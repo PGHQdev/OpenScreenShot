@@ -1,0 +1,11 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://openscreenshot.app/skills/capture-screenshot.md",
+      "links": [
+        { "rel": "service-doc", "href": "https://openscreenshot.app/skills/capture-screenshot.md" },
+        { "rel": "describedby", "href": "https://openscreenshot.app/.well-known/mcp/server-card.json" }
+      ]
+    }
+  ]
+}
