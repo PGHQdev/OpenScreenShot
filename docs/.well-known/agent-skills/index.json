@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "capture-screenshot",
+      "type": "skill-md",
+      "description": "Capture a PNG screenshot of any public web page locally.",
+      "url": "https://openscreenshot.app/skills/capture-screenshot.md",
+      "digest": "sha256:3a41cead724f5e90ebec508944c23b07ed27c068ebe66265a897c99bb38a369a"
+    }
+  ]
+}
