@@ -41,6 +41,28 @@ Capture the **entire scrolling page** (scroll-and-stitch), the **visible viewpor
 
 **From source** — see [Getting started](#getting-started) below.
 
+## Agents & CLI
+
+`openscreenshot-mcp` is a **separate, optional, local** tool for scripting screenshots from the command line or from an AI agent. It drives the Chrome already on your machine (no browser download) and runs entirely on your machine — no account, no hosted service. The browser extension above is unaffected: it stays a client-side, no-server capture tool.
+
+**Run it** — no install needed:
+
+```bash
+npx openscreenshot-mcp shot https://example.com --out shot.png --full
+```
+
+Set `CHROME_PATH` if your Chrome can't be found automatically.
+
+**MCP server (for agents)** — add to your MCP client config:
+
+```json
+{ "command": "npx", "args": ["openscreenshot-mcp", "serve"] }
+```
+
+Then call the `capture_screenshot` tool with `{ "url": "https://example.com" }`.
+
+Like the extension, this tool runs locally and uploads nothing — it just renders a page and hands you the PNG.
+
 ## Tech stack
 
 - **TypeScript** (strict) + **Preact** for the popup/editor UI
