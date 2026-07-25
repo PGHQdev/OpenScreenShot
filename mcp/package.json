@@ -1,0 +1,23 @@
+{
+  "name": "openscreenshot-mcp",
+  "version": "0.1.0",
+  "description": "Local CLI + MCP server for programmatic screenshot capture.",
+  "license": "MIT",
+  "type": "module",
+  "bin": { "openscreenshot-mcp": "dist/bin.js" },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "puppeteer-core": "^24.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.9"
+  }
+}
