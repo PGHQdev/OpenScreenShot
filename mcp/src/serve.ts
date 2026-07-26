@@ -1,10 +1,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { capture, CaptureOptions } from "./capture";
+import { capture, CaptureOptions } from "./capture.js";
 
 export function buildServer(): McpServer {
-  const server = new McpServer({ name: "openscreenshot", version: "0.2.4" });
+  const server = new McpServer({ name: "openscreenshot", version: "0.2.5" });
   server.registerTool(
     "capture_screenshot",
     {
