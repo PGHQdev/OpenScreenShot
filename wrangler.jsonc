@@ -1,7 +1,10 @@
 {
   "name": "openscreenshot",
   "compatibility_date": "2026-07-27",
+  "main": "site-worker.js",
   "assets": {
-    "directory": "./docs"
-  }
+    "directory": "./docs",
+    "binding": "ASSETS",
+    "run_worker_first": ["/"],
+  },
 }
