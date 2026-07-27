@@ -198,6 +198,14 @@
         padding: 1px 5px;
         color: var(--text-1);
       }
+      pre {
+        overflow-x: auto;
+        margin: var(--s-4) 0;
+      }
+      pre code {
+        display: block;
+        padding: var(--s-3);
+      }
 
       .toc {
         background: var(--surface-1);
@@ -361,6 +369,7 @@
           <li><a href="#modes">Capture modes</a></li>
           <li><a href="#annotate">Annotate</a></li>
           <li><a href="#export">Export</a></li>
+          <li><a href="#agents-cli">Agents &amp; CLI</a></li>
           <li><a href="#privacy">Privacy</a></li>
           <li><a href="#support">Get help</a></li>
         </ul>
@@ -456,6 +465,27 @@
             multiple pages with a 5mm overlap so content is not cut mid-line.
           </li>
         </ul>
+      </div>
+
+      <div class="doc-section" id="agents-cli">
+        <h2>Agents &amp; CLI</h2>
+        <p>
+          <code>openscreenshot-mcp</code> is a separate, optional, local tool for scripting
+          screenshots from the command line or from an AI agent. It drives the Chrome already on
+          your machine — no browser download, no hosted service.
+        </p>
+        <pre><code>npx openscreenshot-mcp shot https://example.com --out shot.png --full</code></pre>
+        <img
+          src="../assets/cli-shot.jpg"
+          alt="Full-page capture produced by openscreenshot-mcp shot"
+          style="
+            width: 100%;
+            max-width: 640px;
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            box-shadow: var(--shadow-sm);
+          "
+        />
       </div>
 
       <div class="doc-section" id="privacy">

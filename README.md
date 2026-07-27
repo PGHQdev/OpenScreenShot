@@ -63,6 +63,8 @@ Then call the `capture_screenshot` tool with `{ "url": "https://example.com" }`.
 
 Like the extension, this tool runs locally and uploads nothing — it just renders a page and hands you the PNG.
 
+![Full-page capture from `openscreenshot-mcp shot`](./docs/assets/cli-shot.jpg)
+
 ## Tech stack
 
 - **TypeScript** (strict) + **Preact** for the popup/editor UI
