@@ -11,3 +11,5 @@ coverage
 public/icons/
 # Pi session logs
 pi-session-*.html
+.gstack/
+.wrangler/

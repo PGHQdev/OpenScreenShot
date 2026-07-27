@@ -1,0 +1,588 @@
+{
+  "project": "OpenScreenShot",
+  "provenance": {
+    "git_sha": "4ceb17637f67f0df18d0f05126f7e4892b414818"
+  },
+  "scenarios": [
+    {
+      "id": "full-page",
+      "title": "Full-page capture",
+      "subtitle": "Popup \u2192 worker orchestrates injection + native canvas stitch",
+      "meta": {
+        "created": "2026-07-11",
+        "updated": "2026-07-11"
+      },
+      "actors": [
+        {
+          "id": "user",
+          "label": "User",
+          "zone": "user",
+          "sub_caption": "person"
+        },
+        {
+          "id": "popup",
+          "label": "Popup",
+          "zone": "client",
+          "sub_caption": "Preact UI"
+        },
+        {
+          "id": "bg",
+          "label": "Service Worker",
+          "zone": "worker",
+          "sub_caption": "background/index.ts"
+        },
+        {
+          "id": "page",
+          "label": "Web page",
+          "zone": "external",
+          "sub_caption": "injected functions"
+        }
+      ],
+      "messages": [
+        {
+          "phase": "TRIGGER"
+        },
+        {
+          "from": "user",
+          "to": "popup",
+          "text": "press \u2318\u21e7S",
+          "caption": "or click Full-page card"
+        },
+        {
+          "from": "popup",
+          "to": "bg",
+          "text": "CAPTURE_REQUEST",
+          "caption": "runtime.sendMessage",
+          "via": "api",
+          "src": "popup/App.tsx \u2192 background/index.ts"
+        },
+        {
+          "phase": "MEASURE"
+        },
+        {
+          "from": "bg",
+          "to": "page",
+          "text": "inject getMetrics()",
+          "caption": "scripting.executeScript",
+          "via": "api",
+          "src": "background/index.ts \u2192 content/scroll-capture.ts",
+          "detail": {
+            "why": "activeTab + scripting only \u2014 no broad host permissions; code is stringified into the page."
+          }
+        },
+        {
+          "from": "page",
+          "to": "bg",
+          "text": "page metrics",
+          "caption": "scrollHeight, viewport, dpr",
+          "kind": "ret"
+        },
+        {
+          "self": "bg",
+          "text": "computeScrollPositions",
+          "caption": "plan the tile loop",
+          "src": "shared/geometry.ts"
+        },
+        {
+          "phase": "CAPTURE"
+        },
+        {
+          "from": "bg",
+          "to": "page",
+          "text": "prepareCapture",
+          "caption": "disable smooth scroll",
+          "via": "api",
+          "kind": "async"
+        },
+        {
+          "self": "bg",
+          "text": "captureVisibleTab",
+          "caption": "tile 0, fixed elements visible"
+        },
+        {
+          "from": "bg",
+          "to": "page",
+          "text": "hideFixedElements",
+          "caption": "prevent duplicate headers",
+          "via": "api",
+          "kind": "async"
+        },
+        {
+          "self": "bg",
+          "text": "captureVisibleTab",
+          "caption": "throttled to ~2/sec"
+        },
+        {
+          "from": "bg",
+          "to": "popup",
+          "text": "CAPTURE_PROGRESS",
+          "caption": "percent",
+          "via": "api",
+          "kind": "async"
+        },
+        {
+          "from": "bg",
+          "to": "page",
+          "text": "restoreCapture",
+          "caption": "un-hide, reset scroll",
+          "via": "api",
+          "kind": "async"
+        },
+        {
+          "phase": "STITCH"
+        },
+        {
+          "from": "bg",
+          "to": "page",
+          "text": "inject stitchTiles",
+          "caption": "composite onto one canvas",
+          "via": "api",
+          "paths": [
+            "no-dep"
+          ],
+          "src": "content/scroll-capture.ts",
+          "detail": {
+            "why": "Native canvas drawImage \u2014 no image-processing library ships in the extension."
+          }
+        },
+        {
+          "from": "page",
+          "to": "bg",
+          "text": "stitched PNG",
+          "caption": "canvas.toDataURL",
+          "kind": "ret"
+        },
+        {
+          "phase": "HANDOFF"
+        },
+        {
+          "self": "bg",
+          "text": "setLastCapture",
+          "caption": "chrome.storage.local",
+          "via": "io"
+        },
+        {
+          "self": "bg",
+          "text": "open editor tab",
+          "caption": "tabs.create"
+        }
+      ],
+      "fragments": [
+        {
+          "kind": "loop",
+          "label": "per remaining tile",
+          "range": [
+            8,
+            9
+          ]
+        }
+      ]
+    },
+    {
+      "id": "region",
+      "title": "Region capture",
+      "subtitle": "Hand-written selection overlay, then native crop",
+      "meta": {
+        "created": "2026-07-11",
+        "updated": "2026-07-11"
+      },
+      "actors": [
+        {
+          "id": "user",
+          "label": "User",
+          "zone": "user",
+          "sub_caption": "person"
+        },
+        {
+          "id": "popup",
+          "label": "Popup",
+          "zone": "client",
+          "sub_caption": "Preact UI"
+        },
+        {
+          "id": "bg",
+          "label": "Service Worker",
+          "zone": "worker",
+          "sub_caption": "background/index.ts"
+        },
+        {
+          "id": "page",
+          "label": "Web page",
+          "zone": "external",
+          "sub_caption": "injected overlay"
+        }
+      ],
+      "messages": [
+        {
+          "phase": "TRIGGER"
+        },
+        {
+          "from": "user",
+          "to": "popup",
+          "text": "click Region",
+          "caption": "\u2702\ufe0f or \u2318\u21e7R"
+        },
+        {
+          "from": "popup",
+          "to": "bg",
+          "text": "CAPTURE_REQUEST",
+          "caption": "then popup closes at once",
+          "via": "api"
+        },
+        {
+          "phase": "SELECT"
+        },
+        {
+          "from": "bg",
+          "to": "page",
+          "text": "inject getMetrics()",
+          "via": "api"
+        },
+        {
+          "from": "page",
+          "to": "bg",
+          "text": "metrics",
+          "kind": "ret"
+        },
+        {
+          "from": "bg",
+          "to": "page",
+          "text": "inject selectRegion()",
+          "caption": "mask + dashed box + handles",
+          "via": "api",
+          "paths": [
+            "no-dep"
+          ],
+          "src": "content/region-select.ts",
+          "detail": {
+            "why": "Hand-written drag/resize/nudge overlay \u2014 no cropper or selection library.",
+            "ordering": "Esc \u2192 null (abort); Enter confirms."
+          }
+        },
+        {
+          "self": "page",
+          "text": "drag / resize / nudge",
+          "caption": "arrow keys, Shift = \u00d710"
+        },
+        {
+          "from": "page",
+          "to": "bg",
+          "text": "region rect or null",
+          "caption": "viewport CSS px; null on Esc",
+          "kind": "ret"
+        },
+        {
+          "phase": "CROP"
+        },
+        {
+          "self": "bg",
+          "text": "captureVisibleTab",
+          "caption": "full viewport PNG"
+        },
+        {
+          "from": "bg",
+          "to": "page",
+          "text": "inject cropTile()",
+          "caption": "native canvas crop",
+          "via": "api",
+          "paths": [
+            "no-dep"
+          ]
+        },
+        {
+          "from": "page",
+          "to": "bg",
+          "text": "cropped PNG",
+          "kind": "ret"
+        },
+        {
+          "phase": "HANDOFF"
+        },
+        {
+          "self": "bg",
+          "text": "setLastCapture",
+          "caption": "chrome.storage.local",
+          "via": "io"
+        },
+        {
+          "self": "bg",
+          "text": "open editor tab",
+          "caption": "tabs.create"
+        }
+      ]
+    },
+    {
+      "id": "export",
+      "title": "Editor: load, annotate, export",
+      "subtitle": "Zero-dependency PDF path \u2014 the jsPDF replacement",
+      "meta": {
+        "created": "2026-07-11",
+        "updated": "2026-07-11"
+      },
+      "actors": [
+        {
+          "id": "user",
+          "label": "User",
+          "zone": "user",
+          "sub_caption": "person"
+        },
+        {
+          "id": "editor",
+          "label": "Editor tab",
+          "kind": "internal",
+          "zone": "client",
+          "sub": [
+            {
+              "id": "ui",
+              "label": "Preact UI"
+            },
+            {
+              "id": "canvas",
+              "label": "Canvas"
+            },
+            {
+              "id": "pdf",
+              "label": "PDF writer"
+            }
+          ]
+        }
+      ],
+      "messages": [
+        {
+          "phase": "LOAD"
+        },
+        {
+          "from": "user",
+          "to": "editor.ui",
+          "text": "editor tab opens",
+          "caption": "from capture handoff"
+        },
+        {
+          "self": "editor.ui",
+          "text": "getLastCapture",
+          "caption": "chrome.storage.local",
+          "via": "io",
+          "src": "shared/storage.ts"
+        },
+        {
+          "from": "editor.ui",
+          "to": "editor.canvas",
+          "text": "draw base image",
+          "caption": "native 2D context"
+        },
+        {
+          "phase": "ANNOTATE"
+        },
+        {
+          "from": "user",
+          "to": "editor.ui",
+          "text": "arrow / text / blur",
+          "caption": "select, move, resize, undo"
+        },
+        {
+          "from": "editor.ui",
+          "to": "editor.canvas",
+          "text": "render annotations",
+          "caption": "image-space, native draw",
+          "paths": [
+            "no-dep"
+          ],
+          "src": "editor/annotations.ts",
+          "detail": {
+            "why": "Shapes drawn straight to the 2D context \u2014 no fabric.js / konva canvas library."
+          }
+        },
+        {
+          "phase": "EXPORT"
+        },
+        {
+          "from": "user",
+          "to": "editor.ui",
+          "text": "Export \u2192 PDF",
+          "caption": "or PNG / JPEG / WebP"
+        },
+        {
+          "from": "editor.ui",
+          "to": "editor.canvas",
+          "text": "composeFinal()",
+          "caption": "flatten at native resolution"
+        },
+        {
+          "from": "editor.canvas",
+          "to": "editor.ui",
+          "text": "flattened canvas",
+          "kind": "ret"
+        },
+        {
+          "from": "editor.ui",
+          "to": "editor.pdf",
+          "text": "buildPdf(pages)",
+          "caption": "place one image XObject per page",
+          "paths": [
+            "no-dep"
+          ],
+          "src": "editor/pdf.ts \u2192 editor/pdf-writer.ts",
+          "detail": {
+            "why": "Replaces jsPDF (~386KB). We only ever place raster images, so a bare writer suffices.",
+            "effects": "Emits PDF objects, xref table, trailer by hand."
+          }
+        },
+        {
+          "self": "editor.pdf",
+          "text": "encodeImage",
+          "caption": "canvas \u2192 DeviceRGB, white-composited",
+          "paths": [
+            "no-dep"
+          ]
+        },
+        {
+          "self": "editor.pdf",
+          "text": "deflate",
+          "caption": "native CompressionStream",
+          "paths": [
+            "no-dep"
+          ],
+          "detail": {
+            "why": "/FlateDecode via the platform stream \u2014 no zlib / pako dependency."
+          }
+        },
+        {
+          "from": "editor.pdf",
+          "to": "editor.ui",
+          "text": "PDF bytes",
+          "kind": "ret"
+        },
+        {
+          "self": "editor.ui",
+          "text": "downloadDataUrl",
+          "caption": "chrome.downloads.download",
+          "via": "api"
+        }
+      ]
+    },
+    {
+      "id": "popup-flow",
+      "title": "Popup capture UX",
+      "subtitle": "Open \u2192 pick mode \u2192 feedback path (region diverges)",
+      "meta": {
+        "created": "2026-07-11",
+        "updated": "2026-07-11"
+      },
+      "actors": [
+        {
+          "id": "user",
+          "label": "User",
+          "zone": "user",
+          "sub_caption": "person"
+        },
+        {
+          "id": "popup",
+          "label": "Popup",
+          "zone": "client",
+          "sub_caption": "Preact UI"
+        },
+        {
+          "id": "bg",
+          "label": "Service Worker",
+          "zone": "worker",
+          "sub_caption": "background/index.ts"
+        }
+      ],
+      "messages": [
+        {
+          "phase": "OPEN"
+        },
+        {
+          "from": "user",
+          "to": "popup",
+          "text": "click toolbar icon"
+        },
+        {
+          "self": "popup",
+          "text": "getSettings",
+          "caption": "chrome.storage.local",
+          "via": "io"
+        },
+        {
+          "self": "popup",
+          "text": "applyTheme",
+          "caption": "light / dark / system"
+        },
+        {
+          "self": "popup",
+          "text": "render mode cards",
+          "caption": "Full-page / Visible / Region"
+        },
+        {
+          "phase": "CAPTURE"
+        },
+        {
+          "from": "user",
+          "to": "popup",
+          "text": "pick a mode"
+        },
+        {
+          "from": "popup",
+          "to": "bg",
+          "text": "CAPTURE_REQUEST",
+          "caption": "runtime.sendMessage",
+          "via": "api"
+        },
+        {
+          "self": "popup",
+          "text": "close immediately",
+          "caption": "region mode: no in-popup feedback",
+          "detail": {
+            "why": "Region closes the popup at once so the page overlay is unobstructed; user then relies solely on the page overlay."
+          }
+        },
+        {
+          "from": "bg",
+          "to": "popup",
+          "text": "CAPTURE_PROGRESS %",
+          "caption": "full-page only",
+          "via": "api",
+          "kind": "async"
+        },
+        {
+          "from": "bg",
+          "to": "popup",
+          "text": "CAPTURE_COMPLETE",
+          "via": "api",
+          "kind": "async"
+        },
+        {
+          "self": "popup",
+          "text": "window.close()",
+          "caption": "editor tab already opening"
+        },
+        {
+          "from": "bg",
+          "to": "popup",
+          "text": "CAPTURE_ERROR",
+          "caption": "toast; popup stays open",
+          "via": "api",
+          "kind": "async"
+        }
+      ],
+      "fragments": [
+        {
+          "kind": "alt",
+          "label": "feedback path",
+          "range": [
+            6,
+            9
+          ],
+          "segments": [
+            {
+              "guard": "region \u2014 popup gone"
+            },
+            {
+              "guard": "visible / full-page \u2014 await result"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
