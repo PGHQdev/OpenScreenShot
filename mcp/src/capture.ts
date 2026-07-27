@@ -44,6 +44,9 @@ export async function capture(opts: CaptureOptions): Promise<Buffer> {
   });
   try {
     const page = await browser.newPage();
+    await page.setUserAgent(
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    );
     await page.setViewport({ width: opts.width, height: opts.height });
     await page.goto(opts.url, { waitUntil: "networkidle2", timeout: 30000 });
     const png = await page.screenshot({ fullPage: opts.fullPage, type: "png" });
