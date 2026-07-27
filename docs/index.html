@@ -25,8 +25,8 @@
     />
     <meta property="og:url" content="https://openscreenshot.app/" />
     <meta property="og:image" content="https://openscreenshot.app/assets/shot-1.jpg" />
-    <meta property="og:image:width" content="1280" />
-    <meta property="og:image:height" content="800" />
+    <meta property="og:image:width" content="900" />
+    <meta property="og:image:height" content="563" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -370,7 +370,7 @@
       .cta-note {
         margin-top: var(--s-4);
         font-size: 13px;
-        color: var(--text-3);
+        color: var(--text-2);
       }
       .launch-badge {
         margin-top: var(--s-5);
@@ -412,7 +412,10 @@
         border-radius: 6px;
         background: #ff6600;
         color: #fff;
-        font: 800 18px/1 Verdana, Geneva, sans-serif;
+        font:
+          800 18px/1 Verdana,
+          Geneva,
+          sans-serif;
       }
       .hn-badge .hn-text {
         display: flex;
@@ -423,7 +426,7 @@
       .hn-badge .hn-top {
         font-size: 11px;
         font-weight: 600;
-        color: var(--text-3);
+        color: var(--text-2);
       }
       .hn-badge .hn-bottom {
         font-size: 13px;
@@ -672,7 +675,7 @@
       }
       .format-card .format-hint {
         font-size: 13px;
-        color: var(--text-3);
+        color: var(--text-2);
         margin-top: 2px;
       }
 
@@ -694,6 +697,9 @@
         max-width: 560px;
         margin: 0 auto;
         font-size: 16px;
+      }
+      .privacy > p a {
+        text-decoration: underline;
       }
 
       /* Final CTA */
@@ -719,10 +725,11 @@
         justify-content: center;
         flex-wrap: wrap;
         font-size: 13px;
-        color: var(--text-3);
+        color: var(--text-2);
       }
       .cta-final .cta-note a {
-        color: var(--text-3);
+        color: var(--text-2);
+        text-decoration: underline;
       }
       .cta-final .cta-note a:hover {
         color: var(--accent);
@@ -769,12 +776,12 @@
         max-width: 300px;
         font-size: 14px;
       }
-      .footer-col h4 {
+      .footer-col h3 {
         font-size: 12px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--text-3);
+        color: var(--text-2);
         margin: 0 0 var(--s-3);
       }
       .footer-col a {
@@ -794,7 +801,7 @@
         border-top: 1px solid var(--border);
         text-align: center;
         font-size: 13px;
-        color: var(--text-3);
+        color: var(--text-2);
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -806,7 +813,7 @@
     </style>
   </head>
   <body>
-    <div class="nav-wrap">
+    <div class="nav-wrap" id="navWrap">
       <nav>
         <a href="/" class="nav-brand">
           <span class="logo-badge">
@@ -866,21 +873,543 @@
       </nav>
     </div>
 
-    <!-- Hero -->
-    <section class="hero">
-      <div class="container">
-        <div class="hero-inner">
-          <span class="eyebrow"
-            ><span class="dot"></span> Open source · Manifest V3 · Zero data collection</span
-          >
-          <h1>
-            Capture the <span class="grad-text">whole page</span>.<br />Not just the viewport.
-          </h1>
-          <p class="sub">
-            OpenScreenShot is a free, open-source Chrome extension for full-page, region, and
-            visible-area screenshots. Annotate, then export to PNG, JPEG, WebP, or PDF. Everything
-            stays in your browser.
-          </p>
+    <main>
+      <!-- Hero -->
+      <section class="hero">
+        <div class="container">
+          <div class="hero-inner">
+            <span class="eyebrow"
+              ><span class="dot"></span> Open source · Manifest V3 · Zero data collection</span
+            >
+            <h1>
+              Capture the <span class="grad-text">whole page</span>.<br />Not just the viewport.
+            </h1>
+            <p class="sub">
+              OpenScreenShot is a free, open-source Chrome extension for full-page, region, and
+              visible-area screenshots. Annotate, then export to PNG, JPEG, WebP, or PDF. Everything
+              stays in your browser.
+            </p>
+            <div class="cta-row">
+              <a
+                class="btn btn-primary"
+                href="https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp"
+                target="_blank"
+                rel="noopener"
+              >
+                <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+                  <circle cx="24" cy="24" r="10" fill="#fff" />
+                  <path
+                    d="M7.42 12.82 A20 20 0 0 1 40.58 12.82 L32.29 18.41 A10 10 0 0 0 15.71 18.41 Z"
+                    fill="#EA4335"
+                  />
+                  <path
+                    d="M41.98 15.24 A20 20 0 0 1 25.40 43.95 L24.70 33.98 A10 10 0 0 0 32.99 19.62 Z"
+                    fill="#FBBC05"
+                  />
+                  <path
+                    d="M22.60 43.95 A20 20 0 0 1 6.02 15.24 L15.01 19.62 A10 10 0 0 0 23.30 33.98 Z"
+                    fill="#34A853"
+                  />
+                  <circle cx="24" cy="24" r="8" fill="#4285F4" />
+                </svg>
+                Add to Chrome — Free
+              </a>
+              <a
+                class="btn btn-secondary"
+                href="https://github.com/pghqdev/OpenScreenShot"
+                target="_blank"
+                rel="noopener"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2 1.04 1.79 2.73 1.27 3.4.97.1-.76.4-1.27.74-1.56-2.56-.29-5.26-1.28-5.26-5.7 0-1.26.45-2.29 1.2-3.1-.13-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.75.81 1.2 1.84 1.2 3.1 0 4.43-2.7 5.4-5.28 5.69.42.36.79 1.06.79 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"
+                  />
+                </svg>
+                View source
+              </a>
+            </div>
+            <div class="cta-note">No account. No upload. No telemetry.</div>
+            <div class="launch-badge">
+              <a
+                class="hn-badge"
+                href="https://news.ycombinator.com/item?id=48839719"
+                target="_blank"
+                rel="noopener"
+              >
+                <span class="hn-logo" aria-hidden="true">Y</span>
+                <span class="hn-text">
+                  <span class="hn-top">Featured on</span>
+                  <span class="hn-bottom">Hacker News</span>
+                </span>
+              </a>
+            </div>
+          </div>
+
+          <div class="hero-shot">
+            <div class="shot-frame">
+              <picture>
+                <source srcset="assets/shot-2.webp" type="image/webp" />
+                <img
+                  src="assets/shot-2.jpg"
+                  width="900"
+                  height="563"
+                  alt="OpenScreenShot popup open on a web page, showing Full Page, Visible, and Region capture modes."
+                />
+              </picture>
+            </div>
+          </div>
+
+          <div class="trust">
+            <span
+              ><svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              Local processing</span
+            >
+            <span
+              ><svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M16 18l6-6-6-6M8 6l-6 6 6 6" />
+              </svg>
+              MIT open source</span
+            >
+            <span
+              ><svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 2v20M2 12h20" />
+              </svg>
+              Minimum permissions</span
+            >
+          </div>
+        </div>
+      </section>
+
+      <!-- Features -->
+      <section id="features">
+        <div class="container">
+          <div class="section-head">
+            <div class="section-tag grad-text">What it does</div>
+            <h2>Capture, annotate, and export</h2>
+            <p>
+              One extension for the full screenshot workflow. No cloud, no account, no extra steps.
+            </p>
+          </div>
+          <div class="features">
+            <div class="feature-card">
+              <div class="ficon">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="4" y="3" width="16" height="18" rx="2" />
+                  <path d="M4 9h16M4 15h16" />
+                </svg>
+              </div>
+              <h3>Full-page capture</h3>
+              <p>
+                Scroll and stitch an entire page into one image. Fixed headers are captured once at
+                the top, and a progress bar shows the status.
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <div class="ficon">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"
+                  />
+                </svg>
+              </div>
+              <h3>Region selection</h3>
+              <p>
+                Drag a rectangle, then nudge it with arrow keys or resize handles. A live readout
+                shows the exact width and height.
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <div class="ficon">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M12 19l7-7 3 3-7 7-3-3zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5zM2 2l7.586 7.586"
+                  />
+                  <circle cx="11" cy="11" r="2" />
+                </svg>
+              </div>
+              <h3>Annotation editor</h3>
+              <p>
+                Rectangle, arrow, pen, text, blur, and crop. Eight colors, three stroke widths,
+                undo/redo, and zoom to cursor.
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <div class="ficon">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+              </div>
+              <h3>Four export formats</h3>
+              <p>
+                PNG with transparency, JPEG with quality control, modern WebP, and multi-page PDF
+                with fit-to-page options.
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <div class="ficon">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="4" y="2" width="16" height="20" rx="2" />
+                  <path d="M8 6h8M8 10h8M8 14h5" />
+                </svg>
+              </div>
+              <h3>Smart PDF output</h3>
+              <p>
+                Export a single image page, fit to A4/Letter, or split across multiple pages with a
+                5mm overlap so content is not cut mid-line.
+              </p>
+            </div>
+
+            <div class="feature-card">
+              <div class="ficon">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </div>
+              <h3>Private by default</h3>
+              <p>
+                All capture, annotation, and export run locally. No analytics, no telemetry, no
+                third-party services.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Detail: capture modes -->
+      <section style="padding-top: 0">
+        <div class="container">
+          <div class="detail">
+            <div class="detail-text">
+              <div class="section-tag grad-text">Capture modes</div>
+              <h2>Pick the right crop for the job</h2>
+              <p>
+                Full-page, visible area, or drag-to-select region. One click from the toolbar popup.
+              </p>
+              <ul class="detail-list">
+                <li>
+                  <span class="tick"
+                    ><svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" /></svg></span
+                  ><span
+                    ><strong>Full Page</strong> — auto-scrolls and stitches every viewport tile into
+                    one image.</span
+                  >
+                </li>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" /></svg></span
+                  ><span
+                    ><strong>Visible Area</strong> — captures the current viewport instantly, no
+                    scrolling.</span
+                  >
+                </li>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" /></svg></span
+                  ><span
+                    ><strong>Selected Region</strong> — drag a rectangle, then fine-tune with arrow
+                    keys or resize handles.</span
+                  >
+                </li>
+              </ul>
+            </div>
+            <div class="detail-media">
+              <picture>
+                <source srcset="assets/shot-1.webp" type="image/webp" />
+                <img
+                  src="assets/shot-1.jpg"
+                  width="900"
+                  height="563"
+                  alt="OpenScreenShot overview: capture-mode popup and annotation editor shown side by side."
+                />
+              </picture>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Detail: editor -->
+      <section style="padding-top: 0">
+        <div class="container">
+          <div class="detail reverse">
+            <div class="detail-text">
+              <div class="section-tag grad-text">Annotation editor</div>
+              <h2>Edit before you save</h2>
+              <p>
+                Every capture opens in a full-screen editor. Add shapes, arrows, text, or blur
+                sensitive areas, then export in one click.
+              </p>
+              <ul class="detail-list">
+                <li>
+                  <span class="tick"
+                    ><svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" /></svg></span
+                  ><span
+                    ><strong>Drawing tools</strong> — rectangle, arrow, freehand pen, text, blur,
+                    and crop.</span
+                  >
+                </li>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" /></svg></span
+                  ><span
+                    ><strong>Style controls</strong> — 8-color palette, 3 stroke widths, font-size
+                    slider, remembered across sessions.</span
+                  >
+                </li>
+                <li>
+                  <span class="tick"
+                    ><svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" /></svg></span
+                  ><span
+                    ><strong>Navigation</strong> — scroll-wheel zoom, space-drag pan, fit / 100%
+                    buttons.</span
+                  >
+                </li>
+              </ul>
+            </div>
+            <div class="detail-media">
+              <picture>
+                <source srcset="assets/shot-3.webp" type="image/webp" />
+                <img
+                  src="assets/shot-3.jpg"
+                  width="900"
+                  height="563"
+                  alt="OpenScreenShot annotation editor with color palette, stroke controls, and a full-page screenshot loaded."
+                />
+              </picture>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Export -->
+      <section style="padding-top: 0">
+        <div class="container">
+          <div class="detail">
+            <div class="detail-text">
+              <div class="section-tag grad-text">Export</div>
+              <h2>Export to the format you need</h2>
+              <p>
+                Choose the right format for the job. PDF supports single-page, multi-page with
+                overlap, custom page sizes, and margins.
+              </p>
+              <div class="formats">
+                <div class="format-card">
+                  <div class="format-badge fmt-pdf">PDF</div>
+                  <div class="format-name">PDF</div>
+                  <div class="format-hint">Multi-page · margins</div>
+                </div>
+                <div class="format-card">
+                  <div class="format-badge fmt-png">PNG</div>
+                  <div class="format-name">PNG</div>
+                  <div class="format-hint">Lossless · alpha</div>
+                </div>
+                <div class="format-card">
+                  <div class="format-badge fmt-jpeg">JPG</div>
+                  <div class="format-name">JPEG</div>
+                  <div class="format-hint">Smaller · quality</div>
+                </div>
+                <div class="format-card">
+                  <div class="format-badge fmt-webp">WEBP</div>
+                  <div class="format-name">WebP</div>
+                  <div class="format-hint">Modern · compact</div>
+                </div>
+              </div>
+            </div>
+            <div class="detail-media">
+              <picture>
+                <source srcset="assets/shot-4.webp" type="image/webp" />
+                <img
+                  src="assets/shot-4.jpg"
+                  width="900"
+                  height="563"
+                  alt="OpenScreenShot export dialog showing PDF, PNG, JPEG, and WebP options with page size and orientation controls."
+                />
+              </picture>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Privacy -->
+      <section>
+        <div class="container">
+          <div class="privacy">
+            <h2>Your data never leaves your device</h2>
+            <p>
+              Capture, annotate, and export run entirely in your browser. Nothing is uploaded,
+              collected, or transmitted. Read the
+              <a
+                href="https://github.com/pghqdev/OpenScreenShot/blob/main/PRIVACY.md"
+                target="_blank"
+                rel="noopener"
+                >Privacy Policy</a
+              >
+              for details.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Final CTA -->
+      <section id="download" class="cta-final">
+        <div class="container">
+          <h2>Install OpenScreenShot</h2>
+          <p>Free, open-source, and private. Available on the Chrome Web Store.</p>
           <div class="cta-row">
             <a
               class="btn btn-primary"
@@ -906,534 +1435,26 @@
               </svg>
               Add to Chrome — Free
             </a>
-            <a
-              class="btn btn-secondary"
-              href="https://github.com/pghqdev/OpenScreenShot"
-              target="_blank"
-              rel="noopener"
+          </div>
+          <div class="cta-note">
+            <a href="https://github.com/pghqdev/OpenScreenShot" target="_blank" rel="noopener"
+              >Source on GitHub</a
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2 1.04 1.79 2.73 1.27 3.4.97.1-.76.4-1.27.74-1.56-2.56-.29-5.26-1.28-5.26-5.7 0-1.26.45-2.29 1.2-3.1-.13-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.75.81 1.2 1.84 1.2 3.1 0 4.43-2.7 5.4-5.28 5.69.42.36.79 1.06.79 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"
-                />
-              </svg>
-              View source
-            </a>
-          </div>
-          <div class="cta-note">No account. No upload. No telemetry.</div>
-          <div class="launch-badge">
-            <a
-              class="hn-badge"
-              href="https://news.ycombinator.com/item?id=48839719"
-              target="_blank"
-              rel="noopener"
-            >
-              <span class="hn-logo" aria-hidden="true">Y</span>
-              <span class="hn-text">
-                <span class="hn-top">Featured on</span>
-                <span class="hn-bottom">Hacker News</span>
-              </span>
-            </a>
-          </div>
-        </div>
-
-        <div class="hero-shot">
-          <div class="shot-frame">
-            <img
-              src="assets/shot-2.jpg"
-              width="1280"
-              height="800"
-              alt="OpenScreenShot popup open on a web page, showing Full Page, Visible, and Region capture modes."
-            />
-          </div>
-        </div>
-
-        <div class="trust">
-          <span
-            ><svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-            Local processing</span
-          >
-          <span
-            ><svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M16 18l6-6-6-6M8 6l-6 6 6 6" />
-            </svg>
-            MIT open source</span
-          >
-          <span
-            ><svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M12 2v20M2 12h20" />
-            </svg>
-            Minimum permissions</span
-          >
-        </div>
-      </div>
-    </section>
-
-    <!-- Features -->
-    <section id="features">
-      <div class="container">
-        <div class="section-head">
-          <div class="section-tag grad-text">What it does</div>
-          <h2>Capture, annotate, and export</h2>
-          <p>
-            One extension for the full screenshot workflow. No cloud, no account, no extra steps.
-          </p>
-        </div>
-        <div class="features">
-          <div class="feature-card">
-            <div class="ficon">
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <rect x="4" y="3" width="16" height="18" rx="2" />
-                <path d="M4 9h16M4 15h16" />
-              </svg>
-            </div>
-            <h3>Full-page capture</h3>
-            <p>
-              Scroll and stitch an entire page into one image. Fixed headers are captured once at
-              the top, and a progress bar shows the status.
-            </p>
-          </div>
-
-          <div class="feature-card">
-            <div class="ficon">
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path
-                  d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"
-                />
-              </svg>
-            </div>
-            <h3>Region selection</h3>
-            <p>
-              Drag a rectangle, then nudge it with arrow keys or resize handles. A live readout
-              shows the exact width and height.
-            </p>
-          </div>
-
-          <div class="feature-card">
-            <div class="ficon">
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path
-                  d="M12 19l7-7 3 3-7 7-3-3zM18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5zM2 2l7.586 7.586"
-                />
-                <circle cx="11" cy="11" r="2" />
-              </svg>
-            </div>
-            <h3>Annotation editor</h3>
-            <p>
-              Rectangle, arrow, pen, text, blur, and crop. Eight colors, three stroke widths,
-              undo/redo, and zoom to cursor.
-            </p>
-          </div>
-
-          <div class="feature-card">
-            <div class="ficon">
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-            </div>
-            <h3>Four export formats</h3>
-            <p>
-              PNG with transparency, JPEG with quality control, modern WebP, and multi-page PDF with
-              fit-to-page options.
-            </p>
-          </div>
-
-          <div class="feature-card">
-            <div class="ficon">
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <rect x="4" y="2" width="16" height="20" rx="2" />
-                <path d="M8 6h8M8 10h8M8 14h5" />
-              </svg>
-            </div>
-            <h3>Smart PDF output</h3>
-            <p>
-              Export a single image page, fit to A4/Letter, or split across multiple pages with a
-              5mm overlap so content is not cut mid-line.
-            </p>
-          </div>
-
-          <div class="feature-card">
-            <div class="ficon">
-              <svg
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <rect x="3" y="11" width="18" height="11" rx="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-            </div>
-            <h3>Private by default</h3>
-            <p>
-              All capture, annotation, and export run locally. No analytics, no telemetry, no
-              third-party services.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Detail: capture modes -->
-    <section style="padding-top: 0">
-      <div class="container">
-        <div class="detail">
-          <div class="detail-text">
-            <div class="section-tag grad-text">Capture modes</div>
-            <h2>Pick the right crop for the job</h2>
-            <p>
-              Full-page, visible area, or drag-to-select region. One click from the toolbar popup.
-            </p>
-            <ul class="detail-list">
-              <li>
-                <span class="tick"
-                  ><svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="3"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12" /></svg></span
-                ><span
-                  ><strong>Full Page</strong> — auto-scrolls and stitches every viewport tile into
-                  one image.</span
-                >
-              </li>
-              <li>
-                <span class="tick"
-                  ><svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="3"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12" /></svg></span
-                ><span
-                  ><strong>Visible Area</strong> — captures the current viewport instantly, no
-                  scrolling.</span
-                >
-              </li>
-              <li>
-                <span class="tick"
-                  ><svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="3"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12" /></svg></span
-                ><span
-                  ><strong>Selected Region</strong> — drag a rectangle, then fine-tune with arrow
-                  keys or resize handles.</span
-                >
-              </li>
-            </ul>
-          </div>
-          <div class="detail-media">
-            <img
-              src="assets/shot-1.jpg"
-              width="1280"
-              height="800"
-              alt="OpenScreenShot overview: capture-mode popup and annotation editor shown side by side."
-            />
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Detail: editor -->
-    <section style="padding-top: 0">
-      <div class="container">
-        <div class="detail reverse">
-          <div class="detail-text">
-            <div class="section-tag grad-text">Annotation editor</div>
-            <h2>Edit before you save</h2>
-            <p>
-              Every capture opens in a full-screen editor. Add shapes, arrows, text, or blur
-              sensitive areas, then export in one click.
-            </p>
-            <ul class="detail-list">
-              <li>
-                <span class="tick"
-                  ><svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="3"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12" /></svg></span
-                ><span
-                  ><strong>Drawing tools</strong> — rectangle, arrow, freehand pen, text, blur, and
-                  crop.</span
-                >
-              </li>
-              <li>
-                <span class="tick"
-                  ><svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="3"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12" /></svg></span
-                ><span
-                  ><strong>Style controls</strong> — 8-color palette, 3 stroke widths, font-size
-                  slider, remembered across sessions.</span
-                >
-              </li>
-              <li>
-                <span class="tick"
-                  ><svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="3"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12" /></svg></span
-                ><span
-                  ><strong>Navigation</strong> — scroll-wheel zoom, space-drag pan, fit / 100%
-                  buttons.</span
-                >
-              </li>
-            </ul>
-          </div>
-          <div class="detail-media">
-            <img
-              src="assets/shot-3.jpg"
-              width="1280"
-              height="800"
-              alt="OpenScreenShot annotation editor with color palette, stroke controls, and a full-page screenshot loaded."
-            />
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Export -->
-    <section style="padding-top: 0">
-      <div class="container">
-        <div class="detail">
-          <div class="detail-text">
-            <div class="section-tag grad-text">Export</div>
-            <h2>Export to the format you need</h2>
-            <p>
-              Choose the right format for the job. PDF supports single-page, multi-page with
-              overlap, custom page sizes, and margins.
-            </p>
-            <div class="formats">
-              <div class="format-card">
-                <div class="format-badge fmt-pdf">PDF</div>
-                <div class="format-name">PDF</div>
-                <div class="format-hint">Multi-page · margins</div>
-              </div>
-              <div class="format-card">
-                <div class="format-badge fmt-png">PNG</div>
-                <div class="format-name">PNG</div>
-                <div class="format-hint">Lossless · alpha</div>
-              </div>
-              <div class="format-card">
-                <div class="format-badge fmt-jpeg">JPG</div>
-                <div class="format-name">JPEG</div>
-                <div class="format-hint">Smaller · quality</div>
-              </div>
-              <div class="format-card">
-                <div class="format-badge fmt-webp">WEBP</div>
-                <div class="format-name">WebP</div>
-                <div class="format-hint">Modern · compact</div>
-              </div>
-            </div>
-          </div>
-          <div class="detail-media">
-            <img
-              src="assets/shot-4.jpg"
-              width="1280"
-              height="800"
-              alt="OpenScreenShot export dialog showing PDF, PNG, JPEG, and WebP options with page size and orientation controls."
-            />
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Privacy -->
-    <section>
-      <div class="container">
-        <div class="privacy">
-          <h2>Your data never leaves your device</h2>
-          <p>
-            Capture, annotate, and export run entirely in your browser. Nothing is uploaded,
-            collected, or transmitted. Read the
+            <span>·</span>
             <a
               href="https://github.com/pghqdev/OpenScreenShot/blob/main/PRIVACY.md"
               target="_blank"
               rel="noopener"
               >Privacy Policy</a
             >
-            for details.
-          </p>
+            <span>·</span>
+            <a href="/support/">Support & FAQ</a>
+            <span>·</span>
+            <a href="/docs/">Docs</a>
+          </div>
         </div>
-      </div>
-    </section>
-
-    <!-- Final CTA -->
-    <section id="download" class="cta-final">
-      <div class="container">
-        <h2>Install OpenScreenShot</h2>
-        <p>Free, open-source, and private. Available on the Chrome Web Store.</p>
-        <div class="cta-row">
-          <a
-            class="btn btn-primary"
-            href="https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp"
-            target="_blank"
-            rel="noopener"
-          >
-            <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
-              <circle cx="24" cy="24" r="10" fill="#fff" />
-              <path
-                d="M7.42 12.82 A20 20 0 0 1 40.58 12.82 L32.29 18.41 A10 10 0 0 0 15.71 18.41 Z"
-                fill="#EA4335"
-              />
-              <path
-                d="M41.98 15.24 A20 20 0 0 1 25.40 43.95 L24.70 33.98 A10 10 0 0 0 32.99 19.62 Z"
-                fill="#FBBC05"
-              />
-              <path
-                d="M22.60 43.95 A20 20 0 0 1 6.02 15.24 L15.01 19.62 A10 10 0 0 0 23.30 33.98 Z"
-                fill="#34A853"
-              />
-              <circle cx="24" cy="24" r="8" fill="#4285F4" />
-            </svg>
-            Add to Chrome — Free
-          </a>
-        </div>
-        <div class="cta-note">
-          <a href="https://github.com/pghqdev/OpenScreenShot" target="_blank" rel="noopener"
-            >Source on GitHub</a
-          >
-          <span>·</span>
-          <a
-            href="https://github.com/pghqdev/OpenScreenShot/blob/main/PRIVACY.md"
-            target="_blank"
-            rel="noopener"
-            >Privacy Policy</a
-          >
-          <span>·</span>
-          <a href="/support/">Support & FAQ</a>
-          <span>·</span>
-          <a href="/docs/">Docs</a>
-        </div>
-      </div>
-    </section>
+      </section>
+    </main>
 
     <!-- Footer -->
     <footer>
@@ -1465,7 +1486,7 @@
             </p>
           </div>
           <div class="footer-col">
-            <h4>Product</h4>
+            <h3>Product</h3>
             <a href="#features">Features</a>
             <a href="/docs/">Docs</a>
             <a
@@ -1477,7 +1498,7 @@
             <a href="/support/">Support & FAQ</a>
           </div>
           <div class="footer-col">
-            <h4>Project</h4>
+            <h3>Project</h3>
             <a href="https://github.com/pghqdev/OpenScreenShot" target="_blank" rel="noopener"
               >GitHub</a
             >
@@ -1495,7 +1516,7 @@
             >
           </div>
           <div class="footer-col">
-            <h4>Legal</h4>
+            <h3>Legal</h3>
             <a
               href="https://github.com/pghqdev/OpenScreenShot/blob/main/PRIVACY.md"
               target="_blank"
