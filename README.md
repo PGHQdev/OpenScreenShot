@@ -158,7 +158,7 @@ Read the full [Privacy Policy](./PRIVACY.md).
 
 ## Contributing
 
-Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md). Please follow the [Code of Conduct](./CODE_OF_CONDUCT.md).
+Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md). Please follow the [Code of Conduct](./CODE_OF_CONDUCT.md). Curious what's next? Check the [public roadmap](./ROADMAP.md).
 
 <div align="center">
 

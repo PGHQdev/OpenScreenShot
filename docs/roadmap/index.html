@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Roadmap — OpenScreenShot</title>
+    <meta
+      name="description"
+      content="OpenScreenShot public roadmap — planned features and ideas for the open-source Chrome screenshot extension. Everything stays 100% local: no servers, no accounts."
+    />
+    <link rel="canonical" href="https://openscreenshot.app/roadmap/" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0b0b0d" media="(prefers-color-scheme: dark)" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="OpenScreenShot" />
+    <meta property="og:title" content="Roadmap — OpenScreenShot" />
+    <meta
+      property="og:description"
+      content="What's planned next for OpenScreenShot, the open-source Chrome screenshot extension."
+    />
+    <meta property="og:url" content="https://openscreenshot.app/roadmap/" />
+    <meta property="og:image" content="https://openscreenshot.app/assets/shot-1.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://openscreenshot.app/assets/shot-1.jpg" />
+
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a84ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/%3E%3Ccircle cx='12' cy='13' r='4'/%3E%3C/svg%3E"
+    />
+
+    <style>
+      :root {
+        --s-1: 4px;
+        --s-2: 8px;
+        --s-3: 12px;
+        --s-4: 16px;
+        --s-5: 24px;
+        --s-6: 32px;
+        --s-7: 48px;
+        --s-8: 64px;
+        --r-sm: 8px;
+        --r-md: 12px;
+        --r-lg: 18px;
+        --r-full: 9999px;
+        --font:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'Helvetica Neue', Arial,
+          sans-serif;
+        --surface-0: #ffffff;
+        --surface-1: #ffffff;
+        --surface-2: #f5f5f7;
+        --surface-3: #ececef;
+        --text-1: #111114;
+        --text-2: #55555c;
+        --text-3: #8a8a92;
+        --accent: #0071e3;
+        --accent-2: #6a5cff;
+        --accent-hover: #0077ed;
+        --accent-subtle: #eaf3fe;
+        --border: #e4e4e9;
+        --border-strong: #d3d3da;
+        --green: #1e9e4f;
+        --green-subtle: #e6f6ec;
+        --grad-brand: linear-gradient(120deg, #0071e3 0%, #6a5cff 100%);
+        --grad-text: linear-gradient(120deg, #0071e3 0%, #7b5cff 60%, #a04cff 100%);
+        --shadow-sm: 0 1px 2px rgba(17, 17, 20, 0.04), 0 2px 6px rgba(17, 17, 20, 0.04);
+        --shadow-brand: 0 10px 30px rgba(0, 113, 227, 0.28);
+        --max-w: 780px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --surface-0: #0b0b0d;
+          --surface-1: #141416;
+          --surface-2: #1a1a1d;
+          --surface-3: #242428;
+          --text-1: #f4f4f6;
+          --text-2: #a6a6ad;
+          --text-3: #6e6e77;
+          --accent: #4c9bff;
+          --accent-2: #8f83ff;
+          --accent-hover: #6aabff;
+          --accent-subtle: #16273d;
+          --border: #2a2a30;
+          --border-strong: #37373f;
+          --green: #4ad97e;
+          --green-subtle: #12291b;
+          --grad-text: linear-gradient(120deg, #58a6ff 0%, #9b8bff 60%, #c07cff 100%);
+          --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+          --shadow-brand: 0 10px 30px rgba(76, 155, 255, 0.28);
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: var(--font);
+        font-size: 16px;
+        line-height: 1.6;
+        color: var(--text-1);
+        background: var(--surface-0);
+        -webkit-font-smoothing: antialiased;
+      }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover {
+        color: var(--accent-hover);
+        text-decoration: underline;
+      }
+      .container {
+        max-width: var(--max-w);
+        margin: 0 auto;
+        padding: 0 var(--s-5);
+      }
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+        border-radius: var(--r-sm);
+      }
+
+      nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 60px;
+        max-width: var(--max-w);
+        margin: 0 auto;
+        padding: 0 var(--s-5);
+        border-bottom: 1px solid var(--border);
+      }
+      .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: var(--s-2);
+        font-weight: 700;
+        font-size: 17px;
+        color: var(--text-1);
+        text-decoration: none;
+      }
+      .nav-brand .logo-badge {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        background: var(--grad-brand);
+        color: #fff;
+        box-shadow: var(--shadow-brand);
+      }
+      a.nav-brand:hover {
+        color: var(--text-1);
+        text-decoration: none;
+      }
+      .nav-back {
+        font-size: 14px;
+        color: var(--text-2);
+      }
+      .nav-back + .nav-back {
+        margin-left: var(--s-4);
+      }
+
+      h1 {
+        font-size: clamp(30px, 5vw, 40px);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin: var(--s-8) 0 var(--s-2);
+      }
+      .lead {
+        color: var(--text-2);
+        font-size: 18px;
+        margin: 0 0 var(--s-4);
+      }
+      .promise {
+        color: var(--text-2);
+        font-size: 14.5px;
+        margin: 0 0 var(--s-6);
+      }
+      .promise strong {
+        color: var(--text-1);
+      }
+      h2 {
+        font-size: 22px;
+        font-weight: 700;
+        margin: var(--s-8) 0 var(--s-4);
+      }
+
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--s-2);
+        margin: 0 0 var(--s-6);
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 24px;
+        padding: 0 10px;
+        border-radius: var(--r-full);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        white-space: nowrap;
+      }
+      .status::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: var(--r-full);
+        background: currentColor;
+      }
+      .status-planned {
+        background: var(--accent-subtle);
+        color: var(--accent);
+      }
+      .status-exploring {
+        background: var(--surface-3);
+        color: var(--text-2);
+      }
+      .status-shipped {
+        background: var(--green-subtle);
+        color: var(--green);
+      }
+
+      .item {
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        background: var(--surface-1);
+        box-shadow: var(--shadow-sm);
+        padding: var(--s-4);
+        margin-bottom: var(--s-3);
+      }
+      .item-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--s-3);
+      }
+      .item-head strong {
+        font-size: 15px;
+        color: var(--text-1);
+      }
+      .item p {
+        margin: var(--s-2) 0 0;
+        font-size: 14.5px;
+        color: var(--text-2);
+      }
+
+      .cta {
+        text-align: center;
+        margin: var(--s-8) 0;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--s-2);
+        height: 48px;
+        padding: 0 24px;
+        border-radius: var(--r-md);
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        background: var(--grad-brand);
+        color: #fff;
+        box-shadow: var(--shadow-brand);
+        transition:
+          transform 120ms ease,
+          box-shadow 180ms ease;
+      }
+      .btn:hover {
+        color: #fff;
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 16px 36px rgba(0, 113, 227, 0.36);
+      }
+      .kofi {
+        margin-top: var(--s-4);
+      }
+      .cta-note {
+        margin-top: var(--s-3);
+        font-size: 13px;
+        color: var(--text-3);
+      }
+
+      footer {
+        margin-top: var(--s-8);
+        border-top: 1px solid var(--border);
+        padding: var(--s-6) 0;
+        text-align: center;
+        font-size: 13px;
+        color: var(--text-3);
+      }
+      footer a {
+        color: var(--text-2);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="/" class="nav-brand">
+        <span class="logo-badge"
+          ><svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+            />
+            <circle cx="12" cy="13" r="4" /></svg
+        ></span>
+        OpenScreenShot
+      </a>
+      <span>
+        <a href="/docs/" class="nav-back">Docs</a>
+        <a href="/support/" class="nav-back">Support</a>
+      </span>
+    </nav>
+
+    <div class="container">
+      <h1>Roadmap</h1>
+      <p class="lead">What's planned next — and what we're still thinking through.</p>
+      <p class="promise">
+        <strong>Our promise:</strong> everything on this page stays 100% local. No servers, no
+        accounts, no new data collection — ever. Roadmap items aren't dated promises; feedback and
+        pull requests genuinely shape what ships.
+      </p>
+
+      <div class="legend" aria-label="Status legend">
+        <span class="status status-planned">Planned</span>
+        <span class="status status-exploring">Exploring</span>
+        <span class="status status-shipped">Shipped</span>
+      </div>
+
+      <h2 id="capture">Capture</h2>
+
+      <div class="item">
+        <div class="item-head">
+          <strong>Delayed capture (3s / 5s / 10s timer)</strong>
+          <span class="status status-planned">Planned</span>
+        </div>
+        <p>
+          Capture hover states, dropdown menus, and tooltips that disappear the moment you click the
+          extension.
+        </p>
+      </div>
+      <div class="item">
+        <div class="item-head">
+          <strong>Capture straight to clipboard or download</strong>
+          <span class="status status-planned">Planned</span>
+        </div>
+        <p>An optional "quick mode" that skips the editor for high-frequency work.</p>
+      </div>
+      <div class="item">
+        <div class="item-head">
+          <strong>Right-click context menu capture</strong>
+          <span class="status status-planned">Planned</span>
+        </div>
+        <p>Full page, visible area, or region — straight from the page's context menu.</p>
+      </div>
+      <div class="item">
+        <div class="item-head">
+          <strong>Repeat last region</strong>
+          <span class="status status-planned">Planned</span>
+        </div>
+        <p>Re-capture the previous selection rectangle — great for iterating on documentation.</p>
+      </div>
+      <div class="item">
+        <div class="item-head">
+          <strong>Region loupe &amp; element snapping</strong>
+          <span class="status status-exploring">Exploring</span>
+        </div>
+        <p>
+          A magnifier at the crosshair while you drag, with edges that snap to element boundaries.
+        </p>
+      </div>
+      <div class="item">
+        <div class="item-head">
+          <strong>Batch capture: list of URLs → one PDF</strong>
+          <span class="status status-exploring">Exploring</span>
+        </div>
+        <p>Scroll-and-stitch multiple pages and export them as a single multi-page PDF.</p>
+      </div>
+
+      <h2 id="editor">Editor</h2>
+
+      <div class="item">
+        <div class="item-head">
+          <strong>Beautify mode</strong>
+          <span class="status status-planned">Planned</span>
+        </div>
+        <p>
+          Padding, rounded corners, drop shadow, and gradient backgrounds — polish screenshots for
+          sharing, all in canvas.
+        </p>
+      </div>
+      <div class="item">
+        <div class="item-head">
+          <strong>Numbered step stamps</strong>
+          <span class="status status-planned">Planned</span>
+        </div>
+        <p>Auto-incrementing 1, 2, 3… counters for tutorials, guides, and support replies.</p>
+      </div>
+      <div class="item">
+        <div class="item-head">
+          <strong>Highlighter &amp; solid-redact tools</strong>
+          <span class="status status-planned">Planned</span>
+        </div>
+        <p>Variants on the existing rectangle and blur primitives.</p>
+      </div>
+      <div class="item">
+        <div class="item-head">
+          <strong>Eyedropper color picker</strong>
+          <span class="status status-planned">Planned</span>
+        </div>
+        <p>Pick annotation colors straight from the page, using the browser's native EyeDropper.</p>
+      </div>
+      <div class="item">
+        <div class="item-head">
+          <strong>Resize / scale at export</strong>
+          <span class="status status-planned">Planned</span>
+        </div>
+        <p>Export at 50%, a fixed width, and more — right from the export dialog.</p>
+      </div>
+      <div class="item">
+        <div class="item-head">
+          <strong>Drag &amp; drop any image into the editor</strong>
+          <span class="status status-planned">Planned</span>
+        </div>
+        <p>Annotate images you already have, not just fresh captures.</p>
+      </div>
+
+      <h2 id="power">Power features</h2>
+
+      <div class="item">
+        <div class="item-head">
+          <strong>Local OCR — copy text out of a screenshot</strong>
+          <span class="status status-exploring">Exploring</span>
+        </div>
+        <p>
+          Client-side text recognition, lazy-loaded like the PDF exporter. No data ever leaves the
+          device.
+        </p>
+      </div>
+      <div class="item">
+        <div class="item-head">
+          <strong>Recent captures shelf</strong>
+          <span class="status status-exploring">Exploring</span>
+        </div>
+        <p>
+          Your last few captures kept locally and reopenable in the editor — with a clear-all
+          control, of course.
+        </p>
+      </div>
+      <div class="item">
+        <div class="item-head">
+          <strong>More filename tokens</strong>
+          <span class="status status-planned">Planned</span>
+        </div>
+        <p><code>{domain}</code> and friends for the filename template engine.</p>
+      </div>
+
+      <h2 id="performance">Performance &amp; polish</h2>
+
+      <div class="item">
+        <div class="item-head">
+          <strong>Worker-based stitch compositing</strong>
+          <span class="status status-exploring">Exploring</span>
+        </div>
+        <p>Move full-page stitching to a Web Worker so the UI stays buttery on very long pages.</p>
+      </div>
+      <div class="item">
+        <div class="item-head">
+          <strong>Instant editor open</strong>
+          <span class="status status-exploring">Exploring</span>
+        </div>
+        <p>Prewarm the editor while capture runs so it opens the moment you're ready.</p>
+      </div>
+
+      <h2 id="shipped">Recently shipped</h2>
+
+      <div class="item">
+        <div class="item-head">
+          <strong>Ko-fi donation links</strong>
+          <span class="status status-shipped">Shipped · v0.2.7</span>
+        </div>
+        <p>Support the project from the README, the website, and the extension popup.</p>
+      </div>
+
+      <div class="cta">
+        <a
+          class="btn"
+          href="https://github.com/pghqdev/OpenScreenShot/issues/new"
+          target="_blank"
+          rel="noopener"
+          >Suggest a feature</a
+        >
+        <p class="cta-note">
+          Want to build one of these? Pull requests are welcome —
+          <a href="https://github.com/pghqdev/OpenScreenShot/blob/main/CONTRIBUTING.md"
+            >see the contributing guide</a
+          >.
+        </p>
+        <div class="kofi">
+          <script src="/kofi-widget.js"></script>
+          <script>
+            if (window.kofiwidget2) {
+              kofiwidget2.init('Support me on Ko-fi', '#72a4f2', 'T7A624DAY7');
+              kofiwidget2.draw();
+            }
+          </script>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="container">
+        © <span id="year"></span> OpenScreenShot by PGHQ.dev ·
+        <a href="https://github.com/pghqdev/OpenScreenShot/blob/main/PRIVACY.md">Privacy</a> ·
+        <a href="https://github.com/pghqdev/OpenScreenShot/blob/main/LICENSE">MIT License</a>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+  </body>
+</html>
