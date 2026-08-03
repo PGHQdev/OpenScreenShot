@@ -330,6 +330,26 @@ body {
   opacity: 0.45;
 }
 
+/* ---- Footer / Ko-fi ---- */
+.footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+.kofi-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: center;
+}
+
+.kofi-link svg {
+  flex: 0 0 auto;
+}
+
 /* ---- Shortcuts ---- */
 .mode-card kbd {
   font-family: var(--font-mono);

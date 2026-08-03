@@ -14,6 +14,11 @@ function openShortcutSettings() {
   void chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
 }
 
+// External link — open in a tab (a bare <a> would navigate the popup away).
+function openKofi() {
+  void chrome.tabs.create({ url: 'https://ko-fi.com/T7A624DAY7' });
+}
+
 type ToastTone = 'info' | 'success' | 'error';
 interface Toast {
   id: number;
@@ -217,9 +222,15 @@ export function App() {
 
           <div class="divider" />
 
-          <button class="link-btn" onClick={openShortcutSettings}>
-            {t('customizeShortcuts')}
-          </button>
+          <div class="footer-row">
+            <button class="link-btn kofi-link" onClick={openKofi} title={t('supportKofiTitle')}>
+              <CoffeeMark />
+              {t('supportKofi')}
+            </button>
+            <button class="link-btn" onClick={openShortcutSettings}>
+              {t('customizeShortcuts')}
+            </button>
+          </div>
         </>
       )}
 
@@ -375,6 +386,12 @@ function SettingsView({
         </label>
       </div>
       {pdfDisabled ? <span class="settings-hint">{t('pdfFullHint')}</span> : null}
+
+      <div class="divider" />
+      <button class="link-btn kofi-link" onClick={openKofi} title={t('supportKofiTitle')}>
+        <CoffeeMark />
+        {t('supportKofi')}
+      </button>
     </div>
   );
 }
@@ -434,6 +451,28 @@ function GearMark() {
     >
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
+
+function CoffeeMark() {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M17 8h1a4 4 0 1 1 0 8h-1" />
+      <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" />
+      <line x1="6" x2="6" y1="2" y2="4" />
+      <line x1="10" x2="10" y1="2" y2="4" />
+      <line x1="14" x2="14" y1="2" y2="4" />
     </svg>
   );
 }
