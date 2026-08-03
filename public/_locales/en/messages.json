@@ -75,6 +75,14 @@
     "message": "Customize keyboard shortcuts",
     "description": "Link that opens Chrome's extension shortcut settings."
   },
+  "supportKofi": {
+    "message": "Support on Ko-fi",
+    "description": "Footer link that opens the project's Ko-fi donation page."
+  },
+  "supportKofiTitle": {
+    "message": "Buy the developer a coffee on Ko-fi",
+    "description": "Tooltip for the Ko-fi donation footer link."
+  },
   "settingsShortcuts": {
     "message": "Shortcuts",
     "description": "Shortcuts row label in settings."

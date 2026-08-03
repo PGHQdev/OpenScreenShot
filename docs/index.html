@@ -803,6 +803,10 @@
         font-size: 13px;
         color: var(--text-2);
       }
+      .footer-kofi {
+        margin-top: var(--s-4);
+        text-align: center;
+      }
 
       @media (prefers-reduced-motion: reduce) {
         * {
@@ -1534,6 +1538,15 @@
         <div class="footer-bottom">
           © <span id="year"></span> OpenScreenShot · All processing is local — no data leaves your
           device.
+        </div>
+        <div class="footer-kofi">
+          <script src="/kofi-widget.js"></script>
+          <script>
+            if (window.kofiwidget2) {
+              kofiwidget2.init('Support me on Ko-fi', '#72a4f2', 'T7A624DAY7');
+              kofiwidget2.draw();
+            }
+          </script>
         </div>
       </div>
     </footer>
