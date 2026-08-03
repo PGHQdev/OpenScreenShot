@@ -295,6 +295,10 @@
       .cta p {
         margin: 0 0 var(--s-4);
       }
+      .page-kofi {
+        margin: var(--s-6) auto;
+        text-align: center;
+      }
 
       footer {
         margin-top: var(--s-8);
@@ -539,6 +543,15 @@
       </div>
     </footer>
 
+    <div class="page-kofi">
+      <script src="/kofi-widget.js"></script>
+      <script>
+        if (window.kofiwidget2) {
+          kofiwidget2.init('Support me on Ko-fi', '#72a4f2', 'T7A624DAY7');
+          kofiwidget2.draw();
+        }
+      </script>
+    </div>
     <script>
       document.getElementById('year').textContent = new Date().getFullYear();
     </script>
