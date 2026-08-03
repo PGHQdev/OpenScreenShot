@@ -8,6 +8,7 @@
 [![Users](https://img.shields.io/chrome-web-store/users/hdabbojjccojlapnfjpdppcpfcnhgmdp?label=users&color=34C759)](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp)
 [![License](https://img.shields.io/badge/license-MIT-34C759)](./LICENSE)
 [![Manifest V3](https://img.shields.io/badge/manifest-v3-0A84FF)](./manifest.json)
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/T7A624DAY7)
 
 ### [**➜ Add to Chrome**](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp) &nbsp;·&nbsp; [Website](https://openscreenshot.app) &nbsp;·&nbsp; [Docs](https://openscreenshot.app/docs/) &nbsp;·&nbsp; [Support](https://openscreenshot.app/support/)
 
@@ -157,6 +158,16 @@ Read the full [Privacy Policy](./PRIVACY.md).
 ## Contributing
 
 Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md). Please follow the [Code of Conduct](./CODE_OF_CONDUCT.md).
+
+<div align="center">
+
+## Support the project
+
+OpenScreenShot is free and open source. If you find it useful, consider supporting its development — every coffee helps!
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/T7A624DAY7)
+
+</div>
 
 ## License
 
