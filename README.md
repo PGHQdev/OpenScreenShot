@@ -53,6 +53,8 @@ Built as a Manifest V3 extension with no servers, no accounts, and no telemetry.
 
 ## Agents & CLI
 
+[![npm](https://img.shields.io/npm/v/openscreenshot-mcp?label=openscreenshot-mcp&color=E8503A)](https://www.npmjs.com/package/openscreenshot-mcp)
+
 `openscreenshot-mcp` is a **separate, optional, local** tool for scripting screenshots from
 the command line or from an AI agent. It drives the Chrome already on your machine (no
 browser download) and runs entirely on your machine — no account, no hosted service. The
