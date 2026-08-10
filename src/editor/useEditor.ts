@@ -27,9 +27,11 @@ import {
 } from './annotations';
 import {
   createShapeDraft,
+  createStepAnnotation,
   createTextAnnotation,
   dist,
   extendDraft,
+  renumberSteps,
   shouldCommit,
   TOOL_LIST,
   type ShapeTool,
@@ -138,10 +140,12 @@ export function useEditor() {
   useEffect(() => {
     const a = annotationsRef.current.find((x) => x.id === selectedId);
     if (!a) return;
-    if (a.type === 'rect' || a.type === 'arrow' || a.type === 'pen') {
+    if (a.type === 'rect' || a.type === 'arrow' || a.type === 'pen' || a.type === 'highlight') {
       setStyle((s) => ({ ...s, color: a.stroke, strokeWidth: a.strokeWidth }));
     } else if (a.type === 'text') {
       setStyle((s) => ({ ...s, color: a.color, fontSize: a.fontSize }));
+    } else if (a.type === 'step') {
+      setStyle((s) => ({ ...s, color: a.color }));
     }
   }, [selectedId]);
 
@@ -185,7 +189,7 @@ export function useEditor() {
   const deleteSelection = useCallback(() => {
     const id = selectedIdRef.current;
     if (!id) return;
-    commit((prev) => prev.filter((x) => x.id !== id));
+    commit((prev) => renumberSteps(prev.filter((x) => x.id !== id)));
     setSelectedId(null);
   }, [commit]);
 
@@ -203,9 +207,9 @@ export function useEditor() {
     (color: string) => {
       setStyle((s) => ({ ...s, color }));
       applyStyleToSelected((a) =>
-        a.type === 'text'
+        a.type === 'text' || a.type === 'step'
           ? { ...a, color }
-          : a.type === 'rect' || a.type === 'arrow' || a.type === 'pen'
+          : a.type === 'rect' || a.type === 'arrow' || a.type === 'pen' || a.type === 'highlight'
             ? { ...a, stroke: color }
             : a,
       );
@@ -217,7 +221,9 @@ export function useEditor() {
     (strokeWidth: number) => {
       setStyle((s) => ({ ...s, strokeWidth }));
       applyStyleToSelected((a) =>
-        a.type === 'rect' || a.type === 'arrow' || a.type === 'pen' ? { ...a, strokeWidth } : a,
+        a.type === 'rect' || a.type === 'arrow' || a.type === 'pen' || a.type === 'highlight'
+          ? { ...a, strokeWidth }
+          : a,
       );
     },
     [applyStyleToSelected],
@@ -227,7 +233,11 @@ export function useEditor() {
     (fontSize: number) => {
       setStyle((s) => ({ ...s, fontSize }));
       applyStyleToSelected((a) =>
-        a.type === 'text' ? { ...a, fontSize, ...measureTextSize(a.text, fontSize) } : a,
+        a.type === 'text'
+          ? { ...a, fontSize, ...measureTextSize(a.text, fontSize) }
+          : a.type === 'step'
+            ? { ...a, r: Math.max(12, fontSize * 0.8) }
+            : a,
       );
     },
     [applyStyleToSelected],
@@ -422,7 +432,7 @@ export function useEditor() {
       }
       const draft = draftRef.current;
       if (!draft) return;
-      if (it.kind === 'pen' && draft.type === 'pen') {
+      if (it.kind === 'pen' && (draft.type === 'pen' || draft.type === 'highlight')) {
         const last = draft.points[draft.points.length - 1];
         if (last && dist(last, p) < 1.5) return; // throttle pen samples
       }
@@ -524,6 +534,13 @@ export function useEditor() {
         startText(p);
         return;
       }
+      if (t === 'step') {
+        const n = annotationsRef.current.filter((a) => a.type === 'step').length + 1;
+        const ann = createStepAnnotation(p, styleRef.current.color, n, styleRef.current.fontSize);
+        commit((prev) => [...prev, ann]);
+        setSelectedId(ann.id);
+        return;
+      }
       if (t === 'crop') {
         cropDraftRef.current = { x: p.x, y: p.y, w: 0, h: 0 };
         c.setCropRect(cropDraftRef.current);
@@ -532,7 +549,7 @@ export function useEditor() {
         window.addEventListener('mouseup', onDragUp);
         return;
       }
-      // Shape tool (rect / arrow / pen / blur).
+      // Shape tool (rect / arrow / pen / highlight / blur).
       const draft = createShapeDraft(
         t as ShapeTool,
         p,
@@ -541,7 +558,7 @@ export function useEditor() {
       );
       draftRef.current = draft;
       c.setDraft(draft);
-      interactionRef.current = { kind: t === 'pen' ? 'pen' : 'shape' };
+      interactionRef.current = { kind: t === 'pen' || t === 'highlight' ? 'pen' : 'shape' };
       window.addEventListener('mousemove', onDragMove);
       window.addEventListener('mouseup', onDragUp);
     },
@@ -614,12 +631,14 @@ export function useEditor() {
     const w = canvas.width;
     const h = canvas.height;
     setAnnotations((prev) =>
-      prev
-        .map((a) => translateAnnotation(a, -n.x, -n.y))
-        .filter((a) => {
-          const b = bbox(a);
-          return b.x < w && b.y < h && b.x + b.w > 0 && b.y + b.h > 0;
-        }),
+      renumberSteps(
+        prev
+          .map((a) => translateAnnotation(a, -n.x, -n.y))
+          .filter((a) => {
+            const b = bbox(a);
+            return b.x < w && b.y < h && b.x + b.w > 0 && b.y + b.h > 0;
+          }),
+      ),
     );
     setSelectedId(null);
     setPast([]);

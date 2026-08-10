@@ -5,6 +5,7 @@
  */
 
 @import '../shared/tokens.css';
+@import '../shared/controls.css';
 
 * {
   box-sizing: border-box;
@@ -49,13 +50,6 @@ body {
 
 .brand-mark {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--r-sm);
-  background: var(--accent);
-  color: #fff;
 }
 
 .brand-name {
@@ -81,7 +75,7 @@ body {
 }
 
 .icon-btn:hover {
-  background: var(--surface-2);
+  background: var(--hover-overlay);
   color: var(--text-1);
 }
 
@@ -143,10 +137,10 @@ body {
 }
 
 .mode-icon {
-  font-size: 20px;
-  line-height: 1;
+  display: inline-flex;
+  justify-content: center;
   width: 24px;
-  text-align: center;
+  color: var(--accent);
   flex: 0 0 auto;
 }
 
@@ -395,9 +389,9 @@ body {
   padding: var(--s-3) var(--s-2) var(--s-2);
 }
 
-.welcome-emoji {
-  font-size: 36px;
-  line-height: 1;
+.welcome-mark {
+  display: flex;
+  justify-content: center;
 }
 
 .welcome-title {
