@@ -153,9 +153,7 @@ export async function buildPdf(pages: PdfPage[]): Promise<Blob> {
   for (let i = 1; i <= objCount; i++) {
     b.ascii(`${String(offsets[i]).padStart(10, '0')} 00000 n \n`);
   }
-  b.ascii(
-    `trailer\n<< /Size ${objCount + 1} /Root 1 0 R >>\nstartxref\n${xrefOff}\n%%EOF\n`,
-  );
+  b.ascii(`trailer\n<< /Size ${objCount + 1} /Root 1 0 R >>\nstartxref\n${xrefOff}\n%%EOF\n`);
 
   return new Blob([b.concat()], { type: 'application/pdf' });
 }
