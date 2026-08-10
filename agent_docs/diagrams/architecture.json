@@ -137,9 +137,7 @@
           "text": "inject stitchTiles",
           "caption": "composite onto one canvas",
           "via": "api",
-          "paths": [
-            "no-dep"
-          ],
+          "paths": ["no-dep"],
           "src": "content/scroll-capture.ts",
           "detail": {
             "why": "Native canvas drawImage \u2014 no image-processing library ships in the extension."
@@ -171,10 +169,7 @@
         {
           "kind": "loop",
           "label": "per remaining tile",
-          "range": [
-            8,
-            9
-          ]
+          "range": [8, 9]
         }
       ]
     },
@@ -250,9 +245,7 @@
           "text": "inject selectRegion()",
           "caption": "mask + dashed box + handles",
           "via": "api",
-          "paths": [
-            "no-dep"
-          ],
+          "paths": ["no-dep"],
           "src": "content/region-select.ts",
           "detail": {
             "why": "Hand-written drag/resize/nudge overlay \u2014 no cropper or selection library.",
@@ -285,9 +278,7 @@
           "text": "inject cropTile()",
           "caption": "native canvas crop",
           "via": "api",
-          "paths": [
-            "no-dep"
-          ]
+          "paths": ["no-dep"]
         },
         {
           "from": "page",
@@ -384,9 +375,7 @@
           "to": "editor.canvas",
           "text": "render annotations",
           "caption": "image-space, native draw",
-          "paths": [
-            "no-dep"
-          ],
+          "paths": ["no-dep"],
           "src": "editor/annotations.ts",
           "detail": {
             "why": "Shapes drawn straight to the 2D context \u2014 no fabric.js / konva canvas library."
@@ -418,9 +407,7 @@
           "to": "editor.pdf",
           "text": "buildPdf(pages)",
           "caption": "place one image XObject per page",
-          "paths": [
-            "no-dep"
-          ],
+          "paths": ["no-dep"],
           "src": "editor/pdf.ts \u2192 editor/pdf-writer.ts",
           "detail": {
             "why": "Replaces jsPDF (~386KB). We only ever place raster images, so a bare writer suffices.",
@@ -431,17 +418,13 @@
           "self": "editor.pdf",
           "text": "encodeImage",
           "caption": "canvas \u2192 DeviceRGB, white-composited",
-          "paths": [
-            "no-dep"
-          ]
+          "paths": ["no-dep"]
         },
         {
           "self": "editor.pdf",
           "text": "deflate",
           "caption": "native CompressionStream",
-          "paths": [
-            "no-dep"
-          ],
+          "paths": ["no-dep"],
           "detail": {
             "why": "/FlateDecode via the platform stream \u2014 no zlib / pako dependency."
           }
@@ -569,10 +552,7 @@
         {
           "kind": "alt",
           "label": "feedback path",
-          "range": [
-            6,
-            9
-          ],
+          "range": [6, 9],
           "segments": [
             {
               "guard": "region \u2014 popup gone"

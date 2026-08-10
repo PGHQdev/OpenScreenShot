@@ -57,7 +57,11 @@ describe('buildPdf', () => {
 
   it('assigns one page + xref entry per input page', async () => {
     const c = fakeCanvas(1, 1, [0, 0, 0, 255]);
-    const page = { widthPt: 10, heightPt: 10, image: { canvas: c, xPt: 0, yPt: 0, wPt: 10, hPt: 10 } };
+    const page = {
+      widthPt: 10,
+      heightPt: 10,
+      image: { canvas: c, xPt: 0, yPt: 0, wPt: 10, hPt: 10 },
+    };
     const text = new TextDecoder('latin1').decode(
       new Uint8Array(await (await buildPdf([page, page])).arrayBuffer()),
     );

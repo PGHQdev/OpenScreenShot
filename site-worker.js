@@ -15,8 +15,7 @@ const KOFI_CACHE = { cf: { cacheEverything: true, cacheTtl: 86400 } };
 async function proxyKofiWidget() {
   const upstream = await fetch(`${KOFI_CDN}/widget/Widget_2.js`, KOFI_CACHE);
   if (!upstream.ok) return new Response('Ko-fi widget unavailable', { status: 502 });
-  const script = (await upstream.text())
-    .replaceAll(`${KOFI_CDN}/`, '/kofi-cdn/');
+  const script = (await upstream.text()).replaceAll(`${KOFI_CDN}/`, '/kofi-cdn/');
   return new Response(script, {
     headers: {
       'content-type': 'application/javascript; charset=utf-8',

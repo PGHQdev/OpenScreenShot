@@ -54,7 +54,12 @@ export function getMetrics(): Metrics {
       viewportHeight: scroller.clientHeight,
       viewportWidth: scroller.clientWidth,
       devicePixelRatio: dpr,
-      container: { x: r.left, y: r.top, width: scroller.clientWidth, height: scroller.clientHeight },
+      container: {
+        x: r.left,
+        y: r.top,
+        width: scroller.clientWidth,
+        height: scroller.clientHeight,
+      },
     };
   }
 

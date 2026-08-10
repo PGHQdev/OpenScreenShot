@@ -1,14 +1,14 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { z } from "zod";
-import { capture, CaptureOptions } from "./capture.js";
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { z } from 'zod';
+import { capture, CaptureOptions } from './capture.js';
 
 export function buildServer(): McpServer {
-  const server = new McpServer({ name: "openscreenshot", version: "0.2.6" });
+  const server = new McpServer({ name: 'openscreenshot', version: '0.2.6' });
   server.registerTool(
-    "capture_screenshot",
+    'capture_screenshot',
     {
-      description: "Capture a PNG screenshot of a public web page locally via the system Chrome.",
+      description: 'Capture a PNG screenshot of a public web page locally via the system Chrome.',
       inputSchema: {
         url: z.string().url(),
         fullPage: z.boolean().optional(),
@@ -19,7 +19,7 @@ export function buildServer(): McpServer {
     async (args) => {
       const png = await capture(CaptureOptions.parse(args));
       return {
-        content: [{ type: "image", data: png.toString("base64"), mimeType: "image/png" }],
+        content: [{ type: 'image', data: png.toString('base64'), mimeType: 'image/png' }],
       };
     },
   );
