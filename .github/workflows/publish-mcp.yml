@@ -25,12 +25,6 @@ jobs:
           cache: npm
           cache-dependency-path: mcp/package-lock.json
 
-      - name: Diagnostics
-        run: |
-          node --version
-          npm --version
-          echo "OIDC request URL present: ${ACTIONS_ID_TOKEN_REQUEST_URL:+yes}"
-
       - name: Install dependencies
         run: npm ci
 
@@ -45,7 +39,7 @@ jobs:
         run: npm run build
 
       - name: Publish to npm
-        run: npm publish --loglevel silly
+        run: npm publish
 
       - name: Dump npm debug log
         if: failure()
