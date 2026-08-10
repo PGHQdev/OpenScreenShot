@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
-import { createHash } from "node:crypto";
-const buf = readFileSync("docs/skills/capture-screenshot.md");
-process.stdout.write("sha256:" + createHash("sha256").update(buf).digest("hex") + "\n");
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+const buf = readFileSync('docs/skills/capture-screenshot.md');
+process.stdout.write('sha256:' + createHash('sha256').update(buf).digest('hex') + '\n');
