@@ -1,5 +1,5 @@
 {
-  "name": "openscreenshot-mcp",
+  "name": "openscreenshot",
   "version": "0.3.0",
   "description": "Local CLI + MCP server for programmatic screenshot capture.",
   "license": "MIT",
@@ -10,6 +10,7 @@
   },
   "type": "module",
   "bin": {
+    "openscreenshot": "dist/bin.js",
     "openscreenshot-mcp": "dist/bin.js"
   },
   "files": [

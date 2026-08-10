@@ -10,7 +10,7 @@ export async function runCli(argv: string[]): Promise<number> {
   const [cmd, url] = argv;
   if (cmd !== 'shot' || !url) {
     process.stderr.write(
-      'usage: openscreenshot-mcp shot <url> [--out file|-] [--full] [--width n] [--height n]\n',
+      'usage: openscreenshot shot <url> [--out file|-] [--full] [--width n] [--height n]\n',
     );
     return 2;
   }

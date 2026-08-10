@@ -12,8 +12,8 @@ if (navigator.modelContext && typeof navigator.modelContext.registerTool === 'fu
             type: 'text',
             text: [
               'OpenScreenShot runs locally (no hosted API).',
-              `CLI: npx openscreenshot-mcp shot ${url} --out shot.png`,
-              'MCP: add { "command": "npx", "args": ["openscreenshot-mcp","serve"] } to your client, then call capture_screenshot.',
+              `CLI: npx openscreenshot shot ${url} --out shot.png`,
+              'MCP: add { "command": "npx", "args": ["openscreenshot","serve"] } to your client, then call capture_screenshot.',
             ].join('\n'),
           },
         ],
