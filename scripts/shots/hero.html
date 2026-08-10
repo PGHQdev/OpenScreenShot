@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>hero — browser demo</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      html,
+      body {
+        width: 1160px;
+        height: 680px;
+        overflow: hidden;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        background: #fffdf8;
+        position: relative;
+      }
+      .browser-top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 44px;
+        padding: 0 16px;
+        background: #f4f2ec;
+        border-bottom: 1px solid #e2ded4;
+      }
+      .browser-top .dots {
+        display: flex;
+        gap: 7px;
+      }
+      .browser-top .dots i {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: #d8d3c8;
+      }
+      .urlbar {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 29px;
+        max-width: 560px;
+        margin: 0 auto;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid #e2ded4;
+        font-size: 12.5px;
+        color: #6d685e;
+      }
+      .page {
+        position: absolute;
+        top: 44px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        overflow: hidden;
+      }
+      .page iframe {
+        width: 1160px;
+        height: 900px;
+        border: 0;
+        display: block;
+      }
+      .sel {
+        position: absolute;
+        left: 235px;
+        top: 108px;
+        width: 690px;
+        height: 372px;
+        border: 2px solid #e8503a;
+        box-shadow: 0 0 0 2000px rgba(27, 26, 23, 0.3);
+      }
+      .sel .h {
+        position: absolute;
+        width: 11px;
+        height: 11px;
+        background: #fff;
+        border: 2px solid #e8503a;
+        border-radius: 2px;
+      }
+      .sel .size {
+        position: absolute;
+        right: -2px;
+        bottom: -38px;
+        background: #1b1a17;
+        color: #fafaf7;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        padding: 7px 11px;
+        border-radius: 7px;
+      }
+      .popup-frame {
+        position: absolute;
+        right: 26px;
+        top: 72px;
+        width: 340px;
+        height: 356px;
+        border-radius: 16px;
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid #dcd7cb;
+        box-shadow:
+          0 2px 6px rgba(27, 26, 23, 0.08),
+          0 32px 64px -20px rgba(27, 26, 23, 0.45);
+      }
+      .popup-frame iframe {
+        border: 0;
+        display: block;
+        width: 340px;
+        height: 426px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="browser-top">
+      <span class="dots"><i></i><i></i><i></i></span>
+      <span class="urlbar">
+        <svg
+          width="11"
+          height="11"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <rect x="4" y="11" width="16" height="10" rx="2" />
+          <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+        </svg>
+        thecoastalalmanac.com
+      </span>
+    </div>
+    <div class="page">
+      <iframe src="sample-page.html" scrolling="no"></iframe>
+      <div class="sel">
+        <span class="h" style="left: -7px; top: -7px"></span>
+        <span class="h" style="left: calc(50% - 6px); top: -7px"></span>
+        <span class="h" style="right: -7px; top: -7px"></span>
+        <span class="h" style="left: -7px; top: calc(50% - 6px)"></span>
+        <span class="h" style="right: -7px; top: calc(50% - 6px)"></span>
+        <span class="h" style="left: -7px; bottom: -7px"></span>
+        <span class="h" style="left: calc(50% - 6px); bottom: -7px"></span>
+        <span class="h" style="right: -7px; bottom: -7px"></span>
+        <span class="size">690 × 372</span>
+      </div>
+    </div>
+    <div class="popup-frame">
+      <iframe src="popup-ui.html" scrolling="no"></iframe>
+    </div>
+  </body>
+</html>

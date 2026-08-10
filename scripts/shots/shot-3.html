@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>shot 3 — editor</title>
+    <link rel="stylesheet" href="poster.css" />
+  </head>
+  <body>
+    <div class="poster">
+      <div class="panel">
+        <div class="wordmark">
+          <img src="brand-mark.svg" width="26" height="26" alt="" />
+          OpenScreenShot
+        </div>
+        <h1>Annotate. <span class="coral">Number.</span> <span class="amber">Highlight.</span></h1>
+        <p class="sub">
+          Every capture opens in a full-screen editor. Mark it up, then copy or export — nothing
+          leaves your browser.
+        </p>
+        <div class="features">
+          <div class="feat">
+            <span class="fi">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M10.5 9.6L12.2 8.2v7.6" />
+              </svg>
+            </span>
+            <div>
+              <b>Step numbers</b><span>Click to place badges — numbering stays in order</span>
+            </div>
+          </div>
+          <div class="feat">
+            <span class="fi amber">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="m9 11-6 6v3h9l3-3" />
+                <path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4l8 8Z" />
+              </svg>
+            </span>
+            <div><b>Highlighter</b><span>Translucent marker keeps text readable</span></div>
+          </div>
+          <div class="feat">
+            <span class="fi ink">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M4 20L20 4M20 4h-6M20 4v6" />
+              </svg>
+            </span>
+            <div>
+              <b>Shapes, arrows, text, blur</b><span>Move, resize, undo/redo — full history</span>
+            </div>
+          </div>
+        </div>
+        <div class="chips">
+          <span class="chip"><span class="dot"></span>Zoom to cursor</span>
+          <span class="chip"><span class="dot"></span>Keyboard-first</span>
+        </div>
+      </div>
+
+      <div class="stage-area">
+        <div class="ui-frame" style="left: 24px; top: 28px; width: 800px; height: 507px">
+          <iframe
+            src="editor-ui.html"
+            scrolling="no"
+            style="width: 1280px; height: 800px; transform: scale(0.634)"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
