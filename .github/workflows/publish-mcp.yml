@@ -45,4 +45,8 @@ jobs:
         run: npm run build
 
       - name: Publish to npm
-        run: npm publish
+        run: npm publish --loglevel silly
+
+      - name: Dump npm debug log
+        if: failure()
+        run: cat /home/runner/.npm/_logs/*.log || true
