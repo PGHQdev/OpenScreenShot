@@ -53,9 +53,9 @@ Built as a Manifest V3 extension with no servers, no accounts, and no telemetry.
 
 ## Agents & CLI
 
-[![npm](https://img.shields.io/npm/v/openscreenshot-mcp?label=openscreenshot-mcp&color=E8503A)](https://www.npmjs.com/package/openscreenshot-mcp)
+[![npm](https://img.shields.io/npm/v/openscreenshot?label=openscreenshot&color=E8503A)](https://www.npmjs.com/package/openscreenshot)
 
-`openscreenshot-mcp` is a **separate, optional, local** tool for scripting screenshots from
+`openscreenshot` (npm) is a **separate, optional, local** tool for scripting screenshots from
 the command line or from an AI agent. It drives the Chrome already on your machine (no
 browser download) and runs entirely on your machine — no account, no hosted service. The
 browser extension above is unaffected: it stays a client-side, no-server capture tool.
@@ -63,7 +63,7 @@ browser extension above is unaffected: it stays a client-side, no-server capture
 **Run it** — no install needed:
 
 ```bash
-npx openscreenshot-mcp shot https://example.com --out shot.png --full
+npx openscreenshot shot https://example.com --out shot.png --full
 ```
 
 Set `CHROME_PATH` if your Chrome can't be found automatically.
@@ -71,7 +71,7 @@ Set `CHROME_PATH` if your Chrome can't be found automatically.
 **MCP server (for agents)** — add to your MCP client config:
 
 ```json
-{ "command": "npx", "args": ["openscreenshot-mcp", "serve"] }
+{ "command": "npx", "args": ["openscreenshot", "serve"] }
 ```
 
 Then call the `capture_screenshot` tool with `{ "url": "https://example.com" }`.

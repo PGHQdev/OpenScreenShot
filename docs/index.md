@@ -18,12 +18,12 @@ Open-source screenshot tool for Chrome — full-page, region, and visible-area c
 
 ## Agents & CLI
 
-`openscreenshot-mcp` is a separate, optional, local CLI/MCP server for scripting screenshots. No account, no hosted service — it drives the Chrome already on your machine.
+`openscreenshot` is a separate, optional, local CLI/MCP server for scripting screenshots. No account, no hosted service — it drives the Chrome already on your machine.
 
 ```bash
-npx openscreenshot-mcp shot https://example.com --out shot.png --full
+npx openscreenshot shot https://example.com --out shot.png --full
 ```
 
-MCP server: `{ "command": "npx", "args": ["openscreenshot-mcp", "serve"] }`, tool `capture_screenshot`.
+MCP server: `{ "command": "npx", "args": ["openscreenshot", "serve"] }`, tool `capture_screenshot`.
 
 Skill: https://openscreenshot.app/skills/capture-screenshot.md
