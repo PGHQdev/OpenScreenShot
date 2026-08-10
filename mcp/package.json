@@ -3,6 +3,11 @@
   "version": "0.3.0",
   "description": "Local CLI + MCP server for programmatic screenshot capture.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PGHQdev/OpenScreenShot.git",
+    "directory": "mcp"
+  },
   "type": "module",
   "bin": {
     "openscreenshot-mcp": "dist/bin.js"
