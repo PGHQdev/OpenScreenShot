@@ -1,6 +1,6 @@
 {
   "name": "openscreenshot-mcp",
-  "version": "0.2.6",
+  "version": "0.3.0",
   "description": "Local CLI + MCP server for programmatic screenshot capture.",
   "license": "MIT",
   "type": "module",
