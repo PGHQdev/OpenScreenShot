@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>shot 1 — overview</title>
+    <link rel="stylesheet" href="poster.css" />
+    <style>
+      .panel {
+        width: 360px;
+        padding-top: 26px;
+      }
+      h1 {
+        font-size: 37px;
+      }
+      .sub {
+        margin-bottom: 16px;
+      }
+      .trust {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        margin-top: 4px;
+      }
+      .trust .feat {
+        padding: 9px 12px;
+      }
+      .chips {
+        padding-top: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="poster">
+      <div class="panel">
+        <div class="wordmark">
+          <img src="brand-mark.svg" width="26" height="26" alt="" />
+          OpenScreenShot
+        </div>
+        <h1>
+          Free. <span class="coral">Open source.</span><br />Private
+          <span class="amber">by design.</span>
+        </h1>
+        <p class="sub">
+          A screenshot extension for Chrome with a full annotation editor — and zero data leaving
+          your device. No account, no telemetry, no third-party services.
+        </p>
+        <div class="features trust">
+          <div class="feat">
+            <span class="fi">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </span>
+            <div>
+              <b>Local processing</b><span>Capture, edit, and export run on your device</span>
+            </div>
+          </div>
+          <div class="feat">
+            <span class="fi ink">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M16 18l6-6-6-6M8 6l-6 6 6 6" />
+              </svg>
+            </span>
+            <div><b>MIT open source</b><span>Reviewed, auditable, community-driven</span></div>
+          </div>
+          <div class="feat">
+            <span class="fi amber">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="4" y="11" width="16" height="10" rx="2" />
+                <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+              </svg>
+            </span>
+            <div>
+              <b>Minimum permissions</b><span>Only what a screenshot needs, nothing more</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage-area">
+        <div
+          class="ui-frame"
+          style="left: 40px; top: 48px; width: 340px; height: 426px; border-radius: 16px"
+        >
+          <iframe src="popup-ui.html" scrolling="no" style="width: 340px; height: 426px"></iframe>
+        </div>
+        <div class="ui-frame" style="left: 218px; top: 262px; width: 330px; height: 320px">
+          <iframe
+            src="editor-ui.html"
+            scrolling="no"
+            style="width: 1280px; height: 800px; transform: scale(0.4)"
+          ></iframe>
+        </div>
+        <div class="badge-note" style="left: 60px; bottom: 24px">
+          <span class="dot"></span> Capture · Annotate · Export
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

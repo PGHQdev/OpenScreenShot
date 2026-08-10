@@ -1,0 +1,203 @@
+/* Shared poster styles for the marketing shots (900x563). */
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+html,
+body {
+  width: 900px;
+  height: 563px;
+  overflow: hidden;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: #f2f0ea;
+  color: #1b1a17;
+  position: relative;
+}
+/* faint capture-bracket motif echoing the icon */
+.bracket-motif {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.08;
+}
+.poster {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.panel {
+  width: 312px;
+  flex: 0 0 auto;
+  padding: 34px 30px;
+  display: flex;
+  flex-direction: column;
+}
+.wordmark {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  margin-bottom: 26px;
+}
+h1 {
+  font-size: 35px;
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  margin-bottom: 14px;
+}
+h1 .coral {
+  color: #d43f29;
+}
+h1 .amber {
+  color: #b06f00;
+}
+.sub {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #6d685e;
+  margin-bottom: 22px;
+}
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.feat {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  background: #fafaf7;
+  border: 1px solid #e2ded4;
+  border-radius: 12px;
+  padding: 11px 13px;
+}
+.feat .fi {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: #e8503a;
+  color: #fff;
+}
+.feat .fi.amber {
+  background: #f5a623;
+  color: #1b1a17;
+}
+.feat .fi.ink {
+  background: #1b1a17;
+  color: #fafaf7;
+}
+.feat b {
+  display: block;
+  font-size: 13px;
+  letter-spacing: -0.01em;
+}
+.feat span {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #6d685e;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 18px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #55503f;
+  background: #fafaf7;
+  border: 1px solid #e2ded4;
+  border-radius: 999px;
+  padding: 5px 11px;
+}
+.chip .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e8503a;
+}
+.stage-area {
+  flex: 1 1 auto;
+  position: relative;
+  overflow: hidden;
+}
+.ui-frame {
+  position: absolute;
+  border: 1px solid #dcd7cb;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow:
+    0 2px 6px rgba(27, 26, 23, 0.06),
+    0 24px 48px -18px rgba(27, 26, 23, 0.28);
+}
+.ui-frame iframe {
+  border: 0;
+  display: block;
+  transform-origin: top left;
+}
+/* flat browser chrome for page mocks */
+.browser-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 14px;
+  background: #f4f2ec;
+  border-bottom: 1px solid #e2ded4;
+}
+.browser-top .dots {
+  display: flex;
+  gap: 6px;
+}
+.browser-top .dots i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d8d3c8;
+}
+.urlbar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #e2ded4;
+  font-size: 11.5px;
+  color: #6d685e;
+}
+.badge-note {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #1b1a17;
+  color: #fafaf7;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 7px 13px;
+  box-shadow: 0 10px 24px -8px rgba(27, 26, 23, 0.4);
+}
+.badge-note .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f5a623;
+}
