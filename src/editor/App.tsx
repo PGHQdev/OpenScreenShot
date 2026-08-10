@@ -5,6 +5,7 @@ import { IMAGE_FORMATS, type ImageFormat } from './export';
 import type { PdfOptions } from './pdf';
 import { COLOR_PALETTE, STROKE_WIDTHS } from './annotations';
 import { arrowNav, getFocusable, trapFocus } from './focus';
+import { BrandMark } from '../shared/BrandMark';
 
 type DialogFormat = ImageFormat | 'pdf';
 
@@ -45,19 +46,7 @@ export function App() {
       <header class="topbar">
         <div class="topbar-brand">
           <span class="brand-mark" aria-hidden="true">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-              <circle cx="12" cy="13" r="4" />
-            </svg>
+            <BrandMark size={22} />
           </span>
           <span class="brand-name">OpenScreenShot</span>
           {ed.capture ? <span class="brand-mode">{labelForMode(ed.capture.mode)}</span> : null}
@@ -187,8 +176,8 @@ export function App() {
           {!ed.loading && !ed.capture && !ed.error ? (
             <div class="overlay-msg">
               <div class="empty">
-                <div class="empty-emoji" aria-hidden="true">
-                  🖼️
+                <div class="empty-icon" aria-hidden="true">
+                  <IconImage />
                 </div>
                 <h2>Nothing to edit yet</h2>
                 <p>
@@ -200,8 +189,8 @@ export function App() {
           {ed.error ? (
             <div class="overlay-msg">
               <div class="empty">
-                <div class="empty-emoji" aria-hidden="true">
-                  ⚠️
+                <div class="empty-icon empty-icon-error" aria-hidden="true">
+                  <IconAlert />
                 </div>
                 <h2>Something went wrong</h2>
                 <p>{ed.error}</p>
@@ -228,7 +217,8 @@ export function App() {
 
 function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
   const sel = ed.selectedAnnotation;
-  const showFontSize = ed.tool === 'text' || sel?.type === 'text';
+  const showFontSize =
+    ed.tool === 'text' || ed.tool === 'step' || sel?.type === 'text' || sel?.type === 'step';
   return (
     <div
       class="stylebar"
@@ -450,6 +440,7 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
               <label class="check-label">
                 <input
                   type="checkbox"
+                  class="switch"
                   checked={pdfMultiPage && !isFull}
                   disabled={isFull}
                   onChange={(e) => setPdfMultiPage((e.target as HTMLInputElement).checked)}
@@ -587,6 +578,20 @@ function ToolIcon({ id }: { id: Tool }) {
           <path d="M16.5 3.5l4 4L7 21H3v-4z" />
         </svg>
       );
+    case 'highlight':
+      return (
+        <svg {...common}>
+          <path d="m9 11-6 6v3h9l3-3" />
+          <path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4l8 8Z" />
+        </svg>
+      );
+    case 'step':
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="9" />
+          <path d="M10.5 9.6L12.2 8.2v7.6" />
+        </svg>
+      );
     case 'text':
       return (
         <svg {...common}>
@@ -606,6 +611,43 @@ function ToolIcon({ id }: { id: Tool }) {
         </svg>
       );
   }
+}
+
+function IconImage() {
+  return (
+    <svg
+      width="40"
+      height="40"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <path d="M21 15l-5-5L5 21" />
+    </svg>
+  );
+}
+
+function IconAlert() {
+  return (
+    <svg
+      width="40"
+      height="40"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <path d="M12 9v4M12 17h.01" />
+    </svg>
+  );
 }
 
 function IconUndo() {
@@ -678,6 +720,10 @@ function hintForTool(tool: Tool): string {
       return 'Drag to draw an arrow';
     case 'pen':
       return 'Drag to draw freehand';
+    case 'highlight':
+      return 'Drag to highlight — marker stays translucent';
+    case 'step':
+      return 'Click to place a numbered badge · numbers stay in order';
     case 'text':
       return 'Click to place text, then type';
     case 'blur':

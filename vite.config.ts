@@ -19,6 +19,9 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     target: 'es2022',
+    // chrome-extension:// pages discard crossorigin modulepreloads ("cross-world
+    // extension resource mismatch" warning), so emitting them is pure noise.
+    modulePreload: false,
   },
   test: {
     environment: 'node',

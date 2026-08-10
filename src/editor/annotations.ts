@@ -74,8 +74,30 @@ export interface BlurAnnotation extends BaseAnnotation {
   strength: number;
 }
 
+export interface HighlightAnnotation extends BaseAnnotation {
+  type: 'highlight';
+  points: Point[];
+  stroke: string;
+  strokeWidth: number;
+}
+
+export interface StepAnnotation extends BaseAnnotation {
+  type: 'step';
+  x: number;
+  y: number;
+  r: number;
+  n: number;
+  color: string;
+}
+
 export type Annotation =
-  RectAnnotation | ArrowAnnotation | PenAnnotation | TextAnnotation | BlurAnnotation;
+  | RectAnnotation
+  | ArrowAnnotation
+  | PenAnnotation
+  | TextAnnotation
+  | BlurAnnotation
+  | HighlightAnnotation
+  | StepAnnotation;
 
 export type AnnotationType = Annotation['type'];
 
@@ -145,7 +167,10 @@ export function bbox(a: Annotation): Rect {
         w: Math.abs(a.x2 - a.x1),
         h: Math.abs(a.y2 - a.y1),
       };
-    case 'pen': {
+    case 'step':
+      return { x: a.x - a.r, y: a.y - a.r, w: a.r * 2, h: a.r * 2 };
+    case 'pen':
+    case 'highlight': {
       if (a.points.length === 0) return { x: 0, y: 0, w: 0, h: 0 };
       let minX = Infinity;
       let minY = Infinity;
@@ -235,6 +260,12 @@ export function drawAnnotation(
     case 'blur':
       drawBlur(ctx, a, image, blurCache);
       break;
+    case 'highlight':
+      drawHighlight(ctx, a);
+      break;
+    case 'step':
+      drawStep(ctx, a);
+      break;
   }
 }
 
@@ -297,6 +328,50 @@ function drawPen(ctx: CanvasRenderingContext2D, a: PenAnnotation): void {
   } else {
     ctx.stroke();
   }
+}
+
+function drawHighlight(ctx: CanvasRenderingContext2D, a: HighlightAnnotation): void {
+  if (a.points.length === 0) return;
+  ctx.lineWidth = Math.max(14, a.strokeWidth * 3);
+  ctx.strokeStyle = a.stroke;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  // Multiply keeps the underlying text readable, like a real marker.
+  ctx.globalAlpha = 0.4;
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.beginPath();
+  ctx.moveTo(a.points[0].x, a.points[0].y);
+  for (let i = 1; i < a.points.length; i++) {
+    ctx.lineTo(a.points[i].x, a.points[i].y);
+  }
+  ctx.stroke();
+  // Alpha/composite are restored by the controller's save/restore wrapper.
+}
+
+/** Dark text/ring on light badge colors (white, yellow), white otherwise. */
+function badgeContrast(hex: string): string {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return '#ffffff';
+  const v = parseInt(m[1], 16);
+  const lum = 0.299 * ((v >> 16) & 255) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255);
+  return lum > 200 ? '#1d1d1f' : '#ffffff';
+}
+
+function drawStep(ctx: CanvasRenderingContext2D, a: StepAnnotation): void {
+  const contrast = badgeContrast(a.color);
+  ctx.fillStyle = a.color;
+  ctx.beginPath();
+  ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.lineWidth = Math.max(2, a.r * 0.1);
+  ctx.strokeStyle = contrast;
+  ctx.stroke();
+  ctx.fillStyle = contrast;
+  const fontSize = a.n >= 10 ? a.r : a.r * 1.2;
+  ctx.font = `700 ${fontSize}px ${FONT_STACK}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(String(a.n), a.x, a.y + a.r * 0.05);
 }
 
 function drawText(ctx: CanvasRenderingContext2D, a: TextAnnotation): void {
@@ -370,8 +445,10 @@ export function translateAnnotation(a: Annotation, dx: number, dy: number): Anno
     case 'arrow':
       return { ...a, x1: a.x1 + dx, y1: a.y1 + dy, x2: a.x2 + dx, y2: a.y2 + dy };
     case 'pen':
+    case 'highlight':
       return { ...a, points: a.points.map((p) => ({ x: p.x + dx, y: p.y + dy })) };
     case 'text':
+    case 'step':
       return { ...a, x: a.x + dx, y: a.y + dy };
   }
 }
@@ -432,6 +509,8 @@ export function getHandles(a: Annotation): HandlePos[] {
       ];
     case 'text':
     case 'pen':
+    case 'highlight':
+    case 'step':
       return [];
   }
 }
