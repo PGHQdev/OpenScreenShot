@@ -1,6 +1,7 @@
 /* OpenScreenShot editor styles. Tokens come from src/shared/tokens.css. */
 
 @import '../shared/tokens.css';
+@import '../shared/controls.css';
 
 * {
   box-sizing: border-box;
@@ -100,7 +101,7 @@ body {
     border-color 120ms ease-out;
 }
 .width-btn:hover {
-  background: var(--surface-2);
+  background: var(--hover-overlay);
 }
 .width-btn[aria-pressed='true'] {
   background: var(--accent-subtle);
@@ -137,7 +138,6 @@ body {
 
 .brand-mark {
   display: inline-flex;
-  color: var(--accent);
 }
 
 .brand-name {
@@ -198,7 +198,7 @@ body {
 }
 
 .icon-btn:hover {
-  background: var(--surface-3);
+  background: var(--hover-overlay);
 }
 
 .text-btn {
@@ -214,7 +214,7 @@ body {
 }
 
 .text-btn:hover {
-  background: var(--surface-3);
+  background: var(--hover-overlay);
 }
 
 .icon-btn:focus-visible,
@@ -344,7 +344,7 @@ body {
 }
 
 .tool-btn:hover {
-  background: var(--surface-2);
+  background: var(--hover-overlay);
   color: var(--text-1);
 }
 
@@ -625,9 +625,15 @@ body {
   max-width: 320px;
 }
 
-.empty-emoji {
-  font-size: 40px;
+.empty-icon {
+  display: flex;
+  justify-content: center;
   margin-bottom: var(--s-2);
+  color: var(--text-3);
+}
+
+.empty-icon-error {
+  color: var(--danger);
 }
 
 .empty h2 {

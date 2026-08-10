@@ -29,6 +29,11 @@ export async function getLastCapture(): Promise<LastCapture | null> {
   return (stored[LAST_CAPTURE_KEY] as LastCapture | undefined) ?? null;
 }
 
+/** True if a capture is stashed — checks size only, never loads the image. */
+export async function hasLastCapture(): Promise<boolean> {
+  return (await chrome.storage.local.getBytesInUse(LAST_CAPTURE_KEY)) > 0;
+}
+
 /** Clear the stashed capture (frees storage once the editor has loaded it). */
 export async function clearLastCapture(): Promise<void> {
   await chrome.storage.local.remove(LAST_CAPTURE_KEY);

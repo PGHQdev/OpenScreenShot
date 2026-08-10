@@ -11,12 +11,14 @@ import {
   genId,
   type Annotation,
   type Point,
+  type StepAnnotation,
   type TextAnnotation,
 } from './annotations';
 
-export type Tool = 'select' | 'rect' | 'arrow' | 'pen' | 'text' | 'blur' | 'crop';
+export type Tool =
+  'select' | 'rect' | 'arrow' | 'pen' | 'highlight' | 'text' | 'step' | 'blur' | 'crop';
 
-export type ShapeTool = 'rect' | 'arrow' | 'pen' | 'blur';
+export type ShapeTool = 'rect' | 'arrow' | 'pen' | 'highlight' | 'blur';
 
 export interface ToolDef {
   id: Tool;
@@ -29,7 +31,9 @@ export const TOOL_LIST: ToolDef[] = [
   { id: 'rect', label: 'Rectangle', shortcut: 'R' },
   { id: 'arrow', label: 'Arrow', shortcut: 'A' },
   { id: 'pen', label: 'Pen', shortcut: 'P' },
+  { id: 'highlight', label: 'Highlighter', shortcut: 'H' },
   { id: 'text', label: 'Text', shortcut: 'T' },
+  { id: 'step', label: 'Step number', shortcut: 'S' },
   { id: 'blur', label: 'Blur', shortcut: 'B' },
   { id: 'crop', label: 'Crop', shortcut: 'C' },
 ];
@@ -74,6 +78,14 @@ export function createShapeDraft(
         stroke,
         strokeWidth,
       };
+    case 'highlight':
+      return {
+        id,
+        type: 'highlight',
+        points: [p],
+        stroke,
+        strokeWidth,
+      };
     case 'blur':
       return { id, type: 'blur', x: p.x, y: p.y, w: 0, h: 0, strength: DEFAULT_BLUR_STRENGTH };
   }
@@ -92,9 +104,11 @@ export function extendDraft(draft: Annotation, p: Point): void {
       draft.y2 = p.y;
       break;
     case 'pen':
+    case 'highlight':
       draft.points.push(p);
       break;
     case 'text':
+    case 'step':
       break;
   }
 }
@@ -108,9 +122,12 @@ export function shouldCommit(draft: Annotation): boolean {
     case 'arrow':
       return Math.hypot(draft.x2 - draft.x1, draft.y2 - draft.y1) > 3;
     case 'pen':
+    case 'highlight':
       return draft.points.length >= 2;
     case 'text':
       return false;
+    case 'step':
+      return true;
   }
 }
 
@@ -127,6 +144,30 @@ export function createTextAnnotation(p: Point, color: string, fontSize: number):
     width: 0,
     height: 0,
   };
+}
+
+/** Create a numbered step badge at `p`. Radius scales with the font-size preset. */
+export function createStepAnnotation(
+  p: Point,
+  color: string,
+  n: number,
+  fontSize: number,
+): StepAnnotation {
+  return {
+    id: genId(),
+    type: 'step',
+    x: p.x,
+    y: p.y,
+    r: Math.max(12, fontSize * 0.8),
+    n,
+    color,
+  };
+}
+
+/** Renumber step badges in list order (call after deletes so numbering stays dense). */
+export function renumberSteps(anns: Annotation[]): Annotation[] {
+  let n = 0;
+  return anns.map((a) => (a.type === 'step' ? { ...a, n: ++n } : a));
 }
 
 /** Distance between two points. */

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'preact/hooks';
 import type { CaptureMode, ExportFormat, PopupMessage, Settings } from '../shared/types';
 import { DEFAULT_SETTINGS } from '../shared/types';
-import { getSettings, setSettings } from '../shared/storage';
+import { getSettings, hasLastCapture, setSettings } from '../shared/storage';
 import { onPopupMessage, sendToBackground } from '../shared/messaging';
+import { BrandMark } from '../shared/BrandMark';
 
 // i18n helper
 function t(id: string): string {
@@ -19,6 +20,12 @@ function openKofi() {
   void chrome.tabs.create({ url: 'https://ko-fi.com/T7A624DAY7' });
 }
 
+// Reopen the stashed capture in the editor (the stash survives editor loads).
+function openEditor() {
+  void chrome.tabs.create({ url: chrome.runtime.getURL('src/editor/index.html') });
+  window.close();
+}
+
 type ToastTone = 'info' | 'success' | 'error';
 interface Toast {
   id: number;
@@ -28,7 +35,6 @@ interface Toast {
 
 interface ModeDef {
   id: CaptureMode;
-  icon: string;
   command: string;
   titleKey: string;
   subtitleKey: string;
@@ -37,21 +43,18 @@ interface ModeDef {
 const MODES: ModeDef[] = [
   {
     id: 'full-page',
-    icon: '📄',
     command: 'capture-full-page',
     titleKey: 'modeFullPage',
     subtitleKey: 'modeFullPageSub',
   },
   {
     id: 'visible',
-    icon: '👁',
     command: 'capture-visible',
     titleKey: 'modeVisible',
     subtitleKey: 'modeVisibleSub',
   },
   {
     id: 'region',
-    icon: '✂️',
     command: 'capture-region',
     titleKey: 'modeRegion',
     subtitleKey: 'modeRegionSub',
@@ -66,6 +69,7 @@ export function App() {
   const [progress, setProgress] = useState<number | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [shortcuts, setShortcuts] = useState<Record<string, string>>({});
+  const [hasStash, setHasStash] = useState(false);
 
   // Load settings + apply theme on mount.
   useEffect(() => {
@@ -80,7 +84,19 @@ export function App() {
       for (const c of cmds) if (c.name && c.shortcut) map[c.name] = c.shortcut;
       setShortcuts(map);
     });
+    void hasLastCapture().then(setHasStash);
   }, []);
+
+  // 1/2/3 fire a capture while the mode list is showing.
+  useEffect(() => {
+    if (showSettings || showWelcome) return;
+    const onKey = (e: KeyboardEvent) => {
+      const i = ['1', '2', '3'].indexOf(e.key);
+      if (i !== -1) capture(MODES[i].id);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showSettings, showWelcome, busy]);
 
   // Listen for background progress / completion / errors.
   useEffect(() => {
@@ -160,7 +176,9 @@ export function App() {
         ) : (
           <>
             <div class="brand">
-              <CameraMark />
+              <span class="brand-mark" aria-hidden="true">
+                <BrandMark size={28} />
+              </span>
               <span class="brand-name">OpenScreenShot</span>
             </div>
             <button
@@ -182,7 +200,7 @@ export function App() {
       ) : (
         <>
           <nav class="modes" aria-label={t('captureModesAria')}>
-            {MODES.map((m) => {
+            {MODES.map((m, i) => {
               const isBusy = busy === m.id;
               return (
                 <button
@@ -193,7 +211,7 @@ export function App() {
                   onClick={() => capture(m.id)}
                 >
                   <span class="mode-icon" aria-hidden="true">
-                    {m.icon}
+                    <ModeIcon id={m.id} />
                   </span>
                   <span class="mode-text">
                     <span class="mode-title">{t(m.titleKey)}</span>
@@ -207,9 +225,9 @@ export function App() {
                   </span>
                   {isBusy ? (
                     <span class="spinner" aria-label={t('capturing')} />
-                  ) : shortcuts[m.command] ? (
-                    <kbd>{shortcuts[m.command]}</kbd>
-                  ) : null}
+                  ) : (
+                    <kbd>{shortcuts[m.command] ?? String(i + 1)}</kbd>
+                  )}
                   {isBusy && m.id === 'full-page' && progress != null ? (
                     <div class="progress" aria-hidden="true">
                       <div class="progress-fill" style={{ width: `${progress}%` }} />
@@ -223,6 +241,11 @@ export function App() {
           <div class="divider" />
 
           <div class="footer-row">
+            {hasStash ? (
+              <button class="link-btn" onClick={openEditor}>
+                {t('reopenLast')}
+              </button>
+            ) : null}
             <button class="link-btn kofi-link" onClick={openKofi} title={t('supportKofiTitle')}>
               <CoffeeMark />
               {t('supportKofi')}
@@ -364,6 +387,7 @@ function SettingsView({
         <label class="check-label">
           <input
             type="checkbox"
+            class="switch"
             checked={settings.pdfMultiPage && !pdfDisabled}
             disabled={pdfDisabled}
             onChange={(e) => onChange({ pdfMultiPage: (e.target as HTMLInputElement).checked })}
@@ -399,8 +423,8 @@ function SettingsView({
 function Welcome({ onDone }: { onDone: () => void }) {
   return (
     <div class="welcome">
-      <div class="welcome-emoji" aria-hidden="true">
-        🎉
+      <div class="welcome-mark" aria-hidden="true">
+        <BrandMark size={44} />
       </div>
       <h2 class="welcome-title">{t('welcomeTitle')}</h2>
       <p class="welcome-lede">{t('welcomeLede')}</p>
@@ -417,24 +441,39 @@ function Welcome({ onDone }: { onDone: () => void }) {
   );
 }
 
-function CameraMark() {
-  return (
-    <span class="brand-mark" aria-hidden="true">
-      <svg
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-        <circle cx="12" cy="13" r="4" />
-      </svg>
-    </span>
-  );
+function ModeIcon({ id }: { id: CaptureMode }) {
+  const common = {
+    width: 20,
+    height: 20,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    'stroke-width': 2,
+    'stroke-linecap': 'round' as const,
+    'stroke-linejoin': 'round' as const,
+  };
+  switch (id) {
+    case 'full-page':
+      return (
+        <svg {...common}>
+          <rect x="6" y="3" width="12" height="18" rx="2" />
+          <path d="M9 8h6M9 12h6M9 16h4" />
+        </svg>
+      );
+    case 'visible':
+      return (
+        <svg {...common}>
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+      );
+    case 'region':
+      return (
+        <svg {...common}>
+          <rect x="4" y="5" width="16" height="14" rx="2" stroke-dasharray="4 3" />
+        </svg>
+      );
+  }
 }
 
 function GearMark() {
