@@ -5,6 +5,6 @@
   "assets": {
     "directory": "./docs",
     "binding": "ASSETS",
-    "run_worker_first": ["/", "/kofi-widget.js", "/kofi-cdn/*"],
+    "run_worker_first": ["/", "/api/*", "/kofi-widget.js", "/kofi-cdn/*"],
   },
 }
