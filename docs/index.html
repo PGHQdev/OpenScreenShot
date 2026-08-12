@@ -9,12 +9,15 @@
       content="Free, open-source Chrome extension for full-page, region, and visible-area screenshots. Built-in annotation editor and export to PNG, JPEG, WebP, or PDF. All processing stays in your browser."
     />
     <link rel="canonical" href="https://openscreenshot.app/" />
-    <meta name="theme-color" content="#171512" />
+    <meta name="theme-color" content="#f5f3ee" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="OpenScreenShot" />
-    <meta property="og:title" content="OpenScreenShot — Capture anything. Edit it instantly." />
+    <meta
+      property="og:title"
+      content="OpenScreenShot — Capture, annotate and export without uploading anything"
+    />
     <meta
       property="og:description"
       content="Full-page, visible-area, and region screenshots for Chrome — with annotation, blur, crop, and export built in. Free, open source, private."
@@ -26,7 +29,10 @@
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="OpenScreenShot — Capture anything. Edit it instantly." />
+    <meta
+      name="twitter:title"
+      content="OpenScreenShot — Capture, annotate and export without uploading anything"
+    />
     <meta
       name="twitter:description"
       content="Full-page, visible-area, and region screenshots for Chrome — with annotation, blur, crop, and export built in. Free, open source, private."
@@ -72,34 +78,39 @@
         --s-6: 32px;
         --s-7: 48px;
         --s-8: 72px;
-        --s-9: 112px;
         --r-sm: 6px;
         --r-md: 10px;
         --r-lg: 14px;
-        --r-xl: 18px;
         --font:
           -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'Helvetica Neue', Arial,
           sans-serif;
+        /* Single swap point if a self-hosted display face is added later. */
+        --font-display: var(--font);
         --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
 
-        --ground: #171512;
-        --surface-1: #1e1b17;
-        --surface-2: #26221c;
-        --surface-3: #2e2a22;
-        --border: #322d25;
-        --border-strong: #464034;
-        --text-1: #f2efe6;
-        --text-2: #b0a998;
-        --text-3: #7d766a;
+        /* Light band — matches the extension's own surfaces */
+        --paper: #f5f3ee;
+        --paper-raised: #fffefb;
+        --ink: #171512;
+        --ink-2: #514c44;
+        --ink-3: #6f6a61;
+        --rule: #dfdad0;
+
+        /* Dark band */
+        --ground: #141414;
+        --surface-1: #1c1c1c;
+        --surface-2: #242424;
+        --border: #353535;
+        --border-strong: #464646;
+        --text-1: #f5f3ee;
+        --text-2: #b8b5ae;
+        --text-3: #918e87;
+
+        /* Interaction and annotation only */
         --accent: #f26b57;
-        --accent-hover: #f58170;
         --accent-deep: #e8503a;
-        --accent-subtle: rgba(242, 107, 87, 0.12);
         --amber: #f5a623;
-        --good: #4db380;
-        --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.4);
-        --shadow-lg: 0 40px 90px -30px rgba(0, 0, 0, 0.75);
-        --max-w: 1180px;
+        --max-w: 1120px;
       }
 
       * {
@@ -110,24 +121,16 @@
       }
       body {
         margin: 0;
-        padding: 0;
         font-family: var(--font);
         font-size: 16.5px;
-        line-height: 1.65;
+        line-height: 1.6;
         color: var(--text-1);
         background: var(--ground);
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
       }
-      a {
-        color: var(--accent);
-        text-decoration: none;
-      }
-      a:hover {
-        color: var(--accent-hover);
-        text-decoration: underline;
-      }
-      img {
+      img,
+      video {
         max-width: 100%;
         height: auto;
         display: block;
@@ -135,9 +138,11 @@
       h1,
       h2,
       h3 {
-        line-height: 1.12;
-        letter-spacing: -0.025em;
+        font-family: var(--font-display);
+        line-height: 1.1;
+        letter-spacing: -0.028em;
         text-wrap: balance;
+        font-weight: 700;
       }
       .container {
         max-width: var(--max-w);
@@ -149,28 +154,29 @@
         outline-offset: 3px;
         border-radius: var(--r-sm);
       }
-      .eyebrow {
-        display: block;
-        font-family: var(--mono);
-        font-size: 12.5px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.14em;
-        color: var(--accent);
-        margin-bottom: var(--s-4);
-      }
 
-      /* Reveal on scroll (JS-gated so content shows without JS) */
-      .js .reveal {
-        opacity: 0;
-        transform: translateY(16px);
-        transition:
-          opacity 0.55s ease,
-          transform 0.55s ease;
+      /* Bands */
+      .band-light {
+        background: var(--paper);
+        color: var(--ink);
       }
-      .js .reveal.in {
-        opacity: 1;
-        transform: none;
+      .band-dark {
+        background: var(--ground);
+        color: var(--text-1);
+      }
+      .band-dark a:not(.btn) {
+        color: var(--accent);
+      }
+      .band-dark section {
+        padding: var(--s-8) 0;
+      }
+      @media (max-width: 700px) {
+        .band-dark section {
+          padding: var(--s-7) 0;
+        }
+      }
+      .band-dark + .band-dark section {
+        border-top: 1px solid var(--border);
       }
 
       /* Nav */
@@ -178,16 +184,15 @@
         position: sticky;
         top: 0;
         z-index: 50;
-        background: color-mix(in srgb, var(--ground) 88%, transparent);
-        backdrop-filter: saturate(140%) blur(12px);
-        -webkit-backdrop-filter: saturate(140%) blur(12px);
-        border-bottom: 1px solid var(--border);
+        background: var(--paper);
+        border-bottom: 1px solid var(--rule);
       }
       nav {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        height: 60px;
+        gap: var(--s-4);
+        height: 58px;
         max-width: var(--max-w);
         margin: 0 auto;
         padding: 0 var(--s-5);
@@ -197,19 +202,15 @@
         align-items: center;
         gap: var(--s-2);
         font-weight: 700;
-        font-size: 16px;
-        color: var(--text-1);
+        font-size: 15.5px;
+        color: var(--ink);
         text-decoration: none;
+        letter-spacing: -0.015em;
       }
-      .nav-brand:hover {
-        color: var(--text-1);
-        text-decoration: none;
-      }
-      .nav-brand .logo-badge {
-        display: grid;
-        place-items: center;
-        width: 28px;
-        height: 28px;
+      .nav-right {
+        display: flex;
+        align-items: center;
+        gap: var(--s-5);
       }
       .nav-links {
         display: flex;
@@ -218,28 +219,82 @@
         font-size: 14px;
       }
       .nav-links a {
-        color: var(--text-2);
+        color: var(--ink-2);
         font-weight: 500;
         text-decoration: none;
       }
       .nav-links a:hover {
-        color: var(--text-1);
-        text-decoration: none;
+        color: var(--ink);
       }
-      @media (max-width: 720px) {
-        .nav-links .hide-sm {
+      .nav-cta {
+        display: inline-flex;
+        align-items: center;
+        height: 34px;
+        padding: 0 14px;
+        border: 1px solid rgba(23, 21, 18, 0.3);
+        border-radius: var(--r-sm);
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ink);
+        text-decoration: none;
+        transition:
+          background 140ms ease,
+          color 140ms ease;
+      }
+      .nav-cta:hover {
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .nav-menu {
+        display: none;
+      }
+      .nav-menu summary {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border: 1px solid rgba(23, 21, 18, 0.3);
+        border-radius: var(--r-sm);
+        color: var(--ink);
+        cursor: pointer;
+        list-style: none;
+      }
+      .nav-menu summary::-webkit-details-marker {
+        display: none;
+      }
+      .nav-panel {
+        display: none;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 58px;
+        gap: 2px;
+        padding: var(--s-3) var(--s-5) var(--s-4);
+        background: var(--paper);
+        border-bottom: 1px solid var(--rule);
+      }
+      .nav-menu[open] .nav-panel {
+        display: grid;
+      }
+      .nav-panel a {
+        padding: 10px 0;
+        font-size: 15px;
+        color: var(--ink-2);
+        text-decoration: none;
+        border-bottom: 1px solid var(--rule);
+      }
+      .nav-panel a:last-child {
+        border-bottom: 0;
+      }
+      @media (max-width: 760px) {
+        .nav-links {
           display: none;
         }
-        .nav-links {
+        .nav-menu {
+          display: block;
+        }
+        .nav-right {
           gap: var(--s-3);
-        }
-      }
-      @media (max-width: 480px) {
-        nav {
-          padding: 0 var(--s-4);
-        }
-        .nav-brand {
-          font-size: 15px;
         }
       }
 
@@ -249,85 +304,62 @@
         align-items: center;
         justify-content: center;
         gap: var(--s-2);
-        height: 48px;
-        padding: 0 24px;
+        height: 46px;
+        padding: 0 22px;
         border: 1px solid transparent;
         border-radius: var(--r-md);
         font-family: inherit;
         font-size: 15.5px;
         font-weight: 600;
-        cursor: pointer;
+        text-decoration: none;
         white-space: nowrap;
         transition:
-          transform 100ms ease,
           background 150ms ease,
-          border-color 150ms ease;
+          border-color 150ms ease,
+          color 150ms ease;
       }
       .btn svg {
         flex: none;
       }
-      .btn-primary {
-        background: var(--accent);
-        color: #fff;
+      .btn-ink {
+        background: var(--ink);
+        color: var(--paper);
       }
-      .btn-primary:hover {
-        background: var(--accent-hover);
-        color: #fff;
-        transform: translateY(-1px);
-        text-decoration: none;
+      .btn-ink:hover {
+        background: #000;
+        color: var(--paper);
       }
-      .btn-primary:active {
-        background: var(--accent-deep);
-        transform: translateY(0);
+      .btn-quiet {
+        color: var(--ink);
+        border-color: rgba(23, 21, 18, 0.22);
       }
-      .btn-secondary {
-        background: var(--surface-1);
-        color: var(--text-1);
-        border-color: var(--border-strong);
+      .btn-quiet:hover {
+        border-color: var(--ink);
+        background: rgba(23, 21, 18, 0.04);
       }
-      .btn-secondary:hover {
-        background: var(--surface-2);
-        border-color: var(--text-3);
-        text-decoration: none;
+      .btn-paper {
+        background: var(--paper);
+        color: var(--ink);
+      }
+      .btn-paper:hover {
+        background: #fff;
+        color: var(--ink);
       }
 
       /* Hero */
       .hero {
-        padding: var(--s-8) 0 var(--s-6);
+        padding: var(--s-8) 0 var(--s-8);
         text-align: center;
       }
-      .hero-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--s-3);
-        margin-bottom: var(--s-5);
-        padding: 6px 14px;
-        border-radius: 999px;
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text-2);
-        background: var(--surface-1);
-        border: 1px solid var(--border);
-      }
-      .hero-badge .dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: var(--accent);
-      }
       .hero h1 {
-        font-size: clamp(40px, 6.4vw, 68px);
-        font-weight: 800;
+        font-size: clamp(33px, 5.2vw, 54px);
         margin: 0 auto var(--s-4);
-        max-width: 15ch;
-      }
-      .hero h1 .pop {
-        color: var(--accent);
+        max-width: 20ch;
       }
       .hero .sub {
-        font-size: clamp(17px, 2.2vw, 20px);
-        color: var(--text-2);
-        max-width: 640px;
+        font-size: clamp(16.5px, 1.9vw, 19px);
+        color: var(--ink-2);
+        max-width: 56ch;
         margin: 0 auto var(--s-6);
       }
       .cta-row {
@@ -337,338 +369,196 @@
         gap: var(--s-3);
         flex-wrap: wrap;
       }
-      .micro-badges {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: var(--s-5);
-        flex-wrap: wrap;
-        margin-top: var(--s-5);
+      .compat {
+        margin: var(--s-4) 0 0;
         font-size: 14px;
-        color: var(--text-2);
+        color: var(--ink-3);
       }
-      .micro-badges span {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--s-2);
-      }
-      .micro-badges svg {
-        color: var(--text-3);
-      }
-      .launch-badge {
-        margin-top: var(--s-5);
+      .proof {
         display: flex;
         justify-content: center;
+        flex-wrap: wrap;
+        gap: var(--s-2) var(--s-3);
+        margin: var(--s-3) 0 0;
+        font-size: 13.5px;
+        color: var(--ink-3);
       }
-      .hn-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--s-2);
-        height: 44px;
-        padding: 0 14px 0 8px;
-        border-radius: var(--r-md);
-        background: var(--surface-1);
-        border: 1px solid var(--border);
-        color: var(--text-1);
-        text-decoration: none;
-        transition:
-          transform 120ms ease,
-          border-color 150ms ease;
+      .proof a {
+        color: var(--ink-3);
+        text-decoration: underline;
       }
-      .hn-badge:hover {
-        color: var(--text-1);
-        text-decoration: none;
-        transform: translateY(-1px);
-        border-color: #ff6600;
+      .proof a:hover {
+        color: var(--ink);
       }
-      .hn-badge .hn-logo {
-        display: grid;
-        place-items: center;
-        width: 28px;
-        height: 28px;
-        border-radius: 6px;
-        background: #ff6600;
-        color: #fff;
-        font:
-          800 18px/1 Verdana,
-          Geneva,
-          sans-serif;
-      }
-      .hn-badge .hn-text {
-        display: flex;
-        flex-direction: column;
-        text-align: left;
-        line-height: 1.15;
-      }
-      .hn-badge .hn-top {
-        font-size: 11px;
+      .proof b {
+        color: var(--ink);
         font-weight: 600;
-        color: var(--text-2);
+        font-variant-numeric: tabular-nums;
       }
-      .hn-badge .hn-bottom {
-        font-size: 13px;
-        font-weight: 700;
+
+      /* Crop-mark frame — the product's own selection marks */
+      .marks {
+        position: relative;
+      }
+      .marks::before,
+      .marks::after,
+      .marks > .mk::before,
+      .marks > .mk::after {
+        content: '';
+        position: absolute;
+        width: 13px;
+        height: 13px;
+        border: 1.5px solid var(--accent);
+      }
+      .marks::before {
+        top: -7px;
+        left: -7px;
+        border-right: 0;
+        border-bottom: 0;
+      }
+      .marks::after {
+        top: -7px;
+        right: -7px;
+        border-left: 0;
+        border-bottom: 0;
+      }
+      .marks > .mk::before {
+        bottom: -7px;
+        left: -7px;
+        border-right: 0;
+        border-top: 0;
+      }
+      .marks > .mk::after {
+        bottom: -7px;
+        right: -7px;
+        border-left: 0;
+        border-top: 0;
+      }
+
+      .shot-wrap {
+        margin-top: var(--s-8);
+      }
+      .hero-shot {
+        border: 1px solid var(--rule);
+        border-radius: var(--r-lg);
+        overflow: hidden;
+        background: var(--paper-raised);
+        box-shadow: 0 30px 60px -34px rgba(23, 21, 18, 0.45);
       }
 
       /* Demo */
-      .demo {
-        padding: var(--s-7) 0 0;
-      }
       .demo-frame {
-        border-radius: var(--r-xl);
-        overflow: hidden;
-        border: 1px solid var(--border-strong);
-        box-shadow: var(--shadow-lg);
-        background: var(--surface-2);
-      }
-      .demo-frame img {
-        width: 100%;
-      }
-      .demo-caption {
-        text-align: center;
-        font-size: 14px;
-        color: var(--text-3);
-        margin-top: var(--s-4);
-      }
-
-      /* Trust stats */
-      .stats {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
         border: 1px solid var(--border);
         border-radius: var(--r-lg);
-        background: var(--surface-1);
-        margin-top: var(--s-7);
         overflow: hidden;
+        background: #000;
+        box-shadow: 0 40px 90px -40px rgba(0, 0, 0, 0.8);
       }
-      @media (max-width: 640px) {
-        .stats {
-          grid-template-columns: 1fr;
-        }
+      .demo-frame video {
+        width: 100%;
       }
-      .stat {
-        padding: var(--s-5) var(--s-5);
-        text-align: center;
-      }
-      .stat + .stat {
-        border-left: 1px solid var(--border);
-      }
-      @media (max-width: 640px) {
-        .stat + .stat {
-          border-left: 0;
-          border-top: 1px solid var(--border);
-        }
-      }
-      .stat .num {
-        font-size: 30px;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-        color: var(--accent);
-        font-variant-numeric: tabular-nums;
-      }
-      .stat .label {
-        font-size: 14px;
-        color: var(--text-2);
-        margin-top: 2px;
+      .caption {
+        margin: var(--s-3) 0 0;
+        font-size: 13.5px;
+        color: var(--text-3);
       }
 
-      /* Sections */
-      section {
-        padding: var(--s-9) 0 0;
+      /* Section heads */
+      .head {
+        max-width: 62ch;
+        margin: 0 0 var(--s-6);
       }
-      .section-head {
-        max-width: 680px;
-        margin: 0 0 var(--s-7);
-      }
-      .section-head.center {
-        margin-left: auto;
-        margin-right: auto;
-        text-align: center;
-      }
-      .section-head h2 {
-        font-size: clamp(30px, 4.4vw, 44px);
-        font-weight: 800;
+      .head h2 {
+        font-size: clamp(26px, 3.4vw, 36px);
         margin: 0 0 var(--s-3);
       }
-      .section-head p {
-        font-size: 18px;
-        color: var(--text-2);
+      .head p {
         margin: 0;
+        font-size: 17px;
+        color: var(--text-2);
       }
 
       /* Steps */
       .steps {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: var(--s-5);
+        gap: var(--s-6);
+        margin-top: var(--s-7);
+        padding-top: var(--s-6);
+        border-top: 1px solid var(--border);
       }
-      @media (max-width: 900px) {
+      @media (max-width: 820px) {
         .steps {
           grid-template-columns: 1fr;
-          max-width: 560px;
-          margin: 0 auto;
-        }
-      }
-      .step-card {
-        border: 1px solid var(--border);
-        border-radius: var(--r-xl);
-        background: var(--surface-1);
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-      }
-      .step-card .shot {
-        border-bottom: 1px solid var(--border);
-        background: var(--surface-2);
-      }
-      .step-card .shot img {
-        width: 100%;
-      }
-      .step-card .body {
-        padding: var(--s-5);
-      }
-      .step-num {
-        display: inline-grid;
-        place-items: center;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background: var(--accent);
-        color: #fff;
-        font-size: 14px;
-        font-weight: 700;
-        margin-bottom: var(--s-3);
-      }
-      .step-card h3 {
-        font-size: 20px;
-        margin: 0 0 var(--s-2);
-      }
-      .step-card p {
-        font-size: 15px;
-        color: var(--text-2);
-        margin: 0;
-        line-height: 1.6;
-      }
-
-      /* Privacy */
-      .pillars {
-        display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        gap: var(--s-4);
-        margin-bottom: var(--s-6);
-      }
-      @media (max-width: 980px) {
-        .pillars {
-          grid-template-columns: repeat(3, 1fr);
-        }
-      }
-      @media (max-width: 560px) {
-        .pillars {
-          grid-template-columns: repeat(2, 1fr);
-        }
-      }
-      .pillar {
-        text-align: center;
-        padding: var(--s-5) var(--s-3);
-        border: 1px solid var(--border);
-        border-radius: var(--r-lg);
-        background: var(--surface-1);
-      }
-      .pillar svg {
-        color: var(--accent);
-        margin: 0 auto var(--s-3);
-        display: block;
-      }
-      .pillar b {
-        display: block;
-        font-size: 14.5px;
-        letter-spacing: -0.01em;
-      }
-      .pillar span {
-        display: block;
-        font-size: 12.5px;
-        color: var(--text-3);
-        line-height: 1.45;
-        margin-top: 3px;
-      }
-
-      .privacy-split {
-        display: grid;
-        grid-template-columns: 1fr 1.1fr;
-        gap: var(--s-7);
-        align-items: center;
-        border: 1px solid var(--border);
-        border-radius: var(--r-xl);
-        background: var(--surface-1);
-        padding: var(--s-7);
-      }
-      @media (max-width: 900px) {
-        .privacy-split {
-          grid-template-columns: 1fr;
-          padding: var(--s-5);
           gap: var(--s-5);
         }
       }
-      .privacy-split h3 {
-        font-size: clamp(24px, 3vw, 32px);
-        font-weight: 800;
-        margin: 0 0 var(--s-3);
+      .step .n {
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.16em;
+        color: var(--text-3);
       }
-      .privacy-split .lede {
+      .step h3 {
+        font-size: 19px;
+        margin: var(--s-2) 0 var(--s-2);
+      }
+      .step p {
+        margin: 0;
+        font-size: 15px;
         color: var(--text-2);
-        font-size: 16px;
-        margin: 0 0 var(--s-5);
       }
-      .tick-list {
+
+      /* Privacy */
+      .privacy-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--s-7);
+        align-items: start;
+      }
+      @media (max-width: 900px) {
+        .privacy-grid {
+          grid-template-columns: 1fr;
+          gap: var(--s-6);
+        }
+      }
+      .checks {
         list-style: none;
         padding: 0;
         margin: 0 0 var(--s-5);
         display: grid;
-        gap: var(--s-3);
+        gap: var(--s-4);
       }
-      .tick-list li {
+      .checks li {
         display: flex;
         gap: var(--s-3);
-        font-size: 15px;
+        font-size: 15.5px;
         color: var(--text-2);
       }
-      .tick-list .tick {
+      .checks svg {
         flex: none;
-        display: grid;
-        place-items: center;
-        width: 22px;
-        height: 22px;
-        border-radius: 6px;
-        background: var(--accent-subtle);
         color: var(--accent);
-        margin-top: 2px;
+        margin-top: 4px;
       }
-      .tick-list strong {
+      .checks strong {
         color: var(--text-1);
+        font-weight: 600;
       }
 
       .perm-card {
-        border: 1px solid var(--border-strong);
+        border: 1px solid var(--border);
         border-radius: var(--r-lg);
-        background: var(--ground);
-        overflow: hidden;
-        box-shadow: var(--shadow-md);
-      }
-      .perm-card .tab-row {
-        display: flex;
-        align-items: center;
-        gap: var(--s-2);
-        padding: 10px 14px;
-        border-bottom: 1px solid var(--border);
         background: var(--surface-1);
+        overflow: hidden;
       }
       .perm-card .tab {
+        display: block;
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface-2);
         font-family: var(--mono);
         font-size: 12px;
         color: var(--text-2);
-        padding: 4px 10px;
-        border-radius: 6px;
-        background: var(--surface-3);
       }
       .perm-card pre {
         margin: 0;
@@ -709,171 +599,79 @@
         white-space: nowrap;
       }
 
-      /* Compare */
-      .compare-wrap {
-        overflow-x: auto;
-        border: 1px solid var(--border);
-        border-radius: var(--r-lg);
-        background: var(--surface-1);
-      }
-      table.compare {
-        width: 100%;
-        min-width: 640px;
-        border-collapse: collapse;
-        font-size: 14.5px;
-      }
-      .compare th,
-      .compare td {
-        padding: 14px 18px;
-        text-align: left;
-        border-bottom: 1px solid var(--border);
-      }
-      .compare tr:last-child td {
-        border-bottom: 0;
-      }
-      .compare thead th {
-        font-size: 13.5px;
-        color: var(--text-2);
-        font-weight: 600;
-        background: var(--surface-2);
-      }
-      .compare thead th.oss {
-        color: var(--text-1);
-      }
-      .compare thead .th-brand {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-      }
-      .compare td.oss {
-        background: rgba(242, 107, 87, 0.05);
-      }
-      .compare td:first-child {
-        color: var(--text-2);
-      }
-      .compare .yes {
-        color: var(--good);
-      }
-      .compare .no,
-      .compare .meh {
-        color: var(--text-3);
-      }
-      .cell-flex {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-      }
-
       /* Final CTA */
       .cta-final {
         text-align: center;
-        padding-bottom: var(--s-9);
       }
       .cta-final h2 {
-        font-size: clamp(30px, 4.4vw, 44px);
-        font-weight: 800;
+        font-size: clamp(26px, 3.4vw, 36px);
         margin: 0 0 var(--s-3);
       }
       .cta-final > .container > p {
-        font-size: 18px;
+        font-size: 17px;
         color: var(--text-2);
         margin: 0 0 var(--s-6);
       }
-      .cta-final .cta-note {
-        display: flex;
-        gap: var(--s-3);
-        justify-content: center;
-        flex-wrap: wrap;
-        margin-top: var(--s-5);
-        font-size: 13.5px;
+      .cta-final .compat {
         color: var(--text-3);
       }
-      .cta-final .cta-note a {
+      .cta-note {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: var(--s-3);
+        margin-top: var(--s-4);
+        font-size: 13.5px;
+      }
+      .cta-note a {
         color: var(--text-3);
         text-decoration: underline;
       }
-      .cta-final .cta-note a:hover {
-        color: var(--accent);
+      .cta-note a:hover {
+        color: var(--text-1);
       }
 
       /* Footer */
       footer {
         border-top: 1px solid var(--border);
-        padding: var(--s-7) 0 var(--s-6);
+        padding: var(--s-6) 0;
         font-size: 14px;
-        color: var(--text-2);
-        background: var(--surface-1);
+        color: var(--text-3);
       }
-      .footer-grid {
-        display: grid;
-        grid-template-columns: 2fr 1fr 1fr 1fr;
-        gap: var(--s-6);
-      }
-      @media (max-width: 700px) {
-        .footer-grid {
-          grid-template-columns: 1fr 1fr;
-          gap: var(--s-5);
-        }
-      }
-      .footer-brand .brand-name {
-        font-weight: 700;
-        color: var(--text-1);
+      .foot-row {
         display: flex;
         align-items: center;
-        gap: var(--s-2);
-        margin-bottom: var(--s-3);
+        justify-content: space-between;
+        gap: var(--s-4);
+        flex-wrap: wrap;
       }
-      .footer-brand .logo-badge {
-        display: grid;
-        place-items: center;
-        width: 24px;
-        height: 24px;
+      .foot-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--s-4);
       }
-      .footer-brand p {
-        margin: 0;
-        max-width: 300px;
-        font-size: 14px;
-      }
-      .footer-col h3 {
-        font-size: 12px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--text-2);
-        margin: 0 0 var(--s-3);
-      }
-      .footer-col a {
-        display: block;
-        padding: var(--s-1) 0;
-        font-size: 14px;
+      .foot-links a {
         color: var(--text-2);
         text-decoration: none;
       }
-      .footer-col a:hover {
+      .foot-links a:hover {
         color: var(--text-1);
         text-decoration: underline;
       }
-      .footer-bottom {
-        margin-top: var(--s-6);
-        padding-top: var(--s-4);
-        border-top: 1px solid var(--border);
-        text-align: center;
+      .foot-bottom {
+        margin-top: var(--s-5);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--s-4);
+        flex-wrap: wrap;
         font-size: 13px;
-        color: var(--text-3);
-      }
-      .footer-kofi {
-        margin-top: var(--s-4);
-        text-align: center;
       }
 
       @media (prefers-reduced-motion: reduce) {
         * {
           transition: none !important;
           scroll-behavior: auto !important;
-        }
-        .js .reveal {
-          opacity: 1;
-          transform: none;
         }
       }
     </style>
@@ -882,70 +680,47 @@
     <div class="nav-wrap">
       <nav>
         <a href="/" class="nav-brand">
-          <span class="logo-badge">
-            <svg width="28" height="28" viewBox="0 0 128 128" aria-hidden="true">
-              <rect x="6" y="6" width="116" height="116" rx="30" fill="#FAFAF7" />
-              <rect
-                x="7.5"
-                y="7.5"
-                width="113"
-                height="113"
-                rx="28.5"
-                fill="none"
-                stroke="#1B1A17"
-                stroke-width="3"
-                opacity="0.14"
-              />
-              <g stroke="#1B1A17" stroke-width="11" stroke-linecap="round" fill="none">
-                <path d="M30 46 v-8 a8 8 0 0 1 8 -8 h8" />
-                <path d="M82 30 h8 a8 8 0 0 1 8 8 v8" />
-                <path d="M98 82 v8 a8 8 0 0 1 -8 8 h-8" />
-                <path d="M46 98 h-8 a8 8 0 0 1 -8 -8 v-8" />
-              </g>
-              <circle cx="64" cy="64" r="13" fill="#E8503A" />
-            </svg>
-          </span>
+          <svg width="26" height="26" viewBox="0 0 128 128" aria-hidden="true">
+            <rect x="6" y="6" width="116" height="116" rx="30" fill="#FAFAF7" />
+            <rect
+              x="7.5"
+              y="7.5"
+              width="113"
+              height="113"
+              rx="28.5"
+              fill="none"
+              stroke="#1B1A17"
+              stroke-width="3"
+              opacity="0.14"
+            />
+            <g stroke="#1B1A17" stroke-width="11" stroke-linecap="round" fill="none">
+              <path d="M30 46 v-8 a8 8 0 0 1 8 -8 h8" />
+              <path d="M82 30 h8 a8 8 0 0 1 8 8 v8" />
+              <path d="M98 82 v8 a8 8 0 0 1 -8 8 h-8" />
+              <path d="M46 98 h-8 a8 8 0 0 1 -8 -8 v-8" />
+            </g>
+            <circle cx="64" cy="64" r="13" fill="#E8503A" />
+          </svg>
           OpenScreenShot
         </a>
-        <div class="nav-links">
-          <a class="hide-sm" href="#how">How it works</a>
-          <a class="hide-sm" href="#privacy">Privacy</a>
-          <a class="hide-sm" href="#compare">Compare</a>
-          <a class="hide-sm" href="/docs/">Docs</a>
+        <div class="nav-right">
+          <div class="nav-links">
+            <a href="#how">How it works</a>
+            <a href="#privacy">Privacy</a>
+            <a href="/docs/">Docs</a>
+            <a href="https://github.com/pghqdev/OpenScreenShot" target="_blank" rel="noopener"
+              >GitHub</a
+            >
+          </div>
           <a
-            class="hide-sm"
-            href="https://github.com/pghqdev/OpenScreenShot"
-            target="_blank"
-            rel="noopener"
-            >GitHub</a
-          >
-          <a
+            class="nav-cta"
             href="https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp"
             target="_blank"
             rel="noopener"
             >Install</a
           >
-        </div>
-      </nav>
-    </div>
-
-    <main>
-      <!-- Hero -->
-      <section class="hero" style="padding-top: var(--s-8)">
-        <div class="container">
-          <span class="hero-badge"><span class="dot"></span> Free · Open source · No account</span>
-          <h1>Capture anything. <span class="pop">Edit it instantly.</span></h1>
-          <p class="sub">
-            Full-page, visible-area, and region screenshots for Chrome — with annotation, blur,
-            crop, and export built in. Everything stays in your browser.
-          </p>
-          <div class="cta-row">
-            <a
-              class="btn btn-primary"
-              href="https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp"
-              target="_blank"
-              rel="noopener"
-            >
+          <details class="nav-menu">
+            <summary aria-label="Open menu">
               <svg
                 width="18"
                 height="18"
@@ -954,207 +729,169 @@
                 stroke="currentColor"
                 stroke-width="2"
                 stroke-linecap="round"
-                stroke-linejoin="round"
                 aria-hidden="true"
               >
-                <circle cx="12" cy="12" r="10" />
-                <circle cx="12" cy="12" r="4" />
-                <line x1="21.17" y1="8" x2="12" y2="8" />
-                <line x1="3.95" y1="6.06" x2="8.54" y2="14" />
-                <line x1="10.88" y1="21.94" x2="15.46" y2="14" />
+                <path d="M4 7h16M4 12h16M4 17h16" />
               </svg>
-              Add to Chrome — Free
-            </a>
-            <a
-              class="btn btn-secondary"
-              href="https://github.com/pghqdev/OpenScreenShot"
-              target="_blank"
-              rel="noopener"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                aria-hidden="true"
+            </summary>
+            <div class="nav-panel">
+              <a href="#how">How it works</a>
+              <a href="#privacy">Privacy</a>
+              <a href="/docs/">Docs</a>
+              <a href="/support/">Support &amp; FAQ</a>
+              <a href="/roadmap/">Roadmap</a>
+              <a href="https://github.com/pghqdev/OpenScreenShot" target="_blank" rel="noopener"
+                >GitHub</a
               >
-                <path
-                  d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.36-3.88-1.36-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2 1.04 1.79 2.73 1.27 3.4.97.1-.76.4-1.27.74-1.56-2.56-.29-5.26-1.28-5.26-5.7 0-1.26.45-2.29 1.2-3.1-.13-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.75.81 1.2 1.84 1.2 3.1 0 4.43-2.7 5.4-5.28 5.69.42.36.79 1.06.79 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"
-                />
-              </svg>
-              View on GitHub
-            </a>
-          </div>
-          <div class="micro-badges">
-            <span>
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+              <a
+                href="https://github.com/pghqdev/OpenScreenShot/blob/main/PRIVACY.md"
+                target="_blank"
+                rel="noopener"
+                >Privacy policy</a
               >
-                <circle cx="12" cy="8" r="5" />
-                <path d="M20 21a8 8 0 0 0-16 0" />
-                <path d="M4 4l16 16" />
-              </svg>
-              No signup</span
-            >
-            <span>
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
-              No telemetry</span
-            >
-            <span>
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M1 8.5A15.4 15.4 0 0 1 12 4c4.2 0 8 1.7 11 4.5" opacity="0.35" />
-                <path d="M5 12.5A10.4 10.4 0 0 1 12 9.5c2.7 0 5.2 1.1 7 3" />
-                <circle cx="12" cy="17" r="2" fill="currentColor" stroke="none" />
-              </svg>
-              Works offline</span
-            >
-          </div>
-          <div class="launch-badge">
-            <a
-              class="hn-badge"
-              href="https://news.ycombinator.com/item?id=48839719"
-              target="_blank"
-              rel="noopener"
-            >
-              <span class="hn-logo" aria-hidden="true">Y</span>
-              <span class="hn-text">
-                <span class="hn-top">Featured on</span>
-                <span class="hn-bottom">Hacker News</span>
-              </span>
-            </a>
-          </div>
-
-          <div class="demo">
-            <div class="demo-frame">
-              <picture>
-                <source srcset="assets/hero.webp" type="image/webp" />
-                <img
-                  src="assets/hero.jpg"
-                  width="1160"
-                  height="680"
-                  alt="OpenScreenShot in action: the popup with Full page, Visible area, and Region modes open over a web page, with a region selection in progress."
-                  fetchpriority="high"
-                />
-              </picture>
             </div>
-            <p class="demo-caption">
-              One popup, three capture modes — then straight into the editor.
-            </p>
-          </div>
-
-          <div class="stats reveal">
-            <div class="stat">
-              <div class="num">100%</div>
-              <div class="label">local — capture, edit, and export run on your device</div>
-            </div>
-            <div class="stat">
-              <div class="num">0</div>
-              <div class="label">data collected — no analytics, no telemetry, no uploads</div>
-            </div>
-            <div class="stat">
-              <div class="num">MIT</div>
-              <div class="label">licensed — every line of code is public on GitHub</div>
-            </div>
-          </div>
+          </details>
         </div>
-      </section>
+      </nav>
+    </div>
 
-      <!-- How it works -->
-      <section id="how">
-        <div class="container">
-          <div class="section-head center reveal">
-            <span class="eyebrow">How it works</span>
-            <h2>From page to finished screenshot in seconds.</h2>
-            <p>Three steps, zero detours. No tab-juggling, no separate editor app.</p>
+    <main>
+      <div class="band-light">
+        <section class="hero">
+          <div class="container">
+            <h1>Capture, annotate and export&nbsp;— without uploading anything.</h1>
+            <p class="sub">
+              Full-page, visible-area and region screenshots for Chrome, with a complete editor that
+              runs on your device.
+            </p>
+            <div class="cta-row">
+              <a
+                class="btn btn-ink"
+                href="https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp"
+                target="_blank"
+                rel="noopener"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <circle cx="12" cy="12" r="4" />
+                  <line x1="21.17" y1="8" x2="12" y2="8" />
+                  <line x1="3.95" y1="6.06" x2="8.54" y2="14" />
+                  <line x1="10.88" y1="21.94" x2="15.46" y2="14" />
+                </svg>
+                Add to Chrome — Free
+              </a>
+              <a
+                class="btn btn-quiet"
+                href="https://github.com/pghqdev/OpenScreenShot"
+                target="_blank"
+                rel="noopener"
+                >View source</a
+              >
+            </div>
+            <p class="compat">Works on Chrome, Edge, Brave, Arc and other Chromium browsers.</p>
+            <p class="proof">
+              <span><b id="stat-users">601</b> Chrome Web Store users</span>
+              <span>·</span>
+              <span><b id="stat-stars">55</b> stars on GitHub</span>
+              <span>·</span>
+              <span id="stat-version">v0.3.0</span>
+              <span>·</span>
+              <span>MIT licensed</span>
+              <span>·</span>
+              <a href="https://news.ycombinator.com/item?id=48839719" target="_blank" rel="noopener"
+                >Show HN thread</a
+              >
+            </p>
+
+            <div class="shot-wrap marks">
+              <span class="mk"></span>
+              <div class="hero-shot">
+                <picture>
+                  <source srcset="assets/hero.webp" type="image/webp" />
+                  <img
+                    src="assets/hero.jpg"
+                    width="1940"
+                    height="1160"
+                    alt="The OpenScreenShot popup open over a web page, offering Full page, Visible area, and Region capture, with a region selection in progress."
+                    fetchpriority="high"
+                  />
+                </picture>
+              </div>
+            </div>
           </div>
-          <div class="steps">
-            <div class="step-card reveal">
-              <div class="shot">
-                <picture>
-                  <source srcset="assets/step-1.webp" type="image/webp" />
-                  <img
-                    src="assets/step-1.jpg"
-                    width="560"
-                    height="420"
-                    alt="The OpenScreenShot popup with Full page, Visible area, and Region capture modes."
-                    loading="lazy"
-                  />
-                </picture>
-              </div>
-              <div class="body">
-                <span class="step-num">1</span>
-                <h3>Capture precisely</h3>
-                <p>
-                  Full page, visible area, or any region — one click in the popup, or a keyboard
-                  shortcut. Number keys 1–3 work too.
-                </p>
+        </section>
+      </div>
+
+      <div class="band-dark">
+        <section id="how">
+          <div class="container">
+            <div class="head">
+              <h2>The whole workflow, in one place.</h2>
+              <p>
+                Capture a full page, mark it up, blur what should stay private, then export — no tab
+                juggling, no separate editor app.
+              </p>
+            </div>
+            <div class="marks">
+              <span class="mk"></span>
+              <div class="demo-frame">
+                <video
+                  id="demo"
+                  width="1000"
+                  height="596"
+                  autoplay
+                  muted
+                  loop
+                  playsinline
+                  preload="metadata"
+                  poster="assets/demo-poster.jpg"
+                  aria-label="Screen recording: the popup captures a full page, the editor opens, a region is cropped and annotated, and the result is exported as PNG."
+                >
+                  <source src="assets/demo.mp4" type="video/mp4" />
+                </video>
               </div>
             </div>
-            <div class="step-card reveal">
-              <div class="shot">
-                <picture>
-                  <source srcset="assets/step-2.webp" type="image/webp" />
-                  <img
-                    src="assets/step-2.jpg"
-                    width="560"
-                    height="420"
-                    alt="The annotation editor with numbered step badges, a highlighter stroke, an arrow, and a rectangle on a captured page."
-                    loading="lazy"
-                  />
-                </picture>
-              </div>
-              <div class="body">
-                <span class="step-num">2</span>
-                <h3>Edit immediately</h3>
+            <script>
+              (function () {
+                if (!matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+                var v = document.getElementById('demo');
+                v.removeAttribute('autoplay');
+                v.controls = true;
+                v.pause();
+              })();
+            </script>
+            <p class="caption">Full-page capture to export, recorded at 2.4× speed.</p>
+
+            <div class="steps">
+              <div class="step">
+                <span class="n">01</span>
+                <h3>Capture</h3>
                 <p>
-                  Every capture opens in a full-screen editor. Annotate, highlight, number steps,
-                  blur secrets, and crop — with undo all the way back.
+                  Full page, visible area, or a dragged region. One click in the popup, a keyboard
+                  shortcut, or number keys 1–3.
                 </p>
               </div>
-            </div>
-            <div class="step-card reveal">
-              <div class="shot">
-                <picture>
-                  <source srcset="assets/step-3.webp" type="image/webp" />
-                  <img
-                    src="assets/step-3.jpg"
-                    width="560"
-                    height="420"
-                    alt="The export dialog with PNG, JPEG, WebP, and PDF formats, page size, orientation, and multi-page options."
-                    loading="lazy"
-                  />
-                </picture>
+              <div class="step">
+                <span class="n">02</span>
+                <h3>Edit</h3>
+                <p>
+                  Rectangles, arrows, pen, highlighter, text, numbered step badges, blur and crop —
+                  with undo all the way back.
+                </p>
               </div>
-              <div class="body">
-                <span class="step-num">3</span>
-                <h3>Export anywhere</h3>
+              <div class="step">
+                <span class="n">03</span>
+                <h3>Export</h3>
                 <p>
                   PNG, JPEG, WebP, or multi-page PDF with page size and margins. Download it, or
                   copy straight to the clipboard.
@@ -1162,200 +899,110 @@
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
-      <!-- Privacy -->
-      <section id="privacy">
-        <div class="container">
-          <div class="section-head center reveal">
-            <span class="eyebrow">Built for privacy</span>
-            <h2>Everything you need. Nothing uploaded.</h2>
-            <p>
-              Screenshots are often the most sensitive images on your machine. OpenScreenShot treats
-              them that way.
-            </p>
-          </div>
-
-          <div class="pillars reveal">
-            <div class="pillar">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <circle cx="12" cy="8" r="5" />
-                <path d="M20 21a8 8 0 0 0-16 0" />
-                <path d="M4 4l16 16" />
-              </svg>
-              <b>No account</b>
-              <span>Use it instantly. No sign-up.</span>
-            </div>
-            <div class="pillar">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
-              <b>No telemetry</b>
-              <span>We don't track you. Ever.</span>
-            </div>
-            <div class="pillar">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M9 12l2 2 4-4" />
-                <circle cx="12" cy="12" r="9" />
-              </svg>
-              <b>No watermarks</b>
-              <span>Your screenshots stay yours.</span>
-            </div>
-            <div class="pillar">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <rect x="2" y="4" width="20" height="14" rx="2" />
-                <path d="M8 22h8M12 18v4" />
-              </svg>
-              <b>Offline processing</b>
-              <span>Everything happens in your browser.</span>
-            </div>
-            <div class="pillar">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M16 18l6-6-6-6M8 6l-6 6 6 6" />
-              </svg>
-              <b>Open source</b>
-              <span>Transparent code. Community driven.</span>
-            </div>
-            <div class="pillar">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <rect x="4" y="11" width="16" height="10" rx="2" />
-                <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-              </svg>
-              <b>Clear permissions</b>
-              <span>Minimal access. Always explained.</span>
-            </div>
-          </div>
-
-          <div class="privacy-split reveal">
-            <div>
-              <h3>Your screenshots never leave your browser.</h3>
-              <p class="lede">
-                OpenScreenShot processes everything locally on your device. No servers, no uploads.
-                You stay in control.
-              </p>
-              <ul class="tick-list">
-                <li>
-                  <span class="tick"
-                    ><svg
-                      width="12"
-                      height="12"
+      <div class="band-dark">
+        <section id="privacy">
+          <div class="container">
+            <div class="privacy-grid">
+              <div>
+                <div class="head">
+                  <h2>Your screenshots never leave your browser.</h2>
+                  <p>
+                    Screenshots are often the most sensitive images on your machine. The extension
+                    makes no network requests at all.
+                  </p>
+                </div>
+                <ul class="checks">
+                  <li>
+                    <svg
+                      width="17"
+                      height="17"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       stroke-width="3"
                       stroke-linecap="round"
                       stroke-linejoin="round"
+                      aria-hidden="true"
                     >
-                      <polyline points="20 6 9 17 4 12" /></svg></span
-                  ><span
-                    ><strong>All image data stays on your device</strong> — captures live in local
-                    extension storage until you export them.</span
-                  >
-                </li>
-                <li>
-                  <span class="tick"
-                    ><svg
-                      width="12"
-                      height="12"
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span
+                      ><strong>Image data stays on your device</strong> — captures live in local
+                      extension storage until you export them.</span
+                    >
+                  </li>
+                  <li>
+                    <svg
+                      width="17"
+                      height="17"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       stroke-width="3"
                       stroke-linecap="round"
                       stroke-linejoin="round"
+                      aria-hidden="true"
                     >
-                      <polyline points="20 6 9 17 4 12" /></svg></span
-                  ><span
-                    ><strong>No collection, no analytics, no tracking</strong> — the extension makes
-                    no network requests.</span
-                  >
-                </li>
-                <li>
-                  <span class="tick"
-                    ><svg
-                      width="12"
-                      height="12"
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span
+                      ><strong>No account, no analytics, no telemetry</strong> — nothing to sign up
+                      for and nothing to opt out of.</span
+                    >
+                  </li>
+                  <li>
+                    <svg
+                      width="17"
+                      height="17"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       stroke-width="3"
                       stroke-linecap="round"
                       stroke-linejoin="round"
+                      aria-hidden="true"
                     >
-                      <polyline points="20 6 9 17 4 12" /></svg></span
-                  ><span
-                    ><strong>Zero host permissions</strong> — it cannot read any site in the
-                    background, only the tab you capture, when you capture it.</span
-                  >
-                </li>
-              </ul>
-              <a
-                href="https://github.com/pghqdev/OpenScreenShot/blob/main/PRIVACY.md"
-                target="_blank"
-                rel="noopener"
-                >Read the full privacy policy →</a
-              >
-            </div>
-            <div class="perm-card">
-              <div class="tab-row">
-                <span class="tab">manifest.json</span>
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span
+                      ><strong>Zero host permissions</strong> — it reads the tab you capture, when
+                      you capture it, and nothing else.</span
+                    >
+                  </li>
+                  <li>
+                    <svg
+                      width="17"
+                      height="17"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span
+                      ><strong>MIT licensed, no watermarks</strong> — read every line on GitHub,
+                      keep every pixel of your exports.</span
+                    >
+                  </li>
+                </ul>
+                <a
+                  href="https://github.com/pghqdev/OpenScreenShot/blob/main/PRIVACY.md"
+                  target="_blank"
+                  rel="noopener"
+                  >Read the full privacy policy →</a
+                >
               </div>
-              <pre><code>"permissions": [
+
+              <div class="perm-card">
+                <span class="tab">manifest.json</span>
+                <pre><code>"permissions": [
   <span class="v">"activeTab"</span>,
   <span class="v">"scripting"</span>,
   <span class="v">"storage"</span>,
@@ -1363,121 +1010,37 @@
   <span class="v">"downloads"</span>
 ],
 <span class="k">"host_permissions": []</span></code></pre>
-              <div class="perm-rows">
-                <div class="row">
-                  <code>activeTab</code><span>access the current tab — only when you click</span>
-                </div>
-                <div class="row">
-                  <code>scripting</code><span>run the capture script on that tab</span>
-                </div>
-                <div class="row">
-                  <code>storage</code><span>keep your settings and last capture on-device</span>
-                </div>
-                <div class="row">
-                  <code>downloads</code><span>save exports to your Downloads folder</span>
-                </div>
-                <div class="row">
-                  <code>host_permissions: []</code><span>no standing access to any website</span>
+                <div class="perm-rows">
+                  <div class="row">
+                    <code>activeTab</code><span>access the current tab — only when you click</span>
+                  </div>
+                  <div class="row">
+                    <code>scripting</code><span>run the capture script on that tab</span>
+                  </div>
+                  <div class="row">
+                    <code>storage</code><span>keep your settings and last capture on-device</span>
+                  </div>
+                  <div class="row">
+                    <code>downloads</code><span>save exports to your Downloads folder</span>
+                  </div>
+                  <div class="row">
+                    <code>host_permissions: []</code><span>no standing access to any website</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
-      <!-- Compare -->
-      <section id="compare">
-        <div class="container">
-          <div class="section-head center reveal">
-            <span class="eyebrow">See the difference</span>
-            <h2>Why another screenshot tool?</h2>
-            <p>
-              Because the built-in ones stop at capture, and many extensions charge for the rest —
-              or take your data as payment.
-            </p>
-          </div>
-          <div class="compare-wrap reveal">
-            <table class="compare">
-              <thead>
-                <tr>
-                  <th></th>
-                  <th class="oss">
-                    <span class="th-brand">
-                      <svg width="18" height="18" viewBox="0 0 128 128" aria-hidden="true">
-                        <rect x="6" y="6" width="116" height="116" rx="30" fill="#FAFAF7" />
-                        <g stroke="#1B1A17" stroke-width="11" stroke-linecap="round" fill="none">
-                          <path d="M30 46 v-8 a8 8 0 0 1 8 -8 h8" />
-                          <path d="M82 30 h8 a8 8 0 0 1 8 8 v8" />
-                          <path d="M98 82 v8 a8 8 0 0 1 -8 8 h-8" />
-                          <path d="M46 98 h-8 a8 8 0 0 1 -8 -8 v-8" />
-                        </g>
-                        <circle cx="64" cy="64" r="13" fill="#E8503A" />
-                      </svg>
-                      OpenScreenShot
-                    </span>
-                  </th>
-                  <th>Built-in browser tools</th>
-                  <th>Typical screenshot extensions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Full-page capture</td>
-                  <td class="oss"><span class="cell-flex yes">✓</span></td>
-                  <td class="meh">DevTools command only</td>
-                  <td><span class="cell-flex yes">✓</span></td>
-                </tr>
-                <tr>
-                  <td>Region selection</td>
-                  <td class="oss"><span class="cell-flex yes">✓</span></td>
-                  <td class="no">—</td>
-                  <td><span class="cell-flex yes">✓</span></td>
-                </tr>
-                <tr>
-                  <td>Annotation, blur &amp; step badges</td>
-                  <td class="oss"><span class="cell-flex yes">✓</span></td>
-                  <td class="no">—</td>
-                  <td class="meh">Basic, often paywalled</td>
-                </tr>
-                <tr>
-                  <td>Multi-page PDF export</td>
-                  <td class="oss"><span class="cell-flex yes">✓</span></td>
-                  <td class="no">—</td>
-                  <td class="meh">Rare</td>
-                </tr>
-                <tr>
-                  <td>No account, no upload</td>
-                  <td class="oss"><span class="cell-flex yes">✓</span></td>
-                  <td><span class="cell-flex yes">✓</span></td>
-                  <td class="meh">Often cloud-first</td>
-                </tr>
-                <tr>
-                  <td>Open source</td>
-                  <td class="oss"><span class="cell-flex yes">✓ MIT</span></td>
-                  <td class="no">—</td>
-                  <td class="meh">Rarely</td>
-                </tr>
-                <tr>
-                  <td>100% free</td>
-                  <td class="oss"><span class="cell-flex yes">✓</span></td>
-                  <td><span class="cell-flex yes">✓</span></td>
-                  <td class="meh">Freemium / ads</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- Final CTA -->
-      <section id="download" class="cta-final">
-        <div class="container">
-          <div class="reveal">
-            <h2>Capture more. Share better.</h2>
-            <p>Free, open source, and built for privacy. Installs in seconds.</p>
+      <div class="band-dark">
+        <section id="download" class="cta-final">
+          <div class="container">
+            <h2>Take a screenshot the way you meant to.</h2>
+            <p>Free, open source, and installed in seconds.</p>
             <div class="cta-row">
               <a
-                class="btn btn-primary"
+                class="btn btn-paper"
                 href="https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp"
                 target="_blank"
                 rel="noopener"
@@ -1502,77 +1065,30 @@
                 Add to Chrome — Free
               </a>
             </div>
+            <p class="compat">Works on Chrome, Edge, Brave, Arc and other Chromium browsers.</p>
             <div class="cta-note">
               <a href="https://github.com/pghqdev/OpenScreenShot" target="_blank" rel="noopener"
                 >Source on GitHub</a
               >
               <span>·</span>
-              <a
-                href="https://github.com/pghqdev/OpenScreenShot/blob/main/PRIVACY.md"
-                target="_blank"
-                rel="noopener"
-                >Privacy Policy</a
-              >
-              <span>·</span>
               <a href="/support/">Support &amp; FAQ</a>
               <span>·</span>
               <a href="/docs/">Docs</a>
+              <span>·</span>
+              <a href="/roadmap/">Roadmap</a>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
 
-    <!-- Footer -->
     <footer>
       <div class="container">
-        <div class="footer-grid">
-          <div class="footer-brand">
-            <div class="brand-name">
-              <span class="logo-badge"
-                ><svg width="24" height="24" viewBox="0 0 128 128" aria-hidden="true">
-                  <rect x="6" y="6" width="116" height="116" rx="30" fill="#FAFAF7" />
-                  <rect
-                    x="7.5"
-                    y="7.5"
-                    width="113"
-                    height="113"
-                    rx="28.5"
-                    fill="none"
-                    stroke="#1B1A17"
-                    stroke-width="3"
-                    opacity="0.14"
-                  />
-                  <g stroke="#1B1A17" stroke-width="11" stroke-linecap="round" fill="none">
-                    <path d="M30 46 v-8 a8 8 0 0 1 8 -8 h8" />
-                    <path d="M82 30 h8 a8 8 0 0 1 8 8 v8" />
-                    <path d="M98 82 v8 a8 8 0 0 1 -8 8 h-8" />
-                    <path d="M46 98 h-8 a8 8 0 0 1 -8 -8 v-8" />
-                  </g>
-                  <circle cx="64" cy="64" r="13" fill="#E8503A" /></svg
-              ></span>
-              OpenScreenShot
-            </div>
-            <p>
-              An open-source screenshot and annotation extension for Chrome. Built with privacy
-              first.
-            </p>
-          </div>
-          <div class="footer-col">
-            <h3>Product</h3>
-            <a href="#how">How it works</a>
+        <div class="foot-row">
+          <div class="foot-links">
             <a href="/docs/">Docs</a>
-            <a
-              href="https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp"
-              target="_blank"
-              rel="noopener"
-              >Chrome Web Store</a
-            >
             <a href="/support/">Support &amp; FAQ</a>
             <a href="/roadmap/">Roadmap</a>
-          </div>
-          <div class="footer-col">
-            <h3>Project</h3>
             <a href="https://github.com/pghqdev/OpenScreenShot" target="_blank" rel="noopener"
               >GitHub</a
             >
@@ -1583,19 +1099,10 @@
               >Report an issue</a
             >
             <a
-              href="https://github.com/pghqdev/OpenScreenShot/blob/main/CONTRIBUTING.md"
-              target="_blank"
-              rel="noopener"
-              >Contributing</a
-            >
-          </div>
-          <div class="footer-col">
-            <h3>Legal</h3>
-            <a
               href="https://github.com/pghqdev/OpenScreenShot/blob/main/PRIVACY.md"
               target="_blank"
               rel="noopener"
-              >Privacy Policy</a
+              >Privacy</a
             >
             <a
               href="https://github.com/pghqdev/OpenScreenShot/blob/main/LICENSE"
@@ -1604,52 +1111,42 @@
               >MIT License</a
             >
           </div>
+          <div class="footer-kofi">
+            <script src="/kofi-widget.js"></script>
+            <script>
+              if (window.kofiwidget2) {
+                kofiwidget2.init('Support me on Ko-fi', '#E8503A', 'T7A624DAY7');
+                kofiwidget2.draw();
+              }
+            </script>
+          </div>
         </div>
-        <div class="footer-bottom">
-          © <span id="year"></span> OpenScreenShot · All processing is local — no data leaves your
-          device.
-        </div>
-        <div class="footer-kofi">
-          <script src="/kofi-widget.js"></script>
-          <script>
-            if (window.kofiwidget2) {
-              kofiwidget2.init('Support me on Ko-fi', '#E8503A', 'T7A624DAY7');
-              kofiwidget2.draw();
-            }
-          </script>
+        <div class="foot-bottom">
+          <span>© <span id="year"></span> OpenScreenShot · Built by PGHQ.dev</span>
+          <span>All processing is local — no data leaves your device.</span>
         </div>
       </div>
     </footer>
 
     <script>
       document.getElementById('year').textContent = new Date().getFullYear();
-      document.documentElement.classList.add('js');
-      (function () {
-        var els = document.querySelectorAll('.reveal');
-        if (
-          !('IntersectionObserver' in window) ||
-          matchMedia('(prefers-reduced-motion: reduce)').matches
-        ) {
-          els.forEach(function (el) {
-            el.classList.add('in');
-          });
-          return;
-        }
-        var io = new IntersectionObserver(
-          function (entries) {
-            entries.forEach(function (en) {
-              if (en.isIntersecting) {
-                en.target.classList.add('in');
-                io.unobserve(en.target);
-              }
-            });
-          },
-          { threshold: 0.12, rootMargin: '0px 0px -40px 0px' },
-        );
-        els.forEach(function (el) {
-          io.observe(el);
-        });
-      })();
+
+      // Live counts, served same-origin by the site worker; the values already in
+      // the markup stand if the request fails.
+      fetch('/api/stats.json')
+        .then(function (r) {
+          return r.ok ? r.json() : null;
+        })
+        .then(function (s) {
+          if (!s) return;
+          if (s.users) document.getElementById('stat-users').textContent = s.users;
+          if (s.stars) document.getElementById('stat-stars').textContent = s.stars;
+          if (s.version) {
+            var v = s.version.charAt(0) === 'v' ? s.version : 'v' + s.version;
+            document.getElementById('stat-version').textContent = v;
+          }
+        })
+        .catch(function () {});
     </script>
     <script src="/assets/webmcp.js" defer></script>
   </body>

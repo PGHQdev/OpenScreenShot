@@ -37,9 +37,45 @@ async function proxyKofiAsset(pathname) {
   });
 }
 
+// Live user and star counts for the homepage proof line. Read from shields.io —
+// the same source as the README badges — and cached at the edge, so the page
+// itself never talks to a third party.
+const STAT_SOURCES = {
+  users: 'https://img.shields.io/chrome-web-store/users/hdabbojjccojlapnfjpdppcpfcnhgmdp.json',
+  stars: 'https://img.shields.io/github/stars/pghqdev/OpenScreenShot.json',
+  version: 'https://img.shields.io/chrome-web-store/v/hdabbojjccojlapnfjpdppcpfcnhgmdp.json',
+};
+const STATS_TTL = 21600;
+
+async function shieldValue(url, shape) {
+  try {
+    const upstream = await fetch(url, { cf: { cacheEverything: true, cacheTtl: STATS_TTL } });
+    if (!upstream.ok) return null;
+    const badge = await upstream.json();
+    return shape.test(badge.value ?? '') ? badge.value : null;
+  } catch {
+    return null;
+  }
+}
+
+async function siteStats() {
+  const [users, stars, version] = await Promise.all([
+    shieldValue(STAT_SOURCES.users, /^\d[\d,.kKmM+]*$/),
+    shieldValue(STAT_SOURCES.stars, /^\d[\d,.kKmM+]*$/),
+    shieldValue(STAT_SOURCES.version, /^v?\d+(\.\d+)*$/),
+  ]);
+  return new Response(JSON.stringify({ users, stars, version }), {
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': `public, max-age=${STATS_TTL}`,
+    },
+  });
+}
+
 async function route(url, request, env) {
   const accept = request.headers.get('Accept') ?? '';
 
+  if (url.pathname === '/api/stats.json') return siteStats();
   if (url.pathname === '/kofi-widget.js') return proxyKofiWidget();
   if (url.pathname.startsWith('/kofi-cdn/')) return proxyKofiAsset(url.pathname);
 
