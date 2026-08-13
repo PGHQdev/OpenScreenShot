@@ -178,6 +178,14 @@ export class CanvasController {
     // Checkerboard over the image's screen rect so transparency reads as such.
     const sw = img.naturalWidth * this.view.zoom;
     const sh = img.naturalHeight * this.view.zoom;
+    // Shadow behind the image rect, so a light screenshot keeps an edge.
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.24)';
+    ctx.shadowBlur = 18;
+    ctx.shadowOffsetY = 4;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(this.view.panX, this.view.panY, sw, sh);
+    ctx.restore();
     drawCheckerboard(ctx, this.view.panX, this.view.panY, sw, sh);
     ctx.save();
     ctx.translate(this.view.panX, this.view.panY);
@@ -199,6 +207,12 @@ export class CanvasController {
       drawCropPreview(ctx, this.cropRect, img.naturalWidth, img.naturalHeight);
       ctx.restore();
     }
+    ctx.restore();
+    // Hairline frame in screen space, drawn under the selection handles.
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.28)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(this.view.panX + 0.5, this.view.panY + 0.5, sw - 1, sh - 1);
     ctx.restore();
     if (this.selectedId) {
       const sel = this.annotations.find((a) => a.id === this.selectedId);
