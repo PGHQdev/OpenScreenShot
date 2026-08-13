@@ -79,17 +79,17 @@
     "message": "Reopen last capture",
     "description": "Link in the popup that reopens the most recent capture in the editor."
   },
-  "supportKofi": {
-    "message": "Support on Ko-fi",
-    "description": "Footer link that opens the project's Ko-fi donation page."
+  "footerShortcuts": {
+    "message": "Shortcuts",
+    "description": "Short footer label for the link that opens Chrome's shortcut settings."
+  },
+  "footerKofi": {
+    "message": "Ko-fi",
+    "description": "Short footer label for the Ko-fi donation link."
   },
   "supportKofiTitle": {
     "message": "Buy the developer a coffee on Ko-fi",
     "description": "Tooltip for the Ko-fi donation footer link."
-  },
-  "settingsShortcuts": {
-    "message": "Shortcuts",
-    "description": "Shortcuts row label in settings."
   },
   "settingsTitle": {
     "message": "Settings",

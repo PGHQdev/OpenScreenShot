@@ -271,17 +271,20 @@ export function App() {
           <div class="divider" />
 
           <div class="footer-row">
-            {hasStash ? (
-              <button class="link-btn" onClick={openEditor}>
-                {t('reopenLast')}
-              </button>
-            ) : null}
+            <button
+              class="link-btn"
+              onClick={openEditor}
+              disabled={!hasStash}
+              title={t('reopenLast')}
+            >
+              {t('reopenLast')}
+            </button>
+            <button class="link-btn" onClick={openShortcutSettings} title={t('customizeShortcuts')}>
+              {t('footerShortcuts')}
+            </button>
             <button class="link-btn kofi-link" onClick={openKofi} title={t('supportKofiTitle')}>
               <CoffeeMark />
-              {t('supportKofi')}
-            </button>
-            <button class="link-btn" onClick={openShortcutSettings}>
-              {t('customizeShortcuts')}
+              {t('footerKofi')}
             </button>
           </div>
         </>
@@ -317,13 +320,6 @@ function SettingsView({
             </button>
           ))}
         </div>
-      </div>
-
-      <div class="settings-row">
-        <span class="settings-label">{t('settingsShortcuts')}</span>
-        <button class="link-btn" onClick={openShortcutSettings}>
-          {t('customizeShortcuts')}
-        </button>
       </div>
 
       <div class="settings-row settings-row-col">
@@ -433,12 +429,6 @@ function SettingsView({
         </label>
       </div>
       {pdfDisabled ? <span class="settings-hint">{t('pdfFullHint')}</span> : null}
-
-      <div class="divider" />
-      <button class="link-btn kofi-link" onClick={openKofi} title={t('supportKofiTitle')}>
-        <CoffeeMark />
-        {t('supportKofi')}
-      </button>
     </div>
   );
 }
