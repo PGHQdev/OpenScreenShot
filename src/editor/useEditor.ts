@@ -303,6 +303,20 @@ export function useEditor() {
     cropActiveRef.current = cropActive;
   }, [cropActive]);
 
+  // --- Zoom controls ---
+  const zoomAtCenter = useCallback((factor: number) => {
+    const c = controllerRef.current;
+    const canvas = canvasRef.current;
+    if (!c || !canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    c.zoomAt(factor, rect.width / 2, rect.height / 2);
+  }, []);
+
+  const zoomIn = useCallback(() => zoomAtCenter(1.25), [zoomAtCenter]);
+  const zoomOut = useCallback(() => zoomAtCenter(1 / 1.25), [zoomAtCenter]);
+  const fit = useCallback(() => controllerRef.current?.fit(), []);
+  const resetZoom = useCallback(() => controllerRef.current?.resetZoom(), []);
+
   // Space = temporary pan; tool shortcuts; undo/redo; delete; Esc.
   useEffect(() => {
     const isMod = (e: KeyboardEvent) => e.ctrlKey || e.metaKey;
@@ -325,6 +339,27 @@ export function useEditor() {
       if (isMod(e) && (e.key === 'y' || e.key === 'Y')) {
         e.preventDefault();
         redo();
+        return;
+      }
+      // Zoom.
+      if (isMod(e) && (e.key === '=' || e.key === '+')) {
+        e.preventDefault();
+        zoomIn();
+        return;
+      }
+      if (isMod(e) && (e.key === '-' || e.key === '_')) {
+        e.preventDefault();
+        zoomOut();
+        return;
+      }
+      if (isMod(e) && e.key === '0') {
+        e.preventDefault();
+        resetZoom();
+        return;
+      }
+      if (!isMod(e) && !e.altKey && e.key.toUpperCase() === 'F') {
+        e.preventDefault();
+        fit();
         return;
       }
       // Delete selected.
@@ -365,7 +400,7 @@ export function useEditor() {
       window.removeEventListener('keydown', down);
       window.removeEventListener('keyup', up);
     };
-  }, [undo, redo, deleteSelection]);
+  }, [undo, redo, deleteSelection, zoomIn, zoomOut, resetZoom, fit]);
 
   // --- Drag handlers (attached to window during a drag) ---
   const onDragMove = useCallback(
@@ -645,20 +680,6 @@ export function useEditor() {
     setFuture([]);
     cancelCrop();
   }, [cancelCrop]);
-
-  // --- Zoom controls ---
-  const zoomAtCenter = useCallback((factor: number) => {
-    const c = controllerRef.current;
-    const canvas = canvasRef.current;
-    if (!c || !canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    c.zoomAt(factor, rect.width / 2, rect.height / 2);
-  }, []);
-
-  const zoomIn = useCallback(() => zoomAtCenter(1.25), [zoomAtCenter]);
-  const zoomOut = useCallback(() => zoomAtCenter(1 / 1.25), [zoomAtCenter]);
-  const fit = useCallback(() => controllerRef.current?.fit(), []);
-  const resetZoom = useCallback(() => controllerRef.current?.resetZoom(), []);
 
   const defaultFilename = useCallback(() => {
     const tmpl = settings?.filenameTemplate ?? 'screenshot_{date}_{time}';
