@@ -7,6 +7,7 @@ import { COLOR_PALETTE, STROKE_WIDTHS } from './annotations';
 import { arrowNav, getFocusable, trapFocus } from './focus';
 import { BrandMark } from '../shared/BrandMark';
 import { setSettings } from '../shared/storage';
+import { ZoomMenu } from './ZoomMenu';
 
 type DialogFormat = ImageFormat | 'pdf';
 
@@ -53,23 +54,14 @@ export function App() {
           {ed.capture ? <span class="brand-mode">{labelForMode(ed.capture.mode)}</span> : null}
         </div>
         <div class="topbar-controls">
-          <div class="zoom-group" role="group" aria-label="Zoom">
-            <button class="icon-btn" title="Zoom out" onClick={ed.zoomOut} aria-label="Zoom out">
-              −
-            </button>
-            <span class="zoom-readout" aria-live="polite">
-              {ed.zoomPct}%
-            </span>
-            <button class="icon-btn" title="Zoom in" onClick={ed.zoomIn} aria-label="Zoom in">
-              +
-            </button>
-            <button class="text-btn" title="Fit to screen" onClick={ed.fit}>
-              Fit
-            </button>
-            <button class="text-btn" title="Actual size (100%)" onClick={ed.resetZoom}>
-              100%
-            </button>
-          </div>
+          <ZoomMenu
+            zoomPct={ed.zoomPct}
+            disabled={!ed.capture}
+            onZoomIn={ed.zoomIn}
+            onZoomOut={ed.zoomOut}
+            onFit={ed.fit}
+            onActualSize={ed.resetZoom}
+          />
           <button
             class="btn-primary btn-fixed"
             title="Copy to clipboard as PNG (⌘C)"
@@ -203,8 +195,6 @@ export function App() {
 
       <footer class="statusbar">
         <span>{ed.imageSize ? `${ed.imageSize.w} × ${ed.imageSize.h}px` : '—'}</span>
-        <span class="status-sep">·</span>
-        <span>{ed.zoomPct}%</span>
         <span class="status-spacer" />
         <span class="status-hint">{hintForTool(ed.tool)}</span>
       </footer>
