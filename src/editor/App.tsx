@@ -8,6 +8,7 @@ import { arrowNav, getFocusable, trapFocus } from './focus';
 import { BrandMark } from '../shared/BrandMark';
 import { setSettings } from '../shared/storage';
 import { ZoomMenu } from './ZoomMenu';
+import { stylebarEmpty, stylebarFields } from './stylebar';
 
 type DialogFormat = ImageFormat | 'pdf';
 
@@ -213,8 +214,8 @@ export function App() {
 
 function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
   const sel = ed.selectedAnnotation;
-  const showFontSize =
-    ed.tool === 'text' || ed.tool === 'step' || sel?.type === 'text' || sel?.type === 'step';
+  const fields = stylebarFields(ed.tool, sel?.type ?? null);
+  if (stylebarEmpty(fields)) return null;
   return (
     <div
       class="stylebar"
@@ -223,39 +224,43 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
       aria-label="Annotation style"
       onKeyDown={(e) => arrowNav(e.currentTarget as HTMLElement, e)}
     >
-      <div class="stylebar-group">
-        <span class="stylebar-label">Color</span>
-        <div class="swatches">
-          {COLOR_PALETTE.map((c) => (
-            <button
-              key={c}
-              class="swatch"
-              style={{ backgroundColor: c }}
-              data-light={isLight(c) ? '1' : undefined}
-              aria-label={c}
-              aria-pressed={ed.style.color === c}
-              onClick={() => ed.setStyleColor(c)}
-            />
-          ))}
+      {fields.color ? (
+        <div class="stylebar-group">
+          <span class="stylebar-label">Color</span>
+          <div class="swatches">
+            {COLOR_PALETTE.map((c) => (
+              <button
+                key={c}
+                class="swatch"
+                style={{ backgroundColor: c }}
+                data-light={isLight(c) ? '1' : undefined}
+                aria-label={c}
+                aria-pressed={ed.style.color === c}
+                onClick={() => ed.setStyleColor(c)}
+              />
+            ))}
+          </div>
         </div>
-      </div>
-      <div class="stylebar-group">
-        <span class="stylebar-label">Stroke</span>
-        <div class="widths">
-          {STROKE_WIDTHS.map((w) => (
-            <button
-              key={w}
-              class="width-btn"
-              aria-label={`${w}px`}
-              aria-pressed={ed.style.strokeWidth === w}
-              onClick={() => ed.setStyleStrokeWidth(w)}
-            >
-              <span class="width-bar" style={{ height: `${Math.min(w, 8)}px` }} />
-            </button>
-          ))}
+      ) : null}
+      {fields.stroke ? (
+        <div class="stylebar-group">
+          <span class="stylebar-label">Stroke</span>
+          <div class="widths">
+            {STROKE_WIDTHS.map((w) => (
+              <button
+                key={w}
+                class="width-btn"
+                aria-label={`${w}px`}
+                aria-pressed={ed.style.strokeWidth === w}
+                onClick={() => ed.setStyleStrokeWidth(w)}
+              >
+                <span class="width-bar" style={{ height: `${Math.min(w, 8)}px` }} />
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
-      {showFontSize ? (
+      ) : null}
+      {fields.fontSize ? (
         <div class="stylebar-group">
           <span class="stylebar-label">Size · {ed.style.fontSize}px</span>
           <input
