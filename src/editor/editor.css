@@ -279,6 +279,12 @@ body {
   outline-offset: 1px;
 }
 
+/* The label cycles through three words; a floor stops the topbar shifting. */
+.btn-fixed {
+  min-width: 92px;
+  text-align: center;
+}
+
 /* ---- Stage (canvas area) ---- */
 .stage {
   position: relative;
