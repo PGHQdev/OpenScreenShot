@@ -250,8 +250,13 @@ body {
   border-radius: var(--r-md);
   overflow: hidden;
 }
-.seg-wrap {
-  flex-wrap: wrap;
+.seg-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
 }
 .seg-btn {
   height: 28px;
