@@ -312,16 +312,6 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
   const ext = format === 'pdf' ? 'pdf' : format === 'jpeg' ? 'jpg' : format;
 
   async function doExport() {
-    if (remember) {
-      await setSettings({
-        defaultFormat: format,
-        quality,
-        pdfPageSize,
-        pdfOrientation,
-        pdfMultiPage,
-        pdfMarginMm: pdfMargin,
-      });
-    }
     if (format === 'pdf') {
       const opts: PdfOptions = {
         pageSize: pdfPageSize,
@@ -332,6 +322,18 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
       await ed.exportPdf(opts, filenameBase);
     } else {
       await ed.exportImage(format, quality, filenameBase);
+    }
+    // The export is the action the user asked for. Persisting the choice is a
+    // convenience, so it runs after and can never prevent the export.
+    if (remember) {
+      await setSettings({
+        defaultFormat: format,
+        quality,
+        pdfPageSize,
+        pdfOrientation,
+        pdfMultiPage,
+        pdfMarginMm: pdfMargin,
+      });
     }
     onClose();
   }
