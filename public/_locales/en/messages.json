@@ -198,5 +198,9 @@
   "captureModesAria": {
     "message": "Capture modes",
     "description": "Accessible label for the capture mode buttons."
+  },
+  "dismiss": {
+    "message": "Dismiss",
+    "description": "Accessible label for the button that closes an error message."
   }
 }

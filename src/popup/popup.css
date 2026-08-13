@@ -485,16 +485,43 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--s-1);
-  margin-top: var(--s-1);
 }
 
 .toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
   padding: var(--s-2) var(--s-3);
   border-radius: var(--r-md);
   font-size: 12px;
   font-weight: 500;
   border: 1px solid transparent;
   animation: oss-toast-in 250ms ease-out;
+}
+
+.toast-text {
+  flex: 1 1 auto;
+}
+
+.toast-dismiss {
+  flex: 0 0 auto;
+  padding: 0 2px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 15px;
+  line-height: 1.2;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.toast-dismiss:hover {
+  opacity: 1;
+}
+
+.toast-dismiss:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
 }
 
 .toast-success {
