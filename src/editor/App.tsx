@@ -53,6 +53,35 @@ export function App() {
           <span class="brand-name">OpenScreenShot</span>
           {ed.capture ? <span class="brand-mode">{labelForMode(ed.capture.mode)}</span> : null}
         </div>
+        <div class="topbar-actions" role="group" aria-label="Document actions">
+          <button
+            class="icon-btn"
+            title="Undo (⌘Z)"
+            disabled={!ed.canUndo}
+            onClick={ed.undo}
+            aria-label="Undo"
+          >
+            <IconUndo />
+          </button>
+          <button
+            class="icon-btn"
+            title="Redo (⌘⇧Z)"
+            disabled={!ed.canRedo}
+            onClick={ed.redo}
+            aria-label="Redo"
+          >
+            <IconRedo />
+          </button>
+          <button
+            class="icon-btn icon-btn-danger"
+            title="Delete selected (⌫)"
+            disabled={!ed.hasSelection}
+            onClick={ed.deleteSelection}
+            aria-label="Delete selected"
+          >
+            <IconTrash />
+          </button>
+        </div>
         <div class="topbar-controls">
           <ZoomMenu
             zoomPct={ed.zoomPct}
@@ -103,39 +132,15 @@ export function App() {
             </button>
           ))}
 
-          <div class="toolbar-divider" />
-          <button
-            class="tool-btn"
-            title="Undo (⌘Z)"
-            disabled={!ed.canUndo}
-            onClick={ed.undo}
-            aria-label="Undo"
-          >
-            <IconUndo />
-          </button>
-          <button
-            class="tool-btn"
-            title="Redo (⌘⇧Z)"
-            disabled={!ed.canRedo}
-            onClick={ed.redo}
-            aria-label="Redo"
-          >
-            <IconRedo />
-          </button>
-          <div class="toolbar-divider" />
-          <button
-            class="tool-btn tool-btn-danger"
-            title="Delete (⌫)"
-            disabled={!ed.hasSelection}
-            onClick={ed.deleteSelection}
-            aria-label="Delete selected"
-          >
-            <IconTrash />
-          </button>
-
-          <div class="toolbar-count" title="Annotations">
-            {ed.annotations.length}
-          </div>
+          {ed.annotations.length > 0 ? (
+            <div
+              class="toolbar-count"
+              title={`${ed.annotations.length} annotation${ed.annotations.length === 1 ? '' : 's'}`}
+            >
+              <IconLayers />
+              <span>{ed.annotations.length}</span>
+            </div>
+          ) : null}
         </aside>
 
         <div class="stage">
@@ -720,6 +725,26 @@ function IconTrash() {
       stroke-linejoin="round"
     >
       <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
+    </svg>
+  );
+}
+
+function IconLayers() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 2l9 5-9 5-9-5 9-5z" />
+      <path d="M3 12l9 5 9-5" />
+      <path d="M3 17l9 5 9-5" />
     </svg>
   );
 }
