@@ -158,5 +158,13 @@
   "dismiss": {
     "message": "Dismiss",
     "description": "Accessible label for the button that closes an error message."
+  },
+  "resetDefaults": {
+    "message": "Reset to defaults",
+    "description": "Settings link that restores every default value."
+  },
+  "resetConfirm": {
+    "message": "Click again to reset",
+    "description": "Second-click confirmation label for the reset link."
   }
 }
