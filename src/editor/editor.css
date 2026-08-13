@@ -284,7 +284,7 @@ body {
   position: relative;
   flex: 1 1 auto;
   overflow: hidden;
-  background: var(--surface-2);
+  background: var(--stage-bg);
 }
 
 .stage-canvas {
@@ -621,7 +621,7 @@ body {
   gap: var(--s-2);
   pointer-events: none;
   color: var(--text-2);
-  background: var(--surface-2);
+  background: var(--stage-bg);
 }
 
 .empty {
