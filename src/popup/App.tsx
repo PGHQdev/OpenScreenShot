@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import type { CaptureMode, ExportFormat, PopupMessage, Settings } from '../shared/types';
 import { DEFAULT_SETTINGS } from '../shared/types';
 import { getSettings, hasLastCapture, setSettings } from '../shared/storage';
 import { onPopupMessage, sendToBackground } from '../shared/messaging';
 import { BrandMark } from '../shared/BrandMark';
 import { resolveModeKeys } from '../shared/shortcuts';
+import { FILENAME_TOKENS, formatFilename, insertToken } from '../shared/utils';
 
 // i18n helper
 function t(id: string): string {
@@ -301,7 +302,22 @@ function SettingsView({
   settings: Settings;
   onChange: (patch: Partial<Settings>) => void;
 }) {
+  const filenameRef = useRef<HTMLInputElement>(null);
   const showQuality = settings.defaultFormat === 'jpeg' || settings.defaultFormat === 'webp';
+
+  function insertAtCaret(token: string) {
+    const el = filenameRef.current;
+    if (!el) return;
+    const start = el.selectionStart ?? el.value.length;
+    const end = el.selectionEnd ?? el.value.length;
+    const next = insertToken(el.value, start, end, token);
+    onChange({ filenameTemplate: next.value });
+    // The value arrives on the next render, so restore the caret after it.
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(next.caret, next.caret);
+    });
+  }
 
   return (
     <div class="settings">
@@ -357,13 +373,22 @@ function SettingsView({
       <div class="settings-row settings-row-col">
         <span class="settings-label">{t('settingsFilename')}</span>
         <input
+          ref={filenameRef}
           class="text-input"
           type="text"
           spellcheck={false}
           value={settings.filenameTemplate}
           onInput={(e) => onChange({ filenameTemplate: (e.target as HTMLInputElement).value })}
         />
-        <span class="settings-hint">{t('filenameHint')}</span>
+        <div class="token-row">
+          <span class="token-label">{t('filenameInsert')}</span>
+          {FILENAME_TOKENS.map((tok) => (
+            <button key={tok} class="token-chip" onClick={() => insertAtCaret(tok)}>
+              {tok}
+            </button>
+          ))}
+        </div>
+        <span class="settings-hint">{previewFilename(settings)}</span>
       </div>
 
     </div>
@@ -487,4 +512,15 @@ function applyTheme(theme: Settings['theme']) {
   const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
   const dark = theme === 'dark' || (theme === 'system' && prefersDark);
   document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+}
+
+/** Sample resolution of the template, shown live under the settings input. */
+function previewFilename(settings: Settings): string {
+  const ext = settings.defaultFormat === 'jpeg' ? 'jpg' : settings.defaultFormat;
+  const base = formatFilename(settings.filenameTemplate, {
+    title: 'Example Page',
+    width: 1920,
+    height: 1080,
+  });
+  return `${base}.${ext}`;
 }

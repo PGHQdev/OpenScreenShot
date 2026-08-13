@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { formatFilename, sanitizeFilename, isProtectedUrl } from '../../src/shared/utils';
+import {
+  formatFilename,
+  sanitizeFilename,
+  isProtectedUrl,
+  insertToken,
+  FILENAME_TOKENS,
+} from '../../src/shared/utils';
 
 describe('formatFilename', () => {
   it('replaces date/time/w/h tokens', () => {
@@ -45,5 +51,37 @@ describe('isProtectedUrl', () => {
   });
   it('treats missing urls as protected', () => {
     expect(isProtectedUrl(undefined)).toBe(true);
+  });
+});
+
+describe('insertToken', () => {
+  it('splices the token at a collapsed caret', () => {
+    const out = insertToken('shot_', 5, 5, '{date}');
+    expect(out.value).toBe('shot_{date}');
+    expect(out.caret).toBe(11);
+  });
+
+  it('replaces the selected range', () => {
+    const out = insertToken('shot_{time}', 5, 11, '{date}');
+    expect(out.value).toBe('shot_{date}');
+    expect(out.caret).toBe(11);
+  });
+
+  it('clamps indices past the end of the value', () => {
+    const out = insertToken('abc', 99, 99, '{w}');
+    expect(out.value).toBe('abc{w}');
+    expect(out.caret).toBe(6);
+  });
+
+  it('clamps a negative start and an inverted range', () => {
+    const out = insertToken('abc', -5, -1, '{h}');
+    expect(out.value).toBe('{h}abc');
+    expect(out.caret).toBe(3);
+  });
+});
+
+describe('FILENAME_TOKENS', () => {
+  it('lists every token formatFilename replaces', () => {
+    expect([...FILENAME_TOKENS]).toEqual(['{date}', '{time}', '{title}', '{w}', '{h}']);
   });
 });

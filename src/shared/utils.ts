@@ -47,3 +47,26 @@ export function isProtectedUrl(url: string | undefined): boolean {
     url.startsWith('https://chromewebstore.google.com')
   );
 }
+
+/** Tokens the filename template accepts, in the order the settings UI lists them. */
+export const FILENAME_TOKENS = ['{date}', '{time}', '{title}', '{w}', '{h}'] as const;
+
+/**
+ * Splice `token` into `value` over the range [selStart, selEnd).
+ *
+ * Indices come straight from a DOM input, so they are clamped here rather than
+ * at the call site. Returns the new value and where the caret belongs after it.
+ */
+export function insertToken(
+  value: string,
+  selStart: number,
+  selEnd: number,
+  token: string,
+): { value: string; caret: number } {
+  const start = Math.max(0, Math.min(selStart, value.length));
+  const end = Math.max(start, Math.min(selEnd, value.length));
+  return {
+    value: value.slice(0, start) + token + value.slice(end),
+    caret: start + token.length,
+  };
+}

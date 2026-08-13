@@ -139,9 +139,9 @@
     "message": "Filename template",
     "description": "Filename template setting label."
   },
-  "filenameHint": {
-    "message": "Tokens: {date} {time} {title} {w} {h}",
-    "description": "Help text for filename template tokens."
+  "filenameInsert": {
+    "message": "Insert",
+    "description": "Label above the clickable filename token chips."
   },
   "couldNotReach": {
     "message": "Could not reach the background worker.",
