@@ -124,7 +124,14 @@ export function App() {
   function pushToast(message: string, tone: ToastTone) {
     const id = Date.now() + Math.random();
     setToasts((t) => [...t, { id, message, tone }]);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4000);
+    // An error is a state the user has to read. Info and success are transient.
+    if (tone !== 'error') {
+      setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4000);
+    }
+  }
+
+  function dismissToast(id: number) {
+    setToasts((t) => t.filter((x) => x.id !== id));
   }
 
   async function updateSettings(patch: Partial<Settings>) {
@@ -194,6 +201,24 @@ export function App() {
         )}
       </header>
 
+      <div class="toasts" aria-live="polite">
+        {toasts.map((toast) => (
+          <div key={toast.id} class={`toast toast-${toast.tone}`} role="status">
+            <span class="toast-text">{toast.message}</span>
+            {toast.tone === 'error' ? (
+              <button
+                class="toast-dismiss"
+                aria-label={t('dismiss')}
+                title={t('dismiss')}
+                onClick={() => dismissToast(toast.id)}
+              >
+                ×
+              </button>
+            ) : null}
+          </div>
+        ))}
+      </div>
+
       {showSettings ? (
         <SettingsView settings={settings} onChange={updateSettings} />
       ) : showWelcome ? (
@@ -262,13 +287,6 @@ export function App() {
         </>
       )}
 
-      <div class="toasts" aria-live="polite">
-        {toasts.map((toast) => (
-          <div key={toast.id} class={`toast toast-${toast.tone}`} role="status">
-            {toast.message}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
