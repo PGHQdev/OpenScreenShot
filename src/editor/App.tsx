@@ -71,16 +71,16 @@ export function App() {
             </button>
           </div>
           <button
-            class="btn-secondary"
-            title="Copy to clipboard as PNG"
+            class="btn-primary btn-fixed"
+            title="Copy to clipboard as PNG (⌘C)"
             disabled={!ed.capture}
             onClick={copyToClipboard}
           >
-            {copyState === 'copied' ? 'Copied ✓' : copyState === 'failed' ? 'Copy failed' : 'Copy'}
+            {copyState === 'copied' ? 'Copied' : copyState === 'failed' ? 'Failed' : 'Copy'}
           </button>
           <button
-            class="btn-primary"
-            title="Export"
+            class="btn-secondary"
+            title="Export (⌘S)"
             disabled={!ed.capture}
             onClick={() => setExportOpen(true)}
           >
