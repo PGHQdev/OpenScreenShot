@@ -4,6 +4,7 @@ import { DEFAULT_SETTINGS } from '../shared/types';
 import { getSettings, hasLastCapture, setSettings } from '../shared/storage';
 import { onPopupMessage, sendToBackground } from '../shared/messaging';
 import { BrandMark } from '../shared/BrandMark';
+import { resolveModeKeys } from '../shared/shortcuts';
 
 // i18n helper
 function t(id: string): string {
@@ -202,6 +203,7 @@ export function App() {
           <nav class="modes" aria-label={t('captureModesAria')}>
             {MODES.map((m, i) => {
               const isBusy = busy === m.id;
+              const keys = resolveModeKeys(m.command, i, shortcuts);
               return (
                 <button
                   key={m.id}
@@ -226,7 +228,10 @@ export function App() {
                   {isBusy ? (
                     <span class="spinner" aria-label={t('capturing')} />
                   ) : (
-                    <kbd>{shortcuts[m.command] ?? String(i + 1)}</kbd>
+                    <span class="mode-keys">
+                      {keys.osShortcut ? <kbd class="kbd-os">{keys.osShortcut}</kbd> : null}
+                      <kbd>{keys.digit}</kbd>
+                    </span>
                   )}
                   {isBusy && m.id === 'full-page' && progress != null ? (
                     <div class="progress" aria-hidden="true">

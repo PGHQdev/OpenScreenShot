@@ -38,7 +38,7 @@
       "description": "Capture the visible area"
     },
     "capture-region": {
-      "suggested_key": { "default": "Ctrl+Shift+R", "mac": "Command+Shift+R" },
+      "suggested_key": { "default": "Ctrl+Shift+E", "mac": "Command+Shift+E" },
       "description": "Capture a selected region"
     }
   }

@@ -345,6 +345,13 @@ body {
 }
 
 /* ---- Shortcuts ---- */
+.mode-keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
 .mode-card kbd {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -355,6 +362,11 @@ body {
   padding: 1px 6px;
   flex: 0 0 auto;
   white-space: nowrap;
+}
+
+.mode-card .kbd-os {
+  background: transparent;
+  color: var(--text-3);
 }
 
 .link-btn {
