@@ -333,9 +333,9 @@ body {
 .footer-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: var(--s-3);
-  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--s-2);
+  flex-wrap: nowrap;
 }
 
 .kofi-link {
@@ -389,6 +389,16 @@ body {
 .link-btn:hover {
   color: var(--accent);
   text-decoration: underline;
+}
+
+.link-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.link-btn:disabled:hover {
+  color: var(--text-2);
+  text-decoration: none;
 }
 
 .link-btn:focus-visible {
