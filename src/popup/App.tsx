@@ -302,7 +302,6 @@ function SettingsView({
   onChange: (patch: Partial<Settings>) => void;
 }) {
   const showQuality = settings.defaultFormat === 'jpeg' || settings.defaultFormat === 'webp';
-  const pdfDisabled = settings.pdfPageSize === 'full';
 
   return (
     <div class="settings">
@@ -367,68 +366,6 @@ function SettingsView({
         <span class="settings-hint">{t('filenameHint')}</span>
       </div>
 
-      <div class="settings-section">{t('settingsPdfDefaults')}</div>
-
-      <div class="settings-row">
-        <span class="settings-label">{t('settingsPdfPageSize')}</span>
-        <div class="seg">
-          {(['a4', 'letter', 'full'] as const).map((p) => (
-            <button
-              key={p}
-              class="seg-btn"
-              aria-pressed={settings.pdfPageSize === p}
-              onClick={() => onChange({ pdfPageSize: p })}
-            >
-              {t('pdfPageSize' + p.charAt(0).toUpperCase() + p.slice(1))}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div class="settings-row">
-        <span class="settings-label">{t('settingsPdfOrientation')}</span>
-        <div class="seg">
-          {(['portrait', 'landscape'] as const).map((o) => (
-            <button
-              key={o}
-              class="seg-btn"
-              aria-pressed={settings.pdfOrientation === o}
-              disabled={pdfDisabled}
-              onClick={() => onChange({ pdfOrientation: o })}
-            >
-              {t('pdfOrientation' + o.charAt(0).toUpperCase() + o.slice(1))}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div class="settings-row settings-row-between">
-        <label class="check-label">
-          <input
-            type="checkbox"
-            class="switch"
-            checked={settings.pdfMultiPage && !pdfDisabled}
-            disabled={pdfDisabled}
-            onChange={(e) => onChange({ pdfMultiPage: (e.target as HTMLInputElement).checked })}
-          />
-          {t('pdfMultiPage')}
-        </label>
-        <label class="check-label">
-          {t('pdfMargin')}
-          <input
-            class="num-input"
-            type="number"
-            min="0"
-            max="40"
-            step="1"
-            value={settings.pdfMarginMm}
-            disabled={pdfDisabled}
-            onInput={(e) => onChange({ pdfMarginMm: Number((e.target as HTMLInputElement).value) })}
-          />
-          mm
-        </label>
-      </div>
-      {pdfDisabled ? <span class="settings-hint">{t('pdfFullHint')}</span> : null}
     </div>
   );
 }

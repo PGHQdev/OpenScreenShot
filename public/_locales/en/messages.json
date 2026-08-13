@@ -143,50 +143,6 @@
     "message": "Tokens: {date} {time} {title} {w} {h}",
     "description": "Help text for filename template tokens."
   },
-  "settingsPdfDefaults": {
-    "message": "PDF defaults",
-    "description": "PDF defaults section heading."
-  },
-  "settingsPdfPageSize": {
-    "message": "Page size",
-    "description": "PDF page size setting label."
-  },
-  "pdfPageSizeA4": {
-    "message": "A4",
-    "description": "A4 page size option."
-  },
-  "pdfPageSizeLetter": {
-    "message": "Letter",
-    "description": "Letter page size option."
-  },
-  "pdfPageSizeFull": {
-    "message": "Full",
-    "description": "Full page size option (auto-sized to image)."
-  },
-  "settingsPdfOrientation": {
-    "message": "Orientation",
-    "description": "PDF orientation setting label."
-  },
-  "pdfOrientationPortrait": {
-    "message": "Portrait",
-    "description": "Portrait orientation option."
-  },
-  "pdfOrientationLandscape": {
-    "message": "Landscape",
-    "description": "Landscape orientation option."
-  },
-  "pdfMultiPage": {
-    "message": "Multi-page",
-    "description": "Multi-page PDF option label."
-  },
-  "pdfMargin": {
-    "message": "Margin",
-    "description": "PDF margin setting label."
-  },
-  "pdfFullHint": {
-    "message": "Full sizes the page to the image, so these don\u2019t apply.",
-    "description": "Hint when Full page size is selected."
-  },
   "couldNotReach": {
     "message": "Could not reach the background worker.",
     "description": "Error toast when the background service worker is unreachable."
