@@ -308,9 +308,9 @@ function SettingsView({
         </button>
       </div>
 
-      <div class="settings-row">
+      <div class="settings-row settings-row-col">
         <span class="settings-label">{t('settingsDefaultFormat')}</span>
-        <div class="seg seg-wrap">
+        <div class="seg-grid">
           {(['png', 'jpeg', 'webp', 'pdf'] as const).map((f) => (
             <button
               key={f}
