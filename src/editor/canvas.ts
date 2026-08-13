@@ -8,6 +8,7 @@ import {
   pruneBlurCache,
   type Rect,
 } from './annotations';
+import { clampZoom, fitZoom } from './viewport';
 
 /**
  * CanvasController — imperative owner of the editor's <canvas>.
@@ -33,8 +34,6 @@ export interface Point {
   y: number;
 }
 
-const MIN_ZOOM = 0.05;
-const MAX_ZOOM = 8;
 
 export class CanvasController {
   readonly canvas: HTMLCanvasElement;
@@ -114,7 +113,7 @@ export class CanvasController {
     if (rect.width <= 0 || rect.height <= 0) return;
     const w = this.image.naturalWidth;
     const h = this.image.naturalHeight;
-    const zoom = clamp(Math.min(rect.width / w, rect.height / h, 1), MIN_ZOOM, MAX_ZOOM);
+    const zoom = fitZoom(rect.width, rect.height, w, h);
     this.view = {
       zoom,
       panX: (rect.width - w * zoom) / 2,
@@ -128,7 +127,7 @@ export class CanvasController {
   setZoom(zoom: number, cx: number, cy: number): void {
     const ix = (cx - this.view.panX) / this.view.zoom;
     const iy = (cy - this.view.panY) / this.view.zoom;
-    const z = clamp(zoom, MIN_ZOOM, MAX_ZOOM);
+    const z = clampZoom(zoom);
     this.view = { zoom: z, panX: cx - ix * z, panY: cy - iy * z };
     this.render();
     this.onViewChange?.();
@@ -252,6 +251,3 @@ function drawCheckerboard(
   ctx.restore();
 }
 
-function clamp(v: number, lo: number, hi: number): number {
-  return Math.max(lo, Math.min(hi, v));
-}
