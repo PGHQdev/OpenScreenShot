@@ -303,6 +303,7 @@ function SettingsView({
   onChange: (patch: Partial<Settings>) => void;
 }) {
   const filenameRef = useRef<HTMLInputElement>(null);
+  const [confirmReset, setConfirmReset] = useState(false);
   const showQuality = settings.defaultFormat === 'jpeg' || settings.defaultFormat === 'webp';
 
   function insertAtCaret(token: string) {
@@ -317,6 +318,17 @@ function SettingsView({
       el.focus();
       el.setSelectionRange(next.caret, next.caret);
     });
+  }
+
+  function resetAll() {
+    if (!confirmReset) {
+      setConfirmReset(true);
+      setTimeout(() => setConfirmReset(false), 3000);
+      return;
+    }
+    setConfirmReset(false);
+    // Keep showOnboarding as it is, so the welcome card does not come back.
+    onChange({ ...DEFAULT_SETTINGS, showOnboarding: settings.showOnboarding });
   }
 
   return (
@@ -391,6 +403,10 @@ function SettingsView({
         <span class="settings-hint">{previewFilename(settings)}</span>
       </div>
 
+      <div class="divider" />
+      <button class="link-btn reset-btn" data-armed={confirmReset ? 'true' : undefined} onClick={resetAll}>
+        {confirmReset ? t('resetConfirm') : t('resetDefaults')}
+      </button>
     </div>
   );
 }

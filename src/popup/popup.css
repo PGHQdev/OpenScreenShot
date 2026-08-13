@@ -599,6 +599,11 @@ body {
   }
 }
 
+.reset-btn[data-armed='true'] {
+  color: var(--danger);
+  font-weight: 600;
+}
+
 /* ---- Reduced motion ---- */
 @media (prefers-reduced-motion: reduce) {
   .mode-card,
