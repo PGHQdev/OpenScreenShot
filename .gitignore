@@ -13,3 +13,5 @@ public/icons/
 pi-session-*.html
 .gstack/
 .wrangler/
+.worktrees/
+.superpowers/
