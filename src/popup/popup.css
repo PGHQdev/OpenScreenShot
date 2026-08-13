@@ -306,6 +306,42 @@ body {
   outline: 2px solid var(--border-focus);
   outline-offset: 1px;
 }
+.token-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.token-label {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-right: 2px;
+}
+
+.token-chip {
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease-out,
+    color 120ms ease-out;
+}
+
+.token-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.token-chip:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
 .check-label {
   display: inline-flex;
   align-items: center;
