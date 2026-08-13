@@ -6,6 +6,7 @@ import type { PdfOptions } from './pdf';
 import { COLOR_PALETTE, STROKE_WIDTHS } from './annotations';
 import { arrowNav, getFocusable, trapFocus } from './focus';
 import { BrandMark } from '../shared/BrandMark';
+import { setSettings } from '../shared/storage';
 
 type DialogFormat = ImageFormat | 'pdf';
 
@@ -303,6 +304,7 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
   );
   const [pdfMultiPage, setPdfMultiPage] = useState(ed.settings?.pdfMultiPage ?? true);
   const [pdfMargin, setPdfMargin] = useState(ed.settings?.pdfMarginMm ?? 8);
+  const [remember, setRemember] = useState(false);
 
   const isFull = pdfPageSize === 'full';
   const showQuality = format === 'jpeg' || format === 'webp';
@@ -310,6 +312,16 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
   const ext = format === 'pdf' ? 'pdf' : format === 'jpeg' ? 'jpg' : format;
 
   async function doExport() {
+    if (remember) {
+      await setSettings({
+        defaultFormat: format,
+        quality,
+        pdfPageSize,
+        pdfOrientation,
+        pdfMultiPage,
+        pdfMarginMm: pdfMargin,
+      });
+    }
     if (format === 'pdf') {
       const opts: PdfOptions = {
         pageSize: pdfPageSize,
@@ -488,6 +500,16 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
         </div>
 
         <div class="modal-actions">
+          <label class="check-label">
+            <input
+              type="checkbox"
+              class="switch"
+              checked={remember}
+              onChange={(e) => setRemember((e.target as HTMLInputElement).checked)}
+            />
+            Remember these settings
+          </label>
+          <span class="modal-actions-spacer" />
           <button class="text-btn" onClick={onClose}>
             Cancel
           </button>
