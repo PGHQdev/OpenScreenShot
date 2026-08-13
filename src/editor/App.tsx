@@ -305,6 +305,7 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
   const [pdfMultiPage, setPdfMultiPage] = useState(ed.settings?.pdfMultiPage ?? true);
   const [pdfMargin, setPdfMargin] = useState(ed.settings?.pdfMarginMm ?? 8);
   const [remember, setRemember] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const isFull = pdfPageSize === 'full';
   const showQuality = format === 'jpeg' || format === 'webp';
@@ -312,30 +313,38 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
   const ext = format === 'pdf' ? 'pdf' : format === 'jpeg' ? 'jpg' : format;
 
   async function doExport() {
-    if (format === 'pdf') {
-      const opts: PdfOptions = {
-        pageSize: pdfPageSize,
-        orientation: pdfOrientation,
-        multiPage: pdfMultiPage,
-        marginMm: pdfMargin,
-      };
-      await ed.exportPdf(opts, filenameBase);
-    } else {
-      await ed.exportImage(format, quality, filenameBase);
+    setBusy(true);
+    try {
+      if (format === 'pdf') {
+        const opts: PdfOptions = {
+          pageSize: pdfPageSize,
+          orientation: pdfOrientation,
+          multiPage: pdfMultiPage,
+          marginMm: pdfMargin,
+        };
+        await ed.exportPdf(opts, filenameBase);
+      } else {
+        await ed.exportImage(format, quality, filenameBase);
+      }
+      // The export is the action the user asked for. Persisting the choice is a
+      // convenience, so it runs after and can never prevent the export.
+      if (remember) {
+        await setSettings({
+          defaultFormat: format,
+          quality,
+          pdfPageSize,
+          pdfOrientation,
+          pdfMultiPage,
+          pdfMarginMm: pdfMargin,
+        });
+      }
+      onClose();
+    } finally {
+      // ed.exporting only covers the export call itself, so it clears before the
+      // settings write. This flag spans the whole operation, so the button
+      // cannot fire a second export in the gap.
+      setBusy(false);
     }
-    // The export is the action the user asked for. Persisting the choice is a
-    // convenience, so it runs after and can never prevent the export.
-    if (remember) {
-      await setSettings({
-        defaultFormat: format,
-        quality,
-        pdfPageSize,
-        pdfOrientation,
-        pdfMultiPage,
-        pdfMarginMm: pdfMargin,
-      });
-    }
-    onClose();
   }
 
   const modalRef = useRef<HTMLDivElement>(null);
@@ -515,7 +524,7 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
           <button class="text-btn" onClick={onClose}>
             Cancel
           </button>
-          <button class="btn-primary" onClick={doExport} disabled={ed.exporting}>
+          <button class="btn-primary" onClick={doExport} disabled={ed.exporting || busy}>
             {ed.exporting ? 'Exporting…' : 'Export'}
           </button>
         </div>
