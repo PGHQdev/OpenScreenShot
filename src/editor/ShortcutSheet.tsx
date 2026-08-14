@@ -2,24 +2,39 @@ import { useEffect, useRef } from 'preact/hooks';
 import { TOOL_LIST } from './tools';
 import { getFocusable, trapFocus } from './focus';
 
+/** True on macOS, where the command modifier renders as ⌘ rather than Ctrl. */
+export function isMacPlatform(platform: string): boolean {
+  return /mac/i.test(platform);
+}
+
+/** Render a shortcut using the right modifier word for the platform. */
+export function modKey(isMac: boolean): string {
+  return isMac ? '⌘' : 'Ctrl+';
+}
+
 /** Commands that are not tools. Tool rows come from TOOL_LIST. */
-const COMMANDS: { label: string; keys: string }[] = [
-  { label: 'Copy to clipboard', keys: '⌘C' },
-  { label: 'Export', keys: '⌘S' },
-  { label: 'Undo', keys: '⌘Z' },
-  { label: 'Redo', keys: '⌘⇧Z' },
-  { label: 'Delete selected', keys: '⌫' },
-  { label: 'Deselect / cancel crop', keys: 'Esc' },
-  { label: 'Zoom in', keys: '⌘+' },
-  { label: 'Zoom out', keys: '⌘−' },
-  { label: 'Actual size', keys: '⌘0' },
-  { label: 'Fit to screen', keys: 'F' },
-  { label: 'Pan', keys: 'Space + drag' },
-  { label: 'This sheet', keys: '?' },
-];
+function buildCommands(isMac: boolean): { label: string; keys: string }[] {
+  const mod = modKey(isMac);
+  const shift = isMac ? '⇧' : 'Shift+';
+  return [
+    { label: 'Copy to clipboard', keys: `${mod}C` },
+    { label: 'Export', keys: `${mod}S` },
+    { label: 'Undo', keys: `${mod}Z` },
+    { label: 'Redo', keys: `${mod}${shift}Z` },
+    { label: 'Delete selected', keys: '⌫' },
+    { label: 'Deselect / cancel crop', keys: 'Esc' },
+    { label: 'Zoom in', keys: `${mod}+` },
+    { label: 'Zoom out', keys: `${mod}−` },
+    { label: 'Actual size', keys: `${mod}0` },
+    { label: 'Fit to screen', keys: 'F' },
+    { label: 'Pan', keys: 'Space + drag' },
+    { label: 'This sheet', keys: '?' },
+  ];
+}
 
 export function ShortcutSheet({ onClose }: { onClose: () => void }) {
   const modalRef = useRef<HTMLDivElement>(null);
+  const COMMANDS = buildCommands(isMacPlatform(navigator.platform));
 
   useEffect(() => {
     const prev = (document.activeElement as HTMLElement | null) ?? null;
@@ -44,7 +59,7 @@ export function ShortcutSheet({ onClose }: { onClose: () => void }) {
           // shortcuts (⌘S, ⌘C, tool letters) still fire behind it.
           e.stopPropagation();
           trapFocus(modalRef.current!, e);
-          if (e.key === 'Escape') onClose();
+          if (e.key === 'Escape' || e.key === '?') onClose();
         }}
       >
         <h2 class="modal-title">Keyboard shortcuts</h2>

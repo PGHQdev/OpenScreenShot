@@ -7,7 +7,7 @@ import { COLOR_PALETTE, STROKE_WIDTHS } from './annotations';
 import { colorName } from './palette';
 import { arrowNav, getFocusable, trapFocus } from './focus';
 import { BrandMark } from '../shared/BrandMark';
-import { setSettings } from '../shared/storage';
+import { getSettings, setSettings } from '../shared/storage';
 import { ZoomMenu } from './ZoomMenu';
 import { stylebarEmpty, stylebarFields } from './stylebar';
 import { ShortcutSheet } from './ShortcutSheet';
@@ -344,12 +344,39 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
   const [remember, setRemember] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  // ed.settings is loaded once at editor mount and never refreshes, so a
+  // previous export's "Remember these settings" write is invisible to the
+  // initial state above. Re-read from storage so a dialog reopened later in
+  // the same tab reflects what was actually persisted.
+  useEffect(() => {
+    let cancelled = false;
+    getSettings().then((s) => {
+      if (cancelled) return;
+      const fmt = s.defaultFormat;
+      if (fmt === 'pdf' || fmt === 'png' || fmt === 'jpeg' || fmt === 'webp') setFormat(fmt);
+      setQuality(s.quality);
+      setPdfPageSize(s.pdfPageSize);
+      setPdfOrientation(s.pdfOrientation);
+      setPdfMultiPage(s.pdfMultiPage);
+      setPdfMargin(s.pdfMarginMm);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const isFull = pdfPageSize === 'full';
   const showQuality = format === 'jpeg' || format === 'webp';
   const showPdfOptions = format === 'pdf';
   const ext = format === 'pdf' ? 'pdf' : format === 'jpeg' ? 'jpg' : format;
 
   async function doExport() {
+    // The Export button disables on the next render once busy is true, and
+    // Chrome moves focus to <body> when the focused element is disabled.
+    // Focusing the modal first keeps focus inside it, so the modal's
+    // stopPropagation still shields window shortcuts (⌘Z, ?) while the
+    // export runs.
+    modalRef.current?.focus();
     setBusy(true);
     try {
       if (format === 'pdf') {
@@ -366,14 +393,21 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
       // The export is the action the user asked for. Persisting the choice is a
       // convenience, so it runs after and can never prevent the export.
       if (remember) {
-        await setSettings({
-          defaultFormat: format,
-          quality,
-          pdfPageSize,
-          pdfOrientation,
-          pdfMultiPage,
-          pdfMarginMm: pdfMargin,
-        });
+        // The file is already on disk at this point, so there is nothing left
+        // for the user to retry — a storage failure here must not look like
+        // the export itself failed.
+        try {
+          await setSettings({
+            defaultFormat: format,
+            quality,
+            pdfPageSize,
+            pdfOrientation,
+            pdfMultiPage,
+            pdfMarginMm: pdfMargin,
+          });
+        } catch {
+          // Swallowed: see comment above.
+        }
       }
       onClose();
     } finally {
@@ -403,6 +437,7 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
         role="dialog"
         aria-modal="true"
         aria-label="Export screenshot"
+        tabIndex={-1}
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           // A modal owns the keyboard while it is open — see ShortcutSheet's onKeyDown.
