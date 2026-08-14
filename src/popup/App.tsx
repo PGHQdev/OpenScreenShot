@@ -538,6 +538,7 @@ function previewFilename(settings: Settings): string {
   const ext = settings.defaultFormat === 'jpeg' ? 'jpg' : settings.defaultFormat;
   const base = formatFilename(settings.filenameTemplate, {
     title: 'Example Page',
+    url: 'https://www.example.com/page',
     width: 1920,
     height: 1080,
   });

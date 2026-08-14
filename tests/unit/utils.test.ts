@@ -27,6 +27,39 @@ describe('formatFilename', () => {
     const out = formatFilename('{title}', { title: '', width: 1, height: 1 });
     expect(out).toBe('screenshot');
   });
+
+  it('resolves the domain token to the hostname', () => {
+    const out = formatFilename('{domain}', {
+      url: 'https://docs.example.com/a/b?q=1',
+      width: 1,
+      height: 1,
+    });
+    expect(out).toBe('docs.example.com');
+  });
+
+  it('strips a leading www. from the domain token', () => {
+    const out = formatFilename('{domain}', {
+      url: 'https://www.example.com/',
+      width: 1,
+      height: 1,
+    });
+    expect(out).toBe('example.com');
+  });
+
+  it('falls back to a default domain when no url is provided', () => {
+    const out = formatFilename('{domain}', { width: 1, height: 1 });
+    expect(out).toBe('page');
+  });
+
+  it('falls back to a default domain when the url has no host', () => {
+    const out = formatFilename('{domain}', { url: 'file:///tmp/x.html', width: 1, height: 1 });
+    expect(out).toBe('page');
+  });
+
+  it('falls back to a default domain when the url is unparsable', () => {
+    const out = formatFilename('{domain}', { url: 'not a url', width: 1, height: 1 });
+    expect(out).toBe('page');
+  });
 });
 
 describe('sanitizeFilename', () => {
@@ -82,6 +115,6 @@ describe('insertToken', () => {
 
 describe('FILENAME_TOKENS', () => {
   it('lists every token formatFilename replaces', () => {
-    expect([...FILENAME_TOKENS]).toEqual(['{date}', '{time}', '{title}', '{w}', '{h}']);
+    expect([...FILENAME_TOKENS]).toEqual(['{date}', '{time}', '{title}', '{domain}', '{w}', '{h}']);
   });
 });

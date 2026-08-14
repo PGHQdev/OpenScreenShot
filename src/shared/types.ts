@@ -77,6 +77,8 @@ export interface LastCapture {
   height: number;
   mode: CaptureMode;
   title: string;
+  /** Page URL, used by the `{domain}` filename token. Absent on pre-0.4.0 stashes. */
+  url?: string;
   capturedAt: number;
 }
 

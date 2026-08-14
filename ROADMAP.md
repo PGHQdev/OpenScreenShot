@@ -32,11 +32,11 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 
 ## Power features
 
-| Feature                                  | Status       | Notes                                                                                 |
-| ---------------------------------------- | ------------ | ------------------------------------------------------------------------------------- |
-| Local OCR: copy text out of a screenshot | 🧭 exploring | Client-side WASM OCR, lazy-loaded (same pattern as jsPDF). No data leaves the device. |
-| Recent captures shelf                    | 🧭 exploring | Last N captures kept locally, reopenable in the editor, with a clear-all control.     |
-| Extra filename tokens (`{domain}`, …)    | 📋 planned   | Extends the existing filename template engine.                                        |
+| Feature                                  | Status       | Notes                                                                             |
+| ---------------------------------------- | ------------ | --------------------------------------------------------------------------------- |
+| Local OCR: copy text out of a screenshot | 🧭 exploring | Client-side WASM OCR, lazy-loaded on first use. No data leaves the device.        |
+| Recent captures shelf                    | 🧭 exploring | Last N captures kept locally, reopenable in the editor, with a clear-all control. |
+| Extra filename tokens (`{domain}`, …)    | ✅ shipped   | `{domain}` landed in v0.4.0. More tokens extend the same template engine.         |
 
 ## Performance & polish
 
@@ -47,10 +47,20 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 
 ## Recently shipped
 
-| Feature                                           | Version |
-| ------------------------------------------------- | ------- |
-| Ko-fi donation links (README, site, popup footer) | v0.2.7  |
+| Feature                                                 | Version |
+| ------------------------------------------------------- | ------- |
+| `{domain}` filename token                               | v0.4.0  |
+| Shortcut sheet in the editor, with Export bound to ⌘S   | v0.3.0  |
+| One zoom menu, with keyboard zoom controls              | v0.3.0  |
+| Named swatches, a custom colour, and recent colours     | v0.3.0  |
+| Undo, redo, and delete moved to the topbar              | v0.3.0  |
+| Style bar shown only when a control applies             | v0.3.0  |
+| Export dialog can save its settings as the new defaults | v0.3.0  |
+| Clickable filename tokens with a live preview           | v0.3.0  |
+| Two-click reset to defaults in settings                 | v0.3.0  |
+| One stable popup footer, and per-mode shortcut chips    | v0.3.0  |
+| Ko-fi donation links (README, site, popup footer)       | v0.2.7  |
 
 ---
 
-_Last updated for v0.2.7._
+_Last updated for v0.4.0._
