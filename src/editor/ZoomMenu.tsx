@@ -22,14 +22,21 @@ export function ZoomMenu(props: ZoomMenuProps) {
     const onDown = (e: MouseEvent) => {
       if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
     };
+    // Capture phase, so this runs and stops propagation before the editor's
+    // own bubble-phase window listeners (⌘Z, tool letters, ⌘S, ?) see the
+    // event — the popover isn't inside a modal's DOM subtree the way the
+    // export dialog and shortcut sheet are, so a bubble-phase stopPropagation
+    // on the popover element wouldn't reach a listener that's already on
+    // window.
     const onKey = (e: KeyboardEvent) => {
+      e.stopPropagation();
       if (e.key === 'Escape') setOpen(false);
     };
     window.addEventListener('mousedown', onDown);
-    window.addEventListener('keydown', onKey);
+    window.addEventListener('keydown', onKey, true);
     return () => {
       window.removeEventListener('mousedown', onDown);
-      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keydown', onKey, true);
     };
   }, [open]);
 
