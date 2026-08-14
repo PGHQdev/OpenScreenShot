@@ -40,6 +40,9 @@ export function ShortcutSheet({ onClose }: { onClose: () => void }) {
         aria-label="Keyboard shortcuts"
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
+          // A modal owns the keyboard while it is open. Without this, window-level
+          // shortcuts (⌘S, ⌘C, tool letters) still fire behind it.
+          e.stopPropagation();
           trapFocus(modalRef.current!, e);
           if (e.key === 'Escape') onClose();
         }}
