@@ -29,13 +29,15 @@ the user sees and which keys work.
 
 ### Fix
 
-1. **Region shortcut chip lies.** `manifest.json` gives `capture-region` a
-   `default` key only. The other two commands also carry a `mac` override.
+1. **Region shortcut chip lies.** `manifest.json` gave `capture-region` both a
+   `default` and a `mac` key, but both were `Ctrl+Shift+R` / `Cmd+Shift+R`,
+   which Chrome reserves for hard reload and silently refuses to assign.
    Chrome reports no binding for region, so `popup/App.tsx` falls back to the
    digit `3`. The column then mixes two OS shortcuts and one popup-local key.
    Digits 1/2/3 work for all three modes, and two rows hide that.
-   **Decision:** add a `mac` override for region, and always show the digit on
-   every row. Show the OS binding as a second chip only when Chrome reports one.
+   **Decision:** move region to `Ctrl+Shift+E` / `Command+Shift+E`, and always
+   show the digit on every row. Show the OS binding as a second chip only when
+   Chrome reports one.
 
 2. **Format segmented control breaks.** `.seg-wrap` wraps four options onto two
    rows. Row one keeps a trailing border and row two leaves a dead cell.
