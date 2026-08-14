@@ -201,19 +201,7 @@ export function App() {
               <span>Loading screenshot…</span>
             </div>
           ) : null}
-          {!ed.loading && !ed.capture && !ed.error ? (
-            <div class="overlay-msg">
-              <div class="empty">
-                <div class="empty-icon" aria-hidden="true">
-                  <IconImage />
-                </div>
-                <h2>Nothing to edit yet</h2>
-                <p>
-                  Use the OpenScreenShot popup to capture a page, then it opens here for editing.
-                </p>
-              </div>
-            </div>
-          ) : null}
+          {!ed.loading && !ed.capture && !ed.error ? <EmptyState /> : null}
           {ed.error ? (
             <div class="overlay-msg">
               <div class="empty">
@@ -623,6 +611,43 @@ function TextOverlay({ ed }: { ed: ReturnType<typeof useEditor> }) {
         }
       }}
     />
+  );
+}
+
+function EmptyState() {
+  const [failed, setFailed] = useState(false);
+
+  // openPopup lands in Chrome 127+ and still refuses in some window states, so
+  // the fallback line is the guaranteed path rather than a nicety.
+  function openPopup() {
+    try {
+      const result = chrome.action?.openPopup?.();
+      if (result && typeof result.then === 'function') {
+        result.catch(() => setFailed(true));
+      } else if (!chrome.action?.openPopup) {
+        setFailed(true);
+      }
+    } catch {
+      setFailed(true);
+    }
+  }
+
+  return (
+    <div class="overlay-msg">
+      <div class="empty">
+        <div class="empty-icon" aria-hidden="true">
+          <IconImage />
+        </div>
+        <h2>Nothing to edit yet</h2>
+        <p>Capture a page with OpenScreenShot, and it opens here.</p>
+        <button class="btn-primary empty-cta" onClick={openPopup}>
+          Capture a page
+        </button>
+        {failed ? (
+          <p class="empty-fallback">Click the OpenScreenShot icon in the toolbar.</p>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
