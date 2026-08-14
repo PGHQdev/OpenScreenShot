@@ -35,6 +35,16 @@ describe('stylebarFields by selection', () => {
     });
   });
 
+  it('offers colour and stroke for a selected shape', () => {
+    for (const type of ['rect', 'arrow', 'pen', 'highlight'] as const) {
+      expect(stylebarFields('select', type)).toEqual({
+        color: true,
+        stroke: true,
+        fontSize: false,
+      });
+    }
+  });
+
   it('offers nothing for a selected blur', () => {
     expect(stylebarEmpty(stylebarFields('rect', 'blur'))).toBe(true);
   });
