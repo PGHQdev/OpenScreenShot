@@ -40,6 +40,7 @@ import {
 import type { LastCapture, Settings } from '../shared/types';
 import { getLastCapture, getSettings, setSettings } from '../shared/storage';
 import { formatFilename } from '../shared/utils';
+import { pushRecent } from './palette';
 import { canvasToDataUrl, downloadDataUrl, withExtension, type ImageFormat } from './export';
 import { exportPdf as exportPdfFile, type PdfOptions } from './pdf';
 
@@ -88,6 +89,7 @@ export function useEditor() {
   const [settings, setSettingsState] = useState<Settings | null>(null);
   const [exporting, setExporting] = useState(false);
   const [style, setStyle] = useState<AnnotationStyle>(DEFAULT_STYLE);
+  const [recentColors, setRecentColors] = useState<string[]>([]);
 
   // Refs for use inside stable event handlers (avoid stale closures).
   const toolRef = useRef(tool);
@@ -206,6 +208,12 @@ export function useEditor() {
   const setStyleColor = useCallback(
     (color: string) => {
       setStyle((s) => ({ ...s, color }));
+      setRecentColors((prev) => {
+        const next = pushRecent(prev, color);
+        // pushRecent returns the same array for a preset, so identity is the test.
+        if (next !== prev) void setSettings({ recentColors: next });
+        return next;
+      });
       applyStyleToSelected((a) =>
         a.type === 'text' || a.type === 'step'
           ? { ...a, color }
@@ -253,6 +261,7 @@ export function useEditor() {
     void (async () => {
       const s = await getSettings();
       setSettingsState(s);
+      setRecentColors(s.recentColors);
       applyTheme(s.theme);
       setStyle({
         color: s.annotationColor,
@@ -774,6 +783,7 @@ export function useEditor() {
     hasSelection: !!selectedId,
     selectedAnnotation,
     style,
+    recentColors,
     setStyleColor,
     setStyleStrokeWidth,
     setStyleFontSize,

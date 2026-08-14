@@ -4,6 +4,7 @@ import { TOOL_LIST, type Tool } from './tools';
 import { IMAGE_FORMATS, type ImageFormat } from './export';
 import type { PdfOptions } from './pdf';
 import { COLOR_PALETTE, STROKE_WIDTHS } from './annotations';
+import { colorName } from './palette';
 import { arrowNav, getFocusable, trapFocus } from './focus';
 import { BrandMark } from '../shared/BrandMark';
 import { setSettings } from '../shared/storage';
@@ -234,11 +235,30 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
                 class="swatch"
                 style={{ backgroundColor: c }}
                 data-light={isLight(c) ? '1' : undefined}
-                aria-label={c}
+                aria-label={colorName(c)}
                 aria-pressed={ed.style.color === c}
                 onClick={() => ed.setStyleColor(c)}
               />
             ))}
+            {ed.recentColors.map((c) => (
+              <button
+                key={c}
+                class="swatch"
+                style={{ backgroundColor: c }}
+                data-light={isLight(c) ? '1' : undefined}
+                aria-label={colorName(c)}
+                aria-pressed={ed.style.color === c}
+                onClick={() => ed.setStyleColor(c)}
+              />
+            ))}
+            <label class="swatch swatch-custom" title="Custom color">
+              <input
+                type="color"
+                aria-label="Custom color"
+                value={ed.style.color}
+                onChange={(e) => ed.setStyleColor((e.target as HTMLInputElement).value)}
+              />
+            </label>
           </div>
         </div>
       ) : null}
