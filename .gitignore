@@ -15,3 +15,5 @@ pi-session-*.html
 .wrangler/
 .worktrees/
 .superpowers/
+# agent working docs never belong in the deployed site directory
+docs/superpowers/
