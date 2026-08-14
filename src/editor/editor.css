@@ -776,6 +776,20 @@ body {
   line-height: 1.5;
 }
 
+.empty {
+  pointer-events: auto;
+}
+
+.empty-cta {
+  margin-top: var(--s-4);
+}
+
+.empty-fallback {
+  margin-top: var(--s-2) !important;
+  font-size: 12px;
+  color: var(--text-3);
+}
+
 /* ---- Status bar ---- */
 .statusbar {
   display: flex;
