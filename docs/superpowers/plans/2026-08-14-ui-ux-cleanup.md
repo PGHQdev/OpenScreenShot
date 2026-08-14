@@ -1,5 +1,10 @@
 # OpenScreenShot UI/UX Cleanup Implementation Plan
 
+> **STATUS: complete, shipped in v0.3.0.** All 18 tasks landed, from Task 1
+> (932fa50) through the Task 18 sweep (c5da6a5, 7368acf). The per-step
+> checkboxes below were never ticked during execution, so read them as history
+> rather than as open work.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Remove UI defects, duplicated controls, and dead surface area from the OpenScreenShot popup, settings view, and editor without changing capture, export, or annotation behaviour.
