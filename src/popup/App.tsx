@@ -290,7 +290,6 @@ export function App() {
           </div>
         </>
       )}
-
     </div>
   );
 }
@@ -404,7 +403,11 @@ function SettingsView({
       </div>
 
       <div class="divider" />
-      <button class="link-btn reset-btn" data-armed={confirmReset ? 'true' : undefined} onClick={resetAll}>
+      <button
+        class="link-btn reset-btn"
+        data-armed={confirmReset ? 'true' : undefined}
+        onClick={resetAll}
+      >
         {confirmReset ? t('resetConfirm') : t('resetDefaults')}
       </button>
     </div>

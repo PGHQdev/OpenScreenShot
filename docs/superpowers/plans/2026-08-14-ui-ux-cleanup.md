@@ -37,11 +37,13 @@ Then in Chrome: open `chrome://extensions`, enable Developer mode, click "Load u
 ### Task 1: Honest shortcut chips in the popup
 
 **Files:**
+
 - Create: `src/shared/shortcuts.ts`
 - Test: `tests/unit/shortcuts.test.ts`
 - Modify: `manifest.json:40-43`, `src/popup/App.tsx:203-238`, `src/popup/popup.css:347-358`
 
 **Interfaces:**
+
 - Consumes: nothing from earlier tasks.
 - Produces: `resolveModeKeys(command: string, index: number, shortcuts: Record<string, string>): ModeKeys` where `interface ModeKeys { digit: string; osShortcut: string | null }`.
 
@@ -151,14 +153,16 @@ Inside the `MODES.map` callback, add the lookup as the first line of the body:
 Replace the `<kbd>` line:
 
 ```tsx
-                  {isBusy ? (
-                    <span class="spinner" aria-label={t('capturing')} />
-                  ) : (
-                    <span class="mode-keys">
-                      {keys.osShortcut ? <kbd class="kbd-os">{keys.osShortcut}</kbd> : null}
-                      <kbd>{keys.digit}</kbd>
-                    </span>
-                  )}
+{
+  isBusy ? (
+    <span class="spinner" aria-label={t('capturing')} />
+  ) : (
+    <span class="mode-keys">
+      {keys.osShortcut ? <kbd class="kbd-os">{keys.osShortcut}</kbd> : null}
+      <kbd>{keys.digit}</kbd>
+    </span>
+  );
+}
 ```
 
 - [ ] **Step 7: Style the chip pair**
@@ -215,9 +219,11 @@ git commit -m "fix(popup): show a true digit chip on every capture mode row"
 ### Task 2: Fix the wrapping format control
 
 **Files:**
+
 - Modify: `src/popup/App.tsx:306-320`, `src/popup/popup.css:247-286`
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: CSS class `.seg-grid` for full-width equal-column option rows.
 
@@ -249,21 +255,21 @@ Add this immediately after the `.seg` rule:
 In `src/popup/App.tsx`, replace the default-format row:
 
 ```tsx
-      <div class="settings-row settings-row-col">
-        <span class="settings-label">{t('settingsDefaultFormat')}</span>
-        <div class="seg-grid">
-          {(['png', 'jpeg', 'webp', 'pdf'] as const).map((f) => (
-            <button
-              key={f}
-              class="seg-btn"
-              aria-pressed={settings.defaultFormat === f}
-              onClick={() => onChange({ defaultFormat: f as ExportFormat })}
-            >
-              {t('format' + f.charAt(0).toUpperCase() + f.slice(1))}
-            </button>
-          ))}
-        </div>
-      </div>
+<div class="settings-row settings-row-col">
+  <span class="settings-label">{t('settingsDefaultFormat')}</span>
+  <div class="seg-grid">
+    {(['png', 'jpeg', 'webp', 'pdf'] as const).map((f) => (
+      <button
+        key={f}
+        class="seg-btn"
+        aria-pressed={settings.defaultFormat === f}
+        onClick={() => onChange({ defaultFormat: f as ExportFormat })}
+      >
+        {t('format' + f.charAt(0).toUpperCase() + f.slice(1))}
+      </button>
+    ))}
+  </div>
+</div>
 ```
 
 The wrapper class is now `seg-grid` alone. `.seg` carried the old border and is no longer needed on this row.
@@ -289,9 +295,11 @@ git commit -m "fix(popup): lay the format options out as one full-width grid row
 ### Task 3: Persist error toasts and stop the popup from jumping
 
 **Files:**
+
 - Modify: `src/popup/App.tsx:123-127`, `src/popup/App.tsx:194-266`, `src/popup/popup.css:466-500`
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: nothing later tasks depend on.
 
@@ -300,18 +308,18 @@ git commit -m "fix(popup): lay the format options out as one full-width grid row
 In `src/popup/App.tsx`, replace `pushToast` and add a dismiss handler beside it:
 
 ```tsx
-  function pushToast(message: string, tone: ToastTone) {
-    const id = Date.now() + Math.random();
-    setToasts((t) => [...t, { id, message, tone }]);
-    // An error is a state the user has to read. Info and success are transient.
-    if (tone !== 'error') {
-      setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4000);
-    }
+function pushToast(message: string, tone: ToastTone) {
+  const id = Date.now() + Math.random();
+  setToasts((t) => [...t, { id, message, tone }]);
+  // An error is a state the user has to read. Info and success are transient.
+  if (tone !== 'error') {
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4000);
   }
+}
 
-  function dismissToast(id: number) {
-    setToasts((t) => t.filter((x) => x.id !== id));
-  }
+function dismissToast(id: number) {
+  setToasts((t) => t.filter((x) => x.id !== id));
+}
 ```
 
 - [ ] **Step 2: Move the toast area above the content**
@@ -319,35 +327,35 @@ In `src/popup/App.tsx`, replace `pushToast` and add a dismiss handler beside it:
 In `src/popup/App.tsx`, delete the existing toast block from the bottom of the returned tree:
 
 ```tsx
-      <div class="toasts" aria-live="polite">
-        {toasts.map((toast) => (
-          <div key={toast.id} class={`toast toast-${toast.tone}`} role="status">
-            {toast.message}
-          </div>
-        ))}
-      </div>
+<div class="toasts" aria-live="polite">
+  {toasts.map((toast) => (
+    <div key={toast.id} class={`toast toast-${toast.tone}`} role="status">
+      {toast.message}
+    </div>
+  ))}
+</div>
 ```
 
 Insert this block directly after the closing `</header>` tag and before the `{showSettings ? (` expression:
 
 ```tsx
-      <div class="toasts" aria-live="polite">
-        {toasts.map((toast) => (
-          <div key={toast.id} class={`toast toast-${toast.tone}`} role="status">
-            <span class="toast-text">{toast.message}</span>
-            {toast.tone === 'error' ? (
-              <button
-                class="toast-dismiss"
-                aria-label={t('dismiss')}
-                title={t('dismiss')}
-                onClick={() => dismissToast(toast.id)}
-              >
-                ×
-              </button>
-            ) : null}
-          </div>
-        ))}
-      </div>
+<div class="toasts" aria-live="polite">
+  {toasts.map((toast) => (
+    <div key={toast.id} class={`toast toast-${toast.tone}`} role="status">
+      <span class="toast-text">{toast.message}</span>
+      {toast.tone === 'error' ? (
+        <button
+          class="toast-dismiss"
+          aria-label={t('dismiss')}
+          title={t('dismiss')}
+          onClick={() => dismissToast(toast.id)}
+        >
+          ×
+        </button>
+      ) : null}
+    </div>
+  ))}
+</div>
 ```
 
 - [ ] **Step 3: Add the dismiss string**
@@ -431,9 +439,11 @@ git commit -m "fix(popup): keep capture errors on screen and hold the layout ste
 ### Task 4: One stable popup footer
 
 **Files:**
+
 - Modify: `src/popup/App.tsx:243-256`, `src/popup/App.tsx:299-304`, `src/popup/App.tsx:414-418`, `src/popup/popup.css:327-380`, `public/_locales/en/messages.json`
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: nothing later tasks depend on.
 
@@ -457,23 +467,18 @@ In `public/_locales/en/messages.json`, delete the `settingsShortcuts` entry and 
 In `src/popup/App.tsx`, replace the footer block:
 
 ```tsx
-          <div class="footer-row">
-            <button
-              class="link-btn"
-              onClick={openEditor}
-              disabled={!hasStash}
-              title={t('reopenLast')}
-            >
-              {t('reopenLast')}
-            </button>
-            <button class="link-btn" onClick={openShortcutSettings} title={t('customizeShortcuts')}>
-              {t('footerShortcuts')}
-            </button>
-            <button class="link-btn kofi-link" onClick={openKofi} title={t('supportKofiTitle')}>
-              <CoffeeMark />
-              {t('footerKofi')}
-            </button>
-          </div>
+<div class="footer-row">
+  <button class="link-btn" onClick={openEditor} disabled={!hasStash} title={t('reopenLast')}>
+    {t('reopenLast')}
+  </button>
+  <button class="link-btn" onClick={openShortcutSettings} title={t('customizeShortcuts')}>
+    {t('footerShortcuts')}
+  </button>
+  <button class="link-btn kofi-link" onClick={openKofi} title={t('supportKofiTitle')}>
+    <CoffeeMark />
+    {t('footerKofi')}
+  </button>
+</div>
 ```
 
 - [ ] **Step 3: Remove the duplicated rows from settings**
@@ -481,12 +486,12 @@ In `src/popup/App.tsx`, replace the footer block:
 In `src/popup/App.tsx` `SettingsView`, delete the shortcuts row:
 
 ```tsx
-      <div class="settings-row">
-        <span class="settings-label">{t('settingsShortcuts')}</span>
-        <button class="link-btn" onClick={openShortcutSettings}>
-          {t('customizeShortcuts')}
-        </button>
-      </div>
+<div class="settings-row">
+  <span class="settings-label">{t('settingsShortcuts')}</span>
+  <button class="link-btn" onClick={openShortcutSettings}>
+    {t('customizeShortcuts')}
+  </button>
+</div>
 ```
 
 and delete the trailing divider plus Ko-fi link at the end of the same component:
@@ -553,9 +558,11 @@ git commit -m "refactor(popup): collapse the footer to one stable row and drop t
 ### Task 5: Drop the duplicated PDF defaults from settings
 
 **Files:**
+
 - Modify: `src/popup/App.tsx:271-421`, `public/_locales/en/messages.json`
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: nothing. Task 6 restores the "remember" path in the export dialog, so run these two tasks together before shipping.
 
@@ -564,19 +571,21 @@ git commit -m "refactor(popup): collapse the footer to one stable row and drop t
 In `src/popup/App.tsx`, delete the `pdfDisabled` constant:
 
 ```tsx
-  const pdfDisabled = settings.pdfPageSize === 'full';
+const pdfDisabled = settings.pdfPageSize === 'full';
 ```
 
 and delete every block from the PDF heading through the full-size hint:
 
 ```tsx
-      <div class="settings-section">{t('settingsPdfDefaults')}</div>
+<div class="settings-section">{t('settingsPdfDefaults')}</div>
 ```
 
 through
 
 ```tsx
-      {pdfDisabled ? <span class="settings-hint">{t('pdfFullHint')}</span> : null}
+{
+  pdfDisabled ? <span class="settings-hint">{t('pdfFullHint')}</span> : null;
+}
 ```
 
 inclusive. That removes the page size row, the orientation row, and the multi-page/margin row.
@@ -614,9 +623,11 @@ git commit -m "refactor(popup): remove the PDF defaults section duplicated by th
 ### Task 6: "Remember these settings" in the export dialog
 
 **Files:**
+
 - Modify: `src/editor/App.tsx:290-501`, `src/editor/editor.css:529-534`
 
 **Interfaces:**
+
 - Consumes: `setSettings` from `src/shared/storage.ts` — `setSettings(patch: Partial<Settings>): Promise<Settings>`.
 - Produces: nothing later tasks depend on.
 
@@ -633,36 +644,36 @@ import { setSettings } from '../shared/storage';
 In `ExportDialog`, add the state next to the other `useState` calls:
 
 ```tsx
-  const [remember, setRemember] = useState(false);
+const [remember, setRemember] = useState(false);
 ```
 
 Replace `doExport`:
 
 ```tsx
-  async function doExport() {
-    if (remember) {
-      await setSettings({
-        defaultFormat: format,
-        quality,
-        pdfPageSize,
-        pdfOrientation,
-        pdfMultiPage,
-        pdfMarginMm: pdfMargin,
-      });
-    }
-    if (format === 'pdf') {
-      const opts: PdfOptions = {
-        pageSize: pdfPageSize,
-        orientation: pdfOrientation,
-        multiPage: pdfMultiPage,
-        marginMm: pdfMargin,
-      };
-      await ed.exportPdf(opts, filenameBase);
-    } else {
-      await ed.exportImage(format, quality, filenameBase);
-    }
-    onClose();
+async function doExport() {
+  if (remember) {
+    await setSettings({
+      defaultFormat: format,
+      quality,
+      pdfPageSize,
+      pdfOrientation,
+      pdfMultiPage,
+      pdfMarginMm: pdfMargin,
+    });
   }
+  if (format === 'pdf') {
+    const opts: PdfOptions = {
+      pageSize: pdfPageSize,
+      orientation: pdfOrientation,
+      multiPage: pdfMultiPage,
+      marginMm: pdfMargin,
+    };
+    await ed.exportPdf(opts, filenameBase);
+  } else {
+    await ed.exportImage(format, quality, filenameBase);
+  }
+  onClose();
+}
 ```
 
 - [ ] **Step 3: Add the control to the dialog actions**
@@ -670,24 +681,24 @@ Replace `doExport`:
 Replace the `modal-actions` block:
 
 ```tsx
-        <div class="modal-actions">
-          <label class="check-label">
-            <input
-              type="checkbox"
-              class="switch"
-              checked={remember}
-              onChange={(e) => setRemember((e.target as HTMLInputElement).checked)}
-            />
-            Remember these settings
-          </label>
-          <span class="modal-actions-spacer" />
-          <button class="text-btn" onClick={onClose}>
-            Cancel
-          </button>
-          <button class="btn-primary" onClick={doExport} disabled={ed.exporting}>
-            {ed.exporting ? 'Exporting…' : 'Export'}
-          </button>
-        </div>
+<div class="modal-actions">
+  <label class="check-label">
+    <input
+      type="checkbox"
+      class="switch"
+      checked={remember}
+      onChange={(e) => setRemember((e.target as HTMLInputElement).checked)}
+    />
+    Remember these settings
+  </label>
+  <span class="modal-actions-spacer" />
+  <button class="text-btn" onClick={onClose}>
+    Cancel
+  </button>
+  <button class="btn-primary" onClick={doExport} disabled={ed.exporting}>
+    {ed.exporting ? 'Exporting…' : 'Export'}
+  </button>
+</div>
 ```
 
 - [ ] **Step 4: Let the actions row spread**
@@ -728,10 +739,12 @@ git commit -m "feat(editor): let the export dialog save its settings as the new 
 ### Task 7: Clickable filename tokens and a live preview
 
 **Files:**
+
 - Modify: `src/shared/utils.ts`, `src/popup/App.tsx:339-349`, `src/popup/popup.css`, `public/_locales/en/messages.json`
 - Test: `tests/unit/utils.test.ts`
 
 **Interfaces:**
+
 - Consumes: `formatFilename(template, ctx)` from `src/shared/utils.ts`.
 - Produces: `FILENAME_TOKENS: readonly string[]` and `insertToken(value: string, selStart: number, selEnd: number, token: string): { value: string; caret: number }`.
 
@@ -852,46 +865,46 @@ import { FILENAME_TOKENS, formatFilename, insertToken } from '../shared/utils';
 Inside `SettingsView`, above the returned tree, add:
 
 ```tsx
-  const filenameRef = useRef<HTMLInputElement>(null);
+const filenameRef = useRef<HTMLInputElement>(null);
 
-  function insertAtCaret(token: string) {
-    const el = filenameRef.current;
-    if (!el) return;
-    const start = el.selectionStart ?? el.value.length;
-    const end = el.selectionEnd ?? el.value.length;
-    const next = insertToken(el.value, start, end, token);
-    onChange({ filenameTemplate: next.value });
-    // The value arrives on the next render, so restore the caret after it.
-    requestAnimationFrame(() => {
-      el.focus();
-      el.setSelectionRange(next.caret, next.caret);
-    });
-  }
+function insertAtCaret(token: string) {
+  const el = filenameRef.current;
+  if (!el) return;
+  const start = el.selectionStart ?? el.value.length;
+  const end = el.selectionEnd ?? el.value.length;
+  const next = insertToken(el.value, start, end, token);
+  onChange({ filenameTemplate: next.value });
+  // The value arrives on the next render, so restore the caret after it.
+  requestAnimationFrame(() => {
+    el.focus();
+    el.setSelectionRange(next.caret, next.caret);
+  });
+}
 ```
 
 Replace the filename row:
 
 ```tsx
-      <div class="settings-row settings-row-col">
-        <span class="settings-label">{t('settingsFilename')}</span>
-        <input
-          ref={filenameRef}
-          class="text-input"
-          type="text"
-          spellcheck={false}
-          value={settings.filenameTemplate}
-          onInput={(e) => onChange({ filenameTemplate: (e.target as HTMLInputElement).value })}
-        />
-        <div class="token-row">
-          <span class="token-label">{t('filenameInsert')}</span>
-          {FILENAME_TOKENS.map((tok) => (
-            <button key={tok} class="token-chip" onClick={() => insertAtCaret(tok)}>
-              {tok}
-            </button>
-          ))}
-        </div>
-        <span class="settings-hint">{previewFilename(settings)}</span>
-      </div>
+<div class="settings-row settings-row-col">
+  <span class="settings-label">{t('settingsFilename')}</span>
+  <input
+    ref={filenameRef}
+    class="text-input"
+    type="text"
+    spellcheck={false}
+    value={settings.filenameTemplate}
+    onInput={(e) => onChange({ filenameTemplate: (e.target as HTMLInputElement).value })}
+  />
+  <div class="token-row">
+    <span class="token-label">{t('filenameInsert')}</span>
+    {FILENAME_TOKENS.map((tok) => (
+      <button key={tok} class="token-chip" onClick={() => insertAtCaret(tok)}>
+        {tok}
+      </button>
+    ))}
+  </div>
+  <span class="settings-hint">{previewFilename(settings)}</span>
+</div>
 ```
 
 Add the preview helper next to the other module-level helpers at the bottom of the file:
@@ -973,9 +986,11 @@ git commit -m "feat(popup): make filename tokens clickable and preview the resol
 ### Task 8: Reset to defaults
 
 **Files:**
+
 - Modify: `src/popup/App.tsx` (`SettingsView`), `src/popup/popup.css`, `public/_locales/en/messages.json`
 
 **Interfaces:**
+
 - Consumes: `DEFAULT_SETTINGS` from `src/shared/types.ts`, already imported in `src/popup/App.tsx`.
 - Produces: nothing later tasks depend on.
 
@@ -999,18 +1014,18 @@ In `public/_locales/en/messages.json`, add:
 In `src/popup/App.tsx` `SettingsView`, add the state beside `filenameRef`:
 
 ```tsx
-  const [confirmReset, setConfirmReset] = useState(false);
+const [confirmReset, setConfirmReset] = useState(false);
 
-  function resetAll() {
-    if (!confirmReset) {
-      setConfirmReset(true);
-      setTimeout(() => setConfirmReset(false), 3000);
-      return;
-    }
-    setConfirmReset(false);
-    // Keep showOnboarding as it is, so the welcome card does not come back.
-    onChange({ ...DEFAULT_SETTINGS, showOnboarding: settings.showOnboarding });
+function resetAll() {
+  if (!confirmReset) {
+    setConfirmReset(true);
+    setTimeout(() => setConfirmReset(false), 3000);
+    return;
   }
+  setConfirmReset(false);
+  // Keep showOnboarding as it is, so the welcome card does not come back.
+  onChange({ ...DEFAULT_SETTINGS, showOnboarding: settings.showOnboarding });
+}
 ```
 
 At the end of the returned tree, after the last settings row, add:
@@ -1056,11 +1071,13 @@ git commit -m "feat(popup): add a two-click reset to defaults in settings"
 ### Task 9: Give Fit a margin
 
 **Files:**
+
 - Create: `src/editor/viewport.ts`
 - Test: `tests/unit/viewport.test.ts`
 - Modify: `src/editor/canvas.ts:36-37`, `src/editor/canvas.ts:110-153`, `src/editor/canvas.ts:255-257`
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: `MIN_ZOOM`, `MAX_ZOOM`, `FIT_PADDING`, `clampZoom(v: number): number`, and `fitZoom(viewportW: number, viewportH: number, imgW: number, imgH: number, padding?: number): number`.
 
@@ -1205,7 +1222,7 @@ Replace `fit()`:
 Replace the clamp call inside `setZoom`:
 
 ```ts
-    const z = clampZoom(zoom);
+const z = clampZoom(zoom);
 ```
 
 - [ ] **Step 6: Verify the checks pass**
@@ -1229,9 +1246,11 @@ git commit -m "fix(editor): leave a margin around the image when fitting to the 
 ### Task 10: Give the screenshot a visible edge
 
 **Files:**
+
 - Modify: `src/shared/tokens.css:34-74`, `src/editor/editor.css:283-288`, `src/editor/editor.css:610-621`, `src/editor/canvas.ts:172-208`
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: CSS token `--stage-bg`.
 
@@ -1240,13 +1259,13 @@ git commit -m "fix(editor): leave a margin around the image when fitting to the 
 In `src/shared/tokens.css`, add to the light block after `--surface-3`:
 
 ```css
-  --stage-bg: #e4e4e9;
+--stage-bg: #e4e4e9;
 ```
 
 Add to the dark block after `--surface-3`:
 
 ```css
-  --stage-bg: #161618;
+--stage-bg: #161618;
 ```
 
 - [ ] **Step 2: Use the token on the stage**
@@ -1265,7 +1284,7 @@ In `src/editor/editor.css`, change the `.stage` background:
 and change the `.overlay-msg` background so the loading and empty states match:
 
 ```css
-  background: var(--stage-bg);
+background: var(--stage-bg);
 ```
 
 - [ ] **Step 3: Draw a shadow and a frame around the image**
@@ -1273,45 +1292,45 @@ and change the `.overlay-msg` background so the loading and empty states match:
 In `src/editor/canvas.ts` `render()`, replace the block from the checkerboard call through the closing `ctx.restore()` of the image transform:
 
 ```ts
-    // Checkerboard over the image's screen rect so transparency reads as such.
-    const sw = img.naturalWidth * this.view.zoom;
-    const sh = img.naturalHeight * this.view.zoom;
-    // Shadow behind the image rect, so a light screenshot keeps an edge.
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.24)';
-    ctx.shadowBlur = 18;
-    ctx.shadowOffsetY = 4;
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(this.view.panX, this.view.panY, sw, sh);
-    ctx.restore();
-    drawCheckerboard(ctx, this.view.panX, this.view.panY, sw, sh);
-    ctx.save();
-    ctx.translate(this.view.panX, this.view.panY);
-    ctx.scale(this.view.zoom, this.view.zoom);
-    ctx.imageSmoothingEnabled = this.view.zoom <= 1;
-    ctx.drawImage(img, 0, 0);
-    for (const a of this.annotations) {
-      ctx.save();
-      drawAnnotation(ctx, a, img, this.blurCache);
-      ctx.restore();
-    }
-    if (this.draft) {
-      ctx.save();
-      drawAnnotation(ctx, this.draft, img, this.blurCache);
-      ctx.restore();
-    }
-    if (this.cropRect) {
-      ctx.save();
-      drawCropPreview(ctx, this.cropRect, img.naturalWidth, img.naturalHeight);
-      ctx.restore();
-    }
-    ctx.restore();
-    // Hairline frame in screen space, drawn under the selection handles.
-    ctx.save();
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.28)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(this.view.panX + 0.5, this.view.panY + 0.5, sw - 1, sh - 1);
-    ctx.restore();
+// Checkerboard over the image's screen rect so transparency reads as such.
+const sw = img.naturalWidth * this.view.zoom;
+const sh = img.naturalHeight * this.view.zoom;
+// Shadow behind the image rect, so a light screenshot keeps an edge.
+ctx.save();
+ctx.shadowColor = 'rgba(0, 0, 0, 0.24)';
+ctx.shadowBlur = 18;
+ctx.shadowOffsetY = 4;
+ctx.fillStyle = '#ffffff';
+ctx.fillRect(this.view.panX, this.view.panY, sw, sh);
+ctx.restore();
+drawCheckerboard(ctx, this.view.panX, this.view.panY, sw, sh);
+ctx.save();
+ctx.translate(this.view.panX, this.view.panY);
+ctx.scale(this.view.zoom, this.view.zoom);
+ctx.imageSmoothingEnabled = this.view.zoom <= 1;
+ctx.drawImage(img, 0, 0);
+for (const a of this.annotations) {
+  ctx.save();
+  drawAnnotation(ctx, a, img, this.blurCache);
+  ctx.restore();
+}
+if (this.draft) {
+  ctx.save();
+  drawAnnotation(ctx, this.draft, img, this.blurCache);
+  ctx.restore();
+}
+if (this.cropRect) {
+  ctx.save();
+  drawCropPreview(ctx, this.cropRect, img.naturalWidth, img.naturalHeight);
+  ctx.restore();
+}
+ctx.restore();
+// Hairline frame in screen space, drawn under the selection handles.
+ctx.save();
+ctx.strokeStyle = 'rgba(0, 0, 0, 0.28)';
+ctx.lineWidth = 1;
+ctx.strokeRect(this.view.panX + 0.5, this.view.panY + 0.5, sw - 1, sh - 1);
+ctx.restore();
 ```
 
 The selection draw that follows is unchanged, so handles stay above the frame. `composeFinal()` is untouched, so exports carry no frame or shadow.
@@ -1337,9 +1356,11 @@ git commit -m "fix(editor): frame the screenshot so a light capture keeps an edg
 ### Task 11: Promote Copy and hold the topbar width
 
 **Files:**
+
 - Modify: `src/editor/App.tsx:72-88`, `src/editor/editor.css:255-280`
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces: CSS class `.btn-fixed`.
 
@@ -1399,10 +1420,12 @@ git commit -m "fix(editor): promote Copy and pin its width so the topbar holds s
 ### Task 12: One zoom control with a menu
 
 **Files:**
+
 - Create: `src/editor/ZoomMenu.tsx`
 - Modify: `src/editor/App.tsx:54-71`, `src/editor/App.tsx:203-209`, `src/editor/useEditor.ts:306-368`, `src/editor/editor.css:163-180`
 
 **Interfaces:**
+
 - Consumes: `ed.zoomPct`, `ed.zoomIn`, `ed.zoomOut`, `ed.fit`, `ed.resetZoom` from `useEditor`.
 - Produces: `ZoomMenu(props: ZoomMenuProps)` where `interface ZoomMenuProps { zoomPct: number; disabled: boolean; onZoomIn: () => void; onZoomOut: () => void; onFit: () => void; onActualSize: () => void }`.
 
@@ -1520,14 +1543,14 @@ import { ZoomMenu } from './ZoomMenu';
 Replace the whole `zoom-group` block:
 
 ```tsx
-          <ZoomMenu
-            zoomPct={ed.zoomPct}
-            disabled={!ed.capture}
-            onZoomIn={ed.zoomIn}
-            onZoomOut={ed.zoomOut}
-            onFit={ed.fit}
-            onActualSize={ed.resetZoom}
-          />
+<ZoomMenu
+  zoomPct={ed.zoomPct}
+  disabled={!ed.capture}
+  onZoomIn={ed.zoomIn}
+  onZoomOut={ed.zoomOut}
+  onFit={ed.fit}
+  onActualSize={ed.resetZoom}
+/>
 ```
 
 - [ ] **Step 3: Drop the duplicated readout from the status bar**
@@ -1535,11 +1558,11 @@ Replace the whole `zoom-group` block:
 Replace the status bar block:
 
 ```tsx
-      <footer class="statusbar">
-        <span>{ed.imageSize ? `${ed.imageSize.w} × ${ed.imageSize.h}px` : '—'}</span>
-        <span class="status-spacer" />
-        <span class="status-hint">{hintForTool(ed.tool)}</span>
-      </footer>
+<footer class="statusbar">
+  <span>{ed.imageSize ? `${ed.imageSize.w} × ${ed.imageSize.h}px` : '—'}</span>
+  <span class="status-spacer" />
+  <span class="status-hint">{hintForTool(ed.tool)}</span>
+</footer>
 ```
 
 - [ ] **Step 4: Bind the zoom keys**
@@ -1547,27 +1570,27 @@ Replace the status bar block:
 In `src/editor/useEditor.ts`, inside the keyboard effect's `down` handler, insert this block directly after the redo (`e.key === 'y'`) branch and before the delete branch:
 
 ```ts
-      // Zoom.
-      if (isMod(e) && (e.key === '=' || e.key === '+')) {
-        e.preventDefault();
-        zoomIn();
-        return;
-      }
-      if (isMod(e) && (e.key === '-' || e.key === '_')) {
-        e.preventDefault();
-        zoomOut();
-        return;
-      }
-      if (isMod(e) && e.key === '0') {
-        e.preventDefault();
-        resetZoom();
-        return;
-      }
-      if (!isMod(e) && !e.altKey && e.key.toUpperCase() === 'F') {
-        e.preventDefault();
-        fit();
-        return;
-      }
+// Zoom.
+if (isMod(e) && (e.key === '=' || e.key === '+')) {
+  e.preventDefault();
+  zoomIn();
+  return;
+}
+if (isMod(e) && (e.key === '-' || e.key === '_')) {
+  e.preventDefault();
+  zoomOut();
+  return;
+}
+if (isMod(e) && e.key === '0') {
+  e.preventDefault();
+  resetZoom();
+  return;
+}
+if (!isMod(e) && !e.altKey && e.key.toUpperCase() === 'F') {
+  e.preventDefault();
+  fit();
+  return;
+}
 ```
 
 `F` is not in `TOOL_LIST`, so it never collides with a tool letter. This branch sits above the tool lookup, so the guard holds even if a tool takes `F` later.
@@ -1693,9 +1716,11 @@ git commit -m "refactor(editor): fold the zoom widgets into one menu and add zoo
 ### Task 13: Move document actions to the topbar and label the count
 
 **Files:**
+
 - Modify: `src/editor/App.tsx:44-53`, `src/editor/App.tsx:93-146`, `src/editor/editor.css:157-198`, `src/editor/editor.css:373-385`
 
 **Interfaces:**
+
 - Consumes: `ed.canUndo`, `ed.canRedo`, `ed.hasSelection`, `ed.undo`, `ed.redo`, `ed.deleteSelection`, `ed.annotations`.
 - Produces: `IconLayers()` in `src/editor/App.tsx`, used only by the count pill.
 
@@ -1704,35 +1729,35 @@ git commit -m "refactor(editor): fold the zoom widgets into one menu and add zoo
 In `src/editor/App.tsx`, insert this directly after the closing `</div>` of `topbar-brand` and before `<div class="topbar-controls">`:
 
 ```tsx
-        <div class="topbar-actions" role="group" aria-label="Document actions">
-          <button
-            class="icon-btn"
-            title="Undo (⌘Z)"
-            disabled={!ed.canUndo}
-            onClick={ed.undo}
-            aria-label="Undo"
-          >
-            <IconUndo />
-          </button>
-          <button
-            class="icon-btn"
-            title="Redo (⌘⇧Z)"
-            disabled={!ed.canRedo}
-            onClick={ed.redo}
-            aria-label="Redo"
-          >
-            <IconRedo />
-          </button>
-          <button
-            class="icon-btn icon-btn-danger"
-            title="Delete selected (⌫)"
-            disabled={!ed.hasSelection}
-            onClick={ed.deleteSelection}
-            aria-label="Delete selected"
-          >
-            <IconTrash />
-          </button>
-        </div>
+<div class="topbar-actions" role="group" aria-label="Document actions">
+  <button
+    class="icon-btn"
+    title="Undo (⌘Z)"
+    disabled={!ed.canUndo}
+    onClick={ed.undo}
+    aria-label="Undo"
+  >
+    <IconUndo />
+  </button>
+  <button
+    class="icon-btn"
+    title="Redo (⌘⇧Z)"
+    disabled={!ed.canRedo}
+    onClick={ed.redo}
+    aria-label="Redo"
+  >
+    <IconRedo />
+  </button>
+  <button
+    class="icon-btn icon-btn-danger"
+    title="Delete selected (⌫)"
+    disabled={!ed.hasSelection}
+    onClick={ed.deleteSelection}
+    aria-label="Delete selected"
+  >
+    <IconTrash />
+  </button>
+</div>
 ```
 
 - [ ] **Step 2: Strip the tool rail back to tools**
@@ -1750,12 +1775,14 @@ In the `<aside class="toolbar">` block, delete everything from the first `toolba
 Replace the count element with a labelled pill that hides at zero:
 
 ```tsx
-          {ed.annotations.length > 0 ? (
-            <div class="toolbar-count" title={`${ed.annotations.length} annotations`}>
-              <IconLayers />
-              <span>{ed.annotations.length}</span>
-            </div>
-          ) : null}
+{
+  ed.annotations.length > 0 ? (
+    <div class="toolbar-count" title={`${ed.annotations.length} annotations`}>
+      <IconLayers />
+      <span>{ed.annotations.length}</span>
+    </div>
+  ) : null;
+}
 ```
 
 - [ ] **Step 3: Add the layers icon**
@@ -1854,11 +1881,13 @@ git commit -m "refactor(editor): move undo, redo, and delete to the topbar and l
 ### Task 14: Show the style bar only when it applies
 
 **Files:**
+
 - Create: `src/editor/stylebar.ts`
 - Test: `tests/unit/stylebar.test.ts`
 - Modify: `src/editor/App.tsx:218-278`
 
 **Interfaces:**
+
 - Consumes: `Tool` from `src/editor/tools.ts`, `Annotation` from `src/editor/annotations.ts`.
 - Produces: `stylebarFields(tool: Tool, selectedType: Annotation['type'] | null): StylebarFields` where `interface StylebarFields { color: boolean; stroke: boolean; fontSize: boolean }`, and `stylebarEmpty(f: StylebarFields): boolean`.
 
@@ -2039,11 +2068,13 @@ git commit -m "refactor(editor): show the style bar only when a control applies"
 ### Task 15: Named swatches, a custom colour, and recent colours
 
 **Files:**
+
 - Create: `src/editor/palette.ts`
 - Test: `tests/unit/palette.test.ts`
 - Modify: `src/shared/types.ts:88-118`, `src/editor/useEditor.ts:206-218`, `src/editor/useEditor.ts:246-285`, `src/editor/useEditor.ts:736-778`, `src/editor/App.tsx` (`StyleBar`), `src/editor/editor.css:58-84`
 
 **Interfaces:**
+
 - Consumes: `COLOR_PALETTE` from `src/editor/annotations.ts`, `setSettings` from `src/shared/storage.ts`.
 - Produces: `COLOR_NAMES: Record<string, string>`, `MAX_RECENT_COLORS: number`, `normalizeHex(value: string): string | null`, `colorName(hex: string): string`, `pushRecent(list: string[], hex: string, max?: number): string[]`. Also `Settings.recentColors: string[]` and `useEditor().recentColors: string[]`.
 
@@ -2208,37 +2239,37 @@ import { pushRecent } from './palette';
 Add the state beside the other `useState` calls:
 
 ```ts
-  const [recentColors, setRecentColors] = useState<string[]>([]);
+const [recentColors, setRecentColors] = useState<string[]>([]);
 ```
 
 In the mount effect, after `setSettingsState(s);`, add:
 
 ```ts
-      setRecentColors(s.recentColors);
+setRecentColors(s.recentColors);
 ```
 
 Replace `setStyleColor`:
 
 ```ts
-  const setStyleColor = useCallback(
-    (color: string) => {
-      setStyle((s) => ({ ...s, color }));
-      setRecentColors((prev) => {
-        const next = pushRecent(prev, color);
-        // pushRecent returns the same array for a preset, so identity is the test.
-        if (next !== prev) void setSettings({ recentColors: next });
-        return next;
-      });
-      applyStyleToSelected((a) =>
-        a.type === 'text' || a.type === 'step'
-          ? { ...a, color }
-          : a.type === 'rect' || a.type === 'arrow' || a.type === 'pen' || a.type === 'highlight'
-            ? { ...a, stroke: color }
-            : a,
-      );
-    },
-    [applyStyleToSelected],
-  );
+const setStyleColor = useCallback(
+  (color: string) => {
+    setStyle((s) => ({ ...s, color }));
+    setRecentColors((prev) => {
+      const next = pushRecent(prev, color);
+      // pushRecent returns the same array for a preset, so identity is the test.
+      if (next !== prev) void setSettings({ recentColors: next });
+      return next;
+    });
+    applyStyleToSelected((a) =>
+      a.type === 'text' || a.type === 'step'
+        ? { ...a, color }
+        : a.type === 'rect' || a.type === 'arrow' || a.type === 'pen' || a.type === 'highlight'
+          ? { ...a, stroke: color }
+          : a,
+    );
+  },
+  [applyStyleToSelected],
+);
 ```
 
 Add `recentColors` to the object the hook returns, next to `style`.
@@ -2254,38 +2285,38 @@ import { colorName } from './palette';
 In `StyleBar`, replace the swatch list body:
 
 ```tsx
-        <div class="swatches">
-          {COLOR_PALETTE.map((c) => (
-            <button
-              key={c}
-              class="swatch"
-              style={{ backgroundColor: c }}
-              data-light={isLight(c) ? '1' : undefined}
-              aria-label={colorName(c)}
-              aria-pressed={ed.style.color === c}
-              onClick={() => ed.setStyleColor(c)}
-            />
-          ))}
-          {ed.recentColors.map((c) => (
-            <button
-              key={c}
-              class="swatch"
-              style={{ backgroundColor: c }}
-              data-light={isLight(c) ? '1' : undefined}
-              aria-label={colorName(c)}
-              aria-pressed={ed.style.color === c}
-              onClick={() => ed.setStyleColor(c)}
-            />
-          ))}
-          <label class="swatch swatch-custom" title="Custom color">
-            <input
-              type="color"
-              aria-label="Custom color"
-              value={ed.style.color}
-              onChange={(e) => ed.setStyleColor((e.target as HTMLInputElement).value)}
-            />
-          </label>
-        </div>
+<div class="swatches">
+  {COLOR_PALETTE.map((c) => (
+    <button
+      key={c}
+      class="swatch"
+      style={{ backgroundColor: c }}
+      data-light={isLight(c) ? '1' : undefined}
+      aria-label={colorName(c)}
+      aria-pressed={ed.style.color === c}
+      onClick={() => ed.setStyleColor(c)}
+    />
+  ))}
+  {ed.recentColors.map((c) => (
+    <button
+      key={c}
+      class="swatch"
+      style={{ backgroundColor: c }}
+      data-light={isLight(c) ? '1' : undefined}
+      aria-label={colorName(c)}
+      aria-pressed={ed.style.color === c}
+      onClick={() => ed.setStyleColor(c)}
+    />
+  ))}
+  <label class="swatch swatch-custom" title="Custom color">
+    <input
+      type="color"
+      aria-label="Custom color"
+      value={ed.style.color}
+      onChange={(e) => ed.setStyleColor((e.target as HTMLInputElement).value)}
+    />
+  </label>
+</div>
 ```
 
 The picker listens on `change`, not `input`. Chrome fires `input` for every drag frame, and each one would write to storage.
@@ -2299,15 +2330,7 @@ In `src/editor/editor.css`, add after the `.swatch[aria-pressed='true']` rule:
   position: relative;
   display: inline-flex;
   overflow: hidden;
-  background: conic-gradient(
-    #ff3b30,
-    #ff9500,
-    #ffcc00,
-    #34c759,
-    #0071e3,
-    #af52de,
-    #ff3b30
-  );
+  background: conic-gradient(#ff3b30, #ff9500, #ffcc00, #34c759, #0071e3, #af52de, #ff3b30);
 }
 
 .swatch-custom input[type='color'] {
@@ -2343,10 +2366,12 @@ git commit -m "feat(editor): name the swatches and add a custom colour with rece
 ### Task 16: Export shortcut and a shortcut sheet
 
 **Files:**
+
 - Create: `src/editor/ShortcutSheet.tsx`
 - Modify: `src/editor/App.tsx:12-91`, `src/editor/editor.css`
 
 **Interfaces:**
+
 - Consumes: `TOOL_LIST` from `src/editor/tools.ts`, `isTypingTarget` from `src/editor/useEditor.ts`, `trapFocus`/`getFocusable` from `src/editor/focus.ts`.
 - Produces: `ShortcutSheet({ onClose }: { onClose: () => void })`.
 
@@ -2445,48 +2470,50 @@ import { ShortcutSheet } from './ShortcutSheet';
 Add the state next to `exportOpen`:
 
 ```tsx
-  const [sheetOpen, setSheetOpen] = useState(false);
+const [sheetOpen, setSheetOpen] = useState(false);
 ```
 
 Add this effect below the existing `⌘C` effect:
 
 ```tsx
-  // ⌘S opens Export; ? toggles the shortcut sheet.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (isTypingTarget(e.target)) return;
-      if ((e.metaKey || e.ctrlKey) && (e.key === 's' || e.key === 'S')) {
-        e.preventDefault();
-        if (ed.capture) setExportOpen(true);
-        return;
-      }
-      if (e.key === '?') {
-        e.preventDefault();
-        setSheetOpen((v) => !v);
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [ed.capture]);
+// ⌘S opens Export; ? toggles the shortcut sheet.
+useEffect(() => {
+  const onKey = (e: KeyboardEvent) => {
+    if (isTypingTarget(e.target)) return;
+    if ((e.metaKey || e.ctrlKey) && (e.key === 's' || e.key === 'S')) {
+      e.preventDefault();
+      if (ed.capture) setExportOpen(true);
+      return;
+    }
+    if (e.key === '?') {
+      e.preventDefault();
+      setSheetOpen((v) => !v);
+    }
+  };
+  window.addEventListener('keydown', onKey);
+  return () => window.removeEventListener('keydown', onKey);
+}, [ed.capture]);
 ```
 
 Add the trigger button in `topbar-controls`, before the `ZoomMenu`:
 
 ```tsx
-          <button
-            class="icon-btn"
-            title="Keyboard shortcuts (?)"
-            aria-label="Keyboard shortcuts"
-            onClick={() => setSheetOpen(true)}
-          >
-            ?
-          </button>
+<button
+  class="icon-btn"
+  title="Keyboard shortcuts (?)"
+  aria-label="Keyboard shortcuts"
+  onClick={() => setSheetOpen(true)}
+>
+  ?
+</button>
 ```
 
 Render the sheet next to the export dialog at the end of the tree:
 
 ```tsx
-      {sheetOpen ? <ShortcutSheet onClose={() => setSheetOpen(false)} /> : null}
+{
+  sheetOpen ? <ShortcutSheet onClose={() => setSheetOpen(false)} /> : null;
+}
 ```
 
 - [ ] **Step 3: Style the sheet**
@@ -2546,9 +2573,11 @@ git commit -m "feat(editor): add a shortcut sheet and bind Export to ⌘S"
 ### Task 17: A way out of the empty editor
 
 **Files:**
+
 - Modify: `src/editor/App.tsx:176-188`, `src/editor/editor.css:610-649`
 
 **Interfaces:**
+
 - Consumes: `chrome.action.openPopup()`.
 - Produces: `EmptyState()` in `src/editor/App.tsx`.
 
@@ -2557,7 +2586,9 @@ git commit -m "feat(editor): add a shortcut sheet and bind Export to ⌘S"
 In `src/editor/App.tsx`, replace the empty-state block inside `.stage`:
 
 ```tsx
-          {!ed.loading && !ed.capture && !ed.error ? <EmptyState /> : null}
+{
+  !ed.loading && !ed.capture && !ed.error ? <EmptyState /> : null;
+}
 ```
 
 Add the component next to the other local components:
@@ -2644,9 +2675,11 @@ git commit -m "feat(editor): give the empty state a button that opens the popup"
 ### Task 18: Final sweep
 
 **Files:**
+
 - Modify: none expected.
 
 **Interfaces:**
+
 - Consumes: every task above.
 - Produces: nothing.
 

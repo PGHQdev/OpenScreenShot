@@ -34,7 +34,6 @@ export interface Point {
   y: number;
 }
 
-
 export class CanvasController {
   readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
@@ -264,4 +263,3 @@ function drawCheckerboard(
   }
   ctx.restore();
 }
-
