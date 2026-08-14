@@ -417,6 +417,8 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
         aria-label="Export screenshot"
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
+          // A modal owns the keyboard while it is open — see ShortcutSheet's onKeyDown.
+          e.stopPropagation();
           trapFocus(modalRef.current!, e);
           if (e.key === 'Escape') onClose();
         }}
