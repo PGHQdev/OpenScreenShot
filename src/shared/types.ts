@@ -100,6 +100,8 @@ export interface Settings {
   annotationColor: string;
   annotationStrokeWidth: number;
   annotationFontSize: number;
+  /** Custom colours the user picked, most recent first. */
+  recentColors: string[];
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -115,4 +117,5 @@ export const DEFAULT_SETTINGS: Settings = {
   annotationColor: '#ff3b30',
   annotationStrokeWidth: 6,
   annotationFontSize: 28,
+  recentColors: [],
 };
