@@ -118,7 +118,7 @@ async function captureVisible(tab: chrome.tabs.Tab): Promise<void> {
   const dataUrl = await captureVisibleTabPng(windowId);
   const width = Math.round(metrics.viewportWidth * metrics.devicePixelRatio);
   const height = Math.round(metrics.viewportHeight * metrics.devicePixelRatio);
-  await handoffToEditor(dataUrl, width, height, 'visible', tab.title ?? '');
+  await handoffToEditor(dataUrl, width, height, 'visible', tab.title ?? '', tab.url ?? '');
   broadcast({ type: 'CAPTURE_COMPLETE', imageUrl: dataUrl, width, height });
 }
 
@@ -135,7 +135,7 @@ async function captureRegion(tab: chrome.tabs.Tab): Promise<void> {
   const w = Math.round(rect.width * dpr);
   const h = Math.round(rect.height * dpr);
   const dataUrl = await execInTab(tabId, cropTile, [tile, x, y, w, h]);
-  await handoffToEditor(dataUrl, w, h, 'region', tab.title ?? '');
+  await handoffToEditor(dataUrl, w, h, 'region', tab.title ?? '', tab.url ?? '');
   broadcast({ type: 'CAPTURE_COMPLETE', imageUrl: dataUrl, width: w, height: h });
 }
 
@@ -207,7 +207,14 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
   }
 
   const dataUrl = await execInTab(tabId, stitchTiles, [tiles, canvasWidth, canvasHeight, crop]);
-  await handoffToEditor(dataUrl, canvasWidth, canvasHeight, 'full-page', tab.title ?? '');
+  await handoffToEditor(
+    dataUrl,
+    canvasWidth,
+    canvasHeight,
+    'full-page',
+    tab.title ?? '',
+    tab.url ?? '',
+  );
   broadcast({
     type: 'CAPTURE_COMPLETE',
     imageUrl: dataUrl,
@@ -226,8 +233,9 @@ async function handoffToEditor(
   height: number,
   mode: CaptureMode,
   title: string,
+  url: string,
 ): Promise<void> {
-  await setLastCapture({ dataUrl, width, height, mode, title, capturedAt: Date.now() });
+  await setLastCapture({ dataUrl, width, height, mode, title, url, capturedAt: Date.now() });
   await chrome.tabs.create({ url: EDITOR_URL });
 }
 

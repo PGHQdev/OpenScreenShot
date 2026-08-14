@@ -696,6 +696,7 @@ export function useEditor() {
       width: imageSize?.w ?? 0,
       height: imageSize?.h ?? 0,
       title: capture?.title,
+      url: capture?.url,
     });
   }, [settings, imageSize, capture]);
 
