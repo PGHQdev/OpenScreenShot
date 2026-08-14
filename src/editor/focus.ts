@@ -25,7 +25,7 @@ export function trapFocus(container: HTMLElement, e: KeyboardEvent): void {
   const last = f[f.length - 1];
   const active = document.activeElement as HTMLElement | null;
   if (e.shiftKey) {
-    if (active === first || !container.contains(active)) {
+    if (active === first || active === container || !container.contains(active)) {
       e.preventDefault();
       last.focus();
     }

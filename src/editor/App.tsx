@@ -350,16 +350,21 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
   // the same tab reflects what was actually persisted.
   useEffect(() => {
     let cancelled = false;
-    getSettings().then((s) => {
-      if (cancelled) return;
-      const fmt = s.defaultFormat;
-      if (fmt === 'pdf' || fmt === 'png' || fmt === 'jpeg' || fmt === 'webp') setFormat(fmt);
-      setQuality(s.quality);
-      setPdfPageSize(s.pdfPageSize);
-      setPdfOrientation(s.pdfOrientation);
-      setPdfMultiPage(s.pdfMultiPage);
-      setPdfMargin(s.pdfMarginMm);
-    });
+    getSettings()
+      .then((s) => {
+        if (cancelled) return;
+        const fmt = s.defaultFormat;
+        if (fmt === 'pdf' || fmt === 'png' || fmt === 'jpeg' || fmt === 'webp') setFormat(fmt);
+        setQuality(s.quality);
+        setPdfPageSize(s.pdfPageSize);
+        setPdfOrientation(s.pdfOrientation);
+        setPdfMultiPage(s.pdfMultiPage);
+        setPdfMargin(s.pdfMarginMm);
+      })
+      // Same rationale as the swallowed catch in doExport below: the dialog
+      // already holds usable values from ed.settings, so there is nothing to
+      // recover if the read itself fails.
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
