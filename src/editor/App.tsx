@@ -10,12 +10,14 @@ import { BrandMark } from '../shared/BrandMark';
 import { setSettings } from '../shared/storage';
 import { ZoomMenu } from './ZoomMenu';
 import { stylebarEmpty, stylebarFields } from './stylebar';
+import { ShortcutSheet } from './ShortcutSheet';
 
 type DialogFormat = ImageFormat | 'pdf';
 
 export function App() {
   const ed = useEditor();
   const [exportOpen, setExportOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
 
   function copyToClipboard() {
@@ -37,6 +39,24 @@ export function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [ed.copyImage]);
+
+  // ⌘S opens Export; ? toggles the shortcut sheet.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (isTypingTarget(e.target)) return;
+      if ((e.metaKey || e.ctrlKey) && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        if (ed.capture) setExportOpen(true);
+        return;
+      }
+      if (e.key === '?') {
+        e.preventDefault();
+        setSheetOpen((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [ed.capture]);
   const cursor = ed.spaceHeld
     ? 'grab'
     : ed.tool === 'text'
@@ -85,6 +105,14 @@ export function App() {
           </button>
         </div>
         <div class="topbar-controls">
+          <button
+            class="icon-btn"
+            title="Keyboard shortcuts (?)"
+            aria-label="Keyboard shortcuts"
+            onClick={() => setSheetOpen(true)}
+          >
+            ?
+          </button>
           <ZoomMenu
             zoomPct={ed.zoomPct}
             disabled={!ed.capture}
@@ -209,6 +237,7 @@ export function App() {
       {exportOpen && ed.capture ? (
         <ExportDialog ed={ed} onClose={() => setExportOpen(false)} />
       ) : null}
+      {sheetOpen ? <ShortcutSheet onClose={() => setSheetOpen(false)} /> : null}
     </div>
   );
 }
