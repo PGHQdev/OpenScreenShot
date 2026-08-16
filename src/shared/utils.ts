@@ -86,6 +86,9 @@ export const MENU_IDS: Record<CaptureMode, string> = {
   region: 'oss-region',
 };
 
+/** Menu item id for "repeat last region" — region mode with the stored rect. */
+export const MENU_REPEAT_ID = 'oss-region-repeat';
+
 /** Capture mode for a context menu item id, or null for any other id. */
 export function menuIdToMode(id: string): CaptureMode | null {
   for (const [mode, menuId] of Object.entries(MENU_IDS)) {

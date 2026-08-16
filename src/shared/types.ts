@@ -11,6 +11,8 @@ export type CaptureMode = 'full-page' | 'visible' | 'region';
 export interface CaptureRequest {
   type: 'CAPTURE_REQUEST';
   mode: CaptureMode;
+  /** Region mode only: reuse the stored last-region rect, skip the overlay. */
+  repeat?: boolean;
 }
 
 export type BackgroundMessage = CaptureRequest;
@@ -31,7 +33,7 @@ export interface CaptureComplete {
 }
 
 export type CaptureErrorCode =
-  'protected-page' | 'blank-page' | 'too-large' | 'not-implemented' | 'unknown';
+  'protected-page' | 'blank-page' | 'too-large' | 'no-region' | 'not-implemented' | 'unknown';
 
 export interface CaptureError {
   type: 'CAPTURE_ERROR';

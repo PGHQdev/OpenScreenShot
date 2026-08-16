@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeScrollPositions, MAX_CANVAS_HEIGHT_PX } from '../../src/shared/geometry';
+import { clampRegionRect, computeScrollPositions, MAX_CANVAS_HEIGHT_PX } from '../../src/shared/geometry';
 
 describe('computeScrollPositions', () => {
   it('returns a single [0] when the page fits in one viewport', () => {
@@ -43,5 +43,39 @@ describe('MAX_CANVAS_HEIGHT_PX', () => {
   it("is below Chrome's ~32767px per-side canvas cap", () => {
     expect(MAX_CANVAS_HEIGHT_PX).toBeLessThan(32767);
     expect(MAX_CANVAS_HEIGHT_PX).toBeGreaterThan(0);
+  });
+});
+
+describe('clampRegionRect', () => {
+  it('keeps a rect fully inside the viewport unchanged', () => {
+    const r = { x: 10, y: 20, width: 100, height: 50 };
+    expect(clampRegionRect(r, 1280, 800)).toEqual(r);
+  });
+
+  it('clips a rect hanging off the right and bottom edges', () => {
+    expect(clampRegionRect({ x: 1200, y: 750, width: 200, height: 100 }, 1280, 800)).toEqual({
+      x: 1200,
+      y: 750,
+      width: 80,
+      height: 50,
+    });
+  });
+
+  it('clips a rect with negative origin to the viewport', () => {
+    expect(clampRegionRect({ x: -30, y: -10, width: 100, height: 50 }, 1280, 800)).toEqual({
+      x: 0,
+      y: 0,
+      width: 70,
+      height: 40,
+    });
+  });
+
+  it('returns null when the rect lies outside a smaller viewport', () => {
+    expect(clampRegionRect({ x: 900, y: 100, width: 50, height: 50 }, 800, 600)).toBe(null);
+  });
+
+  it('returns null when clipping leaves a sliver under 2px', () => {
+    expect(clampRegionRect({ x: 1279, y: 0, width: 100, height: 50 }, 1280, 800)).toBe(null);
+    expect(clampRegionRect({ x: 0, y: 799, width: 50, height: 100 }, 1280, 800)).toBe(null);
   });
 });
