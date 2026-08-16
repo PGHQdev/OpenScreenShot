@@ -1,4 +1,5 @@
 /** Shared utility helpers used across the extension. */
+import type { CaptureMode } from './types';
 
 /**
  * Resolve a filename template using the current date/time and capture context.
@@ -76,6 +77,21 @@ export type CaptureDelay = (typeof CAPTURE_DELAYS)[number];
 /** Coerce a stored delay to a supported value; anything else means no delay. */
 export function normalizeCaptureDelay(value: unknown): CaptureDelay {
   return CAPTURE_DELAYS.includes(value as CaptureDelay) ? (value as CaptureDelay) : 0;
+}
+
+/** Context menu item id for each capture mode. */
+export const MENU_IDS: Record<CaptureMode, string> = {
+  'full-page': 'oss-full-page',
+  visible: 'oss-visible',
+  region: 'oss-region',
+};
+
+/** Capture mode for a context menu item id, or null for any other id. */
+export function menuIdToMode(id: string): CaptureMode | null {
+  for (const [mode, menuId] of Object.entries(MENU_IDS)) {
+    if (menuId === id) return mode as CaptureMode;
+  }
+  return null;
 }
 
 /** Tokens the filename template accepts, in the order the settings UI lists them. */

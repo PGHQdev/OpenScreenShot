@@ -4,6 +4,7 @@ import {
   sanitizeFilename,
   isProtectedUrl,
   insertToken,
+  menuIdToMode,
   normalizeCaptureDelay,
   CAPTURE_DELAYS,
   FILENAME_TOKENS,
@@ -118,6 +119,19 @@ describe('insertToken', () => {
 describe('FILENAME_TOKENS', () => {
   it('lists every token formatFilename replaces', () => {
     expect([...FILENAME_TOKENS]).toEqual(['{date}', '{time}', '{title}', '{domain}', '{w}', '{h}']);
+  });
+});
+
+describe('menuIdToMode', () => {
+  it('maps each capture menu item to its mode', () => {
+    expect(menuIdToMode('oss-full-page')).toBe('full-page');
+    expect(menuIdToMode('oss-visible')).toBe('visible');
+    expect(menuIdToMode('oss-region')).toBe('region');
+  });
+
+  it('returns null for unknown ids (parent item, other extensions)', () => {
+    expect(menuIdToMode('oss-parent')).toBe(null);
+    expect(menuIdToMode('')).toBe(null);
   });
 });
 
