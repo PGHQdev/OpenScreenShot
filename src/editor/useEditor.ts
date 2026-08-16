@@ -16,8 +16,10 @@ import { CanvasController } from './canvas';
 import type { Annotation, Rect } from './annotations';
 import {
   bbox,
+  COLOR_PALETTE,
   DEFAULT_STYLE,
   handleAt,
+  hasStroke,
   measureTextSize,
   normalizeRect,
   resizeRect,
@@ -64,7 +66,6 @@ type Interaction =
       handle: Handle;
       startBBox: Rect;
       startPt: { x: number; y: number };
-      annType: 'rect' | 'blur' | 'arrow';
     }
   | null;
 
@@ -142,7 +143,7 @@ export function useEditor() {
   useEffect(() => {
     const a = annotationsRef.current.find((x) => x.id === selectedId);
     if (!a) return;
-    if (a.type === 'rect' || a.type === 'arrow' || a.type === 'pen' || a.type === 'highlight') {
+    if (hasStroke(a)) {
       setStyle((s) => ({ ...s, color: a.stroke, strokeWidth: a.strokeWidth }));
     } else if (a.type === 'text') {
       setStyle((s) => ({ ...s, color: a.color, fontSize: a.fontSize }));
@@ -217,7 +218,7 @@ export function useEditor() {
       applyStyleToSelected((a) =>
         a.type === 'text' || a.type === 'step'
           ? { ...a, color }
-          : a.type === 'rect' || a.type === 'arrow' || a.type === 'pen' || a.type === 'highlight'
+          : hasStroke(a)
             ? { ...a, stroke: color }
             : a,
       );
@@ -228,11 +229,7 @@ export function useEditor() {
   const setStyleStrokeWidth = useCallback(
     (strokeWidth: number) => {
       setStyle((s) => ({ ...s, strokeWidth }));
-      applyStyleToSelected((a) =>
-        a.type === 'rect' || a.type === 'arrow' || a.type === 'pen' || a.type === 'highlight'
-          ? { ...a, strokeWidth }
-          : a,
-      );
+      applyStyleToSelected((a) => (hasStroke(a) ? { ...a, strokeWidth } : a));
     },
     [applyStyleToSelected],
   );
@@ -388,13 +385,21 @@ export function useEditor() {
         }
         return;
       }
-      // Tool shortcuts.
-      if (!isMod(e) && !e.altKey) {
-        const t = TOOL_LIST.find((x) => x.shortcut === e.key.toUpperCase());
-        if (t) {
-          setTool(t.id);
+      if (isMod(e) || e.altKey) return;
+      // Number keys pick a palette colour, in swatch order.
+      if (/^[1-9]$/.test(e.key)) {
+        const color = COLOR_PALETTE[Number(e.key) - 1];
+        if (color) {
+          setStyleColor(color);
           e.preventDefault();
+          return;
         }
+      }
+      // Tool shortcuts.
+      const t = TOOL_LIST.find((x) => x.shortcut === e.key.toUpperCase());
+      if (t) {
+        setTool(t.id);
+        e.preventDefault();
       }
     };
     const up = (e: KeyboardEvent) => {
@@ -409,7 +414,7 @@ export function useEditor() {
       window.removeEventListener('keydown', down);
       window.removeEventListener('keyup', up);
     };
-  }, [undo, redo, deleteSelection, zoomIn, zoomOut, resetZoom, fit]);
+  }, [undo, redo, deleteSelection, zoomIn, zoomOut, resetZoom, fit, setStyleColor]);
 
   // --- Drag handlers (attached to window during a drag) ---
   const onDragMove = useCallback(
@@ -465,7 +470,7 @@ export function useEditor() {
               const r = resizeRect(startBBox, handle, dx, dy);
               return { ...a, x: r.x, y: r.y, w: r.w, h: r.h };
             }
-            if (a.type === 'arrow') {
+            if (a.type === 'arrow' || a.type === 'line') {
               if (handle === 'start') return { ...a, x1: p.x, y1: p.y };
               return { ...a, x2: p.x, y2: p.y };
             }
@@ -480,7 +485,7 @@ export function useEditor() {
         const last = draft.points[draft.points.length - 1];
         if (last && dist(last, p) < 1.5) return; // throttle pen samples
       }
-      extendDraft(draft, p);
+      extendDraft(draft, p, e.shiftKey);
       c.setDraft(draft);
     },
     [snapshot],
@@ -541,22 +546,21 @@ export function useEditor() {
         // Resize: handle hit on the currently selected annotation.
         const selId = selectedIdRef.current;
         if (selId) {
+          // handleAt yields null for the types that carry no handles, so the
+          // annotation type needs no separate check here.
           const sel = annotationsRef.current.find((a) => a.id === selId) ?? null;
-          if (sel && (sel.type === 'rect' || sel.type === 'blur' || sel.type === 'arrow')) {
-            const h = handleAt(sel, (x, y) => c.toScreen(x, y), sx, sy);
-            if (h) {
-              interactionRef.current = {
-                kind: 'resize',
-                id: selId,
-                handle: h,
-                startBBox: bbox(sel),
-                startPt: p,
-                annType: sel.type,
-              };
-              window.addEventListener('mousemove', onDragMove);
-              window.addEventListener('mouseup', onDragUp);
-              return;
-            }
+          const h = sel ? handleAt(sel, (x, y) => c.toScreen(x, y), sx, sy) : null;
+          if (sel && h) {
+            interactionRef.current = {
+              kind: 'resize',
+              id: selId,
+              handle: h,
+              startBBox: bbox(sel),
+              startPt: p,
+            };
+            window.addEventListener('mousemove', onDragMove);
+            window.addEventListener('mouseup', onDragUp);
+            return;
           }
         }
         // Select + move: hit-test annotations topmost-first.
@@ -610,21 +614,55 @@ export function useEditor() {
   );
 
   // --- Text ---
+  /**
+   * A new text layer is already on the history stack (startText commits it), so
+   * only a re-edit owes a snapshot. It is taken on the first keystroke, which
+   * keeps an opened-and-closed overlay out of the undo stack entirely.
+   */
+  const textSnapshottedRef = useRef(true);
+
   function startText(p: { x: number; y: number }) {
     const ann = createTextAnnotation(p, styleRef.current.color, styleRef.current.fontSize);
     commit((prev) => [...prev, ann]);
+    textSnapshottedRef.current = true;
     setTextEdit({ id: ann.id });
   }
 
-  const updateText = useCallback((id: string, text: string) => {
-    setAnnotations((prev) =>
-      prev.map((a) => {
-        if (a.id !== id || a.type !== 'text') return a;
-        const size = measureTextSize(text, a.fontSize);
-        return { ...a, text, width: size.width, height: size.height };
-      }),
+  // Double-click a committed text layer with the select tool to re-open it.
+  const onCanvasDoubleClick = useCallback((e: MouseEvent) => {
+    const c = controllerRef.current;
+    if (!c || !c.image || toolRef.current !== 'select') return;
+    const rect = c.canvas.getBoundingClientRect();
+    const hit = hitTestAnnotation(
+      c,
+      annotationsRef.current,
+      e.clientX - rect.left,
+      e.clientY - rect.top,
     );
+    const a = hit ? annotationsRef.current.find((x) => x.id === hit) : null;
+    if (!a || a.type !== 'text') return;
+    setSelectedId(a.id);
+    selectedIdRef.current = a.id;
+    textSnapshottedRef.current = false;
+    setTextEdit({ id: a.id });
   }, []);
+
+  const updateText = useCallback(
+    (id: string, text: string) => {
+      if (!textSnapshottedRef.current) {
+        snapshot();
+        textSnapshottedRef.current = true;
+      }
+      setAnnotations((prev) =>
+        prev.map((a) => {
+          if (a.id !== id || a.type !== 'text') return a;
+          const size = measureTextSize(text, a.fontSize);
+          return { ...a, text, width: size.width, height: size.height };
+        }),
+      );
+    },
+    [snapshot],
+  );
 
   const finishText = useCallback((id: string) => {
     setTextEdit(null);
@@ -793,6 +831,7 @@ export function useEditor() {
     fit,
     resetZoom,
     onCanvasMouseDown,
+    onCanvasDoubleClick,
     updateText,
     finishText,
     applyCrop,

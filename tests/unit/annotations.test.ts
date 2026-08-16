@@ -5,6 +5,7 @@ import {
   genId,
   getHandles,
   handleAt,
+  hasStroke,
   normalizeRect,
   pruneBlurCache,
   resizeRect,
@@ -43,6 +44,20 @@ describe('bbox', () => {
       y1: 10,
       x2: 30,
       y2: 40,
+      stroke: '#f00',
+      strokeWidth: 4,
+    };
+    expect(bbox(a)).toEqual({ x: 10, y: 10, w: 20, h: 30 });
+  });
+
+  it('bounds a line by its endpoints', () => {
+    const a: Annotation = {
+      id: 'l',
+      type: 'line',
+      x1: 30,
+      y1: 40,
+      x2: 10,
+      y2: 10,
       stroke: '#f00',
       strokeWidth: 4,
     };
@@ -171,6 +186,20 @@ describe('getHandles', () => {
     expect(hs.map((h) => h.handle)).toEqual(['start', 'end']);
   });
 
+  it('returns 2 handles for a line (start + end)', () => {
+    const a: Annotation = {
+      id: 'l',
+      type: 'line',
+      x1: 0,
+      y1: 0,
+      x2: 10,
+      y2: 10,
+      stroke: '#f00',
+      strokeWidth: 4,
+    };
+    expect(getHandles(a).map((h) => h.handle)).toEqual(['start', 'end']);
+  });
+
   it('returns no handles for text or pen (move-only)', () => {
     const t: Annotation = {
       id: 't',
@@ -263,6 +292,20 @@ describe('translateAnnotation', () => {
       ],
     });
   });
+  it('shifts both ends of a line', () => {
+    const a: Annotation = {
+      id: 'l',
+      type: 'line',
+      x1: 0,
+      y1: 0,
+      x2: 10,
+      y2: 10,
+      stroke: '#f00',
+      strokeWidth: 4,
+    };
+    expect(translateAnnotation(a, 5, -5)).toEqual({ ...a, x1: 5, y1: -5, x2: 15, y2: 5 });
+  });
+
   it('does not mutate the original', () => {
     const a: Annotation = {
       id: 'r',
@@ -277,5 +320,35 @@ describe('translateAnnotation', () => {
     };
     translateAnnotation(a, 10, 10);
     expect(a.x).toBe(1);
+  });
+});
+
+describe('hasStroke', () => {
+  it('accepts every annotation the style bar can recolour', () => {
+    const shapes: Annotation[] = [
+      { id: 'r', type: 'rect', x: 0, y: 0, w: 1, h: 1, stroke: '#f00', strokeWidth: 4, fill: null },
+      { id: 'a', type: 'arrow', x1: 0, y1: 0, x2: 1, y2: 1, stroke: '#f00', strokeWidth: 4 },
+      { id: 'l', type: 'line', x1: 0, y1: 0, x2: 1, y2: 1, stroke: '#f00', strokeWidth: 4 },
+      { id: 'p', type: 'pen', points: [], stroke: '#f00', strokeWidth: 4 },
+      { id: 'h', type: 'highlight', points: [], stroke: '#f00', strokeWidth: 4 },
+    ];
+    for (const a of shapes) expect(hasStroke(a)).toBe(true);
+  });
+
+  it('rejects the annotations that carry a colour under another name', () => {
+    const text: Annotation = {
+      id: 't',
+      type: 'text',
+      x: 0,
+      y: 0,
+      text: 'hi',
+      fontSize: 28,
+      color: '#f00',
+      width: 1,
+      height: 1,
+    };
+    const step: Annotation = { id: 's', type: 'step', x: 0, y: 0, r: 12, n: 1, color: '#f00' };
+    const blur: Annotation = { id: 'b', type: 'blur', x: 0, y: 0, w: 1, h: 1, strength: 8 };
+    for (const a of [text, step, blur]) expect(hasStroke(a)).toBe(false);
   });
 });

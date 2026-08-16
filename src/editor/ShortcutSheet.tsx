@@ -17,6 +17,9 @@ function buildCommands(isMac: boolean): { label: string; keys: string }[] {
   const mod = modKey(isMac);
   const shift = isMac ? '⇧' : 'Shift+';
   return [
+    { label: 'Set color', keys: '1–8' },
+    { label: 'Square / 45° constraint', keys: isMac ? '⇧ + drag' : 'Shift + drag' },
+    { label: 'Edit a text layer', keys: 'Double-click' },
     { label: 'Copy to clipboard', keys: `${mod}C` },
     { label: 'Export', keys: `${mod}S` },
     { label: 'Undo', keys: `${mod}Z` },

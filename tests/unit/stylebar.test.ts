@@ -3,7 +3,7 @@ import { stylebarEmpty, stylebarFields } from '../../src/editor/stylebar';
 
 describe('stylebarFields by tool', () => {
   it('offers colour and stroke for the shape tools', () => {
-    for (const tool of ['rect', 'arrow', 'pen', 'highlight'] as const) {
+    for (const tool of ['rect', 'arrow', 'line', 'pen', 'highlight'] as const) {
       expect(stylebarFields(tool, null)).toEqual({ color: true, stroke: true, fontSize: false });
     }
   });

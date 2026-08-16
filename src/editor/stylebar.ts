@@ -26,6 +26,7 @@ export function stylebarFields(
     switch (selectedType) {
       case 'rect':
       case 'arrow':
+      case 'line':
       case 'pen':
       case 'highlight':
         return SHAPE;
@@ -39,6 +40,7 @@ export function stylebarFields(
   switch (tool) {
     case 'rect':
     case 'arrow':
+    case 'line':
     case 'pen':
     case 'highlight':
       return SHAPE;

@@ -39,9 +39,9 @@ Built as a Manifest V3 extension with no servers, no accounts, and no telemetry.
 - **Full Page** — scroll-and-stitch the whole page top to bottom with live progress; fixed headers are composited once at the top. Works on pages that scroll an inner element, too.
 - **Visible Area** — capture exactly what's on screen right now.
 - **Selected Region** — click & drag to grab an area, with a Capture/Cancel bar to confirm.
-- **Annotation editor** — rectangle, arrow, pen, highlighter, text, numbered step badges, blur, crop; select, move/resize, undo/redo; color, stroke width & font size remembered across sessions.
+- **Annotation editor** — rectangle, arrow, line, pen, highlighter, text, numbered step badges, blur, crop; select, move/resize, undo/redo; hold Shift for squares and 45° lines; color, stroke width & font size remembered across sessions.
 - **Export** — PNG, JPEG, WebP, and PDF (single or multi-page with overlap), or copy straight to clipboard with `Cmd/Ctrl+C`.
-- **Keyboard-first** — capture shortcuts, number keys `1`–`3` in the popup, and a "reopen last capture" escape hatch.
+- **Keyboard-first** — capture shortcuts, number keys `1`–`3` in the popup, `1`–`8` for the editor palette, and a "reopen last capture" escape hatch.
 - **Settings** — theme, default format, quality, filename template, PDF defaults.
 - **Polished & accessible** — dark/light UI, modal focus trap, toolbar arrow-key navigation.
 

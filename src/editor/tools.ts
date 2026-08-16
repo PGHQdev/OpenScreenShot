@@ -16,9 +16,9 @@ import {
 } from './annotations';
 
 export type Tool =
-  'select' | 'rect' | 'arrow' | 'pen' | 'highlight' | 'text' | 'step' | 'blur' | 'crop';
+  'select' | 'rect' | 'arrow' | 'line' | 'pen' | 'highlight' | 'text' | 'step' | 'blur' | 'crop';
 
-export type ShapeTool = 'rect' | 'arrow' | 'pen' | 'highlight' | 'blur';
+export type ShapeTool = 'rect' | 'arrow' | 'line' | 'pen' | 'highlight' | 'blur';
 
 export interface ToolDef {
   id: Tool;
@@ -30,6 +30,7 @@ export const TOOL_LIST: ToolDef[] = [
   { id: 'select', label: 'Select', shortcut: 'V' },
   { id: 'rect', label: 'Rectangle', shortcut: 'R' },
   { id: 'arrow', label: 'Arrow', shortcut: 'A' },
+  { id: 'line', label: 'Line', shortcut: 'L' },
   { id: 'pen', label: 'Pen', shortcut: 'P' },
   { id: 'highlight', label: 'Highlighter', shortcut: 'H' },
   { id: 'text', label: 'Text', shortcut: 'T' },
@@ -60,9 +61,10 @@ export function createShapeDraft(
         fill: null,
       };
     case 'arrow':
+    case 'line':
       return {
         id,
-        type: 'arrow',
+        type: tool,
         x1: p.x,
         y1: p.y,
         x2: p.x,
@@ -91,18 +93,47 @@ export function createShapeDraft(
   }
 }
 
-/** Mutate `draft` in place to follow point `p` (the controller re-renders after). */
-export function extendDraft(draft: Annotation, p: Point): void {
+/**
+ * Grow a drag delta into a square, keeping the direction of each axis. A drag
+ * along one axis alone still makes a square, so the shape never collapses.
+ */
+export function squareDelta(dx: number, dy: number): { dx: number; dy: number } {
+  const side = Math.max(Math.abs(dx), Math.abs(dy));
+  return { dx: dx < 0 ? -side : side, dy: dy < 0 ? -side : side };
+}
+
+/** Move the end point onto the nearest 45° ray from the start, at the same distance. */
+export function snapTo45(x1: number, y1: number, x2: number, y2: number): Point {
+  const len = Math.hypot(x2 - x1, y2 - y1);
+  if (len === 0) return { x: x2, y: y2 };
+  const step = Math.PI / 4;
+  const angle = Math.round(Math.atan2(y2 - y1, x2 - x1) / step) * step;
+  return { x: x1 + Math.cos(angle) * len, y: y1 + Math.sin(angle) * len };
+}
+
+/**
+ * Mutate `draft` in place to follow point `p` (the controller re-renders after).
+ * With `shift` held, rectangles stay square and arrows and lines snap to 45°.
+ * The freehand tools follow the pointer either way.
+ */
+export function extendDraft(draft: Annotation, p: Point, shift = false): void {
   switch (draft.type) {
     case 'rect':
-    case 'blur':
-      draft.w = p.x - draft.x;
-      draft.h = p.y - draft.y;
+    case 'blur': {
+      const dx = p.x - draft.x;
+      const dy = p.y - draft.y;
+      const d = shift ? squareDelta(dx, dy) : { dx, dy };
+      draft.w = d.dx;
+      draft.h = d.dy;
       break;
+    }
     case 'arrow':
-      draft.x2 = p.x;
-      draft.y2 = p.y;
+    case 'line': {
+      const end = shift ? snapTo45(draft.x1, draft.y1, p.x, p.y) : p;
+      draft.x2 = end.x;
+      draft.y2 = end.y;
       break;
+    }
     case 'pen':
     case 'highlight':
       draft.points.push(p);
@@ -120,6 +151,7 @@ export function shouldCommit(draft: Annotation): boolean {
     case 'blur':
       return Math.abs(draft.w) > 2 && Math.abs(draft.h) > 2;
     case 'arrow':
+    case 'line':
       return Math.hypot(draft.x2 - draft.x1, draft.y2 - draft.y1) > 3;
     case 'pen':
     case 'highlight':
