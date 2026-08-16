@@ -76,7 +76,7 @@
     "description": "Link that opens Chrome's extension shortcut settings."
   },
   "reopenLast": {
-    "message": "Reopen last capture",
+    "message": "Reopen last",
     "description": "Link in the popup that reopens the most recent capture in the editor."
   },
   "footerShortcuts": {
@@ -176,7 +176,7 @@
     "description": "Delay option that captures immediately."
   },
   "repeatLastRegion": {
-    "message": "Repeat last region",
+    "message": "Repeat region",
     "description": "Footer link and context menu item that re-captures the previous region selection."
   }
 }
