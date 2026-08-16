@@ -21,19 +21,19 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 
 ## Editor
 
-| Feature                                                   | Status     | Notes                                                                                                                                        |
-| --------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Straight line tool                                        | ✅ shipped | Landed in v0.5.0 as the `L` tool: the arrow shape without a head, sharing its two endpoint handles.                                          |
-| Solid and mosaic redaction                                | 📋 planned | Two more modes on the existing blur annotation, for redaction that survives a screenshot of the screenshot.                                  |
-| Spotlight tool                                            | 📋 planned | Dim the frame and cut out one ellipse, rectangle, or rounded rect.                                                                           |
-| Shift constraints while drawing                           | ✅ shipped | Landed in v0.5.0: square rectangles and blur regions, and lines and arrows snapped to 45°.                                                   |
-| Resize every annotation type                              | 📋 planned | Pen, highlighter, text, and step badges carry no handles today. Adds a bbox with scale, which the spotlight and beautify work both build on. |
-| Number keys `1`–`8` set the color                         | ✅ shipped | Landed in v0.5.0 across the whole palette, matching the letter keys on the toolbar.                                                          |
-| Double-click a text layer to re-edit it                   | ✅ shipped | Landed in v0.5.0 on the select tool. Reopens the existing text overlay on a committed annotation.                                            |
-| Beautify mode: padding, rounded corners, shadow, gradient | 📋 planned | Polish screenshots for sharing — pure canvas compositing. Needs an outer frame the viewport, crop, and PDF paths all respect.                |
-| Eyedropper color picker                                   | 📋 planned | Sample any pixel of the capture itself; the native EyeDropper API covers the rest of the screen.                                             |
-| Resize / scale at export (50%, fixed width, …)            | 📋 planned | Offscreen-canvas scaling in the export dialog.                                                                                               |
-| Drag & drop / paste any image into the editor             | 📋 planned | Turns the editor into a general-purpose annotation tool.                                                                                     |
+| Feature                                                   | Status     | Notes                                                                                                                         |
+| --------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Straight line tool                                        | ✅ shipped | Landed in v0.5.0 as the `L` tool: the arrow shape without a head, sharing its two endpoint handles.                           |
+| Solid and mosaic redaction                                | ✅ shipped | Landed in v0.6.0 as a mode on the blur annotation: soft blur, coarse mosaic, or an opaque fill that survives recompression.   |
+| Spotlight tool                                            | ✅ shipped | Landed in v0.6.0 as the `O` tool: rect, rounded rect, or ellipse cut-outs that merge into one dim layer.                      |
+| Shift constraints while drawing                           | ✅ shipped | Landed in v0.5.0: square rectangles and blur regions, and lines and arrows snapped to 45°.                                    |
+| Resize every annotation type                              | ✅ shipped | Landed in v0.6.0: pen and highlighter scale freely on their bbox; text and step badges scale uniformly from corner handles.   |
+| Number keys `1`–`8` set the color                         | ✅ shipped | Landed in v0.5.0 across the whole palette, matching the letter keys on the toolbar.                                           |
+| Double-click a text layer to re-edit it                   | ✅ shipped | Landed in v0.5.0 on the select tool. Reopens the existing text overlay on a committed annotation.                             |
+| Beautify mode: padding, rounded corners, shadow, gradient | 📋 planned | Polish screenshots for sharing — pure canvas compositing. Needs an outer frame the viewport, crop, and PDF paths all respect. |
+| Eyedropper color picker                                   | 📋 planned | Sample any pixel of the capture itself; the native EyeDropper API covers the rest of the screen.                              |
+| Resize / scale at export (50%, fixed width, …)            | 📋 planned | Offscreen-canvas scaling in the export dialog.                                                                                |
+| Drag & drop / paste any image into the editor             | 📋 planned | Turns the editor into a general-purpose annotation tool.                                                                      |
 
 ## Power features
 
@@ -62,6 +62,9 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 
 | Feature                                                 | Version |
 | ------------------------------------------------------- | ------- |
+| Solid and mosaic redaction modes on the blur tool       | v0.6.0  |
+| Spotlight tool (`O`)                                    | v0.6.0  |
+| Resize handles on every annotation type                 | v0.6.0  |
 | Straight line tool (`L`)                                | v0.5.0  |
 | Shift constraints: square rects, 45° lines and arrows   | v0.5.0  |
 | Number keys `1`–`8` set the annotation color            | v0.5.0  |
@@ -81,4 +84,4 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 
 ---
 
-_Last updated for v0.5.0._
+_Last updated for v0.6.0._
