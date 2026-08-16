@@ -5,7 +5,13 @@ import { getSettings, hasLastCapture, setSettings } from '../shared/storage';
 import { onPopupMessage, sendToBackground } from '../shared/messaging';
 import { BrandMark } from '../shared/BrandMark';
 import { resolveModeKeys } from '../shared/shortcuts';
-import { FILENAME_TOKENS, formatFilename, insertToken } from '../shared/utils';
+import {
+  CAPTURE_DELAYS,
+  FILENAME_TOKENS,
+  formatFilename,
+  insertToken,
+  normalizeCaptureDelay,
+} from '../shared/utils';
 
 // i18n helper
 function t(id: string): string {
@@ -144,7 +150,9 @@ export function App() {
   function capture(mode: CaptureMode) {
     if (busy) return;
     setBusy(mode);
-    if (mode === 'region') {
+    // Region needs the page free for the overlay; a delayed capture needs it
+    // free so the user can set up the hover state — both close the popup.
+    if (mode === 'region' || normalizeCaptureDelay(settings.captureDelay) > 0) {
       // Close only AFTER the request is delivered — closing first can drop the
       // message to a cold service worker, so region would silently no-op on the
       // first click and only work once the worker is warm.
@@ -268,6 +276,22 @@ export function App() {
               );
             })}
           </nav>
+
+          <div class="settings-row delay-row">
+            <span class="settings-label">{t('delayLabel')}</span>
+            <div class="seg">
+              {CAPTURE_DELAYS.map((d) => (
+                <button
+                  key={d}
+                  class="seg-btn"
+                  aria-pressed={normalizeCaptureDelay(settings.captureDelay) === d}
+                  onClick={() => updateSettings({ captureDelay: d })}
+                >
+                  {d === 0 ? t('delayOff') : `${d}s`}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div class="divider" />
 

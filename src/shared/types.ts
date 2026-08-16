@@ -104,6 +104,8 @@ export interface Settings {
   annotationFontSize: number;
   /** Custom colours the user picked, most recent first. */
   recentColors: string[];
+  /** Seconds to wait before every capture (0 = immediate). See CAPTURE_DELAYS. */
+  captureDelay: number;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -120,4 +122,5 @@ export const DEFAULT_SETTINGS: Settings = {
   annotationStrokeWidth: 6,
   annotationFontSize: 28,
   recentColors: [],
+  captureDelay: 0,
 };
