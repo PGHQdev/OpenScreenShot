@@ -46,6 +46,16 @@ export interface ArrowAnnotation extends BaseAnnotation {
   strokeWidth: number;
 }
 
+export interface LineAnnotation extends BaseAnnotation {
+  type: 'line';
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  stroke: string;
+  strokeWidth: number;
+}
+
 export interface PenAnnotation extends BaseAnnotation {
   type: 'pen';
   points: Point[];
@@ -93,6 +103,7 @@ export interface StepAnnotation extends BaseAnnotation {
 export type Annotation =
   | RectAnnotation
   | ArrowAnnotation
+  | LineAnnotation
   | PenAnnotation
   | TextAnnotation
   | BlurAnnotation
@@ -100,6 +111,21 @@ export type Annotation =
   | StepAnnotation;
 
 export type AnnotationType = Annotation['type'];
+
+/** The annotations that carry `stroke` + `strokeWidth` (the style bar's shape group). */
+export type StrokedAnnotation =
+  RectAnnotation | ArrowAnnotation | LineAnnotation | PenAnnotation | HighlightAnnotation;
+
+/** Text and step badges carry a `color` instead, and blur carries no style at all. */
+export function hasStroke(a: Annotation): a is StrokedAnnotation {
+  return (
+    a.type === 'rect' ||
+    a.type === 'arrow' ||
+    a.type === 'line' ||
+    a.type === 'pen' ||
+    a.type === 'highlight'
+  );
+}
 
 /** Default annotation styling (a vivid red reads well on most pages). */
 export const DEFAULT_STROKE = '#ff3b30';
@@ -161,6 +187,7 @@ export function bbox(a: Annotation): Rect {
     case 'blur':
       return normalizeRect(a);
     case 'arrow':
+    case 'line':
       return {
         x: Math.min(a.x1, a.x2),
         y: Math.min(a.y1, a.y2),
@@ -251,6 +278,9 @@ export function drawAnnotation(
     case 'arrow':
       drawArrow(ctx, a);
       break;
+    case 'line':
+      drawShaft(ctx, a);
+      break;
     case 'pen':
       drawPen(ctx, a);
       break;
@@ -281,18 +311,23 @@ function drawRect(ctx: CanvasRenderingContext2D, a: RectAnnotation): void {
   ctx.strokeRect(r.x, r.y, r.w, r.h);
 }
 
-function drawArrow(ctx: CanvasRenderingContext2D, a: ArrowAnnotation): void {
-  const dx = a.x2 - a.x1;
-  const dy = a.y2 - a.y1;
+/** The shared body of an arrow and a line: one round-capped segment. */
+function drawShaft(ctx: CanvasRenderingContext2D, a: ArrowAnnotation | LineAnnotation): void {
   ctx.lineWidth = a.strokeWidth;
   ctx.strokeStyle = a.stroke;
-  ctx.fillStyle = a.stroke;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.beginPath();
   ctx.moveTo(a.x1, a.y1);
   ctx.lineTo(a.x2, a.y2);
   ctx.stroke();
+}
+
+function drawArrow(ctx: CanvasRenderingContext2D, a: ArrowAnnotation): void {
+  const dx = a.x2 - a.x1;
+  const dy = a.y2 - a.y1;
+  drawShaft(ctx, a);
+  ctx.fillStyle = a.stroke;
   const len = Math.hypot(dx, dy);
   if (len < 1) return; // too short to draw a head
   const head = Math.max(10, a.strokeWidth * 3);
@@ -443,6 +478,7 @@ export function translateAnnotation(a: Annotation, dx: number, dy: number): Anno
     case 'blur':
       return { ...a, x: a.x + dx, y: a.y + dy };
     case 'arrow':
+    case 'line':
       return { ...a, x1: a.x1 + dx, y1: a.y1 + dy, x2: a.x2 + dx, y2: a.y2 + dy };
     case 'pen':
     case 'highlight':
@@ -503,6 +539,7 @@ export function getHandles(a: Annotation): HandlePos[] {
       ];
     }
     case 'arrow':
+    case 'line':
       return [
         { handle: 'start', x: a.x1, y: a.y1 },
         { handle: 'end', x: a.x2, y: a.y2 },

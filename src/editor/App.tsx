@@ -179,6 +179,7 @@ export function App() {
             class="stage-canvas"
             data-cursor={cursor}
             onMouseDown={ed.onCanvasMouseDown}
+            onDblClick={ed.onCanvasDoubleClick}
           />
 
           {ed.cropActive ? (
@@ -721,6 +722,12 @@ function ToolIcon({ id }: { id: Tool }) {
           <path d="M4 20L20 4M20 4h-6M20 4v6" />
         </svg>
       );
+    case 'line':
+      return (
+        <svg {...common}>
+          <path d="M4 20L20 4" />
+        </svg>
+      );
     case 'pen':
       return (
         <svg {...common}>
@@ -884,9 +891,11 @@ function labelForMode(mode: 'full-page' | 'visible' | 'region'): string {
 function hintForTool(tool: Tool): string {
   switch (tool) {
     case 'rect':
-      return 'Drag to draw a rectangle';
+      return 'Drag to draw a rectangle · Shift keeps it square';
     case 'arrow':
-      return 'Drag to draw an arrow';
+      return 'Drag to draw an arrow · Shift snaps to 45°';
+    case 'line':
+      return 'Drag to draw a line · Shift snaps to 45°';
     case 'pen':
       return 'Drag to draw freehand';
     case 'highlight':
@@ -900,6 +909,6 @@ function hintForTool(tool: Tool): string {
     case 'crop':
       return 'Drag to select, then Apply to crop';
     case 'select':
-      return 'Click to select · drag to move · handles to resize · ⌫ delete';
+      return 'Select · drag to move · handles to resize · double-click text · ⌫ delete';
   }
 }
