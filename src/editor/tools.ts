@@ -10,6 +10,7 @@ import {
   DEFAULT_BLUR_STRENGTH,
   genId,
   type Annotation,
+  type BlurMode,
   type Point,
   type SpotlightShape,
   type StepAnnotation,
@@ -54,6 +55,7 @@ export const TOOL_LIST: ToolDef[] = [
 /** Per-tool options for {@link createShapeDraft} beyond the shared stroke style. */
 export interface ShapeDraftOptions {
   spotlightShape?: SpotlightShape;
+  blurMode?: BlurMode;
 }
 
 /** Create a fresh draft annotation for a shape tool at point `p`. */
@@ -107,7 +109,16 @@ export function createShapeDraft(
         strokeWidth,
       };
     case 'blur':
-      return { id, type: 'blur', x: p.x, y: p.y, w: 0, h: 0, strength: DEFAULT_BLUR_STRENGTH };
+      return {
+        id,
+        type: 'blur',
+        x: p.x,
+        y: p.y,
+        w: 0,
+        h: 0,
+        strength: DEFAULT_BLUR_STRENGTH,
+        mode: opts.blurMode ?? 'blur',
+      };
     case 'spotlight':
       return {
         id,

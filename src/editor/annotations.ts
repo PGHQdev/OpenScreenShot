@@ -75,6 +75,12 @@ export interface TextAnnotation extends BaseAnnotation {
   height: number;
 }
 
+/**
+ * How a blur region redacts: soft pixelation, coarse mosaic blocks, or an
+ * opaque fill. Mosaic and solid survive recompression of the exported image.
+ */
+export type BlurMode = 'blur' | 'mosaic' | 'solid';
+
 export interface BlurAnnotation extends BaseAnnotation {
   type: 'blur';
   x: number;
@@ -82,6 +88,8 @@ export interface BlurAnnotation extends BaseAnnotation {
   w: number;
   h: number;
   strength: number;
+  /** Absent on annotations from before v0.6.0, meaning 'blur'. */
+  mode?: BlurMode;
 }
 
 export interface HighlightAnnotation extends BaseAnnotation {
@@ -269,7 +277,8 @@ interface BlurCacheEntry {
   y: number;
   w: number;
   h: number;
-  strength: number;
+  /** The downsample factor the tile was built with (strength × mode multiplier). */
+  factor: number;
 }
 export type BlurCache = Map<string, BlurCacheEntry>;
 
@@ -443,6 +452,12 @@ function drawText(ctx: CanvasRenderingContext2D, a: TextAnnotation): void {
   }
 }
 
+/** Fill for solid redaction — opaque, so no pixel data survives. */
+const SOLID_REDACTION_FILL = '#111318';
+
+/** Mosaic blocks are this much coarser than the soft blur's pixelation. */
+const MOSAIC_FACTOR = 4;
+
 function drawBlur(
   ctx: CanvasRenderingContext2D,
   a: BlurAnnotation,
@@ -451,7 +466,14 @@ function drawBlur(
 ): void {
   const r = normalizeRect(a);
   if (r.w <= 0 || r.h <= 0) return;
-  const tile = getBlurTile(a.id, r, a.strength, image, blurCache);
+  const mode = a.mode ?? 'blur';
+  if (mode === 'solid') {
+    ctx.fillStyle = SOLID_REDACTION_FILL;
+    ctx.fillRect(r.x, r.y, r.w, r.h);
+    return;
+  }
+  const factor = mode === 'mosaic' ? a.strength * MOSAIC_FACTOR : a.strength;
+  const tile = getBlurTile(a.id, r, factor, image, blurCache);
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(tile, r.x, r.y, r.w, r.h);
   // Smoothing is restored by the controller's save/restore wrapper.
@@ -460,7 +482,7 @@ function drawBlur(
 function getBlurTile(
   id: string,
   r: Rect,
-  strength: number,
+  factor: number,
   image: HTMLImageElement | HTMLCanvasElement,
   blurCache: BlurCache,
 ): HTMLCanvasElement {
@@ -471,18 +493,18 @@ function getBlurTile(
     entry.y === r.y &&
     entry.w === r.w &&
     entry.h === r.h &&
-    entry.strength === strength
+    entry.factor === factor
   ) {
     return entry.tile;
   }
-  const tw = Math.max(1, Math.round(r.w / strength));
-  const th = Math.max(1, Math.round(r.h / strength));
+  const tw = Math.max(1, Math.round(r.w / factor));
+  const th = Math.max(1, Math.round(r.h / factor));
   const tile = document.createElement('canvas');
   tile.width = tw;
   tile.height = th;
   const tctx = tile.getContext('2d');
   if (tctx) tctx.drawImage(image, r.x, r.y, r.w, r.h, 0, 0, tw, th);
-  blurCache.set(id, { tile, x: r.x, y: r.y, w: r.w, h: r.h, strength });
+  blurCache.set(id, { tile, x: r.x, y: r.y, w: r.w, h: r.h, factor });
   return tile;
 }
 

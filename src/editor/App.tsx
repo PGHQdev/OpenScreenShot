@@ -3,7 +3,7 @@ import { isTypingTarget, useEditor } from './useEditor';
 import { TOOL_LIST, type Tool } from './tools';
 import { IMAGE_FORMATS, type ImageFormat } from './export';
 import type { PdfOptions } from './pdf';
-import { COLOR_PALETTE, STROKE_WIDTHS, type SpotlightShape } from './annotations';
+import { COLOR_PALETTE, STROKE_WIDTHS, type BlurMode, type SpotlightShape } from './annotations';
 import { colorName } from './palette';
 import { arrowNav, getFocusable, trapFocus } from './focus';
 import { BrandMark } from '../shared/BrandMark';
@@ -315,6 +315,24 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
           </div>
         </div>
       ) : null}
+      {fields.redaction ? (
+        <div class="stylebar-group">
+          <span class="stylebar-label">Redaction</span>
+          <div class="segmented">
+            {BLUR_MODES.map((m) => (
+              <button
+                key={m.id}
+                class={`segmented-btn${ed.blurMode === m.id ? ' is-selected' : ''}`}
+                title={m.hint}
+                aria-pressed={ed.blurMode === m.id}
+                onClick={() => ed.setBlurMode(m.id)}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
       {fields.fontSize ? (
         <div class="stylebar-group">
           <span class="stylebar-label">Size · {ed.style.fontSize}px</span>
@@ -332,6 +350,12 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
     </div>
   );
 }
+
+const BLUR_MODES: { id: BlurMode; label: string; hint: string }[] = [
+  { id: 'blur', label: 'Blur', hint: 'Soft pixelation' },
+  { id: 'mosaic', label: 'Mosaic', hint: 'Coarse blocks — survives recompression' },
+  { id: 'solid', label: 'Solid', hint: 'Opaque fill — nothing survives' },
+];
 
 const SPOTLIGHT_SHAPES: { id: SpotlightShape; label: string }[] = [
   { id: 'rect', label: 'Rectangle' },
@@ -935,7 +959,7 @@ function hintForTool(tool: Tool): string {
     case 'text':
       return 'Click to place text, then type';
     case 'blur':
-      return 'Drag over an area to blur it';
+      return 'Drag over an area to redact it · pick Blur, Mosaic, or Solid above';
     case 'spotlight':
       return 'Drag to keep an area lit — everything else dims · Shift keeps it square';
     case 'crop':

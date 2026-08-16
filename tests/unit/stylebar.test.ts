@@ -9,6 +9,7 @@ describe('stylebarFields by tool', () => {
         stroke: true,
         fontSize: false,
         shape: false,
+        redaction: false,
       });
     }
   });
@@ -20,6 +21,7 @@ describe('stylebarFields by tool', () => {
         stroke: false,
         fontSize: true,
         shape: false,
+        redaction: false,
       });
     }
   });
@@ -30,11 +32,22 @@ describe('stylebarFields by tool', () => {
       stroke: false,
       fontSize: false,
       shape: true,
+      redaction: false,
     });
   });
 
-  it('offers nothing for select, crop, and blur', () => {
-    for (const tool of ['select', 'crop', 'blur'] as const) {
+  it('offers the redaction picker for the blur tool', () => {
+    expect(stylebarFields('blur', null)).toEqual({
+      color: false,
+      stroke: false,
+      fontSize: false,
+      shape: false,
+      redaction: true,
+    });
+  });
+
+  it('offers nothing for select and crop', () => {
+    for (const tool of ['select', 'crop'] as const) {
       expect(stylebarEmpty(stylebarFields(tool, null))).toBe(true);
     }
   });
@@ -47,12 +60,14 @@ describe('stylebarFields by selection', () => {
       stroke: false,
       fontSize: true,
       shape: false,
+      redaction: false,
     });
     expect(stylebarFields('rect', 'step')).toEqual({
       color: true,
       stroke: false,
       fontSize: true,
       shape: false,
+      redaction: false,
     });
   });
 
@@ -63,6 +78,7 @@ describe('stylebarFields by selection', () => {
         stroke: true,
         fontSize: false,
         shape: false,
+        redaction: false,
       });
     }
   });
@@ -73,24 +89,27 @@ describe('stylebarFields by selection', () => {
       stroke: false,
       fontSize: false,
       shape: true,
+      redaction: false,
     });
   });
 
-  it('offers nothing for a selected blur', () => {
-    expect(stylebarEmpty(stylebarFields('rect', 'blur'))).toBe(true);
+  it('offers the redaction picker for a selected blur', () => {
+    expect(stylebarFields('rect', 'blur')).toEqual({
+      color: false,
+      stroke: false,
+      fontSize: false,
+      shape: false,
+      redaction: true,
+    });
   });
 });
 
 describe('stylebarEmpty', () => {
   it('is false when any field applies', () => {
-    expect(stylebarEmpty({ color: true, stroke: false, fontSize: false, shape: false })).toBe(
-      false,
-    );
-  });
-
-  it('is false when only the shape picker applies', () => {
-    expect(stylebarEmpty({ color: false, stroke: false, fontSize: false, shape: true })).toBe(
-      false,
-    );
+    const base = { color: false, stroke: false, fontSize: false, shape: false, redaction: false };
+    expect(stylebarEmpty({ ...base, color: true })).toBe(false);
+    expect(stylebarEmpty({ ...base, shape: true })).toBe(false);
+    expect(stylebarEmpty({ ...base, redaction: true })).toBe(false);
+    expect(stylebarEmpty(base)).toBe(true);
   });
 });
