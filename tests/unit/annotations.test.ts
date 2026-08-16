@@ -104,6 +104,11 @@ describe('bbox', () => {
     const a: Annotation = { id: 'b', type: 'blur', x: 10, y: 10, w: -5, h: -3, strength: 8 };
     expect(bbox(a)).toEqual({ x: 5, y: 7, w: 5, h: 3 });
   });
+
+  it('normalizes a spotlight annotation', () => {
+    const a: Annotation = { id: 's', type: 'spotlight', x: 10, y: 10, w: -5, h: -3, shape: 'rect' };
+    expect(bbox(a)).toEqual({ x: 5, y: 7, w: 5, h: 3 });
+  });
 });
 
 describe('genId', () => {
@@ -247,6 +252,11 @@ describe('getHandles', () => {
   it('returns the 4 corner handles for a step badge', () => {
     const s: Annotation = { id: 's', type: 'step', x: 10, y: 10, r: 10, n: 1, color: '#f00' };
     expect(getHandles(s).map((h) => h.handle)).toEqual(['nw', 'ne', 'se', 'sw']);
+  });
+
+  it('returns 8 handles for a spotlight (resizes like a rect)', () => {
+    const s: Annotation = { id: 's', type: 'spotlight', x: 0, y: 0, w: 10, h: 10, shape: 'rect' };
+    expect(getHandles(s)).toHaveLength(8);
   });
 
   it('places pen handles on the stroke bbox', () => {
@@ -442,6 +452,10 @@ describe('translateAnnotation', () => {
       ],
     });
   });
+  it('shifts a spotlight', () => {
+    const a: Annotation = { id: 's', type: 'spotlight', x: 1, y: 2, w: 3, h: 4, shape: 'ellipse' };
+    expect(translateAnnotation(a, 10, 20)).toEqual({ ...a, x: 11, y: 22 });
+  });
   it('shifts both ends of a line', () => {
     const a: Annotation = {
       id: 'l',
@@ -499,6 +513,7 @@ describe('hasStroke', () => {
     };
     const step: Annotation = { id: 's', type: 'step', x: 0, y: 0, r: 12, n: 1, color: '#f00' };
     const blur: Annotation = { id: 'b', type: 'blur', x: 0, y: 0, w: 1, h: 1, strength: 8 };
-    for (const a of [text, step, blur]) expect(hasStroke(a)).toBe(false);
+    const spot: Annotation = { id: 'o', type: 'spotlight', x: 0, y: 0, w: 1, h: 1, shape: 'rect' };
+    for (const a of [text, step, blur, spot]) expect(hasStroke(a)).toBe(false);
   });
 });

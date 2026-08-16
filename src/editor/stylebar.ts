@@ -12,11 +12,14 @@ export interface StylebarFields {
   color: boolean;
   stroke: boolean;
   fontSize: boolean;
+  /** The spotlight cut-out shape picker. */
+  shape: boolean;
 }
 
-const NONE: StylebarFields = { color: false, stroke: false, fontSize: false };
-const SHAPE: StylebarFields = { color: true, stroke: true, fontSize: false };
-const GLYPH: StylebarFields = { color: true, stroke: false, fontSize: true };
+const NONE: StylebarFields = { color: false, stroke: false, fontSize: false, shape: false };
+const SHAPE: StylebarFields = { color: true, stroke: true, fontSize: false, shape: false };
+const GLYPH: StylebarFields = { color: true, stroke: false, fontSize: true, shape: false };
+const SPOTLIGHT: StylebarFields = { color: false, stroke: false, fontSize: false, shape: true };
 
 export function stylebarFields(
   tool: Tool,
@@ -33,6 +36,8 @@ export function stylebarFields(
       case 'text':
       case 'step':
         return GLYPH;
+      case 'spotlight':
+        return SPOTLIGHT;
       case 'blur':
         return NONE;
     }
@@ -47,6 +52,8 @@ export function stylebarFields(
     case 'text':
     case 'step':
       return GLYPH;
+    case 'spotlight':
+      return SPOTLIGHT;
     case 'select':
     case 'crop':
     case 'blur':
@@ -56,5 +63,5 @@ export function stylebarFields(
 
 /** True when no control applies, so the bar should not render at all. */
 export function stylebarEmpty(f: StylebarFields): boolean {
-  return !f.color && !f.stroke && !f.fontSize;
+  return !f.color && !f.stroke && !f.fontSize && !f.shape;
 }

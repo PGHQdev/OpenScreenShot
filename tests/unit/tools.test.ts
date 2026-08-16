@@ -78,6 +78,40 @@ describe('line tool', () => {
   });
 });
 
+describe('spotlight tool', () => {
+  it('is in the toolbar with a free shortcut letter', () => {
+    const spot = TOOL_LIST.find((t) => t.id === 'spotlight');
+    expect(spot).toBeDefined();
+    const letters = TOOL_LIST.map((t) => t.shortcut);
+    expect(new Set(letters).size).toBe(letters.length);
+  });
+
+  it('drafts a zero-size spotlight carrying the chosen shape', () => {
+    const draft = createShapeDraft('spotlight', { x: 4, y: 9 }, '#ff3b30', 6, {
+      spotlightShape: 'ellipse',
+    });
+    expect(draft).toMatchObject({ type: 'spotlight', x: 4, y: 9, w: 0, h: 0, shape: 'ellipse' });
+  });
+
+  it('defaults the shape to a rectangle', () => {
+    const draft = createShapeDraft('spotlight', { x: 0, y: 0 }, '#ff3b30', 6);
+    expect(draft).toMatchObject({ type: 'spotlight', shape: 'rect' });
+  });
+
+  it('squares with shift held, like a rectangle', () => {
+    const d = createShapeDraft('spotlight', { x: 0, y: 0 }, '#ff3b30', 6);
+    extendDraft(d, { x: 60, y: 20 }, true);
+    expect(d).toMatchObject({ w: 60, h: 60 });
+  });
+
+  it('commits only once it is larger than a click', () => {
+    const d = createShapeDraft('spotlight', { x: 0, y: 0 }, '#ff3b30', 6);
+    expect(shouldCommit(d)).toBe(false);
+    extendDraft(d, { x: 40, y: 30 });
+    expect(shouldCommit(d)).toBe(true);
+  });
+});
+
 describe('extendDraft with shift held', () => {
   function draft(type: 'rect' | 'line' | 'arrow' | 'blur'): Annotation {
     return createShapeDraft(type, { x: 0, y: 0 }, '#ff3b30', 6);

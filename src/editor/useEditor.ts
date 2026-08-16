@@ -27,6 +27,7 @@ import {
   translateAnnotation,
   type AnnotationStyle,
   type Handle,
+  type SpotlightShape,
 } from './annotations';
 import {
   createShapeDraft,
@@ -94,6 +95,7 @@ export function useEditor() {
   const [exporting, setExporting] = useState(false);
   const [style, setStyle] = useState<AnnotationStyle>(DEFAULT_STYLE);
   const [recentColors, setRecentColors] = useState<string[]>([]);
+  const [spotlightShape, setSpotlightShapeState] = useState<SpotlightShape>('rect');
 
   // Refs for use inside stable event handlers (avoid stale closures).
   const toolRef = useRef(tool);
@@ -107,6 +109,11 @@ export function useEditor() {
   const futureRef = useRef(future);
   const dragSnapshottedRef = useRef(false);
   const styleRef = useRef(style);
+  const spotlightShapeRef = useRef(spotlightShape);
+
+  useEffect(() => {
+    spotlightShapeRef.current = spotlightShape;
+  }, [spotlightShape]);
 
   useEffect(() => {
     toolRef.current = tool;
@@ -152,6 +159,8 @@ export function useEditor() {
       setStyle((s) => ({ ...s, color: a.color, fontSize: a.fontSize }));
     } else if (a.type === 'step') {
       setStyle((s) => ({ ...s, color: a.color }));
+    } else if (a.type === 'spotlight') {
+      setSpotlightShapeState(a.shape);
     }
   }, [selectedId]);
 
@@ -233,6 +242,14 @@ export function useEditor() {
     (strokeWidth: number) => {
       setStyle((s) => ({ ...s, strokeWidth }));
       applyStyleToSelected((a) => (hasStroke(a) ? { ...a, strokeWidth } : a));
+    },
+    [applyStyleToSelected],
+  );
+
+  const setSpotlightShape = useCallback(
+    (shape: SpotlightShape) => {
+      setSpotlightShapeState(shape);
+      applyStyleToSelected((a) => (a.type === 'spotlight' ? { ...a, shape } : a));
     },
     [applyStyleToSelected],
   );
@@ -470,7 +487,7 @@ export function useEditor() {
         setAnnotations((prev) =>
           prev.map((a) => {
             if (a.id !== id) return a;
-            if (a.type === 'rect' || a.type === 'blur') {
+            if (a.type === 'rect' || a.type === 'blur' || a.type === 'spotlight') {
               const r = resizeRect(startBBox, handle, dx, dy);
               return { ...a, x: r.x, y: r.y, w: r.w, h: r.h };
             }
@@ -602,12 +619,13 @@ export function useEditor() {
         window.addEventListener('mouseup', onDragUp);
         return;
       }
-      // Shape tool (rect / arrow / pen / highlight / blur).
+      // Shape tool (rect / arrow / pen / highlight / blur / spotlight).
       const draft = createShapeDraft(
         t as ShapeTool,
         p,
         styleRef.current.color,
         styleRef.current.strokeWidth,
+        { spotlightShape: spotlightShapeRef.current },
       );
       draftRef.current = draft;
       c.setDraft(draft);
@@ -828,6 +846,8 @@ export function useEditor() {
     selectedAnnotation,
     style,
     recentColors,
+    spotlightShape,
+    setSpotlightShape,
     setStyleColor,
     setStyleStrokeWidth,
     setStyleFontSize,

@@ -2,11 +2,15 @@ import {
   type Annotation,
   type BlurCache,
   createBlurCache,
+  createSpotlightLayerCache,
   drawAnnotation,
   drawCropPreview,
   drawSelection,
+  drawSpotlightLayer,
   pruneBlurCache,
   type Rect,
+  type SpotlightAnnotation,
+  type SpotlightLayerCache,
 } from './annotations';
 import { clampZoom, fitZoom } from './viewport';
 
@@ -52,6 +56,7 @@ export class CanvasController {
   onViewChange: (() => void) | null = null;
 
   private readonly blurCache: BlurCache = createBlurCache();
+  private readonly spotlightLayer: SpotlightLayerCache = createSpotlightLayerCache();
 
   private readonly ro: ResizeObserver;
 
@@ -191,6 +196,11 @@ export class CanvasController {
     ctx.scale(this.view.zoom, this.view.zoom);
     ctx.imageSmoothingEnabled = this.view.zoom <= 1;
     ctx.drawImage(img, 0, 0);
+    // The spotlight dim layer (committed + draft) sits under the other annotations.
+    const spotlights = collectSpotlights(this.annotations, this.draft);
+    ctx.save();
+    drawSpotlightLayer(ctx, spotlights, img.naturalWidth, img.naturalHeight, this.spotlightLayer);
+    ctx.restore();
     for (const a of this.annotations) {
       ctx.save();
       drawAnnotation(ctx, a, img, this.blurCache);
@@ -229,6 +239,15 @@ export class CanvasController {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Canvas 2D context unavailable');
     ctx.drawImage(img, 0, 0);
+    ctx.save();
+    drawSpotlightLayer(
+      ctx,
+      collectSpotlights(this.annotations, null),
+      img.naturalWidth,
+      img.naturalHeight,
+      this.spotlightLayer,
+    );
+    ctx.restore();
     for (const a of this.annotations) {
       ctx.save();
       drawAnnotation(ctx, a, img, this.blurCache);
@@ -236,6 +255,13 @@ export class CanvasController {
     }
     return canvas;
   }
+}
+
+/** All spotlights to dim with, including an in-progress spotlight draft. */
+function collectSpotlights(anns: Annotation[], draft: Annotation | null): SpotlightAnnotation[] {
+  const out = anns.filter((a): a is SpotlightAnnotation => a.type === 'spotlight');
+  if (draft && draft.type === 'spotlight') out.push(draft);
+  return out;
 }
 
 function drawCheckerboard(

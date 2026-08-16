@@ -4,14 +4,33 @@ import { stylebarEmpty, stylebarFields } from '../../src/editor/stylebar';
 describe('stylebarFields by tool', () => {
   it('offers colour and stroke for the shape tools', () => {
     for (const tool of ['rect', 'arrow', 'line', 'pen', 'highlight'] as const) {
-      expect(stylebarFields(tool, null)).toEqual({ color: true, stroke: true, fontSize: false });
+      expect(stylebarFields(tool, null)).toEqual({
+        color: true,
+        stroke: true,
+        fontSize: false,
+        shape: false,
+      });
     }
   });
 
   it('offers colour and font size for text and step', () => {
     for (const tool of ['text', 'step'] as const) {
-      expect(stylebarFields(tool, null)).toEqual({ color: true, stroke: false, fontSize: true });
+      expect(stylebarFields(tool, null)).toEqual({
+        color: true,
+        stroke: false,
+        fontSize: true,
+        shape: false,
+      });
     }
+  });
+
+  it('offers the shape picker for the spotlight tool', () => {
+    expect(stylebarFields('spotlight', null)).toEqual({
+      color: false,
+      stroke: false,
+      fontSize: false,
+      shape: true,
+    });
   });
 
   it('offers nothing for select, crop, and blur', () => {
@@ -27,11 +46,13 @@ describe('stylebarFields by selection', () => {
       color: true,
       stroke: false,
       fontSize: true,
+      shape: false,
     });
     expect(stylebarFields('rect', 'step')).toEqual({
       color: true,
       stroke: false,
       fontSize: true,
+      shape: false,
     });
   });
 
@@ -41,8 +62,18 @@ describe('stylebarFields by selection', () => {
         color: true,
         stroke: true,
         fontSize: false,
+        shape: false,
       });
     }
+  });
+
+  it('offers the shape picker for a selected spotlight', () => {
+    expect(stylebarFields('select', 'spotlight')).toEqual({
+      color: false,
+      stroke: false,
+      fontSize: false,
+      shape: true,
+    });
   });
 
   it('offers nothing for a selected blur', () => {
@@ -52,6 +83,14 @@ describe('stylebarFields by selection', () => {
 
 describe('stylebarEmpty', () => {
   it('is false when any field applies', () => {
-    expect(stylebarEmpty({ color: true, stroke: false, fontSize: false })).toBe(false);
+    expect(stylebarEmpty({ color: true, stroke: false, fontSize: false, shape: false })).toBe(
+      false,
+    );
+  });
+
+  it('is false when only the shape picker applies', () => {
+    expect(stylebarEmpty({ color: false, stroke: false, fontSize: false, shape: true })).toBe(
+      false,
+    );
   });
 });
