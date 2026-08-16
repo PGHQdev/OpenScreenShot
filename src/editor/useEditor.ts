@@ -23,6 +23,7 @@ import {
   measureTextSize,
   normalizeRect,
   resizeRect,
+  scaleAnnotation,
   translateAnnotation,
   type AnnotationStyle,
   type Handle,
@@ -66,6 +67,8 @@ type Interaction =
       handle: Handle;
       startBBox: Rect;
       startPt: { x: number; y: number };
+      /** The annotation at drag start, so scaling never compounds across moves. */
+      startAnn: Annotation;
     }
   | null;
 
@@ -463,6 +466,7 @@ export function useEditor() {
         const id = it.id;
         const handle = it.handle;
         const startBBox = it.startBBox;
+        const startAnn = it.startAnn;
         setAnnotations((prev) =>
           prev.map((a) => {
             if (a.id !== id) return a;
@@ -474,7 +478,7 @@ export function useEditor() {
               if (handle === 'start') return { ...a, x1: p.x, y1: p.y };
               return { ...a, x2: p.x, y2: p.y };
             }
-            return a;
+            return scaleAnnotation(startAnn, startBBox, handle, dx, dy);
           }),
         );
         return;
@@ -557,6 +561,7 @@ export function useEditor() {
               handle: h,
               startBBox: bbox(sel),
               startPt: p,
+              startAnn: sel,
             };
             window.addEventListener('mousemove', onDragMove);
             window.addEventListener('mouseup', onDragUp);

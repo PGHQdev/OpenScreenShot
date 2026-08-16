@@ -524,9 +524,10 @@ export interface HandlePos {
 export function getHandles(a: Annotation): HandlePos[] {
   switch (a.type) {
     case 'rect':
-    case 'blur': {
-      const r = normalizeRect(a);
-      const { x, y, w, h } = r;
+    case 'blur':
+    case 'pen':
+    case 'highlight': {
+      const { x, y, w, h } = bbox(a);
       return [
         { handle: 'nw', x, y },
         { handle: 'n', x: x + w / 2, y },
@@ -544,11 +545,17 @@ export function getHandles(a: Annotation): HandlePos[] {
         { handle: 'start', x: a.x1, y: a.y1 },
         { handle: 'end', x: a.x2, y: a.y2 },
       ];
+    // Text and step badges scale uniformly, so only corners apply.
     case 'text':
-    case 'pen':
-    case 'highlight':
-    case 'step':
-      return [];
+    case 'step': {
+      const { x, y, w, h } = bbox(a);
+      return [
+        { handle: 'nw', x, y },
+        { handle: 'ne', x: x + w, y },
+        { handle: 'se', x: x + w, y: y + h },
+        { handle: 'sw', x, y: y + h },
+      ];
+    }
   }
 }
 
@@ -581,6 +588,71 @@ export function resizeRect(start: Rect, handle: Handle, dx: number, dy: number):
     h -= dy;
   }
   return normalizeRect({ x, y, w, h });
+}
+
+const MIN_FONT_SIZE = 8;
+const MIN_STEP_RADIUS = 6;
+
+/** The corner of `r` that stays fixed while `handle` is dragged. */
+function scaleAnchor(r: Rect, handle: Handle): Point {
+  const left = handle === 'ne' || handle === 'e' || handle === 'se';
+  const top = handle === 'sw' || handle === 's' || handle === 'se';
+  return { x: left ? r.x : r.x + r.w, y: top ? r.y : r.y + r.h };
+}
+
+/**
+ * Scale an annotation from a handle drag, always derived from its state at drag
+ * start (`a` + `startBBox`) so repeated calls during one drag never compound.
+ * Pen and highlight strokes scale freely per axis; text and step badges scale
+ * uniformly (fontSize / radius) around the fixed corner, with a size floor.
+ * Rect, blur, arrow and line resize through their own paths and pass through.
+ */
+export function scaleAnnotation(
+  a: Annotation,
+  startBBox: Rect,
+  handle: Handle,
+  dx: number,
+  dy: number,
+): Annotation {
+  const target = resizeRect(startBBox, handle, dx, dy);
+  const kx = startBBox.w > 0 ? target.w / startBBox.w : 1;
+  const ky = startBBox.h > 0 ? target.h / startBBox.h : 1;
+  switch (a.type) {
+    case 'pen':
+    case 'highlight':
+      return {
+        ...a,
+        points: a.points.map((p) => ({
+          x: target.x + (p.x - startBBox.x) * kx,
+          y: target.y + (p.y - startBBox.y) * ky,
+        })),
+      };
+    case 'text': {
+      const k = Math.max(kx, ky, MIN_FONT_SIZE / a.fontSize);
+      const anchor = scaleAnchor(startBBox, handle);
+      return {
+        ...a,
+        x: anchor.x + (a.x - anchor.x) * k,
+        y: anchor.y + (a.y - anchor.y) * k,
+        fontSize: a.fontSize * k,
+        // Text metrics are linear in fontSize, so the measured box scales with it.
+        width: a.width * k,
+        height: a.height * k,
+      };
+    }
+    case 'step': {
+      const k = Math.max(kx, ky, MIN_STEP_RADIUS / a.r);
+      const anchor = scaleAnchor(startBBox, handle);
+      return {
+        ...a,
+        x: anchor.x + (a.x - anchor.x) * k,
+        y: anchor.y + (a.y - anchor.y) * k,
+        r: a.r * k,
+      };
+    }
+    default:
+      return a;
+  }
 }
 
 /** Draw the selection bbox + resize handles in screen space via project (toScreen). */
