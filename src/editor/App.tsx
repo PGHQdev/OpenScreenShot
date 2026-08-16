@@ -3,7 +3,7 @@ import { isTypingTarget, useEditor } from './useEditor';
 import { TOOL_LIST, type Tool } from './tools';
 import { IMAGE_FORMATS, type ImageFormat } from './export';
 import type { PdfOptions } from './pdf';
-import { COLOR_PALETTE, STROKE_WIDTHS } from './annotations';
+import { COLOR_PALETTE, STROKE_WIDTHS, type SpotlightShape } from './annotations';
 import { colorName } from './palette';
 import { arrowNav, getFocusable, trapFocus } from './focus';
 import { BrandMark } from '../shared/BrandMark';
@@ -298,6 +298,23 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
           </div>
         </div>
       ) : null}
+      {fields.shape ? (
+        <div class="stylebar-group">
+          <span class="stylebar-label">Shape</span>
+          <div class="segmented">
+            {SPOTLIGHT_SHAPES.map((s) => (
+              <button
+                key={s.id}
+                class={`segmented-btn${ed.spotlightShape === s.id ? ' is-selected' : ''}`}
+                aria-pressed={ed.spotlightShape === s.id}
+                onClick={() => ed.setSpotlightShape(s.id)}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
       {fields.fontSize ? (
         <div class="stylebar-group">
           <span class="stylebar-label">Size · {ed.style.fontSize}px</span>
@@ -315,6 +332,12 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
     </div>
   );
 }
+
+const SPOTLIGHT_SHAPES: { id: SpotlightShape; label: string }[] = [
+  { id: 'rect', label: 'Rectangle' },
+  { id: 'rounded', label: 'Rounded' },
+  { id: 'ellipse', label: 'Ellipse' },
+];
 
 function isLight(hex: string): boolean {
   const m = /^#([0-9a-f]{6})$/i.exec(hex);
@@ -760,6 +783,13 @@ function ToolIcon({ id }: { id: Tool }) {
           <circle cx="12" cy="12" r="7" stroke-dasharray="2 3" />
         </svg>
       );
+    case 'spotlight':
+      return (
+        <svg {...common}>
+          <rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="3 3" />
+          <circle cx="12" cy="12" r="5" />
+        </svg>
+      );
     case 'crop':
       return (
         <svg {...common}>
@@ -906,6 +936,8 @@ function hintForTool(tool: Tool): string {
       return 'Click to place text, then type';
     case 'blur':
       return 'Drag over an area to blur it';
+    case 'spotlight':
+      return 'Drag to keep an area lit — everything else dims · Shift keeps it square';
     case 'crop':
       return 'Drag to select, then Apply to crop';
     case 'select':

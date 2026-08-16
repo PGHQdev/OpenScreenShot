@@ -11,14 +11,25 @@ import {
   genId,
   type Annotation,
   type Point,
+  type SpotlightShape,
   type StepAnnotation,
   type TextAnnotation,
 } from './annotations';
 
 export type Tool =
-  'select' | 'rect' | 'arrow' | 'line' | 'pen' | 'highlight' | 'text' | 'step' | 'blur' | 'crop';
+  | 'select'
+  | 'rect'
+  | 'arrow'
+  | 'line'
+  | 'pen'
+  | 'highlight'
+  | 'text'
+  | 'step'
+  | 'blur'
+  | 'spotlight'
+  | 'crop';
 
-export type ShapeTool = 'rect' | 'arrow' | 'line' | 'pen' | 'highlight' | 'blur';
+export type ShapeTool = 'rect' | 'arrow' | 'line' | 'pen' | 'highlight' | 'blur' | 'spotlight';
 
 export interface ToolDef {
   id: Tool;
@@ -36,8 +47,14 @@ export const TOOL_LIST: ToolDef[] = [
   { id: 'text', label: 'Text', shortcut: 'T' },
   { id: 'step', label: 'Step number', shortcut: 'S' },
   { id: 'blur', label: 'Blur', shortcut: 'B' },
+  { id: 'spotlight', label: 'Spotlight', shortcut: 'O' },
   { id: 'crop', label: 'Crop', shortcut: 'C' },
 ];
+
+/** Per-tool options for {@link createShapeDraft} beyond the shared stroke style. */
+export interface ShapeDraftOptions {
+  spotlightShape?: SpotlightShape;
+}
 
 /** Create a fresh draft annotation for a shape tool at point `p`. */
 export function createShapeDraft(
@@ -45,6 +62,7 @@ export function createShapeDraft(
   p: Point,
   stroke: string,
   strokeWidth: number,
+  opts: ShapeDraftOptions = {},
 ): Annotation {
   const id = genId();
   switch (tool) {
@@ -90,6 +108,16 @@ export function createShapeDraft(
       };
     case 'blur':
       return { id, type: 'blur', x: p.x, y: p.y, w: 0, h: 0, strength: DEFAULT_BLUR_STRENGTH };
+    case 'spotlight':
+      return {
+        id,
+        type: 'spotlight',
+        x: p.x,
+        y: p.y,
+        w: 0,
+        h: 0,
+        shape: opts.spotlightShape ?? 'rect',
+      };
   }
 }
 
@@ -119,7 +147,8 @@ export function snapTo45(x1: number, y1: number, x2: number, y2: number): Point 
 export function extendDraft(draft: Annotation, p: Point, shift = false): void {
   switch (draft.type) {
     case 'rect':
-    case 'blur': {
+    case 'blur':
+    case 'spotlight': {
       const dx = p.x - draft.x;
       const dy = p.y - draft.y;
       const d = shift ? squareDelta(dx, dy) : { dx, dy };
@@ -149,6 +178,7 @@ export function shouldCommit(draft: Annotation): boolean {
   switch (draft.type) {
     case 'rect':
     case 'blur':
+    case 'spotlight':
       return Math.abs(draft.w) > 2 && Math.abs(draft.h) > 2;
     case 'arrow':
     case 'line':

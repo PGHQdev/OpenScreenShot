@@ -100,6 +100,22 @@ export interface StepAnnotation extends BaseAnnotation {
   color: string;
 }
 
+export type SpotlightShape = 'rect' | 'rounded' | 'ellipse';
+
+/**
+ * Dims the whole image and cuts this region out. All spotlights render as one
+ * shared dim layer (see {@link drawSpotlightLayer}), so drawAnnotation skips
+ * the type and overlapping cut-outs merge.
+ */
+export interface SpotlightAnnotation extends BaseAnnotation {
+  type: 'spotlight';
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  shape: SpotlightShape;
+}
+
 export type Annotation =
   | RectAnnotation
   | ArrowAnnotation
@@ -108,7 +124,8 @@ export type Annotation =
   | TextAnnotation
   | BlurAnnotation
   | HighlightAnnotation
-  | StepAnnotation;
+  | StepAnnotation
+  | SpotlightAnnotation;
 
 export type AnnotationType = Annotation['type'];
 
@@ -185,6 +202,7 @@ export function bbox(a: Annotation): Rect {
   switch (a.type) {
     case 'rect':
     case 'blur':
+    case 'spotlight':
       return normalizeRect(a);
     case 'arrow':
     case 'line':
@@ -295,6 +313,10 @@ export function drawAnnotation(
       break;
     case 'step':
       drawStep(ctx, a);
+      break;
+    case 'spotlight':
+      // Rendered as one shared dim layer by drawSpotlightLayer, under the
+      // other annotations — nothing to draw per annotation.
       break;
   }
 }
@@ -464,6 +486,77 @@ function getBlurTile(
   return tile;
 }
 
+/** How much the spotlight layer darkens everything outside the cut-outs. */
+export const SPOTLIGHT_DIM = 0.55;
+
+/**
+ * The dim layer is an image-sized canvas, so it is rebuilt only when the
+ * spotlight list or the image size changes (pan/zoom redraws reuse it).
+ */
+export interface SpotlightLayerCache {
+  canvas: HTMLCanvasElement | null;
+  sig: string;
+}
+
+export function createSpotlightLayerCache(): SpotlightLayerCache {
+  return { canvas: null, sig: '' };
+}
+
+/** Trace one spotlight's cut-out path (caller begins the path and fills). */
+function traceSpotlight(ctx: CanvasRenderingContext2D, a: SpotlightAnnotation): void {
+  const r = normalizeRect(a);
+  if (r.w <= 0 || r.h <= 0) return;
+  switch (a.shape) {
+    case 'rect':
+      ctx.rect(r.x, r.y, r.w, r.h);
+      break;
+    case 'rounded':
+      ctx.roundRect(r.x, r.y, r.w, r.h, Math.min(24, r.w / 4, r.h / 4));
+      break;
+    case 'ellipse':
+      ctx.ellipse(r.x + r.w / 2, r.y + r.h / 2, r.w / 2, r.h / 2, 0, 0, Math.PI * 2);
+      break;
+  }
+}
+
+/**
+ * Draw the shared spotlight dim layer in image space. The layer starts as a
+ * full-image dim fill; each cut-out is erased with destination-out, so
+ * overlapping spotlights merge into one hole.
+ */
+export function drawSpotlightLayer(
+  ctx: CanvasRenderingContext2D,
+  spotlights: SpotlightAnnotation[],
+  imageWidth: number,
+  imageHeight: number,
+  cache: SpotlightLayerCache,
+): void {
+  if (spotlights.length === 0) return;
+  const sig =
+    `${imageWidth}x${imageHeight}|` +
+    spotlights.map((a) => `${a.shape},${a.x},${a.y},${a.w},${a.h}`).join(';');
+  if (!cache.canvas || cache.sig !== sig) {
+    const layer = cache.canvas ?? document.createElement('canvas');
+    // Assigning the size also resets the layer context's state.
+    layer.width = imageWidth;
+    layer.height = imageHeight;
+    const lctx = layer.getContext('2d');
+    if (!lctx) return;
+    lctx.fillStyle = `rgba(0,0,0,${SPOTLIGHT_DIM})`;
+    lctx.fillRect(0, 0, imageWidth, imageHeight);
+    lctx.globalCompositeOperation = 'destination-out';
+    lctx.fillStyle = '#000';
+    for (const a of spotlights) {
+      lctx.beginPath();
+      traceSpotlight(lctx, a);
+      lctx.fill();
+    }
+    cache.canvas = layer;
+    cache.sig = sig;
+  }
+  ctx.drawImage(cache.canvas, 0, 0);
+}
+
 /** Remove cache entries for ids no longer present (call after annotation changes). */
 export function pruneBlurCache(blurCache: BlurCache, ids: Set<string>): void {
   for (const key of blurCache.keys()) {
@@ -476,6 +569,7 @@ export function translateAnnotation(a: Annotation, dx: number, dy: number): Anno
   switch (a.type) {
     case 'rect':
     case 'blur':
+    case 'spotlight':
       return { ...a, x: a.x + dx, y: a.y + dy };
     case 'arrow':
     case 'line':
@@ -525,6 +619,7 @@ export function getHandles(a: Annotation): HandlePos[] {
   switch (a.type) {
     case 'rect':
     case 'blur':
+    case 'spotlight':
     case 'pen':
     case 'highlight': {
       const { x, y, w, h } = bbox(a);
