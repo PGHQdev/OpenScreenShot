@@ -174,5 +174,9 @@
   "delayOff": {
     "message": "Off",
     "description": "Delay option that captures immediately."
+  },
+  "repeatLastRegion": {
+    "message": "Repeat last region",
+    "description": "Footer link and context menu item that re-captures the previous region selection."
   }
 }

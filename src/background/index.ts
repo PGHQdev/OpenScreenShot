@@ -12,9 +12,15 @@
  * is opened in a new tab. Export (download) happens from the editor.
  */
 import type { BackgroundMessage, CaptureMode, PopupMessage, TileSpec } from '../shared/types';
-import { getSettings, setLastCapture } from '../shared/storage';
-import { isProtectedUrl, menuIdToMode, MENU_IDS, normalizeCaptureDelay } from '../shared/utils';
-import { computeScrollPositions, MAX_CANVAS_HEIGHT_PX } from '../shared/geometry';
+import { getLastRegion, getSettings, setLastCapture, setLastRegion } from '../shared/storage';
+import {
+  isProtectedUrl,
+  menuIdToMode,
+  MENU_IDS,
+  MENU_REPEAT_ID,
+  normalizeCaptureDelay,
+} from '../shared/utils';
+import { clampRegionRect, computeScrollPositions, MAX_CANVAS_HEIGHT_PX } from '../shared/geometry';
 import {
   cropTile,
   getMetrics,
@@ -72,11 +78,34 @@ async function createContextMenus(): Promise<void> {
       contexts: MENU_CONTEXTS,
     });
   }
+  await ensureRepeatMenuItem();
+}
+
+/**
+ * Add the "repeat last region" item once a region has been stored. The create
+ * callback swallows the duplicate-id error on later calls.
+ */
+async function ensureRepeatMenuItem(): Promise<void> {
+  if (!(await getLastRegion())) return;
+  chrome.contextMenus.create(
+    {
+      id: MENU_REPEAT_ID,
+      parentId: 'oss-parent',
+      title: chrome.i18n.getMessage('repeatLastRegion'),
+      contexts: MENU_CONTEXTS,
+    },
+    () => void chrome.runtime.lastError,
+  );
 }
 
 // A context menu click grants `activeTab` just like opening the popup does.
 chrome.contextMenus.onClicked.addListener((info) => {
-  const mode = menuIdToMode(String(info.menuItemId));
+  const id = String(info.menuItemId);
+  if (id === MENU_REPEAT_ID) {
+    void handleCapture('region', true).catch(onCaptureError);
+    return;
+  }
+  const mode = menuIdToMode(id);
   if (mode) void handleCapture(mode).catch(onCaptureError);
 });
 
@@ -87,12 +116,12 @@ chrome.commands.onCommand.addListener((command) => {
 
 chrome.runtime.onMessage.addListener((message: unknown) => {
   if (isCaptureRequest(message)) {
-    void handleCapture(message.mode).catch(onCaptureError);
+    void handleCapture(message.mode, message.repeat === true).catch(onCaptureError);
   }
   return false; // synchronous: no async sendResponse
 });
 
-async function handleCapture(mode: CaptureMode): Promise<void> {
+async function handleCapture(mode: CaptureMode, repeatRegion = false): Promise<void> {
   const tab = await getActiveTab();
   if (!tab || tab.id == null) {
     broadcast({ type: 'CAPTURE_ERROR', code: 'unknown', message: 'No active tab found.' });
@@ -124,7 +153,7 @@ async function handleCapture(mode: CaptureMode): Promise<void> {
       await captureFullPage(tab);
       return;
     case 'region':
-      await captureRegion(tab);
+      await captureRegion(tab, repeatRegion);
       return;
   }
 }
@@ -189,11 +218,27 @@ async function captureVisible(tab: chrome.tabs.Tab): Promise<void> {
   broadcast({ type: 'CAPTURE_COMPLETE', imageUrl: dataUrl, width, height });
 }
 
-async function captureRegion(tab: chrome.tabs.Tab): Promise<void> {
+async function captureRegion(tab: chrome.tabs.Tab, repeat = false): Promise<void> {
   const tabId = tab.id as number;
   const metrics = await execInTab(tabId, getMetrics, []);
-  const rect = await execInTab(tabId, selectRegion, []);
-  if (!rect) return; // user pressed Esc — nothing to capture
+  let rect;
+  if (repeat) {
+    const stored = await getLastRegion();
+    rect = stored && clampRegionRect(stored, metrics.viewportWidth, metrics.viewportHeight);
+    if (!rect) {
+      broadcast({
+        type: 'CAPTURE_ERROR',
+        code: 'no-region',
+        message: 'No saved region fits this screen — select one first.',
+      });
+      return;
+    }
+  } else {
+    rect = await execInTab(tabId, selectRegion, []);
+    if (!rect) return; // user pressed Esc — nothing to capture
+    await setLastRegion(rect);
+    await ensureRepeatMenuItem();
+  }
   const windowId = tab.windowId ?? chrome.windows.WINDOW_ID_CURRENT;
   const tile = await captureVisibleTabPng(windowId);
   const dpr = metrics.devicePixelRatio;

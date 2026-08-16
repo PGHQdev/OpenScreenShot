@@ -1,8 +1,9 @@
-import type { LastCapture, Settings } from './types';
+import type { LastCapture, PageRect, Settings } from './types';
 import { DEFAULT_SETTINGS } from './types';
 
 const SETTINGS_KEY = 'openscreenshot:settings';
 const LAST_CAPTURE_KEY = 'openscreenshot:last-capture';
+const LAST_REGION_KEY = 'openscreenshot:last-region';
 
 /** Load settings, merged over the defaults so new fields are always present. */
 export async function getSettings(): Promise<Settings> {
@@ -32,6 +33,17 @@ export async function getLastCapture(): Promise<LastCapture | null> {
 /** True if a capture is stashed — checks size only, never loads the image. */
 export async function hasLastCapture(): Promise<boolean> {
   return (await chrome.storage.local.getBytesInUse(LAST_CAPTURE_KEY)) > 0;
+}
+
+/** Remember the last region selection so it can be repeated. */
+export async function setLastRegion(rect: PageRect): Promise<void> {
+  await chrome.storage.local.set({ [LAST_REGION_KEY]: rect });
+}
+
+/** Read the last region selection, or null if none was made yet. */
+export async function getLastRegion(): Promise<PageRect | null> {
+  const stored = await chrome.storage.local.get(LAST_REGION_KEY);
+  return (stored[LAST_REGION_KEY] as PageRect | undefined) ?? null;
 }
 
 /** Clear the stashed capture (frees storage once the editor has loaded it). */

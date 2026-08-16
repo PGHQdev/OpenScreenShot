@@ -5,6 +5,7 @@ import {
   isProtectedUrl,
   insertToken,
   menuIdToMode,
+  MENU_REPEAT_ID,
   normalizeCaptureDelay,
   CAPTURE_DELAYS,
   FILENAME_TOKENS,
@@ -132,6 +133,12 @@ describe('menuIdToMode', () => {
   it('returns null for unknown ids (parent item, other extensions)', () => {
     expect(menuIdToMode('oss-parent')).toBe(null);
     expect(menuIdToMode('')).toBe(null);
+  });
+
+  it('leaves the repeat item out of the plain mode mapping', () => {
+    // Repeat is region + a stored rect; the click handler routes it separately.
+    expect(MENU_REPEAT_ID).toBe('oss-region-repeat');
+    expect(menuIdToMode(MENU_REPEAT_ID)).toBe(null);
   });
 });
 

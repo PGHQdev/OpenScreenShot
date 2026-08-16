@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { CaptureMode, ExportFormat, PopupMessage, Settings } from '../shared/types';
 import { DEFAULT_SETTINGS } from '../shared/types';
-import { getSettings, hasLastCapture, setSettings } from '../shared/storage';
+import { getLastRegion, getSettings, hasLastCapture, setSettings } from '../shared/storage';
 import { onPopupMessage, sendToBackground } from '../shared/messaging';
 import { BrandMark } from '../shared/BrandMark';
 import { resolveModeKeys } from '../shared/shortcuts';
@@ -78,6 +78,7 @@ export function App() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [shortcuts, setShortcuts] = useState<Record<string, string>>({});
   const [hasStash, setHasStash] = useState(false);
+  const [hasRegion, setHasRegion] = useState(false);
 
   // Load settings + apply theme on mount.
   useEffect(() => {
@@ -93,6 +94,7 @@ export function App() {
       setShortcuts(map);
     });
     void hasLastCapture().then(setHasStash);
+    void getLastRegion().then((r) => setHasRegion(r != null));
   }, []);
 
   // 1/2/3 fire a capture while the mode list is showing.
@@ -147,7 +149,7 @@ export function App() {
     if (patch.theme) applyTheme(next.theme);
   }
 
-  function capture(mode: CaptureMode) {
+  function capture(mode: CaptureMode, repeat = false) {
     if (busy) return;
     setBusy(mode);
     // Region needs the page free for the overlay; a delayed capture needs it
@@ -156,13 +158,13 @@ export function App() {
       // Close only AFTER the request is delivered — closing first can drop the
       // message to a cold service worker, so region would silently no-op on the
       // first click and only work once the worker is warm.
-      void sendToBackground({ type: 'CAPTURE_REQUEST', mode })
+      void sendToBackground({ type: 'CAPTURE_REQUEST', mode, repeat })
         .catch(() => {})
         .finally(() => window.close());
       return;
     }
     setProgress(0);
-    sendToBackground({ type: 'CAPTURE_REQUEST', mode }).catch(() => {
+    sendToBackground({ type: 'CAPTURE_REQUEST', mode, repeat }).catch(() => {
       setBusy(null);
       setProgress(null);
       pushToast(t('couldNotReach'), 'error');
@@ -303,6 +305,14 @@ export function App() {
               title={t('reopenLast')}
             >
               {t('reopenLast')}
+            </button>
+            <button
+              class="link-btn"
+              onClick={() => capture('region', true)}
+              disabled={!hasRegion || !!busy}
+              title={t('repeatLastRegion')}
+            >
+              {t('repeatLastRegion')}
             </button>
             <button class="link-btn" onClick={openShortcutSettings} title={t('customizeShortcuts')}>
               {t('footerShortcuts')}
