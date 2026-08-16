@@ -9,6 +9,7 @@ import {
   normalizeRect,
   pruneBlurCache,
   resizeRect,
+  scaleAnnotation,
   translateAnnotation,
   type Annotation,
   type BlurCache,
@@ -200,7 +201,35 @@ describe('getHandles', () => {
     expect(getHandles(a).map((h) => h.handle)).toEqual(['start', 'end']);
   });
 
-  it('returns no handles for text or pen (move-only)', () => {
+  it('returns 8 handles for a pen stroke (free scale on its bbox)', () => {
+    const p: Annotation = {
+      id: 'p',
+      type: 'pen',
+      points: [
+        { x: 0, y: 0 },
+        { x: 10, y: 20 },
+      ],
+      stroke: '#f00',
+      strokeWidth: 4,
+    };
+    expect(getHandles(p)).toHaveLength(8);
+  });
+
+  it('returns 8 handles for a highlight stroke', () => {
+    const h: Annotation = {
+      id: 'h',
+      type: 'highlight',
+      points: [
+        { x: 0, y: 0 },
+        { x: 10, y: 20 },
+      ],
+      stroke: '#f00',
+      strokeWidth: 4,
+    };
+    expect(getHandles(h)).toHaveLength(8);
+  });
+
+  it('returns the 4 corner handles for text (uniform scale)', () => {
     const t: Annotation = {
       id: 't',
       type: 'text',
@@ -212,9 +241,130 @@ describe('getHandles', () => {
       width: 10,
       height: 10,
     };
-    const p: Annotation = { id: 'p', type: 'pen', points: [], stroke: '#f00', strokeWidth: 4 };
-    expect(getHandles(t)).toEqual([]);
-    expect(getHandles(p)).toEqual([]);
+    expect(getHandles(t).map((h) => h.handle)).toEqual(['nw', 'ne', 'se', 'sw']);
+  });
+
+  it('returns the 4 corner handles for a step badge', () => {
+    const s: Annotation = { id: 's', type: 'step', x: 10, y: 10, r: 10, n: 1, color: '#f00' };
+    expect(getHandles(s).map((h) => h.handle)).toEqual(['nw', 'ne', 'se', 'sw']);
+  });
+
+  it('places pen handles on the stroke bbox', () => {
+    const p: Annotation = {
+      id: 'p',
+      type: 'pen',
+      points: [
+        { x: 10, y: 20 },
+        { x: 30, y: 60 },
+      ],
+      stroke: '#f00',
+      strokeWidth: 4,
+    };
+    const nw = getHandles(p).find((h) => h.handle === 'nw');
+    expect(nw).toEqual({ handle: 'nw', x: 10, y: 20 });
+  });
+});
+
+describe('scaleAnnotation', () => {
+  const penStart: Annotation = {
+    id: 'p',
+    type: 'pen',
+    points: [
+      { x: 0, y: 0 },
+      { x: 10, y: 10 },
+    ],
+    stroke: '#f00',
+    strokeWidth: 4,
+  };
+
+  it('scales pen points into the bbox resized from the south-east handle', () => {
+    const out = scaleAnnotation(penStart, { x: 0, y: 0, w: 10, h: 10 }, 'se', 10, 10);
+    expect(out).toEqual({
+      ...penStart,
+      points: [
+        { x: 0, y: 0 },
+        { x: 20, y: 20 },
+      ],
+    });
+  });
+
+  it('scales pen points on one axis from an edge handle', () => {
+    const out = scaleAnnotation(penStart, { x: 0, y: 0, w: 10, h: 10 }, 'e', 10, 0);
+    expect(out).toEqual({
+      ...penStart,
+      points: [
+        { x: 0, y: 0 },
+        { x: 20, y: 10 },
+      ],
+    });
+  });
+
+  it('does not mutate the original pen annotation', () => {
+    scaleAnnotation(penStart, { x: 0, y: 0, w: 10, h: 10 }, 'se', 10, 10);
+    expect(penStart.type === 'pen' && penStart.points[1]).toEqual({ x: 10, y: 10 });
+  });
+
+  const textStart: Annotation = {
+    id: 't',
+    type: 'text',
+    x: 10,
+    y: 10,
+    text: 'hi',
+    fontSize: 20,
+    color: '#f00',
+    width: 40,
+    height: 25,
+  };
+
+  it('grows text uniformly from the south-east handle, north-west corner fixed', () => {
+    const out = scaleAnnotation(textStart, { x: 10, y: 10, w: 40, h: 25 }, 'se', 40, 0);
+    expect(out).toEqual({ ...textStart, fontSize: 40, width: 80, height: 50, x: 10, y: 10 });
+  });
+
+  it('shrinks text from the north-west handle, south-east corner fixed', () => {
+    const out = scaleAnnotation(textStart, { x: 10, y: 10, w: 40, h: 25 }, 'nw', 20, 12.5);
+    expect(out).toEqual({
+      ...textStart,
+      fontSize: 10,
+      width: 20,
+      height: 12.5,
+      x: 30,
+      y: 22.5,
+    });
+  });
+
+  it('never scales text below the minimum font size', () => {
+    const small: Annotation = { ...textStart, fontSize: 10 };
+    const out = scaleAnnotation(small, { x: 10, y: 10, w: 40, h: 25 }, 'se', -38, -23.75);
+    expect(out.type === 'text' && out.fontSize).toBe(8);
+    expect(out.type === 'text' && out.width).toBe(32);
+  });
+
+  it('scales a step badge radius and center around the fixed corner', () => {
+    const step: Annotation = { id: 's', type: 'step', x: 50, y: 50, r: 10, n: 1, color: '#f00' };
+    const out = scaleAnnotation(step, { x: 40, y: 40, w: 20, h: 20 }, 'se', 20, 20);
+    expect(out).toEqual({ ...step, x: 60, y: 60, r: 20 });
+  });
+
+  it('never scales a step badge below the minimum radius', () => {
+    const step: Annotation = { id: 's', type: 'step', x: 50, y: 50, r: 10, n: 1, color: '#f00' };
+    const out = scaleAnnotation(step, { x: 40, y: 40, w: 20, h: 20 }, 'se', -19, -19);
+    expect(out.type === 'step' && out.r).toBe(6);
+  });
+
+  it('returns endpoint-handle and rect types unchanged', () => {
+    const rect: Annotation = {
+      id: 'r',
+      type: 'rect',
+      x: 0,
+      y: 0,
+      w: 10,
+      h: 10,
+      stroke: '#f00',
+      strokeWidth: 4,
+      fill: null,
+    };
+    expect(scaleAnnotation(rect, { x: 0, y: 0, w: 10, h: 10 }, 'se', 5, 5)).toBe(rect);
   });
 });
 
