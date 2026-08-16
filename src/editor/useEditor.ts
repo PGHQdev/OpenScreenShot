@@ -26,6 +26,7 @@ import {
   scaleAnnotation,
   translateAnnotation,
   type AnnotationStyle,
+  type BlurMode,
   type Handle,
   type SpotlightShape,
 } from './annotations';
@@ -96,6 +97,7 @@ export function useEditor() {
   const [style, setStyle] = useState<AnnotationStyle>(DEFAULT_STYLE);
   const [recentColors, setRecentColors] = useState<string[]>([]);
   const [spotlightShape, setSpotlightShapeState] = useState<SpotlightShape>('rect');
+  const [blurMode, setBlurModeState] = useState<BlurMode>('blur');
 
   // Refs for use inside stable event handlers (avoid stale closures).
   const toolRef = useRef(tool);
@@ -110,10 +112,15 @@ export function useEditor() {
   const dragSnapshottedRef = useRef(false);
   const styleRef = useRef(style);
   const spotlightShapeRef = useRef(spotlightShape);
+  const blurModeRef = useRef(blurMode);
 
   useEffect(() => {
     spotlightShapeRef.current = spotlightShape;
   }, [spotlightShape]);
+
+  useEffect(() => {
+    blurModeRef.current = blurMode;
+  }, [blurMode]);
 
   useEffect(() => {
     toolRef.current = tool;
@@ -161,6 +168,8 @@ export function useEditor() {
       setStyle((s) => ({ ...s, color: a.color }));
     } else if (a.type === 'spotlight') {
       setSpotlightShapeState(a.shape);
+    } else if (a.type === 'blur') {
+      setBlurModeState(a.mode ?? 'blur');
     }
   }, [selectedId]);
 
@@ -250,6 +259,14 @@ export function useEditor() {
     (shape: SpotlightShape) => {
       setSpotlightShapeState(shape);
       applyStyleToSelected((a) => (a.type === 'spotlight' ? { ...a, shape } : a));
+    },
+    [applyStyleToSelected],
+  );
+
+  const setBlurMode = useCallback(
+    (mode: BlurMode) => {
+      setBlurModeState(mode);
+      applyStyleToSelected((a) => (a.type === 'blur' ? { ...a, mode } : a));
     },
     [applyStyleToSelected],
   );
@@ -625,7 +642,7 @@ export function useEditor() {
         p,
         styleRef.current.color,
         styleRef.current.strokeWidth,
-        { spotlightShape: spotlightShapeRef.current },
+        { spotlightShape: spotlightShapeRef.current, blurMode: blurModeRef.current },
       );
       draftRef.current = draft;
       c.setDraft(draft);
@@ -848,6 +865,8 @@ export function useEditor() {
     recentColors,
     spotlightShape,
     setSpotlightShape,
+    blurMode,
+    setBlurMode,
     setStyleColor,
     setStyleStrokeWidth,
     setStyleFontSize,

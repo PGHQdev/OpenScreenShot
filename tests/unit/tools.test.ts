@@ -112,6 +112,18 @@ describe('spotlight tool', () => {
   });
 });
 
+describe('blur redaction modes', () => {
+  it('drafts a blur carrying the chosen redaction mode', () => {
+    const draft = createShapeDraft('blur', { x: 0, y: 0 }, '#ff3b30', 6, { blurMode: 'solid' });
+    expect(draft).toMatchObject({ type: 'blur', mode: 'solid' });
+  });
+
+  it('defaults to the soft pixelated blur', () => {
+    const draft = createShapeDraft('blur', { x: 0, y: 0 }, '#ff3b30', 6);
+    expect(draft).toMatchObject({ type: 'blur', mode: 'blur' });
+  });
+});
+
 describe('extendDraft with shift held', () => {
   function draft(type: 'rect' | 'line' | 'arrow' | 'blur'): Annotation {
     return createShapeDraft(type, { x: 0, y: 0 }, '#ff3b30', 6);

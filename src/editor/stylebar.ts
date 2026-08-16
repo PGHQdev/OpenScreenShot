@@ -14,12 +14,21 @@ export interface StylebarFields {
   fontSize: boolean;
   /** The spotlight cut-out shape picker. */
   shape: boolean;
+  /** The blur redaction mode picker (blur / mosaic / solid). */
+  redaction: boolean;
 }
 
-const NONE: StylebarFields = { color: false, stroke: false, fontSize: false, shape: false };
-const SHAPE: StylebarFields = { color: true, stroke: true, fontSize: false, shape: false };
-const GLYPH: StylebarFields = { color: true, stroke: false, fontSize: true, shape: false };
-const SPOTLIGHT: StylebarFields = { color: false, stroke: false, fontSize: false, shape: true };
+const NONE: StylebarFields = {
+  color: false,
+  stroke: false,
+  fontSize: false,
+  shape: false,
+  redaction: false,
+};
+const SHAPE: StylebarFields = { ...NONE, color: true, stroke: true };
+const GLYPH: StylebarFields = { ...NONE, color: true, fontSize: true };
+const SPOTLIGHT: StylebarFields = { ...NONE, shape: true };
+const BLUR: StylebarFields = { ...NONE, redaction: true };
 
 export function stylebarFields(
   tool: Tool,
@@ -39,7 +48,7 @@ export function stylebarFields(
       case 'spotlight':
         return SPOTLIGHT;
       case 'blur':
-        return NONE;
+        return BLUR;
     }
   }
   switch (tool) {
@@ -54,14 +63,15 @@ export function stylebarFields(
       return GLYPH;
     case 'spotlight':
       return SPOTLIGHT;
+    case 'blur':
+      return BLUR;
     case 'select':
     case 'crop':
-    case 'blur':
       return NONE;
   }
 }
 
 /** True when no control applies, so the bar should not render at all. */
 export function stylebarEmpty(f: StylebarFields): boolean {
-  return !f.color && !f.stroke && !f.fontSize && !f.shape;
+  return !f.color && !f.stroke && !f.fontSize && !f.shape && !f.redaction;
 }

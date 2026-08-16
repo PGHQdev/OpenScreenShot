@@ -136,7 +136,7 @@ describe('pruneBlurCache', () => {
         y: 0,
         w: 1,
         h: 1,
-        strength: 1,
+        factor: 1,
       });
     }
     return cache;
