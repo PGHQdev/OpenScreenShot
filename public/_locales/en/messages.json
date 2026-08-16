@@ -32,11 +32,11 @@
     "description": "Subtitle for the Selected Region capture mode."
   },
   "capturing": {
-    "message": "Capturing\u2026",
+    "message": "Capturing…",
     "description": "Status shown while a capture is in progress."
   },
   "cannotCaptureProtected": {
-    "message": "Can\u2019t screenshot this protected page.",
+    "message": "Can’t screenshot this protected page.",
     "description": "Error shown when the active page cannot be captured (e.g. chrome:// pages)."
   },
   "comingSoon": {
@@ -48,27 +48,27 @@
     "description": "Onboarding welcome card title."
   },
   "welcomeLede": {
-    "message": "Capture full-length screenshots of any webpage \u2014 even long-scrolling pages \u2014 annotate them, and export as PNG or PDF.",
+    "message": "Capture full-length screenshots of any webpage — even long-scrolling pages — annotate them, and export as PNG or PDF.",
     "description": "Welcome card description text."
   },
   "welcomeList1": {
-    "message": "\ud83d\udcc4 Full Page \u2014 Scroll & stitch the entire page, top to bottom",
+    "message": "📄 Full Page — Scroll & stitch the entire page, top to bottom",
     "description": "Welcome card feature list item 1"
   },
   "welcomeList2": {
-    "message": "\ud83d\udc41 Visible \u2014 Just what you see now",
+    "message": "👁 Visible — Just what you see now",
     "description": "Welcome card feature list item 2"
   },
   "welcomeList3": {
-    "message": "\u2702\ufe0f Region \u2014 Drag to select an area",
+    "message": "✂️ Region — Drag to select an area",
     "description": "Welcome card feature list item 3"
   },
   "welcomePerm": {
-    "message": "\ud83d\udd12 We need permission to read page content for screenshots. Your data never leaves your device.",
+    "message": "🔒 We need permission to read page content for screenshots. Your data never leaves your device.",
     "description": "Welcome card permission notice."
   },
   "welcomeCta": {
-    "message": "Got it, let\u2019s go!",
+    "message": "Got it, let’s go!",
     "description": "Primary call-to-action on the welcome card."
   },
   "customizeShortcuts": {
@@ -166,5 +166,13 @@
   "resetConfirm": {
     "message": "Click again to reset",
     "description": "Second-click confirmation label for the reset link."
+  },
+  "delayLabel": {
+    "message": "Delay",
+    "description": "Label for the capture delay row in the popup."
+  },
+  "delayOff": {
+    "message": "Off",
+    "description": "Delay option that captures immediately."
   }
 }

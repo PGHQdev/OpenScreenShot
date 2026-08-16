@@ -4,6 +4,8 @@ import {
   sanitizeFilename,
   isProtectedUrl,
   insertToken,
+  normalizeCaptureDelay,
+  CAPTURE_DELAYS,
   FILENAME_TOKENS,
 } from '../../src/shared/utils';
 
@@ -116,5 +118,23 @@ describe('insertToken', () => {
 describe('FILENAME_TOKENS', () => {
   it('lists every token formatFilename replaces', () => {
     expect([...FILENAME_TOKENS]).toEqual(['{date}', '{time}', '{title}', '{domain}', '{w}', '{h}']);
+  });
+});
+
+describe('normalizeCaptureDelay', () => {
+  it('keeps every supported delay value', () => {
+    for (const d of CAPTURE_DELAYS) expect(normalizeCaptureDelay(d)).toBe(d);
+  });
+
+  it('falls back to 0 for unsupported numbers', () => {
+    expect(normalizeCaptureDelay(1)).toBe(0);
+    expect(normalizeCaptureDelay(7)).toBe(0);
+    expect(normalizeCaptureDelay(-3)).toBe(0);
+  });
+
+  it('falls back to 0 for non-numbers from old stored settings', () => {
+    expect(normalizeCaptureDelay(undefined)).toBe(0);
+    expect(normalizeCaptureDelay('5')).toBe(0);
+    expect(normalizeCaptureDelay(null)).toBe(0);
   });
 });

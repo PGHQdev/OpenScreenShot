@@ -12,8 +12,8 @@
  * is opened in a new tab. Export (download) happens from the editor.
  */
 import type { BackgroundMessage, CaptureMode, PopupMessage, TileSpec } from '../shared/types';
-import { setLastCapture } from '../shared/storage';
-import { isProtectedUrl } from '../shared/utils';
+import { getSettings, setLastCapture } from '../shared/storage';
+import { isProtectedUrl, normalizeCaptureDelay } from '../shared/utils';
 import { computeScrollPositions, MAX_CANVAS_HEIGHT_PX } from '../shared/geometry';
 import {
   cropTile,
@@ -65,6 +65,16 @@ async function handleCapture(mode: CaptureMode): Promise<void> {
     });
     return;
   }
+  const delaySeconds = normalizeCaptureDelay((await getSettings()).captureDelay);
+  if (delaySeconds > 0) {
+    if (countdownActive) return; // one countdown at a time — ignore extra requests
+    countdownActive = true;
+    try {
+      await runCountdown(delaySeconds);
+    } finally {
+      countdownActive = false;
+    }
+  }
   switch (mode) {
     case 'visible':
       await captureVisible(tab);
@@ -76,6 +86,22 @@ async function handleCapture(mode: CaptureMode): Promise<void> {
       await captureRegion(tab);
       return;
   }
+}
+
+let countdownActive = false;
+
+/**
+ * Tick the action badge down once per second, then clear it. Each `chrome.*`
+ * call resets the MV3 idle timer, so a ≤10s countdown can't kill the worker.
+ */
+async function runCountdown(seconds: number): Promise<void> {
+  await chrome.action.setBadgeBackgroundColor({ color: '#e8503a' });
+  await chrome.action.setBadgeTextColor({ color: '#ffffff' });
+  for (let s = seconds; s > 0; s--) {
+    await chrome.action.setBadgeText({ text: String(s) });
+    await delay(1000);
+  }
+  await chrome.action.setBadgeText({ text: '' });
 }
 
 async function getActiveTab(): Promise<chrome.tabs.Tab | null> {

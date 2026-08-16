@@ -68,6 +68,16 @@ export function isProtectedUrl(url: string | undefined): boolean {
   );
 }
 
+/** Capture delays the popup offers, in seconds. 0 means capture immediately. */
+export const CAPTURE_DELAYS = [0, 3, 5, 10] as const;
+
+export type CaptureDelay = (typeof CAPTURE_DELAYS)[number];
+
+/** Coerce a stored delay to a supported value; anything else means no delay. */
+export function normalizeCaptureDelay(value: unknown): CaptureDelay {
+  return CAPTURE_DELAYS.includes(value as CaptureDelay) ? (value as CaptureDelay) : 0;
+}
+
 /** Tokens the filename template accepts, in the order the settings UI lists them. */
 export const FILENAME_TOKENS = ['{date}', '{time}', '{title}', '{domain}', '{w}', '{h}'] as const;
 

@@ -196,6 +196,11 @@ body {
   transition: width 200ms ease-out;
 }
 
+/* ---- Capture delay row ---- */
+.delay-row {
+  margin-top: var(--s-2);
+}
+
 /* ---- Divider ---- */
 .divider {
   height: 1px;
