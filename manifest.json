@@ -22,7 +22,14 @@
     "service_worker": "src/background/index.ts",
     "type": "module"
   },
-  "permissions": ["activeTab", "scripting", "storage", "unlimitedStorage", "downloads"],
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "unlimitedStorage",
+    "downloads",
+    "contextMenus"
+  ],
   "host_permissions": [],
   "options_ui": {
     "page": "src/editor/index.html",

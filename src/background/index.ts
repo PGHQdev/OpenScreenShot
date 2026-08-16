@@ -13,7 +13,7 @@
  */
 import type { BackgroundMessage, CaptureMode, PopupMessage, TileSpec } from '../shared/types';
 import { getSettings, setLastCapture } from '../shared/storage';
-import { isProtectedUrl, normalizeCaptureDelay } from '../shared/utils';
+import { isProtectedUrl, menuIdToMode, MENU_IDS, normalizeCaptureDelay } from '../shared/utils';
 import { computeScrollPositions, MAX_CANVAS_HEIGHT_PX } from '../shared/geometry';
 import {
   cropTile,
@@ -37,6 +37,47 @@ chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
     console.log('[OpenScreenShot] installed — welcome card will show on first popup open.');
   }
+  void createContextMenus();
+});
+
+/** Contexts the capture menu appears in — everywhere on a page. */
+const MENU_CONTEXTS: NonNullable<chrome.contextMenus.CreateProperties['contexts']> = [
+  'page',
+  'frame',
+  'selection',
+  'link',
+  'image',
+  'video',
+  'audio',
+];
+
+/** (Re)create the right-click capture menu. Menus persist until update/reload. */
+async function createContextMenus(): Promise<void> {
+  await chrome.contextMenus.removeAll();
+  chrome.contextMenus.create({
+    id: 'oss-parent',
+    title: 'OpenScreenShot',
+    contexts: MENU_CONTEXTS,
+  });
+  const titles: Record<CaptureMode, string> = {
+    'full-page': chrome.i18n.getMessage('modeFullPage'),
+    visible: chrome.i18n.getMessage('modeVisible'),
+    region: chrome.i18n.getMessage('modeRegion'),
+  };
+  for (const mode of ['full-page', 'visible', 'region'] as const) {
+    chrome.contextMenus.create({
+      id: MENU_IDS[mode],
+      parentId: 'oss-parent',
+      title: titles[mode],
+      contexts: MENU_CONTEXTS,
+    });
+  }
+}
+
+// A context menu click grants `activeTab` just like opening the popup does.
+chrome.contextMenus.onClicked.addListener((info) => {
+  const mode = menuIdToMode(String(info.menuItemId));
+  if (mode) void handleCapture(mode).catch(onCaptureError);
 });
 
 chrome.commands.onCommand.addListener((command) => {
@@ -284,10 +325,21 @@ function onCaptureError(err: unknown): void {
 }
 
 function broadcast(msg: PopupMessage): void {
+  // Context menu and delayed captures have no popup to show a toast in, so
+  // errors also flash the action badge.
+  if (msg.type === 'CAPTURE_ERROR') void flashErrorBadge();
   // The popup may already be closed (e.g. region mode); ignore delivery failures.
   void chrome.runtime.sendMessage(msg).catch(() => {
     /* popup not listening */
   });
+}
+
+async function flashErrorBadge(): Promise<void> {
+  await chrome.action.setBadgeBackgroundColor({ color: '#e8503a' });
+  await chrome.action.setBadgeTextColor({ color: '#ffffff' });
+  await chrome.action.setBadgeText({ text: '!' });
+  await delay(4000);
+  await chrome.action.setBadgeText({ text: '' });
 }
 
 function delay(ms: number): Promise<void> {
