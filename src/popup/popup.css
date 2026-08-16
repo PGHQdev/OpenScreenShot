@@ -421,6 +421,7 @@ body {
   background: transparent;
   color: var(--text-2);
   font-size: 12px;
+  white-space: nowrap;
   cursor: pointer;
   padding: 2px 4px;
   border-radius: var(--r-sm);
