@@ -396,6 +396,10 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
   // Scale is per-export intent: it starts at 100% every time the dialog opens
   // and stays out of "Remember these settings".
   const [targetWidth, setTargetWidth] = useState<number | null>(null);
+  // What the Width field displays while the user is typing. null means "follow
+  // the derived outW" — set on preset clicks and on commit (blur), so the field
+  // never shows stale typed text once a value lands.
+  const [widthText, setWidthText] = useState<string | null>(null);
   const [filenameBase, setFilenameBase] = useState(ed.defaultFilename());
 
   const [pdfPageSize, setPdfPageSize] = useState<'a4' | 'letter' | 'full'>(
@@ -551,13 +555,16 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
             <div class="field-label">Scale</div>
             <div class="segmented">
               {SCALE_PRESETS.map((p) => {
-                const w = Math.max(1, Math.round(composed.w * p));
+                const w = clampTargetWidth(Math.max(1, Math.round(composed.w * p)), composed.w);
                 return (
                   <button
                     key={p}
                     class={`segmented-btn${outW === w ? ' is-selected' : ''}`}
                     aria-pressed={outW === w}
-                    onClick={() => setTargetWidth(p === 1 ? null : w)}
+                    onClick={() => {
+                      setTargetWidth(p === 1 ? null : w);
+                      setWidthText(null);
+                    }}
                   >
                     {p * 100}%
                   </button>
@@ -571,12 +578,27 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
                 type="number"
                 min={MIN_EXPORT_WIDTH}
                 max={composed.w * MAX_EXPORT_SCALE}
-                value={outW}
-                onChange={(e) =>
-                  setTargetWidth(
-                    clampTargetWidth(Number((e.target as HTMLInputElement).value), composed.w),
-                  )
-                }
+                value={widthText ?? String(outW)}
+                onInput={(e) => {
+                  const raw = (e.target as HTMLInputElement).value;
+                  setWidthText(raw);
+                  const n = Number(raw);
+                  if (
+                    Number.isFinite(n) &&
+                    n >= MIN_EXPORT_WIDTH &&
+                    n <= composed.w * MAX_EXPORT_SCALE
+                  ) {
+                    setTargetWidth(n);
+                  }
+                }}
+                onChange={(e) => {
+                  const clamped = clampTargetWidth(
+                    Number((e.target as HTMLInputElement).value),
+                    composed.w,
+                  );
+                  setTargetWidth(clamped);
+                  setWidthText(null);
+                }}
               />
               px
             </label>
