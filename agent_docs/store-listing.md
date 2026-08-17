@@ -52,6 +52,7 @@ Developers filing bug reports, QA testers, designers collecting references, writ
 
 - Screenshots: `docs/assets/store/cws-1..4.jpg` (1280x800) — rendered by `npm run shots`
 - Promo tile: `docs/assets/store/promo-tile.jpg` (440x280) — rendered by `npm run shots`
+- Marquee: `docs/assets/store/marquee.jpg` (1400x560) — rendered by `npm run shots`
 
 ## Dashboard steps (manual)
 
