@@ -6,9 +6,9 @@
 
 **Capture anything. Edit it instantly.**
 
-Open-source screenshot extension for Chrome — full-page, region, and visible-area capture
-with a built-in annotation editor and PDF export. 100% local and private: works fully
-offline, and your screenshots never leave your device.
+Open-source full page screenshot extension for Chrome — entire-scrolling-page, region, and
+visible-area capture with a built-in annotation editor and PDF export. 100% local and
+private: works fully offline, and your screenshots never leave your device.
 
 [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/hdabbojjccojlapnfjpdppcpfcnhgmdp?label=Chrome%20Web%20Store&logo=googlechrome&logoColor=white&color=E8503A)](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp)
 [![Users](https://img.shields.io/chrome-web-store/users/hdabbojjccojlapnfjpdppcpfcnhgmdp?label=users&color=F5A623)](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp)
