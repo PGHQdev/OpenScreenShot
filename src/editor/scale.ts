@@ -6,10 +6,36 @@
  * stroke weights the user picked. Steep downscales walk through halves, which
  * a single drawImage step would render mushy.
  */
+import { MAX_CANVAS_HEIGHT_PX } from '../shared/geometry';
 
 export const SCALE_PRESETS = [0.25, 0.5, 1, 2] as const;
 export const MIN_EXPORT_WIDTH = 16;
 export const MAX_EXPORT_SCALE = 4;
+
+/**
+ * Total canvas area cap, in px². Chrome accepts a canvas within
+ * MAX_CANVAS_HEIGHT_PX on each side yet still no-ops the draw once width ×
+ * height gets large enough — toDataURL then returns "data:," with no error.
+ * The number is conservative, well under sizes seen to fail in practice.
+ */
+export const MAX_EXPORT_AREA_PX = 268_000_000;
+
+/**
+ * The largest export width that keeps the width, the derived height, and the
+ * area all inside the canvas caps, for a composed size of `compW × compH`.
+ */
+export function maxSafeExportWidth(compW: number, compH: number): number {
+  if (!(compW > 0) || !(compH > 0)) return MAX_CANVAS_HEIGHT_PX;
+  const byWidth = MAX_CANVAS_HEIGHT_PX;
+  const byHeight = (MAX_CANVAS_HEIGHT_PX * compW) / compH;
+  const byArea = Math.sqrt((MAX_EXPORT_AREA_PX * compW) / compH);
+  return Math.max(MIN_EXPORT_WIDTH, Math.floor(Math.min(byWidth, byHeight, byArea)));
+}
+
+/** The ceiling a target width must respect: the user's scale multiplier and the canvas caps. */
+export function exportWidthCeiling(compW: number, compH: number): number {
+  return Math.min(compW * MAX_EXPORT_SCALE, maxSafeExportWidth(compW, compH));
+}
 
 /** Widths to draw through, ending on the exact target. */
 export function halvingSteps(srcW: number, targetW: number): number[] {
@@ -32,10 +58,16 @@ export function scaledHeight(srcW: number, srcH: number, targetW: number): numbe
   return Math.max(1, Math.round((srcH * targetW) / srcW));
 }
 
-/** Hold a typed width inside the supported range. */
-export function clampTargetWidth(value: number, srcW: number): number {
+/**
+ * Hold a typed width inside the supported range. `composedH` — the composed
+ * height at `srcW` — is optional so the existing two-argument call sites keep
+ * compiling; pass it to also cap the result inside the canvas size limits.
+ */
+export function clampTargetWidth(value: number, srcW: number, composedH?: number): number {
   if (!Number.isFinite(value)) return srcW;
-  return Math.round(Math.max(MIN_EXPORT_WIDTH, Math.min(value, srcW * MAX_EXPORT_SCALE)));
+  const ceiling =
+    composedH === undefined ? srcW * MAX_EXPORT_SCALE : exportWidthCeiling(srcW, composedH);
+  return Math.round(Math.max(MIN_EXPORT_WIDTH, Math.min(value, ceiling)));
 }
 
 /** Resample to `targetW`, returning the source untouched at 100%. */

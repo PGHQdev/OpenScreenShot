@@ -14,7 +14,7 @@ import { stylebarEmpty, stylebarFields } from './stylebar';
 import { ShortcutSheet } from './ShortcutSheet';
 import {
   clampTargetWidth,
-  MAX_EXPORT_SCALE,
+  exportWidthCeiling,
   MIN_EXPORT_WIDTH,
   scaledHeight,
   SCALE_PRESETS,
@@ -412,6 +412,7 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
   const [pdfMargin, setPdfMargin] = useState(ed.settings?.pdfMarginMm ?? 8);
   const [remember, setRemember] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   // ed.settings is loaded once at editor mount and never refreshes, so a
   // previous export's "Remember these settings" write is invisible to the
@@ -457,6 +458,7 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
     // export runs.
     modalRef.current?.focus();
     setBusy(true);
+    setExportError(null);
     try {
       if (format === 'pdf') {
         const opts: PdfOptions = {
@@ -489,6 +491,10 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
         }
       }
       onClose();
+    } catch {
+      // Keep the dialog open on failure — there is no other surface for this
+      // error, and the fields (scale, format) are right here to adjust and retry.
+      setExportError('Could not export the image. Try a smaller scale or a different format.');
     } finally {
       // ed.exporting only covers the export call itself, so it clears before the
       // settings write. This flag spans the whole operation, so the button
@@ -553,58 +559,63 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
         {showScale && composed ? (
           <div class="modal-row">
             <div class="field-label">Scale</div>
-            <div class="segmented">
-              {SCALE_PRESETS.map((p) => {
-                const w = clampTargetWidth(Math.max(1, Math.round(composed.w * p)), composed.w);
-                return (
-                  <button
-                    key={p}
-                    class={`segmented-btn${outW === w ? ' is-selected' : ''}`}
-                    aria-pressed={outW === w}
-                    onClick={() => {
-                      setTargetWidth(p === 1 ? null : w);
-                      setWidthText(null);
-                    }}
-                  >
-                    {p * 100}%
-                  </button>
-                );
-              })}
-            </div>
-            <label class="check-label">
-              Width
-              <input
-                class="num-input"
-                type="number"
-                min={MIN_EXPORT_WIDTH}
-                max={composed.w * MAX_EXPORT_SCALE}
-                value={widthText ?? String(outW)}
-                onInput={(e) => {
-                  const raw = (e.target as HTMLInputElement).value;
-                  setWidthText(raw);
-                  const n = Number(raw);
-                  if (
-                    Number.isFinite(n) &&
-                    n >= MIN_EXPORT_WIDTH &&
-                    n <= composed.w * MAX_EXPORT_SCALE
-                  ) {
-                    setTargetWidth(n);
-                  }
-                }}
-                onChange={(e) => {
-                  const clamped = clampTargetWidth(
-                    Number((e.target as HTMLInputElement).value),
-                    composed.w,
+            <div class="scale-row">
+              <div class="segmented">
+                {SCALE_PRESETS.map((p) => {
+                  const raw = Math.max(1, Math.round(composed.w * p));
+                  const ceiling = exportWidthCeiling(composed.w, composed.h);
+                  const exceeds = raw > ceiling;
+                  const w = clampTargetWidth(raw, composed.w, composed.h);
+                  return (
+                    <button
+                      key={p}
+                      class={`segmented-btn${!exceeds && outW === w ? ' is-selected' : ''}`}
+                      aria-pressed={!exceeds && outW === w}
+                      disabled={exceeds}
+                      title={exceeds ? `${p * 100}% would exceed the export size limit` : undefined}
+                      onClick={() => {
+                        setTargetWidth(p === 1 ? null : w);
+                        setWidthText(null);
+                      }}
+                    >
+                      {p * 100}%
+                    </button>
                   );
-                  setTargetWidth(clamped);
-                  setWidthText(null);
-                }}
-              />
-              px
-            </label>
-            <span class="scale-readout">
-              {composed.w} × {composed.h} → {outW} × {outH}
-            </span>
+                })}
+              </div>
+              <label class="check-label">
+                Width
+                <input
+                  class="num-input num-input-wide"
+                  type="number"
+                  min={MIN_EXPORT_WIDTH}
+                  max={exportWidthCeiling(composed.w, composed.h)}
+                  value={widthText ?? String(outW)}
+                  onInput={(e) => {
+                    const raw = (e.target as HTMLInputElement).value;
+                    setWidthText(raw);
+                    const n = Number(raw);
+                    const ceiling = exportWidthCeiling(composed.w, composed.h);
+                    if (Number.isFinite(n) && n >= MIN_EXPORT_WIDTH && n <= ceiling) {
+                      setTargetWidth(Math.round(n));
+                    }
+                  }}
+                  onChange={(e) => {
+                    const clamped = clampTargetWidth(
+                      Number((e.target as HTMLInputElement).value),
+                      composed.w,
+                      composed.h,
+                    );
+                    setTargetWidth(clamped);
+                    setWidthText(null);
+                  }}
+                />
+                px
+              </label>
+              <span class="scale-readout">
+                {composed.w} × {composed.h} → {outW} × {outH}
+              </span>
+            </div>
           </div>
         ) : null}
 
@@ -720,6 +731,8 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
             <span class="filename-ext">.{ext}</span>
           </div>
         </div>
+
+        {exportError ? <p class="export-error">{exportError}</p> : null}
 
         <div class="modal-actions">
           <label class="check-label">

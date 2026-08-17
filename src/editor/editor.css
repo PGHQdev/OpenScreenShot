@@ -720,11 +720,28 @@ body {
 .num-input:disabled {
   opacity: 0.45;
 }
+.num-input-wide {
+  width: 80px;
+}
 .pdf-hint {
   margin: 0 0 var(--s-3);
   font-size: 12px;
   color: var(--text-2);
   line-height: 1.45;
+}
+.export-error {
+  margin: 0 0 var(--s-3);
+  font-size: 12px;
+  color: var(--danger);
+  line-height: 1.45;
+}
+
+/* ---- Scale row (export dialog) ---- */
+.scale-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
 }
 
 /* ---- Overlay messages (loading / empty / error) ---- */
