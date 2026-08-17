@@ -63,6 +63,7 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
           <label class="beautify-toggle">
             <input
               type="checkbox"
+              class="switch"
               checked={f.enabled}
               onChange={(e) => props.onChange({ enabled: (e.target as HTMLInputElement).checked })}
             />
