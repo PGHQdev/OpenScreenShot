@@ -1,6 +1,6 @@
 # OpenScreenShot
 
-Open-source screenshot tool for Chrome — full-page, region, and visible-area capture with annotation and PDF export. 100% local and private: works fully offline, screenshots never leave the device.
+Open-source full page screenshot tool for Chrome — entire-scrolling-page, region, and visible-area capture with annotation and PDF export. 100% local and private: works fully offline, screenshots never leave the device.
 
 - Chrome Web Store: https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp
 - Source: https://github.com/pghqdev/OpenScreenShot
