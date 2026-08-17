@@ -50,3 +50,41 @@ export async function getLastRegion(): Promise<PageRect | null> {
 export async function clearLastCapture(): Promise<void> {
   await chrome.storage.local.remove(LAST_CAPTURE_KEY);
 }
+
+const DRAFT_KEY = 'openscreenshot:draft';
+const DRAFT_IMAGE_KEY = 'openscreenshot:draft-image';
+
+/**
+ * The editor's in-progress edits. The value is `unknown` here on purpose:
+ * `src/editor/draft.ts` owns the shape and validates it on the way back, and
+ * shared code must not import editor types.
+ */
+export async function setDraft(draft: unknown): Promise<void> {
+  await chrome.storage.local.set({ [DRAFT_KEY]: draft });
+}
+
+export async function getDraft(): Promise<unknown> {
+  const stored = await chrome.storage.local.get(DRAFT_KEY);
+  return stored[DRAFT_KEY] ?? null;
+}
+
+export async function clearDraft(): Promise<void> {
+  await chrome.storage.local.remove(DRAFT_KEY);
+}
+
+/**
+ * The working image, written only when a crop replaces it. Without this the
+ * draft's coordinates would be restored against the uncropped stash.
+ */
+export async function setDraftImage(dataUrl: string): Promise<void> {
+  await chrome.storage.local.set({ [DRAFT_IMAGE_KEY]: dataUrl });
+}
+
+export async function getDraftImage(): Promise<string | null> {
+  const stored = await chrome.storage.local.get(DRAFT_IMAGE_KEY);
+  return (stored[DRAFT_IMAGE_KEY] as string | undefined) ?? null;
+}
+
+export async function clearDraftImage(): Promise<void> {
+  await chrome.storage.local.remove(DRAFT_IMAGE_KEY);
+}
