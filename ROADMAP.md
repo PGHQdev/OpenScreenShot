@@ -13,7 +13,7 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 | Feature                                                 | Status       | Notes                                                                                                                                        |
 | ------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | Delayed capture (3s / 5s / 10s timer)                   | ✅ shipped   | Landed in v0.6.1: persistent Off / 3s / 5s / 10s row in the popup; the badge counts down; region shows its overlay after the delay. |
-| Capture straight to clipboard or download (skip editor) | 📋 planned   | Optional "quick mode" for high-frequency power users. Clipboard needs an offscreen document; download goes straight from the service worker. |
+| Capture straight to clipboard or download (skip editor) | ✅ shipped   | Landed in v1.1.0: an "After capture" row in the popup picks Editor, Clipboard, or Download. The setting is read when the capture finishes, so one row covers the popup buttons, the keyboard commands, and the context menu. The clipboard write is injected into the page rather than using an offscreen document, because a service worker has no `navigator.clipboard`; the download runs in the worker. Quick save writes PNG, and the badge is the only feedback since no tab opens. |
 | Right-click context menu capture                        | ✅ shipped   | Landed in v0.6.1: full page / visible / region from the page context menu, via the warning-free `contextMenus` permission; clicks grant `activeTab` and honor the delay setting; errors flash `!` on the badge. |
 | Repeat last region                                      | ✅ shipped   | Landed in v0.6.1: re-capture the previous selection rect. The rect persists in local storage; entry points are a popup footer link and a context menu item, shown once a rect exists. |
 | Region loupe + DOM element snapping                     | 🧭 exploring | Pixel-precise crosshair magnifier; snap selection edges to element boundaries.                                                               |
@@ -31,15 +31,15 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 | Number keys `1`–`8` set the color                         | ✅ shipped | Landed in v0.5.0 across the whole palette, matching the letter keys on the toolbar.                                           |
 | Double-click a text layer to re-edit it                   | ✅ shipped | Landed in v0.5.0 on the select tool. Reopens the existing text overlay on a committed annotation.                             |
 | Beautify mode: padding, rounded corners, shadow, gradient | ✅ shipped | Landed in v0.7.0: a topbar panel with padding, corner, and shadow sliders plus six gradient presets, transparent, and a custom solid. The frame previews live and travels into every export, the clipboard, and PDF. The screenshot's top-left stays image `(0,0)`, so every tool and the crop path were left untouched. |
-| Eyedropper color picker                                   | 📋 planned | Sample any pixel of the capture itself; the native EyeDropper API covers the rest of the screen.                              |
+| Eyedropper color picker                                   | ✅ shipped | Landed in v1.1.0 as the `I` tool. It samples the rendered canvas, so a colour inside a spotlight's dim or on the beautify gradient picks as it looks, and it hands the previous tool back after one pick. A swatch-sized button on the colour row opens Chrome's screen-wide picker for everything outside the capture. |
 | Resize / scale at export (50%, fixed width, …)            | ✅ shipped | Landed in v0.7.0: 25/50/100/200% or an exact pixel width, hidden for PDF. Resamples the composed canvas through repeated halvings, and refuses sizes past Chrome's canvas limits instead of writing an empty file. |
-| Drag & drop / paste any image into the editor             | 📋 planned | Turns the editor into a general-purpose annotation tool.                                                                      |
+| Drag & drop / paste any image into the editor             | ✅ shipped | Landed in v1.1.0: drop an image on the stage or paste one anywhere outside a text field. An import takes the same seat a capture takes, so every tool, export path, and the beautify frame keep working, and the topbar reads `Imported`. It replaces the canvas, so it asks first whenever there are annotations to lose. |
 
 ## Power features
 
 | Feature                                  | Status       | Notes                                                                                                                                                                       |
 | ---------------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Crash-safe editor snapshot               | 📋 planned   | Debounced local write of the annotation list, with a restore prompt on reopen.                                                                                              |
+| Crash-safe editor snapshot               | ✅ shipped   | Landed in v1.1.0: a debounced write of the annotation list and the beautify frame, plus a flush when the tab is hidden, keyed to the capture the coordinates were drawn on. A cropped image gets its own key so annotations never restore against the wrong picture. Restoring is always a click — a stale draft can never silently replace what you meant to start fresh. |
 | Local OCR: copy text out of a screenshot | 🧭 exploring | Client-side WASM OCR, lazy-loaded on first use. No data leaves the device. The engine and one language file are 10–15 MB against a 44 KB package today, so size decides it. |
 | Recent captures shelf                    | 🧭 exploring | Last N captures kept locally, reopenable in the editor, with a clear-all control.                                                                                           |
 | Pin a capture in a floating window       | 🧭 exploring | Document Picture-in-Picture is the only always-on-top surface Chrome offers, and it closes with the tab that opened it.                                                     |
@@ -62,6 +62,10 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 
 | Feature                                                 | Version |
 | ------------------------------------------------------- | ------- |
+| Quick capture: straight to clipboard or disk             | v1.1.0  |
+| Eyedropper color picker (`I`), plus a screen-wide pick   | v1.1.0  |
+| Drag & drop or paste any image into the editor           | v1.1.0  |
+| Crash-safe editor drafts, restored on reopen             | v1.1.0  |
 | Beautify mode: padding, rounded corners, shadow, gradient | v0.7.0  |
 | Resize / scale at export (25/50/100/200% or a width)     | v0.7.0  |
 | Delayed capture (3s / 5s / 10s timer)                   | v0.6.1  |
@@ -89,4 +93,4 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 
 ---
 
-_Last updated for v0.7.0._
+_Last updated for v1.1.0._
