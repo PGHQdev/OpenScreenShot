@@ -9,6 +9,7 @@ import { arrowNav, getFocusable, trapFocus } from './focus';
 import { BrandMark } from '../shared/BrandMark';
 import { getSettings, setSettings } from '../shared/storage';
 import { ZoomMenu } from './ZoomMenu';
+import { BeautifyMenu } from './BeautifyMenu';
 import { stylebarEmpty, stylebarFields } from './stylebar';
 import { ShortcutSheet } from './ShortcutSheet';
 
@@ -120,6 +121,12 @@ export function App() {
             onZoomOut={ed.zoomOut}
             onFit={ed.fit}
             onActualSize={ed.resetZoom}
+          />
+          <BeautifyMenu
+            frame={ed.frame}
+            disabled={!ed.capture}
+            imageSize={ed.imageSize}
+            onChange={ed.setFrame}
           />
           <button
             class="btn-primary btn-fixed"
