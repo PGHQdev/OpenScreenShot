@@ -50,9 +50,21 @@ import {
   type Tool,
 } from './tools';
 import type { LastCapture, Settings } from '../shared/types';
-import { getLastCapture, getSettings, setLastCapture, setSettings } from '../shared/storage';
+import {
+  clearDraft,
+  clearDraftImage,
+  getDraft,
+  getDraftImage,
+  getLastCapture,
+  getSettings,
+  setDraft,
+  setDraftImage,
+  setLastCapture,
+  setSettings,
+} from '../shared/storage';
 import { formatFilename } from '../shared/utils';
 import { pushRecent } from './palette';
+import { draftFrame, DRAFT_DEBOUNCE_MS, makeDraft, parseDraft, type Draft } from './draft';
 import { canvasToDataUrl, downloadDataUrl, withExtension, type ImageFormat } from './export';
 import { importSizeError, readImageFile, titleFromFilename } from './import-image';
 import { exportPdf as exportPdfFile, type PdfOptions } from './pdf';
@@ -117,6 +129,7 @@ export function useEditor() {
   const [frame, setFrameState] = useState<FrameOptions>(DEFAULT_FRAME);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [draftPrompt, setDraftPrompt] = useState<Draft | null>(null);
 
   // Refs for use inside stable event handlers (avoid stale closures).
   const toolRef = useRef(tool);
@@ -160,8 +173,10 @@ export function useEditor() {
     controllerRef.current?.setAnnotations(annotations);
   }, [annotations]);
 
-  // Sync the beautify frame to the controller.
+  const frameRef = useRef(frame);
+  // Sync the beautify frame to the controller, and to a ref for the draft flush.
   useEffect(() => {
+    frameRef.current = frame;
     controllerRef.current?.setFrame(frame);
   }, [frame]);
 
@@ -365,6 +380,14 @@ export function useEditor() {
       }
       setCapture(cap);
       setImageSize({ w: cap.width, h: cap.height });
+      // A draft only fits the capture it was drawn on. Anything else is stale.
+      const stored = parseDraft(await getDraft());
+      if (stored && stored.sourceCapturedAt === cap.capturedAt && stored.annotations.length > 0) {
+        setDraftPrompt(stored);
+      } else if (stored) {
+        void clearDraft();
+        void clearDraftImage();
+      }
       const img = new Image();
       img.onload = () => {
         c.setImage(img);
@@ -816,12 +839,15 @@ export function useEditor() {
       return;
     }
     cx.drawImage(c.image, n.x, n.y, n.w, n.h, 0, 0, canvas.width, canvas.height);
+    const cropped = canvas.toDataURL('image/png');
+    // The draft's coordinates now belong to this image, not to the stash.
+    void setDraftImage(cropped);
     const img = new Image();
     img.onload = () => {
       c.setImage(img);
       setImageSize({ w: canvas.width, h: canvas.height });
     };
-    img.src = canvas.toDataURL('image/png');
+    img.src = cropped;
     const w = canvas.width;
     const h = canvas.height;
     setAnnotations((prev) =>
@@ -839,6 +865,72 @@ export function useEditor() {
     setFuture([]);
     cancelCrop();
   }, [cancelCrop]);
+
+  /**
+   * Debounced crash-safety net. It holds off while the restore bar is up: the
+   * canvas is empty then, and saving would erase the draft being offered.
+   * An empty list clears both keys — there is nothing to restore from zero
+   * annotations, and the frame is already persisted in settings.
+   */
+  useEffect(() => {
+    if (loading || !capture || draftPrompt) return;
+    const timer = window.setTimeout(() => {
+      if (annotations.length === 0) {
+        void clearDraft();
+        void clearDraftImage();
+        return;
+      }
+      void setDraft(makeDraft(capture.capturedAt, annotations, frame));
+    }, DRAFT_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [annotations, frame, loading, capture, draftPrompt]);
+
+  // A closing tab does not wait out the debounce. `beforeunload` is not used:
+  // a storage write started there is not guaranteed to land.
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState !== 'hidden') return;
+      if (loading || !capture || draftPrompt) return;
+      if (annotationsRef.current.length === 0) return;
+      void setDraft(makeDraft(capture.capturedAt, annotationsRef.current, frameRef.current));
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [loading, capture, draftPrompt]);
+
+  /**
+   * Put a draft back. The image comes first when a crop stored one, so the
+   * annotations land on the picture their coordinates were measured against.
+   */
+  const restoreDraft = useCallback(() => {
+    const d = draftPrompt;
+    if (!d) return;
+    setDraftPrompt(null);
+    setFrameState(draftFrame(d));
+    setPast([]);
+    setFuture([]);
+    setSelectedId(null);
+    void getDraftImage().then((dataUrl) => {
+      if (!dataUrl) {
+        setAnnotations(d.annotations);
+        return;
+      }
+      const img = new Image();
+      img.onload = () => {
+        controllerRef.current?.setImage(img);
+        setImageSize({ w: img.naturalWidth, h: img.naturalHeight });
+        setAnnotations(d.annotations);
+      };
+      img.onerror = () => setAnnotations(d.annotations);
+      img.src = dataUrl;
+    });
+  }, [draftPrompt]);
+
+  const discardDraft = useCallback(() => {
+    setDraftPrompt(null);
+    void clearDraft();
+    void clearDraftImage();
+  }, []);
 
   /**
    * Put an imported image on the canvas. Annotation coordinates belong to the
@@ -865,6 +957,8 @@ export function useEditor() {
       void setLastCapture(cap);
       setCapture(cap);
       setImageSize({ w: width, h: height });
+      // The stored crop image belongs to the document being replaced.
+      void clearDraftImage();
       setAnnotations([]);
       setPast([]);
       setFuture([]);
@@ -1046,6 +1140,9 @@ export function useEditor() {
     cancelImport,
     importError,
     dismissImportError,
+    draftPrompt,
+    restoreDraft,
+    discardDraft,
   };
 }
 
