@@ -4,92 +4,98 @@
     <meta charset="UTF-8" />
     <title>shot 3 — editor</title>
     <link rel="stylesheet" href="poster.css" />
+    <style>
+      /* Full-bleed editor close-up with callouts pointing at the tools. */
+      .full {
+        position: absolute;
+        inset: 0;
+      }
+      .full iframe {
+        border: 0;
+        display: block;
+        width: 1280px;
+        height: 800px;
+        transform: scale(0.7031);
+        transform-origin: top left;
+      }
+      .callout {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #fafaf7;
+        border: 1px solid #e2ded4;
+        border-radius: 10px;
+        padding: 9px 13px;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #1b1a17;
+        box-shadow:
+          0 2px 6px rgba(27, 26, 23, 0.08),
+          0 16px 32px -14px rgba(27, 26, 23, 0.35);
+      }
+      .callout .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #d43f29;
+        flex: 0 0 auto;
+      }
+      .callout.amber .dot {
+        background: #f5a623;
+      }
+      .line {
+        position: absolute;
+        background: #d43f29;
+        opacity: 0.85;
+      }
+      .line.amber {
+        background: #f5a623;
+      }
+      .wordmark-chip {
+        position: absolute;
+        left: 74px;
+        bottom: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #1b1a17;
+        color: #fafaf7;
+        font-weight: 700;
+        font-size: 12.5px;
+        border-radius: 999px;
+        padding: 8px 15px 8px 10px;
+        box-shadow: 0 10px 24px -8px rgba(27, 26, 23, 0.4);
+      }
+    </style>
   </head>
   <body>
-    <div class="poster">
-      <div class="panel">
-        <div class="wordmark">
-          <img src="brand-mark.svg" width="26" height="26" alt="" />
-          OpenScreenShot
-        </div>
-        <h1>Annotate. <span class="coral">Number.</span> <span class="amber">Highlight.</span></h1>
-        <p class="sub">
-          Every capture opens in a full-screen editor. Mark it up, then copy or export — nothing
-          leaves your browser.
-        </p>
-        <div class="features">
-          <div class="feat">
-            <span class="fi">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <circle cx="12" cy="12" r="9" />
-                <path d="M10.5 9.6L12.2 8.2v7.6" />
-              </svg>
-            </span>
-            <div>
-              <b>Step numbers</b><span>Click to place badges — numbering stays in order</span>
-            </div>
-          </div>
-          <div class="feat">
-            <span class="fi amber">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="m9 11-6 6v3h9l3-3" />
-                <path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4l8 8Z" />
-              </svg>
-            </span>
-            <div><b>Highlighter</b><span>Translucent marker keeps text readable</span></div>
-          </div>
-          <div class="feat">
-            <span class="fi ink">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M4 20L20 4M20 4h-6M20 4v6" />
-              </svg>
-            </span>
-            <div>
-              <b>Shapes, arrows, text, blur</b><span>Move, resize, undo/redo — full history</span>
-            </div>
-          </div>
-        </div>
-        <div class="chips">
-          <span class="chip"><span class="dot"></span>Zoom to cursor</span>
-          <span class="chip"><span class="dot"></span>Keyboard-first</span>
-        </div>
+    <div class="poster" style="display: block">
+      <div class="full">
+        <iframe src="editor-ui.html" scrolling="no"></iframe>
       </div>
 
-      <div class="stage-area">
-        <div class="ui-frame" style="left: 24px; top: 28px; width: 800px; height: 507px">
-          <iframe
-            src="editor-ui.html"
-            scrolling="no"
-            style="width: 1280px; height: 800px; transform: scale(0.634)"
-          ></iframe>
-        </div>
+      <!-- left toolbar -->
+      <div class="line" style="left: 44px; top: 258px; width: 34px; height: 2px"></div>
+      <div class="callout" style="left: 78px; top: 244px">
+        <span class="dot"></span> Shapes, arrows, text, blur &amp; step numbers
+      </div>
+
+      <!-- stylebar -->
+      <div class="line amber" style="left: 348px; top: 74px; width: 2px; height: 30px"></div>
+      <div class="callout amber" style="left: 268px; top: 104px">
+        <span class="dot"></span> Color, stroke &amp; size for every tool
+      </div>
+
+      <!-- export / copy -->
+      <div class="line" style="right: 56px; top: 40px; width: 2px; height: 34px"></div>
+      <div class="callout" style="right: 30px; top: 74px">
+        <span class="dot"></span> Copy or export — nothing uploads
+      </div>
+
+      <div class="wordmark-chip">
+        <img src="brand-mark.svg" width="22" height="22" alt="" />
+        OpenScreenShot — built-in annotation editor
       </div>
     </div>
   </body>

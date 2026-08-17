@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>promo tile — 440x280</title>
+    <link rel="stylesheet" href="poster.css" />
+    <style>
+      html,
+      body {
+        width: 440px;
+        height: 280px;
+      }
+      .tile {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 0 36px;
+      }
+      .tile .wordmark {
+        margin-bottom: 18px;
+      }
+      .tile h1 {
+        font-size: 31px;
+        margin-bottom: 12px;
+      }
+      .tile .sub {
+        font-size: 13px;
+        margin-bottom: 0;
+        max-width: 330px;
+      }
+      /* capture-bracket corners echoing the icon */
+      .corner {
+        position: absolute;
+        width: 34px;
+        height: 34px;
+        border: 4px solid #d43f29;
+        opacity: 0.9;
+      }
+      .corner.tr {
+        top: 22px;
+        right: 22px;
+        border-left: 0;
+        border-bottom: 0;
+        border-radius: 0 8px 0 0;
+      }
+      .corner.br {
+        bottom: 22px;
+        right: 22px;
+        border-left: 0;
+        border-top: 0;
+        border-radius: 0 0 8px 0;
+        border-color: #f5a623;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="tile">
+      <div class="wordmark">
+        <img src="brand-mark.svg" width="26" height="26" alt="" />
+        OpenScreenShot
+      </div>
+      <h1>
+        <span class="coral">Full page</span> screenshot &amp; <span class="amber">annotate</span>
+      </h1>
+      <p class="sub">Free, open source, 100% private — capture, edit, and export on your device.</p>
+      <span class="corner tr"></span>
+      <span class="corner br"></span>
+    </div>
+  </body>
+</html>

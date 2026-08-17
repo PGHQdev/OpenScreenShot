@@ -70,6 +70,35 @@ try {
       console.log(`✓ ${store} (${STORE_SIZE.w}x${STORE_SIZE.h})`);
     }
   }
+  // Promo tile: the store wants exactly 440x280, JPEG or 24-bit PNG. Rendered
+  // at 2x like the shots, then downscaled straight into the store directory.
+  {
+    const src = resolve('scripts/shots/promo-tile.html');
+    const png = join(work, 'promo-tile.png');
+    await execFileP(
+      CHROME,
+      [
+        '--headless=new',
+        '--disable-gpu',
+        '--hide-scrollbars',
+        '--no-first-run',
+        '--disable-extensions',
+        `--user-data-dir=${join(work, 'profile-promo-tile')}`,
+        `--screenshot=${png}`,
+        '--window-size=440,280',
+        '--force-device-scale-factor=2',
+        `file://${src}`,
+      ],
+      { timeout: 30_000 },
+    );
+    const tile = `${STORE_DIR}/promo-tile.jpg`;
+    await sharp(png)
+      .resize(440, 280, { fit: 'cover' })
+      .flatten({ background: '#f2f0ea' })
+      .jpeg({ quality: 92 })
+      .toFile(tile);
+    console.log(`✓ ${tile} (440x280)`);
+  }
 } finally {
   await rm(work, { recursive: true, force: true });
 }
