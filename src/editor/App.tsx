@@ -12,6 +12,7 @@ import { ZoomMenu } from './ZoomMenu';
 import { BeautifyMenu } from './BeautifyMenu';
 import { stylebarEmpty, stylebarFields } from './stylebar';
 import { ShortcutSheet } from './ShortcutSheet';
+import { hasScreenPicker, openScreenPicker } from './eyedropper';
 import {
   clampTargetWidth,
   exportWidthCeiling,
@@ -249,6 +250,13 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
   const sel = ed.selectedAnnotation;
   const fields = stylebarFields(ed.tool, sel?.type ?? null);
   if (stylebarEmpty(fields)) return null;
+
+  function pickFromScreen() {
+    void openScreenPicker(window).then((hex) => {
+      if (hex) ed.setStyleColor(hex);
+    });
+  }
+
   return (
     <div
       class="stylebar"
@@ -291,6 +299,16 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
                 onChange={(e) => ed.setStyleColor((e.target as HTMLInputElement).value)}
               />
             </label>
+            {CAN_PICK_SCREEN ? (
+              <button
+                class="swatch swatch-screen"
+                title="Pick a color from anywhere on screen"
+                aria-label="Pick a color from anywhere on screen"
+                onClick={pickFromScreen}
+              >
+                <IconDropper />
+              </button>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -364,6 +382,9 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
     </div>
   );
 }
+
+// Chrome 95+. Feature-detected once: the answer cannot change while the page lives.
+const CAN_PICK_SCREEN = hasScreenPicker(window);
 
 const BLUR_MODES: { id: BlurMode; label: string; hint: string }[] = [
   { id: 'blur', label: 'Blur', hint: 'Soft pixelation' },
@@ -1034,6 +1055,25 @@ function IconLayers() {
       <path d="M12 2l9 5-9 5-9-5 9-5z" />
       <path d="M3 12l9 5 9-5" />
       <path d="M3 17l9 5 9-5" />
+    </svg>
+  );
+}
+
+function IconDropper() {
+  return (
+    <svg
+      width="11"
+      height="11"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M18 3.5a2.1 2.1 0 0 1 3 3L15 12.5l-3-3z" />
+      <path d="M12 9.5 4.5 17v2.5H7L14.5 12" />
     </svg>
   );
 }
