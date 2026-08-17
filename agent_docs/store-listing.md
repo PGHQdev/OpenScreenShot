@@ -33,6 +33,7 @@ ANNOTATE
 • Spotlight to dim everything except the part that matters
 • Crop, resize, zoom to cursor, full undo/redo history
 • Beautify: padding, rounded corners, shadow, and gradient backgrounds for polished sharing
+• Eyedropper: match a color from the screenshot or anywhere on your screen
 
 EXPORT
 • PNG, JPEG, or WebP with quality control
