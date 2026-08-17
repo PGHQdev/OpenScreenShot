@@ -43,6 +43,7 @@ Built as a Manifest V3 extension with no servers, no accounts, and no telemetry.
 - **Annotation editor** — rectangle, arrow, line, pen, highlighter, text, numbered step badges, blur (soft, mosaic, or solid redaction), spotlight, crop; select, move/resize any annotation, undo/redo; hold Shift for squares and 45° lines; color, stroke width & font size remembered across sessions.
 - Eyedropper (`I`): take a color from the capture, or from anywhere on screen
 - Drop or paste any image into the editor to annotate it — no capture needed
+- Crash-safe: edits are saved locally as you work, and offered back if the tab closes
 - Beautify: padding, rounded corners, drop shadow, and a gradient, solid, or transparent background
 - **Export** — PNG, JPEG, WebP, and PDF (single or multi-page with overlap), or copy straight to clipboard with `Cmd/Ctrl+C`.
 - Export at any scale: 25 / 50 / 100 / 200 % or an exact pixel width
