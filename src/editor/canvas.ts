@@ -12,7 +12,7 @@ import {
   type SpotlightAnnotation,
   type SpotlightLayerCache,
 } from './annotations';
-import { clampZoom, fitZoom } from './viewport';
+import { centerView, clampZoom, fitZoom } from './viewport';
 import { clipToFrame, DEFAULT_FRAME, frameMetrics, paintFrame, type FrameOptions } from './frame';
 
 /**
@@ -118,19 +118,14 @@ export class CanvasController {
     this.render();
   }
 
-  /** Fit the whole image inside the viewport, centered, never upscaling past 100%. */
+  /** Fit the whole framed image inside the viewport, centered, never past 100%. */
   fit(): void {
     if (!this.image) return;
     const rect = this.canvas.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) return;
-    const w = this.image.naturalWidth;
-    const h = this.image.naturalHeight;
-    const zoom = fitZoom(rect.width, rect.height, w, h);
-    this.view = {
-      zoom,
-      panX: (rect.width - w * zoom) / 2,
-      panY: (rect.height - h * zoom) / 2,
-    };
+    const m = frameMetrics(this.frame, this.image.naturalWidth, this.image.naturalHeight);
+    const zoom = fitZoom(rect.width, rect.height, m.outerW, m.outerH);
+    this.view = centerView(rect.width, rect.height, m.outerW, m.outerH, m.pad, zoom);
     this.render();
     this.onViewChange?.();
   }
@@ -154,11 +149,8 @@ export class CanvasController {
   resetZoom(): void {
     if (!this.image) return;
     const rect = this.canvas.getBoundingClientRect();
-    this.view = {
-      zoom: 1,
-      panX: (rect.width - this.image.naturalWidth) / 2,
-      panY: (rect.height - this.image.naturalHeight) / 2,
-    };
+    const m = frameMetrics(this.frame, this.image.naturalWidth, this.image.naturalHeight);
+    this.view = centerView(rect.width, rect.height, m.outerW, m.outerH, m.pad, 1);
     this.render();
     this.onViewChange?.();
   }
@@ -187,21 +179,43 @@ export class CanvasController {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, rect.width, rect.height);
     if (!img) return;
-    // Checkerboard over the image's screen rect so transparency reads as such.
+    const m = frameMetrics(this.frame, img.naturalWidth, img.naturalHeight);
     const sw = img.naturalWidth * this.view.zoom;
     const sh = img.naturalHeight * this.view.zoom;
-    // Shadow behind the image rect, so a light screenshot keeps an edge.
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.24)';
-    ctx.shadowBlur = 18;
-    ctx.shadowOffsetY = 4;
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(this.view.panX, this.view.panY, sw, sh);
-    ctx.restore();
-    drawCheckerboard(ctx, this.view.panX, this.view.panY, sw, sh);
+
+    if (this.frame.enabled) {
+      // A transparent background still needs the checkerboard, so alpha reads
+      // as alpha across the padding as well as the screenshot.
+      if (this.frame.background.kind === 'transparent') {
+        drawCheckerboard(
+          ctx,
+          this.view.panX - m.pad * this.view.zoom,
+          this.view.panY - m.pad * this.view.zoom,
+          m.outerW * this.view.zoom,
+          m.outerH * this.view.zoom,
+        );
+      }
+      ctx.save();
+      ctx.translate(this.view.panX, this.view.panY);
+      ctx.scale(this.view.zoom, this.view.zoom);
+      paintFrame(ctx, m, this.frame.background, this.view.zoom);
+      ctx.restore();
+    } else {
+      // Shadow behind the image rect, so a light screenshot keeps an edge.
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.24)';
+      ctx.shadowBlur = 18;
+      ctx.shadowOffsetY = 4;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(this.view.panX, this.view.panY, sw, sh);
+      ctx.restore();
+      drawCheckerboard(ctx, this.view.panX, this.view.panY, sw, sh);
+    }
+
     ctx.save();
     ctx.translate(this.view.panX, this.view.panY);
     ctx.scale(this.view.zoom, this.view.zoom);
+    if (this.frame.enabled) clipToFrame(ctx, m);
     ctx.imageSmoothingEnabled = this.view.zoom <= 1;
     ctx.drawImage(img, 0, 0);
     // The spotlight dim layer (committed + draft) sits under the other annotations.
@@ -226,11 +240,13 @@ export class CanvasController {
     }
     ctx.restore();
     // Hairline frame in screen space, drawn under the selection handles.
-    ctx.save();
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.28)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(this.view.panX + 0.5, this.view.panY + 0.5, sw - 1, sh - 1);
-    ctx.restore();
+    if (!this.frame.enabled) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.28)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(this.view.panX + 0.5, this.view.panY + 0.5, sw - 1, sh - 1);
+      ctx.restore();
+    }
     if (this.selectedId) {
       const sel = this.annotations.find((a) => a.id === this.selectedId);
       if (sel) drawSelection(ctx, sel, (x, y) => this.toScreen(x, y));
