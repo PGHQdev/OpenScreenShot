@@ -69,6 +69,22 @@ describe('parseDraft', () => {
     expect(parsed).not.toBeNull();
     expect(draftFrame(parsed!)).toEqual(DEFAULT_FRAME);
   });
+
+  it('rejects a pen or highlight annotation with no points, but accepts one that has them', () => {
+    expect(parseDraft({ sourceCapturedAt: 1, annotations: [{ id: 'x', type: 'pen' }] })).toBeNull();
+    expect(
+      parseDraft({ sourceCapturedAt: 1, annotations: [{ id: 'x', type: 'highlight' }] }),
+    ).toBeNull();
+    const pen: Annotation = {
+      id: 'p1',
+      type: 'pen',
+      points: [{ x: 1, y: 2 }],
+      stroke: '#ff3b30',
+      strokeWidth: 6,
+    };
+    const parsed = parseDraft({ sourceCapturedAt: 1, annotations: [pen] });
+    expect(parsed?.annotations).toEqual([pen]);
+  });
 });
 
 describe('draftFrame', () => {
