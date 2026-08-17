@@ -78,12 +78,15 @@ export interface TileSpec {
   y: number;
 }
 
+/** Where the editor's image came from. An import is not a capture mode. */
+export type CaptureSource = CaptureMode | 'import';
+
 /** The most recent capture, stashed in storage so the editor page can load it. */
 export interface LastCapture {
   dataUrl: string;
   width: number;
   height: number;
-  mode: CaptureMode;
+  mode: CaptureSource;
   title: string;
   /** Page URL, used by the `{domain}` filename token. Absent on pre-0.4.0 stashes. */
   url?: string;

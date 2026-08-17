@@ -8,6 +8,7 @@ import { colorName } from './palette';
 import { arrowNav, getFocusable, trapFocus } from './focus';
 import { BrandMark } from '../shared/BrandMark';
 import { getSettings, setSettings } from '../shared/storage';
+import type { LastCapture } from '../shared/types';
 import { ZoomMenu } from './ZoomMenu';
 import { BeautifyMenu } from './BeautifyMenu';
 import { stylebarEmpty, stylebarFields } from './stylebar';
@@ -82,7 +83,7 @@ export function App() {
             <BrandMark size={22} />
           </span>
           <span class="brand-name">OpenScreenShot</span>
-          {ed.capture ? <span class="brand-mode">{labelForMode(ed.capture.mode)}</span> : null}
+          {ed.capture ? <span class="brand-mode">{labelForSource(ed.capture.mode)}</span> : null}
         </div>
         <div class="topbar-actions" role="group" aria-label="Document actions">
           <button
@@ -1078,7 +1079,7 @@ function IconDropper() {
   );
 }
 
-function labelForMode(mode: 'full-page' | 'visible' | 'region'): string {
+function labelForSource(mode: LastCapture['mode']): string {
   switch (mode) {
     case 'full-page':
       return 'Full Page';
@@ -1086,6 +1087,8 @@ function labelForMode(mode: 'full-page' | 'visible' | 'region'): string {
       return 'Visible';
     case 'region':
       return 'Region';
+    case 'import':
+      return 'Imported';
   }
 }
 
