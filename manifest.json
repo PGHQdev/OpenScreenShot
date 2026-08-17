@@ -29,7 +29,8 @@
     "storage",
     "unlimitedStorage",
     "downloads",
-    "contextMenus"
+    "contextMenus",
+    "clipboardWrite"
   ],
   "host_permissions": [],
   "options_ui": {
