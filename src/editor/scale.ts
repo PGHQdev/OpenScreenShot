@@ -23,18 +23,31 @@ export const MAX_EXPORT_AREA_PX = 268_000_000;
 /**
  * The largest export width that keeps the width, the derived height, and the
  * area all inside the canvas caps, for a composed size of `compW × compH`.
+ *
+ * MIN_EXPORT_WIDTH is deliberately not applied here. The caps are a hard limit
+ * of the canvas; the minimum is only a preference. Flooring at the minimum
+ * would return a width the caps forbid, which is what it used to do for an
+ * image over 2000x taller than it is wide. Returns 0 when no width qualifies.
  */
 export function maxSafeExportWidth(compW: number, compH: number): number {
   if (!(compW > 0) || !(compH > 0)) return MAX_CANVAS_HEIGHT_PX;
   const byWidth = MAX_CANVAS_HEIGHT_PX;
   const byHeight = (MAX_CANVAS_HEIGHT_PX * compW) / compH;
   const byArea = Math.sqrt((MAX_EXPORT_AREA_PX * compW) / compH);
-  return Math.max(MIN_EXPORT_WIDTH, Math.floor(Math.min(byWidth, byHeight, byArea)));
+  return Math.max(0, Math.floor(Math.min(byWidth, byHeight, byArea)));
 }
 
 /** The ceiling a target width must respect: the user's scale multiplier and the canvas caps. */
 export function exportWidthCeiling(compW: number, compH: number): number {
   return Math.min(compW * MAX_EXPORT_SCALE, maxSafeExportWidth(compW, compH));
+}
+
+/**
+ * The smallest width the export may use. Normally MIN_EXPORT_WIDTH, but a
+ * shape whose ceiling sits below it takes the ceiling: the cap always wins.
+ */
+export function minExportWidth(ceiling: number): number {
+  return Math.min(MIN_EXPORT_WIDTH, ceiling);
 }
 
 /** Widths to draw through, ending on the exact target. */
@@ -67,7 +80,7 @@ export function clampTargetWidth(value: number, srcW: number, composedH?: number
   if (!Number.isFinite(value)) return srcW;
   const ceiling =
     composedH === undefined ? srcW * MAX_EXPORT_SCALE : exportWidthCeiling(srcW, composedH);
-  return Math.round(Math.max(MIN_EXPORT_WIDTH, Math.min(value, ceiling)));
+  return Math.round(Math.max(minExportWidth(ceiling), Math.min(value, ceiling)));
 }
 
 /** Resample to `targetW`, returning the source untouched at 100%. */

@@ -15,7 +15,7 @@ import { ShortcutSheet } from './ShortcutSheet';
 import {
   clampTargetWidth,
   exportWidthCeiling,
-  MIN_EXPORT_WIDTH,
+  minExportWidth,
   scaledHeight,
   SCALE_PRESETS,
 } from './scale';
@@ -448,7 +448,10 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
   const composed = ed.composedSize;
   const outW = targetWidth ?? composed?.w ?? 0;
   const outH = composed ? scaledHeight(composed.w, composed.h, outW) : 0;
-  const showScale = format !== 'pdf' && composed !== null;
+  // A shape so extreme that no width fits the canvas caps has nothing to offer:
+  // the row would present a range the export cannot honour.
+  const showScale =
+    format !== 'pdf' && composed !== null && exportWidthCeiling(composed.w, composed.h) >= 1;
 
   async function doExport() {
     // The Export button disables on the next render once busy is true, and
@@ -588,7 +591,7 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
                 <input
                   class="num-input num-input-wide"
                   type="number"
-                  min={MIN_EXPORT_WIDTH}
+                  min={minExportWidth(exportWidthCeiling(composed.w, composed.h))}
                   max={exportWidthCeiling(composed.w, composed.h)}
                   value={widthText ?? String(outW)}
                   onInput={(e) => {
@@ -596,7 +599,7 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
                     setWidthText(raw);
                     const n = Number(raw);
                     const ceiling = exportWidthCeiling(composed.w, composed.h);
-                    if (Number.isFinite(n) && n >= MIN_EXPORT_WIDTH && n <= ceiling) {
+                    if (Number.isFinite(n) && n >= minExportWidth(ceiling) && n <= ceiling) {
                       setTargetWidth(Math.round(n));
                     }
                   }}

@@ -7,6 +7,7 @@ import {
   MAX_EXPORT_SCALE,
   maxSafeExportWidth,
   MIN_EXPORT_WIDTH,
+  minExportWidth,
   scaledHeight,
 } from '../../src/editor/scale';
 import { MAX_CANVAS_HEIGHT_PX } from '../../src/shared/geometry';
@@ -102,8 +103,35 @@ describe('maxSafeExportWidth', () => {
     expect((w + 1) * (w + 1)).toBeGreaterThan(MAX_EXPORT_AREA_PX);
   });
 
-  it('never returns less than the minimum export width', () => {
-    expect(maxSafeExportWidth(1, 1_000_000)).toBeGreaterThanOrEqual(MIN_EXPORT_WIDTH);
+  it('goes below the minimum export width when the caps demand it', () => {
+    // 10 x 32000 is at the height cap already, so 10px is the only safe width.
+    // Flooring at MIN_EXPORT_WIDTH here would return 16 and derive a 51200px
+    // canvas, which is the overflow this cap exists to prevent.
+    const w = maxSafeExportWidth(10, 32000);
+    expect(w).toBe(10);
+    expect(w).toBeLessThan(MIN_EXPORT_WIDTH);
+    expect(scaledHeight(10, 32000, w)).toBeLessThanOrEqual(MAX_CANVAS_HEIGHT_PX);
+  });
+
+  it('returns zero when no width keeps the derived height inside the cap', () => {
+    expect(maxSafeExportWidth(1, 1_000_000)).toBe(0);
+  });
+
+  it('keeps the derived height inside the cap across aspect ratios', () => {
+    for (const [w, h] of [
+      [10, 32000],
+      [100, 20000],
+      [640, 480],
+      [2000, 2000],
+      [3840, 32000],
+      [20000, 100],
+    ]) {
+      const safe = maxSafeExportWidth(w, h);
+      if (safe < 1) continue;
+      expect(scaledHeight(w, h, safe)).toBeLessThanOrEqual(MAX_CANVAS_HEIGHT_PX);
+      expect(safe).toBeLessThanOrEqual(MAX_CANVAS_HEIGHT_PX);
+      expect(safe * scaledHeight(w, h, safe)).toBeLessThanOrEqual(MAX_EXPORT_AREA_PX);
+    }
   });
 
   it('falls back to the side cap for degenerate input', () => {
@@ -120,6 +148,30 @@ describe('caps on a real full-page export', () => {
     expect(Math.round((20000 * ceiling) / 1200)).toBe(MAX_CANVAS_HEIGHT_PX);
     // So the 200% preset (width 2400) must be rejected as exceeding the cap.
     expect(Math.round(1200 * 2)).toBeGreaterThan(ceiling);
+  });
+});
+
+describe('minExportWidth', () => {
+  it('is the usual minimum when the ceiling is comfortably above it', () => {
+    expect(minExportWidth(9600)).toBe(MIN_EXPORT_WIDTH);
+  });
+
+  it('yields to the ceiling when the caps push it below the minimum', () => {
+    expect(minExportWidth(10)).toBe(10);
+  });
+});
+
+describe('clamping a sliver, where the cap sits below the minimum width', () => {
+  it('never clamps up past the safe ceiling', () => {
+    const ceiling = exportWidthCeiling(10, 32000);
+    expect(ceiling).toBe(10);
+    // Each of these used to return 16, deriving a 51200px canvas.
+    expect(clampTargetWidth(1, 10, 32000)).toBe(10);
+    expect(clampTargetWidth(16, 10, 32000)).toBe(10);
+    expect(clampTargetWidth(999999, 10, 32000)).toBe(10);
+    expect(scaledHeight(10, 32000, clampTargetWidth(1, 10, 32000))).toBeLessThanOrEqual(
+      MAX_CANVAS_HEIGHT_PX,
+    );
   });
 });
 
