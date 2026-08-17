@@ -11,7 +11,7 @@
  * motion, not per mousemove). Crop is destructive and clears history (the
  * pre-crop annotation coordinates are invalid for the cropped image).
  */
-import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { CanvasController } from './canvas';
 import type { Annotation, Rect } from './annotations';
 import {
@@ -31,6 +31,13 @@ import {
   type SpotlightShape,
 } from './annotations';
 import {
+  DEFAULT_FRAME,
+  frameFromSettings,
+  frameMetrics,
+  frameToSettings,
+  type FrameOptions,
+} from './frame';
+import {
   createShapeDraft,
   createStepAnnotation,
   createTextAnnotation,
@@ -48,6 +55,7 @@ import { formatFilename } from '../shared/utils';
 import { pushRecent } from './palette';
 import { canvasToDataUrl, downloadDataUrl, withExtension, type ImageFormat } from './export';
 import { exportPdf as exportPdfFile, type PdfOptions } from './pdf';
+import { resampleToWidth } from './scale';
 
 export interface TextOverlayPos {
   x: number;
@@ -98,6 +106,7 @@ export function useEditor() {
   const [recentColors, setRecentColors] = useState<string[]>([]);
   const [spotlightShape, setSpotlightShapeState] = useState<SpotlightShape>('rect');
   const [blurMode, setBlurModeState] = useState<BlurMode>('blur');
+  const [frame, setFrameState] = useState<FrameOptions>(DEFAULT_FRAME);
 
   // Refs for use inside stable event handlers (avoid stale closures).
   const toolRef = useRef(tool);
@@ -132,6 +141,11 @@ export function useEditor() {
     controllerRef.current?.setAnnotations(annotations);
   }, [annotations]);
 
+  // Sync the beautify frame to the controller.
+  useEffect(() => {
+    controllerRef.current?.setFrame(frame);
+  }, [frame]);
+
   useEffect(() => {
     selectedIdRef.current = selectedId;
     controllerRef.current?.setSelected(selectedId);
@@ -155,6 +169,17 @@ export function useEditor() {
       annotationFontSize: style.fontSize,
     });
   }, [style]);
+
+  // Persist the beautify frame so it is remembered across sessions. Skip the
+  // first run (the initial load from settings) to avoid a redundant write.
+  const frameLoadedRef = useRef(false);
+  useEffect(() => {
+    if (!frameLoadedRef.current) {
+      frameLoadedRef.current = true;
+      return;
+    }
+    void setSettings(frameToSettings(frame));
+  }, [frame]);
 
   // When a new annotation is selected, adopt its style in the style bar.
   useEffect(() => {
@@ -271,6 +296,17 @@ export function useEditor() {
     [applyStyleToSelected],
   );
 
+  const setFrame = useCallback((patch: Partial<FrameOptions>) => {
+    setFrameState((f) => ({ ...f, ...patch }));
+  }, []);
+
+  // Outer size of the export, so the export dialog can show what a scale yields.
+  const composedSize = useMemo(() => {
+    if (!imageSize) return null;
+    const m = frameMetrics(frame, imageSize.w, imageSize.h);
+    return { w: m.outerW, h: m.outerH };
+  }, [frame, imageSize]);
+
   const setStyleFontSize = useCallback(
     (fontSize: number) => {
       setStyle((s) => ({ ...s, fontSize }));
@@ -302,6 +338,7 @@ export function useEditor() {
         strokeWidth: s.annotationStrokeWidth,
         fontSize: s.annotationFontSize,
       });
+      setFrameState(frameFromSettings(s));
       const cap = await getLastCapture();
       if (!cap) {
         setLoading(false);
@@ -470,7 +507,16 @@ export function useEditor() {
       }
       const p = c.toImage(sx, sy);
       if (it.kind === 'crop') {
-        const r: Rect = { x: it.start.x, y: it.start.y, w: p.x - it.start.x, h: p.y - it.start.y };
+        // The frame's padding renders like part of the picture, so a drag that
+        // strays into it must not smear transparent padding pixels into the
+        // crop — hold the point to the image bounds.
+        const cp = c.image ? clampToImage(p, c.image.naturalWidth, c.image.naturalHeight) : p;
+        const r: Rect = {
+          x: it.start.x,
+          y: it.start.y,
+          w: cp.x - it.start.x,
+          h: cp.y - it.start.y,
+        };
         cropDraftRef.current = r;
         c.setCropRect(r);
         return;
@@ -629,9 +675,10 @@ export function useEditor() {
         return;
       }
       if (t === 'crop') {
-        cropDraftRef.current = { x: p.x, y: p.y, w: 0, h: 0 };
+        const cp = clampToImage(p, c.image.naturalWidth, c.image.naturalHeight);
+        cropDraftRef.current = { x: cp.x, y: cp.y, w: 0, h: 0 };
         c.setCropRect(cropDraftRef.current);
-        interactionRef.current = { kind: 'crop', start: p };
+        interactionRef.current = { kind: 'crop', start: cp };
         window.addEventListener('mousemove', onDragMove);
         window.addEventListener('mouseup', onDragUp);
         return;
@@ -779,12 +826,16 @@ export function useEditor() {
   }, [settings, imageSize, capture]);
 
   const exportImage = useCallback(
-    async (format: ImageFormat, quality: number, filenameBase: string) => {
+    async (format: ImageFormat, quality: number, filenameBase: string, targetWidth?: number) => {
       const c = controllerRef.current;
       if (!c || !c.image) return;
       setExporting(true);
       try {
-        const canvas = c.composeFinal();
+        const composed = c.composeFinal();
+        const canvas =
+          targetWidth && targetWidth !== composed.width
+            ? resampleToWidth(composed, targetWidth)
+            : composed;
         const dataUrl = canvasToDataUrl(canvas, format, quality);
         await downloadDataUrl(dataUrl, withExtension(filenameBase, format));
       } finally {
@@ -867,6 +918,9 @@ export function useEditor() {
     setSpotlightShape,
     blurMode,
     setBlurMode,
+    frame,
+    setFrame,
+    composedSize,
     setStyleColor,
     setStyleStrokeWidth,
     setStyleFontSize,
@@ -910,6 +964,11 @@ function hitTestAnnotation(
     }
   }
   return null;
+}
+
+/** Hold a point inside the image bounds — used to keep crop drags out of the beautify padding. */
+function clampToImage(p: { x: number; y: number }, w: number, h: number): { x: number; y: number } {
+  return { x: Math.min(Math.max(p.x, 0), w), y: Math.min(Math.max(p.y, 0), h) };
 }
 
 export function isTypingTarget(t: EventTarget | null): boolean {

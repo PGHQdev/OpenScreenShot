@@ -40,7 +40,9 @@ Built as a Manifest V3 extension with no servers, no accounts, and no telemetry.
 - **Visible Area** — capture exactly what's on screen right now.
 - **Selected Region** — click & drag to grab an area, with a Capture/Cancel bar to confirm.
 - **Annotation editor** — rectangle, arrow, line, pen, highlighter, text, numbered step badges, blur (soft, mosaic, or solid redaction), spotlight, crop; select, move/resize any annotation, undo/redo; hold Shift for squares and 45° lines; color, stroke width & font size remembered across sessions.
+- Beautify: padding, rounded corners, drop shadow, and a gradient, solid, or transparent background
 - **Export** — PNG, JPEG, WebP, and PDF (single or multi-page with overlap), or copy straight to clipboard with `Cmd/Ctrl+C`.
+- Export at any scale: 25 / 50 / 100 / 200 % or an exact pixel width
 - **Keyboard-first** — capture shortcuts, number keys `1`–`3` in the popup, `1`–`8` for the editor palette, and a "reopen last capture" escape hatch.
 - **Settings** — theme, default format, quality, filename template, PDF defaults.
 - **Polished & accessible** — dark/light UI, modal focus trap, toolbar arrow-key navigation.

@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { clampZoom, fitZoom, FIT_PADDING, MIN_ZOOM, MAX_ZOOM } from '../../src/editor/viewport';
+import {
+  centerView,
+  clampZoom,
+  fitZoom,
+  FIT_PADDING,
+  MIN_ZOOM,
+  MAX_ZOOM,
+} from '../../src/editor/viewport';
 
 describe('clampZoom', () => {
   it('holds a value inside the zoom range', () => {
@@ -37,5 +44,34 @@ describe('fitZoom', () => {
 
   it('clamps a huge image to the minimum zoom', () => {
     expect(fitZoom(1000, 800, 500000, 500000)).toBe(MIN_ZOOM);
+  });
+});
+
+describe('centerView', () => {
+  it('centres an unframed image, so pan is the plain margin', () => {
+    const v = centerView(1000, 800, 400, 300, 0, 1);
+    expect(v.panX).toBe(300);
+    expect(v.panY).toBe(250);
+    expect(v.zoom).toBe(1);
+  });
+
+  it('offsets the pan by the padding, since pan positions the screenshot origin', () => {
+    // 400x300 image, 50px pad -> 500x400 outer box.
+    const v = centerView(1000, 800, 500, 400, 50, 1);
+    expect(v.panX).toBe((1000 - 500) / 2 + 50);
+    expect(v.panY).toBe((800 - 400) / 2 + 50);
+  });
+
+  it('scales the padding offset with the zoom', () => {
+    const v = centerView(1000, 800, 500, 400, 50, 0.5);
+    expect(v.panX).toBe((1000 - 250) / 2 + 25);
+    expect(v.panY).toBe((800 - 200) / 2 + 25);
+  });
+
+  it('keeps the whole framed box on screen at fit zoom', () => {
+    const zoom = fitZoom(1000, 800, 3600, 2400);
+    const v = centerView(1000, 800, 3600, 2400, 300, zoom);
+    expect(v.panX - 300 * zoom).toBeGreaterThanOrEqual(0);
+    expect(v.panY - 300 * zoom).toBeGreaterThanOrEqual(0);
   });
 });

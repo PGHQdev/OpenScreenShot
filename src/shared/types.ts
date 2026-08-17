@@ -86,6 +86,14 @@ export interface LastCapture {
 
 // --- Settings --------------------------------------------------------------
 
+/** Beautify frame background. `Settings` stores one; see src/editor/frame.ts. */
+export type PresetId = 'ink' | 'coral' | 'dusk' | 'mint' | 'sand' | 'sky';
+
+export type FrameBackground =
+  | { kind: 'preset'; id: PresetId }
+  | { kind: 'solid'; color: string }
+  | { kind: 'transparent' };
+
 export type ExportFormat = 'png' | 'jpeg' | 'webp' | 'pdf';
 export type ThemePreference = 'light' | 'dark' | 'system';
 
@@ -108,6 +116,12 @@ export interface Settings {
   recentColors: string[];
   /** Seconds to wait before every capture (0 = immediate). See CAPTURE_DELAYS. */
   captureDelay: number;
+  /** Beautify frame (editor). Sliders are 0..100; see src/editor/frame.ts. */
+  beautifyEnabled: boolean;
+  beautifyPadding: number;
+  beautifyRadius: number;
+  beautifyShadow: number;
+  beautifyBackground: FrameBackground;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -125,4 +139,9 @@ export const DEFAULT_SETTINGS: Settings = {
   annotationFontSize: 28,
   recentColors: [],
   captureDelay: 0,
+  beautifyEnabled: false,
+  beautifyPadding: 40,
+  beautifyRadius: 30,
+  beautifyShadow: 45,
+  beautifyBackground: { kind: 'preset', id: 'ink' },
 };
