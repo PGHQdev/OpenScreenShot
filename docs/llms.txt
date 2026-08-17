@@ -19,5 +19,5 @@
 
 ## Optional
 
-- [Privacy policy](https://github.com/pghqdev/OpenScreenShot/blob/main/PRIVACY.md): no data collection, all processing local
+- [Privacy policy](https://openscreenshot.app/privacy/): no data collection, all processing local
 - [License](https://github.com/pghqdev/OpenScreenShot/blob/main/LICENSE): MIT
