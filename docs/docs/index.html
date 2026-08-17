@@ -189,6 +189,17 @@
         padding: 1px 5px;
         color: var(--text-1);
       }
+      kbd {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.82em;
+        background: var(--surface-2);
+        border: 1px solid var(--border-strong);
+        border-bottom-width: 2px;
+        border-radius: 5px;
+        padding: 1px 6px;
+        color: var(--text-1);
+        white-space: nowrap;
+      }
       pre {
         overflow-x: auto;
         margin: var(--s-4) 0;
@@ -368,8 +379,14 @@
           <li><a href="#install">Install</a></li>
           <li><a href="#capture">Capture a screenshot</a></li>
           <li><a href="#modes">Capture modes</a></li>
+          <li><a href="#after-capture">After a capture</a></li>
           <li><a href="#annotate">Annotate</a></li>
+          <li><a href="#beautify">Beautify</a></li>
+          <li><a href="#import">Annotate an image you already have</a></li>
           <li><a href="#export">Export</a></li>
+          <li><a href="#drafts">Drafts</a></li>
+          <li><a href="#shortcuts">Keyboard shortcuts</a></li>
+          <li><a href="#settings">Settings</a></li>
           <li><a href="#agents-cli">Agents &amp; CLI</a></li>
           <li><a href="#privacy">Privacy</a></li>
           <li><a href="#support">Get help</a></li>
@@ -402,8 +419,31 @@
       <div class="doc-section" id="capture">
         <h2>Capture a screenshot</h2>
         <p>
-          Click the OpenScreenShot icon in your toolbar. Choose one of the three capture modes. The
-          screenshot is processed locally in your browser and then opens in the annotation editor.
+          Click the OpenScreenShot icon in your toolbar and choose one of the three capture modes.
+          The screenshot is processed locally in your browser. There are four ways to start a
+          capture:
+        </p>
+        <ul>
+          <li><strong>The popup</strong> — click a mode, or press <kbd>1</kbd>–<kbd>3</kbd>.</li>
+          <li>
+            <strong>A keyboard shortcut</strong> — <kbd>Ctrl+Shift+S</kbd> for the full page,
+            <kbd>Alt+Shift+V</kbd> for the visible area, <kbd>Ctrl+Shift+E</kbd> for a region. On
+            macOS these are <kbd>⌘⇧S</kbd>, <kbd>⌘⇧V</kbd>, and <kbd>⌘⇧E</kbd>. Rebind them at
+            <code>chrome://extensions/shortcuts</code>.
+          </li>
+          <li>
+            <strong>The right-click menu</strong> — the OpenScreenShot submenu on any page offers
+            the same three modes.
+          </li>
+          <li>
+            <strong>Repeat region</strong> — the popup footer and the right-click menu re-capture
+            the last region rectangle. It appears once you have selected a region.
+          </li>
+        </ul>
+        <p>
+          The <strong>Delay</strong> row in the popup holds a capture for 3, 5, or 10 seconds, and
+          the toolbar badge counts down. Use it for hover states, dropdown menus, and tooltips that
+          close the moment you click somewhere else.
         </p>
       </div>
 
@@ -413,7 +453,8 @@
         <p>
           Captures the entire scrolling page and stitches it into one image. The extension scrolls
           the page viewport by viewport, captures each tile, and composites them together. Fixed
-          headers are captured on the first tile and composited once at the top.
+          headers are captured on the first tile and composited once at the top. Pages that scroll
+          an inner element instead of the window work too.
         </p>
 
         <h3>Visible Area</h3>
@@ -425,37 +466,112 @@
         <h3>Selected Region</h3>
         <p>
           Click and drag to draw a rectangle. Resize handles appear on each edge and corner. Use the
-          arrow keys to nudge the selection by one pixel at a time, or drag the handles to resize.
-          Press <kbd>Enter</kbd> to confirm or <kbd>Esc</kbd> to cancel.
+          arrow keys to nudge the selection by one pixel at a time, or hold <kbd>Shift</kbd> to move
+          it ten pixels at a time. Press <kbd>Enter</kbd> to confirm or <kbd>Esc</kbd> to cancel.
+        </p>
+      </div>
+
+      <div class="doc-section" id="after-capture">
+        <h2>After a capture</h2>
+        <p>
+          The <strong>After capture</strong> row in the popup picks what a finished capture does. It
+          applies to every entry point: the popup buttons, the keyboard shortcuts, and the
+          right-click menu.
+        </p>
+        <ul>
+          <li>
+            <strong>Editor</strong> — open the annotation editor in a new tab. This is the default.
+          </li>
+          <li>
+            <strong>Clipboard</strong> — copy the screenshot and skip the editor. Paste it straight
+            into a chat, a document, or an issue.
+          </li>
+          <li>
+            <strong>Download</strong> — save the screenshot to your downloads folder and skip the
+            editor. Quick saves are written as PNG.
+          </li>
+        </ul>
+        <p>
+          Clipboard and Download open no tab, so the toolbar badge is the confirmation. A failed
+          capture flashes <kbd>!</kbd> on the badge. <strong>Reopen last</strong> in the popup
+          footer opens the most recent capture in the editor at any time.
         </p>
       </div>
 
       <div class="doc-section" id="annotate">
         <h2>Annotate</h2>
         <p>
-          After every capture, the annotation editor opens in a new tab. The editor loads the most
-          recent capture from local storage.
+          The editor opens in a full tab and loads the most recent capture from local storage. Each
+          tool has a one-letter shortcut.
         </p>
         <ul>
-          <li><strong>Rectangle</strong> — draw a border rectangle.</li>
-          <li><strong>Arrow</strong> — draw a directional arrow.</li>
-          <li><strong>Pen</strong> — freehand drawing.</li>
-          <li><strong>Text</strong> — add a text box. Use the font-size slider to adjust size.</li>
-          <li><strong>Blur</strong> — pixelate a region to hide sensitive information.</li>
-          <li><strong>Crop</strong> — trim the image to a selected area.</li>
+          <li>
+            <strong>Select</strong> <kbd>V</kbd> — move, resize, or delete any annotation.
+            Double-click a text layer to re-edit it.
+          </li>
+          <li><strong>Rectangle</strong> <kbd>R</kbd> — draw a border rectangle.</li>
+          <li><strong>Arrow</strong> <kbd>A</kbd> — draw a directional arrow.</li>
+          <li><strong>Line</strong> <kbd>L</kbd> — the arrow without a head.</li>
+          <li><strong>Pen</strong> <kbd>P</kbd> — freehand drawing.</li>
+          <li><strong>Highlighter</strong> <kbd>H</kbd> — a translucent freehand stroke.</li>
+          <li>
+            <strong>Text</strong> <kbd>T</kbd> — add a text box, sized by the font-size control.
+          </li>
+          <li>
+            <strong>Step number</strong> <kbd>S</kbd> — numbered badges that count up on their own,
+            and renumber when you delete one.
+          </li>
+          <li>
+            <strong>Blur</strong> <kbd>B</kbd> — hide sensitive content as a soft blur, a coarse
+            mosaic, or an opaque fill. The opaque fill survives recompression.
+          </li>
+          <li>
+            <strong>Spotlight</strong> <kbd>O</kbd> — rectangle, rounded rectangle, or ellipse
+            cut-outs that merge into one dim layer.
+          </li>
+          <li>
+            <strong>Eyedropper</strong> <kbd>I</kbd> — take a color from the capture. It samples
+            what you see, so a color inside a spotlight or on a beautify gradient picks as it looks.
+            The swatch button on the color row opens Chrome's screen-wide picker for anything
+            outside the canvas.
+          </li>
+          <li><strong>Crop</strong> <kbd>C</kbd> — trim the image to a selected area.</li>
         </ul>
         <p>
-          Style controls include an 8-color palette, three stroke widths, and a font-size slider.
-          Your choices are remembered across sessions. Undo and redo are available with
-          <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd> (or <kbd>⌘Z</kbd> / <kbd>⌘Shift+Z</kbd> on
-          macOS).
+          Hold <kbd>Shift</kbd> while you draw for square rectangles and 45° lines and arrows. The
+          style bar carries an 8-color palette on <kbd>1</kbd>–<kbd>8</kbd>, a custom color, recent
+          colors, three stroke widths, and a font-size control. Your choices are remembered across
+          sessions. Undo and redo are <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>, or
+          <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd> on macOS.
+        </p>
+      </div>
+
+      <div class="doc-section" id="beautify">
+        <h2>Beautify</h2>
+        <p>
+          The <strong>Beautify</strong> panel in the top bar frames the screenshot for sharing:
+          padding, corner radius, and drop-shadow sliders, plus six gradient presets, a custom solid
+          color, or a transparent background. The frame previews live and travels into every export,
+          the clipboard, and PDF.
+        </p>
+      </div>
+
+      <div class="doc-section" id="import">
+        <h2>Annotate an image you already have</h2>
+        <p>
+          Drop an image file onto the editor stage, or paste one with <kbd>Ctrl+V</kbd> /
+          <kbd>⌘V</kbd> outside a text field. The import takes the same seat a capture takes, so
+          every tool, the beautify frame, and every export path keep working, and the top bar reads
+          <strong>Imported</strong>. Importing replaces the canvas, so the editor asks first when
+          there are annotations to lose.
         </p>
       </div>
 
       <div class="doc-section" id="export">
         <h2>Export</h2>
         <p>
-          Click the <strong>Export</strong> button in the top bar of the editor. Choose a format:
+          Click <strong>Export</strong> in the top bar of the editor, or press <kbd>Ctrl+S</kbd> /
+          <kbd>⌘S</kbd>. Choose a format:
         </p>
         <ul>
           <li><strong>PNG</strong> — lossless, supports transparency.</li>
@@ -466,19 +582,81 @@
             multiple pages with a 5mm overlap so content is not cut mid-line.
           </li>
         </ul>
+        <p>
+          <strong>Scale</strong> exports at 25, 50, 100, or 200 %, or at an exact pixel width. It is
+          hidden for PDF, which sizes to the page instead. A size past Chrome's canvas limit is
+          refused rather than written as an empty file.
+        </p>
+        <p>
+          <kbd>Ctrl+C</kbd> / <kbd>⌘C</kbd> copies the finished image straight to the clipboard. The
+          export dialog can also save its current settings as your new defaults.
+        </p>
+      </div>
+
+      <div class="doc-section" id="drafts">
+        <h2>Drafts</h2>
+        <p>
+          Your edits are saved locally as you work. If the editor tab closes or crashes, the next
+          editor tab offers the draft back. Restoring is always a click, so a stale draft never
+          replaces a capture you meant to start fresh. A cropped image gets its own draft, so
+          annotations never restore against the wrong picture.
+        </p>
+      </div>
+
+      <div class="doc-section" id="shortcuts">
+        <h2>Keyboard shortcuts</h2>
+        <p>Press <kbd>?</kbd> in the editor for the full sheet. Beyond the tool letters above:</p>
+        <ul>
+          <li><kbd>1</kbd>–<kbd>8</kbd> — set the annotation color.</li>
+          <li><kbd>Ctrl+C</kbd> / <kbd>⌘C</kbd> — copy to the clipboard.</li>
+          <li><kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd> — export.</li>
+          <li><kbd>Backspace</kbd> — delete the selected annotation.</li>
+          <li><kbd>Esc</kbd> — deselect, or cancel a crop.</li>
+          <li>
+            <kbd>Ctrl</kbd> / <kbd>⌘</kbd> with <kbd>+</kbd>, <kbd>−</kbd>, or <kbd>0</kbd> — zoom
+            in, zoom out, actual size. <kbd>F</kbd> fits to the screen.
+          </li>
+          <li><kbd>Space</kbd> + drag — pan the canvas.</li>
+        </ul>
+      </div>
+
+      <div class="doc-section" id="settings">
+        <h2>Settings</h2>
+        <p>Open the gear icon in the popup to set:</p>
+        <ul>
+          <li><strong>Theme</strong> — light, dark, or system.</li>
+          <li><strong>Default format</strong> — PNG, JPEG, WebP, or PDF.</li>
+          <li><strong>Quality</strong> — for JPEG, WebP, and PDF.</li>
+          <li>
+            <strong>Filename template</strong> — click a token chip to insert <code>{date}</code>,
+            <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code>, or
+            <code>{h}</code>. A live preview shows the result.
+          </li>
+        </ul>
+        <p>
+          Settings live in local storage on this device. <strong>Reset to defaults</strong> at the
+          bottom of the panel takes two clicks.
+        </p>
       </div>
 
       <div class="doc-section" id="agents-cli">
         <h2>Agents &amp; CLI</h2>
         <p>
-          <code>openscreenshot-mcp</code> is a separate, optional, local tool for scripting
+          <code>openscreenshot</code> (npm) is a separate, optional, local tool for scripting
           screenshots from the command line or from an AI agent. It drives the Chrome already on
-          your machine — no browser download, no hosted service.
+          your machine — no browser download, no hosted service. Set <code>CHROME_PATH</code> if
+          your Chrome cannot be found automatically.
         </p>
-        <pre><code>npx openscreenshot-mcp shot https://example.com --out shot.png --full</code></pre>
+        <pre><code>npx openscreenshot shot https://example.com --out shot.png --full</code></pre>
+        <p>As an MCP server, add this to your MCP client config:</p>
+        <pre><code>{ "command": "npx", "args": ["openscreenshot", "serve"] }</code></pre>
+        <p>
+          Then call the <code>capture_screenshot</code> tool with
+          <code>{ "url": "https://example.com" }</code>.
+        </p>
         <img
           src="../assets/cli-shot.jpg"
-          alt="Full-page capture produced by openscreenshot-mcp shot"
+          alt="Full-page capture produced by the openscreenshot shot command"
           style="
             width: 100%;
             max-width: 640px;
@@ -541,7 +719,7 @@
       <script src="/kofi-widget.js"></script>
       <script>
         if (window.kofiwidget2) {
-          kofiwidget2.init('Support me on Ko-fi', '#72a4f2', 'T7A624DAY7');
+          kofiwidget2.init('Support me on Ko-fi', '#E8503A', 'T7A624DAY7');
           kofiwidget2.draw();
         }
       </script>

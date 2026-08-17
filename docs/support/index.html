@@ -522,9 +522,8 @@
         </summary>
         <div class="faq-a">
           <p>
-            Not yet. The region selection tool is currently viewport-only — it locks scrolling while
-            you drag. Selecting an area that extends below the fold requires a full-page capture
-            followed by cropping in the editor. Scroll-during-select is a planned feature.
+            No. Region selection is viewport-only — it locks scrolling while you drag. To grab an
+            area that extends below the fold, capture the full page and crop it in the editor.
           </p>
         </div>
       </details>
@@ -548,9 +547,94 @@
         </summary>
         <div class="faq-a">
           <p>
-            The editor opens automatically in a new tab after every capture — you don't need to do
-            anything. If the popup is still open, it will close once the editor tab is ready. Export
-            (download) your annotated screenshot from the editor's "Export" button in the top bar.
+            By default the editor opens in a new tab after every capture — you don't need to do
+            anything. Export your annotated screenshot from the editor's "Export" button in the top
+            bar, or press <code>Ctrl+S</code> / <code>⌘S</code>.
+          </p>
+          <p>
+            If the <strong>After capture</strong> row in the popup is set to Clipboard or Download,
+            no tab opens. <strong>Reopen last</strong> in the popup footer loads that capture into
+            the editor whenever you want it.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq">
+        <summary>
+          Can I skip the editor and copy or save a screenshot straight away?
+          <svg
+            class="chev"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </summary>
+        <div class="faq-a">
+          <p>
+            Yes. The <strong>After capture</strong> row in the popup picks Editor, Clipboard, or
+            Download. The setting applies to every entry point — the popup buttons, the keyboard
+            shortcuts, and the right-click menu. Quick saves are written as PNG, and the toolbar
+            badge is the confirmation since no tab opens.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq">
+        <summary>
+          How do I capture a menu or a hover state that closes when I click?
+          <svg
+            class="chev"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </summary>
+        <div class="faq-a">
+          <p>
+            Set the <strong>Delay</strong> row in the popup to 3s, 5s, or 10s, then trigger the
+            capture and open the menu. The toolbar badge counts down, and a region capture shows its
+            overlay only after the delay. The right-click menu honors the same setting.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq">
+        <summary>
+          What happens to my edits if the editor tab closes?
+          <svg
+            class="chev"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </summary>
+        <div class="faq-a">
+          <p>
+            They are saved locally as you work. The next editor tab offers the draft back, and
+            restoring it is always a click — a stale draft never replaces a capture you meant to
+            start fresh. A cropped image gets its own draft, so annotations never restore against
+            the wrong picture.
           </p>
         </div>
       </details>
@@ -574,16 +658,21 @@
         </summary>
         <div class="faq-a">
           <p>
-            Not directly — the editor loads the most recent capture from storage. If you want to
-            edit an existing screenshot file, you'd need to capture it fresh through the extension.
-            Loading arbitrary image files into the editor is a planned improvement.
+            Yes. Drop an image file onto the editor stage, or paste one with <code>Ctrl+V</code> /
+            <code>⌘V</code> outside a text field. The import takes the same seat a capture takes, so
+            every tool, the beautify frame, and every export path keep working. It replaces the
+            canvas, so the editor asks first when there are annotations to lose.
+          </p>
+          <p>
+            <strong>Reopen last</strong> in the popup footer also loads the most recent capture back
+            into the editor.
           </p>
         </div>
       </details>
 
       <details class="faq">
         <summary>
-          Why does PDF export bundle extra libraries?
+          Does PDF export bundle a heavy library?
           <svg
             class="chev"
             width="18"
@@ -600,12 +689,72 @@
         </summary>
         <div class="faq-a">
           <p>
-            The extension uses <a href="https://github.com/parallax/jsPDF">jsPDF</a> (lazy-loaded)
-            for PDF generation. jsPDF transitively includes <code>html2canvas</code> and
-            <code>dompurify</code> for its <code>doc.html()</code> feature, which we never call — we
-            only use <code>doc.addImage()</code>. These libraries are bundled in the extension
-            package but only downloaded when you export a PDF (lazy chunk). The total on-demand PDF
-            cost is about 580 KB (gzipped ~180 KB).
+            No. Earlier versions used jsPDF, which pulled in <code>html2canvas</code> and
+            <code>dompurify</code> for a <code>doc.html()</code> feature the extension never called.
+            PDF export now runs on a small writer built into the extension
+            (<code>src/editor/pdf-writer.ts</code>), which places raster images on pages and
+            compresses them with the browser's own <code>CompressionStream</code>. The whole
+            extension package is about 46 KB, and exporting a PDF makes no network request.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq">
+        <summary>
+          Can I make a screenshot bigger, smaller, or nicer to share?
+          <svg
+            class="chev"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </summary>
+        <div class="faq-a">
+          <p>
+            The export dialog carries a <strong>Scale</strong> control: 25, 50, 100, or 200 %, or an
+            exact pixel width. It is hidden for PDF, which sizes to the page. A size past Chrome's
+            canvas limit is refused rather than written as an empty file.
+          </p>
+          <p>
+            The <strong>Beautify</strong> panel adds padding, rounded corners, a drop shadow, and a
+            gradient, solid, or transparent background. The frame travels into every export, the
+            clipboard, and PDF.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq">
+        <summary>
+          Can I change the keyboard shortcuts?
+          <svg
+            class="chev"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </summary>
+        <div class="faq-a">
+          <p>
+            Yes. Open <code>chrome://extensions/shortcuts</code>, or use the
+            <strong>Shortcuts</strong> link in the popup footer. The defaults are
+            <code>Ctrl+Shift+S</code> for the full page, <code>Alt+Shift+V</code> for the visible
+            area, and <code>Ctrl+Shift+E</code> for a region; on macOS they are <code>⌘⇧S</code>,
+            <code>⌘⇧V</code>, and <code>⌘⇧E</code>. Chrome may leave a command unbound if another
+            extension already claims the combination.
           </p>
         </div>
       </details>
@@ -615,10 +764,6 @@
         <li>
           <strong>Region selection is viewport-only</strong> — scrolling while selecting is not yet
           supported. Use full-page capture + crop instead.
-        </li>
-        <li>
-          <strong>Text and pen annotations are move-only</strong> — resize handles for text boxes
-          and freehand strokes are planned.
         </li>
         <li>
           <strong>Dynamic / infinite-scroll pages</strong> — the capture engine measures the page
@@ -672,7 +817,7 @@
           <script src="/kofi-widget.js"></script>
           <script>
             if (window.kofiwidget2) {
-              kofiwidget2.init('Support me on Ko-fi', '#72a4f2', 'T7A624DAY7');
+              kofiwidget2.init('Support me on Ko-fi', '#E8503A', 'T7A624DAY7');
               kofiwidget2.draw();
             }
           </script>
