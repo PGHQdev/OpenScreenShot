@@ -4,6 +4,7 @@
   "version": "0.6.1",
   "description": "__MSG_extDesc__",
   "default_locale": "en",
+  "minimum_chrome_version": "99",
   "action": {
     "default_popup": "src/popup/index.html",
     "default_title": "OpenScreenShot",

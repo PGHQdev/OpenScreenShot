@@ -720,11 +720,28 @@ body {
 .num-input:disabled {
   opacity: 0.45;
 }
+.num-input-wide {
+  width: 80px;
+}
 .pdf-hint {
   margin: 0 0 var(--s-3);
   font-size: 12px;
   color: var(--text-2);
   line-height: 1.45;
+}
+.export-error {
+  margin: 0 0 var(--s-3);
+  font-size: 12px;
+  color: var(--danger);
+  line-height: 1.45;
+}
+
+/* ---- Scale row (export dialog) ---- */
+.scale-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
 }
 
 /* ---- Overlay messages (loading / empty / error) ---- */
@@ -859,4 +876,60 @@ body {
   border-radius: var(--r-sm);
   padding: 1px 6px;
   white-space: nowrap;
+}
+
+/* ---- Beautify panel ---- */
+.btn-secondary.is-active {
+  background: var(--accent-subtle);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.beautify-menu {
+  position: relative;
+}
+
+.beautify-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  width: 248px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  box-shadow: var(--sh-md);
+}
+
+.beautify-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.beautify-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.beautify-group .range {
+  width: 100%;
+}
+
+.swatch-transparent {
+  background:
+    linear-gradient(45deg, #d9d9de 25%, transparent 25%) 0 0 / 8px 8px,
+    linear-gradient(-45deg, #d9d9de 25%, transparent 25%) 0 4px / 8px 8px,
+    #fff;
+}
+
+.scale-readout {
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
 }

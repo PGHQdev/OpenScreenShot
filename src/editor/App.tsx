@@ -9,8 +9,16 @@ import { arrowNav, getFocusable, trapFocus } from './focus';
 import { BrandMark } from '../shared/BrandMark';
 import { getSettings, setSettings } from '../shared/storage';
 import { ZoomMenu } from './ZoomMenu';
+import { BeautifyMenu } from './BeautifyMenu';
 import { stylebarEmpty, stylebarFields } from './stylebar';
 import { ShortcutSheet } from './ShortcutSheet';
+import {
+  clampTargetWidth,
+  exportWidthCeiling,
+  MIN_EXPORT_WIDTH,
+  scaledHeight,
+  SCALE_PRESETS,
+} from './scale';
 
 type DialogFormat = ImageFormat | 'pdf';
 
@@ -120,6 +128,12 @@ export function App() {
             onZoomOut={ed.zoomOut}
             onFit={ed.fit}
             onActualSize={ed.resetZoom}
+          />
+          <BeautifyMenu
+            frame={ed.frame}
+            disabled={!ed.capture}
+            imageSize={ed.imageSize}
+            onChange={ed.setFrame}
           />
           <button
             class="btn-primary btn-fixed"
@@ -379,6 +393,13 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
     df === 'pdf' || df === 'png' || df === 'jpeg' || df === 'webp' ? df : 'png';
   const [format, setFormat] = useState<DialogFormat>(initialFormat);
   const [quality, setQuality] = useState(ed.settings?.quality ?? 0.92);
+  // Scale is per-export intent: it starts at 100% every time the dialog opens
+  // and stays out of "Remember these settings".
+  const [targetWidth, setTargetWidth] = useState<number | null>(null);
+  // What the Width field displays while the user is typing. null means "follow
+  // the derived outW" — set on preset clicks and on commit (blur), so the field
+  // never shows stale typed text once a value lands.
+  const [widthText, setWidthText] = useState<string | null>(null);
   const [filenameBase, setFilenameBase] = useState(ed.defaultFilename());
 
   const [pdfPageSize, setPdfPageSize] = useState<'a4' | 'letter' | 'full'>(
@@ -391,6 +412,7 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
   const [pdfMargin, setPdfMargin] = useState(ed.settings?.pdfMarginMm ?? 8);
   const [remember, setRemember] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   // ed.settings is loaded once at editor mount and never refreshes, so a
   // previous export's "Remember these settings" write is invisible to the
@@ -423,6 +445,11 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
   const showPdfOptions = format === 'pdf';
   const ext = format === 'pdf' ? 'pdf' : format === 'jpeg' ? 'jpg' : format;
 
+  const composed = ed.composedSize;
+  const outW = targetWidth ?? composed?.w ?? 0;
+  const outH = composed ? scaledHeight(composed.w, composed.h, outW) : 0;
+  const showScale = format !== 'pdf' && composed !== null;
+
   async function doExport() {
     // The Export button disables on the next render once busy is true, and
     // Chrome moves focus to <body> when the focused element is disabled.
@@ -431,6 +458,7 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
     // export runs.
     modalRef.current?.focus();
     setBusy(true);
+    setExportError(null);
     try {
       if (format === 'pdf') {
         const opts: PdfOptions = {
@@ -441,7 +469,7 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
         };
         await ed.exportPdf(opts, filenameBase);
       } else {
-        await ed.exportImage(format, quality, filenameBase);
+        await ed.exportImage(format, quality, filenameBase, targetWidth ?? undefined);
       }
       // The export is the action the user asked for. Persisting the choice is a
       // convenience, so it runs after and can never prevent the export.
@@ -463,6 +491,10 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
         }
       }
       onClose();
+    } catch {
+      // Keep the dialog open on failure — there is no other surface for this
+      // error, and the fields (scale, format) are right here to adjust and retry.
+      setExportError('Could not export the image. Try a smaller scale or a different format.');
     } finally {
       // ed.exporting only covers the export call itself, so it clears before the
       // settings write. This flag spans the whole operation, so the button
@@ -523,6 +555,69 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
             <span class="format-hint">Document · multi-page</span>
           </button>
         </div>
+
+        {showScale && composed ? (
+          <div class="modal-row">
+            <div class="field-label">Scale</div>
+            <div class="scale-row">
+              <div class="segmented">
+                {SCALE_PRESETS.map((p) => {
+                  const raw = Math.max(1, Math.round(composed.w * p));
+                  const ceiling = exportWidthCeiling(composed.w, composed.h);
+                  const exceeds = raw > ceiling;
+                  const w = clampTargetWidth(raw, composed.w, composed.h);
+                  return (
+                    <button
+                      key={p}
+                      class={`segmented-btn${!exceeds && outW === w ? ' is-selected' : ''}`}
+                      aria-pressed={!exceeds && outW === w}
+                      disabled={exceeds}
+                      title={exceeds ? `${p * 100}% would exceed the export size limit` : undefined}
+                      onClick={() => {
+                        setTargetWidth(p === 1 ? null : w);
+                        setWidthText(null);
+                      }}
+                    >
+                      {p * 100}%
+                    </button>
+                  );
+                })}
+              </div>
+              <label class="check-label">
+                Width
+                <input
+                  class="num-input num-input-wide"
+                  type="number"
+                  min={MIN_EXPORT_WIDTH}
+                  max={exportWidthCeiling(composed.w, composed.h)}
+                  value={widthText ?? String(outW)}
+                  onInput={(e) => {
+                    const raw = (e.target as HTMLInputElement).value;
+                    setWidthText(raw);
+                    const n = Number(raw);
+                    const ceiling = exportWidthCeiling(composed.w, composed.h);
+                    if (Number.isFinite(n) && n >= MIN_EXPORT_WIDTH && n <= ceiling) {
+                      setTargetWidth(Math.round(n));
+                    }
+                  }}
+                  onChange={(e) => {
+                    const clamped = clampTargetWidth(
+                      Number((e.target as HTMLInputElement).value),
+                      composed.w,
+                      composed.h,
+                    );
+                    setTargetWidth(clamped);
+                    setWidthText(null);
+                  }}
+                />
+                px
+              </label>
+              <span class="scale-readout">
+                {composed.w} × {composed.h} → {outW} × {outH}
+              </span>
+            </div>
+          </div>
+        ) : null}
 
         {showQuality ? (
           <div class="modal-row">
@@ -636,6 +731,8 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
             <span class="filename-ext">.{ext}</span>
           </div>
         </div>
+
+        {exportError ? <p class="export-error">{exportError}</p> : null}
 
         <div class="modal-actions">
           <label class="check-label">

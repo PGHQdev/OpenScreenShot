@@ -27,3 +27,22 @@ export function fitZoom(
   const availH = Math.max(1, viewportH - padding * 2);
   return clampZoom(Math.min(availW / imgW, availH / imgH, 1));
 }
+
+/**
+ * Centre a framed image in the viewport. Pan is the screen position of the
+ * screenshot's origin, so the padding is added back after centring the outer box.
+ */
+export function centerView(
+  viewportW: number,
+  viewportH: number,
+  outerW: number,
+  outerH: number,
+  pad: number,
+  zoom: number,
+): { zoom: number; panX: number; panY: number } {
+  return {
+    zoom,
+    panX: (viewportW - outerW * zoom) / 2 + pad * zoom,
+    panY: (viewportH - outerH * zoom) / 2 + pad * zoom,
+  };
+}

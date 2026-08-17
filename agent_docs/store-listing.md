@@ -31,12 +31,14 @@ ANNOTATE
 • Blur or redact sensitive information before you share
 • Spotlight to dim everything except the part that matters
 • Crop, resize, zoom to cursor, full undo/redo history
+• Beautify: padding, rounded corners, shadow, and gradient backgrounds for polished sharing
 
 EXPORT
 • PNG, JPEG, or WebP with quality control
 • Multi-page PDF: A4 or Letter, fit-to-page or split with margins
 • Copy to clipboard from anywhere in the editor
 • Filename templates and saved defaults
+• Export at 25/50/100/200% or an exact pixel width
 
 PRIVATE BY DESIGN
 Your screenshots never leave your device. Capture, editing, and export all run locally, and the extension works fully offline. No sign-up, no tracking, no third-party services, and only the minimum permissions a screenshot needs.
