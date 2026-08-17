@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "private": true,
-  "author": "OpenScreenShot Contributors",
+  "author": "OpenScreenShot @PGHQdev",
   "repository": {
     "type": "git",
     "url": "https://github.com/pghqdev/OpenScreenShot"
