@@ -204,10 +204,6 @@
         border-radius: var(--r-full);
         background: currentColor;
       }
-      .status-planned {
-        background: var(--accent-subtle);
-        color: var(--accent);
-      }
       .status-exploring {
         background: var(--surface-3);
         color: var(--text-2);
@@ -215,6 +211,10 @@
       .status-shipped {
         background: var(--green-subtle);
         color: var(--green);
+      }
+      .status-out {
+        background: var(--surface-3);
+        color: var(--text-3);
       }
 
       .item {
@@ -239,6 +239,42 @@
         margin: var(--s-2) 0 0;
         font-size: 14.5px;
         color: var(--text-2);
+      }
+
+      .ship-group {
+        margin-bottom: var(--s-5);
+      }
+      .ship-ver {
+        display: flex;
+        align-items: baseline;
+        gap: var(--s-3);
+        margin: 0 0 var(--s-3);
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-1);
+      }
+      .ship-ver span {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-3);
+      }
+      ul.ship {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        background: var(--surface-1);
+        box-shadow: var(--shadow-sm);
+      }
+      ul.ship li {
+        padding: 10px var(--s-4);
+        font-size: 14.5px;
+        color: var(--text-2);
+        border-bottom: 1px solid var(--border);
+      }
+      ul.ship li:last-child {
+        border-bottom: 0;
       }
 
       .cta {
@@ -329,52 +365,21 @@
 
     <div class="container">
       <h1>Roadmap</h1>
-      <p class="lead">What's planned next — and what we're still thinking through.</p>
+      <p class="lead">What has shipped, what is next, and what we are still thinking through.</p>
       <p class="promise">
         <strong>Our promise:</strong> everything on this page stays 100% local. No servers, no
-        accounts, no new data collection — ever. Roadmap items aren't dated promises; feedback and
-        pull requests genuinely shape what ships.
+        accounts, no new data collection — ever. Roadmap items are not dated promises; feedback and
+        pull requests shape what ships. Current release: <strong>v1.1.0</strong>.
       </p>
 
       <div class="legend" aria-label="Status legend">
-        <span class="status status-planned">Planned</span>
         <span class="status status-exploring">Exploring</span>
         <span class="status status-shipped">Shipped</span>
+        <span class="status status-out">Out of scope</span>
       </div>
 
       <h2 id="capture">Capture</h2>
 
-      <div class="item">
-        <div class="item-head">
-          <strong>Delayed capture (3s / 5s / 10s timer)</strong>
-          <span class="status status-planned">Planned</span>
-        </div>
-        <p>
-          Capture hover states, dropdown menus, and tooltips that disappear the moment you click the
-          extension.
-        </p>
-      </div>
-      <div class="item">
-        <div class="item-head">
-          <strong>Capture straight to clipboard or download</strong>
-          <span class="status status-planned">Planned</span>
-        </div>
-        <p>An optional "quick mode" that skips the editor for high-frequency work.</p>
-      </div>
-      <div class="item">
-        <div class="item-head">
-          <strong>Right-click context menu capture</strong>
-          <span class="status status-planned">Planned</span>
-        </div>
-        <p>Full page, visible area, or region — straight from the page's context menu.</p>
-      </div>
-      <div class="item">
-        <div class="item-head">
-          <strong>Repeat last region</strong>
-          <span class="status status-planned">Planned</span>
-        </div>
-        <p>Re-capture the previous selection rectangle — great for iterating on documentation.</p>
-      </div>
       <div class="item">
         <div class="item-head">
           <strong>Region loupe &amp; element snapping</strong>
@@ -389,55 +394,10 @@
           <strong>Batch capture: list of URLs → one PDF</strong>
           <span class="status status-exploring">Exploring</span>
         </div>
-        <p>Scroll-and-stitch multiple pages and export them as a single multi-page PDF.</p>
-      </div>
-
-      <h2 id="editor">Editor</h2>
-
-      <div class="item">
-        <div class="item-head">
-          <strong>Beautify mode</strong>
-          <span class="status status-planned">Planned</span>
-        </div>
         <p>
-          Padding, rounded corners, drop shadow, and gradient backgrounds — polish screenshots for
-          sharing, all in canvas.
+          Scroll-and-stitch several pages and export them as a single multi-page PDF. It combines
+          two parts that already exist.
         </p>
-      </div>
-      <div class="item">
-        <div class="item-head">
-          <strong>Numbered step stamps</strong>
-          <span class="status status-planned">Planned</span>
-        </div>
-        <p>Auto-incrementing 1, 2, 3… counters for tutorials, guides, and support replies.</p>
-      </div>
-      <div class="item">
-        <div class="item-head">
-          <strong>Highlighter &amp; solid-redact tools</strong>
-          <span class="status status-planned">Planned</span>
-        </div>
-        <p>Variants on the existing rectangle and blur primitives.</p>
-      </div>
-      <div class="item">
-        <div class="item-head">
-          <strong>Eyedropper color picker</strong>
-          <span class="status status-planned">Planned</span>
-        </div>
-        <p>Pick annotation colors straight from the page, using the browser's native EyeDropper.</p>
-      </div>
-      <div class="item">
-        <div class="item-head">
-          <strong>Resize / scale at export</strong>
-          <span class="status status-planned">Planned</span>
-        </div>
-        <p>Export at 50%, a fixed width, and more — right from the export dialog.</p>
-      </div>
-      <div class="item">
-        <div class="item-head">
-          <strong>Drag &amp; drop any image into the editor</strong>
-          <span class="status status-planned">Planned</span>
-        </div>
-        <p>Annotate images you already have, not just fresh captures.</p>
       </div>
 
       <h2 id="power">Power features</h2>
@@ -448,8 +408,9 @@
           <span class="status status-exploring">Exploring</span>
         </div>
         <p>
-          Client-side text recognition, lazy-loaded like the PDF exporter. No data ever leaves the
-          device.
+          Client-side WASM text recognition, loaded on first use. No data leaves the device. The
+          engine and one language file weigh 10–15 MB against a 44 KB package today, so size decides
+          it.
         </p>
       </div>
       <div class="item">
@@ -458,16 +419,19 @@
           <span class="status status-exploring">Exploring</span>
         </div>
         <p>
-          Your last few captures kept locally and reopenable in the editor — with a clear-all
-          control, of course.
+          Your last few captures kept locally and reopenable in the editor, with a clear-all
+          control.
         </p>
       </div>
       <div class="item">
         <div class="item-head">
-          <strong>More filename tokens</strong>
-          <span class="status status-planned">Planned</span>
+          <strong>Pin a capture in a floating window</strong>
+          <span class="status status-exploring">Exploring</span>
         </div>
-        <p><code>{domain}</code> and friends for the filename template engine.</p>
+        <p>
+          Document Picture-in-Picture is the only always-on-top surface Chrome offers, and it closes
+          with the tab that opened it.
+        </p>
       </div>
 
       <h2 id="performance">Performance &amp; polish</h2>
@@ -477,24 +441,141 @@
           <strong>Worker-based stitch compositing</strong>
           <span class="status status-exploring">Exploring</span>
         </div>
-        <p>Move full-page stitching to a Web Worker so the UI stays buttery on very long pages.</p>
+        <p>
+          Move full-page stitching to a Web Worker with OffscreenCanvas, so the UI stays responsive
+          on very long pages.
+        </p>
       </div>
       <div class="item">
         <div class="item-head">
           <strong>Instant editor open</strong>
           <span class="status status-exploring">Exploring</span>
         </div>
-        <p>Prewarm the editor while capture runs so it opens the moment you're ready.</p>
+        <p>Prewarm the editor bundle while the capture runs, so the tab opens near-instantly.</p>
       </div>
 
-      <h2 id="shipped">Recently shipped</h2>
+      <h2 id="out-of-scope">Out of scope</h2>
 
       <div class="item">
         <div class="item-head">
-          <strong>Ko-fi donation links</strong>
-          <span class="status status-shipped">Shipped · v0.2.7</span>
+          <strong>Capturing desktop windows or the whole screen</strong>
+          <span class="status status-out">Out of scope</span>
         </div>
-        <p>Support the project from the README, the website, and the extension popup.</p>
+        <p>
+          It needs the <code>desktopCapture</code> permission, which adds a "capture content of your
+          screen" install warning and a Chrome picker on every shot. OpenScreenShot ships with empty
+          <code>host_permissions</code>, and keeping it that way is worth more than the feature.
+        </p>
+      </div>
+
+      <h2 id="shipped">Shipped</h2>
+
+      <div class="ship-group">
+        <p class="ship-ver">v1.1.0 <span>current release</span></p>
+        <ul class="ship">
+          <li>
+            <strong>Quick capture</strong> — an "After capture" row in the popup sends a capture to
+            the editor, the clipboard, or your downloads folder. It covers the popup buttons, the
+            keyboard shortcuts, and the context menu.
+          </li>
+          <li>
+            <strong>Eyedropper color picker (<code>I</code>)</strong> — samples the rendered canvas,
+            so a color inside a spotlight or on a beautify gradient picks as it looks. A swatch on
+            the color row opens Chrome's screen-wide picker.
+          </li>
+          <li>
+            <strong>Drag, drop, or paste any image</strong> — annotate a picture you already have.
+            An import takes the same seat a capture takes, so every tool and export path keeps
+            working.
+          </li>
+          <li>
+            <strong>Crash-safe editor drafts</strong> — edits are saved locally as you work and
+            offered back when the editor reopens. Restoring is always a click.
+          </li>
+        </ul>
+      </div>
+
+      <div class="ship-group">
+        <p class="ship-ver">v0.7.0</p>
+        <ul class="ship">
+          <li>
+            <strong>Beautify mode</strong> — padding, rounded corners, drop shadow, and six gradient
+            presets, a solid color, or transparent. It previews live and travels into every export.
+          </li>
+          <li>
+            <strong>Export at any scale</strong> — 25 / 50 / 100 / 200 % or an exact pixel width. It
+            refuses sizes past Chrome's canvas limits instead of writing an empty file.
+          </li>
+        </ul>
+      </div>
+
+      <div class="ship-group">
+        <p class="ship-ver">v0.6.1</p>
+        <ul class="ship">
+          <li>
+            <strong>Delayed capture</strong> — Off / 3s / 5s / 10s in the popup, with a countdown on
+            the badge, for hover states, dropdowns, and tooltips.
+          </li>
+          <li>
+            <strong>Right-click context menu capture</strong> — full page, visible area, or region
+            from the page's own menu. It honors the delay setting.
+          </li>
+          <li>
+            <strong>Repeat last region</strong> — re-capture the previous selection rectangle from
+            the popup footer or the context menu.
+          </li>
+        </ul>
+      </div>
+
+      <div class="ship-group">
+        <p class="ship-ver">v0.6.0</p>
+        <ul class="ship">
+          <li>
+            <strong>Solid and mosaic redaction</strong> — a mode on the blur tool: soft blur, coarse
+            mosaic, or an opaque fill that survives recompression.
+          </li>
+          <li>
+            <strong>Spotlight tool (<code>O</code>)</strong> — rectangle, rounded rectangle, or
+            ellipse cut-outs that merge into one dim layer.
+          </li>
+          <li>
+            <strong>Resize every annotation type</strong> — pen and highlighter scale on their
+            bounding box; text and step badges scale from the corner handles.
+          </li>
+        </ul>
+      </div>
+
+      <div class="ship-group">
+        <p class="ship-ver">v0.5.0</p>
+        <ul class="ship">
+          <li><strong>Straight line tool (<code>L</code>)</strong> — the arrow without a head.</li>
+          <li>
+            <strong>Shift constraints</strong> — square rectangles and blur regions, and lines and
+            arrows snapped to 45°.
+          </li>
+          <li>
+            <strong>Number keys <code>1</code>–<code>8</code></strong> set the color.
+          </li>
+          <li><strong>Double-click a text layer</strong> to re-edit it.</li>
+        </ul>
+      </div>
+
+      <div class="ship-group">
+        <p class="ship-ver">v0.4.0 and earlier</p>
+        <ul class="ship">
+          <li>
+            <code>{domain}</code> filename token, alongside <code>{date}</code>,
+            <code>{time}</code>, <code>{title}</code>, <code>{w}</code>, and
+            <code>{h}</code> (v0.4.0).
+          </li>
+          <li>Numbered step badges and the highlighter tool (v0.3.0).</li>
+          <li>Shortcut sheet in the editor, with Export bound to ⌘S (v0.3.0).</li>
+          <li>One zoom menu, with keyboard zoom controls (v0.3.0).</li>
+          <li>Named swatches, a custom color, and recent colors (v0.3.0).</li>
+          <li>The export dialog can save its settings as the new defaults (v0.3.0).</li>
+          <li>Clickable filename tokens with a live preview (v0.3.0).</li>
+          <li>Ko-fi donation links in the README, the site, and the popup footer (v0.2.7).</li>
+        </ul>
       </div>
 
       <div class="cta">
@@ -515,7 +596,7 @@
           <script src="/kofi-widget.js"></script>
           <script>
             if (window.kofiwidget2) {
-              kofiwidget2.init('Support me on Ko-fi', '#72a4f2', 'T7A624DAY7');
+              kofiwidget2.init('Support me on Ko-fi', '#E8503A', 'T7A624DAY7');
               kofiwidget2.draw();
             }
           </script>

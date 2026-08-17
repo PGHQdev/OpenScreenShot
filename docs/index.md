@@ -13,8 +13,13 @@ Open-source full page screenshot tool for Chrome — entire-scrolling-page, regi
 - Full Page — scroll-and-stitch capture of the entire page
 - Visible Area — capture exactly what's on screen
 - Selected Region — click & drag to grab an area
-- Annotation editor — rectangle, arrow, pen, text, blur, crop
-- Export — PNG, JPEG, WebP, PDF
+- Capture from the popup, a keyboard shortcut, or the page's right-click menu, with an optional 3/5/10s delay and a repeat-last-region shortcut
+- Quick capture — send a shot straight to the clipboard or to disk, skipping the editor
+- Annotation editor — rectangle, arrow, line, pen, highlighter, text, numbered step badges, blur (soft, mosaic, or solid redaction), spotlight, eyedropper, crop; select, move, and resize any annotation, with undo/redo
+- Beautify — padding, rounded corners, drop shadow, and a gradient, solid, or transparent background
+- Drop or paste any image into the editor to annotate it — no capture needed
+- Crash-safe — edits are saved locally as you work and offered back if the tab closes
+- Export — PNG, JPEG, WebP, PDF (single or multi-page), at 25–200% or an exact pixel width, or copy to the clipboard
 
 ## Agents & CLI
 

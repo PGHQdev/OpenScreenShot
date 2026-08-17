@@ -874,8 +874,9 @@
                 <span class="n">01</span>
                 <h3>Capture</h3>
                 <p>
-                  Full page, visible area, or a dragged region. One click in the popup, a keyboard
-                  shortcut, or number keys 1–3.
+                  Full page, visible area, or a dragged region — from the popup, a keyboard
+                  shortcut, or the right-click menu. Add a 3/5/10s delay for menus that close, or
+                  send the shot straight to the clipboard and skip the editor.
                 </p>
               </div>
               <div class="step">
@@ -883,15 +884,17 @@
                 <h3>Edit</h3>
                 <p>
                   Rectangles, arrows, lines, pen, highlighter, text, numbered step badges, blur or
-                  mosaic or solid redaction, spotlight and crop — with undo all the way back.
+                  mosaic or solid redaction, spotlight, eyedropper and crop — with undo all the way
+                  back. Drop in an image you already have and annotate that instead.
                 </p>
               </div>
               <div class="step">
                 <span class="n">03</span>
                 <h3>Export</h3>
                 <p>
-                  PNG, JPEG, WebP, or multi-page PDF with page size and margins. Download it, or
-                  copy straight to the clipboard.
+                  PNG, JPEG, WebP, or multi-page PDF, at 25–200 % or an exact width. Add padding, a
+                  rounded frame and a gradient with beautify. Download it, or copy straight to the
+                  clipboard.
                 </p>
               </div>
             </div>
@@ -1001,7 +1004,9 @@
   <span class="v">"scripting"</span>,
   <span class="v">"storage"</span>,
   <span class="v">"unlimitedStorage"</span>,
-  <span class="v">"downloads"</span>
+  <span class="v">"downloads"</span>,
+  <span class="v">"contextMenus"</span>,
+  <span class="v">"clipboardWrite"</span>
 ],
 <span class="k">"host_permissions": []</span></code></pre>
                 <div class="perm-rows">
@@ -1016,6 +1021,14 @@
                   </div>
                   <div class="row">
                     <code>downloads</code><span>save exports to your Downloads folder</span>
+                  </div>
+                  <div class="row">
+                    <code>contextMenus</code
+                    ><span>add one capture submenu to the right-click menu</span>
+                  </div>
+                  <div class="row">
+                    <code>clipboardWrite</code
+                    ><span>copy a screenshot; it never reads the clipboard</span>
                   </div>
                   <div class="row">
                     <code>host_permissions: []</code><span>no standing access to any website</span>

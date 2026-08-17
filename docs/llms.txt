@@ -14,7 +14,7 @@
 
 ## Agents & CLI
 
-- [capture-screenshot skill](https://openscreenshot.app/skills/capture-screenshot.md): agent skill for scripting screenshots via the openscreenshot-mcp CLI/MCP server
+- [capture-screenshot skill](https://openscreenshot.app/skills/capture-screenshot.md): agent skill for scripting screenshots via the openscreenshot CLI/MCP server
 - [API catalog](https://openscreenshot.app/.well-known/api-catalog): RFC 9727 machine-readable service catalog
 
 ## Optional
