@@ -142,9 +142,9 @@ describe('frameMetrics', () => {
     expect(m.imgH).toBe(700);
   });
 
-  it('caps the corner radius at half the shorter side', () => {
-    const m = frameMetrics(on({ radius: 100 }), 40, 4000);
-    expect(m.radius).toBe(20);
+  it('takes the corner radius from the shorter side too', () => {
+    expect(frameMetrics(on({ radius: 100 }), 1000, 4000).radius).toBe(60);
+    expect(frameMetrics(on({ radius: 50 }), 1000, 1000).radius).toBe(30);
   });
 
   it('derives the shadow offset and alpha from the strength', () => {
@@ -282,10 +282,8 @@ export function frameMetrics(opts: FrameOptions, imgW: number, imgH: number): Fr
   }
   const short = Math.max(1, Math.min(imgW, imgH));
   const pad = Math.round(unit(opts.padding) * PAD_FRACTION * short);
-  const radius = Math.min(
-    Math.round(unit(opts.radius) * RADIUS_FRACTION * short),
-    Math.floor(short / 2),
-  );
+  // roundRect scales oversized radii itself, so no cap is needed here.
+  const radius = Math.round(unit(opts.radius) * RADIUS_FRACTION * short);
   const shadowBlur = Math.round(unit(opts.shadow) * SHADOW_BLUR_FRACTION * short);
   const shadowAlpha =
     unit(opts.shadow) === 0
