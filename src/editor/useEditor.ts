@@ -11,7 +11,7 @@
  * motion, not per mousemove). Crop is destructive and clears history (the
  * pre-crop annotation coordinates are invalid for the cropped image).
  */
-import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { CanvasController } from './canvas';
 import type { Annotation, Rect } from './annotations';
 import {
@@ -30,6 +30,13 @@ import {
   type Handle,
   type SpotlightShape,
 } from './annotations';
+import {
+  DEFAULT_FRAME,
+  frameFromSettings,
+  frameMetrics,
+  frameToSettings,
+  type FrameOptions,
+} from './frame';
 import {
   createShapeDraft,
   createStepAnnotation,
@@ -98,6 +105,7 @@ export function useEditor() {
   const [recentColors, setRecentColors] = useState<string[]>([]);
   const [spotlightShape, setSpotlightShapeState] = useState<SpotlightShape>('rect');
   const [blurMode, setBlurModeState] = useState<BlurMode>('blur');
+  const [frame, setFrameState] = useState<FrameOptions>(DEFAULT_FRAME);
 
   // Refs for use inside stable event handlers (avoid stale closures).
   const toolRef = useRef(tool);
@@ -132,6 +140,11 @@ export function useEditor() {
     controllerRef.current?.setAnnotations(annotations);
   }, [annotations]);
 
+  // Sync the beautify frame to the controller.
+  useEffect(() => {
+    controllerRef.current?.setFrame(frame);
+  }, [frame]);
+
   useEffect(() => {
     selectedIdRef.current = selectedId;
     controllerRef.current?.setSelected(selectedId);
@@ -155,6 +168,17 @@ export function useEditor() {
       annotationFontSize: style.fontSize,
     });
   }, [style]);
+
+  // Persist the beautify frame so it is remembered across sessions. Skip the
+  // first run (the initial load from settings) to avoid a redundant write.
+  const frameLoadedRef = useRef(false);
+  useEffect(() => {
+    if (!frameLoadedRef.current) {
+      frameLoadedRef.current = true;
+      return;
+    }
+    void setSettings(frameToSettings(frame));
+  }, [frame]);
 
   // When a new annotation is selected, adopt its style in the style bar.
   useEffect(() => {
@@ -271,6 +295,17 @@ export function useEditor() {
     [applyStyleToSelected],
   );
 
+  const setFrame = useCallback((patch: Partial<FrameOptions>) => {
+    setFrameState((f) => ({ ...f, ...patch }));
+  }, []);
+
+  // Outer size of the export, so the export dialog can show what a scale yields.
+  const composedSize = useMemo(() => {
+    if (!imageSize) return null;
+    const m = frameMetrics(frame, imageSize.w, imageSize.h);
+    return { w: m.outerW, h: m.outerH };
+  }, [frame, imageSize]);
+
   const setStyleFontSize = useCallback(
     (fontSize: number) => {
       setStyle((s) => ({ ...s, fontSize }));
@@ -302,6 +337,7 @@ export function useEditor() {
         strokeWidth: s.annotationStrokeWidth,
         fontSize: s.annotationFontSize,
       });
+      setFrameState(frameFromSettings(s));
       const cap = await getLastCapture();
       if (!cap) {
         setLoading(false);
@@ -867,6 +903,9 @@ export function useEditor() {
     setSpotlightShape,
     blurMode,
     setBlurMode,
+    frame,
+    setFrame,
+    composedSize,
     setStyleColor,
     setStyleStrokeWidth,
     setStyleFontSize,
