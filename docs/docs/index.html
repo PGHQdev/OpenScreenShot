@@ -9,8 +9,8 @@
       content="OpenScreenShot documentation. How to install, capture, annotate, and export screenshots with the open-source Chrome extension."
     />
     <link rel="canonical" href="https://openscreenshot.app/docs/" />
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0b0b0d" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f5f3ee" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#141414" media="(prefers-color-scheme: dark)" />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="OpenScreenShot" />
@@ -27,7 +27,7 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a84ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/%3E%3Ccircle cx='12' cy='13' r='4'/%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect x='6' y='6' width='116' height='116' rx='30' fill='%23FAFAF7'/%3E%3Crect x='7.5' y='7.5' width='113' height='113' rx='28.5' fill='none' stroke='%231B1A17' stroke-width='3' opacity='0.14'/%3E%3Cg stroke='%231B1A17' stroke-width='11' stroke-linecap='round' fill='none'%3E%3Cpath d='M30 46 v-8 a8 8 0 0 1 8 -8 h8'/%3E%3Cpath d='M82 30 h8 a8 8 0 0 1 8 8 v8'/%3E%3Cpath d='M98 82 v8 a8 8 0 0 1 -8 8 h-8'/%3E%3Cpath d='M46 98 h-8 a8 8 0 0 1 -8 -8 v-8'/%3E%3C/g%3E%3Ccircle cx='64' cy='64' r='13' fill='%23E8503A'/%3E%3C/svg%3E"
     />
 
     <style>
@@ -46,38 +46,38 @@
         --font:
           -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'Helvetica Neue', Arial,
           sans-serif;
-        --surface-0: #ffffff;
-        --surface-1: #ffffff;
-        --surface-2: #f5f5f7;
-        --surface-3: #ececef;
-        --text-1: #111114;
-        --text-2: #55555c;
-        --text-3: #8a8a92;
-        --accent: #0071e3;
-        --accent-hover: #0077ed;
-        --accent-subtle: #eaf3fe;
-        --border: #e4e4e9;
-        --border-strong: #d3d3da;
-        --grad-brand: linear-gradient(120deg, #0071e3 0%, #6a5cff 100%);
+        --surface-0: #f5f3ee;
+        --surface-1: #fffefb;
+        --surface-2: #ebe7e0;
+        --surface-3: #e0dbd2;
+        --text-1: #171512;
+        --text-2: #514c44;
+        --text-3: #6f6a61;
+        --accent: #e8503a;
+        --accent-hover: #cf4530;
+        --accent-subtle: #fbeae6;
+        --border: #dfdad0;
+        --border-strong: #cdc7bb;
+        --grad-brand: linear-gradient(120deg, #e8503a 0%, #f5a623 100%);
         --shadow-sm: 0 1px 2px rgba(17, 17, 20, 0.04);
         --shadow-md: 0 4px 12px rgba(17, 17, 20, 0.08);
-        --shadow-brand: 0 10px 30px rgba(0, 113, 227, 0.28);
+        --shadow-brand: 0 10px 30px rgba(232, 80, 58, 0.24);
         --max-w: 780px;
       }
       @media (prefers-color-scheme: dark) {
         :root {
-          --surface-0: #0b0b0d;
-          --surface-1: #141416;
-          --surface-2: #1a1a1d;
-          --surface-3: #242428;
-          --text-1: #f4f4f6;
-          --text-2: #a6a6ad;
-          --text-3: #6e6e77;
-          --accent: #4c9bff;
-          --accent-hover: #6aabff;
-          --accent-subtle: #16273d;
-          --border: #2a2a30;
-          --border-strong: #37373f;
+          --surface-0: #141414;
+          --surface-1: #1c1c1c;
+          --surface-2: #242424;
+          --surface-3: #2e2e2e;
+          --text-1: #f5f3ee;
+          --text-2: #b8b5ae;
+          --text-3: #918e87;
+          --accent: #f26b57;
+          --accent-hover: #f5836f;
+          --accent-subtle: #3a201b;
+          --border: #353535;
+          --border-strong: #464646;
           --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
           --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
         }
@@ -136,16 +136,6 @@
       .nav-brand:hover {
         color: var(--text-1);
         text-decoration: none;
-      }
-      .nav-brand .logo-badge {
-        display: grid;
-        place-items: center;
-        width: 28px;
-        height: 28px;
-        border-radius: 8px;
-        background: var(--grad-brand);
-        color: #fff;
-        box-shadow: var(--shadow-brand);
       }
       .nav-links {
         display: flex;
@@ -271,7 +261,7 @@
         color: #fff;
         text-decoration: none;
         transform: translateY(-2px);
-        box-shadow: 0 16px 36px rgba(0, 113, 227, 0.36);
+        box-shadow: 0 16px 36px rgba(232, 80, 58, 0.32);
       }
       .btn-secondary {
         background: var(--surface-1);
@@ -328,22 +318,27 @@
   <body>
     <nav>
       <a href="/" class="nav-brand">
-        <span class="logo-badge"
-          ><svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
+        <svg width="26" height="26" viewBox="0 0 128 128" aria-hidden="true">
+          <rect x="6" y="6" width="116" height="116" rx="30" fill="#FAFAF7" />
+          <rect
+            x="7.5"
+            y="7.5"
+            width="113"
+            height="113"
+            rx="28.5"
             fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path
-              d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
-            />
-            <circle cx="12" cy="13" r="4" /></svg
-        ></span>
+            stroke="#1B1A17"
+            stroke-width="3"
+            opacity="0.14"
+          />
+          <g stroke="#1B1A17" stroke-width="11" stroke-linecap="round" fill="none">
+            <path d="M30 46 v-8 a8 8 0 0 1 8 -8 h8" />
+            <path d="M82 30 h8 a8 8 0 0 1 8 8 v8" />
+            <path d="M98 82 v8 a8 8 0 0 1 -8 8 h-8" />
+            <path d="M46 98 h-8 a8 8 0 0 1 -8 -8 v-8" />
+          </g>
+          <circle cx="64" cy="64" r="13" fill="#E8503A" />
+        </svg>
         OpenScreenShot
       </a>
       <div class="nav-links">
