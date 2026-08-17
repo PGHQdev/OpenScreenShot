@@ -6,6 +6,7 @@ import type { PdfOptions } from './pdf';
 import { COLOR_PALETTE, STROKE_WIDTHS, type BlurMode, type SpotlightShape } from './annotations';
 import { colorName } from './palette';
 import { arrowNav, getFocusable, trapFocus } from './focus';
+import { pickImageFile } from './import-image';
 import { BrandMark } from '../shared/BrandMark';
 import { getSettings, setSettings } from '../shared/storage';
 import type { LastCapture } from '../shared/types';
@@ -29,6 +30,7 @@ export function App() {
   const [exportOpen, setExportOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const [dragOver, setDragOver] = useState(false);
 
   function copyToClipboard() {
     ed.copyImage()
@@ -67,6 +69,31 @@ export function App() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [ed.capture]);
+
+  // Without this, a file dropped anywhere but the stage navigates this tab to it.
+  useEffect(() => {
+    const stop = (e: DragEvent) => e.preventDefault();
+    window.addEventListener('dragover', stop);
+    window.addEventListener('drop', stop);
+    return () => {
+      window.removeEventListener('dragover', stop);
+      window.removeEventListener('drop', stop);
+    };
+  }, []);
+
+  // Paste an image to open it. Text fields keep their own paste.
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      if (isTypingTarget(e.target)) return;
+      const file = pickImageFile(Array.from(e.clipboardData?.files ?? []));
+      if (!file) return;
+      e.preventDefault();
+      void ed.importFromFile(file);
+    };
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+  }, [ed.importFromFile]);
+
   const cursor = ed.spaceHeld
     ? 'grab'
     : ed.tool === 'text'
@@ -189,7 +216,21 @@ export function App() {
           ) : null}
         </aside>
 
-        <div class="stage">
+        <div
+          class="stage"
+          data-dropping={dragOver ? 'true' : undefined}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragOver(false);
+            const file = pickImageFile(Array.from(e.dataTransfer?.files ?? []));
+            if (file) void ed.importFromFile(file);
+          }}
+        >
           <canvas
             ref={ed.canvasRef}
             class="stage-canvas"
@@ -197,6 +238,15 @@ export function App() {
             onMouseDown={ed.onCanvasMouseDown}
             onDblClick={ed.onCanvasDoubleClick}
           />
+
+          {ed.importError ? (
+            <div class="stage-notice" role="status">
+              <span>{ed.importError}</span>
+              <button class="text-btn" onClick={ed.dismissImportError}>
+                Dismiss
+              </button>
+            </div>
+          ) : null}
 
           {ed.cropActive ? (
             <div class="crop-confirm">
@@ -243,6 +293,7 @@ export function App() {
         <ExportDialog ed={ed} onClose={() => setExportOpen(false)} />
       ) : null}
       {sheetOpen ? <ShortcutSheet onClose={() => setSheetOpen(false)} /> : null}
+      {ed.pendingImport ? <ImportConfirm ed={ed} /> : null}
     </div>
   );
 }
@@ -782,6 +833,56 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
   );
 }
 
+function ImportConfirm({ ed }: { ed: ReturnType<typeof useEditor> }) {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const name = ed.pendingImport?.name ?? '';
+  const count = ed.annotations.length;
+
+  useEffect(() => {
+    const prev = (document.activeElement as HTMLElement | null) ?? null;
+    const focusable = modalRef.current ? getFocusable(modalRef.current) : [];
+    focusable[0]?.focus();
+    return () => {
+      prev?.focus?.();
+    };
+  }, []);
+
+  return (
+    <div class="modal-backdrop" onMouseDown={ed.cancelImport}>
+      <div
+        ref={modalRef}
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Replace the current image"
+        tabIndex={-1}
+        onMouseDown={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          // A modal owns the keyboard while it is open — see ShortcutSheet's onKeyDown.
+          e.stopPropagation();
+          trapFocus(modalRef.current!, e);
+          if (e.key === 'Escape') ed.cancelImport();
+        }}
+      >
+        <h2 class="modal-title">Replace the current image?</h2>
+        <p class="modal-text">
+          “{name}” opens in place of what is on the canvas. {count}{' '}
+          {count === 1 ? 'annotation' : 'annotations'} and the undo history go with it.
+        </p>
+        <div class="modal-actions">
+          <span class="modal-actions-spacer" />
+          <button class="text-btn" onClick={ed.cancelImport}>
+            Cancel
+          </button>
+          <button class="btn-primary" onClick={ed.confirmImport}>
+            Replace
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TextOverlay({ ed }: { ed: ReturnType<typeof useEditor> }) {
   const id = ed.textEdit!.id;
   const pos = ed.textOverlayPos(id);
@@ -850,6 +951,7 @@ function EmptyState() {
         </div>
         <h2>Nothing to edit yet</h2>
         <p>Capture a page with OpenScreenShot, and it opens here.</p>
+        <p class="empty-alt">Or drop an image here — paste works too.</p>
         <button class="btn-primary empty-cta" onClick={openPopup}>
           Capture a page
         </button>
