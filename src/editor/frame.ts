@@ -13,6 +13,7 @@
 import type { FrameBackground, PresetId } from '../shared/types';
 import { normalizeHex } from './palette';
 import type { Settings } from '../shared/types';
+import { MAX_CANVAS_HEIGHT_PX } from '../shared/geometry';
 
 export type { FrameBackground, PresetId };
 
@@ -83,7 +84,17 @@ export function frameMetrics(opts: FrameOptions, imgW: number, imgH: number): Fr
     return { pad: 0, radius: 0, shadowBlur: 0, shadowOffsetY: 0, shadowAlpha: 0, ...base };
   }
   const short = Math.max(1, Math.min(imgW, imgH));
-  const pad = Math.round(unit(opts.padding) * PAD_FRACTION * short);
+  // Padding can't push either outer side past the canvas cap — beautify alone
+  // must never turn a legal capture into a canvas Chrome silently refuses to
+  // draw into (toDataURL then returns "data:," with no error).
+  const maxPad = Math.max(
+    0,
+    Math.min(
+      Math.floor((MAX_CANVAS_HEIGHT_PX - imgW) / 2),
+      Math.floor((MAX_CANVAS_HEIGHT_PX - imgH) / 2),
+    ),
+  );
+  const pad = Math.min(Math.round(unit(opts.padding) * PAD_FRACTION * short), maxPad);
   // roundRect scales oversized radii itself, so no cap is needed here.
   const radius = Math.round(unit(opts.radius) * RADIUS_FRACTION * short);
   const shadowBlur = Math.round(unit(opts.shadow) * SHADOW_BLUR_FRACTION * short);
@@ -127,7 +138,9 @@ export function paintFrame(
   if (bg.kind !== 'transparent') {
     ctx.save();
     ctx.fillStyle =
-      bg.kind === 'solid' ? bg.color : presetGradient(ctx, bg.id, -m.pad, -m.pad, m.outerW, m.outerH);
+      bg.kind === 'solid'
+        ? bg.color
+        : presetGradient(ctx, bg.id, -m.pad, -m.pad, m.outerW, m.outerH);
     ctx.fillRect(-m.pad, -m.pad, m.outerW, m.outerH);
     ctx.restore();
   }
@@ -139,11 +152,26 @@ export function paintFrame(
     ctx.shadowOffsetY = m.shadowOffsetY * scale;
     // The plate is hidden by the screenshot drawn over it; it exists to cast.
     ctx.fillStyle = '#ffffff';
+    const plate = shadowPlateRect(m.imgW, m.imgH);
     ctx.beginPath();
-    ctx.roundRect(0, 0, m.imgW, m.imgH, m.radius);
+    ctx.roundRect(plate.x, plate.y, plate.w, plate.h, m.radius);
     ctx.fill();
     ctx.restore();
   }
+}
+
+/**
+ * The shadow plate's rect, inset 1px so its own antialiased edge sits under
+ * the image's opaque pixels instead of leaking a faint white ring past a
+ * rounded corner. Degenerate sizes skip the inset — there is no edge to hide
+ * once the plate itself is under 2px on a side.
+ */
+export function shadowPlateRect(
+  imgW: number,
+  imgH: number,
+): { x: number; y: number; w: number; h: number } {
+  if (imgW < 2 || imgH < 2) return { x: 0, y: 0, w: imgW, h: imgH };
+  return { x: 1, y: 1, w: imgW - 2, h: imgH - 2 };
 }
 
 /** Clip to the screenshot's rounded rect. Callers draw the image inside it. */

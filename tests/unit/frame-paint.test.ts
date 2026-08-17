@@ -91,9 +91,9 @@ describe('paintFrame', () => {
     expect(ctx.fills).toBe(1); // the shadow plate still draws
   });
 
-  it('rounds the screenshot rect at the metric radius', () => {
+  it('rounds the shadow plate at the metric radius, inset 1px so its antialiased edge stays under the image', () => {
     const { ctx, m } = paint({ radius: 30 });
-    expect(ctx.roundRects[0]).toEqual({ x: 0, y: 0, w: m.imgW, h: m.imgH, r: m.radius });
+    expect(ctx.roundRects[0]).toEqual({ x: 1, y: 1, w: m.imgW - 2, h: m.imgH - 2, r: m.radius });
   });
 
   it('scales the shadow with the caller scale, since ctx ignores the transform', () => {

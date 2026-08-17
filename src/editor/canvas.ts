@@ -198,7 +198,11 @@ export class CanvasController {
       ctx.save();
       ctx.translate(this.view.panX, this.view.panY);
       ctx.scale(this.view.zoom, this.view.zoom);
-      paintFrame(ctx, m, this.frame.background, this.view.zoom);
+      // shadowBlur/shadowOffsetY ignore the transform matrix, and the context
+      // already carries the device pixel ratio from setTransform in render(),
+      // so the scale passed here must include dpr too, or the shadow drifts
+      // from the export (which composes at 1x with no dpr) on a Retina display.
+      paintFrame(ctx, m, this.frame.background, this.view.zoom * this.dpr);
       ctx.restore();
     } else {
       // Shadow behind the image rect, so a light screenshot keeps an edge.
