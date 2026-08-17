@@ -403,7 +403,16 @@ async function deliverCapture(
   // Quick save writes PNG: the capture already is one, and the export dialog
   // owns the format choice.
   const base = formatFilename(settings.filenameTemplate, { title, url, width, height });
-  await chrome.downloads.download({ url: dataUrl, filename: `${base}.png`, saveAs: false });
+  try {
+    await chrome.downloads.download({ url: dataUrl, filename: `${base}.png`, saveAs: false });
+  } catch {
+    broadcast({
+      type: 'CAPTURE_ERROR',
+      code: 'quick-action',
+      message: 'Could not save the screenshot to disk.',
+    });
+    return false;
+  }
   void flashDoneBadge();
   return true;
 }
