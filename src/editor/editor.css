@@ -530,6 +530,24 @@ body {
   z-index: 5;
 }
 
+.draft-restore {
+  position: absolute;
+  top: var(--s-3);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  max-width: 90%;
+  padding: 6px 10px 6px 14px;
+  border: 1px solid var(--accent);
+  border-radius: var(--r-full);
+  background: var(--surface-1);
+  box-shadow: var(--sh-md);
+  font-size: 13px;
+  z-index: 8;
+}
+
 .text-overlay {
   position: absolute;
   margin: 0;

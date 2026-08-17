@@ -248,6 +248,21 @@ export function App() {
             </div>
           ) : null}
 
+          {ed.draftPrompt && !ed.importError ? (
+            <div class="draft-restore" role="status">
+              <span>
+                Unsaved edits from your last session ({ed.draftPrompt.annotations.length}{' '}
+                {ed.draftPrompt.annotations.length === 1 ? 'annotation' : 'annotations'}).
+              </span>
+              <button class="btn-primary btn-sm" onClick={ed.restoreDraft}>
+                Restore
+              </button>
+              <button class="text-btn" onClick={ed.discardDraft}>
+                Discard
+              </button>
+            </div>
+          ) : null}
+
           {ed.cropActive ? (
             <div class="crop-confirm">
               <span>Crop to selection</span>
