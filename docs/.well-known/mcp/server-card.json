@@ -1,5 +1,5 @@
 {
-  "serverInfo": { "name": "openscreenshot", "version": "0.7.0" },
+  "serverInfo": { "name": "openscreenshot", "version": "1.1.0" },
   "transport": { "type": "stdio", "endpoint": "npx openscreenshot serve" },
   "capabilities": ["tools"]
 }
