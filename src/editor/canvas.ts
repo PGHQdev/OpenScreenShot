@@ -14,6 +14,7 @@ import {
 } from './annotations';
 import { centerView, clampZoom, fitZoom } from './viewport';
 import { clipToFrame, DEFAULT_FRAME, frameMetrics, paintFrame, type FrameOptions } from './frame';
+import { rgbToHex } from './eyedropper';
 
 /**
  * CanvasController — imperative owner of the editor's <canvas>.
@@ -170,6 +171,24 @@ export class CanvasController {
   /** Convert image (native px) to screen (CSS px) coordinates. */
   toScreen(ix: number, iy: number): Point {
     return { x: ix * this.view.zoom + this.view.panX, y: iy * this.view.zoom + this.view.panY };
+  }
+
+  /**
+   * Colour of the rendered pixel under a screen point, as #rrggbb, or null when
+   * the point is off-canvas or fully transparent.
+   *
+   * It reads the rendered canvas rather than the source image, so a pick lands
+   * on what the user sees: annotations, spotlight dim, and beautify background
+   * included. The backing store carries the device pixel ratio, so the screen
+   * point is scaled before the read.
+   */
+  sampleAt(sx: number, sy: number): string | null {
+    if (!this.image) return null;
+    const x = Math.round(sx * this.dpr);
+    const y = Math.round(sy * this.dpr);
+    if (x < 0 || y < 0 || x >= this.canvas.width || y >= this.canvas.height) return null;
+    const [r, g, b, a] = this.ctx.getImageData(x, y, 1, 1).data;
+    return a === 0 ? null : rgbToHex(r, g, b);
   }
 
   render(): void {
