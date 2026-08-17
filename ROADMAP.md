@@ -12,10 +12,10 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 
 | Feature                                                 | Status       | Notes                                                                                                                                        |
 | ------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Delayed capture (3s / 5s / 10s timer)                   | 🚧 in progress | Capture hover states, dropdowns, and tooltips that disappear when you click the extension. Persistent Off / 3s / 5s / 10s row in the popup; the badge counts down; region shows its overlay after the delay. |
+| Delayed capture (3s / 5s / 10s timer)                   | ✅ shipped   | Landed in v0.6.1: persistent Off / 3s / 5s / 10s row in the popup; the badge counts down; region shows its overlay after the delay. |
 | Capture straight to clipboard or download (skip editor) | 📋 planned   | Optional "quick mode" for high-frequency power users. Clipboard needs an offscreen document; download goes straight from the service worker. |
-| Right-click context menu capture                        | 🚧 in progress | Full page / visible / region from the page context menu. Needs the warning-free `contextMenus` permission; clicks grant `activeTab` and honor the delay setting; errors flash `!` on the badge. |
-| Repeat last region                                      | 🚧 in progress | Re-capture the previous selection rect — great for iterating on docs. The rect persists in local storage; entry points are a popup footer link and a context menu item, shown once a rect exists. |
+| Right-click context menu capture                        | ✅ shipped   | Landed in v0.6.1: full page / visible / region from the page context menu, via the warning-free `contextMenus` permission; clicks grant `activeTab` and honor the delay setting; errors flash `!` on the badge. |
+| Repeat last region                                      | ✅ shipped   | Landed in v0.6.1: re-capture the previous selection rect. The rect persists in local storage; entry points are a popup footer link and a context menu item, shown once a rect exists. |
 | Region loupe + DOM element snapping                     | 🧭 exploring | Pixel-precise crosshair magnifier; snap selection edges to element boundaries.                                                               |
 | Batch capture: list of URLs → one multi-page PDF        | 🧭 exploring | Combines existing scroll-and-stitch with existing PDF export.                                                                                |
 
@@ -62,6 +62,9 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 
 | Feature                                                 | Version |
 | ------------------------------------------------------- | ------- |
+| Delayed capture (3s / 5s / 10s timer)                   | v0.6.1  |
+| Right-click context menu capture                        | v0.6.1  |
+| Repeat last region                                      | v0.6.1  |
 | Solid and mosaic redaction modes on the blur tool       | v0.6.0  |
 | Spotlight tool (`O`)                                    | v0.6.0  |
 | Resize handles on every annotation type                 | v0.6.0  |
@@ -84,4 +87,4 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 
 ---
 
-_Last updated for v0.6.0._
+_Last updated for v0.6.1._
