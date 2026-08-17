@@ -145,6 +145,11 @@ export function useEditor() {
   const styleRef = useRef(style);
   const spotlightShapeRef = useRef(spotlightShape);
   const blurModeRef = useRef(blurMode);
+  // True from the moment restoreDraft clears draftPrompt until the restored
+  // annotations land. The canvas is transiently empty in that window; without
+  // this, the debounce or the visibility flush could wipe the draft being
+  // restored before it is applied.
+  const restoringRef = useRef(false);
 
   useEffect(() => {
     spotlightShapeRef.current = spotlightShape;
@@ -873,7 +878,7 @@ export function useEditor() {
    * annotations, and the frame is already persisted in settings.
    */
   useEffect(() => {
-    if (loading || !capture || draftPrompt) return;
+    if (loading || !capture || draftPrompt || restoringRef.current) return;
     const timer = window.setTimeout(() => {
       if (annotations.length === 0) {
         void clearDraft();
@@ -890,7 +895,7 @@ export function useEditor() {
   useEffect(() => {
     const onVisibility = () => {
       if (document.visibilityState !== 'hidden') return;
-      if (loading || !capture || draftPrompt) return;
+      if (loading || !capture || draftPrompt || restoringRef.current) return;
       if (annotationsRef.current.length === 0) return;
       void setDraft(makeDraft(capture.capturedAt, annotationsRef.current, frameRef.current));
     };
@@ -901,29 +906,46 @@ export function useEditor() {
   /**
    * Put a draft back. The image comes first when a crop stored one, so the
    * annotations land on the picture their coordinates were measured against.
+   *
+   * The canvas is still empty between clearing draftPrompt and the eventual
+   * setAnnotations below — restoringRef holds the autosave and the visibility
+   * flush off so neither one wipes the draft while it is mid-restore. It is
+   * cleared in every terminal branch before that branch's setAnnotations
+   * call, so the re-render it triggers already sees restoring as done.
    */
   const restoreDraft = useCallback(() => {
     const d = draftPrompt;
     if (!d) return;
+    restoringRef.current = true;
     setDraftPrompt(null);
     setFrameState(draftFrame(d));
     setPast([]);
     setFuture([]);
     setSelectedId(null);
-    void getDraftImage().then((dataUrl) => {
-      if (!dataUrl) {
+    void getDraftImage()
+      .then((dataUrl) => {
+        if (!dataUrl) {
+          restoringRef.current = false;
+          setAnnotations(d.annotations);
+          return;
+        }
+        const img = new Image();
+        img.onload = () => {
+          restoringRef.current = false;
+          controllerRef.current?.setImage(img);
+          setImageSize({ w: img.naturalWidth, h: img.naturalHeight });
+          setAnnotations(d.annotations);
+        };
+        img.onerror = () => {
+          restoringRef.current = false;
+          setAnnotations(d.annotations);
+        };
+        img.src = dataUrl;
+      })
+      .catch(() => {
+        restoringRef.current = false;
         setAnnotations(d.annotations);
-        return;
-      }
-      const img = new Image();
-      img.onload = () => {
-        controllerRef.current?.setImage(img);
-        setImageSize({ w: img.naturalWidth, h: img.naturalHeight });
-        setAnnotations(d.annotations);
-      };
-      img.onerror = () => setAnnotations(d.annotations);
-      img.src = dataUrl;
-    });
+      });
   }, [draftPrompt]);
 
   const discardDraft = useCallback(() => {
