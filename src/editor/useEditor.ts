@@ -507,7 +507,16 @@ export function useEditor() {
       }
       const p = c.toImage(sx, sy);
       if (it.kind === 'crop') {
-        const r: Rect = { x: it.start.x, y: it.start.y, w: p.x - it.start.x, h: p.y - it.start.y };
+        // The frame's padding renders like part of the picture, so a drag that
+        // strays into it must not smear transparent padding pixels into the
+        // crop — hold the point to the image bounds.
+        const cp = c.image ? clampToImage(p, c.image.naturalWidth, c.image.naturalHeight) : p;
+        const r: Rect = {
+          x: it.start.x,
+          y: it.start.y,
+          w: cp.x - it.start.x,
+          h: cp.y - it.start.y,
+        };
         cropDraftRef.current = r;
         c.setCropRect(r);
         return;
@@ -666,9 +675,10 @@ export function useEditor() {
         return;
       }
       if (t === 'crop') {
-        cropDraftRef.current = { x: p.x, y: p.y, w: 0, h: 0 };
+        const cp = clampToImage(p, c.image.naturalWidth, c.image.naturalHeight);
+        cropDraftRef.current = { x: cp.x, y: cp.y, w: 0, h: 0 };
         c.setCropRect(cropDraftRef.current);
-        interactionRef.current = { kind: 'crop', start: p };
+        interactionRef.current = { kind: 'crop', start: cp };
         window.addEventListener('mousemove', onDragMove);
         window.addEventListener('mouseup', onDragUp);
         return;
@@ -954,6 +964,11 @@ function hitTestAnnotation(
     }
   }
   return null;
+}
+
+/** Hold a point inside the image bounds — used to keep crop drags out of the beautify padding. */
+function clampToImage(p: { x: number; y: number }, w: number, h: number): { x: number; y: number } {
+  return { x: Math.min(Math.max(p.x, 0), w), y: Math.min(Math.max(p.y, 0), h) };
 }
 
 export function isTypingTarget(t: EventTarget | null): boolean {
