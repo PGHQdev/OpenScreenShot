@@ -34,6 +34,7 @@ ANNOTATE
 • Crop, resize, zoom to cursor, full undo/redo history
 • Beautify: padding, rounded corners, shadow, and gradient backgrounds for polished sharing
 • Eyedropper: match a color from the screenshot or anywhere on your screen
+• Drag and drop or paste any image into the editor to annotate it
 
 EXPORT
 • PNG, JPEG, or WebP with quality control
