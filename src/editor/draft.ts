@@ -76,12 +76,24 @@ export function parseDraft(value: unknown): Draft | null {
     sourceCapturedAt: v.sourceCapturedAt,
     annotations: v.annotations as Annotation[],
     frame: frameToSettings(frameFromSettings({ ...DEFAULT_SETTINGS, ...stored })),
-    savedAt: typeof v.savedAt === 'number' ? v.savedAt : 0,
+    savedAt: typeof v.savedAt === 'number' && Number.isFinite(v.savedAt) ? v.savedAt : 0,
   };
 }
 
+/**
+ * Pen and highlight are special-cased: their draw and hit-test paths index
+ * straight into `points` with no length guard (see `drawPen`, `drawHighlight`,
+ * and `bbox` in `./annotations`), so a stored annotation missing `points`
+ * would throw on every redraw instead of just rendering wrong. The other
+ * seven types only produce `NaN` from a missing numeric field, which every
+ * canvas 2D call involved already no-ops on silently.
+ */
 function isAnnotation(value: unknown): value is Annotation {
   if (!value || typeof value !== 'object') return false;
-  const a = value as { id?: unknown; type?: unknown };
-  return typeof a.id === 'string' && typeof a.type === 'string' && ANNOTATION_TYPES.has(a.type);
+  const a = value as { id?: unknown; type?: unknown; points?: unknown };
+  if (typeof a.id !== 'string' || typeof a.type !== 'string' || !ANNOTATION_TYPES.has(a.type)) {
+    return false;
+  }
+  if ((a.type === 'pen' || a.type === 'highlight') && !Array.isArray(a.points)) return false;
+  return true;
 }
