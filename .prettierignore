@@ -4,3 +4,9 @@ coverage
 public/icons
 *.png
 *.zip
+
+# Implementation plans quote code snippets at the indentation they will sit at
+# in the real file. Prettier formats each fenced block as a standalone file and
+# strips that leading indentation, which destroys the one signal telling a
+# reader where the snippet goes.
+agent_docs/plans
