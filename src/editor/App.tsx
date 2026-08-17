@@ -914,6 +914,13 @@ function ToolIcon({ id }: { id: Tool }) {
           <circle cx="12" cy="12" r="5" />
         </svg>
       );
+    case 'eyedropper':
+      return (
+        <svg {...common}>
+          <path d="M18 3.5a2.1 2.1 0 0 1 3 3L15 12.5l-3-3z" />
+          <path d="M12 9.5 4.5 17v2.5H7L14.5 12" />
+        </svg>
+      );
     case 'crop':
       return (
         <svg {...common}>
@@ -1064,6 +1071,8 @@ function hintForTool(tool: Tool): string {
       return 'Drag to keep an area lit — everything else dims · Shift keeps it square';
     case 'crop':
       return 'Drag to select, then Apply to crop';
+    case 'eyedropper':
+      return 'Click any pixel to take its color · the previous tool comes back';
     case 'select':
       return 'Select · drag to move · handles to resize · double-click text · ⌫ delete';
   }

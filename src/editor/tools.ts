@@ -28,6 +28,7 @@ export type Tool =
   | 'step'
   | 'blur'
   | 'spotlight'
+  | 'eyedropper'
   | 'crop';
 
 export type ShapeTool = 'rect' | 'arrow' | 'line' | 'pen' | 'highlight' | 'blur' | 'spotlight';
@@ -49,6 +50,7 @@ export const TOOL_LIST: ToolDef[] = [
   { id: 'step', label: 'Step number', shortcut: 'S' },
   { id: 'blur', label: 'Blur', shortcut: 'B' },
   { id: 'spotlight', label: 'Spotlight', shortcut: 'O' },
+  { id: 'eyedropper', label: 'Eyedropper', shortcut: 'I' },
   { id: 'crop', label: 'Crop', shortcut: 'C' },
 ];
 

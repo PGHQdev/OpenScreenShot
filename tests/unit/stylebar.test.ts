@@ -104,6 +104,18 @@ describe('stylebarFields by selection', () => {
   });
 });
 
+describe('stylebarFields for the eyedropper', () => {
+  it('shows the colour row, so the picked colour is visible where it landed', () => {
+    expect(stylebarFields('eyedropper', null)).toEqual({
+      color: true,
+      stroke: false,
+      fontSize: false,
+      shape: false,
+      redaction: false,
+    });
+  });
+});
+
 describe('stylebarEmpty', () => {
   it('is false when any field applies', () => {
     const base = { color: false, stroke: false, fontSize: false, shape: false, redaction: false };

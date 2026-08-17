@@ -135,6 +135,15 @@ export function useEditor() {
     toolRef.current = tool;
   }, [tool]);
 
+  // The eyedropper is a one-shot: it sets the colour for whatever you were
+  // drawing with, then hands that tool back. Clearing the selection matters too
+  // — a handle painted over the pixel would be sampled instead of the pixel.
+  const prevToolRef = useRef<Tool>('select');
+  useEffect(() => {
+    if (tool === 'eyedropper') setSelectedId(null);
+    else prevToolRef.current = tool;
+  }, [tool]);
+
   // Sync annotations to the controller + a ref for history/hit-testing.
   useEffect(() => {
     annotationsRef.current = annotations;
@@ -674,6 +683,12 @@ export function useEditor() {
         setSelectedId(ann.id);
         return;
       }
+      if (t === 'eyedropper') {
+        const hex = c.sampleAt(sx, sy);
+        if (hex) setStyleColor(hex);
+        setTool(prevToolRef.current);
+        return;
+      }
       if (t === 'crop') {
         const cp = clampToImage(p, c.image.naturalWidth, c.image.naturalHeight);
         cropDraftRef.current = { x: cp.x, y: cp.y, w: 0, h: 0 };
@@ -697,7 +712,7 @@ export function useEditor() {
       window.addEventListener('mousemove', onDragMove);
       window.addEventListener('mouseup', onDragUp);
     },
-    [onDragMove, onDragUp],
+    [onDragMove, onDragUp, setStyleColor, setTool],
   );
 
   // --- Text ---

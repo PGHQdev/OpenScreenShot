@@ -65,6 +65,8 @@ export function stylebarFields(
       return SPOTLIGHT;
     case 'blur':
       return BLUR;
+    case 'eyedropper':
+      return { ...NONE, color: true };
     case 'select':
     case 'crop':
       return NONE;

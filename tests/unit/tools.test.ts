@@ -168,3 +168,13 @@ describe('extendDraft with shift held', () => {
     expect(d).toMatchObject({ w: 60, h: 20 });
   });
 });
+
+describe('eyedropper tool', () => {
+  it('is in the toolbar with a free shortcut letter', () => {
+    const dropper = TOOL_LIST.find((t) => t.id === 'eyedropper');
+    expect(dropper).toBeDefined();
+    expect(dropper?.shortcut).toBe('I');
+    const letters = TOOL_LIST.map((t) => t.shortcut);
+    expect(new Set(letters).size).toBe(letters.length);
+  });
+});
