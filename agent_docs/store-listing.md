@@ -35,6 +35,7 @@ ANNOTATE
 • Beautify: padding, rounded corners, shadow, and gradient backgrounds for polished sharing
 • Eyedropper: match a color from the screenshot or anywhere on your screen
 • Drag and drop or paste any image into the editor to annotate it
+• Crash-safe drafts: reopen the editor and pick up where you left off
 
 EXPORT
 • PNG, JPEG, or WebP with quality control
