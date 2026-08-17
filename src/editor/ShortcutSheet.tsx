@@ -18,6 +18,7 @@ function buildCommands(isMac: boolean): { label: string; keys: string }[] {
   const shift = isMac ? '⇧' : 'Shift+';
   return [
     { label: 'Set color', keys: '1–8' },
+    { label: 'Pick a color from the screen', keys: 'Style bar' },
     { label: 'Square / 45° constraint', keys: isMac ? '⇧ + drag' : 'Shift + drag' },
     { label: 'Edit a text layer', keys: 'Double-click' },
     { label: 'Copy to clipboard', keys: `${mod}C` },

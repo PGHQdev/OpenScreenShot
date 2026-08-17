@@ -99,6 +99,13 @@ body {
   opacity: 0;
   cursor: pointer;
 }
+.swatch-screen {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  color: var(--text-1);
+}
 .widths {
   display: flex;
   gap: 2px;
