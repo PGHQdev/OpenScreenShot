@@ -2,12 +2,76 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>shot 2 — hero</title>
+    <title>shot 2 — full page</title>
     <link rel="stylesheet" href="poster.css" />
+    <style>
+      /* Tall stitched-page strip on the left, text and result on the right. */
+      .strip {
+        position: absolute;
+        left: 36px;
+        top: -24px;
+        width: 232px;
+        height: 620px;
+      }
+      .strip .ui-frame {
+        inset: 0;
+        border-radius: 10px;
+      }
+      .seam {
+        position: absolute;
+        left: -8px;
+        right: -8px;
+        border-top: 2px dashed #d43f29;
+        opacity: 0.75;
+      }
+      .seam .tag {
+        position: absolute;
+        right: 16px;
+        top: -11px;
+        background: #d43f29;
+        color: #fff;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        font-size: 10.5px;
+        font-weight: 700;
+        border-radius: 999px;
+        padding: 3px 9px;
+      }
+      .copy {
+        position: absolute;
+        left: 330px;
+        top: 44px;
+        width: 380px;
+      }
+      .copy h1 {
+        font-size: 33px;
+      }
+      .result {
+        position: absolute;
+        left: 330px;
+        right: 26px;
+        top: 268px;
+        height: 262px;
+      }
+      .result .ui-frame {
+        inset: 0;
+      }
+    </style>
   </head>
   <body>
-    <div class="poster">
-      <div class="panel">
+    <div class="poster" style="display: block">
+      <div class="strip">
+        <div class="ui-frame">
+          <iframe
+            src="sample-page.html"
+            scrolling="no"
+            style="width: 520px; height: 1460px; transform: scale(0.4462); margin-top: -34px"
+          ></iframe>
+        </div>
+        <div class="seam" style="top: 208px"><span class="tag">stitch</span></div>
+        <div class="seam" style="top: 412px"><span class="tag">stitch</span></div>
+      </div>
+
+      <div class="copy">
         <div class="wordmark">
           <img src="brand-mark.svg" width="26" height="26" alt="" />
           OpenScreenShot
@@ -15,109 +79,24 @@
         <h1>Capture the <span class="coral">whole page</span>. Not just the viewport.</h1>
         <p class="sub">
           Full-page, visible-area, and region screenshots from one popup — one click, or one
-          shortcut.
+          shortcut. Long pages scroll &amp; stitch automatically.
         </p>
-        <div class="features">
-          <div class="feat">
-            <span class="fi">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <rect x="6" y="3" width="12" height="18" rx="2" />
-                <path d="M9 8h6M9 12h6M9 16h4" />
-              </svg>
-            </span>
-            <div>
-              <b>Full page</b><span>Scrolls &amp; stitches the entire page automatically</span>
-            </div>
-          </div>
-          <div class="feat">
-            <span class="fi amber">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-            </span>
-            <div><b>Visible area</b><span>Exactly what you see, instantly</span></div>
-          </div>
-          <div class="feat">
-            <span class="fi ink">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <rect x="4" y="5" width="16" height="14" rx="2" stroke-dasharray="4 3" />
-              </svg>
-            </span>
-            <div><b>Region</b><span>Drag to select, fine-tune with arrow keys</span></div>
-          </div>
-        </div>
-        <div class="chips">
-          <span class="chip"><span class="dot"></span>No account</span>
-          <span class="chip"><span class="dot"></span>No upload</span>
-          <span class="chip"><span class="dot"></span>No telemetry</span>
-        </div>
       </div>
 
-      <div class="stage-area">
-        <div class="ui-frame" style="left: 22px; top: 30px; width: 560px; height: 533px">
+      <div class="result">
+        <div class="ui-frame">
           <div class="browser-top">
             <span class="dots"><i></i><i></i><i></i></span>
-            <span class="urlbar">
-              <svg
-                width="11"
-                height="11"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-              >
-                <rect x="4" y="11" width="16" height="10" rx="2" />
-                <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-              </svg>
-              thecoastalalmanac.com
-            </span>
+            <span class="urlbar">thecoastalalmanac.com</span>
           </div>
           <iframe
             src="sample-page.html"
             scrolling="no"
-            style="width: 860px; height: 780px; transform: scale(0.651)"
+            style="width: 860px; height: 780px; transform: scale(0.63)"
           ></iframe>
         </div>
-        <div
-          class="ui-frame"
-          style="right: 16px; top: 66px; width: 310px; height: 388px; border-radius: 16px"
-        >
-          <iframe
-            src="popup-ui.html"
-            scrolling="no"
-            style="width: 340px; height: 426px; transform: scale(0.912)"
-          ></iframe>
-        </div>
-        <div class="badge-note" style="right: 30px; bottom: 28px">
-          <span class="dot"></span> Everything stays in your browser
+        <div class="badge-note" style="right: 14px; bottom: -14px">
+          <span class="dot"></span> One click · entire scrolling page
         </div>
       </div>
     </div>
