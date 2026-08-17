@@ -1,5 +1,5 @@
 /** Shared utility helpers used across the extension. */
-import type { CaptureMode } from './types';
+import type { CaptureAction, CaptureMode } from './types';
 
 /**
  * Resolve a filename template using the current date/time and capture context.
@@ -77,6 +77,14 @@ export type CaptureDelay = (typeof CAPTURE_DELAYS)[number];
 /** Coerce a stored delay to a supported value; anything else means no delay. */
 export function normalizeCaptureDelay(value: unknown): CaptureDelay {
   return CAPTURE_DELAYS.includes(value as CaptureDelay) ? (value as CaptureDelay) : 0;
+}
+
+/** Post-capture actions the popup offers, in the order it lists them. */
+export const CAPTURE_ACTIONS: readonly CaptureAction[] = ['editor', 'clipboard', 'download'];
+
+/** Coerce a stored action to a supported one; anything else opens the editor. */
+export function normalizeCaptureAction(value: unknown): CaptureAction {
+  return CAPTURE_ACTIONS.includes(value as CaptureAction) ? (value as CaptureAction) : 'editor';
 }
 
 /** Context menu item id for each capture mode. */

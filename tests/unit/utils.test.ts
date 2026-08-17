@@ -7,9 +7,12 @@ import {
   menuIdToMode,
   MENU_REPEAT_ID,
   normalizeCaptureDelay,
+  normalizeCaptureAction,
   CAPTURE_DELAYS,
+  CAPTURE_ACTIONS,
   FILENAME_TOKENS,
 } from '../../src/shared/utils';
+import { DEFAULT_SETTINGS } from '../../src/shared/types';
 
 describe('formatFilename', () => {
   it('replaces date/time/w/h tokens', () => {
@@ -157,5 +160,26 @@ describe('normalizeCaptureDelay', () => {
     expect(normalizeCaptureDelay(undefined)).toBe(0);
     expect(normalizeCaptureDelay('5')).toBe(0);
     expect(normalizeCaptureDelay(null)).toBe(0);
+  });
+});
+
+describe('normalizeCaptureAction', () => {
+  it('keeps every offered action', () => {
+    for (const a of CAPTURE_ACTIONS) expect(normalizeCaptureAction(a)).toBe(a);
+  });
+
+  it('falls back to the editor for anything else, so bad storage cannot strand a capture', () => {
+    expect(normalizeCaptureAction('print')).toBe('editor');
+    expect(normalizeCaptureAction(undefined)).toBe('editor');
+    expect(normalizeCaptureAction(null)).toBe('editor');
+    expect(normalizeCaptureAction(3)).toBe('editor');
+  });
+
+  it('lists the editor first, so the default reads as the first chip', () => {
+    expect(CAPTURE_ACTIONS[0]).toBe('editor');
+  });
+
+  it('ships with the editor as the default', () => {
+    expect(DEFAULT_SETTINGS.captureAction).toBe('editor');
   });
 });
