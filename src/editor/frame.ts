@@ -11,6 +11,8 @@
  * full-page capture.
  */
 import type { FrameBackground, PresetId } from '../shared/types';
+import { normalizeHex } from './palette';
+import type { Settings } from '../shared/types';
 
 export type { FrameBackground, PresetId };
 
@@ -167,4 +169,51 @@ function presetGradient(
   g.addColorStop(0, p.from);
   g.addColorStop(1, p.to);
   return g;
+}
+
+const PRESET_IDS = new Set<string>(BACKGROUND_PRESETS.map((p) => p.id));
+
+/** Coerce a stored background to a usable one; anything unknown falls back. */
+export function normalizeBackground(value: unknown): FrameBackground {
+  if (!value || typeof value !== 'object') return DEFAULT_FRAME.background;
+  const v = value as { kind?: unknown; id?: unknown; color?: unknown };
+  if (v.kind === 'transparent') return { kind: 'transparent' };
+  if (v.kind === 'preset' && typeof v.id === 'string' && PRESET_IDS.has(v.id)) {
+    return { kind: 'preset', id: v.id as PresetId };
+  }
+  if (v.kind === 'solid' && typeof v.color === 'string') {
+    const hex = normalizeHex(v.color);
+    if (hex) return { kind: 'solid', color: hex };
+  }
+  return DEFAULT_FRAME.background;
+}
+
+function slider(value: unknown, fallback: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
+  return Math.max(0, Math.min(100, value));
+}
+
+export function frameFromSettings(s: Settings): FrameOptions {
+  return {
+    enabled: s.beautifyEnabled === true,
+    padding: slider(s.beautifyPadding, DEFAULT_FRAME.padding),
+    radius: slider(s.beautifyRadius, DEFAULT_FRAME.radius),
+    shadow: slider(s.beautifyShadow, DEFAULT_FRAME.shadow),
+    background: normalizeBackground(s.beautifyBackground),
+  };
+}
+
+export function frameToSettings(
+  f: FrameOptions,
+): Pick<
+  Settings,
+  'beautifyEnabled' | 'beautifyPadding' | 'beautifyRadius' | 'beautifyShadow' | 'beautifyBackground'
+> {
+  return {
+    beautifyEnabled: f.enabled,
+    beautifyPadding: f.padding,
+    beautifyRadius: f.radius,
+    beautifyShadow: f.shadow,
+    beautifyBackground: f.background,
+  };
 }
