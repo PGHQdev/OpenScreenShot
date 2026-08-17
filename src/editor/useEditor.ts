@@ -128,7 +128,10 @@ export function useEditor() {
   const [blurMode, setBlurModeState] = useState<BlurMode>('blur');
   const [frame, setFrameState] = useState<FrameOptions>(DEFAULT_FRAME);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
-  const [importError, setImportError] = useState<string | null>(null);
+  // The dismissible pill over the stage. Import failures and a draft that
+  // could not be restored both surface here — the two never overlap, since a
+  // failed restore happens on the Restore click, not during a drop.
+  const [stageNotice, setStageNotice] = useState<string | null>(null);
   const [draftPrompt, setDraftPrompt] = useState<Draft | null>(null);
 
   // Refs for use inside stable event handlers (avoid stale closures).
@@ -910,8 +913,16 @@ export function useEditor() {
    * The canvas is still empty between clearing draftPrompt and the eventual
    * setAnnotations below — restoringRef holds the autosave and the visibility
    * flush off so neither one wipes the draft while it is mid-restore. It is
-   * cleared in every terminal branch before that branch's setAnnotations
-   * call, so the re-render it triggers already sees restoring as done.
+   * cleared in every terminal branch before that branch does anything else,
+   * so the re-render it triggers already sees restoring as done.
+   *
+   * A stored draft image that fails to load, or a lookup that fails outright,
+   * leaves the coordinate space of d.annotations unknown — the crop that made
+   * that image is exactly what those coordinates were measured against, and
+   * the canvas still shows the pre-crop capture. Applying them there would
+   * misplace them, so those two branches refuse: no setAnnotations, a notice
+   * for the user, and both draft keys cleared so the same broken restore
+   * isn't offered again next reload.
    */
   const restoreDraft = useCallback(() => {
     const d = draftPrompt;
@@ -922,6 +933,12 @@ export function useEditor() {
     setPast([]);
     setFuture([]);
     setSelectedId(null);
+    const refuse = () => {
+      restoringRef.current = false;
+      setStageNotice('Your saved edits could not be restored.');
+      void clearDraft();
+      void clearDraftImage();
+    };
     void getDraftImage()
       .then((dataUrl) => {
         if (!dataUrl) {
@@ -936,16 +953,10 @@ export function useEditor() {
           setImageSize({ w: img.naturalWidth, h: img.naturalHeight });
           setAnnotations(d.annotations);
         };
-        img.onerror = () => {
-          restoringRef.current = false;
-          setAnnotations(d.annotations);
-        };
+        img.onerror = refuse;
         img.src = dataUrl;
       })
-      .catch(() => {
-        restoringRef.current = false;
-        setAnnotations(d.annotations);
-      });
+      .catch(refuse);
   }, [draftPrompt]);
 
   const discardDraft = useCallback(() => {
@@ -979,7 +990,9 @@ export function useEditor() {
       void setLastCapture(cap);
       setCapture(cap);
       setImageSize({ w: width, h: height });
-      // The stored crop image belongs to the document being replaced.
+      // The old draft belongs to a document that no longer exists.
+      setDraftPrompt(null);
+      void clearDraft();
       void clearDraftImage();
       setAnnotations([]);
       setPast([]);
@@ -988,7 +1001,7 @@ export function useEditor() {
       setTextEdit(null);
       cancelCrop();
       setError(null);
-      setImportError(null);
+      setStageNotice(null);
       setPendingImport(null);
       c.setImage(p.img);
     },
@@ -998,18 +1011,18 @@ export function useEditor() {
   /** Read a dropped or pasted file, then import it — asking first if it would destroy work. */
   const importFromFile = useCallback(
     async (file: File) => {
-      setImportError(null);
+      setStageNotice(null);
       let next: PendingImport;
       try {
         const { dataUrl, img } = await readImageFile(file);
         next = { name: file.name, dataUrl, img };
         const sizeError = importSizeError(img.naturalWidth, img.naturalHeight);
         if (sizeError) {
-          setImportError(sizeError);
+          setStageNotice(sizeError);
           return;
         }
       } catch {
-        setImportError('Could not read that image.');
+        setStageNotice('Could not read that image.');
         return;
       }
       if (annotationsRef.current.length > 0) setPendingImport(next);
@@ -1025,7 +1038,7 @@ export function useEditor() {
   }, [pendingImport, applyImport]);
 
   const cancelImport = useCallback(() => setPendingImport(null), []);
-  const dismissImportError = useCallback(() => setImportError(null), []);
+  const dismissStageNotice = useCallback(() => setStageNotice(null), []);
 
   const defaultFilename = useCallback(() => {
     const tmpl = settings?.filenameTemplate ?? 'screenshot_{date}_{time}';
@@ -1160,8 +1173,8 @@ export function useEditor() {
     pendingImport,
     confirmImport,
     cancelImport,
-    importError,
-    dismissImportError,
+    stageNotice,
+    dismissStageNotice,
     draftPrompt,
     restoreDraft,
     discardDraft,

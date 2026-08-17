@@ -239,16 +239,16 @@ export function App() {
             onDblClick={ed.onCanvasDoubleClick}
           />
 
-          {ed.importError ? (
+          {ed.stageNotice && !ed.cropActive ? (
             <div class="stage-notice" role="status">
-              <span>{ed.importError}</span>
-              <button class="text-btn" onClick={ed.dismissImportError}>
+              <span>{ed.stageNotice}</span>
+              <button class="text-btn" onClick={ed.dismissStageNotice}>
                 Dismiss
               </button>
             </div>
           ) : null}
 
-          {ed.draftPrompt && !ed.importError ? (
+          {ed.draftPrompt && !ed.stageNotice && !ed.cropActive ? (
             <div class="draft-restore" role="status">
               <span>
                 Unsaved edits from your last session ({ed.draftPrompt.annotations.length}{' '}
@@ -314,6 +314,8 @@ export function App() {
 }
 
 function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
+  // Chrome 95+. Feature-detected once: the answer cannot change while the page lives.
+  const [canPickScreen] = useState(() => hasScreenPicker(window));
   const sel = ed.selectedAnnotation;
   const fields = stylebarFields(ed.tool, sel?.type ?? null);
   if (stylebarEmpty(fields)) return null;
@@ -366,7 +368,7 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
                 onChange={(e) => ed.setStyleColor((e.target as HTMLInputElement).value)}
               />
             </label>
-            {CAN_PICK_SCREEN ? (
+            {canPickScreen ? (
               <button
                 class="swatch swatch-screen"
                 title="Pick a color from anywhere on screen"
@@ -449,9 +451,6 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
     </div>
   );
 }
-
-// Chrome 95+. Feature-detected once: the answer cannot change while the page lives.
-const CAN_PICK_SCREEN = hasScreenPicker(window);
 
 const BLUR_MODES: { id: BlurMode; label: string; hint: string }[] = [
   { id: 'blur', label: 'Blur', hint: 'Soft pixelation' },
