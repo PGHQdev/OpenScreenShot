@@ -33,7 +33,13 @@ export interface CaptureComplete {
 }
 
 export type CaptureErrorCode =
-  'protected-page' | 'blank-page' | 'too-large' | 'no-region' | 'not-implemented' | 'unknown';
+  | 'protected-page'
+  | 'blank-page'
+  | 'too-large'
+  | 'no-region'
+  | 'quick-action'
+  | 'not-implemented'
+  | 'unknown';
 
 export interface CaptureError {
   type: 'CAPTURE_ERROR';
@@ -90,9 +96,10 @@ export interface LastCapture {
 export type PresetId = 'ink' | 'coral' | 'dusk' | 'mint' | 'sand' | 'sky';
 
 export type FrameBackground =
-  | { kind: 'preset'; id: PresetId }
-  | { kind: 'solid'; color: string }
-  | { kind: 'transparent' };
+  { kind: 'preset'; id: PresetId } | { kind: 'solid'; color: string } | { kind: 'transparent' };
+
+/** What a finished capture does. `Settings` stores one; see src/shared/utils.ts. */
+export type CaptureAction = 'editor' | 'clipboard' | 'download';
 
 export type ExportFormat = 'png' | 'jpeg' | 'webp' | 'pdf';
 export type ThemePreference = 'light' | 'dark' | 'system';
@@ -116,6 +123,8 @@ export interface Settings {
   recentColors: string[];
   /** Seconds to wait before every capture (0 = immediate). See CAPTURE_DELAYS. */
   captureDelay: number;
+  /** What a finished capture does: open the editor, copy, or save. See CAPTURE_ACTIONS. */
+  captureAction: CaptureAction;
   /** Beautify frame (editor). Sliders are 0..100; see src/editor/frame.ts. */
   beautifyEnabled: boolean;
   beautifyPadding: number;
@@ -139,6 +148,7 @@ export const DEFAULT_SETTINGS: Settings = {
   annotationFontSize: 28,
   recentColors: [],
   captureDelay: 0,
+  captureAction: 'editor',
   beautifyEnabled: false,
   beautifyPadding: 40,
   beautifyRadius: 30,
