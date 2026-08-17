@@ -8,16 +8,19 @@
  * the service worker itself only orchestrates and captures viewport tiles with
  * `chrome.tabs.captureVisibleTab`.
  *
- * After a capture completes, the image is stashed in storage and the editor page
- * is opened in a new tab. Export (download) happens from the editor.
+ * After a capture completes, the image is stashed in storage, then delivered per
+ * the user's capture action: opened in the editor, copied to the clipboard, or
+ * downloaded directly.
  */
 import type { BackgroundMessage, CaptureMode, PopupMessage, TileSpec } from '../shared/types';
 import { getLastRegion, getSettings, setLastCapture, setLastRegion } from '../shared/storage';
 import {
+  formatFilename,
   isProtectedUrl,
   menuIdToMode,
   MENU_IDS,
   MENU_REPEAT_ID,
+  normalizeCaptureAction,
   normalizeCaptureDelay,
 } from '../shared/utils';
 import { clampRegionRect, computeScrollPositions, MAX_CANVAS_HEIGHT_PX } from '../shared/geometry';
@@ -31,6 +34,7 @@ import {
   stitchTiles,
 } from '../content/scroll-capture';
 import { selectRegion } from '../content/region-select';
+import { copyImageToClipboard } from '../content/clipboard';
 
 const EDITOR_URL = chrome.runtime.getURL('src/editor/index.html');
 
@@ -214,7 +218,7 @@ async function captureVisible(tab: chrome.tabs.Tab): Promise<void> {
   const dataUrl = await captureVisibleTabPng(windowId);
   const width = Math.round(metrics.viewportWidth * metrics.devicePixelRatio);
   const height = Math.round(metrics.viewportHeight * metrics.devicePixelRatio);
-  await handoffToEditor(dataUrl, width, height, 'visible', tab.title ?? '', tab.url ?? '');
+  await deliverCapture(tabId, dataUrl, width, height, 'visible', tab.title ?? '', tab.url ?? '');
   broadcast({ type: 'CAPTURE_COMPLETE', imageUrl: dataUrl, width, height });
 }
 
@@ -247,7 +251,7 @@ async function captureRegion(tab: chrome.tabs.Tab, repeat = false): Promise<void
   const w = Math.round(rect.width * dpr);
   const h = Math.round(rect.height * dpr);
   const dataUrl = await execInTab(tabId, cropTile, [tile, x, y, w, h]);
-  await handoffToEditor(dataUrl, w, h, 'region', tab.title ?? '', tab.url ?? '');
+  await deliverCapture(tabId, dataUrl, w, h, 'region', tab.title ?? '', tab.url ?? '');
   broadcast({ type: 'CAPTURE_COMPLETE', imageUrl: dataUrl, width: w, height: h });
 }
 
@@ -319,7 +323,8 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
   }
 
   const dataUrl = await execInTab(tabId, stitchTiles, [tiles, canvasWidth, canvasHeight, crop]);
-  await handoffToEditor(
+  await deliverCapture(
+    tabId,
     dataUrl,
     canvasWidth,
     canvasHeight,
@@ -336,10 +341,13 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
 }
 
 /**
- * Stash the captured image in storage and open the editor in a new tab. The
- * editor reads the stash on load; export (download) happens from there.
+ * Deliver a finished capture the way the user asked for. Every path stashes the
+ * capture first, so the popup's "Reopen last" link still works after a quick
+ * capture. Settings are read here rather than passed down: a full-page capture
+ * can take seconds, and the newest value is the one the user meant.
  */
-async function handoffToEditor(
+async function deliverCapture(
+  tabId: number,
   dataUrl: string,
   width: number,
   height: number,
@@ -348,7 +356,33 @@ async function handoffToEditor(
   url: string,
 ): Promise<void> {
   await setLastCapture({ dataUrl, width, height, mode, title, url, capturedAt: Date.now() });
-  await chrome.tabs.create({ url: EDITOR_URL });
+  const settings = await getSettings();
+  const action = normalizeCaptureAction(settings.captureAction);
+
+  if (action === 'editor') {
+    await chrome.tabs.create({ url: EDITOR_URL });
+    return;
+  }
+
+  if (action === 'clipboard') {
+    const copied = await execInTab(tabId, copyImageToClipboard, [dataUrl]);
+    if (!copied) {
+      broadcast({
+        type: 'CAPTURE_ERROR',
+        code: 'quick-action',
+        message: 'Could not copy the screenshot to the clipboard.',
+      });
+      return;
+    }
+    void flashDoneBadge();
+    return;
+  }
+
+  // Quick save writes PNG: the capture already is one, and the export dialog
+  // owns the format choice.
+  const base = formatFilename(settings.filenameTemplate, { title, url, width, height });
+  await chrome.downloads.download({ url: dataUrl, filename: `${base}.png`, saveAs: false });
+  void flashDoneBadge();
 }
 
 function commandToMode(command: string): CaptureMode | null {
@@ -384,6 +418,15 @@ async function flashErrorBadge(): Promise<void> {
   await chrome.action.setBadgeTextColor({ color: '#ffffff' });
   await chrome.action.setBadgeText({ text: '!' });
   await delay(4000);
+  await chrome.action.setBadgeText({ text: '' });
+}
+
+/** A quick capture opens no tab, so the badge is the only place to report success. */
+async function flashDoneBadge(): Promise<void> {
+  await chrome.action.setBadgeBackgroundColor({ color: '#34c759' });
+  await chrome.action.setBadgeTextColor({ color: '#ffffff' });
+  await chrome.action.setBadgeText({ text: '✓' });
+  await delay(1200);
   await chrome.action.setBadgeText({ text: '' });
 }
 
