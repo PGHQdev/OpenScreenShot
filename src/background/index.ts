@@ -218,8 +218,16 @@ async function captureVisible(tab: chrome.tabs.Tab): Promise<void> {
   const dataUrl = await captureVisibleTabPng(windowId);
   const width = Math.round(metrics.viewportWidth * metrics.devicePixelRatio);
   const height = Math.round(metrics.viewportHeight * metrics.devicePixelRatio);
-  await deliverCapture(tabId, dataUrl, width, height, 'visible', tab.title ?? '', tab.url ?? '');
-  broadcast({ type: 'CAPTURE_COMPLETE', imageUrl: dataUrl, width, height });
+  const delivered = await deliverCapture(
+    tabId,
+    dataUrl,
+    width,
+    height,
+    'visible',
+    tab.title ?? '',
+    tab.url ?? '',
+  );
+  if (delivered) broadcast({ type: 'CAPTURE_COMPLETE', imageUrl: dataUrl, width, height });
 }
 
 async function captureRegion(tab: chrome.tabs.Tab, repeat = false): Promise<void> {
@@ -251,8 +259,16 @@ async function captureRegion(tab: chrome.tabs.Tab, repeat = false): Promise<void
   const w = Math.round(rect.width * dpr);
   const h = Math.round(rect.height * dpr);
   const dataUrl = await execInTab(tabId, cropTile, [tile, x, y, w, h]);
-  await deliverCapture(tabId, dataUrl, w, h, 'region', tab.title ?? '', tab.url ?? '');
-  broadcast({ type: 'CAPTURE_COMPLETE', imageUrl: dataUrl, width: w, height: h });
+  const delivered = await deliverCapture(
+    tabId,
+    dataUrl,
+    w,
+    h,
+    'region',
+    tab.title ?? '',
+    tab.url ?? '',
+  );
+  if (delivered) broadcast({ type: 'CAPTURE_COMPLETE', imageUrl: dataUrl, width: w, height: h });
 }
 
 async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
@@ -323,7 +339,7 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
   }
 
   const dataUrl = await execInTab(tabId, stitchTiles, [tiles, canvasWidth, canvasHeight, crop]);
-  await deliverCapture(
+  const delivered = await deliverCapture(
     tabId,
     dataUrl,
     canvasWidth,
@@ -332,12 +348,14 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
     tab.title ?? '',
     tab.url ?? '',
   );
-  broadcast({
-    type: 'CAPTURE_COMPLETE',
-    imageUrl: dataUrl,
-    width: canvasWidth,
-    height: canvasHeight,
-  });
+  if (delivered) {
+    broadcast({
+      type: 'CAPTURE_COMPLETE',
+      imageUrl: dataUrl,
+      width: canvasWidth,
+      height: canvasHeight,
+    });
+  }
 }
 
 /**
@@ -345,6 +363,10 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
  * capture first, so the popup's "Reopen last" link still works after a quick
  * capture. Settings are read here rather than passed down: a full-page capture
  * can take seconds, and the newest value is the one the user meant.
+ *
+ * Returns whether delivery actually happened — callers broadcast `CAPTURE_COMPLETE`
+ * only on `true`, so a failed clipboard copy doesn't chase its own `CAPTURE_ERROR`
+ * with a completion message (the popup closes itself on `CAPTURE_COMPLETE`).
  */
 async function deliverCapture(
   tabId: number,
@@ -354,14 +376,14 @@ async function deliverCapture(
   mode: CaptureMode,
   title: string,
   url: string,
-): Promise<void> {
+): Promise<boolean> {
   await setLastCapture({ dataUrl, width, height, mode, title, url, capturedAt: Date.now() });
   const settings = await getSettings();
   const action = normalizeCaptureAction(settings.captureAction);
 
   if (action === 'editor') {
     await chrome.tabs.create({ url: EDITOR_URL });
-    return;
+    return true;
   }
 
   if (action === 'clipboard') {
@@ -372,10 +394,10 @@ async function deliverCapture(
         code: 'quick-action',
         message: 'Could not copy the screenshot to the clipboard.',
       });
-      return;
+      return false;
     }
     void flashDoneBadge();
-    return;
+    return true;
   }
 
   // Quick save writes PNG: the capture already is one, and the export dialog
@@ -383,6 +405,7 @@ async function deliverCapture(
   const base = formatFilename(settings.filenameTemplate, { title, url, width, height });
   await chrome.downloads.download({ url: dataUrl, filename: `${base}.png`, saveAs: false });
   void flashDoneBadge();
+  return true;
 }
 
 function commandToMode(command: string): CaptureMode | null {
