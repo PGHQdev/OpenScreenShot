@@ -73,7 +73,7 @@ Full page and region capture need to run code in the page. For a full page captu
 **storage**
 
 ```
-chrome.storage.local holds three things, all on the device: the user settings (export format and quality, PDF page size, filename template, delay), the last region rectangle so "Repeat last region" can reuse it, and the capture that was just taken, which the editor page reads on open and then deletes. The extension has no server and no account, so this local store is the only place state can live. Nothing is sent anywhere.
+chrome.storage.local holds five things, all on the device: the user settings (export format and quality, PDF page size, filename template, delay), the last region rectangle so "Repeat last region" can reuse it, the capture that was just taken, which the editor page reads on open and then deletes, and a crash-safety draft (the current annotations, plus the cropped image when a crop changed the picture) that the editor saves as the user works so a closed tab or a crash does not lose unsaved edits. The extension has no server and no account, so this local store is the only place state can live. Nothing is sent anywhere.
 ```
 
 **unlimitedStorage**
@@ -85,13 +85,19 @@ A capture is handed to the editor through chrome.storage.local as a PNG data URL
 **downloads**
 
 ```
-Saving is the end of the workflow. When the user exports from the editor, the extension calls chrome.downloads.download with the generated PNG, JPEG, WebP, or PDF and the filename built from the user's template, so the file lands in the normal Downloads folder. The URL passed is always a local data or blob URL produced by the extension. The extension never reads, searches, or opens the user's download history.
+Saving is the end of the workflow. The extension calls chrome.downloads.download with the filename built from the user's template so the file lands in the normal Downloads folder, either when the user exports from the editor with the generated PNG, JPEG, WebP, or PDF, or when quick mode is set to save to disk, which downloads the capture straight from the background service worker without opening the editor. The URL passed is always a local data or blob URL produced by the extension. The extension never reads, searches, or opens the user's download history.
 ```
 
 **contextMenus**
 
 ```
 OpenScreenShot uses contextMenus to add one "OpenScreenShot" submenu to the page right-click menu. The submenu holds the same capture actions as the toolbar popup: Full page, Visible area, Region, and Repeat last region. This gives users a second way to start a capture, next to the toolbar button and the keyboard shortcuts. The menu items are static and are created once at install time. The extension reads only the ID of the clicked menu item to select the capture mode. It does not read the page, the selected text, the link URL, or any other data from the click event. A click grants activeTab for that capture, in the same way that opening the popup does. Without this permission the right-click capture entry point cannot exist.
+```
+
+**clipboardWrite**
+
+```
+Copy to clipboard is one of the ways to get a screenshot out of the extension. The editor's Copy button and quick mode's clipboard action both build a PNG and call navigator.clipboard.write with it. A service worker has no navigator.clipboard, so the quick mode path injects a small self-contained function into the captured tab with chrome.scripting.executeScript to make that call, then removes it once the write finishes. The extension only ever writes the screenshot the user just captured or exported to the clipboard; it never reads the clipboard's existing contents.
 ```
 
 **Remote code**: No, I am not using remote code. All scripts are in the package.
