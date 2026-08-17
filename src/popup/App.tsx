@@ -1,15 +1,23 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import type { CaptureMode, ExportFormat, PopupMessage, Settings } from '../shared/types';
+import type {
+  CaptureAction,
+  CaptureMode,
+  ExportFormat,
+  PopupMessage,
+  Settings,
+} from '../shared/types';
 import { DEFAULT_SETTINGS } from '../shared/types';
 import { getLastRegion, getSettings, hasLastCapture, setSettings } from '../shared/storage';
 import { onPopupMessage, sendToBackground } from '../shared/messaging';
 import { BrandMark } from '../shared/BrandMark';
 import { resolveModeKeys } from '../shared/shortcuts';
 import {
+  CAPTURE_ACTIONS,
   CAPTURE_DELAYS,
   FILENAME_TOKENS,
   formatFilename,
   insertToken,
+  normalizeCaptureAction,
   normalizeCaptureDelay,
 } from '../shared/utils';
 
@@ -47,6 +55,12 @@ interface ModeDef {
   titleKey: string;
   subtitleKey: string;
 }
+
+const ACTION_LABEL_KEYS: Record<CaptureAction, string> = {
+  editor: 'actionEditor',
+  clipboard: 'actionClipboard',
+  download: 'actionDownload',
+};
 
 const MODES: ModeDef[] = [
   {
@@ -152,9 +166,11 @@ export function App() {
   function capture(mode: CaptureMode, repeat = false) {
     if (busy) return;
     setBusy(mode);
-    // Region needs the page free for the overlay; a delayed capture needs it
-    // free so the user can set up the hover state — both close the popup.
-    if (mode === 'region' || normalizeCaptureDelay(settings.captureDelay) > 0) {
+    // Region needs the page free for the overlay, a delayed capture needs it
+    // free so the user can set up the hover state, and a clipboard capture
+    // needs the page focused before it can write — all three close the popup.
+    const quickCopy = normalizeCaptureAction(settings.captureAction) === 'clipboard';
+    if (mode === 'region' || normalizeCaptureDelay(settings.captureDelay) > 0 || quickCopy) {
       // Close only AFTER the request is delivered — closing first can drop the
       // message to a cold service worker, so region would silently no-op on the
       // first click and only work once the worker is warm.
@@ -294,6 +310,25 @@ export function App() {
               ))}
             </div>
           </div>
+
+          <div class="settings-row delay-row">
+            <span class="settings-label">{t('afterCaptureLabel')}</span>
+            <div class="seg">
+              {CAPTURE_ACTIONS.map((a) => (
+                <button
+                  key={a}
+                  class="seg-btn"
+                  aria-pressed={normalizeCaptureAction(settings.captureAction) === a}
+                  onClick={() => updateSettings({ captureAction: a })}
+                >
+                  {t(ACTION_LABEL_KEYS[a])}
+                </button>
+              ))}
+            </div>
+          </div>
+          {normalizeCaptureAction(settings.captureAction) === 'download' ? (
+            <span class="settings-hint">{t('actionHintPng')}</span>
+          ) : null}
 
           <div class="divider" />
 
