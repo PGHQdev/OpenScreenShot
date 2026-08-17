@@ -48,6 +48,50 @@ WHO IT IS FOR
 Developers filing bug reports, QA testers, designers collecting references, writers building tutorials and documentation, support teams, and anyone who needs a scrolling screenshot of an entire webpage.
 ```
 
+## Permission justifications (Privacy practices tab)
+
+One field per permission in `manifest.json`. Paste as plain text.
+
+**activeTab**
+
+```
+The capture runs against the tab the user acts on. A click on the toolbar button, a click on the OpenScreenShot right-click menu item, or one of the keyboard shortcuts grants activeTab for that tab, and the extension then reads its pixels with chrome.tabs.captureVisibleTab and injects the scroll and region-select helpers into it. activeTab keeps this scoped to the one tab the user chose, so the extension declares no host permissions and has no standing access to any site. Without it there is no way to screenshot the page the user is looking at.
+```
+
+**scripting**
+
+```
+Full page and region capture need to run code in the page. For a full page capture the extension injects a function that reads the document height, scrolls the page step by step, hides sticky and fixed elements during the scroll, and restores the scroll position afterwards; the visible frames are stitched into one image. For a region capture it injects the drag-to-select overlay that returns the chosen rectangle. Both scripts are self-contained functions bundled in the package, injected with chrome.scripting.executeScript only into the tab granted by activeTab, and removed when the capture ends. No remote code is loaded.
+```
+
+**storage**
+
+```
+chrome.storage.local holds three things, all on the device: the user settings (export format and quality, PDF page size, filename template, delay), the last region rectangle so "Repeat last region" can reuse it, and the capture that was just taken, which the editor page reads on open and then deletes. The extension has no server and no account, so this local store is the only place state can live. Nothing is sent anywhere.
+```
+
+**unlimitedStorage**
+
+```
+A capture is handed to the editor through chrome.storage.local as a PNG data URL. A full page screenshot of a long page is often larger than the 10 MB default quota for chrome.storage.local, so the write fails and the capture is lost without this permission. unlimitedStorage raises that limit. The extension writes one capture at a time and deletes it once the editor has loaded it.
+```
+
+**downloads**
+
+```
+Saving is the end of the workflow. When the user exports from the editor, the extension calls chrome.downloads.download with the generated PNG, JPEG, WebP, or PDF and the filename built from the user's template, so the file lands in the normal Downloads folder. The URL passed is always a local data or blob URL produced by the extension. The extension never reads, searches, or opens the user's download history.
+```
+
+**contextMenus**
+
+```
+OpenScreenShot uses contextMenus to add one "OpenScreenShot" submenu to the page right-click menu. The submenu holds the same capture actions as the toolbar popup: Full page, Visible area, Region, and Repeat last region. This gives users a second way to start a capture, next to the toolbar button and the keyboard shortcuts. The menu items are static and are created once at install time. The extension reads only the ID of the clicked menu item to select the capture mode. It does not read the page, the selected text, the link URL, or any other data from the click event. A click grants activeTab for that capture, in the same way that opening the popup does. Without this permission the right-click capture entry point cannot exist.
+```
+
+**Remote code**: No, I am not using remote code. All scripts are in the package.
+
+**Data usage**: no data collected. The extension has no network code and no host permissions.
+
 ## Assets
 
 - Screenshots: `docs/assets/store/cws-1..4.jpg` (1280x800) — rendered by `npm run shots`
@@ -59,4 +103,6 @@ Developers filing bug reports, QA testers, designers collecting references, writ
 1. Paste the full description above.
 2. Upload the four screenshots and the promo tile.
 3. Confirm category (Tools) and language (English).
-4. Title and summary update only when the next release package is uploaded.
+4. On the Privacy practices tab, paste one justification per permission from the
+   section above, then answer the remote code and data usage questions.
+5. Title and summary update only when the next release package is uploaded.
