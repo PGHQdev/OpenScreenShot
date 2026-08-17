@@ -3,6 +3,7 @@
   "version": "1.1.0",
   "description": "Local CLI + MCP server for programmatic screenshot capture.",
   "license": "MIT",
+  "author": "OpenScreenShot @PGHQdev",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/PGHQdev/OpenScreenShot.git",
