@@ -86,6 +86,14 @@ export interface LastCapture {
 
 // --- Settings --------------------------------------------------------------
 
+/** Beautify frame background. `Settings` stores one; see src/editor/frame.ts. */
+export type PresetId = 'ink' | 'coral' | 'dusk' | 'mint' | 'sand' | 'sky';
+
+export type FrameBackground =
+  | { kind: 'preset'; id: PresetId }
+  | { kind: 'solid'; color: string }
+  | { kind: 'transparent' };
+
 export type ExportFormat = 'png' | 'jpeg' | 'webp' | 'pdf';
 export type ThemePreference = 'light' | 'dark' | 'system';
 
