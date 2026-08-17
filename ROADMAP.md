@@ -30,9 +30,9 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 | Resize every annotation type                              | ✅ shipped | Landed in v0.6.0: pen and highlighter scale freely on their bbox; text and step badges scale uniformly from corner handles.   |
 | Number keys `1`–`8` set the color                         | ✅ shipped | Landed in v0.5.0 across the whole palette, matching the letter keys on the toolbar.                                           |
 | Double-click a text layer to re-edit it                   | ✅ shipped | Landed in v0.5.0 on the select tool. Reopens the existing text overlay on a committed annotation.                             |
-| Beautify mode: padding, rounded corners, shadow, gradient | 📋 planned | Polish screenshots for sharing — pure canvas compositing. Needs an outer frame the viewport, crop, and PDF paths all respect. |
+| Beautify mode: padding, rounded corners, shadow, gradient | ✅ shipped | Landed in v0.7.0: a topbar panel with padding, corner, and shadow sliders plus six gradient presets, transparent, and a custom solid. The frame previews live and travels into every export, the clipboard, and PDF. The screenshot's top-left stays image `(0,0)`, so every tool and the crop path were left untouched. |
 | Eyedropper color picker                                   | 📋 planned | Sample any pixel of the capture itself; the native EyeDropper API covers the rest of the screen.                              |
-| Resize / scale at export (50%, fixed width, …)            | 📋 planned | Offscreen-canvas scaling in the export dialog.                                                                                |
+| Resize / scale at export (50%, fixed width, …)            | ✅ shipped | Landed in v0.7.0: 25/50/100/200% or an exact pixel width, hidden for PDF. Resamples the composed canvas through repeated halvings, and refuses sizes past Chrome's canvas limits instead of writing an empty file. |
 | Drag & drop / paste any image into the editor             | 📋 planned | Turns the editor into a general-purpose annotation tool.                                                                      |
 
 ## Power features
@@ -62,6 +62,8 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 
 | Feature                                                 | Version |
 | ------------------------------------------------------- | ------- |
+| Beautify mode: padding, rounded corners, shadow, gradient | v0.7.0  |
+| Resize / scale at export (25/50/100/200% or a width)     | v0.7.0  |
 | Delayed capture (3s / 5s / 10s timer)                   | v0.6.1  |
 | Right-click context menu capture                        | v0.6.1  |
 | Repeat last region                                      | v0.6.1  |
@@ -87,4 +89,4 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 
 ---
 
-_Last updated for v0.6.1._
+_Last updated for v0.7.0._
