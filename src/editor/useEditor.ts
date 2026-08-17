@@ -55,6 +55,7 @@ import { formatFilename } from '../shared/utils';
 import { pushRecent } from './palette';
 import { canvasToDataUrl, downloadDataUrl, withExtension, type ImageFormat } from './export';
 import { exportPdf as exportPdfFile, type PdfOptions } from './pdf';
+import { resampleToWidth } from './scale';
 
 export interface TextOverlayPos {
   x: number;
@@ -815,12 +816,16 @@ export function useEditor() {
   }, [settings, imageSize, capture]);
 
   const exportImage = useCallback(
-    async (format: ImageFormat, quality: number, filenameBase: string) => {
+    async (format: ImageFormat, quality: number, filenameBase: string, targetWidth?: number) => {
       const c = controllerRef.current;
       if (!c || !c.image) return;
       setExporting(true);
       try {
-        const canvas = c.composeFinal();
+        const composed = c.composeFinal();
+        const canvas =
+          targetWidth && targetWidth !== composed.width
+            ? resampleToWidth(composed, targetWidth)
+            : composed;
         const dataUrl = canvasToDataUrl(canvas, format, quality);
         await downloadDataUrl(dataUrl, withExtension(filenameBase, format));
       } finally {

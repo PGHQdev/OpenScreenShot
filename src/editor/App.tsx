@@ -12,6 +12,13 @@ import { ZoomMenu } from './ZoomMenu';
 import { BeautifyMenu } from './BeautifyMenu';
 import { stylebarEmpty, stylebarFields } from './stylebar';
 import { ShortcutSheet } from './ShortcutSheet';
+import {
+  clampTargetWidth,
+  MAX_EXPORT_SCALE,
+  MIN_EXPORT_WIDTH,
+  scaledHeight,
+  SCALE_PRESETS,
+} from './scale';
 
 type DialogFormat = ImageFormat | 'pdf';
 
@@ -386,6 +393,9 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
     df === 'pdf' || df === 'png' || df === 'jpeg' || df === 'webp' ? df : 'png';
   const [format, setFormat] = useState<DialogFormat>(initialFormat);
   const [quality, setQuality] = useState(ed.settings?.quality ?? 0.92);
+  // Scale is per-export intent: it starts at 100% every time the dialog opens
+  // and stays out of "Remember these settings".
+  const [targetWidth, setTargetWidth] = useState<number | null>(null);
   const [filenameBase, setFilenameBase] = useState(ed.defaultFilename());
 
   const [pdfPageSize, setPdfPageSize] = useState<'a4' | 'letter' | 'full'>(
@@ -430,6 +440,11 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
   const showPdfOptions = format === 'pdf';
   const ext = format === 'pdf' ? 'pdf' : format === 'jpeg' ? 'jpg' : format;
 
+  const composed = ed.composedSize;
+  const outW = targetWidth ?? composed?.w ?? 0;
+  const outH = composed ? scaledHeight(composed.w, composed.h, outW) : 0;
+  const showScale = format !== 'pdf' && composed !== null;
+
   async function doExport() {
     // The Export button disables on the next render once busy is true, and
     // Chrome moves focus to <body> when the focused element is disabled.
@@ -448,7 +463,7 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
         };
         await ed.exportPdf(opts, filenameBase);
       } else {
-        await ed.exportImage(format, quality, filenameBase);
+        await ed.exportImage(format, quality, filenameBase, targetWidth ?? undefined);
       }
       // The export is the action the user asked for. Persisting the choice is a
       // convenience, so it runs after and can never prevent the export.
@@ -530,6 +545,46 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
             <span class="format-hint">Document · multi-page</span>
           </button>
         </div>
+
+        {showScale && composed ? (
+          <div class="modal-row">
+            <div class="field-label">Scale</div>
+            <div class="segmented">
+              {SCALE_PRESETS.map((p) => {
+                const w = Math.max(1, Math.round(composed.w * p));
+                return (
+                  <button
+                    key={p}
+                    class={`segmented-btn${outW === w ? ' is-selected' : ''}`}
+                    aria-pressed={outW === w}
+                    onClick={() => setTargetWidth(p === 1 ? null : w)}
+                  >
+                    {p * 100}%
+                  </button>
+                );
+              })}
+            </div>
+            <label class="check-label">
+              Width
+              <input
+                class="num-input"
+                type="number"
+                min={MIN_EXPORT_WIDTH}
+                max={composed.w * MAX_EXPORT_SCALE}
+                value={outW}
+                onChange={(e) =>
+                  setTargetWidth(
+                    clampTargetWidth(Number((e.target as HTMLInputElement).value), composed.w),
+                  )
+                }
+              />
+              px
+            </label>
+            <span class="scale-readout">
+              {composed.w} × {composed.h} → {outW} × {outH}
+            </span>
+          </div>
+        ) : null}
 
         {showQuality ? (
           <div class="modal-row">
