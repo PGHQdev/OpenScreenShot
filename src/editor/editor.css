@@ -911,3 +911,8 @@ body {
     linear-gradient(-45deg, #d9d9de 25%, transparent 25%) 0 4px / 8px 8px,
     #fff;
 }
+
+.scale-readout {
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
