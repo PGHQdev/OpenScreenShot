@@ -178,5 +178,25 @@
   "repeatLastRegion": {
     "message": "Repeat region",
     "description": "Footer link and context menu item that re-captures the previous region selection."
+  },
+  "afterCaptureLabel": {
+    "message": "After capture",
+    "description": "Label for the row that picks what a finished capture does."
+  },
+  "actionEditor": {
+    "message": "Editor",
+    "description": "Post-capture action that opens the annotation editor."
+  },
+  "actionClipboard": {
+    "message": "Clipboard",
+    "description": "Post-capture action that copies the screenshot and skips the editor."
+  },
+  "actionDownload": {
+    "message": "Download",
+    "description": "Post-capture action that saves the screenshot and skips the editor."
+  },
+  "actionHintPng": {
+    "message": "Quick save writes a PNG.",
+    "description": "Hint shown under the after-capture row when Download is selected."
   }
 }
