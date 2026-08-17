@@ -50,10 +50,11 @@ import {
   type Tool,
 } from './tools';
 import type { LastCapture, Settings } from '../shared/types';
-import { getLastCapture, getSettings, setSettings } from '../shared/storage';
+import { getLastCapture, getSettings, setLastCapture, setSettings } from '../shared/storage';
 import { formatFilename } from '../shared/utils';
 import { pushRecent } from './palette';
 import { canvasToDataUrl, downloadDataUrl, withExtension, type ImageFormat } from './export';
+import { importSizeError, readImageFile, titleFromFilename } from './import-image';
 import { exportPdf as exportPdfFile, type PdfOptions } from './pdf';
 import { resampleToWidth } from './scale';
 
@@ -63,6 +64,13 @@ export interface TextOverlayPos {
   fontSize: number;
   width: number;
   height: number;
+}
+
+/** A decoded import waiting on the user's answer to "replace what is here?". */
+interface PendingImport {
+  name: string;
+  dataUrl: string;
+  img: HTMLImageElement;
 }
 
 type Interaction =
@@ -107,6 +115,8 @@ export function useEditor() {
   const [spotlightShape, setSpotlightShapeState] = useState<SpotlightShape>('rect');
   const [blurMode, setBlurModeState] = useState<BlurMode>('blur');
   const [frame, setFrameState] = useState<FrameOptions>(DEFAULT_FRAME);
+  const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
 
   // Refs for use inside stable event handlers (avoid stale closures).
   const toolRef = useRef(tool);
@@ -830,6 +840,77 @@ export function useEditor() {
     cancelCrop();
   }, [cancelCrop]);
 
+  /**
+   * Put an imported image on the canvas. Annotation coordinates belong to the
+   * image they were drawn on, so the list, the history, and any open crop go
+   * with the old one. The beautify frame stays: it is a preference, not part of
+   * the document.
+   */
+  const applyImport = useCallback(
+    (p: PendingImport) => {
+      const c = controllerRef.current;
+      if (!c) return;
+      const width = p.img.naturalWidth;
+      const height = p.img.naturalHeight;
+      const cap: LastCapture = {
+        dataUrl: p.dataUrl,
+        width,
+        height,
+        mode: 'import',
+        title: titleFromFilename(p.name),
+        capturedAt: Date.now(),
+      };
+      // Stashed like a capture, so the popup's "Reopen last" and a page reload
+      // both find it.
+      void setLastCapture(cap);
+      setCapture(cap);
+      setImageSize({ w: width, h: height });
+      setAnnotations([]);
+      setPast([]);
+      setFuture([]);
+      setSelectedId(null);
+      setTextEdit(null);
+      cancelCrop();
+      setError(null);
+      setImportError(null);
+      setPendingImport(null);
+      c.setImage(p.img);
+    },
+    [cancelCrop],
+  );
+
+  /** Read a dropped or pasted file, then import it — asking first if it would destroy work. */
+  const importFromFile = useCallback(
+    async (file: File) => {
+      setImportError(null);
+      let next: PendingImport;
+      try {
+        const { dataUrl, img } = await readImageFile(file);
+        next = { name: file.name, dataUrl, img };
+        const sizeError = importSizeError(img.naturalWidth, img.naturalHeight);
+        if (sizeError) {
+          setImportError(sizeError);
+          return;
+        }
+      } catch {
+        setImportError('Could not read that image.');
+        return;
+      }
+      if (annotationsRef.current.length > 0) setPendingImport(next);
+      else applyImport(next);
+    },
+    [applyImport],
+  );
+
+  // applyImport clears pendingImport itself, so this reads the value rather
+  // than calling into it from inside a state updater.
+  const confirmImport = useCallback(() => {
+    if (pendingImport) applyImport(pendingImport);
+  }, [pendingImport, applyImport]);
+
+  const cancelImport = useCallback(() => setPendingImport(null), []);
+  const dismissImportError = useCallback(() => setImportError(null), []);
+
   const defaultFilename = useCallback(() => {
     const tmpl = settings?.filenameTemplate ?? 'screenshot_{date}_{time}';
     return formatFilename(tmpl, {
@@ -959,6 +1040,12 @@ export function useEditor() {
     defaultFilename,
     exporting,
     settings,
+    importFromFile,
+    pendingImport,
+    confirmImport,
+    cancelImport,
+    importError,
+    dismissImportError,
   };
 }
 
