@@ -24,6 +24,7 @@ CAPTURE
 • Visible area — grab what is on screen right now
 • Delayed capture (3s / 5s / 10s) for menus and hover states
 • Right-click context menu and keyboard shortcuts for every mode
+• Quick mode: copy to clipboard or save to disk without opening the editor
 
 ANNOTATE
 • Arrows, shapes, lines, text, and highlighter
