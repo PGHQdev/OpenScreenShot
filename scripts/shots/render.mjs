@@ -70,11 +70,14 @@ try {
       console.log(`✓ ${store} (${STORE_SIZE.w}x${STORE_SIZE.h})`);
     }
   }
-  // Promo tile: the store wants exactly 440x280, JPEG or 24-bit PNG. Rendered
-  // at 2x like the shots, then downscaled straight into the store directory.
-  {
-    const src = resolve('scripts/shots/promo-tile.html');
-    const png = join(work, 'promo-tile.png');
+  // Store promo images: exact sizes, JPEG or 24-bit PNG. Rendered at 2x like
+  // the shots, then downscaled straight into the store directory.
+  for (const { name, w, h } of [
+    { name: 'promo-tile', w: 440, h: 280 },
+    { name: 'marquee', w: 1400, h: 560 },
+  ]) {
+    const src = resolve(`scripts/shots/${name}.html`);
+    const png = join(work, `${name}.png`);
     await execFileP(
       CHROME,
       [
@@ -83,21 +86,21 @@ try {
         '--hide-scrollbars',
         '--no-first-run',
         '--disable-extensions',
-        `--user-data-dir=${join(work, 'profile-promo-tile')}`,
+        `--user-data-dir=${join(work, 'profile-' + name)}`,
         `--screenshot=${png}`,
-        '--window-size=440,280',
+        `--window-size=${w},${h}`,
         '--force-device-scale-factor=2',
         `file://${src}`,
       ],
       { timeout: 30_000 },
     );
-    const tile = `${STORE_DIR}/promo-tile.jpg`;
+    const out = `${STORE_DIR}/${name}.jpg`;
     await sharp(png)
-      .resize(440, 280, { fit: 'cover' })
+      .resize(w, h, { fit: 'cover' })
       .flatten({ background: '#f2f0ea' })
       .jpeg({ quality: 92 })
-      .toFile(tile);
-    console.log(`✓ ${tile} (440x280)`);
+      .toFile(out);
+    console.log(`✓ ${out} (${w}x${h})`);
   }
 } finally {
   await rm(work, { recursive: true, force: true });
