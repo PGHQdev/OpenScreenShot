@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { clampRegionRect, computeScrollPositions, MAX_CANVAS_HEIGHT_PX } from '../../src/shared/geometry';
+import {
+  clampRegionRect,
+  computeScrollPositions,
+  MAX_CANVAS_HEIGHT_PX,
+} from '../../src/shared/geometry';
 
 describe('computeScrollPositions', () => {
   it('returns a single [0] when the page fits in one viewport', () => {
