@@ -101,3 +101,70 @@ export function frameMetrics(opts: FrameOptions, imgW: number, imgH: number): Fr
     outerH: imgH + pad * 2,
   };
 }
+
+const PRESET_BY_ID: Record<PresetId, BackgroundPreset> = Object.fromEntries(
+  BACKGROUND_PRESETS.map((p) => [p.id, p]),
+) as Record<PresetId, BackgroundPreset>;
+
+/**
+ * Paint the background and the drop shadow. The ctx origin must sit at the
+ * screenshot's top-left; the frame is drawn out into negative coordinates.
+ *
+ * `scale` carries the caller's zoom because shadowBlur and shadowOffsetY are
+ * applied in output space and ignore the transform matrix — without it the
+ * preview and the export would disagree about shadow size.
+ */
+export function paintFrame(
+  ctx: CanvasRenderingContext2D,
+  m: FrameMetrics,
+  bg: FrameBackground,
+  scale: number,
+): void {
+  if (m.pad === 0 && m.radius === 0 && m.shadowAlpha === 0) return;
+
+  if (bg.kind !== 'transparent') {
+    ctx.save();
+    ctx.fillStyle =
+      bg.kind === 'solid' ? bg.color : presetGradient(ctx, bg.id, -m.pad, -m.pad, m.outerW, m.outerH);
+    ctx.fillRect(-m.pad, -m.pad, m.outerW, m.outerH);
+    ctx.restore();
+  }
+
+  if (m.shadowAlpha > 0) {
+    ctx.save();
+    ctx.shadowColor = `rgba(0, 0, 0, ${m.shadowAlpha})`;
+    ctx.shadowBlur = m.shadowBlur * scale;
+    ctx.shadowOffsetY = m.shadowOffsetY * scale;
+    // The plate is hidden by the screenshot drawn over it; it exists to cast.
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.roundRect(0, 0, m.imgW, m.imgH, m.radius);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+/** Clip to the screenshot's rounded rect. Callers draw the image inside it. */
+export function clipToFrame(ctx: CanvasRenderingContext2D, m: FrameMetrics): void {
+  ctx.beginPath();
+  ctx.roundRect(0, 0, m.imgW, m.imgH, m.radius);
+  ctx.clip();
+}
+
+function presetGradient(
+  ctx: CanvasRenderingContext2D,
+  id: PresetId,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+): CanvasGradient {
+  const p = PRESET_BY_ID[id] ?? BACKGROUND_PRESETS[0];
+  const g =
+    p.direction === 'vertical'
+      ? ctx.createLinearGradient(x, y, x, y + h)
+      : ctx.createLinearGradient(x, y, x + w, y + h);
+  g.addColorStop(0, p.from);
+  g.addColorStop(1, p.to);
+  return g;
+}

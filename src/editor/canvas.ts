@@ -13,6 +13,7 @@ import {
   type SpotlightLayerCache,
 } from './annotations';
 import { clampZoom, fitZoom } from './viewport';
+import { clipToFrame, DEFAULT_FRAME, frameMetrics, paintFrame, type FrameOptions } from './frame';
 
 /**
  * CanvasController — imperative owner of the editor's <canvas>.
@@ -52,6 +53,8 @@ export class CanvasController {
   selectedId: string | null = null;
   /** A transient crop rectangle (tool action), rendered as a dim preview. */
   cropRect: Rect | null = null;
+  /** Beautify frame. Document-level, so it lives beside the image, not the annotations. */
+  frame: FrameOptions = DEFAULT_FRAME;
   /** Called whenever the viewport changes (zoom/pan) — not on annotation edits. */
   onViewChange: (() => void) | null = null;
 
@@ -99,6 +102,11 @@ export class CanvasController {
 
   setCropRect(r: Rect | null): void {
     this.cropRect = r;
+    this.render();
+  }
+
+  setFrame(f: FrameOptions): void {
+    this.frame = f;
     this.render();
   }
 
@@ -229,15 +237,21 @@ export class CanvasController {
     }
   }
 
-  /** Composite the image + annotations at full image resolution (no zoom/pan) for export. */
+  /** Composite the frame + image + annotations at full image resolution for export. */
   composeFinal(): HTMLCanvasElement {
     const img = this.image;
     if (!img) throw new Error('No image to export');
+    const m = frameMetrics(this.frame, img.naturalWidth, img.naturalHeight);
     const canvas = document.createElement('canvas');
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
+    canvas.width = m.outerW;
+    canvas.height = m.outerH;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Canvas 2D context unavailable');
+    // Origin at the screenshot's top-left, matching annotation coordinates.
+    ctx.translate(m.pad, m.pad);
+    paintFrame(ctx, m, this.frame.background, 1);
+    ctx.save();
+    clipToFrame(ctx, m);
     ctx.drawImage(img, 0, 0);
     ctx.save();
     drawSpotlightLayer(
@@ -253,6 +267,7 @@ export class CanvasController {
       drawAnnotation(ctx, a, img, this.blurCache);
       ctx.restore();
     }
+    ctx.restore();
     return canvas;
   }
 }
