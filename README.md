@@ -39,6 +39,8 @@ Built as a Manifest V3 extension with no servers, no accounts, and no telemetry.
 - **Full Page** — scroll-and-stitch the whole page top to bottom with live progress; fixed headers are composited once at the top. Works on pages that scroll an inner element, too.
 - **Visible Area** — capture exactly what's on screen right now.
 - **Selected Region** — click & drag to grab an area, with a Capture/Cancel bar to confirm.
+- Start a capture from the popup, a keyboard shortcut, or the page's right-click menu — and repeat the last region in one click
+- Delayed capture: hold the shot for 3, 5, or 10 seconds, with a countdown on the badge, for menus and hover states that close when you click
 - Quick mode: send a capture straight to the clipboard or straight to disk, skipping the editor
 - **Annotation editor** — rectangle, arrow, line, pen, highlighter, text, numbered step badges, blur (soft, mosaic, or solid redaction), spotlight, crop; select, move/resize any annotation, undo/redo; hold Shift for squares and 45° lines; color, stroke width & font size remembered across sessions.
 - Eyedropper (`I`): take a color from the capture, or from anywhere on screen
@@ -47,7 +49,7 @@ Built as a Manifest V3 extension with no servers, no accounts, and no telemetry.
 - Beautify: padding, rounded corners, drop shadow, and a gradient, solid, or transparent background
 - **Export** — PNG, JPEG, WebP, and PDF (single or multi-page with overlap), or copy straight to clipboard with `Cmd/Ctrl+C`.
 - Export at any scale: 25 / 50 / 100 / 200 % or an exact pixel width
-- **Keyboard-first** — capture shortcuts, number keys `1`–`3` in the popup, `1`–`8` for the editor palette, and a "reopen last capture" escape hatch.
+- **Keyboard-first** — capture shortcuts, number keys `1`–`3` in the popup, `1`–`8` for the editor palette, `?` for the full shortcut sheet, and a "reopen last capture" escape hatch.
 - **Settings** — theme, default format, quality, filename template, PDF defaults.
 - **Polished & accessible** — dark/light UI, modal focus trap, toolbar arrow-key navigation.
 
@@ -90,13 +92,15 @@ hands you the PNG.
 OpenScreenShot requests the minimum permissions a screenshot tool needs — and explains
 every one:
 
-| Permission                       | Why                                                                                                |
-| -------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `activeTab`                      | Access the current tab — only when you click the extension or use a shortcut                       |
-| `scripting`                      | Inject on-demand page functions for scroll-and-stitch & region selection                           |
-| `storage` (+ `unlimitedStorage`) | Settings, onboarding state, and stashing large full-page PNGs for the editor                       |
-| `downloads`                      | Save exports to your Downloads folder                                                              |
-| `options_ui`                     | The editor is registered as a full-tab options page so crxjs bundles it; opened after each capture |
+| Permission                       | Why                                                                                                                     |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `activeTab`                      | Access the current tab — only when you click the extension, use a shortcut, or pick a capture from the right-click menu |
+| `scripting`                      | Inject on-demand page functions for scroll-and-stitch, region selection, and the quick-mode clipboard write             |
+| `storage` (+ `unlimitedStorage`) | Settings, onboarding state, the last region rect, editing drafts, and stashing large full-page PNGs for the editor      |
+| `downloads`                      | Save exports, and quick-mode captures, to your Downloads folder                                                         |
+| `contextMenus`                   | Add one capture submenu to the page right-click menu                                                                    |
+| `clipboardWrite`                 | Copy a screenshot from the editor or from quick mode; it never reads the clipboard                                      |
+| `options_ui`                     | The editor is registered as a full-tab options page so crxjs bundles it; opened after each capture                      |
 
 **`host_permissions` is empty.** We never request `<all_urls>` — `activeTab` grants access
 on your click, and `scripting` runs only within that grant. The extension cannot read any
@@ -120,8 +124,9 @@ Read the full [Privacy Policy](./PRIVACY.md).
 - **TypeScript** (strict) + **Preact** for the popup/editor UI
 - **Vite** + **[@crxjs/vite-plugin](https://github.com/crxjs/crxjs)** for Manifest V3 bundling & HMR
 - **Canvas compositing in-page** via on-demand `chrome.scripting` injection (no offscreen document needed)
-- **[jsPDF](https://github.com/parallax/jsPDF)** (lazy-loaded, zero vulnerabilities) for PDF export
-- **Vitest** for unit tests, **Playwright** for e2e (planned)
+- **A built-in PDF writer** (`src/editor/pdf-writer.ts`) — it places raster images on pages and deflates them with the browser's own `CompressionStream`. It replaced jsPDF, which pulled in `html2canvas` and `dompurify` for a `doc.html()` path the editor never called.
+- **One runtime dependency in the extension**: Preact. Everything else is browser API.
+- **Vitest** for unit tests (`tests/unit`, plus `mcp/test` for the CLI and server)
 
 ### Prerequisites
 
@@ -153,17 +158,19 @@ Load `dist/` as an unpacked extension, or run `npm run package` to produce
 
 ### Scripts
 
-| Script              | Description                                         |
-| ------------------- | --------------------------------------------------- |
-| `npm run dev`       | Vite dev server with extension HMR                  |
-| `npm run build`     | Type-check and bundle the extension into `dist/`    |
-| `npm run typecheck` | Run `tsc --noEmit`                                  |
-| `npm run lint`      | ESLint (flat config)                                |
-| `npm test`          | Run unit tests (Vitest)                             |
-| `npm run icons`     | Regenerate extension icons from the SVG source      |
-| `npm run shots`     | Re-render the marketing screenshots (`docs/assets`) |
-| `npm run format`    | Format the codebase with Prettier                   |
-| `npm run package`   | Build + zip `dist/` for store submission            |
+| Script                | Description                                         |
+| --------------------- | --------------------------------------------------- |
+| `npm run dev`         | Vite dev server with extension HMR                  |
+| `npm run build`       | Type-check and bundle the extension into `dist/`    |
+| `npm run typecheck`   | Run `tsc --noEmit`                                  |
+| `npm run lint`        | ESLint (flat config)                                |
+| `npm test`            | Run unit tests (Vitest)                             |
+| `npm run icons`       | Regenerate extension icons from the SVG source      |
+| `npm run shots`       | Re-render the marketing screenshots (`docs/assets`) |
+| `npm run format`      | Format the codebase with Prettier                   |
+| `npm run package`     | Build + zip `dist/` for store submission            |
+| `npm run site:dev`    | Serve `docs/` locally through the Worker            |
+| `npm run site:deploy` | Deploy `docs/` to openscreenshot.app                |
 
 ### Project structure
 
@@ -180,7 +187,8 @@ openscreenshot/
 │   ├── popup/               # popup UI (Preact)
 │   └── shared/              # design tokens, messaging, storage, types, utils
 ├── mcp/                     # optional local CLI + MCP server
-├── tests/                   # unit + e2e tests
+├── docs/                    # openscreenshot.app, served by site-worker.js
+├── tests/unit/              # unit tests (Vitest)
 └── scripts/
     ├── generate-icons.mjs   # SVG → PNG/ICO icon pipeline
     └── shots/               # marketing screenshot pipeline (npm run shots)
