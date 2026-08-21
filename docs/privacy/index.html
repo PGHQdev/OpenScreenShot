@@ -43,6 +43,8 @@
         --font:
           -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'Helvetica Neue', Arial,
           sans-serif;
+        --font-display:
+          'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
         --surface-0: #f5f3ee;
         --surface-1: #fffefb;
         --surface-2: #ebe7e0;
@@ -135,9 +137,10 @@
       }
 
       h1 {
+        font-family: var(--font-display);
         font-size: clamp(30px, 5vw, 40px);
-        font-weight: 800;
-        letter-spacing: -0.02em;
+        font-weight: 600;
+        letter-spacing: -0.01em;
         margin: var(--s-8) 0 var(--s-2);
       }
       .lead {
@@ -151,8 +154,9 @@
         margin: 0 0 var(--s-6);
       }
       h2 {
-        font-size: 22px;
-        font-weight: 700;
+        font-family: var(--font-display);
+        font-size: 23px;
+        font-weight: 600;
         margin: var(--s-8) 0 var(--s-4);
       }
       p,
@@ -265,6 +269,7 @@
       <span>
         <a href="/support/" class="nav-back">Support</a>
         <a href="/docs/" class="nav-back" style="margin-left: var(--s-4)">Docs</a>
+        <a href="/cool-stuff/" class="nav-back" style="margin-left: var(--s-4)">Cool stuff</a>
       </span>
     </nav>
 
@@ -285,9 +290,9 @@
       <h2 id="how-it-works">How it works</h2>
       <p>
         Every part of the extension runs locally in your browser: page capture, image compositing,
-        annotation editing, and export. No data ever leaves your device. The extension makes no
-        network requests of its own and declares no host permissions, so it has no standing access
-        to any website you visit.
+        annotation editing, screen recording, and export. No data ever leaves your device. The
+        extension makes no network requests of its own and declares no standing host permissions, so
+        it has no background access to any website you visit.
       </p>
 
       <h2 id="permissions">Permissions</h2>
@@ -351,9 +356,62 @@
                 It never reads what is already on your clipboard.
               </td>
             </tr>
+            <tr>
+              <td><code>offscreen</code></td>
+              <td>
+                Run the screen-recording engine in a hidden document. <code>MediaRecorder</code>
+                capture and the crash-safe IndexedDB chunk writes need a page context a service
+                worker does not have. Always present; it adds no install-time warning.
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
+
+      <h2 id="recording">Screen recording</h2>
+      <p>
+        Recordings, cursor logs, and microphone or webcam streams are handled the same way as
+        screenshots: entirely on your device. Video chunks, the cursor log, and any audio are
+        written to IndexedDB as you record and stay there until you delete the session; nothing is
+        ever uploaded. Recording uses two further permissions, both optional and requested only when
+        you use the recorder.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Permission</th>
+              <th>Why it is needed</th>
+              <th>When it is requested</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>tabCapture</code></td>
+              <td>
+                Captures the current tab's video, and its audio if you enable the tab-audio track,
+                for recording.
+              </td>
+              <td>Once, the first time you click Record — a single Chrome permission prompt.</td>
+            </tr>
+            <tr>
+              <td><code>&lt;all_urls&gt;</code> (optional host permission)</td>
+              <td>
+                Keeps the in-page cursor overlay and control bar alive when a recording's tab
+                navigates to a different origin.
+              </td>
+              <td>Only if you turn on "Record across sites" in settings.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        The microphone and camera, when you enable them, are opened directly by your browser's own
+        permission prompt. The extension never sees a stream until you grant it, and the stream
+        never leaves your device.
+      </p>
 
       <h2 id="third-party">Third-party services</h2>
       <p>
@@ -378,6 +436,7 @@
     <footer>
       <div class="container">
         © <span id="year"></span> OpenScreenShot @PGHQdev · <a href="/privacy/">Privacy</a> ·
+        <a href="/cool-stuff/">Cool stuff</a> ·
         <a href="https://github.com/pghqdev/OpenScreenShot/blob/main/LICENSE">MIT License</a>
       </div>
     </footer>

@@ -3,6 +3,8 @@
  * Imported by the popup, background service worker, and (later) the editor.
  */
 
+import type { RecMessage } from './recording-types';
+
 /** The three capture modes offered in the popup. */
 export type CaptureMode = 'full-page' | 'visible' | 'region';
 
@@ -15,7 +17,7 @@ export interface CaptureRequest {
   repeat?: boolean;
 }
 
-export type BackgroundMessage = CaptureRequest;
+export type BackgroundMessage = CaptureRequest | RecMessage;
 
 // --- Background → Popup (progress / result / error) ----------------------
 
@@ -128,6 +130,8 @@ export interface Settings {
   captureDelay: number;
   /** What a finished capture does: open the editor, copy, or save. See CAPTURE_ACTIONS. */
   captureAction: CaptureAction;
+  /** When true, a toolbar-icon click captures the full page instead of opening the popup. */
+  expressMode: boolean;
   /** Beautify frame (editor). Sliders are 0..100; see src/editor/frame.ts. */
   beautifyEnabled: boolean;
   beautifyPadding: number;
@@ -152,6 +156,7 @@ export const DEFAULT_SETTINGS: Settings = {
   recentColors: [],
   captureDelay: 0,
   captureAction: 'editor',
+  expressMode: false,
   beautifyEnabled: false,
   beautifyPadding: 40,
   beautifyRadius: 30,

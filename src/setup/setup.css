@@ -1,0 +1,335 @@
+/*
+ * Recording setup page. Tokens come from src/shared/tokens.css (shared with
+ * the popup and editor); this file only holds the page's surface styles.
+ */
+
+@import '../shared/tokens.css';
+@import '../shared/controls.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-1);
+  background: var(--surface-2);
+  -webkit-font-smoothing: antialiased;
+}
+
+.setup {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: var(--s-6) var(--s-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.setup-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+}
+
+.setup-header h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.setup-intro {
+  margin: var(--s-1) 0 0;
+  color: var(--text-2);
+}
+
+/* ---- Pin nudge (floats toward Chrome's puzzle menu, top-right) ---- */
+.pin-hint {
+  position: fixed;
+  top: var(--s-3);
+  right: var(--s-4);
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  max-width: 240px;
+  padding: var(--s-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface-1);
+  box-shadow: var(--sh-md);
+  color: var(--accent);
+}
+
+.pin-arrow {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  transform: translateY(-6px);
+}
+
+.pin-hint-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--text-1);
+  font-size: 13px;
+}
+
+.pin-hint-text span {
+  color: var(--text-2);
+}
+
+.pin-hint-done {
+  color: var(--text-1);
+  border-color: color-mix(in srgb, var(--success) 40%, var(--border));
+  background: color-mix(in srgb, var(--success) 14%, var(--surface-1));
+}
+
+/* ---- Trust strip ---- */
+.trust-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.trust-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--s-1) var(--s-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  background: var(--surface-1);
+  color: var(--text-1);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.trust-pill svg {
+  width: 15px;
+  height: 15px;
+  color: var(--accent);
+}
+
+a.trust-pill:hover {
+  border-color: var(--accent);
+}
+
+.trust-hint {
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.banner {
+  border-radius: var(--r-md);
+  padding: var(--s-3) var(--s-4);
+}
+
+.banner-attention {
+  background: var(--accent-subtle);
+  color: var(--accent-pressed);
+}
+
+.banner-ready {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  background: color-mix(in srgb, var(--success) 14%, var(--surface-1));
+}
+
+/* ---- Welcome (hero) view ---- */
+.hero {
+  align-items: center;
+  text-align: center;
+  padding-top: var(--s-6);
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.hero .setup-intro {
+  margin: 0;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-3);
+  width: 100%;
+  margin: var(--s-3) 0;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  text-align: left;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--s-3) var(--s-4);
+}
+
+.feature h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.feature p {
+  margin: 2px 0 0;
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.btn-hero {
+  padding: var(--s-3) var(--s-5);
+  font-size: 15px;
+  border-radius: var(--r-md);
+}
+
+.setup-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: var(--s-3) var(--s-4);
+}
+
+.row-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: var(--r-full);
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+
+.row-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.row-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.row-head h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.row-desc {
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.row-hint {
+  margin: var(--s-2) 0 0;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.row-recover {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+}
+
+.tag {
+  border-radius: var(--r-full);
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tag-granted {
+  background: color-mix(in srgb, var(--success) 18%, var(--surface-1));
+}
+
+.tag-required {
+  background: var(--accent-subtle);
+  color: var(--accent-pressed);
+}
+
+.tag-optional {
+  background: var(--surface-3);
+  color: var(--text-2);
+}
+
+.tag-denied {
+  background: color-mix(in srgb, var(--warning) 20%, var(--surface-1));
+  color: var(--danger);
+}
+
+.btn-primary {
+  border: none;
+  border-radius: var(--r-sm);
+  padding: var(--s-2) var(--s-4);
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.btn-ghost {
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: var(--s-1) var(--s-3);
+  background: transparent;
+  color: var(--text-1);
+  font: inherit;
+  cursor: pointer;
+}
+
+.btn-ghost:hover {
+  background: var(--hover-overlay);
+}
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  cursor: pointer;
+}

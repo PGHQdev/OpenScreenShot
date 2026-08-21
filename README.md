@@ -31,8 +31,9 @@ TypeScript and Preact, with one runtime dependency.
 
 > [!NOTE]
 > There is no server, no account, and no telemetry anywhere in this extension.
-> `host_permissions` is empty and it never requests `<all_urls>`. Pull the network cable and
-> it works exactly the same.
+> `host_permissions` is empty, and `<all_urls>` is only ever requested if you turn on
+> "Record across sites" for the screen recorder. Pull the network cable and it works
+> exactly the same.
 
 [Features](#features) &nbsp;·&nbsp; [Install](#install) &nbsp;·&nbsp; [Agents & CLI](#agents--cli) &nbsp;·&nbsp; [Permissions](#permissions) &nbsp;·&nbsp; [Privacy](#privacy) &nbsp;·&nbsp; [Development](#development) &nbsp;·&nbsp; [Contributing](#contributing)
 
@@ -64,6 +65,21 @@ TypeScript and Preact, with one runtime dependency.
 - **Any image, not just captures** — drop or paste an image into the editor to annotate it.
 - **Beautify** — padding, rounded corners, drop shadow, and a gradient, solid, or transparent background.
 - **Crash-safe** — edits are saved locally as you work, and offered back if the tab closes.
+
+### Recording
+
+Record the current tab, then edit and export locally — the recording never leaves your device.
+
+- **One-time permission** — `tabCapture` is optional and requested once, at your first
+  recording, with no install-time warning; every recording after that starts in one click.
+- **Auto zoom at clicks** — the editor zooms in 2x with a 0.6s ease at every click your cursor
+  log picked up. Add manual zoom blocks (1.5x/2x/3x) and trim any segment by hand.
+- **Mic, tab audio, and a webcam bubble** — mix narration and tab sound with volume sliders,
+  and composite a draggable webcam circle into the export.
+- **Crash-safe** — 1-second chunks land in IndexedDB while you record, so a crashed tab or a
+  killed offscreen document recovers, and "Continue recording" appends a new segment.
+- **Beautify + WebM export** — the editor's own padding/corner/shadow/gradient frame wraps
+  the recording, re-rendered through canvas into a WebM file.
 
 ### Export
 
@@ -119,24 +135,32 @@ hands you the PNG.
 OpenScreenShot requests the minimum permissions a screenshot tool needs — and explains
 every one.
 
-**`host_permissions` is empty.** We never request `<all_urls>` — `activeTab` grants access
+**`host_permissions` is empty.** We never request it upfront — `activeTab` grants access
 on your click, and `scripting` runs only within that grant. The extension cannot read any
-site in the background.
+site in the background, unless you explicitly opt into recording across sites (below).
 
 <details>
-<summary><b>All seven permissions, line by line</b></summary>
+<summary><b>All required permissions, line by line</b></summary>
 
 <br />
 
-| Permission                       | Why                                                                                                                     |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `activeTab`                      | Access the current tab — only when you click the extension, use a shortcut, or pick a capture from the right-click menu |
-| `scripting`                      | Inject on-demand page functions for scroll-and-stitch, region selection, and the quick-mode clipboard write             |
-| `storage` (+ `unlimitedStorage`) | Settings, onboarding state, the last region rect, editing drafts, and stashing large full-page PNGs for the editor      |
-| `downloads`                      | Save exports, and quick-mode captures, to your Downloads folder                                                         |
-| `contextMenus`                   | Add one capture submenu to the page right-click menu                                                                    |
-| `clipboardWrite`                 | Copy a screenshot from the editor or from quick mode; it never reads the clipboard                                      |
-| `options_ui`                     | The editor is registered as a full-tab options page so crxjs bundles it; opened after each capture                      |
+| Permission                       | Why                                                                                                                                            |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `activeTab`                      | Access the current tab — only when you click the extension, use a shortcut, or pick a capture from the right-click menu                        |
+| `scripting`                      | Inject on-demand page functions for scroll-and-stitch, region selection, the quick-mode clipboard write, and the in-page recording control bar |
+| `storage` (+ `unlimitedStorage`) | Settings, onboarding state, the last region rect, editing drafts, and stashing large full-page PNGs and recording chunks for the editor        |
+| `downloads`                      | Save exports, quick-mode captures, and recording exports to your Downloads folder                                                              |
+| `contextMenus`                   | Add one capture submenu to the page right-click menu                                                                                           |
+| `clipboardWrite`                 | Copy a screenshot from the editor or from quick mode; it never reads the clipboard                                                             |
+| `offscreen`                      | Run the recording engine in a hidden document — `MediaRecorder` and the IndexedDB writes need a page context a service worker doesn't have     |
+| `options_ui`                     | The editor is registered as a full-tab options page so crxjs bundles it; opened after each capture                                             |
+
+**Optional — requested only when you use them:**
+
+| Permission          | Why                                                                                                                   |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `tabCapture`        | Requested once, at your first recording, with one Chrome prompt; every recording after that starts in one click       |
+| `<all_urls>` (host) | Only if you turn on "Record across sites" — keeps the cursor overlay alive when a recording navigates to a new origin |
 
 </details>
 
@@ -147,7 +171,9 @@ site in the background.
 Your screenshots never leave your device — there are no servers, no accounts, no sign-ups,
 and no tracking. Every capture, edit, and export happens right inside your browser, so
 nothing is ever uploaded, stored in the cloud, or seen by anyone but you. You could pull
-the network cable and it would work exactly the same.
+the network cable and it would work exactly the same. The same is true of recordings:
+video chunks, cursor logs, and mic/webcam streams stay in IndexedDB on your device until
+you delete them.
 
 Read the full [Privacy Policy](./PRIVACY.md).
 
@@ -220,10 +246,12 @@ openscreenshot/
 │   ├── icons/               # generated extension icons
 │   └── _locales/en/         # i18n messages
 ├── src/
-│   ├── background/          # service worker (capture coordinator)
-│   ├── content/             # on-demand capture funcs (scroll, region)
+│   ├── background/          # service worker (capture + recording coordinator)
+│   ├── content/             # on-demand capture funcs (scroll, region, recording overlay)
 │   ├── editor/              # annotation editor + export (Preact, own tab)
+│   ├── offscreen/           # recording engine: MediaRecorder + IndexedDB chunks
 │   ├── popup/               # popup UI (Preact)
+│   ├── recorder/            # recording editor: timeline, zoom, trim, export (Preact, own tab)
 │   └── shared/              # design tokens, messaging, storage, types, utils
 ├── mcp/                     # optional local CLI + MCP server
 ├── docs/                    # openscreenshot.app, served by site-worker.js

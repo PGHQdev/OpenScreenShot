@@ -1,0 +1,806 @@
+/*
+ * OpenScreenShot recorder editor styles. Design tokens (spacing, radius,
+ * shadows, typography, light/dark themes) live in src/shared/tokens.css and
+ * are shared with the popup and editor. This file only holds recorder
+ * surface styles.
+ */
+
+@import '../shared/tokens.css';
+@import '../shared/controls.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-1);
+  background: var(--surface-1);
+  -webkit-font-smoothing: antialiased;
+}
+
+.rec-app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ---- Header ---- */
+.rec-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s-3) var(--s-5);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-1);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.brand-mark {
+  display: inline-flex;
+}
+
+.brand-name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.link-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 13px;
+  cursor: pointer;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-sm);
+  transition: color 150ms ease-out;
+}
+
+.link-btn:hover {
+  color: var(--accent);
+}
+
+.link-btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  transition:
+    background 150ms ease-out,
+    transform 150ms ease-out;
+}
+
+.icon-btn:hover {
+  background: var(--accent-hover);
+}
+
+.icon-btn:active {
+  transform: scale(0.96);
+}
+
+.icon-btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+/* ---- Toasts ---- */
+.toasts {
+  position: fixed;
+  top: var(--s-4);
+  right: var(--s-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  z-index: 10;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-md);
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  box-shadow: var(--sh-md);
+}
+
+.toast-info {
+  color: var(--text-2);
+}
+
+/* ---- Session list ---- */
+.rec-list {
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--s-5);
+}
+
+.rec-list-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 var(--s-4);
+}
+
+.rec-empty {
+  color: var(--text-2);
+  font-size: 13px;
+  padding: var(--s-5) 0;
+}
+
+.rec-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  margin-bottom: var(--s-2);
+}
+
+.rec-row-info {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.rec-row-date {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.rec-row-meta {
+  font-size: 12px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px var(--s-2);
+  border-radius: var(--r-full);
+}
+
+.pill-recovered {
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 16%, transparent);
+}
+
+.pill-live {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.rec-row-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  flex: 0 0 auto;
+}
+
+/* A session that is being recorded right now: its row's actions are inert. */
+.link-btn[aria-disabled='true'],
+.link-btn[aria-disabled='true']:hover {
+  color: var(--text-2);
+  opacity: 0.55;
+  cursor: default;
+}
+
+.rec-delete-btn[data-armed='true'] {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+/* ---- Session view (stage + rail) ---- */
+.rec-session {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.rec-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rail {
+  flex: 0 0 260px;
+  border-left: 1px solid var(--border);
+  background: var(--surface-1);
+}
+
+.rail-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+  padding: var(--s-4);
+}
+
+.rail-section + .rail-section {
+  border-top: 1px solid var(--border);
+}
+
+.rail-link {
+  padding-left: 0;
+}
+
+.rail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  width: 100%;
+  cursor: pointer;
+}
+
+.rail-row-label {
+  font-size: 13px;
+  color: var(--text-1);
+}
+
+.rail-check {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: 12px;
+  color: var(--text-2);
+  cursor: pointer;
+}
+
+.rail-check input {
+  accent-color: var(--accent);
+  margin: 0;
+}
+
+.rail-slider {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  width: 100%;
+}
+
+.rail-slider + .rail-slider {
+  margin-top: var(--s-2);
+}
+
+/* popup.css defines the same rule locally; recorder.css does not import it. */
+.range {
+  width: 100%;
+}
+
+/* ---- Beautify background swatches ---- */
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.swatch {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 2px solid var(--border);
+  border-radius: var(--r-full);
+  cursor: pointer;
+  transition:
+    transform 100ms ease-out,
+    border-color 100ms ease-out;
+}
+
+.swatch:hover {
+  transform: scale(1.12);
+}
+
+.swatch[aria-pressed='true'] {
+  border-color: var(--text-1);
+  box-shadow:
+    0 0 0 2px var(--surface-1),
+    0 0 0 3px var(--accent);
+}
+
+.swatch-transparent {
+  background:
+    linear-gradient(45deg, #d9d9de 25%, transparent 25%) 0 0 / 8px 8px,
+    linear-gradient(-45deg, #d9d9de 25%, transparent 25%) 0 4px / 8px 8px,
+    #fff;
+}
+
+.swatch-custom {
+  position: relative;
+  display: inline-flex;
+  overflow: hidden;
+  background: conic-gradient(#ff3b30, #ff9500, #ffcc00, #34c759, #0071e3, #af52de, #ff3b30);
+}
+
+.swatch-custom input[type='color'] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* ---- Webcam bubble corner picker ---- */
+.rec-bubble-corners {
+  display: grid;
+  grid-template-columns: repeat(2, 28px);
+  grid-template-rows: repeat(2, 28px);
+  gap: var(--s-1);
+}
+
+.rec-bubble-corner {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  cursor: pointer;
+}
+
+.rec-bubble-corner:hover {
+  background: var(--surface-3);
+}
+
+.rec-bubble-corner[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-subtle);
+}
+
+.rec-bubble-corner::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-full);
+  background: var(--text-2);
+}
+
+.rec-bubble-corner[aria-pressed='true']::after {
+  background: var(--accent);
+}
+
+.rec-bubble-corner[data-corner='tl']::after {
+  top: 4px;
+  left: 4px;
+}
+
+.rec-bubble-corner[data-corner='tr']::after {
+  top: 4px;
+  right: 4px;
+}
+
+.rec-bubble-corner[data-corner='bl']::after {
+  bottom: 4px;
+  left: 4px;
+}
+
+.rec-bubble-corner[data-corner='br']::after {
+  bottom: 4px;
+  right: 4px;
+}
+
+.rec-bubble-corner:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.rail-hint {
+  font-size: 12px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.rail-export {
+  width: 100%;
+}
+
+.rec-btn-primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.rec-btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.rec-progress {
+  width: 100%;
+  height: 6px;
+  border-radius: var(--r-full);
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.rec-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 120ms linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rec-progress-fill {
+    transition: none;
+  }
+}
+
+.rec-btn {
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--text-1);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 120ms ease-out;
+}
+
+.rec-btn:hover {
+  background: var(--surface-3);
+}
+
+.rec-btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+
+/* ---- Stage ---- */
+.rec-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--stage-bg);
+  position: relative;
+  padding: var(--s-4);
+}
+
+/* Shrink-wraps the rendered canvas, so the reticle can be placed in
+   percentages of the canvas box. */
+.rec-stage-frame {
+  position: relative;
+  display: flex;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.rec-canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--r-sm);
+}
+
+/* Draw sources only — the canvas is the picture. */
+.rec-video {
+  display: none;
+}
+
+.rec-reticle {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  padding: 0;
+  border: 2px solid var(--accent);
+  border-radius: var(--r-full);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+  cursor: grab;
+  touch-action: none;
+}
+
+.rec-reticle::after {
+  content: '';
+  position: absolute;
+  inset: 11px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+}
+
+.rec-reticle:active {
+  cursor: grabbing;
+}
+
+.rec-reticle:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.rec-transport {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-5);
+  border-top: 1px solid var(--border);
+  background: var(--surface-1);
+}
+
+.rec-time {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+}
+
+/* ---- Timeline ---- */
+.rec-timeline {
+  padding: var(--s-4) var(--s-5) var(--s-5);
+  background: var(--surface-1);
+}
+
+/* One box for every row, so a column is the same timeline ms in all of them. */
+.rec-tl-track {
+  position: relative;
+  touch-action: none;
+}
+
+.rec-tl-segments {
+  display: flex;
+  height: 34px;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+
+.rec-tl-strip {
+  position: relative;
+  min-width: 2px;
+  background: var(--surface-3);
+  border-right: 1px solid var(--surface-1);
+  cursor: pointer;
+}
+
+.rec-tl-strip:last-child {
+  border-right: none;
+}
+
+/* How much source time was cut at this end, at the timeline's own ms scale. */
+.rec-tl-trimmed {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(-45deg, var(--border) 0 4px, transparent 4px 8px);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.rec-tl-trimmed-start {
+  left: 0;
+}
+
+.rec-tl-trimmed-end {
+  right: 0;
+}
+
+.rec-tl-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: var(--text-3);
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.rec-tl-handle:hover,
+.rec-tl-handle:focus-visible {
+  background: var(--accent);
+  outline: none;
+}
+
+.rec-tl-handle-start {
+  left: 0;
+  border-radius: var(--r-sm) 0 0 var(--r-sm);
+}
+
+.rec-tl-handle-end {
+  right: 0;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+}
+
+.rec-tl-zooms {
+  position: relative;
+  height: 26px;
+  margin-top: var(--s-1);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+
+.rec-tl-zoom {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 6px;
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--accent) 70%, transparent);
+  cursor: grab;
+  touch-action: none;
+  overflow: hidden;
+}
+
+.rec-tl-zoom[data-selected='true'] {
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--border-focus);
+}
+
+.rec-tl-zoom-label {
+  display: block;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.rec-tl-zoom-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: ew-resize;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.rec-tl-zoom-edge-start {
+  left: 0;
+}
+
+.rec-tl-zoom-edge-end {
+  right: 0;
+}
+
+.rec-zoom-tools {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-1) var(--s-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  box-shadow: var(--sh-md);
+  white-space: nowrap;
+}
+
+.rec-zoom-tools-label {
+  font-size: 11px;
+  color: var(--text-2);
+}
+
+.rec-seg {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+
+.rec-seg-btn {
+  height: 24px;
+  padding: 0 8px;
+  border: none;
+  border-right: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--text-1);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.rec-seg-btn:last-child {
+  border-right: none;
+}
+
+.rec-seg-btn:hover {
+  background: var(--surface-2);
+}
+
+.rec-seg-btn[aria-pressed='true'] {
+  background: var(--accent-subtle);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.rec-zoom-delete {
+  color: var(--danger);
+}
+
+.rec-zoom-delete:hover {
+  color: var(--danger);
+  text-decoration: underline;
+}
+
+.rec-tl-ruler {
+  position: relative;
+  height: 18px;
+  margin-top: var(--s-1);
+  overflow: hidden;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.rec-tl-tick {
+  position: absolute;
+  top: 0;
+  padding-left: 4px;
+  border-left: 1px solid var(--border);
+  font-size: 10px;
+  line-height: 16px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.rec-tl-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--accent);
+  pointer-events: none;
+}
+
+.rec-tl-playhead::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-btn,
+  .rec-btn {
+    transition: none;
+  }
+}

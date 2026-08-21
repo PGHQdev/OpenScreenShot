@@ -24,8 +24,26 @@ The extension requires the following permissions, each with a narrow purpose:
 | `downloads`                      | Save an export from the editor, or a quick-mode capture, to your downloads folder. The extension never reads, searches, or opens your download history.                                                                                  |
 | `contextMenus`                   | Add one OpenScreenShot submenu to the page right-click menu, as a second way to start a capture. The extension reads only which menu item you clicked.                                                                                   |
 | `clipboardWrite`                 | Copy a screenshot to your clipboard, from the editor's Copy button or from quick mode. The extension only ever writes the screenshot you just captured or exported. It never reads what is already on your clipboard.                    |
+| `offscreen`                      | Run the screen-recording engine in a hidden document. `MediaRecorder` capture and the crash-safe IndexedDB chunk writes need a page context a service worker does not have. Always present; it adds no install-time warning.             |
 
 `host_permissions` is empty, so the extension has no standing access to any site you visit.
+
+## Screen recording
+
+Recordings, cursor logs, and microphone or webcam streams are handled the same way as
+screenshots: **entirely on your device**. Video chunks, the cursor log, and any audio are
+written to IndexedDB as you record and stay there until you delete the session; nothing is
+ever uploaded. Recording uses two further permissions, both optional and requested only
+when you use the recorder:
+
+| Permission                              | Why it's needed                                                                                                | When it's requested                                                        |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `tabCapture`                            | Captures the current tab's video, and its audio if you enable the tab-audio track, for recording.              | Once, the first time you click Record — a single Chrome permission prompt. |
+| `<all_urls>` (optional host permission) | Keeps the in-page cursor overlay and control bar alive when a recording's tab navigates to a different origin. | Only if you turn on "Record across sites" in settings.                     |
+
+The microphone and camera, when you enable them, are opened directly by your browser's own
+permission prompt — the extension never sees a stream until you grant it, and the stream
+never leaves your device.
 
 ## Third-party services
 

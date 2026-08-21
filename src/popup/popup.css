@@ -125,6 +125,16 @@ body {
   background: var(--surface-2);
 }
 
+.mode-card[aria-disabled='true'] {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.mode-card[aria-disabled='true']:hover {
+  border-color: var(--border);
+  background: var(--surface-2);
+}
+
 .mode-card[data-busy='true'] {
   opacity: 1;
   border-color: var(--accent);
@@ -160,6 +170,28 @@ body {
 .mode-sub {
   font-size: 12px;
   color: var(--text-2);
+}
+
+/* ---- Recording row ---- */
+.rec-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  flex: 0 0 auto;
+  animation: oss-rec-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes oss-rec-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.rec-live {
+  cursor: default;
+  border-color: var(--accent);
+  background: var(--accent-subtle);
 }
 
 /* ---- Spinner ---- */
@@ -254,6 +286,13 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   overflow: hidden;
+}
+/* A seg whose buttons split the row's full width evenly. */
+.seg-fill {
+  display: flex;
+}
+.seg-fill .seg-btn {
+  flex: 1;
 }
 .seg-grid {
   display: grid;
@@ -413,6 +452,24 @@ body {
 .mode-card .kbd-os {
   background: transparent;
   color: var(--text-3);
+}
+
+/* Warning chip: a toggled-on device whose permission is hard-denied. */
+.perm-chip {
+  align-self: flex-start;
+  border: none;
+  border-radius: var(--r-full);
+  padding: 2px 10px;
+  background: color-mix(in srgb, var(--warning) 20%, var(--surface-1));
+  color: var(--danger);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.perm-chip:hover {
+  background: color-mix(in srgb, var(--warning) 32%, var(--surface-1));
 }
 
 .link-btn {
@@ -620,6 +677,9 @@ body {
   }
   .spinner {
     animation-duration: 1.4s;
+  }
+  .rec-dot {
+    animation: none;
   }
   .progress-fill {
     transition: none;

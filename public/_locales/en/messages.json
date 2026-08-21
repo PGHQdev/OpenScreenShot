@@ -91,6 +91,18 @@
     "message": "Buy the developer a coffee on Ko-fi",
     "description": "Tooltip for the Ko-fi donation footer link."
   },
+  "footerCoolStuff": {
+    "message": "Cool stuff",
+    "description": "Accessible label for the gift icon footer link that opens the cool-stuff page."
+  },
+  "coolStuffTitle": {
+    "message": "Cool stuff — more free tools by the same maker",
+    "description": "Tooltip for the gift icon footer link."
+  },
+  "setupCoolStuff": {
+    "message": "Cool stuff",
+    "description": "Trust strip link on the setup page that opens the cool-stuff page."
+  },
   "settingsTitle": {
     "message": "Settings",
     "description": "Settings panel heading."
@@ -198,5 +210,481 @@
   "actionHintPng": {
     "message": "Quick save writes a PNG.",
     "description": "Hint shown under the after-capture row when Download is selected."
+  },
+  "expressLabel": {
+    "message": "Express mode",
+    "description": "Label for the express mode row in the popup, and the icon context-menu checkbox."
+  },
+  "expressOn": {
+    "message": "On",
+    "description": "Express mode option that makes the toolbar icon capture directly."
+  },
+  "expressOff": {
+    "message": "Off",
+    "description": "Express mode option that keeps the popup on icon click."
+  },
+  "expressHint": {
+    "message": "The icon now captures the full page. Right-click the icon to turn this off.",
+    "description": "Hint shown under the express row when express mode is on."
+  },
+  "recOverlayPause": {
+    "message": "Pause",
+    "description": "Recording control bar: button that pauses the active recording."
+  },
+  "recOverlayResume": {
+    "message": "Resume",
+    "description": "Recording control bar: button that resumes a paused recording."
+  },
+  "recOverlayStop": {
+    "message": "Stop",
+    "description": "Recording control bar: button that stops and finalizes the recording."
+  },
+  "recOverlayCancel": {
+    "message": "Cancel",
+    "description": "Recording control bar: button that cancels the recording and discards it."
+  },
+  "recOverlayMic": {
+    "message": "MIC",
+    "description": "Recording control bar: chip shown when the microphone track is enabled."
+  },
+  "recOverlayTabAudio": {
+    "message": "TAB",
+    "description": "Recording control bar: chip shown when tab audio is enabled."
+  },
+  "recOverlayWebcam": {
+    "message": "CAM",
+    "description": "Recording control bar: chip shown when the webcam track is enabled."
+  },
+  "recTitle": {
+    "message": "Record",
+    "description": "Popup: title of the record row when no session is pending."
+  },
+  "recSub": {
+    "message": "Record this tab with auto zoom",
+    "description": "Popup: subtitle of the record row."
+  },
+  "recStop": {
+    "message": "Stop",
+    "description": "Popup: label for the button that stops the active recording."
+  },
+  "recCancel": {
+    "message": "Cancel",
+    "description": "Popup: label for the button that cancels the active recording."
+  },
+  "recRecording": {
+    "message": "Recording…",
+    "description": "Popup: status label shown while a recording is in progress."
+  },
+  "recPaused": {
+    "message": "Paused",
+    "description": "Popup: status label shown while a recording is paused."
+  },
+  "recMic": {
+    "message": "Mic",
+    "description": "Popup: toggle chip for the microphone track."
+  },
+  "recTabAudio": {
+    "message": "Tab audio",
+    "description": "Popup: toggle chip for the tab audio track."
+  },
+  "recWebcam": {
+    "message": "Webcam",
+    "description": "Popup: toggle chip for the webcam track."
+  },
+  "recWebcamDenied": {
+    "message": "Camera declined — recording without it",
+    "description": "Webcam preview bubble: shown in place of the video when the camera prompt is declined or the camera is unavailable."
+  },
+  "recProtected": {
+    "message": "Can’t record this protected page.",
+    "description": "Popup: error toast shown when the active tab can't be recorded."
+  },
+  "recRecover": {
+    "message": "Recover last recording",
+    "description": "Popup: link that reopens the editor for a crashed/unfinished recording session."
+  },
+  "recContinue": {
+    "message": "Continue recording",
+    "description": "Popup: record row title when a continue-session is pending from the editor. Also the recorder page header button that starts a continue-session."
+  },
+  "recAcrossSites": {
+    "message": "Record across sites",
+    "description": "Settings: label for the row that grants recording access to all sites."
+  },
+  "recAcrossSitesHint": {
+    "message": "Keeps the cursor overlay alive when the tab changes site. Grants access to all sites.",
+    "description": "Settings: hint shown under the record-across-sites row."
+  },
+  "recOn": {
+    "message": "On",
+    "description": "Segmented control option that turns a setting on."
+  },
+  "recOff": {
+    "message": "Off",
+    "description": "Segmented control option that turns a setting off."
+  },
+  "recorderTitle": {
+    "message": "Recorder",
+    "description": "Recorder page: header title."
+  },
+  "recorderSessions": {
+    "message": "Recordings",
+    "description": "Recorder page: session list heading."
+  },
+  "recorderOpen": {
+    "message": "Open",
+    "description": "Recorder page: button that opens a session for playback."
+  },
+  "recorderDelete": {
+    "message": "Delete",
+    "description": "Recorder page: button that deletes a session."
+  },
+  "recorderDeleteConfirm": {
+    "message": "Really delete?",
+    "description": "Recorder page: armed state of the delete button, click again to confirm."
+  },
+  "recorderEmpty": {
+    "message": "No recordings yet. Record a tab from the popup.",
+    "description": "Recorder page: shown when the session list is empty."
+  },
+  "recorderRecovered": {
+    "message": "Recovered",
+    "description": "Recorder page: pill on a session that was left mid-recording by a crash."
+  },
+  "recorderRecordingNow": {
+    "message": "Recording…",
+    "description": "Recorder page: pill on the session that is being recorded right now; its Open and Delete buttons are disabled."
+  },
+  "recContinueHint": {
+    "message": "Open the popup on the tab you want to keep recording.",
+    "description": "Recorder page: info toast shown after Continue recording is clicked."
+  },
+  "recorderPlay": {
+    "message": "Play",
+    "description": "Recorder page: play button label/aria-label."
+  },
+  "recorderPause": {
+    "message": "Pause",
+    "description": "Recorder page: pause button label/aria-label."
+  },
+  "recorderAddZoom": {
+    "message": "Add zoom",
+    "description": "Recorder page: button that adds a zoom block at the playhead."
+  },
+  "recorderRegenerate": {
+    "message": "Regenerate auto zoom",
+    "description": "Recorder page: button that rebuilds all zoom blocks from the recorded clicks."
+  },
+  "recorderDeleteZoom": {
+    "message": "Delete zoom",
+    "description": "Recorder page: button that removes the selected zoom block."
+  },
+  "recorderZoomScale": {
+    "message": "Zoom",
+    "description": "Recorder page: label of the zoom scale segmented control."
+  },
+  "recorderZoomTarget": {
+    "message": "Zoom target",
+    "description": "Recorder page: aria-label of the draggable target reticle on the preview."
+  },
+  "recorderTrimStart": {
+    "message": "Trim start",
+    "description": "Recorder page: aria-label of a segment's leading trim handle."
+  },
+  "recorderTrimEnd": {
+    "message": "Trim end",
+    "description": "Recorder page: aria-label of a segment's trailing trim handle."
+  },
+  "recorderTimelineAria": {
+    "message": "Timeline",
+    "description": "Recorder page: aria-label of the timeline region."
+  },
+  "recorderRipple": {
+    "message": "Click ripple",
+    "description": "Recorder page: label of the toggle that draws a ripple at every recorded click."
+  },
+  "recorderVolTab": {
+    "message": "Tab volume",
+    "description": "Recorder page: label of the tab-audio volume slider."
+  },
+  "recorderVolMic": {
+    "message": "Mic volume",
+    "description": "Recorder page: label of the microphone volume slider."
+  },
+  "recorderBubble": {
+    "message": "Webcam bubble",
+    "description": "Recorder page: label of the webcam bubble settings section."
+  },
+  "recorderBubbleTL": {
+    "message": "Top left",
+    "description": "Recorder page: aria-label of the webcam bubble's top-left corner preset button."
+  },
+  "recorderBubbleTR": {
+    "message": "Top right",
+    "description": "Recorder page: aria-label of the webcam bubble's top-right corner preset button."
+  },
+  "recorderBubbleBL": {
+    "message": "Bottom left",
+    "description": "Recorder page: aria-label of the webcam bubble's bottom-left corner preset button."
+  },
+  "recorderBubbleBR": {
+    "message": "Bottom right",
+    "description": "Recorder page: aria-label of the webcam bubble's bottom-right corner preset button."
+  },
+  "recorderBubbleSize": {
+    "message": "Size",
+    "description": "Recorder page: label of the webcam bubble size slider."
+  },
+  "recorderBubbleHide": {
+    "message": "Hide",
+    "description": "Recorder page: label of the toggle that hides the webcam bubble."
+  },
+  "recorderBeautify": {
+    "message": "Beautify",
+    "description": "Recorder page: label of the toggle that frames the export in padding, corners, shadow, and a background."
+  },
+  "recorderBeautifyPadding": {
+    "message": "Padding",
+    "description": "Recorder page: label of the beautify frame's padding slider."
+  },
+  "recorderBeautifyCorners": {
+    "message": "Corners",
+    "description": "Recorder page: label of the beautify frame's corner-radius slider."
+  },
+  "recorderBeautifyShadow": {
+    "message": "Shadow",
+    "description": "Recorder page: label of the beautify frame's drop-shadow slider."
+  },
+  "recorderBeautifyBackground": {
+    "message": "Background",
+    "description": "Recorder page: label of the beautify frame's background swatches."
+  },
+  "recorderBeautifyTransparent": {
+    "message": "Transparent",
+    "description": "Recorder page: aria-label of the beautify frame's transparent-background swatch."
+  },
+  "recorderBeautifyCustom": {
+    "message": "Solid colour",
+    "description": "Recorder page: aria-label of the beautify frame's custom solid-colour swatch."
+  },
+  "recorderExport": {
+    "message": "Export WebM",
+    "description": "Recorder page: button that renders the edited recording to a WebM file."
+  },
+  "recorderExporting": {
+    "message": "Rendering…",
+    "description": "Recorder page: status shown while the export renders."
+  },
+  "recorderCancel": {
+    "message": "Cancel",
+    "description": "Recorder page: button that stops an export in progress and discards it."
+  },
+  "recorderExported": {
+    "message": "Saved $SIZE$ MB",
+    "description": "Recorder page: toast shown after an export is downloaded.",
+    "placeholders": {
+      "size": {
+        "content": "$1",
+        "example": "12.4"
+      }
+    }
+  },
+  "recorderExportFailed": {
+    "message": "Export failed",
+    "description": "Recorder page: toast shown when an export could not be rendered."
+  },
+  "recorderDeleteAfter": {
+    "message": "Delete recording after export",
+    "description": "Recorder page: checkbox that deletes the session once its export is saved."
+  },
+  "setupTitle": {
+    "message": "Set up recording",
+    "description": "Setup page: heading."
+  },
+  "setupIntro": {
+    "message": "One-time setup.",
+    "description": "Setup page: intro line under the heading."
+  },
+  "setupHeroLede": {
+    "message": "The open-source screen studio in your browser.",
+    "description": "Setup page welcome view: one-line lede under the title."
+  },
+  "setupFeatCapture": {
+    "message": "Full-page capture",
+    "description": "Setup welcome: feature tile title 1."
+  },
+  "setupFeatCaptureSub": {
+    "message": "Scroll & stitch any page",
+    "description": "Setup welcome: feature tile subtitle 1."
+  },
+  "setupFeatRecord": {
+    "message": "Tab recording",
+    "description": "Setup welcome: feature tile title 2."
+  },
+  "setupFeatRecordSub": {
+    "message": "Webcam bubble, mic & tab audio",
+    "description": "Setup welcome: feature tile subtitle 2."
+  },
+  "setupFeatZoom": {
+    "message": "Auto-zoom",
+    "description": "Setup welcome: feature tile title 3."
+  },
+  "setupFeatZoomSub": {
+    "message": "Your clicks become smooth zooms",
+    "description": "Setup welcome: feature tile subtitle 3."
+  },
+  "setupFeatExport": {
+    "message": "Annotate & export",
+    "description": "Setup welcome: feature tile title 4."
+  },
+  "setupFeatExportSub": {
+    "message": "PNG, PDF, WebM — saved locally",
+    "description": "Setup welcome: feature tile subtitle 4."
+  },
+  "setupWelcomeCta": {
+    "message": "Set up recording",
+    "description": "Setup welcome: button that advances to the permission checklist."
+  },
+  "setupFinish": {
+    "message": "All set — close this tab",
+    "description": "Setup page: button on the ready banner that closes the tab."
+  },
+  "setupTrustOpenSource": {
+    "message": "Open source (MIT)",
+    "description": "Setup page: trust pill linking to the GitHub repo."
+  },
+  "setupTrustLocal": {
+    "message": "100% local",
+    "description": "Setup page: trust pill — everything is processed on-device."
+  },
+  "setupTrustNoTracking": {
+    "message": "No tracking",
+    "description": "Setup page: trust pill — no analytics, no accounts."
+  },
+  "setupTrustHint": {
+    "message": "Your recordings never leave your device.",
+    "description": "Setup page: one-line assurance under the trust pills."
+  },
+  "setupPinTitle": {
+    "message": "Pin OpenScreenShot",
+    "description": "Setup page: floating hint asking the user to pin the extension."
+  },
+  "setupPinSub": {
+    "message": "Click the 🧩 up there, then the 📌 next to OpenScreenShot.",
+    "description": "Setup page: how to pin, pointing at Chrome's toolbar."
+  },
+  "setupPinDone": {
+    "message": "📌 Pinned — one click to record!",
+    "description": "Setup page: hint state once the extension is pinned."
+  },
+  "setupFromRecord": {
+    "message": "One step left: enable tab recording below.",
+    "description": "Setup page: banner shown when the Record button routed here."
+  },
+  "setupReady": {
+    "message": "Ready to record.",
+    "description": "Setup page: banner headline once tab recording is granted."
+  },
+  "setupReadyHint": {
+    "message": "Click the toolbar icon and hit Record.",
+    "description": "Setup page: what to do after setup is complete."
+  },
+  "setupTabCapture": {
+    "message": "Tab recording",
+    "description": "Setup page: row title for the tabCapture permission."
+  },
+  "setupTabCaptureDesc": {
+    "message": "Captures the tab you record.",
+    "description": "Setup page: row description for the tabCapture permission."
+  },
+  "setupCamera": {
+    "message": "Camera",
+    "description": "Setup page: row title for the camera permission."
+  },
+  "setupCameraDesc": {
+    "message": "Adds a webcam bubble.",
+    "description": "Setup page: row description for the camera permission."
+  },
+  "setupMic": {
+    "message": "Microphone",
+    "description": "Setup page: row title for the microphone permission."
+  },
+  "setupMicDesc": {
+    "message": "Adds your voice.",
+    "description": "Setup page: row description for the microphone permission."
+  },
+  "setupAcrossSites": {
+    "message": "Record across sites",
+    "description": "Setup page: row title for the all-urls host permission."
+  },
+  "setupAcrossSitesDesc": {
+    "message": "Keeps recording when you switch sites.",
+    "description": "Setup page: row description for the all-urls host permission."
+  },
+  "setupAcrossSitesToggle": {
+    "message": "Allow on all sites",
+    "description": "Setup page: label next to the all-urls toggle."
+  },
+  "setupEnable": {
+    "message": "Enable",
+    "description": "Setup page: button that requests the tabCapture permission."
+  },
+  "setupAllow": {
+    "message": "Allow",
+    "description": "Setup page: button that triggers a camera or mic prompt."
+  },
+  "setupGranted": {
+    "message": "Granted",
+    "description": "Setup page: status tag for a granted permission."
+  },
+  "setupRequired": {
+    "message": "Required",
+    "description": "Setup page: status tag for the one required permission."
+  },
+  "setupOptional": {
+    "message": "Optional",
+    "description": "Setup page: status tag for a skippable permission."
+  },
+  "setupDeniedTag": {
+    "message": "Blocked",
+    "description": "Setup page: status tag for a denied permission."
+  },
+  "setupDismissed": {
+    "message": "Prompt closed — click again when ready.",
+    "description": "Setup page: hint after a permission prompt was closed without an answer."
+  },
+  "setupBlockedSite": {
+    "message": "Blocked in Chrome. Allow it in site settings — this page updates itself.",
+    "description": "Setup page: recovery hint for a site-level denial."
+  },
+  "setupBlockedSystem": {
+    "message": "Blocked by your OS. macOS: System Settings → Privacy & Security → allow Chrome.",
+    "description": "Setup page: recovery hint for an OS-level denial."
+  },
+  "setupNoDevice": {
+    "message": "No device found. Plug one in, then try again.",
+    "description": "Setup page: hint when no camera or microphone exists."
+  },
+  "setupOpenSiteSettings": {
+    "message": "Open site settings",
+    "description": "Setup page: button that opens Chrome's per-site permission settings."
+  },
+  "popupPermissionChip": {
+    "message": "$DEVICE$ is blocked — fix in setup",
+    "description": "Popup: warning chip when a toggled-on device permission is denied.",
+    "placeholders": {
+      "device": {
+        "content": "$1",
+        "example": "Microphone"
+      }
+    }
+  },
+  "popupSetupLink": {
+    "message": "Recording permissions",
+    "description": "Popup settings: row that opens the recording setup page."
+  },
+  "welcomeSkip": {
+    "message": "Skip for now",
+    "description": "Welcome card: secondary link that dismisses without opening setup."
   }
 }

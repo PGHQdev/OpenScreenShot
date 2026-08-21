@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "__MSG_extDesc__",
   "default_locale": "en",
-  "minimum_chrome_version": "99",
+  "minimum_chrome_version": "116",
   "action": {
     "default_popup": "src/popup/index.html",
     "default_title": "OpenScreenShot",
@@ -30,9 +30,18 @@
     "unlimitedStorage",
     "downloads",
     "contextMenus",
-    "clipboardWrite"
+    "clipboardWrite",
+    "offscreen"
   ],
   "host_permissions": [],
+  "optional_permissions": ["tabCapture"],
+  "optional_host_permissions": ["<all_urls>"],
+  "web_accessible_resources": [
+    {
+      "resources": ["src/recorder/webcam-frame.html"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "options_ui": {
     "page": "src/editor/index.html",
     "open_in_tab": true
@@ -49,6 +58,10 @@
     "capture-region": {
       "suggested_key": { "default": "Ctrl+Shift+E", "mac": "Command+Shift+E" },
       "description": "Capture a selected region"
+    },
+    "stop-recording": {
+      "suggested_key": { "default": "Alt+Shift+X", "mac": "Alt+Shift+X" },
+      "description": "Stop the current recording"
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "openscreenshot",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Open-source screenshot tool for Chrome — full-page, region, and visible-area capture with annotation and PDF export.",
   "license": "MIT",
   "type": "module",
@@ -23,7 +23,9 @@
     "package": "npm run build && rm -f openscreenshot-v$npm_package_version.zip && cd dist && zip -r -X ../openscreenshot-v$npm_package_version.zip .",
     "site:deploy": "wrangler deploy",
     "site:dev": "wrangler dev",
-    "shots": "node scripts/shots/render.mjs"
+    "shots": "node scripts/shots/render.mjs",
+    "smoke:recorder": "node tests/browser/recorder-smoke.mjs",
+    "smoke:setup": "node tests/browser/setup-smoke.mjs"
   },
   "dependencies": {
     "preact": "^10.29.4"
@@ -35,6 +37,7 @@
     "@types/chrome": "^0.2.2",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
+    "fake-indexeddb": "^6.2.5",
     "globals": "^17.7.0",
     "prettier": "^3.9.4",
     "sharp": "^0.35.3",
