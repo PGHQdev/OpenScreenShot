@@ -46,6 +46,8 @@
         --font:
           -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'Helvetica Neue', Arial,
           sans-serif;
+        --font-display:
+          'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
         --surface-0: #f5f3ee;
         --surface-1: #fffefb;
         --surface-2: #ebe7e0;
@@ -153,9 +155,10 @@
       }
 
       h1 {
+        font-family: var(--font-display);
         font-size: clamp(28px, 4.5vw, 38px);
-        font-weight: 800;
-        letter-spacing: -0.02em;
+        font-weight: 600;
+        letter-spacing: -0.01em;
         margin: var(--s-7) 0 var(--s-2);
       }
       .lead {
@@ -164,8 +167,9 @@
         margin: 0 0 var(--s-6);
       }
       h2 {
+        font-family: var(--font-display);
         font-size: 24px;
-        font-weight: 800;
+        font-weight: 600;
         margin: var(--s-7) 0 var(--s-3);
       }
       h3 {
@@ -356,6 +360,7 @@
         <a class="hide-sm" href="/docs/">Docs</a>
         <a class="hide-sm" href="/support/">Support</a>
         <a class="hide-sm" href="/roadmap/">Roadmap</a>
+        <a class="hide-sm" href="/cool-stuff/">Cool stuff</a>
         <a
           class="hide-sm"
           href="https://github.com/pghqdev/OpenScreenShot"
@@ -384,6 +389,7 @@
           <li><a href="#beautify">Beautify</a></li>
           <li><a href="#import">Annotate an image you already have</a></li>
           <li><a href="#export">Export</a></li>
+          <li><a href="#record">Record a tab</a></li>
           <li><a href="#drafts">Drafts</a></li>
           <li><a href="#shortcuts">Keyboard shortcuts</a></li>
           <li><a href="#settings">Settings</a></li>
@@ -593,6 +599,52 @@
         </p>
       </div>
 
+      <div class="doc-section" id="record">
+        <h2>Record a tab</h2>
+        <p>
+          Click <strong>Record</strong> in the popup, or press <kbd>Alt+Shift+X</kbd> to stop once a
+          recording is running. The first time you record, Chrome shows one permission prompt for
+          tab capture; every recording after that starts in a single click.
+        </p>
+
+        <h3>Start a recording</h3>
+        <p>
+          The Record row in the popup has three toggles — <strong>Mic</strong>,
+          <strong>Tab audio</strong>, and <strong>Webcam</strong> — turn on any of them before you
+          click Record. With the mic or webcam on, your browser's own permission prompt appears from
+          a small bubble on the page before capture starts.
+        </p>
+        <p>
+          If a recording navigates to a different site, the control bar needs the optional "Record
+          across sites" permission (see <a href="#settings">Settings</a>) to follow it there.
+          Without that permission the toolbar badge turns amber; click the toolbar icon or interact
+          with the page again to reattach the overlay.
+        </p>
+
+        <h3>The control bar</h3>
+        <p>
+          A small bar sits at the bottom of the page while you record: a timer, a chip for each
+          track you enabled, and Pause/Resume, Stop, and Cancel buttons. With the webcam on, a
+          draggable circular preview floats over the page — drag it anywhere and it stays there for
+          the rest of the recording.
+        </p>
+
+        <h3>The editor</h3>
+        <p>
+          Stop opens the recording editor on a timeline of your take. The editor zooms in 2x, with a
+          smooth ease, at every click your cursor made — adjust or delete any of those, or add your
+          own manual zoom blocks at 1.5x, 2x, or 3x. Trim the start or end of any segment by
+          dragging its handles. Click ripples mark where you clicked, and the webcam bubble,
+          Beautify frame, and mic/tab-audio volume sliders live in the side panel.
+        </p>
+
+        <h3>Export</h3>
+        <p>
+          Export re-renders the take through canvas, mixing in the tracks and effects you set, and
+          downloads a WebM file.
+        </p>
+      </div>
+
       <div class="doc-section" id="drafts">
         <h2>Drafts</h2>
         <p>
@@ -618,6 +670,10 @@
           </li>
           <li><kbd>Space</kbd> + drag — pan the canvas.</li>
         </ul>
+        <p>
+          <kbd>Alt+Shift+X</kbd> stops the current recording from anywhere — it does not need the
+          editor or the popup open.
+        </p>
       </div>
 
       <div class="doc-section" id="settings">
@@ -636,6 +692,11 @@
         <p>
           Settings live in local storage on this device. <strong>Reset to defaults</strong> at the
           bottom of the panel takes two clicks.
+        </p>
+        <p>
+          <strong>Record across sites</strong> — off by default. Turning it on requests the optional
+          <code>&lt;all_urls&gt;</code> host permission, so the recording control bar and cursor
+          overlay can follow a tab that navigates to a new site mid-recording.
         </p>
       </div>
 
@@ -671,8 +732,9 @@
         <h2>Privacy</h2>
         <p>
           OpenScreenShot processes everything locally in your browser. Captures are stored in Chrome
-          local storage and are not uploaded to any server. The extension has no analytics, no
-          telemetry, and no third-party services.
+          local storage and are not uploaded to any server. Recordings, cursor logs, and mic/webcam
+          streams stay in IndexedDB on your device until you delete them. The extension has no
+          analytics, no telemetry, and no third-party services.
         </p>
         <p>
           See the
@@ -711,6 +773,7 @@
       <div class="container">
         © <span id="year"></span> OpenScreenShot @PGHQdev · <a href="/support/">Support</a> ·
         <a href="https://openscreenshot.app/privacy/">Privacy</a> ·
+        <a href="/cool-stuff/">Cool stuff</a> ·
         <a href="https://github.com/pghqdev/OpenScreenShot/blob/main/LICENSE">MIT License</a>
       </div>
     </footer>

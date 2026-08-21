@@ -12,8 +12,15 @@
  * the user's capture action: opened in the editor, copied to the clipboard, or
  * downloaded directly.
  */
-import type { BackgroundMessage, CaptureMode, PopupMessage, TileSpec } from '../shared/types';
-import { getLastRegion, getSettings, setLastCapture, setLastRegion } from '../shared/storage';
+import type { CaptureMode, CaptureRequest, PopupMessage, TileSpec } from '../shared/types';
+import {
+  getLastRegion,
+  getSettings,
+  onSettingsChanged,
+  setLastCapture,
+  setLastRegion,
+  setSettings,
+} from '../shared/storage';
 import {
   formatFilename,
   isProtectedUrl,
@@ -35,8 +42,12 @@ import {
 } from '../content/scroll-capture';
 import { selectRegion } from '../content/region-select';
 import { copyImageToClipboard } from '../content/clipboard';
+import { restoreRecBadge } from './recording';
 
 const EDITOR_URL = chrome.runtime.getURL('src/editor/index.html');
+const POPUP_URL = 'src/popup/index.html';
+/** Icon context-menu checkbox that toggles express mode. */
+const MENU_EXPRESS_ID = 'oss-express';
 
 /** Minimum gap between `captureVisibleTab` calls — Chrome throttles to ~2/sec. */
 const CAPTURE_THROTTLE_MS = 500;
@@ -45,7 +56,9 @@ const PAINT_SETTLE_MS = 60;
 
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
-    console.log('[OpenScreenShot] installed — welcome card will show on first popup open.');
+    // The setup walkthrough takes the permission grants a first recording
+    // needs; the welcome card still shows on first popup open.
+    void chrome.tabs.create({ url: chrome.runtime.getURL('src/setup/index.html?from=install') });
   }
   void createContextMenus();
 });
@@ -82,8 +95,43 @@ async function createContextMenus(): Promise<void> {
       contexts: MENU_CONTEXTS,
     });
   }
+  // Express lives on the icon's right-click menu: once it hijacks the icon
+  // click, this checkbox is the only remaining surface that can turn it off.
+  chrome.contextMenus.create({
+    id: MENU_EXPRESS_ID,
+    type: 'checkbox',
+    title: chrome.i18n.getMessage('expressLabel'),
+    contexts: ['action'],
+    checked: (await getSettings()).expressMode,
+  });
   await ensureRepeatMenuItem();
 }
+
+/**
+ * Point the icon click at the popup or (in express mode) straight at a capture.
+ * `action.onClicked` only fires while no popup is bound, so the binding is the
+ * mode switch. Runs on every worker start and settings change; the menu update
+ * fails harmlessly before the checkbox exists (first run before onInstalled).
+ */
+async function syncExpressMode(): Promise<void> {
+  const { expressMode } = await getSettings();
+  await chrome.action.setPopup({ popup: expressMode ? '' : POPUP_URL });
+  chrome.contextMenus.update(MENU_EXPRESS_ID, { checked: expressMode }, () => {
+    void chrome.runtime.lastError;
+  });
+}
+
+void syncExpressMode();
+onSettingsChanged(() => void syncExpressMode());
+// The popup binding may revert to the manifest default when the browser
+// restarts; this listener guarantees the worker wakes then and re-syncs.
+chrome.runtime.onStartup.addListener(() => void syncExpressMode());
+
+// Express mode only: with no popup bound, the icon click grants `activeTab`
+// and lands here.
+chrome.action.onClicked.addListener(() => {
+  void handleCapture('full-page').catch(onCaptureError);
+});
 
 /**
  * Add the "repeat last region" item once a region has been stored. The create
@@ -105,6 +153,12 @@ async function ensureRepeatMenuItem(): Promise<void> {
 // A context menu click grants `activeTab` just like opening the popup does.
 chrome.contextMenus.onClicked.addListener((info) => {
   const id = String(info.menuItemId);
+  if (id === MENU_EXPRESS_ID) {
+    // Chrome already flipped the checkbox; persist the new state. The
+    // settings-change listener then rebinds the popup.
+    void setSettings({ expressMode: info.checked === true });
+    return;
+  }
   if (id === MENU_REPEAT_ID) {
     void handleCapture('region', true).catch(onCaptureError);
     return;
@@ -165,8 +219,9 @@ async function handleCapture(mode: CaptureMode, repeatRegion = false): Promise<v
 let countdownActive = false;
 
 /**
- * Tick the action badge down once per second, then clear it. Each `chrome.*`
- * call resets the MV3 idle timer, so a ≤10s countdown can't kill the worker.
+ * Tick the action badge down once per second, then hand the badge back to the
+ * recorder (which clears it when nothing is recording). Each `chrome.*` call
+ * resets the MV3 idle timer, so a ≤10s countdown can't kill the worker.
  */
 async function runCountdown(seconds: number): Promise<void> {
   await chrome.action.setBadgeBackgroundColor({ color: '#e8503a' });
@@ -175,7 +230,7 @@ async function runCountdown(seconds: number): Promise<void> {
     await chrome.action.setBadgeText({ text: String(s) });
     await delay(1000);
   }
-  await chrome.action.setBadgeText({ text: '' });
+  await restoreRecBadge();
 }
 
 async function getActiveTab(): Promise<chrome.tabs.Tab | null> {
@@ -450,7 +505,7 @@ async function flashErrorBadge(): Promise<void> {
   await chrome.action.setBadgeTextColor({ color: '#ffffff' });
   await chrome.action.setBadgeText({ text: '!' });
   await delay(4000);
-  await chrome.action.setBadgeText({ text: '' });
+  await restoreRecBadge();
 }
 
 /** A quick capture opens no tab, so the badge is the only place to report success. */
@@ -459,14 +514,14 @@ async function flashDoneBadge(): Promise<void> {
   await chrome.action.setBadgeTextColor({ color: '#ffffff' });
   await chrome.action.setBadgeText({ text: '✓' });
   await delay(1200);
-  await chrome.action.setBadgeText({ text: '' });
+  await restoreRecBadge();
 }
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function isCaptureRequest(m: unknown): m is BackgroundMessage {
+function isCaptureRequest(m: unknown): m is CaptureRequest {
   return (
     !!m &&
     typeof m === 'object' &&

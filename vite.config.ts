@@ -22,6 +22,16 @@ export default defineConfig({
     // chrome-extension:// pages discard crossorigin modulepreloads ("cross-world
     // extension resource mismatch" warning), so emitting them is pure noise.
     modulePreload: false,
+    rollupOptions: {
+      // crxjs only builds pages reachable from the manifest; the offscreen and
+      // recorder pages are opened via chrome.runtime.getURL, so list them here.
+      input: {
+        offscreen: 'src/offscreen/index.html',
+        recorder: 'src/recorder/index.html',
+        webcamFrame: 'src/recorder/webcam-frame.html',
+        setup: 'src/setup/index.html',
+      },
+    },
   },
   test: {
     environment: 'node',

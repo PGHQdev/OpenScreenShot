@@ -17,9 +17,16 @@ import {
   FILENAME_TOKENS,
   formatFilename,
   insertToken,
+  isProtectedUrl,
   normalizeCaptureAction,
   normalizeCaptureDelay,
 } from '../shared/utils';
+import {
+  DEFAULT_RECORDING_SETTINGS,
+  type RecordingSettings,
+  type RecState,
+} from '../shared/recording-types';
+import { popupWarnings, type DevicePermission } from '../shared/permissions';
 
 // i18n helper
 function t(id: string): string {
@@ -34,6 +41,71 @@ function openShortcutSettings() {
 // External link — open in a tab (a bare <a> would navigate the popup away).
 function openKofi() {
   void chrome.tabs.create({ url: 'https://ko-fi.com/T7A624DAY7' });
+}
+
+function openCoolStuff() {
+  void chrome.tabs.create({ url: 'https://openscreenshot.app/cool-stuff' });
+}
+
+/**
+ * Open the recording setup walkthrough; the popup hands off and closes.
+ * An already-open setup tab is focused, never duplicated — a stack of
+ * identical setup tabs reads as "the close button does nothing".
+ */
+function openSetupPage(from?: 'record') {
+  const base = chrome.runtime.getURL('src/setup/index.html');
+  const url = base + (from ? `?from=${from}` : '');
+  void (async () => {
+    try {
+      const [tab] = await chrome.tabs.query({ url: base + '*' });
+      if (tab?.id != null) {
+        await chrome.tabs.update(tab.id, { active: true, url });
+        if (tab.windowId != null) await chrome.windows.update(tab.windowId, { focused: true });
+      } else {
+        await chrome.tabs.create({ url });
+      }
+    } catch {
+      await chrome.tabs.create({ url }).catch(() => {});
+    } finally {
+      window.close();
+    }
+  })();
+}
+
+/** Camera/mic grant state for the warning chips; 'prompt' when unqueryable. */
+async function queryDeviceStates(): Promise<{ camera: DevicePermission; mic: DevicePermission }> {
+  const query = async (name: string): Promise<DevicePermission> => {
+    try {
+      return (await navigator.permissions.query({ name: name as PermissionName })).state;
+    } catch {
+      return 'prompt';
+    }
+  };
+  const [camera, mic] = await Promise.all([query('camera'), query('microphone')]);
+  return { camera, mic };
+}
+
+const REC_SETTINGS_KEY = 'openscreenshot:rec-settings';
+const CONTINUE_SESSION_KEY = 'openscreenshot:continue-session';
+
+/** Load recorder toggles, merged over the defaults so new fields are always present. */
+async function getRecSettings(): Promise<RecordingSettings> {
+  const stored = await chrome.storage.local.get(REC_SETTINGS_KEY);
+  const partial = (stored[REC_SETTINGS_KEY] ?? {}) as Partial<RecordingSettings>;
+  return { ...DEFAULT_RECORDING_SETTINGS, ...partial };
+}
+
+/** Persist recorder toggles as-is (caller merges the patch). */
+async function setRecSettings(next: RecordingSettings): Promise<void> {
+  await chrome.storage.local.set({ [REC_SETTINGS_KEY]: next });
+}
+
+/** mm:ss from recorded ms, pauses already excluded by the caller. */
+function formatElapsed(ms: number): string {
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
 }
 
 // Reopen the stashed capture in the editor (the stash survives editor loads).
@@ -93,6 +165,17 @@ export function App() {
   const [shortcuts, setShortcuts] = useState<Record<string, string>>({});
   const [hasStash, setHasStash] = useState(false);
   const [hasRegion, setHasRegion] = useState(false);
+  const [recState, setRecState] = useState<RecState | null>(null);
+  const [recSettings, setRecSettingsState] = useState<RecordingSettings>(
+    DEFAULT_RECORDING_SETTINGS,
+  );
+  const [activeTabProtected, setActiveTabProtected] = useState(false);
+  const [continueSessionId, setContinueSessionId] = useState<string | null>(null);
+  const [displayMs, setDisplayMs] = useState(0);
+  const [deviceStates, setDeviceStates] = useState<{
+    camera: DevicePermission;
+    mic: DevicePermission;
+  }>({ camera: 'prompt', mic: 'prompt' });
 
   // Load settings + apply theme on mount.
   useEffect(() => {
@@ -110,6 +193,32 @@ export function App() {
     void hasLastCapture().then(setHasStash);
     void getLastRegion().then((r) => setHasRegion(r != null));
   }, []);
+
+  // Recorder: settings, active tab, a pending continue-session, and current state.
+  useEffect(() => {
+    void getRecSettings().then(setRecSettingsState);
+    void queryDeviceStates().then(setDeviceStates);
+    void chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
+      setActiveTabProtected(isProtectedUrl(tab?.url));
+    });
+    void chrome.storage.session.get(CONTINUE_SESSION_KEY).then((stored) => {
+      setContinueSessionId((stored[CONTINUE_SESSION_KEY] as string | undefined) ?? null);
+    });
+    void sendToBackground({ type: 'REC_QUERY' })
+      .then((res) => setRecState(res as RecState))
+      .catch(() => {});
+  }, []);
+
+  // Tick the on-screen timer locally from the elapsed baseline the worker reported.
+  useEffect(() => {
+    if (!recState?.active) return;
+    const baseMs = recState.elapsedMs ?? 0;
+    setDisplayMs(baseMs);
+    if (recState.paused) return;
+    const start = Date.now();
+    const id = setInterval(() => setDisplayMs(baseMs + (Date.now() - start)), 250);
+    return () => clearInterval(id);
+  }, [recState?.active, recState?.paused, recState?.elapsedMs]);
 
   // 1/2/3 fire a capture while the mode list is showing.
   useEffect(() => {
@@ -191,6 +300,59 @@ export function App() {
     setShowWelcome(false);
     const next = await setSettings({ showOnboarding: false });
     setSettingsState(next);
+  }
+
+  async function updateRecSettings(patch: Partial<RecordingSettings>) {
+    const next = { ...recSettings, ...patch };
+    setRecSettingsState(next);
+    await setRecSettings(next);
+  }
+
+  // Recording needs the page, so the popup closes right after handing off —
+  // same reasoning as region mode in capture().
+  async function startRecording() {
+    // The setup walkthrough owns the grant. Anything missing routes there —
+    // an inline prompt here has no room for recovery when it goes wrong.
+    const granted = await chrome.permissions.contains({ permissions: ['tabCapture'] });
+    if (!granted) {
+      openSetupPage('record');
+      return;
+    }
+    await chrome.storage.session.remove(CONTINUE_SESSION_KEY);
+    void sendToBackground({
+      type: 'REC_START',
+      settings: recSettings,
+      continueSessionId: continueSessionId ?? undefined,
+    })
+      .catch(() => {})
+      .finally(() => window.close());
+  }
+
+  function onRecordClick() {
+    if (activeTabProtected) {
+      pushToast(t('recProtected'), 'error');
+      return;
+    }
+    void startRecording();
+  }
+
+  function stopRecording() {
+    void sendToBackground({ type: 'REC_STOP' })
+      .catch(() => {})
+      .finally(() => window.close());
+  }
+
+  function cancelRecording() {
+    void sendToBackground({ type: 'REC_CANCEL' })
+      .catch(() => {})
+      .finally(() => window.close());
+  }
+
+  function recoverRecording(sessionId: string) {
+    void chrome.tabs.create({
+      url: chrome.runtime.getURL('src/recorder/index.html') + '?session=' + sessionId,
+    });
+    window.close();
   }
 
   return (
@@ -295,6 +457,89 @@ export function App() {
             })}
           </nav>
 
+          {recState?.active ? (
+            <div class="mode-card rec-live">
+              <span class="rec-dot" aria-hidden="true" />
+              <span class="mode-text">
+                <span class="mode-title">
+                  {recState.paused ? t('recPaused') : t('recRecording')}
+                </span>
+                <span class="mode-sub">{formatElapsed(displayMs)}</span>
+              </span>
+              <span class="mode-keys">
+                <button class="seg-btn" onClick={stopRecording}>
+                  {t('recStop')}
+                </button>
+                <button class="seg-btn" onClick={cancelRecording}>
+                  {t('recCancel')}
+                </button>
+              </span>
+            </div>
+          ) : (
+            <button
+              class="mode-card"
+              aria-disabled={activeTabProtected}
+              title={activeTabProtected ? t('recProtected') : undefined}
+              onClick={onRecordClick}
+            >
+              <span class="mode-icon" aria-hidden="true">
+                <RecordIcon />
+              </span>
+              <span class="mode-text">
+                <span class="mode-title">{t(continueSessionId ? 'recContinue' : 'recTitle')}</span>
+                <span class="mode-sub">{t('recSub')}</span>
+              </span>
+            </button>
+          )}
+
+          {recState?.active ? null : (
+            <div class="seg seg-fill delay-row">
+              <button
+                class="seg-btn"
+                aria-pressed={recSettings.mic}
+                onClick={() => updateRecSettings({ mic: !recSettings.mic })}
+              >
+                {t('recMic')}
+              </button>
+              <button
+                class="seg-btn"
+                aria-pressed={recSettings.tabAudio}
+                onClick={() => updateRecSettings({ tabAudio: !recSettings.tabAudio })}
+              >
+                {t('recTabAudio')}
+              </button>
+              <button
+                class="seg-btn"
+                aria-pressed={recSettings.webcam}
+                onClick={() => updateRecSettings({ webcam: !recSettings.webcam })}
+              >
+                {t('recWebcam')}
+              </button>
+            </div>
+          )}
+
+          {recState?.active
+            ? null
+            : popupWarnings(recSettings, deviceStates).map((device) => (
+                <button key={device} class="perm-chip" onClick={() => openSetupPage()}>
+                  {chrome.i18n.getMessage(
+                    'popupPermissionChip',
+                    t(device === 'mic' ? 'recMic' : 'recWebcam'),
+                  )}
+                </button>
+              ))}
+
+          {recState?.recoverableSessionId && !recState.active ? (
+            <div class="footer-row">
+              <button
+                class="link-btn"
+                onClick={() => recoverRecording(recState.recoverableSessionId as string)}
+              >
+                {t('recRecover')}
+              </button>
+            </div>
+          ) : null}
+
           <div class="settings-row delay-row">
             <span class="settings-label">{t('delayLabel')}</span>
             <div class="seg">
@@ -330,6 +575,27 @@ export function App() {
             <span class="settings-hint">{t('actionHintPng')}</span>
           ) : null}
 
+          <div class="settings-row delay-row">
+            <span class="settings-label">{t('expressLabel')}</span>
+            <div class="seg">
+              <button
+                class="seg-btn"
+                aria-pressed={!settings.expressMode}
+                onClick={() => updateSettings({ expressMode: false })}
+              >
+                {t('expressOff')}
+              </button>
+              <button
+                class="seg-btn"
+                aria-pressed={settings.expressMode}
+                onClick={() => updateSettings({ expressMode: true })}
+              >
+                {t('expressOn')}
+              </button>
+            </div>
+          </div>
+          {settings.expressMode ? <span class="settings-hint">{t('expressHint')}</span> : null}
+
           <div class="divider" />
 
           <div class="footer-row">
@@ -356,6 +622,14 @@ export function App() {
               <CoffeeMark />
               {t('footerKofi')}
             </button>
+            <button
+              class="link-btn kofi-link"
+              onClick={openCoolStuff}
+              title={t('coolStuffTitle')}
+              aria-label={t('footerCoolStuff')}
+            >
+              <GiftMark />
+            </button>
           </div>
         </>
       )}
@@ -372,7 +646,22 @@ function SettingsView({
 }) {
   const filenameRef = useRef<HTMLInputElement>(null);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [acrossSites, setAcrossSites] = useState(false);
   const showQuality = settings.defaultFormat === 'jpeg' || settings.defaultFormat === 'webp';
+
+  useEffect(() => {
+    void chrome.permissions.contains({ origins: ['<all_urls>'] }).then(setAcrossSites);
+  }, []);
+
+  async function toggleAcrossSites(next: boolean) {
+    if (next) {
+      const granted = await chrome.permissions.request({ origins: ['<all_urls>'] });
+      setAcrossSites(granted);
+    } else {
+      await chrome.permissions.remove({ origins: ['<all_urls>'] });
+      setAcrossSites(await chrome.permissions.contains({ origins: ['<all_urls>'] }));
+    }
+  }
 
   function insertAtCaret(token: string) {
     const el = filenameRef.current;
@@ -471,6 +760,34 @@ function SettingsView({
         <span class="settings-hint">{previewFilename(settings)}</span>
       </div>
 
+      <div class="settings-row">
+        <span class="settings-label">{t('popupSetupLink')}</span>
+        <button class="link-btn" onClick={() => openSetupPage()}>
+          {t('setupTitle')}
+        </button>
+      </div>
+
+      <div class="settings-row">
+        <span class="settings-label">{t('recAcrossSites')}</span>
+        <div class="seg">
+          <button
+            class="seg-btn"
+            aria-pressed={!acrossSites}
+            onClick={() => toggleAcrossSites(false)}
+          >
+            {t('recOff')}
+          </button>
+          <button
+            class="seg-btn"
+            aria-pressed={acrossSites}
+            onClick={() => toggleAcrossSites(true)}
+          >
+            {t('recOn')}
+          </button>
+        </div>
+      </div>
+      <span class="settings-hint">{t('recAcrossSitesHint')}</span>
+
       <div class="divider" />
       <button
         class="link-btn reset-btn"
@@ -497,8 +814,17 @@ function Welcome({ onDone }: { onDone: () => void }) {
         <li>{t('welcomeList3')}</li>
       </ul>
       <p class="welcome-perm">{t('welcomePerm')}</p>
-      <button class="btn-primary" onClick={onDone}>
+      <button
+        class="btn-primary"
+        onClick={() => {
+          onDone();
+          openSetupPage();
+        }}
+      >
         {t('welcomeCta')}
+      </button>
+      <button class="link-btn" onClick={onDone}>
+        {t('welcomeSkip')}
       </button>
     </div>
   );
@@ -539,6 +865,14 @@ function ModeIcon({ id }: { id: CaptureMode }) {
   }
 }
 
+function RecordIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="8" fill="currentColor" />
+    </svg>
+  );
+}
+
 function GearMark() {
   return (
     <svg
@@ -575,6 +909,26 @@ function CoffeeMark() {
       <line x1="6" x2="6" y1="2" y2="4" />
       <line x1="10" x2="10" y1="2" y2="4" />
       <line x1="14" x2="14" y1="2" y2="4" />
+    </svg>
+  );
+}
+
+function GiftMark() {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="3" y="8" width="18" height="4" rx="1" />
+      <path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
+      <path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5" />
     </svg>
   );
 }

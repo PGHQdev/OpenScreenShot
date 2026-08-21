@@ -35,6 +35,16 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 | Resize / scale at export (50%, fixed width, …)            | ✅ shipped | Landed in v0.7.0: 25/50/100/200% or an exact pixel width, hidden for PDF. Resamples the composed canvas through repeated halvings, and refuses sizes past Chrome's canvas limits instead of writing an empty file.                                                                                                         |
 | Drag & drop / paste any image into the editor             | ✅ shipped | Landed in v1.1.0: drop an image on the stage or paste one anywhere outside a text field. An import takes the same seat a capture takes, so every tool, export path, and the beautify frame keep working, and the topbar reads `Imported`. It replaces the canvas, so it asks first whenever there are annotations to lose. |
 
+## Recording
+
+| Feature                                                                                 | Status       | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| --------------------------------------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Screen recorder with auto zoom (record tab, zoom at clicks, webcam bubble, WebM export) | ✅ shipped   | Landed in v1.2.0: `tabCapture` is an optional permission, requested once at first record, so there's no update warning. An offscreen document runs the capture engine and writes crash-safe 1 s chunks to IndexedDB. The editor (`src/recorder/`) plays the take on a timeline with automatic zoom at cursor clicks, manual zoom blocks, and per-segment trim, then re-renders the export through a canvas, mixing in mic and tab audio, click ripples, and an optional webcam bubble. |
+| MP4 export                                                                              | 📋 planned   | WebCodecs plus a muxer, alongside the existing WebM path.                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Follow-cursor zoom mode                                                                 | 📋 planned   | A zoom that pans to track the cursor instead of sitting on fixed auto/manual blocks.                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Platform size presets (YouTube, Shorts, square, …)                                      | 🧭 exploring | Export at a target aspect ratio instead of the recorded tab's own.                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Split-and-delete inside a segment                                                       | 🧭 exploring | Cut a segment in two on the timeline and drop the piece you don't want, rather than trimming from an end only.                                                                                                                                                                                                                                                                                                                                                                         |
+
 ## Power features
 
 | Feature                                  | Status       | Notes                                                                                                                                                                                                                                                                                                                                                                      |
@@ -60,37 +70,38 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 
 ## Recently shipped
 
-| Feature                                                   | Version |
-| --------------------------------------------------------- | ------- |
-| Quick capture: straight to clipboard or disk              | v1.1.0  |
-| Eyedropper color picker (`I`), plus a screen-wide pick    | v1.1.0  |
-| Drag & drop or paste any image into the editor            | v1.1.0  |
-| Crash-safe editor drafts, restored on reopen              | v1.1.0  |
-| Beautify mode: padding, rounded corners, shadow, gradient | v0.7.0  |
-| Resize / scale at export (25/50/100/200% or a width)      | v0.7.0  |
-| Delayed capture (3s / 5s / 10s timer)                     | v0.6.1  |
-| Right-click context menu capture                          | v0.6.1  |
-| Repeat last region                                        | v0.6.1  |
-| Solid and mosaic redaction modes on the blur tool         | v0.6.0  |
-| Spotlight tool (`O`)                                      | v0.6.0  |
-| Resize handles on every annotation type                   | v0.6.0  |
-| Straight line tool (`L`)                                  | v0.5.0  |
-| Shift constraints: square rects, 45° lines and arrows     | v0.5.0  |
-| Number keys `1`–`8` set the annotation color              | v0.5.0  |
-| Double-click a text layer to re-edit it                   | v0.5.0  |
-| `{domain}` filename token                                 | v0.4.0  |
-| Numbered step badges and the highlighter tool             | v0.3.0  |
-| Shortcut sheet in the editor, with Export bound to ⌘S     | v0.3.0  |
-| One zoom menu, with keyboard zoom controls                | v0.3.0  |
-| Named swatches, a custom colour, and recent colours       | v0.3.0  |
-| Undo, redo, and delete moved to the topbar                | v0.3.0  |
-| Style bar shown only when a control applies               | v0.3.0  |
-| Export dialog can save its settings as the new defaults   | v0.3.0  |
-| Clickable filename tokens with a live preview             | v0.3.0  |
-| Two-click reset to defaults in settings                   | v0.3.0  |
-| One stable popup footer, and per-mode shortcut chips      | v0.3.0  |
-| Ko-fi donation links (README, site, popup footer)         | v0.2.7  |
+| Feature                                                    | Version |
+| ---------------------------------------------------------- | ------- |
+| Screen recorder with auto zoom, webcam bubble, WebM export | v1.2.0  |
+| Quick capture: straight to clipboard or disk               | v1.1.0  |
+| Eyedropper color picker (`I`), plus a screen-wide pick     | v1.1.0  |
+| Drag & drop or paste any image into the editor             | v1.1.0  |
+| Crash-safe editor drafts, restored on reopen               | v1.1.0  |
+| Beautify mode: padding, rounded corners, shadow, gradient  | v0.7.0  |
+| Resize / scale at export (25/50/100/200% or a width)       | v0.7.0  |
+| Delayed capture (3s / 5s / 10s timer)                      | v0.6.1  |
+| Right-click context menu capture                           | v0.6.1  |
+| Repeat last region                                         | v0.6.1  |
+| Solid and mosaic redaction modes on the blur tool          | v0.6.0  |
+| Spotlight tool (`O`)                                       | v0.6.0  |
+| Resize handles on every annotation type                    | v0.6.0  |
+| Straight line tool (`L`)                                   | v0.5.0  |
+| Shift constraints: square rects, 45° lines and arrows      | v0.5.0  |
+| Number keys `1`–`8` set the annotation color               | v0.5.0  |
+| Double-click a text layer to re-edit it                    | v0.5.0  |
+| `{domain}` filename token                                  | v0.4.0  |
+| Numbered step badges and the highlighter tool              | v0.3.0  |
+| Shortcut sheet in the editor, with Export bound to ⌘S      | v0.3.0  |
+| One zoom menu, with keyboard zoom controls                 | v0.3.0  |
+| Named swatches, a custom colour, and recent colours        | v0.3.0  |
+| Undo, redo, and delete moved to the topbar                 | v0.3.0  |
+| Style bar shown only when a control applies                | v0.3.0  |
+| Export dialog can save its settings as the new defaults    | v0.3.0  |
+| Clickable filename tokens with a live preview              | v0.3.0  |
+| Two-click reset to defaults in settings                    | v0.3.0  |
+| One stable popup footer, and per-mode shortcut chips       | v0.3.0  |
+| Ko-fi donation links (README, site, popup footer)          | v0.2.7  |
 
 ---
 
-_Last updated for v1.1.0._
+_Last updated for v1.2.0._

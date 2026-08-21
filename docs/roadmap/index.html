@@ -47,6 +47,8 @@
         --font:
           -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'Helvetica Neue', Arial,
           sans-serif;
+        --font-display:
+          'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
         --surface-0: #f5f3ee;
         --surface-1: #fffefb;
         --surface-2: #ebe7e0;
@@ -154,9 +156,10 @@
       }
 
       h1 {
+        font-family: var(--font-display);
         font-size: clamp(30px, 5vw, 40px);
-        font-weight: 800;
-        letter-spacing: -0.02em;
+        font-weight: 600;
+        letter-spacing: -0.01em;
         margin: var(--s-8) 0 var(--s-2);
       }
       .lead {
@@ -173,8 +176,9 @@
         color: var(--text-1);
       }
       h2 {
+        font-family: var(--font-display);
         font-size: 22px;
-        font-weight: 700;
+        font-weight: 600;
         margin: var(--s-8) 0 var(--s-4);
       }
 
@@ -360,6 +364,7 @@
       <span>
         <a href="/docs/" class="nav-back">Docs</a>
         <a href="/support/" class="nav-back">Support</a>
+        <a href="/cool-stuff/" class="nav-back">Cool stuff</a>
       </span>
     </nav>
 
@@ -369,7 +374,7 @@
       <p class="promise">
         <strong>Our promise:</strong> everything on this page stays 100% local. No servers, no
         accounts, no new data collection — ever. Roadmap items are not dated promises; feedback and
-        pull requests shape what ships. Current release: <strong>v1.1.0</strong>.
+        pull requests shape what ships. Current release: <strong>v1.2.0</strong>.
       </p>
 
       <div class="legend" aria-label="Status legend">
@@ -397,6 +402,40 @@
         <p>
           Scroll-and-stitch several pages and export them as a single multi-page PDF. It combines
           two parts that already exist.
+        </p>
+      </div>
+
+      <h2 id="recording">Recording</h2>
+
+      <div class="item">
+        <div class="item-head">
+          <strong>MP4 export</strong>
+          <span class="status status-exploring">Exploring</span>
+        </div>
+        <p>WebCodecs plus a muxer, alongside the existing WebM export.</p>
+      </div>
+      <div class="item">
+        <div class="item-head">
+          <strong>Follow-cursor zoom mode</strong>
+          <span class="status status-exploring">Exploring</span>
+        </div>
+        <p>A zoom that pans to track the cursor, instead of sitting on fixed zoom blocks.</p>
+      </div>
+      <div class="item">
+        <div class="item-head">
+          <strong>Platform size presets</strong>
+          <span class="status status-exploring">Exploring</span>
+        </div>
+        <p>Export at a target aspect ratio — YouTube, Shorts, square — instead of the tab's own.</p>
+      </div>
+      <div class="item">
+        <div class="item-head">
+          <strong>Split-and-delete inside a segment</strong>
+          <span class="status status-exploring">Exploring</span>
+        </div>
+        <p>
+          Cut a segment in two on the timeline and drop the piece you don't want, instead of
+          trimming from an end only.
         </p>
       </div>
 
@@ -471,7 +510,21 @@
       <h2 id="shipped">Shipped</h2>
 
       <div class="ship-group">
-        <p class="ship-ver">v1.1.0 <span>current release</span></p>
+        <p class="ship-ver">v1.2.0 <span>current release</span></p>
+        <ul class="ship">
+          <li>
+            <strong>Screen recorder with auto zoom</strong> — record the current tab, with a
+            <code>tabCapture</code> permission requested once, at your first recording. The editor
+            plays the take on a timeline with automatic zoom at cursor clicks, manual zoom blocks,
+            and per-segment trim, then re-renders the export through canvas, mixing in mic and tab
+            audio, click ripples, and an optional webcam bubble. 1-second chunks land in IndexedDB
+            as you record, so a crash or a killed background page recovers.
+          </li>
+        </ul>
+      </div>
+
+      <div class="ship-group">
+        <p class="ship-ver">v1.1.0</p>
         <ul class="ship">
           <li>
             <strong>Quick capture</strong> — an "After capture" row in the popup sends a capture to
@@ -608,6 +661,7 @@
       <div class="container">
         © <span id="year"></span> OpenScreenShot @PGHQdev ·
         <a href="https://openscreenshot.app/privacy/">Privacy</a> ·
+        <a href="/cool-stuff/">Cool stuff</a> ·
         <a href="https://github.com/pghqdev/OpenScreenShot/blob/main/LICENSE">MIT License</a>
       </div>
     </footer>

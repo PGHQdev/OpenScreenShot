@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenScreenShot Webcam Preview</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        overflow: hidden;
+      }
+      video {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+        background: #141416;
+        /* Drags land on the host wrapper's handle ring, never on the video. */
+        pointer-events: none;
+      }
+      .denied {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        padding: 18px;
+        border-radius: 50%;
+        background: #141416;
+        color: #fff;
+        text-align: center;
+        font:
+          500 12px/1.35 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        border: 2px solid #e8503a;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module" src="./webcam-frame.ts"></script>
+  </body>
+</html>

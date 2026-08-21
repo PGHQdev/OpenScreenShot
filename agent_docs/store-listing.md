@@ -44,8 +44,17 @@ EXPORT
 • Filename templates and saved defaults
 • Export at 25/50/100/200% or an exact pixel width
 
+RECORD
+• Record the current tab in one click — the tabCapture permission prompt appears once, then every recording after starts instantly
+• Auto zoom at every click you make, 2x with a smooth ease
+• Add your own zoom blocks and trim any part of the timeline by hand
+• Mix in microphone narration and tab audio with independent volume control
+• Draggable webcam bubble overlay
+• Crash-safe: 1-second chunks save to the device as you go, so a crashed tab or a killed background page never loses the take, and Continue recording picks a session back up
+• Export to WebM, beautified with the same padding, rounded corners, shadow, and gradient frame as screenshots
+
 PRIVATE BY DESIGN
-Your screenshots never leave your device. Capture, editing, and export all run locally, and the extension works fully offline. No sign-up, no tracking, no third-party services, and only the minimum permissions a screenshot needs.
+Your screenshots and recordings never leave your device. Capture, editing, recording, and export all run locally, and the extension works fully offline. No sign-up, no tracking, no third-party services, and only the minimum permissions each feature needs.
 
 OPEN SOURCE
 OpenScreenShot is MIT-licensed. Read the code, file issues, or contribute at github.com/pghqdev/OpenScreenShot.
@@ -100,9 +109,34 @@ OpenScreenShot uses contextMenus to add one "OpenScreenShot" submenu to the page
 Copy to clipboard is one of the ways to get a screenshot out of the extension. The editor's Copy button and quick mode's clipboard action both build a PNG and call navigator.clipboard.write with it. A service worker has no navigator.clipboard, so the quick mode path injects a small self-contained function into the captured tab with chrome.scripting.executeScript to make that call, then removes it once the write finishes. The extension only ever writes the screenshot the user just captured or exported to the clipboard; it never reads the clipboard's existing contents.
 ```
 
+**offscreen**
+
+```
+Recording the tab needs a page that can hold a live MediaRecorder and write video chunks to IndexedDB as they arrive; a service worker can be evicted mid-recording and has no such page context. chrome.offscreen creates that hidden page only while a recording, or its crash-safe write-out, is active, and closes it when the session ends. offscreen requires no user prompt and adds no install-time warning.
+```
+
+## Optional permission justifications
+
+`tabCapture` and `<all_urls>` are declared in `optional_permissions` /
+`optional_host_permissions`, requested at runtime with `chrome.permissions.request`, never at
+install. The dashboard's permission-justification fields above cover the required
+permissions; these two are documented here for the same review.
+
+**tabCapture (optional)**
+
+```
+Screen recording needs the pixels, and optionally the audio, of the tab being recorded. The extension calls chrome.tabCapture.getMediaStreamId only after the user clicks Record for the first time, which raises Chrome's own permission prompt; every recording after that reuses the granted permission with no further prompt. Declaring it optional means it carries no install-time warning and never appears unless the user actually starts a recording.
+```
+
+**`<all_urls>` (optional host permission)**
+
+```
+The in-page recording control bar and cursor logger are injected into the tab being recorded. If that tab navigates to a different origin mid-recording, chrome.scripting.executeScript needs a matching host permission to re-inject there; without it the overlay and cursor log stop at the first cross-origin navigation. This permission is requested only when the user turns on "Record across sites" in settings, through a dedicated chrome.permissions.request click, and is never requested by default.
+```
+
 **Remote code**: No, I am not using remote code. All scripts are in the package.
 
-**Data usage**: no data collected. The extension has no network code and no host permissions.
+**Data usage**: no data collected. The extension has no network code. `host_permissions` is empty at install; the optional `<all_urls>` host permission is requested only if the user turns on "Record across sites".
 
 ## Assets
 

@@ -120,6 +120,8 @@
         --font:
           -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'Helvetica Neue', Arial,
           sans-serif;
+        --font-display:
+          'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
         --surface-0: #f5f3ee;
         --surface-1: #fffefb;
         --surface-2: #ebe7e0;
@@ -220,9 +222,10 @@
       }
 
       h1 {
+        font-family: var(--font-display);
         font-size: clamp(30px, 5vw, 40px);
-        font-weight: 800;
-        letter-spacing: -0.02em;
+        font-weight: 600;
+        letter-spacing: -0.01em;
         margin: var(--s-8) 0 var(--s-2);
       }
       .lead {
@@ -231,8 +234,9 @@
         margin: 0 0 var(--s-6);
       }
       h2 {
+        font-family: var(--font-display);
         font-size: 22px;
-        font-weight: 700;
+        font-weight: 600;
         margin: var(--s-8) 0 var(--s-4);
       }
       p,
@@ -385,6 +389,7 @@
       <span>
         <a href="/roadmap/" class="nav-back">Roadmap</a>
         <a href="/docs/" class="nav-back" style="margin-left: var(--s-4)">Docs</a>
+        <a href="/cool-stuff/" class="nav-back" style="margin-left: var(--s-4)">Cool stuff</a>
       </span>
     </nav>
 
@@ -759,6 +764,87 @@
         </div>
       </details>
 
+      <details class="faq">
+        <summary>
+          Why does Chrome ask for tab capture access?
+          <svg
+            class="chev"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </summary>
+        <div class="faq-a">
+          <p>
+            <code>tabCapture</code> is an optional permission, not one the extension asks for at
+            install. Chrome shows the prompt once, the first time you click Record; every recording
+            after that starts in one click, with no further prompt. Declaring it optional means it
+            carries no install-time warning and never appears unless you actually start a recording.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq">
+        <summary>
+          Where are my recordings stored?
+          <svg
+            class="chev"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </summary>
+        <div class="faq-a">
+          <p>
+            On your device, and nowhere else. Video chunks, the cursor log, and any mic or tab audio
+            are written to IndexedDB as you record, in 1-second pieces, so a crash or a killed
+            background page never loses the take. They stay there until you export or delete the
+            session — nothing is ever uploaded.
+          </p>
+        </div>
+      </details>
+
+      <details class="faq">
+        <summary>
+          Why WebM and not MP4?
+          <svg
+            class="chev"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </summary>
+        <div class="faq-a">
+          <p>
+            The recorder exports through <code>MediaRecorder</code>, which writes WebM natively in
+            every browser that supports tab capture. MP4 export is on the
+            <a href="/roadmap/">roadmap</a>, via WebCodecs and a muxer, alongside the WebM path this
+            version ships.
+          </p>
+        </div>
+      </details>
+
       <h2 id="limitations">Known limitations</h2>
       <ul class="notes">
         <li>
@@ -777,6 +863,12 @@
         <li>
           <strong>No settings sync</strong> — your theme, export format, and filename template live
           in local storage and don't sync across devices or profiles.
+        </li>
+        <li>
+          <strong>The live webcam bubble is part of the recorded page</strong> — while you record,
+          the control bar and the webcam preview are elements on the page itself, so they appear in
+          the raw tab video. The recording editor composites its own webcam bubble as a second
+          overlay on export, on top of whatever the page captured underneath it.
         </li>
       </ul>
 
@@ -829,6 +921,7 @@
       <div class="container">
         © <span id="year"></span> OpenScreenShot @PGHQdev ·
         <a href="https://openscreenshot.app/privacy/">Privacy</a> ·
+        <a href="/cool-stuff/">Cool stuff</a> ·
         <a href="https://github.com/pghqdev/OpenScreenShot/blob/main/LICENSE">MIT License</a>
       </div>
     </footer>

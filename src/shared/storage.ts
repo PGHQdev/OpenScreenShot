@@ -19,6 +19,13 @@ export async function setSettings(patch: Partial<Settings>): Promise<Settings> {
   return next;
 }
 
+/** Run `callback` whenever the stored settings change (any writer, any context). */
+export function onSettingsChanged(callback: () => void): void {
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && SETTINGS_KEY in changes) callback();
+  });
+}
+
 /** Stash the most recent capture so the editor page can load it. */
 export async function setLastCapture(capture: LastCapture): Promise<void> {
   await chrome.storage.local.set({ [LAST_CAPTURE_KEY]: capture });
