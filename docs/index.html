@@ -441,15 +441,9 @@
           gap: var(--s-5);
         }
       }
-      .step .n {
-        font-family: var(--mono);
-        font-size: 12px;
-        letter-spacing: 0.16em;
-        color: var(--accent);
-      }
       .step h3 {
         font-size: 20px;
-        margin: var(--s-2) 0 var(--s-2);
+        margin: 0 0 var(--s-2);
       }
       .step p {
         margin: 0;
@@ -690,8 +684,8 @@
         <div class="container-wide">
           <h1>The whole page, kept to yourself.</h1>
           <p class="sub">
-            OpenScreenShot captures the entire scrolling page, a region, or the visible area in
-            Chrome — then lets you annotate and export it. Everything runs on your device.
+            Capture the entire scrolling page in Chrome, annotate it, and export it. All on your
+            device.
           </p>
           <div class="cta-row">
             <a
@@ -700,7 +694,7 @@
               target="_blank"
               rel="noopener"
             >
-              Add to Chrome — Free
+              Add to Chrome
             </a>
             <a
               class="btn btn-quiet"
@@ -747,10 +741,7 @@
         <div class="container-wide">
           <div class="head">
             <h2>Capture, edit, export.</h2>
-            <p>
-              One extension carries a screenshot from capture to finished image, with no tab
-              juggling and no separate editor.
-            </p>
+            <p>One extension carries a screenshot from capture to finished image.</p>
           </div>
           <div class="marks">
             <span class="mk"></span>
@@ -784,26 +775,22 @@
 
           <div class="steps">
             <div class="step">
-              <span class="n">01</span>
               <h3>Capture</h3>
               <p>
-                Full page, visible area, or a dragged region — from the popup, a keyboard shortcut,
-                or the right-click menu.
+                Full page, visible area, or a dragged region. Start from the popup, a keyboard
+                shortcut, or the right-click menu.
               </p>
             </div>
             <div class="step">
-              <span class="n">02</span>
               <h3>Edit</h3>
               <p>
                 Arrows, text, numbered steps, blur, spotlight, and crop, with undo all the way back.
               </p>
             </div>
             <div class="step">
-              <span class="n">03</span>
               <h3>Export</h3>
               <p>
-                PNG, JPEG, WebP, or multi-page PDF — download it, or copy it straight to the
-                clipboard.
+                Download PNG, JPEG, WebP, or multi-page PDF, or copy it straight to the clipboard.
               </p>
             </div>
           </div>
@@ -837,8 +824,8 @@
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   <span
-                    ><strong>Local storage only</strong> — captures live in extension storage and
-                    recordings in IndexedDB, on your machine, until you export or delete them.</span
+                    >Captures and recordings live in local browser storage, on your machine, until
+                    you export or delete them.</span
                   >
                 </li>
                 <li>
@@ -856,9 +843,8 @@
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                   <span
-                    ><strong>Zero network requests</strong> — host permissions are empty, and the
-                    extension reads a tab only when you capture it; cross-site recording is a
-                    separate opt-in.</span
+                    >Host permissions are empty. The extension reads a tab only when you capture it,
+                    and cross-site recording is a separate opt-in.</span
                   >
                 </li>
                 <li>
@@ -875,10 +861,7 @@
                   >
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
-                  <span
-                    ><strong>MIT licensed, no watermarks</strong> — every line is on GitHub, and
-                    every pixel of an export is yours.</span
-                  >
+                  <span>MIT licensed, with no watermarks. Every line of code is on GitHub.</span>
                 </li>
               </ul>
               <a href="/privacy/">Read the full privacy policy →</a>
@@ -901,7 +884,7 @@
 <span class="k">"optional_host_permissions": [</span><span class="v">"&lt;all_urls&gt;"</span><span class="k">]</span></code></pre>
               <div class="perm-rows">
                 <div class="row">
-                  <code>activeTab</code><span>access the current tab — only when you click</span>
+                  <code>activeTab</code><span>access the current tab, only when you click</span>
                 </div>
                 <div class="row">
                   <code>scripting</code
@@ -929,11 +912,11 @@
                 </div>
                 <div class="row">
                   <code>tabCapture</code
-                  ><span>optional — requested once, at your first recording</span>
+                  ><span>optional; requested once, at your first recording</span>
                 </div>
                 <div class="row">
                   <code>&lt;all_urls&gt;</code
-                  ><span>optional host permission — only if you turn on "Record across sites"</span>
+                  ><span>optional host permission, only if you turn on "Record across sites"</span>
                 </div>
               </div>
             </div>
@@ -944,7 +927,7 @@
       <section id="download" class="cta-final">
         <div class="container">
           <h2>Install OpenScreenShot.</h2>
-          <p>Free, open source, and installed in seconds.</p>
+          <p>Free and open source. Installed in seconds.</p>
           <div class="cta-row">
             <a
               class="btn btn-ink"
@@ -952,7 +935,7 @@
               target="_blank"
               rel="noopener"
             >
-              Add to Chrome — Free
+              Add to Chrome
             </a>
           </div>
           <p class="compat">Works on Chrome, Edge, Brave, Arc and other Chromium browsers.</p>
@@ -979,15 +962,15 @@
               <path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
               <path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5" />
             </svg>
-            More from the same hands
+            Also by @PGHQdev
           </span>
           <p>
             <a href="https://minimalistnotes.com" target="_blank" rel="noopener"
               >Minimalist Notes</a
             >
-            — a quiet place to think ·
-            <a href="https://musing.wiki" target="_blank" rel="noopener">Musing</a> — a new tab with
-            a quote worth keeping · <a href="/cool-stuff/">See the cool stuff →</a>
+            — distraction-free notes ·
+            <a href="https://musing.wiki" target="_blank" rel="noopener">Musing</a> — a quote on
+            every new tab · <a href="/cool-stuff/">See the cool stuff →</a>
           </p>
         </div>
         <div class="foot-links">
@@ -1002,7 +985,6 @@
         </div>
         <div class="foot-bottom">
           <span>© <span id="year"></span> OpenScreenShot · Built by @PGHQdev</span>
-          <span>All processing is local — no data leaves your device.</span>
         </div>
       </div>
     </footer>

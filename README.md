@@ -13,29 +13,23 @@
 
 [**➜ Add to Chrome**](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp) &nbsp;·&nbsp; [Website](https://openscreenshot.app) &nbsp;·&nbsp; [Docs](https://openscreenshot.app/docs/) &nbsp;·&nbsp; [Roadmap](./ROADMAP.md)
 
-<img src="docs/assets/hero.jpg" alt="OpenScreenShot popup open over a web page with a region selection in progress" width="860" />
+<img src="docs/assets/demo.gif" alt="A full page is captured, annotated in the editor, and exported as PNG" width="860" />
 
 </div>
 
-Capture a full scrolling page, the visible area, or a region. The editor opens on every
-capture: annotate, redact, beautify, then export PNG, JPEG, WebP, or PDF. Record the
-current tab and cut it down with auto-zoom, trim, and a webcam bubble. There is no
-server, no account, and no telemetry — `host_permissions` is empty, and it all works
-offline.
+Most screenshot extensions want an account, a watermark, or your browsing history.
+This one runs on your machine and wants nothing: no server, no telemetry, works offline.
 
-|                                        1 · Capture                                        |                                             2 · Edit                                             |                                           3 · Export                                           |
-| :---------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------: |
-| <img src="docs/assets/step-1.jpg" alt="Popup with Full page, Visible area, and Region" /> | <img src="docs/assets/step-2.jpg" alt="Editor with step badges, highlighter, arrow, and rect" /> | <img src="docs/assets/step-3.jpg" alt="Export dialog with PNG, JPEG, WebP, and PDF options" /> |
+Capture a full page, the visible area, or a region, then annotate and export.
+Record the current tab when a still image is not enough.
 
 ## Features
 
-- **Full-page capture** — scroll-and-stitch, with fixed headers handled and inner scrollers supported
-- **Annotation editor** — arrows, text, numbered steps, blur/redact, spotlight, crop, full undo
-- **Beautify** — padding, rounded corners, shadow, gradient or solid background
-- **Tab recording** — auto-zoom at clicks, mic + webcam, trim, WebM export
-- **Fast paths** — shortcuts, right-click menu, delayed capture, straight-to-clipboard quick mode
-- **Four export formats** — PNG, JPEG, WebP, multi-page PDF, at any scale
-- **Private** — no account, no telemetry, empty `host_permissions`, MIT licensed
+- **Capture whole pages**, even behind sticky headers and inside nested scrollers
+- **Annotate** with arrows, text, numbered steps, spotlight, and crop, with full undo
+- **Blur or redact secrets** before you share
+- **Record the tab** with auto-zoom at your clicks, mic and webcam, and trim
+- **Export** as PNG, JPEG, WebP, or multi-page PDF, or copy straight to the clipboard
 
 The full tour, every shortcut, and the settings reference live in the
 [docs](https://openscreenshot.app/docs/).
@@ -45,20 +39,6 @@ The full tour, every shortcut, and the settings reference live in the
 [**Add to Chrome**](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp) —
 works on Chrome, Edge, Brave, Arc, and other Chromium browsers. To build from source, see
 [Development](#development).
-
-## Screenshots from the CLI or an agent
-
-[![npm](https://img.shields.io/npm/v/openscreenshot?label=openscreenshot&color=E8503A)](https://www.npmjs.com/package/openscreenshot)
-
-`openscreenshot` (npm) is a separate, optional tool that drives the Chrome already on your
-machine — also fully local:
-
-```bash
-npx openscreenshot shot https://example.com --out shot.png --full
-```
-
-As an MCP server, add `{ "command": "npx", "args": ["openscreenshot", "serve"] }` to your
-client config and call the `capture_screenshot` tool.
 
 ## Permissions & privacy
 
@@ -126,6 +106,20 @@ openscreenshot/
 ```
 
 </details>
+
+## Screenshots from the CLI or an agent
+
+[![npm](https://img.shields.io/npm/v/openscreenshot?label=openscreenshot&color=E8503A)](https://www.npmjs.com/package/openscreenshot)
+
+`openscreenshot` (npm) is a separate, optional tool that drives the Chrome already on your
+machine — also fully local:
+
+```bash
+npx openscreenshot shot https://example.com --out shot.png --full
+```
+
+As an MCP server, add `{ "command": "npx", "args": ["openscreenshot", "serve"] }` to your
+client config and call the `capture_screenshot` tool.
 
 ## Contributing
 
