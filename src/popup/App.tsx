@@ -414,6 +414,7 @@ export function App() {
         <Welcome onDone={dismissWelcome} />
       ) : (
         <>
+          <span class="settings-section">{t('popupSectionScreenshot')}</span>
           <nav class="modes" aria-label={t('captureModesAria')}>
             {MODES.map((m, i) => {
               const isBusy = busy === m.id;
@@ -424,6 +425,11 @@ export function App() {
                   class="mode-card"
                   data-busy={isBusy ? 'true' : undefined}
                   disabled={!!busy}
+                  title={
+                    keys.osShortcut
+                      ? chrome.i18n.getMessage('popupDigitHint', keys.digit)
+                      : undefined
+                  }
                   onClick={() => capture(m.id)}
                 >
                   <span class="mode-icon" aria-hidden="true">
@@ -443,8 +449,11 @@ export function App() {
                     <span class="spinner" aria-label={t('capturing')} />
                   ) : (
                     <span class="mode-keys">
-                      {keys.osShortcut ? <kbd class="kbd-os">{keys.osShortcut}</kbd> : null}
-                      <kbd>{keys.digit}</kbd>
+                      {keys.osShortcut ? (
+                        <kbd class="kbd-os">{keys.osShortcut}</kbd>
+                      ) : (
+                        <kbd>{keys.digit}</kbd>
+                      )}
                     </span>
                   )}
                   {isBusy && m.id === 'full-page' && progress != null ? (
@@ -457,6 +466,7 @@ export function App() {
             })}
           </nav>
 
+          <span class="settings-section">{t('popupSectionRecord')}</span>
           {recState?.active ? (
             <div class="mode-card rec-live">
               <span class="rec-dot" aria-hidden="true" />
@@ -493,28 +503,31 @@ export function App() {
           )}
 
           {recState?.active ? null : (
-            <div class="seg seg-fill delay-row">
-              <button
-                class="seg-btn"
-                aria-pressed={recSettings.mic}
-                onClick={() => updateRecSettings({ mic: !recSettings.mic })}
-              >
-                {t('recMic')}
-              </button>
-              <button
-                class="seg-btn"
-                aria-pressed={recSettings.tabAudio}
-                onClick={() => updateRecSettings({ tabAudio: !recSettings.tabAudio })}
-              >
-                {t('recTabAudio')}
-              </button>
-              <button
-                class="seg-btn"
-                aria-pressed={recSettings.webcam}
-                onClick={() => updateRecSettings({ webcam: !recSettings.webcam })}
-              >
-                {t('recWebcam')}
-              </button>
+            <div class="rec-sources">
+              <span class="rec-sources-label">{t('recSourceLabel')}</span>
+              <div class="chip-row" role="group" aria-label={t('recSourceLabel')}>
+                <button
+                  class="chip-toggle"
+                  aria-pressed={recSettings.mic}
+                  onClick={() => updateRecSettings({ mic: !recSettings.mic })}
+                >
+                  {t('recMic')}
+                </button>
+                <button
+                  class="chip-toggle"
+                  aria-pressed={recSettings.tabAudio}
+                  onClick={() => updateRecSettings({ tabAudio: !recSettings.tabAudio })}
+                >
+                  {t('recTabAudio')}
+                </button>
+                <button
+                  class="chip-toggle"
+                  aria-pressed={recSettings.webcam}
+                  onClick={() => updateRecSettings({ webcam: !recSettings.webcam })}
+                >
+                  {t('recWebcam')}
+                </button>
+              </div>
             </div>
           )}
 
@@ -540,61 +553,64 @@ export function App() {
             </div>
           ) : null}
 
-          <div class="settings-row delay-row">
-            <span class="settings-label">{t('delayLabel')}</span>
-            <div class="seg">
-              {CAPTURE_DELAYS.map((d) => (
-                <button
-                  key={d}
-                  class="seg-btn"
-                  aria-pressed={normalizeCaptureDelay(settings.captureDelay) === d}
-                  onClick={() => updateSettings({ captureDelay: d })}
-                >
-                  {d === 0 ? t('delayOff') : `${d}s`}
-                </button>
-              ))}
+          <span class="settings-section">{t('popupSectionOptions')}</span>
+          <div class="options-group">
+            <div class="settings-row">
+              <span class="settings-label">{t('delayLabel')}</span>
+              <div class="seg">
+                {CAPTURE_DELAYS.map((d) => (
+                  <button
+                    key={d}
+                    class="seg-btn"
+                    aria-pressed={normalizeCaptureDelay(settings.captureDelay) === d}
+                    onClick={() => updateSettings({ captureDelay: d })}
+                  >
+                    {d === 0 ? t('delayOff') : `${d}s`}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          <div class="settings-row delay-row">
-            <span class="settings-label">{t('afterCaptureLabel')}</span>
-            <div class="seg">
-              {CAPTURE_ACTIONS.map((a) => (
-                <button
-                  key={a}
-                  class="seg-btn"
-                  aria-pressed={normalizeCaptureAction(settings.captureAction) === a}
-                  onClick={() => updateSettings({ captureAction: a })}
-                >
-                  {t(ACTION_LABEL_KEYS[a])}
-                </button>
-              ))}
+            <div class="settings-row">
+              <span class="settings-label">{t('afterCaptureLabel')}</span>
+              <div class="seg">
+                {CAPTURE_ACTIONS.map((a) => (
+                  <button
+                    key={a}
+                    class="seg-btn"
+                    aria-pressed={normalizeCaptureAction(settings.captureAction) === a}
+                    onClick={() => updateSettings({ captureAction: a })}
+                  >
+                    {t(ACTION_LABEL_KEYS[a])}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-          {normalizeCaptureAction(settings.captureAction) === 'download' ? (
-            <span class="settings-hint">{t('actionHintPng')}</span>
-          ) : null}
+            {normalizeCaptureAction(settings.captureAction) === 'download' ? (
+              <span class="settings-hint">{t('actionHintPng')}</span>
+            ) : null}
 
-          <div class="settings-row delay-row">
-            <span class="settings-label">{t('expressLabel')}</span>
-            <div class="seg">
-              <button
-                class="seg-btn"
-                aria-pressed={!settings.expressMode}
-                onClick={() => updateSettings({ expressMode: false })}
-              >
-                {t('expressOff')}
-              </button>
-              <button
-                class="seg-btn"
-                aria-pressed={settings.expressMode}
-                onClick={() => updateSettings({ expressMode: true })}
-              >
-                {t('expressOn')}
-              </button>
+            <div class="settings-row">
+              <span class="settings-label">{t('expressLabel')}</span>
+              <div class="seg">
+                <button
+                  class="seg-btn"
+                  aria-pressed={!settings.expressMode}
+                  onClick={() => updateSettings({ expressMode: false })}
+                >
+                  {t('expressOff')}
+                </button>
+                <button
+                  class="seg-btn"
+                  aria-pressed={settings.expressMode}
+                  onClick={() => updateSettings({ expressMode: true })}
+                >
+                  {t('expressOn')}
+                </button>
+              </div>
             </div>
+            {settings.expressMode ? <span class="settings-hint">{t('expressHint')}</span> : null}
           </div>
-          {settings.expressMode ? <span class="settings-hint">{t('expressHint')}</span> : null}
 
           <div class="divider" />
 
@@ -603,7 +619,7 @@ export function App() {
               class="link-btn"
               onClick={openEditor}
               disabled={!hasStash}
-              title={t('reopenLast')}
+              title={hasStash ? t('reopenLast') : t('reopenLastDisabledTitle')}
             >
               {t('reopenLast')}
             </button>
@@ -611,24 +627,12 @@ export function App() {
               class="link-btn"
               onClick={() => capture('region', true)}
               disabled={!hasRegion || !!busy}
-              title={t('repeatLastRegion')}
+              title={hasRegion ? t('repeatLastRegion') : t('repeatRegionDisabledTitle')}
             >
               {t('repeatLastRegion')}
             </button>
             <button class="link-btn" onClick={openShortcutSettings} title={t('customizeShortcuts')}>
               {t('footerShortcuts')}
-            </button>
-            <button class="link-btn kofi-link" onClick={openKofi} title={t('supportKofiTitle')}>
-              <CoffeeMark />
-              {t('footerKofi')}
-            </button>
-            <button
-              class="link-btn kofi-link"
-              onClick={openCoolStuff}
-              title={t('coolStuffTitle')}
-              aria-label={t('footerCoolStuff')}
-            >
-              <GiftMark />
             </button>
           </div>
         </>
@@ -787,6 +791,20 @@ function SettingsView({
         </div>
       </div>
       <span class="settings-hint">{t('recAcrossSitesHint')}</span>
+
+      <div class="settings-row">
+        <span class="settings-label">{t('settingsSupport')}</span>
+        <div class="support-links">
+          <button class="link-btn kofi-link" onClick={openKofi} title={t('supportKofiTitle')}>
+            <CoffeeMark />
+            {t('footerKofi')}
+          </button>
+          <button class="link-btn kofi-link" onClick={openCoolStuff} title={t('coolStuffTitle')}>
+            <GiftMark />
+            {t('footerCoolStuff')}
+          </button>
+        </div>
+      </div>
 
       <div class="divider" />
       <button

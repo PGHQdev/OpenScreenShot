@@ -191,6 +191,44 @@
     "message": "Repeat region",
     "description": "Footer link and context menu item that re-captures the previous region selection."
   },
+  "popupSectionScreenshot": {
+    "message": "Screenshot",
+    "description": "Popup: section heading above the three capture mode cards."
+  },
+  "popupSectionRecord": {
+    "message": "Record",
+    "description": "Popup: section heading above the record card."
+  },
+  "popupSectionOptions": {
+    "message": "Options",
+    "description": "Popup: section heading above the delay, after-capture, and icon-click rows."
+  },
+  "recSourceLabel": {
+    "message": "Recording source",
+    "description": "Popup: label above the mic / tab audio / webcam toggle chips."
+  },
+  "popupDigitHint": {
+    "message": "Also: press $DIGIT$",
+    "description": "Popup: tooltip on a capture mode card naming its number-key shortcut.",
+    "placeholders": {
+      "digit": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "reopenLastDisabledTitle": {
+    "message": "No capture to reopen yet",
+    "description": "Popup: tooltip on the disabled reopen-last footer action."
+  },
+  "repeatRegionDisabledTitle": {
+    "message": "No region captured yet",
+    "description": "Popup: tooltip on the disabled repeat-region footer action."
+  },
+  "settingsSupport": {
+    "message": "Support",
+    "description": "Settings: label of the row holding the Ko-fi and cool-stuff links."
+  },
   "afterCaptureLabel": {
     "message": "After capture",
     "description": "Label for the row that picks what a finished capture does."
@@ -212,8 +250,8 @@
     "description": "Hint shown under the after-capture row when Download is selected."
   },
   "expressLabel": {
-    "message": "Express mode",
-    "description": "Label for the express mode row in the popup, and the icon context-menu checkbox."
+    "message": "Capture on icon click",
+    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
   },
   "expressOn": {
     "message": "On",

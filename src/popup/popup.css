@@ -228,9 +228,69 @@ body {
   transition: width 200ms ease-out;
 }
 
-/* ---- Capture delay row ---- */
-.delay-row {
-  margin-top: var(--s-2);
+/* ---- Recording sources (independent toggles, so chips, never a seg) ---- */
+.rec-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rec-sources-label {
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.chip-row {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.chip-toggle {
+  flex: 1;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  background: var(--surface-1);
+  color: var(--text-2);
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    background 120ms ease-out,
+    border-color 120ms ease-out,
+    color 120ms ease-out;
+}
+
+.chip-toggle:hover {
+  background: var(--surface-2);
+}
+
+.chip-toggle[aria-pressed='true'] {
+  background: var(--accent-subtle);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.chip-toggle:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+/* ---- Options group: configuration reads quieter than the actions above ---- */
+.options-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.options-group .settings-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.options-group .seg-btn {
+  height: 26px;
 }
 
 /* ---- Divider ---- */
@@ -427,6 +487,12 @@ body {
 
 .kofi-link svg {
   flex: 0 0 auto;
+}
+
+.support-links {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
 }
 
 /* ---- Shortcuts ---- */
