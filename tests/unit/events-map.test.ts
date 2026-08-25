@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { cursorAt, cursorPathAt, normalizeClicks, normalizeMoves } from '../../src/recorder/events-map';
+import {
+  cursorAt,
+  cursorPathAt,
+  normalizeClicks,
+  normalizeMoves,
+} from '../../src/recorder/events-map';
 import type { CursorEvent, SegmentViewport } from '../../src/shared/recording-types';
 
 describe('normalizeClicks', () => {
@@ -123,7 +128,15 @@ describe('cursorAt', () => {
     expect(cursorAt(moves, 150)).toEqual({ nx: 0.5, ny: 0.25 }));
   it('holds the last sample', () => expect(cursorAt(moves, 900)).toEqual({ nx: 1, ny: 0.5 }));
   it('tolerates duplicate timestamps', () =>
-    expect(cursorAt([{ t: 5, nx: 0.1, ny: 0.1 }, { t: 5, nx: 0.9, ny: 0.9 }], 5)).toEqual({
+    expect(
+      cursorAt(
+        [
+          { t: 5, nx: 0.1, ny: 0.1 },
+          { t: 5, nx: 0.9, ny: 0.9 },
+        ],
+        5,
+      ),
+    ).toEqual({
       nx: 0.9,
       ny: 0.9,
     }));

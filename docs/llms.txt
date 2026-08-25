@@ -1,6 +1,6 @@
 # OpenScreenShot
 
-> Free, open-source full page screenshot extension for Chrome — entire-scrolling-page, region, and visible-area screenshots with a built-in annotation editor and export to PNG, JPEG, WebP, or PDF. Also records the current tab, with auto zoom at clicks, a webcam bubble, and WebM export. 100% local and private: works fully offline, screenshots and recordings never leave the device. MIT licensed.
+> Free, open-source full page screenshot extension for Chrome — entire-scrolling-page, region, and visible-area screenshots with a built-in annotation editor and export to PNG, JPEG, WebP, or PDF. Also records the current tab, with auto zoom at clicks, a webcam bubble, an auto-hiding control bar, an optional synthetic cursor overlay, and WebM export. 100% local and private: works fully offline, screenshots and recordings never leave the device. MIT licensed.
 
 - Chrome Web Store: https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp
 - Source: https://github.com/pghqdev/OpenScreenShot

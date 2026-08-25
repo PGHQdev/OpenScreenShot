@@ -374,7 +374,7 @@
       <p class="promise">
         <strong>Our promise:</strong> everything on this page stays 100% local. No servers, no
         accounts, no new data collection — ever. Roadmap items are not dated promises; feedback and
-        pull requests shape what ships. Current release: <strong>v1.2.0</strong>.
+        pull requests shape what ships. Current release: <strong>v1.3.0</strong>.
       </p>
 
       <div class="legend" aria-label="Status legend">
@@ -510,7 +510,25 @@
       <h2 id="shipped">Shipped</h2>
 
       <div class="ship-group">
-        <p class="ship-ver">v1.2.0 <span>current release</span></p>
+        <p class="ship-ver">v1.3.0 <span>current release</span></p>
+        <ul class="ship">
+          <li>
+            <strong>Auto-hiding control bar</strong> — the recording control bar hides itself about
+            3 seconds after your pointer leaves it, so it stays out of the video. Move your cursor
+            to the bottom center of the page to bring it back, and it always shows while paused or
+            hovered.
+          </li>
+          <li>
+            <strong>Synthetic cursor overlay</strong> — a "Show cursor" toggle in the editor's
+            settings rail, on by default, draws a smooth pointer from the recorded cursor path in
+            both the preview and the WebM export, since <code>tabCapture</code> never records the OS
+            cursor.
+          </li>
+        </ul>
+      </div>
+
+      <div class="ship-group">
+        <p class="ship-ver">v1.2.0</p>
         <ul class="ship">
           <li>
             <strong>Screen recorder with auto zoom</strong> — record the current tab, with a
