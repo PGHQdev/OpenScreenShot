@@ -16,6 +16,32 @@ export const MOVE_THROTTLE_MS = 33;
 /** How often cursor batches (and the heartbeat) flush to the engine. */
 export const FLUSH_INTERVAL_MS = 1000;
 
+/** The bar hides after this long with the pointer away, except paused/hovered. */
+export const OVERLAY_GRACE_MS = 3000;
+/** Reveal zone: a pointer this close to bottom-center brings the bar back. */
+export const REVEAL_HALF_WIDTH_PX = 200;
+export const REVEAL_HEIGHT_PX = 120;
+
+/** Whether a viewport point is inside the bar's bottom-center reveal zone. */
+export function isNearBar(x: number, y: number, winW: number, winH: number): boolean {
+  return Math.abs(x - winW / 2) <= REVEAL_HALF_WIDTH_PX && y >= winH - REVEAL_HEIGHT_PX;
+}
+
+/**
+ * Visibility policy for the control bar. Paused and hovered always show —
+ * a paused MediaRecorder writes no frames, so a visible bar costs nothing,
+ * and a bar must never vanish under the pointer.
+ */
+export function shouldShowBar(args: {
+  sinceMountMs: number;
+  sinceNearMs: number;
+  hovering: boolean;
+  paused: boolean;
+}): boolean {
+  if (args.paused || args.hovering) return true;
+  return args.sinceMountMs < OVERLAY_GRACE_MS || args.sinceNearMs < OVERLAY_GRACE_MS;
+}
+
 /** "0:07", "1:23", "1:23:45". Floors ragged ms, clamps negatives to zero. */
 export function formatTimer(ms: number): string {
   const totalSec = Math.floor(Math.max(0, ms) / 1000);
@@ -60,6 +86,24 @@ export function mountRecordingOverlay(
   const MOVE_THROTTLE_MS = 33;
   const FLUSH_INTERVAL_MS = 1000;
 
+  const OVERLAY_GRACE_MS = 3000;
+  const REVEAL_HALF_WIDTH_PX = 200;
+  const REVEAL_HEIGHT_PX = 120;
+
+  function isNearBar(x: number, y: number, winW: number, winH: number): boolean {
+    return Math.abs(x - winW / 2) <= REVEAL_HALF_WIDTH_PX && y >= winH - REVEAL_HEIGHT_PX;
+  }
+
+  function shouldShowBar(args: {
+    sinceMountMs: number;
+    sinceNearMs: number;
+    hovering: boolean;
+    paused: boolean;
+  }): boolean {
+    if (args.paused || args.hovering) return true;
+    return args.sinceMountMs < OVERLAY_GRACE_MS || args.sinceNearMs < OVERLAY_GRACE_MS;
+  }
+
   function formatTimer(ms: number): string {
     const totalSec = Math.floor(Math.max(0, ms) / 1000);
     const h = Math.floor(totalSec / 3600);
@@ -103,7 +147,7 @@ export function mountRecordingOverlay(
   const host = document.createElement('div');
   host.style.cssText =
     'all:initial;position:fixed;left:50%;bottom:20px;transform:translateX(-50%);' +
-    'z-index:2147483647;';
+    'z-index:2147483647;transition:opacity .25s;';
   const shadow = host.attachShadow({ mode: 'closed' });
 
   const style = document.createElement('style');
@@ -343,6 +387,32 @@ export function mountRecordingOverlay(
   }
   renderPauseState();
 
+  const mountedAt = Date.now();
+  let lastNearAt = mountedAt;
+  let hoveringBar = false;
+
+  function applyBarVisibility(): void {
+    const now = Date.now();
+    const show = shouldShowBar({
+      sinceMountMs: now - mountedAt,
+      sinceNearMs: now - lastNearAt,
+      hovering: hoveringBar,
+      paused: isPaused,
+    });
+    host.style.opacity = show ? '1' : '0';
+    // Hidden means hidden to the page too, or it would still swallow clicks.
+    host.style.pointerEvents = show ? '' : 'none';
+  }
+
+  host.addEventListener('mouseenter', () => {
+    hoveringBar = true;
+    applyBarVisibility();
+  });
+  host.addEventListener('mouseleave', () => {
+    hoveringBar = false;
+    applyBarVisibility();
+  });
+
   pauseBtn.addEventListener('click', () => {
     isPaused = !isPaused;
     if (isPaused) {
@@ -353,6 +423,7 @@ export function mountRecordingOverlay(
     }
     renderPauseState();
     safeSend({ type: isPaused ? 'REC_PAUSE' : 'REC_RESUME' });
+    applyBarVisibility();
   });
 
   stopBtn.addEventListener('click', () => safeSend({ type: 'REC_STOP' }));
@@ -362,6 +433,7 @@ export function mountRecordingOverlay(
 
   const timerInterval = setInterval(() => {
     timer.textContent = formatTimer(nowT());
+    applyBarVisibility();
   }, 500);
   timer.textContent = formatTimer(nowT());
 
@@ -373,6 +445,10 @@ export function mountRecordingOverlay(
   }
 
   function onMove(e: MouseEvent): void {
+    if (isNearBar(e.clientX, e.clientY, window.innerWidth, window.innerHeight)) {
+      lastNearAt = Date.now();
+      applyBarVisibility();
+    }
     const now = Date.now();
     if (now - lastMoveAt < MOVE_THROTTLE_MS) return;
     lastMoveAt = now;
@@ -454,6 +530,7 @@ export function mountRecordingOverlay(
       camHost = null;
       clampBubble = null;
     }
+    applyBarVisibility();
   };
 
   // --- Teardown -------------------------------------------------------------
