@@ -4,143 +4,70 @@
 
 # OpenScreenShot
 
-**Capture anything. Edit it instantly.**
-
-Open-source full page screenshot extension for Chrome — entire-scrolling-page, region, and
-visible-area capture with a built-in annotation editor and PDF export. 100% local and
-private: works fully offline, and your screenshots never leave your device.
+**Screenshots and tab recording for Chrome. Everything stays on your device.**
 
 [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/hdabbojjccojlapnfjpdppcpfcnhgmdp?label=Chrome%20Web%20Store&logo=googlechrome&logoColor=white&color=E8503A)](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp)
 [![Users](https://img.shields.io/chrome-web-store/users/hdabbojjccojlapnfjpdppcpfcnhgmdp?label=users&color=F5A623)](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp)
 [![CI](https://github.com/pghqdev/OpenScreenShot/actions/workflows/ci.yml/badge.svg)](https://github.com/pghqdev/OpenScreenShot/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT-1B1A17)](./LICENSE)
-[![Manifest V3](https://img.shields.io/badge/manifest-v3-1B1A17)](./manifest.json)
 
-[**➜ Add to Chrome**](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp) &nbsp;·&nbsp; [Website](https://openscreenshot.app) &nbsp;·&nbsp; [Docs](https://openscreenshot.app/docs/) &nbsp;·&nbsp; [Support](https://openscreenshot.app/support/) &nbsp;·&nbsp; [Roadmap](./ROADMAP.md)
+[**➜ Add to Chrome**](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp) &nbsp;·&nbsp; [Website](https://openscreenshot.app) &nbsp;·&nbsp; [Docs](https://openscreenshot.app/docs/) &nbsp;·&nbsp; [Roadmap](./ROADMAP.md)
 
 <img src="docs/assets/hero.jpg" alt="OpenScreenShot popup open over a web page with a region selection in progress" width="860" />
 
 </div>
 
----
-
-Capture the **entire scrolling page** (scroll-and-stitch), the **visible viewport**, or a
-**selected region**. The editor opens on every capture: annotate it, redact it, beautify it,
-then export PNG, JPEG, WebP, or a multi-page PDF. Built as a Manifest V3 extension in
-TypeScript and Preact, with one runtime dependency.
-
-> [!NOTE]
-> There is no server, no account, and no telemetry anywhere in this extension.
-> `host_permissions` is empty, and `<all_urls>` is only ever requested if you turn on
-> "Record across sites" for the screen recorder. Pull the network cable and it works
-> exactly the same.
-
-[Features](#features) &nbsp;·&nbsp; [Install](#install) &nbsp;·&nbsp; [Agents & CLI](#agents--cli) &nbsp;·&nbsp; [Permissions](#permissions) &nbsp;·&nbsp; [Privacy](#privacy) &nbsp;·&nbsp; [Development](#development) &nbsp;·&nbsp; [Contributing](#contributing)
-
-## From page to finished screenshot
+Capture a full scrolling page, the visible area, or a region. The editor opens on every
+capture: annotate, redact, beautify, then export PNG, JPEG, WebP, or PDF. Record the
+current tab and cut it down with auto-zoom, trim, and a webcam bubble. There is no
+server, no account, and no telemetry — `host_permissions` is empty, and it all works
+offline.
 
 |                                        1 · Capture                                        |                                             2 · Edit                                             |                                           3 · Export                                           |
 | :---------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------: |
 | <img src="docs/assets/step-1.jpg" alt="Popup with Full page, Visible area, and Region" /> | <img src="docs/assets/step-2.jpg" alt="Editor with step badges, highlighter, arrow, and rect" /> | <img src="docs/assets/step-3.jpg" alt="Export dialog with PNG, JPEG, WebP, and PDF options" /> |
-|               One click in the popup, a keyboard shortcut, or keys `1`–`3`                |                   Full-screen editor opens on every capture, undo all the way                    |                   PNG, JPEG, WebP, or multi-page PDF — download or clipboard                   |
 
 ## Features
 
-### Capture
+- **Full-page capture** — scroll-and-stitch, with fixed headers handled and inner scrollers supported
+- **Annotation editor** — arrows, text, numbered steps, blur/redact, spotlight, crop, full undo
+- **Beautify** — padding, rounded corners, shadow, gradient or solid background
+- **Tab recording** — auto-zoom at clicks, mic + webcam, trim, WebM export
+- **Fast paths** — shortcuts, right-click menu, delayed capture, straight-to-clipboard quick mode
+- **Four export formats** — PNG, JPEG, WebP, multi-page PDF, at any scale
+- **Private** — no account, no telemetry, empty `host_permissions`, MIT licensed
 
-- **Full page** — scroll-and-stitch the whole page top to bottom with live progress; fixed headers are composited once at the top. Works on pages that scroll an inner element, too.
-- **Visible area** — capture exactly what's on screen right now.
-- **Selected region** — click & drag to grab an area, with a Capture/Cancel bar to confirm.
-- **Start from anywhere** — the popup, a keyboard shortcut, or the page's right-click menu; repeat the last region in one click.
-- **Delayed capture** — hold the shot for 3, 5, or 10 seconds, with a countdown on the badge, for menus and hover states that close when you click.
-- **Quick mode** — send a capture straight to the clipboard or straight to disk, skipping the editor.
-
-### Edit
-
-- **Annotation editor** — rectangle, arrow, line, pen, highlighter, text, numbered step badges, blur (soft, mosaic, or solid redaction), spotlight, and crop.
-  - Select, move, and resize any annotation; undo and redo all the way back.
-  - Hold Shift for squares and 45° lines.
-  - Color, stroke width & font size are remembered across sessions.
-- **Eyedropper** (`I`) — take a color from the capture, or from anywhere on screen.
-- **Any image, not just captures** — drop or paste an image into the editor to annotate it.
-- **Beautify** — padding, rounded corners, drop shadow, and a gradient, solid, or transparent background.
-- **Crash-safe** — edits are saved locally as you work, and offered back if the tab closes.
-
-### Recording
-
-Record the current tab, then edit and export locally — the recording never leaves your device.
-
-- **One-time permission** — `tabCapture` is optional and requested once, at your first
-  recording, with no install-time warning; every recording after that starts in one click.
-- **Auto zoom at clicks** — the editor zooms in 2x with a 0.6s ease at every click your cursor
-  log picked up. Add manual zoom blocks (1.5x/2x/3x) and trim any segment by hand.
-- **Mic, tab audio, and a webcam bubble** — mix narration and tab sound with volume sliders,
-  and composite a draggable webcam circle into the export.
-- **Crash-safe** — 1-second chunks land in IndexedDB while you record, so a crashed tab or a
-  killed offscreen document recovers, and "Continue recording" appends a new segment.
-- **Beautify + WebM export** — the editor's own padding/corner/shadow/gradient frame wraps
-  the recording, re-rendered through canvas into a WebM file.
-
-### Export
-
-- **Four formats** — PNG, JPEG, WebP, and PDF (single or multi-page with overlap).
-- **Straight to clipboard** — `Cmd/Ctrl+C` from the editor.
-- **Any scale** — 25 / 50 / 100 / 200 %, or an exact pixel width.
-
-### Around the edges
-
-- **Keyboard-first** — capture shortcuts, number keys `1`–`3` in the popup, `1`–`8` for the editor palette, `?` for the full shortcut sheet, and a "reopen last capture" escape hatch.
-- **Settings** — theme, default format, quality, filename template, PDF defaults.
-- **Polished & accessible** — dark/light UI, modal focus trap, toolbar arrow-key navigation.
+The full tour, every shortcut, and the settings reference live in the
+[docs](https://openscreenshot.app/docs/).
 
 ## Install
 
-**From the Chrome Web Store** — [**Add to Chrome**](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp). That's it.
+[**Add to Chrome**](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp) —
+works on Chrome, Edge, Brave, Arc, and other Chromium browsers. To build from source, see
+[Development](#development).
 
-**From source** — see [Development](#development) below.
-
-> [!TIP]
-> Press `?` inside the editor for the full shortcut sheet.
-
-## Agents & CLI
+## Screenshots from the CLI or an agent
 
 [![npm](https://img.shields.io/npm/v/openscreenshot?label=openscreenshot&color=E8503A)](https://www.npmjs.com/package/openscreenshot)
 
-`openscreenshot` (npm) is a **separate, optional, local** tool for scripting screenshots from
-the command line or from an AI agent. It drives the Chrome already on your machine (no
-browser download) and runs entirely on your machine — no account, no hosted service. The
-browser extension above is unaffected: it stays a client-side, no-server capture tool.
-
-**Run it** — no install needed:
+`openscreenshot` (npm) is a separate, optional tool that drives the Chrome already on your
+machine — also fully local:
 
 ```bash
 npx openscreenshot shot https://example.com --out shot.png --full
 ```
 
-Set `CHROME_PATH` if your Chrome can't be found automatically.
+As an MCP server, add `{ "command": "npx", "args": ["openscreenshot", "serve"] }` to your
+client config and call the `capture_screenshot` tool.
 
-**MCP server (for agents)** — add to your MCP client config:
+## Permissions & privacy
 
-```json
-{ "command": "npx", "args": ["openscreenshot", "serve"] }
-```
-
-Then call the `capture_screenshot` tool with `{ "url": "https://example.com" }`.
-
-Like the extension, this tool runs locally and uploads nothing — it just renders a page and
-hands you the PNG.
-
-## Permissions
-
-OpenScreenShot requests the minimum permissions a screenshot tool needs — and explains
-every one.
-
-**`host_permissions` is empty.** We never request it upfront — `activeTab` grants access
-on your click, and `scripting` runs only within that grant. The extension cannot read any
-site in the background, unless you explicitly opt into recording across sites (below).
+`host_permissions` is empty: `activeTab` grants access on your click, and the extension
+cannot read any site in the background. Captures, recordings, and edits stay in local
+browser storage until you export or delete them. Full policy: [PRIVACY.md](./PRIVACY.md).
 
 <details>
-<summary><b>All required permissions, line by line</b></summary>
+<summary><b>Every permission, line by line</b></summary>
 
 <br />
 
@@ -153,86 +80,27 @@ site in the background, unless you explicitly opt into recording across sites (b
 | `contextMenus`                   | Add one capture submenu to the page right-click menu                                                                                           |
 | `clipboardWrite`                 | Copy a screenshot from the editor or from quick mode; it never reads the clipboard                                                             |
 | `offscreen`                      | Run the recording engine in a hidden document — `MediaRecorder` and the IndexedDB writes need a page context a service worker doesn't have     |
-| `options_ui`                     | The editor is registered as a full-tab options page so crxjs bundles it; opened after each capture                                             |
-
-**Optional — requested only when you use them:**
-
-| Permission          | Why                                                                                                                   |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `tabCapture`        | Requested once, at your first recording, with one Chrome prompt; every recording after that starts in one click       |
-| `<all_urls>` (host) | Only if you turn on "Record across sites" — keeps the cursor overlay alive when a recording navigates to a new origin |
+| `tabCapture` (optional)          | Requested once, at your first recording; every recording after that starts in one click                                                        |
+| `<all_urls>` (optional host)     | Only if you turn on "Record across sites" — keeps the cursor overlay alive when a recording navigates to a new origin                          |
 
 </details>
 
-## Privacy
-
-**100% local. 100% private. Works fully offline.**
-
-Your screenshots never leave your device — there are no servers, no accounts, no sign-ups,
-and no tracking. Every capture, edit, and export happens right inside your browser, so
-nothing is ever uploaded, stored in the cloud, or seen by anyone but you. You could pull
-the network cable and it would work exactly the same. The same is true of recordings:
-video chunks, cursor logs, and mic/webcam streams stay in IndexedDB on your device until
-you delete them.
-
-Read the full [Privacy Policy](./PRIVACY.md).
-
 ## Development
 
-### Tech stack
-
-- **TypeScript** (strict) + **Preact** for the popup/editor UI
-- **Vite** + **[@crxjs/vite-plugin](https://github.com/crxjs/crxjs)** for Manifest V3 bundling & HMR
-- **Canvas compositing in-page** via on-demand `chrome.scripting` injection (no offscreen document needed)
-- **A built-in PDF writer** (`src/editor/pdf-writer.ts`) — it places raster images on pages and deflates them with the browser's own `CompressionStream`. It replaced jsPDF, which pulled in `html2canvas` and `dompurify` for a `doc.html()` path the editor never called.
-- **One runtime dependency in the extension**: Preact. Everything else is browser API.
-- **Vitest** for unit tests (`tests/unit`, plus `mcp/test` for the CLI and server)
-
-### Quick start
-
-Node.js 22+ and npm 10+ required.
+TypeScript (strict) + Preact, bundled by Vite + [@crxjs/vite-plugin](https://github.com/crxjs/crxjs).
+One runtime dependency (Preact); unit tests with Vitest. Node.js 22+ and npm 10+.
 
 ```bash
 npm install
 npm run icons      # generate the extension icons into public/icons
-npm run dev        # start Vite + crxjs with HMR (writes to dist/)
+npm run dev        # Vite + crxjs with HMR (writes to dist/)
 ```
 
-Then load the extension in Chrome:
+Load `dist/` via `chrome://extensions` → Developer mode → **Load unpacked**.
 
-1. Open `chrome://extensions`
-2. Enable **Developer mode** (top right)
-3. Click **Load unpacked** and select the `dist/` folder
-
-### Build for production
-
-```bash
-npm run build      # type-check + bundle into dist/
-```
-
-Load `dist/` as an unpacked extension, or run `npm run package` to produce
-`openscreenshot-vX.Y.Z.zip` for the Chrome Web Store.
-
-<details>
-<summary><b>All npm scripts</b></summary>
-
-<br />
-
-| Script                | Description                                         |
-| --------------------- | --------------------------------------------------- |
-| `npm run dev`         | Vite dev server with extension HMR                  |
-| `npm run build`       | Type-check and bundle the extension into `dist/`    |
-| `npm run typecheck`   | Run `tsc --noEmit`                                  |
-| `npm run lint`        | ESLint (flat config)                                |
-| `npm test`            | Run unit tests (Vitest)                             |
-| `npm run icons`       | Regenerate extension icons from the SVG source      |
-| `npm run shots`       | Re-render the marketing screenshots (`docs/assets`) |
-| `npm run format`      | Format the codebase with Prettier                   |
-| `npm run package`     | Build + zip `dist/` for store submission            |
-| `npm run site:dev`    | Serve `docs/` locally through the Worker            |
-| `npm run site:deploy` | Deploy `docs/` to openscreenshot.app                |
-
-</details>
+`npm run build` type-checks and bundles; `npm run package` produces the store zip. Other
+scripts: `typecheck`, `lint`, `test`, `format`, `shots` (marketing screenshots),
+`site:dev` / `site:deploy` (openscreenshot.app).
 
 <details>
 <summary><b>Project structure</b></summary>
@@ -242,9 +110,7 @@ Load `dist/` as an unpacked extension, or run `npm run package` to produce
 ```
 openscreenshot/
 ├── manifest.json            # MV3 manifest (crxjs entry)
-├── public/
-│   ├── icons/               # generated extension icons
-│   └── _locales/en/         # i18n messages
+├── public/                  # icons + i18n messages
 ├── src/
 │   ├── background/          # service worker (capture + recording coordinator)
 │   ├── content/             # on-demand capture funcs (scroll, region, recording overlay)
@@ -256,29 +122,15 @@ openscreenshot/
 ├── mcp/                     # optional local CLI + MCP server
 ├── docs/                    # openscreenshot.app, served by site-worker.js
 ├── tests/unit/              # unit tests (Vitest)
-└── scripts/
-    ├── generate-icons.mjs   # SVG → PNG/ICO icon pipeline
-    └── shots/               # marketing screenshot pipeline (npm run shots)
+└── scripts/                 # icon + screenshot pipelines
 ```
 
 </details>
 
 ## Contributing
 
-Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md). Please follow the
-[Code of Conduct](./CODE_OF_CONDUCT.md). Curious what's next? Check the
-[public roadmap](./ROADMAP.md).
-
-<div align="center">
-
-## Support the project
-
-OpenScreenShot is free and open source. If you find it useful, consider supporting its
-development — every coffee helps!
-
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/T7A624DAY7)
-
-</div>
+See [CONTRIBUTING.md](./CONTRIBUTING.md) and the [roadmap](./ROADMAP.md). If
+OpenScreenShot is useful to you, you can [buy me a coffee](https://ko-fi.com/T7A624DAY7).
 
 ## License
 
