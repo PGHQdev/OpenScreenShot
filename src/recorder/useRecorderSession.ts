@@ -63,6 +63,7 @@ export interface EditorState {
   autoZoomDone: boolean;
   trims: Record<string, { start: number; end: number }>;
   ripple: boolean;
+  pointer: boolean;
   volumes: { tab: number; mic: number };
   bubble: { corner: BubbleCorner; x: number; y: number; size: number; hidden: boolean };
   frame: RecorderDraft['frame'];
@@ -74,6 +75,7 @@ function editorFromDraft(draft: RecorderDraft): EditorState {
     autoZoomDone: draft.autoZoomDone,
     trims: draft.trims,
     ripple: draft.ripple,
+    pointer: draft.pointer,
     volumes: draft.volumes,
     bubble: draft.bubble,
     frame: draft.frame,
@@ -112,10 +114,12 @@ export interface UseRecorderSession {
   addBlockAtPlayhead: () => string | null;
   regenerateAutoZoom: () => void;
   ripple: boolean;
+  pointer: boolean;
   volumes: { tab: number; mic: number };
   bubble: EditorState['bubble'];
   frame: EditorState['frame'];
   setRipple: (ripple: boolean) => void;
+  setPointer: (pointer: boolean) => void;
   setVolumes: (patch: Partial<{ tab: number; mic: number }>) => void;
   setBubble: (patch: Partial<EditorState['bubble']>) => void;
   setFrame: (frame: EditorState['frame']) => void;
@@ -520,6 +524,10 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
     setEditor((prev) => ({ ...prev, ripple }));
   }, []);
 
+  const setPointer = useCallback((pointer: boolean) => {
+    setEditor((prev) => ({ ...prev, pointer }));
+  }, []);
+
   const setVolumes = useCallback((patch: Partial<{ tab: number; mic: number }>) => {
     setEditor((prev) => ({ ...prev, volumes: { ...prev.volumes, ...patch } }));
   }, []);
@@ -606,10 +614,12 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
     addBlockAtPlayhead,
     regenerateAutoZoom,
     ripple: editor.ripple,
+    pointer: editor.pointer,
     volumes: editor.volumes,
     bubble: editor.bubble,
     frame: editor.frame,
     setRipple,
+    setPointer,
     setVolumes,
     setBubble,
     setFrame,

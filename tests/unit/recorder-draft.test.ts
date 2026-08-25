@@ -101,3 +101,14 @@ describe('parseRecorderDraft', () => {
     expect(parseRecorderDraft({ ...makeDraft(), trims: [] })).toBeNull();
   });
 });
+
+describe('pointer', () => {
+  it('defaults on', () => expect(defaultRecorderDraft().pointer).toBe(true));
+  it('parses a missing pointer as on (pre-pointer drafts)', () => {
+    const stored = makeDraft() as { pointer?: unknown };
+    delete stored.pointer;
+    expect(parseRecorderDraft(stored)?.pointer).toBe(true);
+  });
+  it('round-trips pointer off', () =>
+    expect(parseRecorderDraft(makeDraft({ pointer: false }))?.pointer).toBe(false));
+});

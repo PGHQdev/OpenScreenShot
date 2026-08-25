@@ -23,7 +23,7 @@ import {
 } from '../editor/frame';
 import { pickRecorderMime } from '../offscreen/mime';
 import { DEFAULT_SETTINGS } from '../shared/types';
-import { normalizeClicks, type NormClick } from './events-map';
+import { cursorAt, normalizeClicks, normalizeMoves, type NormClick } from './events-map';
 import type { RecorderDraft } from './recorder-draft';
 import { drawExportFrame, RIPPLE_MS } from './render';
 import { fixDuration, type LoadedSession } from './session-load';
@@ -195,6 +195,9 @@ export async function exportVideo(
   const clicks: NormClick[][] = loaded.segments.map((s) =>
     draft.ripple ? normalizeClicks(s.events, s.segment.viewport) : [],
   );
+  const moves: NormClick[][] = loaded.segments.map((s) =>
+    draft.pointer ? normalizeMoves(s.events, s.segment.viewport) : [],
+  );
 
   const videos = loaded.segments.map((s) => createVideo(s.tabUrl, loaded.hasAudio.tab));
   // A segment's `webcamUrl` is the recorder-#2 blob: real webcam video when
@@ -274,6 +277,7 @@ export async function exportVideo(
       ripples: clicks[index]
         .filter((c) => sourceMs >= c.t && sourceMs - c.t < RIPPLE_MS)
         .map((c) => ({ nx: c.nx, ny: c.ny, ageMs: sourceMs - c.t })),
+      cursor: cursorAt(moves[index], sourceMs),
       bubble: webcamReady ? draft.bubble : null,
       frame,
       frameMetrics: metrics,

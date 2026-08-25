@@ -33,6 +33,7 @@ export interface RailProps {
   loaded: LoadedSession;
   draft: ExportDraft;
   onRipple: (ripple: boolean) => void;
+  onPointer: (pointer: boolean) => void;
   onVolumes: (patch: Partial<{ tab: number; mic: number }>) => void;
   onBubble: (patch: Partial<ExportDraft['bubble']>) => void;
   onFrame: (patch: Partial<FrameOptions>) => void;
@@ -114,6 +115,15 @@ export function Rail(props: RailProps) {
             class="switch"
             checked={props.draft.ripple}
             onChange={(e) => props.onRipple((e.currentTarget as HTMLInputElement).checked)}
+          />
+        </label>
+        <label class="rail-row">
+          <span class="rail-row-label">{t('recorderPointer')}</span>
+          <input
+            type="checkbox"
+            class="switch"
+            checked={props.draft.pointer}
+            onChange={(e) => props.onPointer((e.currentTarget as HTMLInputElement).checked)}
           />
         </label>
       </div>

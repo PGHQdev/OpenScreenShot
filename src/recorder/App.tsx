@@ -19,7 +19,7 @@ import {
   type FitRect,
 } from './render';
 import { exportGeometry, type ExportDraft } from './export-video';
-import { normalizeClicks } from './events-map';
+import { cursorAt, normalizeClicks, normalizeMoves } from './events-map';
 import { cameraAt, EASE_MS } from './zoom';
 
 // i18n helper
@@ -234,6 +234,7 @@ function SessionView({
     autoZoomDone: sess.autoZoomDone,
     trims: sess.trims,
     ripple: sess.ripple,
+    pointer: sess.pointer,
     volumes: sess.volumes,
     bubble: sess.bubble,
     frame: sess.frame,
@@ -365,6 +366,7 @@ function SessionView({
         loaded={loaded}
         draft={draft}
         onRipple={sess.setRipple}
+        onPointer={sess.setPointer}
         onVolumes={sess.setVolumes}
         onBubble={sess.setBubble}
         onFrame={onFrame}
@@ -409,6 +411,11 @@ function Stage({
 
   const clicks = useMemo(
     () => sess.segments.map((s) => normalizeClicks(s.events, s.segment.viewport)),
+    [sess.segments],
+  );
+
+  const moves = useMemo(
+    () => sess.segments.map((s) => normalizeMoves(s.events, s.segment.viewport)),
     [sess.segments],
   );
 
@@ -497,6 +504,7 @@ function Stage({
             .filter((c) => sourceMs >= c.t && sourceMs - c.t < RIPPLE_MS)
             .map((c) => ({ nx: c.nx, ny: c.ny, ageMs: sourceMs - c.t }))
         : [],
+      cursor: draft.pointer ? cursorAt(moves[sess.segmentIndex] ?? [], sourceMs) : null,
       bubble: webcamReady ? draft.bubble : null,
       frame: geometry.frame,
       frameMetrics: metrics,

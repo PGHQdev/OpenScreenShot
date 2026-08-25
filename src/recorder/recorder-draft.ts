@@ -27,6 +27,7 @@ export interface RecorderDraft {
   autoZoomDone: boolean;
   trims: Record<string, { start: number; end: number }>;
   ripple: boolean;
+  pointer: boolean;
   /** 0..1. */
   volumes: { tab: number; mic: number };
   /** x/y normalized 0..1; size = fraction of min(W,H). */
@@ -58,6 +59,7 @@ export function defaultRecorderDraft(ripple = true): RecorderDraft {
     autoZoomDone: false,
     trims: {},
     ripple,
+    pointer: true,
     volumes: { tab: 1, mic: 1 },
     bubble: { ...DEFAULT_BUBBLE },
     frame: frameToSettings({ ...DEFAULT_FRAME, enabled: false }),
@@ -142,6 +144,7 @@ export function parseRecorderDraft(value: unknown): RecorderDraft | null {
     autoZoomDone?: unknown;
     trims?: unknown;
     ripple?: unknown;
+    pointer?: unknown;
     volumes?: unknown;
     bubble?: unknown;
     frame?: unknown;
@@ -164,6 +167,7 @@ export function parseRecorderDraft(value: unknown): RecorderDraft | null {
     autoZoomDone: v.autoZoomDone === true,
     trims,
     ripple: v.ripple !== false,
+    pointer: v.pointer !== false,
     volumes: {
       tab: clamp01(volumesRaw.tab, 1),
       mic: clamp01(volumesRaw.mic, 1),

@@ -129,12 +129,31 @@ export interface FrameInputs {
   camera: Camera;
   /** Click positions normalized in video space, with the age of each click. */
   ripples: { nx: number; ny: number; ageMs: number }[];
+  /** Cursor position normalized in video space, or null to draw no pointer. */
+  cursor: { nx: number; ny: number } | null;
   bubble: RecorderDraft['bubble'] | null;
   frame: FrameOptions;
   frameMetrics: FrameMetrics;
 }
 
 const RIPPLE_COLOR = '232, 80, 58';
+
+/**
+ * Arrow-cursor outline, normalized so y spans 0..1 of the pointer's height;
+ * the classic notched pointer shape, tip at the sample point.
+ */
+const POINTER_PTS: readonly [number, number][] = [
+  [0, 0],
+  [0, 0.86],
+  [0.21, 0.68],
+  [0.33, 0.97],
+  [0.47, 0.91],
+  [0.36, 0.63],
+  [0.61, 0.63],
+];
+
+/** Pointer height as a fraction of the shorter video side (before camera zoom). */
+const POINTER_SIZE = 0.035;
 
 /**
  * Draws one composited frame: beautify background, the video under the
@@ -169,6 +188,7 @@ export function drawExportFrame(
     const src = cameraSourceRect(inputs.camera, inputs.tabW, inputs.tabH);
     ctx.drawImage(inputs.tab, src.sx, src.sy, src.sw, src.sh, dst.x, dst.y, dst.w, dst.h);
     drawRipples(ctx, inputs, dst, src);
+    drawPointer(ctx, inputs, dst, src);
   }
 
   drawBubble(ctx, inputs, m);
@@ -212,6 +232,44 @@ function drawRipples(
     ctx.strokeStyle = `rgba(${RIPPLE_COLOR}, ${ripple.alpha})`;
     ctx.stroke();
   }
+  ctx.restore();
+}
+
+/**
+ * The synthetic pointer. tabCapture frames carry no OS cursor, so this is the
+ * only cursor a viewer sees. It rides the same camera mapping as ripples and
+ * is clipped to the drawn video rect. Ink fill with a white outline stays
+ * visible on both light and dark pages.
+ */
+function drawPointer(
+  ctx: CanvasRenderingContext2D,
+  inputs: FrameInputs,
+  dst: FitRect,
+  src: SourceRect,
+): void {
+  const c = inputs.cursor;
+  if (!c) return;
+  const mag = dst.w / src.sw;
+  const size = Math.min(inputs.tabW, inputs.tabH) * mag * POINTER_SIZE;
+  const px = (c.nx * inputs.tabW - src.sx) * mag + dst.x;
+  const py = (c.ny * inputs.tabH - src.sy) * mag + dst.y;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(dst.x, dst.y, dst.w, dst.h);
+  ctx.clip();
+  ctx.beginPath();
+  ctx.moveTo(px + POINTER_PTS[0][0] * size, py + POINTER_PTS[0][1] * size);
+  for (let i = 1; i < POINTER_PTS.length; i++) {
+    ctx.lineTo(px + POINTER_PTS[i][0] * size, py + POINTER_PTS[i][1] * size);
+  }
+  ctx.closePath();
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = Math.max(1, size * 0.12);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+  ctx.stroke();
+  ctx.fillStyle = '#1b1a17';
+  ctx.fill();
   ctx.restore();
 }
 

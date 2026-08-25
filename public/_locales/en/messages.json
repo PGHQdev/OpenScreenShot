@@ -403,6 +403,10 @@
     "message": "Click ripple",
     "description": "Recorder page: label of the toggle that draws a ripple at every recorded click."
   },
+  "recorderPointer": {
+    "message": "Show cursor",
+    "description": "Recorder page: label of the toggle that draws the recorded cursor path as a pointer in the video."
+  },
   "recorderVolTab": {
     "message": "Tab volume",
     "description": "Recorder page: label of the tab-audio volume slider."
