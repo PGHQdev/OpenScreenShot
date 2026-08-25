@@ -146,12 +146,34 @@ body {
   outline-offset: 2px;
 }
 
+/* Cards are neutral at rest; only the hovered (or busy) card takes the accent. */
 .mode-icon {
   display: inline-flex;
   justify-content: center;
   width: 24px;
-  color: var(--accent);
+  color: var(--text-2);
   flex: 0 0 auto;
+  transition: color 150ms ease-out;
+}
+
+.mode-card:hover .mode-icon,
+.mode-card[data-busy='true'] .mode-icon {
+  color: var(--accent);
+}
+
+.mode-card:hover .mode-title,
+.mode-card[data-busy='true'] .mode-title {
+  color: var(--accent);
+}
+
+.mode-card:disabled:hover .mode-icon,
+.mode-card[aria-disabled='true']:hover .mode-icon {
+  color: var(--text-2);
+}
+
+.mode-card:disabled:hover .mode-title,
+.mode-card[aria-disabled='true']:hover .mode-title {
+  color: inherit;
 }
 
 .mode-text {
@@ -165,6 +187,7 @@ body {
 .mode-title {
   font-size: 14px;
   font-weight: 600;
+  transition: color 150ms ease-out;
 }
 
 .mode-sub {
@@ -487,12 +510,6 @@ body {
 
 .kofi-link svg {
   flex: 0 0 auto;
-}
-
-.support-links {
-  display: flex;
-  align-items: center;
-  gap: var(--s-2);
 }
 
 /* ---- Shortcuts ---- */

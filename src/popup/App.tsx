@@ -634,6 +634,18 @@ export function App() {
             <button class="link-btn" onClick={openShortcutSettings} title={t('customizeShortcuts')}>
               {t('footerShortcuts')}
             </button>
+            <button class="link-btn kofi-link" onClick={openKofi} title={t('supportKofiTitle')}>
+              <CoffeeMark />
+              {t('footerKofi')}
+            </button>
+            <button
+              class="link-btn kofi-link"
+              onClick={openCoolStuff}
+              title={t('coolStuffTitle')}
+              aria-label={t('footerCoolStuff')}
+            >
+              <GiftMark />
+            </button>
           </div>
         </>
       )}
@@ -791,20 +803,6 @@ function SettingsView({
         </div>
       </div>
       <span class="settings-hint">{t('recAcrossSitesHint')}</span>
-
-      <div class="settings-row">
-        <span class="settings-label">{t('settingsSupport')}</span>
-        <div class="support-links">
-          <button class="link-btn kofi-link" onClick={openKofi} title={t('supportKofiTitle')}>
-            <CoffeeMark />
-            {t('footerKofi')}
-          </button>
-          <button class="link-btn kofi-link" onClick={openCoolStuff} title={t('coolStuffTitle')}>
-            <GiftMark />
-            {t('footerCoolStuff')}
-          </button>
-        </div>
-      </div>
 
       <div class="divider" />
       <button

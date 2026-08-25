@@ -225,10 +225,6 @@
     "message": "No region captured yet",
     "description": "Popup: tooltip on the disabled repeat-region footer action."
   },
-  "settingsSupport": {
-    "message": "Support",
-    "description": "Settings: label of the row holding the Ko-fi and cool-stuff links."
-  },
   "afterCaptureLabel": {
     "message": "After capture",
     "description": "Label for the row that picks what a finished capture does."
