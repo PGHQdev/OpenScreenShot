@@ -1,0 +1,82 @@
+---
+/**
+ * One permission table. The homepage privacy section and the Privacy Policy
+ * page both render it, from the same list in ../data/permissions.
+ *
+ * The "When it is requested" column appears only for the optional permissions,
+ * which are the rows that carry a `when`.
+ */
+import type { Permission } from '../data/permissions';
+
+interface Props {
+  rows: Permission[];
+}
+
+const { rows } = Astro.props;
+const hasWhen = rows.some((row) => row.when);
+---
+
+<table class="perms">
+  <thead>
+    <tr>
+      <th scope="col">Permission</th>
+      <th scope="col">Why it is needed</th>
+      {hasWhen && <th scope="col">When it is requested</th>}
+    </tr>
+  </thead>
+  <tbody>
+    {
+      rows.map((row) => (
+        <tr>
+          <th scope="row">
+            <code>{row.name}</code>
+          </th>
+          <td>{row.why}</td>
+          {hasWhen && <td>{row.when}</td>}
+        </tr>
+      ))
+    }
+  </tbody>
+</table>
+
+<style>
+  .perms {
+    width: 100%;
+    margin-bottom: var(--s-5);
+    border-collapse: collapse;
+    font-size: var(--fs-md);
+    text-align: left;
+  }
+
+  .perms th,
+  .perms td {
+    padding: var(--s-3) var(--s-4) var(--s-3) 0;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  .perms thead th {
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: var(--fs-xs);
+    letter-spacing: var(--tr-label);
+    text-transform: uppercase;
+  }
+
+  .perms tbody th {
+    width: 13rem;
+    color: var(--ink);
+    font-weight: 400;
+  }
+
+  .perms td {
+    color: var(--ink-2);
+  }
+
+  @media (max-width: 620px) {
+    .perms tbody th {
+      width: auto;
+    }
+  }
+</style>

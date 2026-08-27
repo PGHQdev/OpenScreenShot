@@ -2,8 +2,11 @@
 import Base from '../layouts/Base.astro';
 import BrandMark from '../components/BrandMark.astro';
 import CropMarks from '../components/CropMarks.astro';
+import FaqList from '../components/FaqList.astro';
 import FrameLabel from '../components/FrameLabel.astro';
+import PermissionTable from '../components/PermissionTable.astro';
 import { homeFaq } from '../data/faq';
+import { installPermissions, recordingPermissions } from '../data/permissions';
 import hero from '../assets/hero.webp';
 
 const STORE_URL = 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp';
@@ -22,50 +25,6 @@ const navLinks = [
 // The ticker is one run repeated twice so the loop is seamless.
 const ticker =
   'FULL PAGE · REGION · VISIBLE AREA · ARROWS · BLUR · SPOTLIGHT · STEP NUMBERS · CROP · PNG · JPEG · WEBP · PDF · TAB RECORDING · CLIPBOARD · MIT LICENSED · NO ACCOUNT · NO UPLOAD · ';
-
-const permissions = [
-  {
-    name: 'activeTab',
-    why: 'Capture the tab you are looking at, when you click the toolbar button, press a keyboard shortcut, or pick a capture from the right-click menu. Access is granted for that one tab, for that one capture.',
-  },
-  {
-    name: 'scripting',
-    why: 'Inject small, self-contained functions into the captured tab: measure the page height and scroll it during a full-page capture, draw the drag-to-select overlay for a region capture, and write an image to the clipboard in quick mode. Every script ships inside the package. No remote code is loaded.',
-  },
-  {
-    name: 'storage and unlimitedStorage',
-    why: 'Keep your settings on the device, hold the capture the editor page loads, remember the last region rectangle so it can be repeated, and save an in-progress editing draft so a closed or crashed tab does not lose your annotations. A full-page screenshot can exceed the default storage quota, which is what unlimitedStorage raises.',
-  },
-  {
-    name: 'downloads',
-    why: 'Save an export from the editor, or a quick-mode capture, to your downloads folder. The extension never reads, searches, or opens your download history.',
-  },
-  {
-    name: 'contextMenus',
-    why: 'Add one OpenScreenShot submenu to the page right-click menu, as a second way to start a capture. The extension reads only which menu item you clicked.',
-  },
-  {
-    name: 'clipboardWrite',
-    why: 'Copy a screenshot to your clipboard, from the editor’s Copy button or from quick mode. The extension only ever writes the screenshot you just captured or exported. It never reads what is already on your clipboard.',
-  },
-  {
-    name: 'offscreen',
-    why: 'Run the screen-recording engine in a hidden document. MediaRecorder capture and the crash-safe IndexedDB chunk writes need a page context a service worker does not have. Always present; it adds no install-time warning.',
-  },
-];
-
-const optionalPermissions = [
-  {
-    name: 'tabCapture',
-    why: 'Captures the current tab’s video, and its audio if you enable the tab-audio track, for recording.',
-    when: 'Once, the first time you click Record — a single Chrome permission prompt.',
-  },
-  {
-    name: '<all_urls>',
-    why: 'Keeps the in-page cursor overlay and control bar alive when a recording’s tab navigates to a different origin.',
-    when: 'Only if you turn on “Record across sites” in settings.',
-  },
-];
 
 const softwareLd = {
   '@context': 'https://schema.org',
@@ -325,50 +284,10 @@ const ld = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
       </p>
 
       <h3 class="sub-head">What it asks for at install</h3>
-      <table class="perms">
-        <thead>
-          <tr>
-            <th scope="col">Permission</th>
-            <th scope="col">Why it is needed</th>
-          </tr>
-        </thead>
-        <tbody>
-          {
-            permissions.map((perm) => (
-              <tr>
-                <th scope="row">
-                  <code>{perm.name}</code>
-                </th>
-                <td>{perm.why}</td>
-              </tr>
-            ))
-          }
-        </tbody>
-      </table>
+      <PermissionTable rows={installPermissions} />
 
       <h3 class="sub-head">What recording adds, only when you record</h3>
-      <table class="perms">
-        <thead>
-          <tr>
-            <th scope="col">Permission</th>
-            <th scope="col">Why it is needed</th>
-            <th scope="col">When it is requested</th>
-          </tr>
-        </thead>
-        <tbody>
-          {
-            optionalPermissions.map((perm) => (
-              <tr>
-                <th scope="row">
-                  <code>{perm.name}</code>
-                </th>
-                <td>{perm.why}</td>
-                <td>{perm.when}</td>
-              </tr>
-            ))
-          }
-        </tbody>
-      </table>
+      <PermissionTable rows={recordingPermissions} />
 
       <p class="fine">
         The microphone and camera, when you enable them, are opened by your browser’s own permission
@@ -402,19 +321,7 @@ const ld = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
     <div class="container-wide">
       <FrameLabel label="FAQ" />
       <h2>Questions.</h2>
-      <div class="faq-list">
-        {
-          homeFaq.map((item) => (
-            <details class="faq">
-              <summary>
-                {item.q}
-                <span class="faq-mark" aria-hidden="true" />
-              </summary>
-              <div class="faq-a" set:html={item.a} />
-            </details>
-          ))
-        }
-      </div>
+      <FaqList items={homeFaq} />
       <p class="fine">
         Every question, plus the known limits, on the <a href="/support/">Support page</a>.
       </p>
@@ -647,39 +554,6 @@ const ld = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
     margin-top: var(--s-6);
   }
 
-  .perms {
-    width: 100%;
-    margin-bottom: var(--s-5);
-    border-collapse: collapse;
-    font-size: var(--fs-md);
-    text-align: left;
-  }
-
-  .perms th,
-  .perms td {
-    padding: var(--s-3) var(--s-4) var(--s-3) 0;
-    border-bottom: 1px solid var(--border);
-    vertical-align: top;
-  }
-
-  .perms thead th {
-    color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-weight: 500;
-    font-size: var(--fs-xs);
-    letter-spacing: var(--tr-label);
-    text-transform: uppercase;
-  }
-
-  .perms tbody th {
-    width: 13rem;
-    font-weight: 400;
-  }
-
-  .perms td {
-    color: var(--ink-2);
-  }
-
   /* ---- Code blocks ---- */
 
   .code {
@@ -695,76 +569,6 @@ const ld = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
 
   .code code {
     font-size: inherit;
-  }
-
-  /* ---- FAQ ---- */
-
-  .faq-list {
-    max-width: var(--max-w);
-    margin-top: var(--s-6);
-  }
-
-  .faq {
-    border-top: 1px solid var(--rule);
-  }
-
-  .faq:last-of-type {
-    border-bottom: 1px solid var(--rule);
-  }
-
-  .faq summary {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--s-4);
-    padding: var(--s-4) 0;
-    color: var(--ink);
-    font-weight: 600;
-    cursor: pointer;
-    list-style: none;
-  }
-
-  .faq summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .faq-mark {
-    position: relative;
-    flex: none;
-    width: 13px;
-    height: 13px;
-  }
-
-  .faq-mark::before,
-  .faq-mark::after {
-    content: '';
-    position: absolute;
-    inset: 50% 0 auto;
-    height: 1.5px;
-    background: var(--accent);
-    transition: transform var(--dur-fast) var(--ease);
-  }
-
-  .faq-mark::after {
-    transform: rotate(90deg);
-  }
-
-  .faq[open] .faq-mark::after {
-    transform: rotate(0deg);
-  }
-
-  .faq-a {
-    padding-bottom: var(--s-4);
-    color: var(--ink-2);
-    font-size: var(--fs-md);
-  }
-
-  .faq-a :global(p) {
-    margin: 0 0 var(--s-3);
-  }
-
-  .faq-a :global(p:last-child) {
-    margin-bottom: 0;
   }
 
   /* ---- Final CTA ---- */
@@ -793,10 +597,6 @@ const ld = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
   @media (max-width: 620px) {
     .spec > div {
       grid-template-columns: 1fr;
-    }
-
-    .perms tbody th {
-      width: auto;
     }
   }
 </style>
