@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/brand-mark.svg" alt="" width="88" height="88" />
+<img src="media/brand-mark.svg" alt="" width="88" height="88" />
 
 # OpenScreenShot
 
