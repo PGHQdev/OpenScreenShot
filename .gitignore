@@ -10,7 +10,8 @@ coverage
 # generated extension icons (produced by scripts/generate-icons.mjs)
 public/icons/
 # generated site output (produced by `npm run site:build` from site/)
-docs/
+# Anchored: an unanchored `docs/` also matches site/src/pages/docs/.
+/docs/
 # Astro's local build cache
 site/.astro/
 # Pi session logs
@@ -19,5 +20,3 @@ pi-session-*.html
 .wrangler/
 .worktrees/
 .superpowers/
-# agent working docs never belong in the deployed site directory
-docs/superpowers/
