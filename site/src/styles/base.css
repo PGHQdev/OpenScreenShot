@@ -1,0 +1,236 @@
+/*
+ * Global element defaults and the few primitives every page shares.
+ * Loaded once, by Base.astro. Page-specific rules stay in the page.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100svh;
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 var(--s-4);
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tr-tight);
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--fs-3xl);
+}
+
+h2 {
+  font-size: var(--fs-2xl);
+}
+
+h3 {
+  font-size: var(--fs-xl);
+}
+
+p {
+  margin: 0 0 var(--s-4);
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--accent-ink);
+  text-decoration-color: color-mix(in srgb, var(--accent-ink) 40%, transparent);
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  text-decoration-color: currentcolor;
+}
+
+hr {
+  height: 0;
+  margin: var(--s-6) 0;
+  border: 0;
+  border-top: 1px solid var(--rule);
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: var(--r-sm);
+}
+
+/* ---- Layout ---- */
+
+.container {
+  max-width: var(--max-w);
+  margin-inline: auto;
+  padding-inline: var(--s-5);
+}
+
+.container-wide {
+  max-width: var(--max-w-wide);
+  margin-inline: auto;
+  padding-inline: var(--s-5);
+}
+
+/* ---- Accessibility ---- */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  top: var(--s-2);
+  left: var(--s-2);
+  z-index: 100;
+  padding: var(--s-2) var(--s-4);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--paper-raised);
+  color: var(--ink);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(calc(-100% - var(--s-4)));
+}
+
+.skip-link:focus-visible {
+  transform: none;
+}
+
+/* ---- Buttons ---- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: 46px;
+  padding: 0 22px;
+  border: 1px solid transparent;
+  border-radius: var(--r-full);
+  font: inherit;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+
+.btn-ink {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.btn-ink:hover {
+  background: var(--accent-ink);
+  color: var(--paper-raised);
+}
+
+.btn-quiet {
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+.btn-quiet:hover {
+  border-color: var(--ink);
+  background: var(--paper-raised);
+}
+
+/* ---- Scroll reveal ----
+ * Declared only where motion is welcome and the timeline is supported, so the
+ * fallback is plain visible content rather than a stuck opacity: 0.
+ */
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal-in linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 28%;
+    }
+  }
+}
+
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---- Motion off ----
+ * Catches everything a page adds later, the marquee ticker included.
+ */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,65 @@
+---
+/**
+ * Crop-mark brackets: the contact-sheet motif. Wraps its slot and draws four
+ * corner brackets just outside the content box. Decorative only, so the marks
+ * are hidden from assistive tech.
+ */
+interface Props {
+  as?: 'div' | 'section' | 'figure' | 'article' | 'aside';
+  arm?: string;
+  inset?: string;
+  class?: string;
+}
+
+const { as: Tag = 'div', arm = '18px', inset = '10px', class: className } = Astro.props;
+---
+
+<Tag class:list={['crop', className]} style={`--crop-arm:${arm};--crop-inset:${inset}`}>
+  <span class="crop-tl" aria-hidden="true"></span>
+  <span class="crop-tr" aria-hidden="true"></span>
+  <span class="crop-bl" aria-hidden="true"></span>
+  <span class="crop-br" aria-hidden="true"></span>
+  <slot />
+</Tag>
+
+<style>
+  .crop {
+    position: relative;
+  }
+
+  .crop > span {
+    position: absolute;
+    width: var(--crop-arm);
+    height: var(--crop-arm);
+    border: 0 solid var(--accent);
+    pointer-events: none;
+  }
+
+  .crop-tl {
+    top: calc(var(--crop-inset) * -1);
+    left: calc(var(--crop-inset) * -1);
+    border-top-width: 1.5px;
+    border-left-width: 1.5px;
+  }
+
+  .crop-tr {
+    top: calc(var(--crop-inset) * -1);
+    right: calc(var(--crop-inset) * -1);
+    border-top-width: 1.5px;
+    border-right-width: 1.5px;
+  }
+
+  .crop-bl {
+    bottom: calc(var(--crop-inset) * -1);
+    left: calc(var(--crop-inset) * -1);
+    border-bottom-width: 1.5px;
+    border-left-width: 1.5px;
+  }
+
+  .crop-br {
+    bottom: calc(var(--crop-inset) * -1);
+    right: calc(var(--crop-inset) * -1);
+    border-bottom-width: 1.5px;
+    border-right-width: 1.5px;
+  }
+</style>

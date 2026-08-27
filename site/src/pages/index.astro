@@ -1,15 +1,26 @@
 ---
 // Placeholder homepage. Task 3 replaces this with the real landing page.
+import Base from '../layouts/Base.astro';
+import FrameLabel from '../components/FrameLabel.astro';
+import CropMarks from '../components/CropMarks.astro';
+
+const navLinks = [
+  { href: '#capture', label: 'Capture' },
+  { href: '#annotate', label: 'Annotate' },
+];
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>OpenScreenShot</title>
-  </head>
-  <body>
-    <p>OpenScreenShot</p>
-  </body>
-</html>
+<Base
+  title="OpenScreenShot"
+  description="Free, open-source full page screenshot extension for Chrome."
+  path="/"
+  navLinks={navLinks}
+  preloadItalic
+>
+  <div class="container">
+    <CropMarks>
+      <FrameLabel index="01" label="Capture" />
+      <h1>OpenScreenShot</h1>
+    </CropMarks>
+  </div>
+</Base>
