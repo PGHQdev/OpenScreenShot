@@ -1,0 +1,47 @@
+---
+/**
+ * The five sub-pages all wear this shell: Base.astro's head, nav and footer,
+ * one cross-page nav, and the eyebrow / heading / lead block at the top. Pages
+ * supply their own sections through the default slot and their own structured
+ * data through `head`.
+ */
+import Base from './Base.astro';
+import type { NavLink } from './Base.astro';
+import FrameLabel from '../components/FrameLabel.astro';
+import '../styles/doc.css';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Canonical path, leading and trailing slash included: '/docs/'. */
+  path: string;
+  /** Monospace eyebrow above the heading. */
+  label: string;
+  heading: string;
+  lead: string;
+}
+
+// The full nav, with cross-page links. Only the homepage nav is anchors-only.
+const navLinks: NavLink[] = [
+  { href: '/docs/', label: 'Docs' },
+  { href: '/support/', label: 'Support' },
+  { href: '/roadmap/', label: 'Roadmap' },
+  { href: '/cool-stuff/', label: 'Cool stuff' },
+  { href: 'https://github.com/pghqdev/OpenScreenShot', label: 'GitHub', external: true },
+];
+
+const { title, description, path, label, heading, lead } = Astro.props;
+---
+
+<Base title={title} description={description} path={path} navLinks={navLinks}>
+  <slot name="head" slot="head" />
+
+  <div class="doc container">
+    <header class="doc-head">
+      <FrameLabel label={label} />
+      <h1>{heading}</h1>
+      <p class="doc-lead">{lead}</p>
+    </header>
+    <slot />
+  </div>
+</Base>

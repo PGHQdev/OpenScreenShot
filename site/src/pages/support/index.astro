@@ -1,0 +1,114 @@
+---
+import Doc from '../../layouts/Doc.astro';
+import CropMarks from '../../components/CropMarks.astro';
+import FaqList from '../../components/FaqList.astro';
+import { faq } from '../../data/faq';
+
+const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
+const STORE_URL = 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp';
+
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faq.map((item) => ({
+    '@type': 'Question',
+    name: item.q,
+    acceptedAnswer: { '@type': 'Answer', text: item.a },
+  })),
+};
+
+// The list below and mainEntity above both read `faq`, so they cannot drift.
+// This guard fails the build if a later edit gives either its own source.
+if (faqLd.mainEntity.length !== faq.length) {
+  throw new Error(
+    `FAQ drift: ${faqLd.mainEntity.length} structured answers for ${faq.length} rendered questions.`,
+  );
+}
+
+// set:html does not escape, and an answer carries HTML, so close the </script>
+// break-out the only way JSON.stringify leaves open.
+const ld = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
+---
+
+<Doc
+  title="Support & FAQ — OpenScreenShot"
+  description="OpenScreenShot support — FAQ, troubleshooting, known limitations, and how to get help with the open-source Chrome screenshot extension."
+  path="/support/"
+  label="Answers and known limits"
+  heading="Support & FAQ"
+  lead="Answers to common questions, known limitations, and how to get help."
+>
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={ld(faqLd)} />
+  </Fragment>
+
+  <section class="doc-section" id="faq">
+    <h2>Frequently asked questions</h2>
+    <FaqList items={faq} />
+  </section>
+
+  <section class="doc-section" id="limitations">
+    <h2>Known limitations</h2>
+    <ul>
+      <li>
+        <strong>Region selection is viewport-only</strong> — scrolling while selecting is not yet
+        supported. Use full-page capture and crop instead.
+      </li>
+      <li>
+        <strong>Dynamic and infinite-scroll pages</strong> — the capture engine measures the page
+        height once at the start. Pages that load content as you scroll may produce an incomplete
+        result.
+      </li>
+      <li>
+        <strong>Editor i18n</strong> — the annotation editor UI is English only. The popup is fully
+        internationalized.
+      </li>
+      <li>
+        <strong>No settings sync</strong> — your theme, export format, and filename template live in
+        local storage and do not sync across devices or profiles.
+      </li>
+      <li>
+        <strong>The live webcam bubble is part of the recorded page</strong> — while you record, the
+        webcam preview is an element on the page itself, so it appears in the raw tab video. The
+        recording editor composites its own webcam bubble as a second overlay on export, on top of
+        whatever the page captured underneath it. The control bar hides itself about 3 seconds after
+        your pointer leaves it, so it stays out of the video; move your cursor to the bottom center
+        of the page to bring it back, and it always shows while paused or hovered.
+      </li>
+    </ul>
+  </section>
+
+  <section class="doc-section" id="get-help">
+    <h2>Get help</h2>
+    <p>If you hit a bug, have a feature request, or need help with anything not covered here:</p>
+    <ul>
+      <li>
+        <strong>Open a GitHub issue</strong> —
+        <a href={`${REPO_URL}/issues`} target="_blank" rel="noopener"
+          >github.com/pghqdev/OpenScreenShot/issues</a
+        >
+      </li>
+      <li>
+        <strong>Leave a review</strong> on the
+        <a href={STORE_URL} target="_blank" rel="noopener">Chrome Web Store</a> — it helps other people
+        find the extension.
+      </li>
+      <li>
+        <strong>Contribute</strong> — the extension is MIT licensed. Pull requests are welcome. See
+        <a href={`${REPO_URL}/blob/main/CONTRIBUTING.md`} target="_blank" rel="noopener"
+          >CONTRIBUTING.md</a
+        >.
+      </li>
+    </ul>
+  </section>
+
+  <section class="doc-cta">
+    <CropMarks arm="26px" inset="18px">
+      <h2>Still stuck?</h2>
+      <p>Bugs, feature requests, and questions all go to the same tracker.</p>
+      <a class="btn btn-ink" href={`${REPO_URL}/issues/new`} target="_blank" rel="noopener">
+        Open a GitHub issue
+      </a>
+    </CropMarks>
+  </section>
+</Doc>
