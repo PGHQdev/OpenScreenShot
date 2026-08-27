@@ -13,7 +13,7 @@
 
 [**➜ Add to Chrome**](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp) &nbsp;·&nbsp; [Website](https://openscreenshot.app) &nbsp;·&nbsp; [Docs](https://openscreenshot.app/docs/) &nbsp;·&nbsp; [Roadmap](./ROADMAP.md)
 
-<img src="docs/assets/demo.gif" alt="A full page is captured, annotated in the editor, and exported as PNG" width="860" />
+<img src="media/demo.gif" alt="A full page is captured, annotated in the editor, and exported as PNG" width="860" />
 
 </div>
 

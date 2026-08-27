@@ -32,11 +32,11 @@ for (const size of [16, 48, 128]) {
   console.log(`✓ generated ${outDir}/icon${size}.png`);
 }
 
-// Website icons (docs/ is the static root for openscreenshot.app):
+// Website icons (site/public/ is copied verbatim into docs/ by astro build):
 //  - favicon.ico  — multi-size ICO (PNG-compressed entries); /favicon.ico is
 //    fetched by browsers, crawlers, and feed readers regardless of <link> tags
 //  - apple-touch-icon.png — requested by iOS for Add to Home Screen
-const webDir = 'docs';
+const webDir = 'site/public';
 await mkdir(webDir, { recursive: true });
 
 const icoSizes = [16, 32, 48];

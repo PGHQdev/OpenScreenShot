@@ -21,8 +21,10 @@
     "test:watch": "vitest",
     "build": "tsc --noEmit && vite build",
     "package": "npm run build && rm -f openscreenshot-v$npm_package_version.zip && cd dist && zip -r -X ../openscreenshot-v$npm_package_version.zip .",
-    "site:deploy": "wrangler deploy",
-    "site:dev": "wrangler dev",
+    "site:build": "astro build --root site",
+    "site:dev": "astro dev --root site",
+    "site:preview": "wrangler dev",
+    "site:deploy": "npm run site:build && wrangler deploy",
     "shots": "node scripts/shots/render.mjs",
     "smoke:recorder": "node tests/browser/recorder-smoke.mjs",
     "smoke:setup": "node tests/browser/setup-smoke.mjs"
@@ -31,10 +33,12 @@
     "preact": "^10.29.4"
   },
   "devDependencies": {
+    "@astrojs/sitemap": "^3.7.3",
     "@crxjs/vite-plugin": "^2.7.1",
     "@eslint/js": "^9.39.4",
     "@preact/preset-vite": "^2.10.5",
     "@types/chrome": "^0.2.2",
+    "astro": "^7.2.9",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "fake-indexeddb": "^6.2.5",

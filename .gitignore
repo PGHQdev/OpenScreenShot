@@ -9,6 +9,10 @@ coverage
 
 # generated extension icons (produced by scripts/generate-icons.mjs)
 public/icons/
+# generated site output (produced by `npm run site:build` from site/)
+docs/
+# Astro's local build cache
+site/.astro/
 # Pi session logs
 pi-session-*.html
 .gstack/

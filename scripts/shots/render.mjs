@@ -1,5 +1,5 @@
-// Renders the marketing shots (docs/assets/shot-N.{jpg,webp}) from the poster
-// pages in this directory, using headless Chrome + sharp.
+// Renders the marketing shots (site/src/assets/shot-N.{jpg,webp}) from the
+// poster pages in this directory, using headless Chrome + sharp.
 // Run with: npm run shots
 import sharp from 'sharp';
 import { execFile } from 'node:child_process';
@@ -13,11 +13,11 @@ const execFileP = promisify(run);
 
 const CHROME =
   process.env.CHROME_BIN ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const OUT_DIR = 'docs/assets';
+const OUT_DIR = 'site/src/assets';
 // The Chrome Web Store accepts screenshots at exactly 1280x800 or 640x400, as
 // JPEG or 24-bit PNG with no alpha. The posters render at 1800x1126 for the
 // landing page, so each one is downscaled into a second, store-sized file.
-const STORE_DIR = 'docs/assets/store';
+const STORE_DIR = 'media/store';
 const STORE_SIZE = { w: 1280, h: 800 };
 const STORE_SHOTS = new Set(['shot-1', 'shot-2', 'shot-3', 'shot-4']);
 const SHOTS = [
@@ -32,6 +32,7 @@ const SHOTS = [
 ];
 
 const work = await mkdtemp(join(tmpdir(), 'oss-shots-'));
+await mkdir(OUT_DIR, { recursive: true });
 await mkdir(STORE_DIR, { recursive: true });
 try {
   for (const { name, w, h } of SHOTS) {
