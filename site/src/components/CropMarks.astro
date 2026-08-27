@@ -27,6 +27,8 @@ const { as: Tag = 'div', arm = '18px', inset = '10px', class: className } = Astr
     position: relative;
   }
 
+  /* The corner rules must out-specify this one, or the zero widths win and the
+   * marks never draw; hence `.crop > .crop-*` below. */
   .crop > span {
     position: absolute;
     width: var(--crop-arm);
@@ -35,28 +37,28 @@ const { as: Tag = 'div', arm = '18px', inset = '10px', class: className } = Astr
     pointer-events: none;
   }
 
-  .crop-tl {
+  .crop > .crop-tl {
     top: calc(var(--crop-inset) * -1);
     left: calc(var(--crop-inset) * -1);
     border-top-width: 1.5px;
     border-left-width: 1.5px;
   }
 
-  .crop-tr {
+  .crop > .crop-tr {
     top: calc(var(--crop-inset) * -1);
     right: calc(var(--crop-inset) * -1);
     border-top-width: 1.5px;
     border-right-width: 1.5px;
   }
 
-  .crop-bl {
+  .crop > .crop-bl {
     bottom: calc(var(--crop-inset) * -1);
     left: calc(var(--crop-inset) * -1);
     border-bottom-width: 1.5px;
     border-left-width: 1.5px;
   }
 
-  .crop-br {
+  .crop > .crop-br {
     bottom: calc(var(--crop-inset) * -1);
     right: calc(var(--crop-inset) * -1);
     border-bottom-width: 1.5px;
