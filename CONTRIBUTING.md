@@ -52,7 +52,3 @@ chore(deps): bump vite to 7.3
 ## Milestones
 
 We build in milestones (see [README](./README.md) status table). If you'd like to take on a chunk of work, open an issue first to discuss scope.
-
-## Code of Conduct
-
-By participating you agree to abide by our [Code of Conduct](./CODE_OF_CONDUCT.md).
