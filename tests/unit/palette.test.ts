@@ -1,17 +1,42 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import {
-  COLOR_NAMES,
-  COLOR_PALETTE,
   MAX_RECENT_COLORS,
+  SWATCHES,
   colorName,
   normalizeHex,
   pushRecent,
 } from '../../src/editor/palette';
 
-describe('COLOR_NAMES', () => {
-  it('names every preset swatch', () => {
-    for (const hex of COLOR_PALETTE) {
-      expect(COLOR_NAMES[hex]).toBeTypeOf('string');
+/**
+ * COLOR_PALETTE and COLOR_NAMES both derive from SWATCHES, so comparing them
+ * proves nothing. The seam that can still break is the one between tokens.css
+ * and SWATCHES: adding a --swatch-* token and forgetting the word a screen
+ * reader reads for it.
+ */
+describe('SWATCHES', () => {
+  const css = readFileSync('src/shared/tokens.css', 'utf8');
+  const declared = [...css.matchAll(/--swatch-([a-z0-9-]+):\s*(#[0-9a-f]{6});/g)].map((m) => ({
+    token: `--swatch-${m[1]}`,
+    hex: m[2],
+  }));
+
+  it('finds the swatch tokens in tokens.css', () => {
+    expect(declared.length).toBeGreaterThan(0);
+  });
+
+  it('gives every --swatch-* token an accessible name', () => {
+    for (const { token, hex } of declared) {
+      const swatch = SWATCHES.find((s) => s.hex === hex);
+      expect(swatch, `${token} (${hex}) has no SWATCHES entry`).toBeDefined();
+      expect(swatch?.name, `${token} has an empty name`).toMatch(/\S/);
+    }
+  });
+
+  it('has no swatch that tokens.css does not declare', () => {
+    const hexes = declared.map((d) => d.hex);
+    for (const s of SWATCHES) {
+      expect(hexes, `${s.name} (${s.hex}) is not a --swatch-* token`).toContain(s.hex);
     }
   });
 });
