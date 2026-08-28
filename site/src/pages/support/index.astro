@@ -55,7 +55,8 @@ if (faqLd.mainEntity.length !== faq.length) {
       <li>
         <strong>Dynamic and infinite-scroll pages</strong> — the capture engine measures the page
         height once, at the start. A page that grows while you scroll comes out at the height it
-        had when the capture began.
+        had when the capture began. Images that load late can come out blank too: each tile gets a
+        short pause to repaint, not time for a fresh fetch.
       </li>
       <li>
         <strong>Editor language</strong> — the annotation editor is English only. The popup is

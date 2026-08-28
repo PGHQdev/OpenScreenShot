@@ -63,7 +63,7 @@ export const faq: FaqItem[] = [
   },
   {
     q: 'Does PDF export bundle a heavy library?',
-    a: '<p>No. PDF export runs on a small writer built into the extension (<code>src/editor/pdf-writer.ts</code>). It places the image on the page and compresses it with the browser’s own <code>CompressionStream</code>, so exporting a PDF makes no network request and adds no third-party code. Earlier versions used jsPDF, which pulled in <code>html2canvas</code> and <code>dompurify</code> for a feature the extension never called.</p>',
+    a: '<p>No. PDF export runs on a small writer built into the extension (<code>src/editor/pdf-writer.ts</code>). It places each page’s image and compresses it with the browser’s own <code>CompressionStream</code>, so exporting a PDF makes no network request and adds no third-party code. Earlier versions used jsPDF, which pulled in <code>html2canvas</code> and <code>dompurify</code> for a feature the extension never called.</p>',
     home: true,
   },
   {

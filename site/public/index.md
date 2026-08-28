@@ -21,7 +21,7 @@ Free, open-source full page screenshot tool for Chrome — full-page (scroll-and
 - Drop or paste any image into the editor to annotate it — no capture needed
 - Crash-safe — edits are saved locally as you work and offered back if the tab closes
 - Export — PNG, JPEG, WebP, PDF (single or multi-page), at 25–200% or an exact pixel width, or copy to the clipboard
-- Screen recording — record the current tab (optional `tabCapture` permission, requested once), with mic, tab audio, and a webcam bubble; auto zoom at cursor clicks, manual zoom blocks, per-segment trim, click ripples, Beautify frame, and WebM export; crash-safe 1-second chunks with recovery and continue-recording; an auto-hiding control bar (hides after 3s, returns at the bottom center) and an optional synthetic cursor overlay drawn from the recorded pointer path, in both the preview and the export
+- Screen recording — record the current tab (optional `tabCapture` permission, requested once), with mic, tab audio, and a webcam bubble; auto zoom at cursor clicks, manual zoom blocks, per-segment trim, click ripples, Beautify frame, and WebM export; crash-safe 1-second chunks with recovery and continue-recording; an auto-hiding control bar (hides about 3s after the pointer leaves it, returns at the bottom center) and an optional synthetic cursor overlay drawn from the recorded pointer path, in both the preview and the export
 
 ## Agents & CLI
 
