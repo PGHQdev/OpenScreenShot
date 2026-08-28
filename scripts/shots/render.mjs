@@ -108,7 +108,13 @@ try {
       { timeout: 30_000 },
     );
     const out = `${OUT_DIR}/${name}.png`;
-    await sharp(png).resize(w, h).png({ compressionLevel: 9 }).toFile(out);
+    // `palette: true` quantizes to an indexed palette (libimagequant, bundled
+    // with sharp) instead of relying on zlib effort alone — roughly 140KB down
+    // to 60KB for this mostly-flat card, with no visible banding.
+    await sharp(png)
+      .resize(w, h)
+      .png({ palette: true, compressionLevel: 9, effort: 10 })
+      .toFile(out);
     console.log(`✓ ${out} (${w}x${h})`);
   }
 

@@ -116,6 +116,17 @@ samp {
   padding-inline: var(--s-5);
 }
 
+/* ---- Prose ----
+ * Shared by the homepage's lede paragraphs (the four remaining inline
+ * sections and every Frame).
+ */
+
+.lede {
+  max-width: var(--max-w);
+  color: var(--ink-2);
+  font-size: var(--fs-lg);
+}
+
 /* ---- Accessibility ---- */
 
 .visually-hidden {
