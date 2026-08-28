@@ -28,7 +28,18 @@
  *   --border      control boundaries; >= 3:1 on --surface-1..--surface-3.
  *   --rule        a decorative hairline. Never a control's edge, never the only
  *                 signal that a boundary exists.
- * Measured ratios: .superpowers/sdd/tranquil-drifting-lemon/task-9-report.md.
+ *   --border-focus  the keyboard focus ring. Appears only under
+ *                 :focus-visible (or a descendant/proxy of it) — never as a
+ *                 persistent state indicator. >= 3:1 against every surface it
+ *                 can land on; against an arbitrary fill (a colour swatch, a
+ *                 filled chip) it sits behind a known-colour moat instead.
+ *   --ring-selected  a persistent (non-focus) selection indicator, for a
+ *                 control whose "this one is chosen" state has to survive
+ *                 losing focus. Same value as --border-focus today, kept as
+ *                 its own token so the two can diverge and so --border-focus
+ *                 stays exclusively a focus signal.
+ * Measured ratios: .superpowers/sdd/tranquil-drifting-lemon/task-9-report.md,
+ * task-15-report.md.
  */
 
 /* @tokens base */
@@ -138,6 +149,7 @@
   --border: #818187;
   --rule: #d2d2d7;
   --border-focus: #e8503a;
+  --ring-selected: #e8503a;
   --danger: #b45309;
   --success: #34c759;
   --warning: #ff9500;
@@ -163,6 +175,7 @@
   --border: #8a8a8f;
   --rule: #48484a;
   --border-focus: #f26b57;
+  --ring-selected: #f26b57;
   --danger: #f5a623;
   --success: #30d158;
   --warning: #ff9f0a;
@@ -198,6 +211,7 @@
     --border: #8a8a8f;
     --rule: #48484a;
     --border-focus: #f26b57;
+    --ring-selected: #f26b57;
     --danger: #f5a623;
     --success: #30d158;
     --warning: #ff9f0a;
