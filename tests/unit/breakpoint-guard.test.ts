@@ -29,7 +29,29 @@ const BREAKPOINTS = new Set(
     .map(([, value]) => Number(String(value).replace('px', ''))),
 );
 
-const MEDIA_WIDTH = /@media[^{]*\b(?:min|max)-width\s*:\s*([0-9.]+)px/g;
+const MEDIA_PRELUDE = /@media([^{]*)\{/g;
+const WIDTH_IN_PRELUDE = /\b(?:min|max)-width\s*:\s*([0-9.]+)px/g;
+
+/**
+ * Every min/max-width px value in any @media prelude in `css`. A single
+ * regex spanning "@media ... width: Npx" (this file's original shape)
+ * only captures the LAST width in a prelude that combines min-width and
+ * max-width — an "@media (min-width: 600px) and (max-width: 900px)" range
+ * query — because the greedy `[^{]*` backtracks to the rightmost position
+ * that still matches, silently swallowing the first width into it. No
+ * stylesheet here currently writes a combined range query, so this was
+ * unexploited, but it would have let a non-canonical width through
+ * undetected, or an actually-used breakpoint read as unused. Scoping the
+ * width regex to each prelude's own substring instead finds every
+ * occurrence, not just the last.
+ */
+function mediaWidths(css: string): number[] {
+  const out: number[] = [];
+  for (const prelude of css.matchAll(MEDIA_PRELUDE)) {
+    for (const m of prelude[1].matchAll(WIDTH_IN_PRELUDE)) out.push(Number(m[1]));
+  }
+  return out;
+}
 
 describe('stylesheet @media widths match the tokens.css breakpoints', () => {
   const files = cssFiles(join(process.cwd(), 'src'));
@@ -45,20 +67,24 @@ describe('stylesheet @media widths match the tokens.css breakpoints', () => {
   for (const file of files) {
     it(`${file.replace(process.cwd() + '/', '')} only uses canonical breakpoint widths`, () => {
       const css = readFileSync(file, 'utf8');
-      const offenders = [...css.matchAll(MEDIA_WIDTH)]
-        .map((m) => Number(m[1]))
-        .filter((px) => !BREAKPOINTS.has(px));
+      const offenders = mediaWidths(css).filter((px) => !BREAKPOINTS.has(px));
       expect(offenders, offenders.join(', ')).toEqual([]);
     });
   }
 
   it('every breakpoint is actually used by at least one stylesheet', () => {
     const css = files.map((f) => readFileSync(f, 'utf8')).join('\n');
-    const used = new Set([...css.matchAll(MEDIA_WIDTH)].map((m) => Number(m[1])));
+    const used = new Set(mediaWidths(css));
     for (const bp of BREAKPOINTS) {
       expect(used.has(bp), `--bp token ${bp}px is declared but never used in a stylesheet`).toBe(
         true,
       );
     }
+  });
+
+  it('catches every width in a combined min/max-width range query, not just the last', () => {
+    const [sm, md] = [...BREAKPOINTS].sort((a, b) => a - b);
+    const combined = `@media (min-width: ${sm}px) and (max-width: ${md}px) { .x { color: red; } }`;
+    expect(mediaWidths(combined)).toEqual([sm, md]);
   });
 });
