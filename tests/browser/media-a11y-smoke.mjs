@@ -30,6 +30,12 @@
 //   - Baseline (no emulated feature) is captured first and re-checked last,
 //     so a forced-colors or prefers-contrast rule that leaked into ordinary
 //     rendering fails the same run.
+//
+// All three surfaces that carry these rules are opened: editor, recorder and
+// popup. Every forced-colors selector the task's CSS diff touches has an
+// assertion that fails if its rule is reverted (verified by reverting each
+// one — see task-17-report.md's negative-control section), including the
+// shared controls.css switch, checked on the editor and the recorder.
 // Run with: npm run build && npm run smoke:media
 import { createReadStream } from 'node:fs';
 import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
@@ -240,10 +246,15 @@ async function seedRecorderSession() {
       startedAt: Date.now(),
       duration: 3000,
       viewport: { w: 640, h: 360, dpr: 1 },
-      hasWebcam: false,
+      // The rail's webcam-bubble controls (.rec-bubble-corner, one of the
+      // selectors under test) only render when a segment has a webcam track
+      // (Rail.tsx: segments.some(s => s.webcamUrl !== null)), so the fixture
+      // carries one — the same blob replayed on the 'webcam' kind.
+      hasWebcam: true,
     });
     const chunks = tx.objectStore('chunks');
     blobs.forEach((blob, seq) => chunks.put({ segmentId, kind: 'tab', seq, blob }));
+    blobs.forEach((blob, seq) => chunks.put({ segmentId, kind: 'webcam', seq, blob }));
     tx.objectStore('events').put({ segmentId, seq: 0, events: [] });
     tx.oncomplete = () => done();
     tx.onerror = () => fail(tx.error);
@@ -278,19 +289,50 @@ async function emulateMedia(cdp, features) {
   await cdp.send('Emulation.setEmulatedMedia', { features });
 }
 
-/** The live computed value of `background-color: Highlight` in this browser/run. */
-async function highlightReference(page) {
-  return page.evaluate(() => {
+/**
+ * The live computed value of a CSS system colour in this browser/run. The
+ * forced-colors palette is implementation-defined, so every "resolves to
+ * Highlight" check below compares against this rather than a hardcoded hex.
+ * Must be called *while* forced-colors is emulated — the same keyword
+ * resolves to a different value in ordinary rendering.
+ */
+async function systemColor(page, keyword) {
+  return page.evaluate((name) => {
     const probe = document.createElement('div');
-    probe.style.backgroundColor = 'Highlight';
+    probe.style.backgroundColor = name;
     probe.style.position = 'fixed';
     probe.style.opacity = '0';
     document.body.appendChild(probe);
     const value = getComputedStyle(probe).backgroundColor;
     probe.remove();
     return value;
-  });
+  }, keyword);
 }
+
+const highlightReference = (page) => systemColor(page, 'Highlight');
+
+/** Computed style of a pseudo-element (::before / ::after), which querySelector cannot reach. */
+async function computedOfPseudo(page, selector, pseudo, props) {
+  return page.evaluate(
+    (sel, pe, ps) => {
+      const el = document.querySelector(sel);
+      if (!el) return null;
+      const cs = getComputedStyle(el, pe);
+      const out = {};
+      for (const p of ps) out[p] = cs[p];
+      return out;
+    },
+    selector,
+    pseudo,
+    props,
+  );
+}
+
+/**
+ * transition-duration is a comma list, one entry per transitioned property;
+ * `transition: none` collapses every entry to 0s.
+ */
+const allZero = (duration) => /^0s(,\s*0s)*$/.test(duration);
 
 async function computedOf(page, selector, props) {
   return page.evaluate(
@@ -355,6 +397,7 @@ async function testEditor(browser, base, messages) {
     'selected swatch has no outline at baseline (forced-colors outline is not leaking)',
   );
   const baseBorder = await rootVar(page, '--border');
+  const baseEyedropper = await computedOf(page, '.swatch-screen', ['backgroundColor']);
 
   step('EDITOR — forced-colors: active — box-shadow really is dropped, generally, in this browser');
   await emulateMedia(cdp, [{ name: 'forced-colors', value: 'active' }]);
@@ -391,14 +434,9 @@ async function testEditor(browser, base, messages) {
     fcSwatchPressed.boxShadow !== 'none',
     'forced-color-adjust: none (kept for the fill) opts the whole swatch out, box-shadow included, so the ring still paints — this is the authored fix',
   );
-  // Chrome also outlines the pressed swatch here, on top of the box-shadow
-  // moat above — reproducible, but its exact trigger was not pinned down
-  // (an idle sibling in the same run stays outline: none, so it does not
-  // just come from forced-color-adjust: none or from [aria-pressed] alone
-  // in isolation; see task-17-report.md). Logged, not hard-asserted: it is
-  // a bonus this task did not author and cannot vouch for as stable.
-  console.log(
-    `    note: pressed swatch outline is ${fcSwatchPressed.outlineStyle}, idle sibling is ${fcSwatchIdle.outlineStyle} (unexplained Chrome behaviour, not relied on)`,
+  assert(
+    fcSwatchIdle.boxShadow === 'none',
+    'an unpressed sibling still has no ring — the selected swatch stays distinguishable under forced-colors',
   );
 
   step('EDITOR — forced-colors: active — active tool distinguishable from its unselected sibling');
@@ -413,6 +451,79 @@ async function testEditor(browser, base, messages) {
     idleTool.backgroundColor !== highlight,
     `idle tool background (${idleTool.backgroundColor}) does not — the two are distinguishable`,
   );
+
+  step('EDITOR — forced-colors: active — selected stroke width, and its inner .width-bar');
+  const highlightText = await systemColor(page, 'HighlightText');
+  const pressedWidth = await computedOf(page, ".width-btn[aria-pressed='true']", [
+    'backgroundColor',
+  ]);
+  const idleWidth = await computedOf(page, ".width-btn[aria-pressed='false']", ['backgroundColor']);
+  assert(
+    pressedWidth.backgroundColor === highlight,
+    'the selected stroke-width button resolves to Highlight',
+  );
+  assert(
+    idleWidth.backgroundColor !== highlight,
+    `an unselected width button does not (${idleWidth.backgroundColor}) — the two are distinguishable`,
+  );
+  // .width-bar paints via background, not the inherited color property, so
+  // the button's Highlight fill never reaches it. What is checked here is the
+  // requirement — the bar stays visible against the Highlight track — not the
+  // authored HighlightText value: measured in this Chrome, an un-overridden
+  // background maps to Canvas, and Canvas equals HighlightText in both its
+  // light (white) and dark (black) forced-colors palettes, so no computed
+  // value can tell the override apart from its fallback here. The override
+  // stays because Canvas/Highlight contrast is a coincidence of this palette
+  // while HighlightText/Highlight is a guarantee; see task-17-report.md.
+  const pressedBar = await computedOf(page, ".width-btn[aria-pressed='true'] .width-bar", [
+    'backgroundColor',
+  ]);
+  assert(
+    pressedBar.backgroundColor !== highlight,
+    `the selected button's .width-bar (${pressedBar.backgroundColor}) still contrasts with its Highlight track, so the width is readable`,
+  );
+
+  step('EDITOR — forced-colors: active — a keyboard-focused swatch keeps its focus ring');
+  // :focus-visible's ring is a box-shadow moat too, and forced-colors drops
+  // box-shadow — .swatch's forced-color-adjust: none is what keeps it. The
+  // style bar is a roving-tabindex toolbar (focus.ts), so Tab is one stop for
+  // the whole group and ArrowRight is what walks it; driving the real arrow
+  // keys is also what makes :focus-visible match, which a bare .focus() does
+  // not. An unpressed swatch is the target, so this measures the focus ring
+  // on its own rather than [aria-pressed='true']'s.
+  await page.evaluate(() => {
+    document.querySelector('.stylebar [tabindex="0"]')?.focus();
+  });
+  let focused = null;
+  for (let i = 0; i < 40; i += 1) {
+    await page.keyboard.press('ArrowRight');
+    focused = await page.evaluate(() => {
+      const el = document.activeElement;
+      if (
+        !el?.classList?.contains('swatch') ||
+        el.classList.contains('swatch-custom') ||
+        el.classList.contains('swatch-screen') ||
+        el.getAttribute('aria-pressed') === 'true'
+      ) {
+        return null;
+      }
+      return {
+        label: el.getAttribute('aria-label'),
+        focusVisible: el.matches(':focus-visible'),
+        boxShadow: getComputedStyle(el).boxShadow,
+      };
+    });
+    if (focused) break;
+  }
+  assert(
+    focused !== null && focused.focusVisible,
+    `ArrowRight walked the style bar onto an unpressed swatch (${focused?.label}) and it matches :focus-visible`,
+  );
+  assert(
+    focused.boxShadow !== 'none',
+    'that focus ring still paints under forced-colors (the same forced-color-adjust: none that keeps the fill)',
+  );
+  await page.evaluate(() => document.activeElement?.blur());
 
   step('EDITOR — populating 5 recent colours, so all 13 swatches (8 preset + 5 recent) exist');
   await emulateMedia(cdp, []); // ordinary rendering while driving the custom-colour input
@@ -449,13 +560,16 @@ async function testEditor(browser, base, messages) {
     flattened.length === 0,
     `every swatch's computed fill still matches its own inline colour under forced-colors (forced-color-adjust: none); ${flattened.length} flattened`,
   );
+  // The opt-back-in is only proved by the eyedropper's own fill *changing*:
+  // with forced-color-adjust: auto its --surface-2 background is replaced by
+  // a system colour, whereas inheriting .swatch's `none` would leave it
+  // exactly as authored — which is what a comparison against Highlight alone
+  // would have failed to catch.
   const eyedropper = await computedOf(page, '.swatch-screen', ['backgroundColor']);
-  if (eyedropper) {
-    assert(
-      eyedropper.backgroundColor !== highlight,
-      'the eyedropper (not a colour choice) still follows the system palette, not left opted out with the real swatches',
-    );
-  }
+  assert(
+    eyedropper.backgroundColor !== baseEyedropper.backgroundColor,
+    `the eyedropper (not a colour choice) opts back in: its fill moved from its authored ${baseEyedropper.backgroundColor} to the system ${eyedropper.backgroundColor}, unlike the swatches beside it`,
+  );
 
   step('EDITOR — forced-colors: active — selected format card in the export modal');
   await emulateMedia(cdp, []); // clear, so the modal opens under ordinary rendering first
@@ -474,8 +588,74 @@ async function testEditor(browser, base, messages) {
     idleFormat.backgroundColor !== highlight,
     'an unselected format card does not — the two are distinguishable',
   );
-  await page.keyboard.press('Escape');
+  // .format-hint sets its own colour rather than inheriting the card's, so
+  // without its own override it keeps painting --text-2 on the Highlight
+  // fill above.
+  const selectedHint = await computedOf(page, '.format-card.is-selected .format-hint', ['color']);
+  assert(
+    selectedHint.color === highlightText,
+    `the selected card's .format-hint resolves to HighlightText (${selectedHint.color}), so it stays legible on the Highlight fill`,
+  );
+
+  step('EDITOR — forced-colors: active — selected output-width segment in the same modal');
+  const selectedSegment = await computedOf(page, '.segmented-btn.is-selected', ['backgroundColor']);
+  const idleSegment = await computedOf(page, '.segmented-btn:not(.is-selected)', [
+    'backgroundColor',
+  ]);
+  assert(
+    selectedSegment.backgroundColor === highlight,
+    'the selected .segmented-btn resolves to Highlight',
+  );
+  assert(
+    idleSegment.backgroundColor !== highlight,
+    `an unselected segment does not (${idleSegment.backgroundColor}) — the two are distinguishable`,
+  );
   await emulateMedia(cdp, []);
+  // The dialog's Escape handler is on .modal itself, and focus is still on
+  // the style bar here, so the backdrop's own onMouseDown is what closes it.
+  await page.mouse.click(4, 4);
+  await page.waitForFunction(() => !document.querySelector('.modal'));
+
+  step('EDITOR — forced-colors: active — the Beautify toggle once it is on');
+  // .btn-secondary.is-active is the only "this is on" state in the header,
+  // and it is carried entirely by colour in ordinary rendering.
+  await page.click('.beautify-menu .btn-secondary');
+  await page.waitForSelector('.beautify-popover');
+  await page.click('.beautify-toggle .switch');
+  await page.waitForSelector('.beautify-menu .btn-secondary.is-active');
+  await emulateMedia(cdp, [{ name: 'forced-colors', value: 'active' }]);
+  const beautifyOn = await computedOf(page, '.beautify-menu .btn-secondary.is-active', [
+    'backgroundColor',
+  ]);
+  const beautifyOff = await computedOf(page, 'header .btn-secondary:not(.is-active)', [
+    'backgroundColor',
+  ]);
+  assert(
+    beautifyOn.backgroundColor === highlight,
+    'the active Beautify toggle resolves to Highlight',
+  );
+  assert(
+    beautifyOff.backgroundColor !== highlight,
+    `an ordinary secondary button does not (${beautifyOff.backgroundColor}) — on and off stay distinguishable`,
+  );
+
+  step('EDITOR — forced-colors: active — the shared .switch inside the Beautify popover');
+  const switchOn = await computedOf(page, '.beautify-toggle .switch', ['backgroundColor']);
+  const switchKnobOn = await computedOfPseudo(page, '.beautify-toggle .switch', '::before', [
+    'backgroundColor',
+  ]);
+  assert(
+    switchOn.backgroundColor === highlight,
+    'a checked shared switch (controls.css) resolves to Highlight',
+  );
+  assert(
+    switchKnobOn.backgroundColor !== switchOn.backgroundColor,
+    `its knob (${switchKnobOn.backgroundColor}) differs from the track (${switchOn.backgroundColor}), so it survives the dropped box-shadow`,
+  );
+  await emulateMedia(cdp, []);
+  await page.click('.beautify-toggle .switch'); // back off
+  await page.click('.beautify-menu .btn-secondary'); // close the popover
+  await page.waitForFunction(() => !document.querySelector('.beautify-popover'));
 
   step('EDITOR — prefers-contrast: more — --border tracks --text-2 in light, dark and default');
   // --text-2's *un-raised* value in each theme, read with prefers-contrast
@@ -529,9 +709,10 @@ async function testEditor(browser, base, messages) {
   // forced explicitly for the "baseline" side of this check so it holds on
   // any machine, reduced-motion setting or not.
   await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'no-preference' }]);
-  await page.keyboard.down('Meta');
-  await page.keyboard.press('s');
-  await page.keyboard.up('Meta');
+  // The header button, not ⌘S: the editor's shortcut listener is scoped away
+  // from a focused control, and focus is still in the header after the
+  // Beautify step above.
+  await page.click('header .btn-secondary[title^="Export"]');
   await page.waitForSelector('.modal', { timeout: 5000 });
   const baseToolTransition = await computedOf(page, '.tool-btn', ['transitionDuration']);
   const baseFormatTransition = await computedOf(page, '.format-card', ['transitionDuration']);
@@ -547,11 +728,11 @@ async function testEditor(browser, base, messages) {
   const reducedTool = await computedOf(page, '.tool-btn', ['transitionDuration']);
   const reducedFormat = await computedOf(page, '.format-card', ['transitionDuration']);
   assert(
-    /^0s(,\s*0s)*$/.test(reducedTool.transitionDuration),
+    allZero(reducedTool.transitionDuration),
     `.tool-btn transition-duration is ${reducedTool.transitionDuration} under prefers-reduced-motion: reduce`,
   );
   assert(
-    /^0s(,\s*0s)*$/.test(reducedFormat.transitionDuration),
+    allZero(reducedFormat.transitionDuration),
     `.format-card transition-duration is ${reducedFormat.transitionDuration} under prefers-reduced-motion: reduce`,
   );
   await page.keyboard.press('Escape');
@@ -630,6 +811,136 @@ async function testRecorder(browser, base, messages) {
     idleSeg.backgroundColor !== highlight,
     'an unpressed sibling segment does not — the two stay distinguishable',
   );
+
+  step('RECORDER — forced-colors: active — selected webcam-bubble corner, and its ::after dot');
+  const pressedCorner = await computedOf(page, ".rec-bubble-corner[aria-pressed='true']", [
+    'backgroundColor',
+  ]);
+  const idleCorner = await computedOf(page, ".rec-bubble-corner[aria-pressed='false']", [
+    'backgroundColor',
+  ]);
+  assert(
+    pressedCorner.backgroundColor === highlight,
+    'the selected bubble corner resolves to Highlight',
+  );
+  assert(
+    idleCorner.backgroundColor !== highlight,
+    `an unselected corner does not (${idleCorner.backgroundColor}) — the two are distinguishable`,
+  );
+  // Same shape as .width-bar in the editor, and the same limit: the dot's
+  // own background cannot be told apart from its Canvas fallback by computed
+  // value in Chrome's palette, so the requirement is what is asserted.
+  const pressedDot = await computedOfPseudo(
+    page,
+    ".rec-bubble-corner[aria-pressed='true']",
+    '::after',
+    ['backgroundColor'],
+  );
+  assert(
+    pressedDot.backgroundColor !== highlight,
+    `its ::after dot (${pressedDot.backgroundColor}) still contrasts with the Highlight fill, so the chosen corner is readable`,
+  );
+
+  step('RECORDER — forced-colors: active — the shared .switch, checked vs unchecked');
+  // controls.css's toggle carried its whole state as colour plus a knob
+  // separated from the track only by a box-shadow, which forced-colors
+  // drops — checked and unchecked rendered identically with no visible knob.
+  const switches = await page.evaluate(() => {
+    const list = [...document.querySelectorAll('input.switch')];
+    const on = list.find((el) => el.checked);
+    const off = list.find((el) => !el.checked);
+    if (!on || !off) return null;
+    const read = (el) => ({
+      track: getComputedStyle(el).backgroundColor,
+      knob: getComputedStyle(el, '::before').backgroundColor,
+      knobX: getComputedStyle(el, '::before').transform,
+    });
+    return { on: read(on), off: read(off) };
+  });
+  assert(
+    switches !== null,
+    'the rail shows both a checked and an unchecked switch to compare in the same run',
+  );
+  assert(
+    switches.on.track === highlight && switches.off.track !== highlight,
+    `a checked switch's track resolves to Highlight (${switches.on.track}) and an unchecked one does not (${switches.off.track}) — the two states are distinguishable`,
+  );
+  assert(
+    switches.on.knob !== switches.on.track,
+    `the checked knob (${switches.on.knob}) differs from its track (${switches.on.track}), so it is visible without the dropped box-shadow`,
+  );
+  assert(
+    switches.off.knob !== switches.off.track,
+    `the unchecked knob (${switches.off.knob}) differs from its track (${switches.off.track}) too`,
+  );
+  assert(
+    switches.on.knobX !== switches.off.knobX,
+    `knob position still carries the state as a non-colour signal (checked ${switches.on.knobX} vs unchecked ${switches.off.knobX})`,
+  );
+  await emulateMedia(cdp, []);
+
+  assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
+  await page.close();
+}
+
+// ------------------------------------------------------------------ popup ---
+async function testPopup(browser, base, messages) {
+  step('POPUP — opening');
+  // showOnboarding defaults to true, which replaces the whole popup with the
+  // welcome card — seeded off so the real controls render.
+  const { page, cdp, crashes } = await newPage(browser, messages, {
+    'openscreenshot:settings': { showOnboarding: false },
+  });
+  await page.setViewport({ width: 420, height: 900 });
+  await page.goto(`${base}/src/popup/index.html`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.seg-btn');
+  // The recording-source chips all start unpressed, so one is pressed here
+  // to give .chip-toggle[aria-pressed='true'] a target.
+  await page.click('.chip-row .chip-toggle');
+  await page.waitForSelector(".chip-toggle[aria-pressed='true']");
+
+  step('POPUP — baseline: the forced-colors CSS has not leaked into ordinary rendering');
+  const basePressedSeg = await computedOf(page, ".seg-btn[aria-pressed='true']", [
+    'backgroundColor',
+  ]);
+  const baseIdleSeg = await computedOf(page, ".seg-btn[aria-pressed='false']", ['backgroundColor']);
+  assert(
+    basePressedSeg.backgroundColor !== baseIdleSeg.backgroundColor,
+    'pressed and unpressed segments already differ at baseline',
+  );
+
+  step('POPUP — forced-colors: active — pressed segment and pressed source chip');
+  await emulateMedia(cdp, [{ name: 'forced-colors', value: 'active' }]);
+  // Switching palette re-triggers these controls' colour transitions, and a
+  // computed style read mid-transition returns an interpolated colour, not
+  // the declared one. Found by a negative control: reverting popup.css's
+  // reduced-motion fix (which is what zeroes these transitions on a machine
+  // with Reduce Motion on) made this step fail for a timing reason rather
+  // than the reason under test. Settled explicitly so the two stay
+  // independent.
+  await new Promise((r) => setTimeout(r, 400));
+  const highlight = await highlightReference(page);
+  const pressedSeg = await computedOf(page, ".seg-btn[aria-pressed='true']", ['backgroundColor']);
+  const idleSeg = await computedOf(page, ".seg-btn[aria-pressed='false']", ['backgroundColor']);
+  assert(pressedSeg.backgroundColor === highlight, 'the pressed .seg-btn resolves to Highlight');
+  assert(
+    idleSeg.backgroundColor !== highlight,
+    `an unpressed sibling does not (${idleSeg.backgroundColor}) — the two are distinguishable`,
+  );
+  const pressedChip = await computedOf(page, ".chip-toggle[aria-pressed='true']", [
+    'backgroundColor',
+  ]);
+  const idleChip = await computedOf(page, ".chip-toggle[aria-pressed='false']", [
+    'backgroundColor',
+  ]);
+  assert(
+    pressedChip.backgroundColor === highlight,
+    'the pressed .chip-toggle resolves to Highlight',
+  );
+  assert(
+    idleChip.backgroundColor !== highlight,
+    `an unpressed chip does not (${idleChip.backgroundColor}) — the two are distinguishable`,
+  );
   await emulateMedia(cdp, []);
 
   assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
@@ -663,6 +974,7 @@ async function main() {
 
     await testEditor(browser, base, messages);
     await testRecorder(browser, base, messages);
+    await testPopup(browser, base, messages);
   } finally {
     await browser?.close();
     server.closeAllConnections();

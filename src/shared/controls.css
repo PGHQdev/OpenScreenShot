@@ -62,3 +62,41 @@ input[type='checkbox'].switch:focus-visible {
     transition: none;
   }
 }
+
+/*
+ * The switch carries its state three ways in ordinary rendering — track
+ * colour, knob position, knob-against-track contrast — but two of the three
+ * are colour, and the third is only visible because of the second. Under
+ * forced colors the track's --surface-3/--accent-ink pair flattens to one
+ * system colour in both states, and the knob's separation from the track is
+ * a box-shadow, which forced colors drops outright (the same trap
+ * ui.css:205 documents). The knob then matches the track and disappears, so
+ * a checked switch and an unchecked one render identically.
+ *
+ * transform: translateX(14px) is not a colour property and still applies,
+ * so the knob is already in the right place — it just cannot be seen.
+ * Restoring its contrast against the track is therefore the whole fix, and
+ * position becomes a real non-colour signal. Highlight/HighlightText is the
+ * same "this one is chosen" pair the surface stylesheets use; unchecked
+ * stays on the ButtonFace/ButtonText an ordinary control renders with, so
+ * the two states differ in track colour as well as knob position.
+ */
+@media (forced-colors: active) {
+  input[type='checkbox'].switch {
+    background-color: ButtonFace;
+    border-color: ButtonText;
+  }
+
+  input[type='checkbox'].switch::before {
+    background-color: ButtonText;
+  }
+
+  input[type='checkbox'].switch:checked {
+    background-color: Highlight;
+    border-color: Highlight;
+  }
+
+  input[type='checkbox'].switch:checked::before {
+    background-color: HighlightText;
+  }
+}

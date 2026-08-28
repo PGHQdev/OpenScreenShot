@@ -878,43 +878,6 @@ body {
   }
 }
 
-/*
- * Active tool, selected width/segment/format and the beautify toggle carry
- * their state entirely as background/text/border colour today, which forced
- * colors mode is free to flatten to the same button face as every other
- * member of the group (it maps arbitrary author colours into a small system
- * palette by element role, not by hue, so two differently-coloured buttons
- * of the same role can land on the same system colour). Highlight/
- * HighlightText is the pair Chromium reserves for "this one is chosen," so
- * declaring it explicitly is guaranteed to differ from the ButtonFace/
- * ButtonText an unselected sibling renders with.
- */
-@media (forced-colors: active) {
-  .tool-btn.is-active,
-  .width-btn[aria-pressed='true'],
-  .segmented-btn.is-selected,
-  .format-card.is-selected,
-  .btn-secondary.is-active {
-    background-color: Highlight;
-    border-color: Highlight;
-    color: HighlightText;
-  }
-
-  /* .format-hint sets its own colour rather than inheriting .format-card's,
-     so it needs its own override to stay legible on the Highlight fill
-     above — .format-name has no colour of its own and inherits correctly. */
-  .format-card.is-selected .format-hint {
-    color: HighlightText;
-  }
-
-  /* .width-bar paints via background, not the inherited color property, so
-     the selected button's Highlight fill above does not reach it on its
-     own. */
-  .width-btn[aria-pressed='true'] .width-bar {
-    background-color: HighlightText;
-  }
-}
-
 .sheet {
   width: 560px;
 }
@@ -1039,4 +1002,47 @@ body {
 .empty-alt {
   color: var(--text-3);
   font-size: var(--fs-sm);
+}
+
+/*
+ * Active tool, selected width/segment/format and the beautify toggle carry
+ * their state entirely as background/text/border colour today, which forced
+ * colors mode is free to flatten to the same button face as every other
+ * member of the group (it maps arbitrary author colours into a small system
+ * palette by element role, not by hue, so two differently-coloured buttons
+ * of the same role can land on the same system colour). Highlight/
+ * HighlightText is the pair Chromium reserves for "this one is chosen," so
+ * declaring it explicitly is guaranteed to differ from the ButtonFace/
+ * ButtonText an unselected sibling renders with.
+ *
+ * Placed last in the file on purpose: a media query adds no specificity, so
+ * a same-specificity rule declared later still wins inside it. The Beautify
+ * panel's own `.btn-secondary.is-active` is exactly that shape and used to
+ * sit below this block, which silently kept the toggle unfixed until the
+ * smoke caught it. Keep new colour-state rules above this block.
+ */
+@media (forced-colors: active) {
+  .tool-btn.is-active,
+  .width-btn[aria-pressed='true'],
+  .segmented-btn.is-selected,
+  .format-card.is-selected,
+  .btn-secondary.is-active {
+    background-color: Highlight;
+    border-color: Highlight;
+    color: HighlightText;
+  }
+
+  /* .format-hint sets its own colour rather than inheriting .format-card's,
+     so it needs its own override to stay legible on the Highlight fill
+     above — .format-name has no colour of its own and inherits correctly. */
+  .format-card.is-selected .format-hint {
+    color: HighlightText;
+  }
+
+  /* .width-bar paints via background, not the inherited color property, so
+     the selected button's Highlight fill above does not reach it on its
+     own. */
+  .width-btn[aria-pressed='true'] .width-bar {
+    background-color: HighlightText;
+  }
 }
