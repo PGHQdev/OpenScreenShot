@@ -24,17 +24,17 @@ export const faq: FaqItem[] = [
   },
   {
     q: 'Does it work on chrome:// and extension pages?',
-    a: '<p>No. For security reasons, Chrome blocks extensions from capturing <code>chrome://</code>, <code>chrome-extension://</code>, the Chrome Web Store, and <code>about:</code> pages. The extension will show an error message if you try.</p>',
+    a: '<p>No. Chrome blocks extensions from capturing <code>chrome://</code>, <code>chrome-extension://</code>, the Chrome Web Store, and <code>about:</code> pages. That block is a Chrome security rule, and no extension can lift it. The extension shows an error if you try.</p>',
     home: true,
   },
   {
     q: 'Why does full-page capture take a few seconds?',
-    a: '<p>Chrome limits <code>captureVisibleTab</code> to approximately 2 calls per second. Every viewport-height tile triggers one capture call, plus a short paint-settle delay. For a typical 10-tile page this takes about 5–6 seconds. The progress bar in the popup shows how it is going. Long pages take proportionally longer.</p>',
+    a: '<p>Chrome limits <code>captureVisibleTab</code> to about 2 calls per second. Every viewport-height tile costs one call, plus a short pause for the page to repaint. A typical 10-tile page takes 5–6 seconds, and a longer page takes proportionally longer. The progress bar in the popup tells you where it is.</p>',
     home: true,
   },
   {
     q: 'Why is my site header missing from the full-page screenshot?',
-    a: '<p>Fixed headers <em>do</em> appear — they are captured on the first tile. If a header still seems missing, it may use <code>position: sticky</code> with certain scroll-behavior flags that the capture process handles differently. This is rare; if you encounter it, please open a <a href="https://github.com/pghqdev/OpenScreenShot/issues">GitHub issue</a>.</p>',
+    a: '<p>Fixed headers <em>do</em> appear — they are captured on the first tile and composited once at the top. A few rare <code>position: sticky</code> setups still slip past that. If you hit one, open a <a href="https://github.com/pghqdev/OpenScreenShot/issues">GitHub issue</a> with the page URL.</p>',
   },
   {
     q: 'Can I scroll while selecting a region?',
@@ -63,7 +63,7 @@ export const faq: FaqItem[] = [
   },
   {
     q: 'Does PDF export bundle a heavy library?',
-    a: '<p>No. Earlier versions used jsPDF, which pulled in <code>html2canvas</code> and <code>dompurify</code> for a <code>doc.html()</code> feature the extension never called. PDF export now runs on a small writer built into the extension (<code>src/editor/pdf-writer.ts</code>), which places raster images on pages and compresses them with the browser’s own <code>CompressionStream</code>. The whole extension package is about 46 KB, and exporting a PDF makes no network request.</p>',
+    a: '<p>No. PDF export runs on a small writer built into the extension (<code>src/editor/pdf-writer.ts</code>). It places the image on the page and compresses it with the browser’s own <code>CompressionStream</code>, so exporting a PDF makes no network request and adds no third-party code. Earlier versions used jsPDF, which pulled in <code>html2canvas</code> and <code>dompurify</code> for a feature the extension never called.</p>',
     home: true,
   },
   {

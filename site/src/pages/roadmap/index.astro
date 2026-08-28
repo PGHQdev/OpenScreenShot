@@ -58,7 +58,7 @@ const groups: { id: string; heading: string; items: Item[] }[] = [
       {
         name: 'Local OCR — copy text out of a screenshot',
         status: 'Exploring',
-        note: 'Client-side WASM text recognition, loaded on first use. No data leaves the device. The engine and one language file weigh 10–15 MB against a 44 KB package today, so size decides it.',
+        note: 'Text recognition in WASM, loaded on first use and run on your device. The engine and one language file weigh 10–15 MB, many times the whole extension, so size decides it.',
       },
       {
         name: 'Recent captures shelf',
@@ -108,7 +108,7 @@ const shipped: { version: string; current?: boolean; items: string[] }[] = [
     version: 'v1.3.0',
     current: true,
     items: [
-      '<strong>Auto-hiding control bar</strong> — the recording control bar hides itself about 3 seconds after your pointer leaves it, so it stays out of the video. Move your cursor to the bottom center of the page to bring it back, and it always shows while paused or hovered.',
+      '<strong>Auto-hiding control bar</strong> — the recording control bar hides itself about three seconds after your pointer leaves it, so it stays out of the video. Move your cursor to the bottom center of the page to bring it back. It stays visible while you hover it, and while the recording is paused.',
       '<strong>Synthetic cursor overlay</strong> — a “Show cursor” toggle in the editor’s settings rail, on by default, draws a smooth pointer from the recorded cursor path in both the preview and the WebM export, since <code>tabCapture</code> never records the OS cursor.',
     ],
   },
@@ -181,12 +181,12 @@ const shipped: { version: string; current?: boolean; items: string[] }[] = [
   path="/roadmap/"
   label="Shipped and exploring"
   heading="Roadmap"
-  lead="What has shipped, what is next, and what we are still thinking through."
+  lead="What has shipped, what is being explored, and what stays out of scope."
 >
   <p class="doc-callout">
-    <strong>Our promise:</strong> everything on this page stays 100% local. No servers, no accounts, no
-    new data collection — ever. Roadmap items are not dated promises; feedback and pull requests shape
-    what ships. Current release: <strong>v1.3.0</strong>.
+    <strong>The promise:</strong> everything on this page stays 100% local. No servers, no accounts, no
+    new data collection — ever. Roadmap items carry no dates. Feedback and pull requests shape what
+    ships. Current release: <strong>v1.3.0</strong>.
   </p>
 
   <p class="legend">
@@ -244,7 +244,7 @@ const shipped: { version: string; current?: boolean; items: string[] }[] = [
   <section class="doc-cta">
     <CropMarks arm="26px" inset="18px">
       <h2>Shape what ships next.</h2>
-      <p>Roadmap items are not dated promises. What people ask for is what gets built.</p>
+      <p>What people ask for is what gets built.</p>
       <a class="btn btn-ink" href={`${REPO_URL}/issues/new`} target="_blank" rel="noopener">
         Suggest a feature
       </a>

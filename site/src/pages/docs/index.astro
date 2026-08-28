@@ -50,8 +50,8 @@ const toc = [
       </li>
       <li>Click <strong>Add to Chrome</strong>.</li>
       <li>
-        Accept the permissions. The extension needs access to the active tab and the ability to run
-        a content script to capture the page.
+        Accept the permissions. The extension needs the active tab and permission to run its
+        capture script there.
       </li>
       <li>The OpenScreenShot icon appears in your toolbar. Click it to open the popup.</li>
     </ol>
@@ -60,8 +60,8 @@ const toc = [
   <section class="doc-section" id="capture">
     <h2>Capture a screenshot</h2>
     <p>
-      Click the OpenScreenShot icon in your toolbar and choose one of the three capture modes. The
-      screenshot is processed locally in your browser. There are four ways to start a capture:
+      Click the OpenScreenShot icon in your toolbar and pick one of the three capture modes.
+      Everything runs locally in your browser. There are four ways to start a capture:
     </p>
     <ul>
       <li><strong>The popup</strong> — click a mode, or press <kbd>1</kbd>–<kbd>3</kbd>.</li>
@@ -77,7 +77,7 @@ const toc = [
       </li>
       <li>
         <strong>Repeat region</strong> — the popup footer and the right-click menu re-capture the
-        last region rectangle. It appears once you have selected a region.
+        last region rectangle. Both items appear once you have selected a region.
       </li>
     </ul>
     <p>
@@ -209,9 +209,9 @@ const toc = [
       >. Choose a format:
     </p>
     <ul>
-      <li><strong>PNG</strong> — lossless, supports transparency.</li>
-      <li><strong>JPEG</strong> — smaller file size, with adjustable quality.</li>
-      <li><strong>WebP</strong> — modern format, good balance of size and quality.</li>
+      <li><strong>PNG</strong> — lossless, keeps transparency.</li>
+      <li><strong>JPEG</strong> — smaller files, adjustable quality.</li>
+      <li><strong>WebP</strong> — adjustable quality like JPEG, transparency like PNG.</li>
       <li>
         <strong>PDF</strong> — export as a single image page, fit to A4/Letter, or split across
         multiple pages with a 5mm overlap so content is not cut mid-line.
@@ -258,15 +258,16 @@ const toc = [
       recording.
     </p>
     <p>
-      The bar hides itself after three seconds so it stays out of your recording; move your cursor to
-      the bottom center of the page to bring it back.
+      The bar hides itself about three seconds after your pointer leaves it, so it stays out of your
+      recording. Move your cursor to the bottom center of the page to bring it back. It stays
+      visible while you hover it, and while the recording is paused.
     </p>
 
     <h3>The editor</h3>
     <p>
-      Stop opens the recording editor on a timeline of your take. The editor zooms in 2x, with a
-      smooth ease, at every click your cursor made — adjust or delete any of those, or add your own
-      manual zoom blocks at 1.5x, 2x, or 3x. Trim the start or end of any segment by dragging its
+      Stop opens the recording editor on a timeline of your take. The editor adds a smooth 2x zoom
+      at every click your cursor made — adjust or delete any of those, or add your own manual zoom
+      blocks at 1.5x, 2x, or 3x. Trim the start or end of any segment by dragging its
       handles. Click ripples mark where you clicked, and the webcam bubble, Beautify frame, and
       mic/tab-audio volume sliders live in the side panel. Show cursor draws a smooth pointer that
       follows your recorded cursor path; turn it off in the settings rail.
