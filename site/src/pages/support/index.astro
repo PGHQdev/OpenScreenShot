@@ -3,6 +3,7 @@ import Doc from '../../layouts/Doc.astro';
 import CropMarks from '../../components/CropMarks.astro';
 import FaqList from '../../components/FaqList.astro';
 import { faq } from '../../data/faq';
+import { ld } from '../../lib/json-ld';
 
 const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
 const STORE_URL = 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp';
@@ -25,9 +26,6 @@ if (faqLd.mainEntity.length !== faq.length) {
   );
 }
 
-// set:html does not escape, and an answer carries HTML, so close the </script>
-// break-out the only way JSON.stringify leaves open.
-const ld = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
 ---
 
 <Doc

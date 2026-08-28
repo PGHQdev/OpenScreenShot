@@ -9,6 +9,7 @@ import FrameLabel from '../components/FrameLabel.astro';
 import PermissionTable from '../components/PermissionTable.astro';
 import { homeFaq } from '../data/faq';
 import { installPermissions, recordingPermissions } from '../data/permissions';
+import { ld } from '../lib/json-ld';
 import hero from '../assets/hero.webp';
 import shotCapture from '../assets/shot-2.webp';
 import shotAnnotate from '../assets/shot-3.webp';
@@ -67,9 +68,6 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
   );
 }
 
-// set:html does not escape, and an answer carries HTML, so close the </script>
-// break-out the only way JSON.stringify leaves open.
-const ld = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
 ---
 
 <Base

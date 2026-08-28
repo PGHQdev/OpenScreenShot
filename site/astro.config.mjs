@@ -5,29 +5,33 @@ import { fileURLToPath } from 'node:url';
 
 const siteRoot = fileURLToPath(new URL('.', import.meta.url));
 
-// Each URL's lastmod is its page file's own last commit date, not a single
-// build-time stamp — a rebuild that touches an unrelated page must not move
-// every other page's lastmod along with it.
-const PAGE_FILES = {
-  '/': 'src/pages/index.astro',
-  '/docs/': 'src/pages/docs/index.astro',
-  '/roadmap/': 'src/pages/roadmap/index.astro',
-  '/support/': 'src/pages/support/index.astro',
-  '/privacy/': 'src/pages/privacy/index.astro',
-  '/cool-stuff/': 'src/pages/cool-stuff/index.astro',
-};
-
-function lastCommitIso(relFile) {
+// Every page renders through shared layouts and global styles (Base.astro,
+// Doc.astro, tokens.css, base.css, Frame.astro, FaqList.astro,
+// PermissionTable.astro, faq.ts, permissions.ts, ...), so a change to almost
+// any file under site/ can change almost any page's rendered output. A
+// per-page "last touched" map can't stay correct against that: this file's
+// first version tried one, and it went stale within its own introducing
+// commit, when a Doc.astro change didn't move the lastmod of the four pages
+// whose HTML it actually changed. One honest, site-wide date beats several
+// page-specific ones that quietly go wrong.
+//
+// Computed once at config-eval time, not per sitemap entry: git only needs
+// asking once, and it makes the "unavailable" case a single fallback rather
+// than one per URL.
+const SITE_LASTMOD = (() => {
   try {
-    const out = execFileSync('git', ['log', '-1', '--format=%cI', '--', relFile], {
+    const out = execFileSync('git', ['log', '-1', '--format=%cI', '--', '.'], {
       cwd: siteRoot,
       encoding: 'utf8',
     }).trim();
     return out || undefined;
   } catch {
+    // No git, no history, or the call failed for some other reason. Omit
+    // lastmod rather than emit a fabricated "now" — an absent lastmod is
+    // valid; an invented one is worse than no signal at all.
     return undefined;
   }
-}
+})();
 
 export default defineConfig({
   outDir: '../docs',
@@ -42,10 +46,7 @@ export default defineConfig({
   integrations: [
     sitemap({
       serialize(item) {
-        const pathname = new URL(item.url).pathname;
-        const file = PAGE_FILES[pathname];
-        const lastmod = file && lastCommitIso(file);
-        return lastmod ? { ...item, lastmod } : item;
+        return SITE_LASTMOD ? { ...item, lastmod: SITE_LASTMOD } : item;
       },
     }),
   ],

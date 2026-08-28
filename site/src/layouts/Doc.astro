@@ -9,6 +9,7 @@ import Base from './Base.astro';
 import type { NavLink } from './Base.astro';
 import FrameLabel from '../components/FrameLabel.astro';
 import '../styles/doc.css';
+import { ld } from '../lib/json-ld';
 
 interface Props {
   title: string;
@@ -44,9 +45,6 @@ const breadcrumbLd = {
   ],
 };
 
-// set:html does not escape; none of the values above carry a "<", but this
-// matches the same escape Base's callers use for their own JSON-LD.
-const ld = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
 ---
 
 <Base title={title} description={description} path={path} navLinks={navLinks}>
