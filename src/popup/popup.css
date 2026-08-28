@@ -19,7 +19,7 @@ body {
 
 body {
   font-family: var(--font);
-  font-size: 14px;
+  font-size: var(--fs-base);
   line-height: 1.45;
   color: var(--text-1);
   background: var(--surface-1);
@@ -70,8 +70,8 @@ body {
   color: var(--text-2);
   cursor: pointer;
   transition:
-    background 150ms ease-out,
-    color 150ms ease-out;
+    background var(--dur-mid) var(--ease-out),
+    color var(--dur-mid) var(--ease-out);
 }
 
 .icon-btn:hover {
@@ -100,10 +100,10 @@ body {
   text-align: left;
   cursor: pointer;
   transition:
-    border-color 150ms ease-out,
-    background 150ms ease-out,
-    transform 100ms ease-out,
-    opacity 150ms ease-out;
+    border-color var(--dur-mid) var(--ease-out),
+    background var(--dur-mid) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out),
+    opacity var(--dur-mid) var(--ease-out);
 }
 
 .mode-card:hover {
@@ -153,7 +153,7 @@ body {
   width: 24px;
   color: var(--text-2);
   flex: 0 0 auto;
-  transition: color 150ms ease-out;
+  transition: color var(--dur-mid) var(--ease-out);
 }
 
 .mode-card:hover .mode-icon,
@@ -185,13 +185,13 @@ body {
 }
 
 .mode-title {
-  font-size: 14px;
+  font-size: var(--fs-base);
   font-weight: 600;
-  transition: color 150ms ease-out;
+  transition: color var(--dur-mid) var(--ease-out);
 }
 
 .mode-sub {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--text-2);
 }
 
@@ -248,7 +248,7 @@ body {
 .progress-fill {
   height: 100%;
   background: var(--accent);
-  transition: width 200ms ease-out;
+  transition: width var(--dur-slow) var(--ease-out);
 }
 
 /* ---- Recording sources (independent toggles, so chips, never a seg) ---- */
@@ -259,7 +259,7 @@ body {
 }
 
 .rec-sources-label {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--text-2);
 }
 
@@ -276,12 +276,12 @@ body {
   border-radius: var(--r-full);
   background: var(--surface-1);
   color: var(--text-2);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   cursor: pointer;
   transition:
-    background 120ms ease-out,
-    border-color 120ms ease-out,
-    color 120ms ease-out;
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 }
 
 .chip-toggle:hover {
@@ -307,7 +307,7 @@ body {
 }
 
 .options-group .settings-label {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--text-2);
 }
@@ -353,14 +353,14 @@ body {
 }
 .settings-section {
   margin-top: var(--s-2);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-3);
 }
 .settings-hint {
-  font-size: 11px;
+  font-size: var(--fs-xs);
   color: var(--text-3);
   font-family: var(--font-mono);
 }
@@ -392,11 +392,11 @@ body {
   border-right: 1px solid var(--border);
   background: var(--surface-1);
   color: var(--text-1);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   cursor: pointer;
   transition:
-    background 120ms ease-out,
-    color 120ms ease-out;
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 }
 .seg-btn:last-child {
   border-right: none;
@@ -427,7 +427,7 @@ body {
   background: var(--surface-2);
   color: var(--text-1);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 .text-input:focus {
   outline: 2px solid var(--border-focus);
@@ -441,23 +441,23 @@ body {
 }
 
 .token-label {
-  font-size: 11px;
+  font-size: var(--fs-xs);
   color: var(--text-3);
-  margin-right: 2px;
+  margin-right: var(--s-05);
 }
 
 .token-chip {
-  padding: 2px 6px;
+  padding: var(--s-05) 6px;
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   background: var(--surface-2);
   color: var(--text-2);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   cursor: pointer;
   transition:
-    border-color 120ms ease-out,
-    color 120ms ease-out;
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 }
 
 .token-chip:hover {
@@ -485,7 +485,7 @@ body {
   background: var(--surface-2);
   color: var(--text-1);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   text-align: right;
 }
 .num-input:disabled {
@@ -522,7 +522,7 @@ body {
 
 .mode-card kbd {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   background: var(--surface-3);
   color: var(--text-2);
   border: 1px solid var(--border);
@@ -542,11 +542,11 @@ body {
   align-self: flex-start;
   border: none;
   border-radius: var(--r-full);
-  padding: 2px 10px;
+  padding: var(--s-05) 10px;
   background: color-mix(in srgb, var(--warning) 20%, var(--surface-1));
   color: var(--danger);
   font: inherit;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
 }
@@ -560,12 +560,12 @@ body {
   border: none;
   background: transparent;
   color: var(--text-2);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   white-space: nowrap;
   cursor: pointer;
-  padding: 2px 4px;
+  padding: var(--s-05) var(--s-1);
   border-radius: var(--r-sm);
-  transition: color 150ms ease-out;
+  transition: color var(--dur-mid) var(--ease-out);
 }
 
 .link-btn:hover {
@@ -605,7 +605,7 @@ body {
 
 .welcome-title {
   margin: 0;
-  font-size: 18px;
+  font-size: var(--fs-lg);
   font-weight: 700;
   letter-spacing: -0.01em;
 }
@@ -639,7 +639,7 @@ body {
 
 .welcome-perm {
   margin: var(--s-1) 0 0;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--text-2);
 }
 
@@ -651,12 +651,12 @@ body {
   border-radius: var(--r-md);
   background: var(--accent);
   color: #fff;
-  font-size: 14px;
+  font-size: var(--fs-base);
   font-weight: 600;
   cursor: pointer;
   transition:
-    background 150ms ease-out,
-    transform 100ms ease-out;
+    background var(--dur-mid) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .btn-primary:hover {
@@ -685,10 +685,10 @@ body {
   gap: var(--s-2);
   padding: var(--s-2) var(--s-3);
   border-radius: var(--r-md);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 500;
   border: 1px solid transparent;
-  animation: oss-toast-in 250ms ease-out;
+  animation: oss-toast-in var(--dur-slow) var(--ease-out);
 }
 
 .toast-text {
@@ -697,7 +697,7 @@ body {
 
 .toast-dismiss {
   flex: 0 0 auto;
-  padding: 0 2px;
+  padding: 0 var(--s-05);
   border: none;
   background: transparent;
   color: inherit;

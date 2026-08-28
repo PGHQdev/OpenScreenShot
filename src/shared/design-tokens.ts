@@ -10,6 +10,7 @@
 
 /** Tokens that do not change with the theme (the `@tokens base` block). */
 export const tokens = {
+  s05: '2px',
   s1: '4px',
   s2: '8px',
   s3: '12px',
@@ -25,6 +26,16 @@ export const tokens = {
   shLg: '0 8px 30px rgba(0, 0, 0, 0.16)',
   font: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif",
   fontMono: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace",
+  fsXs: '11px',
+  fsSm: '12px',
+  fsBase: '14px',
+  fsMd: '16px',
+  fsLg: '18px',
+  fsXl: '20px',
+  durFast: '120ms',
+  durMid: '150ms',
+  durSlow: '250ms',
+  easeOut: 'cubic-bezier(0, 0, 0.58, 1)',
 } as const;
 
 /** Tokens that change with the theme (the `@tokens light`/`dark` blocks). */

@@ -18,7 +18,7 @@ body {
 
 body {
   font-family: var(--font);
-  font-size: 14px;
+  font-size: var(--fs-base);
   line-height: 1.5;
   color: var(--text-1);
   background: var(--surface-2);
@@ -42,7 +42,7 @@ body {
 
 .setup-header h1 {
   margin: 0;
-  font-size: 20px;
+  font-size: var(--fs-xl);
   font-weight: 700;
 }
 
@@ -79,7 +79,7 @@ body {
 .pin-hint-text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--s-05);
   color: var(--text-1);
   font-size: 13px;
 }
@@ -188,14 +188,14 @@ a.trust-pill:hover {
 
 .feature h2 {
   margin: 0;
-  font-size: 14px;
+  font-size: var(--fs-base);
   font-weight: 600;
 }
 
 .feature p {
-  margin: 2px 0 0;
+  margin: var(--s-05) 0 0;
   color: var(--text-2);
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 .btn-hero {
@@ -273,8 +273,8 @@ a.trust-pill:hover {
 
 .tag {
   border-radius: var(--r-full);
-  padding: 2px 10px;
-  font-size: 12px;
+  padding: var(--s-05) 10px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   white-space: nowrap;
 }

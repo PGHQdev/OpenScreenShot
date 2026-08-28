@@ -16,7 +16,7 @@ body {
 
 body {
   font-family: var(--font);
-  font-size: 14px;
+  font-size: var(--fs-base);
   color: var(--text-1);
   background: var(--surface-1);
   -webkit-font-smoothing: antialiased;
@@ -49,7 +49,7 @@ body {
   gap: var(--s-2);
 }
 .stylebar-label {
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: var(--text-2);
   user-select: none;
@@ -67,8 +67,8 @@ body {
   border-radius: var(--r-full);
   cursor: pointer;
   transition:
-    transform 100ms ease-out,
-    border-color 100ms ease-out;
+    transform var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
 }
 .swatch[data-light='1'] {
   border-color: var(--border);
@@ -108,7 +108,7 @@ body {
 }
 .widths {
   display: flex;
-  gap: 2px;
+  gap: var(--s-05);
 }
 .width-btn {
   display: inline-flex;
@@ -121,8 +121,8 @@ body {
   background: transparent;
   cursor: pointer;
   transition:
-    background 120ms ease-out,
-    border-color 120ms ease-out;
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
 }
 .width-btn:hover {
   background: var(--hover-overlay);
@@ -163,7 +163,7 @@ body {
 .topbar-actions {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--s-05);
   margin-right: auto;
   padding-left: var(--s-3);
 }
@@ -177,7 +177,7 @@ body {
 }
 
 .brand-mode {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--text-2);
   background: var(--surface-2);
@@ -207,7 +207,7 @@ body {
   background: var(--surface-2);
   color: var(--text-1);
   cursor: pointer;
-  transition: background 120ms ease-out;
+  transition: background var(--dur-fast) var(--ease-out);
 }
 
 .zoom-trigger:hover:not(:disabled) {
@@ -228,7 +228,7 @@ body {
   min-width: 44px;
   text-align: center;
   font-variant-numeric: tabular-nums;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--text-2);
   user-select: none;
 }
@@ -274,7 +274,7 @@ body {
 
 .zoom-item kbd {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   color: var(--text-3);
 }
 
@@ -288,12 +288,12 @@ body {
   border-radius: var(--r-sm);
   background: transparent;
   color: var(--text-1);
-  font-size: 16px;
+  font-size: var(--fs-md);
   line-height: 1;
   cursor: pointer;
   transition:
-    background 120ms ease-out,
-    border-color 120ms ease-out;
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
 }
 
 .icon-btn:hover {
@@ -320,9 +320,9 @@ body {
   border-radius: var(--r-sm);
   background: transparent;
   color: var(--text-1);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   cursor: pointer;
-  transition: background 120ms ease-out;
+  transition: background var(--dur-fast) var(--ease-out);
 }
 
 .text-btn:hover {
@@ -347,8 +347,8 @@ body {
   font-size: 13px;
   cursor: pointer;
   transition:
-    background 120ms ease-out,
-    opacity 120ms ease-out;
+    background var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -374,7 +374,7 @@ body {
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
-  transition: background 120ms ease-out;
+  transition: background var(--dur-fast) var(--ease-out);
 }
 
 .btn-secondary:hover:not(:disabled) {
@@ -456,9 +456,9 @@ body {
   color: var(--text-2);
   cursor: pointer;
   transition:
-    background 120ms ease-out,
-    color 120ms ease-out,
-    border-color 120ms ease-out;
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
 }
 
 .tool-btn:hover {
@@ -499,10 +499,10 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: var(--s-05);
   margin-top: auto;
   padding: 4px 0;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   color: var(--text-3);
   font-variant-numeric: tabular-nums;
 }
@@ -510,7 +510,7 @@ body {
 .btn-sm {
   height: 28px;
   padding: 0 10px;
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 .crop-confirm {
@@ -552,7 +552,7 @@ body {
   position: absolute;
   margin: 0;
   min-width: 60px;
-  padding: 2px 4px;
+  padding: var(--s-05) var(--s-1);
   border: 1px dashed var(--accent);
   border-radius: 3px;
   background: transparent;
@@ -591,7 +591,7 @@ body {
 }
 .field-label {
   display: block;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--text-2);
   margin-bottom: var(--s-2);
@@ -605,7 +605,7 @@ body {
 .format-card {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--s-05);
   padding: var(--s-3);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
@@ -614,8 +614,8 @@ body {
   text-align: left;
   cursor: pointer;
   transition:
-    border-color 120ms ease-out,
-    background 120ms ease-out;
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
 }
 .format-card:hover {
   border-color: var(--accent);
@@ -630,10 +630,10 @@ body {
 }
 .format-name {
   font-weight: 600;
-  font-size: 14px;
+  font-size: var(--fs-base);
 }
 .format-hint {
-  font-size: 11px;
+  font-size: var(--fs-xs);
   color: var(--text-2);
 }
 .modal-row {
@@ -695,8 +695,8 @@ body {
   font-size: 13px;
   cursor: pointer;
   transition:
-    background 120ms ease-out,
-    color 120ms ease-out;
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 }
 .segmented-btn:last-child {
   border-right: none;
@@ -739,7 +739,7 @@ body {
   background: var(--surface-2);
   color: var(--text-1);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   text-align: right;
 }
 .num-input:disabled {
@@ -750,13 +750,13 @@ body {
 }
 .pdf-hint {
   margin: 0 0 var(--s-3);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--text-2);
   line-height: 1.45;
 }
 .export-error {
   margin: 0 0 var(--s-3);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--danger);
   line-height: 1.45;
 }
@@ -820,7 +820,7 @@ body {
 
 .empty-fallback {
   margin-top: var(--s-2) !important;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--text-3);
 }
 
@@ -833,7 +833,7 @@ body {
   padding: 0 var(--s-4);
   border-top: 1px solid var(--border);
   background: var(--surface-1);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-variant-numeric: tabular-nums;
   color: var(--text-2);
   flex: 0 0 auto;
@@ -894,7 +894,7 @@ body {
 
 .sheet-row kbd {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   color: var(--text-2);
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -991,5 +991,5 @@ body {
 
 .empty-alt {
   color: var(--text-3);
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
