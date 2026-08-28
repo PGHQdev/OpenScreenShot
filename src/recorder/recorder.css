@@ -308,15 +308,12 @@ body {
 }
 
 /* ---- Beautify background swatches ---- */
-/* Overrides of the shared 18px swatch from ui.css: the beautify grid wraps
-   and its chips read at 22px. */
+/* The beautify grid wraps. It used to size its chips to 22px here too; Task
+   15 grew the shared .swatch in ui.css to 24px for the pointer-target
+   minimum, which is already >= what this override asked for, so the size
+   rule is gone and only the wrap stays. */
 .swatches {
   flex-wrap: wrap;
-}
-
-.swatch {
-  width: 22px;
-  height: 22px;
 }
 
 /* ---- Webcam bubble corner picker ---- */
@@ -554,30 +551,57 @@ body {
   right: 0;
 }
 
+/*
+ * The draggable trim edge is 6px visually (rec-tl-handle::before below) but
+ * the element itself — what pointerdown and :focus-visible land on — is
+ * min(24px, 33%): the 24×24 pointer-target minimum, capped so the two edges
+ * of one strip can never together claim more than two-thirds of it. Each
+ * anchors to its own side (left:0 / right:0) and grows inward, so the extra
+ * hit area lands on this strip, never a neighbour's.
+ */
 .rec-tl-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: min(24px, 33%);
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.rec-tl-handle-start {
+  left: 0;
+}
+
+.rec-tl-handle-end {
+  right: 0;
+}
+
+.rec-tl-handle::before {
+  content: '';
   position: absolute;
   top: 0;
   bottom: 0;
   width: 6px;
   background: var(--text-3);
-  cursor: ew-resize;
-  touch-action: none;
 }
 
-.rec-tl-handle:hover,
-.rec-tl-handle:focus-visible {
-  background: var(--accent);
-  outline: none;
-}
-
-.rec-tl-handle-start {
+.rec-tl-handle-start::before {
   left: 0;
   border-radius: var(--r-sm) 0 0 var(--r-sm);
 }
 
-.rec-tl-handle-end {
+.rec-tl-handle-end::before {
   right: 0;
   border-radius: 0 var(--r-sm) var(--r-sm) 0;
+}
+
+.rec-tl-handle:hover::before,
+.rec-tl-handle:focus-visible::before {
+  background: var(--accent);
+}
+
+.rec-tl-handle:focus-visible {
+  outline: none;
 }
 
 .rec-tl-zooms {
@@ -600,9 +624,28 @@ body {
   overflow: hidden;
 }
 
+/*
+ * Persistent selection, not focus: --ring-selected instead of --border-focus
+ * keeps that token exclusively a :focus-visible signal (see tokens.css). The
+ * ring sits against --surface-2 (the track), not the chip's own fill —
+ * --accent-ink-pressed measures under 2:1 against --ring-selected in both
+ * themes, so drawing straight onto it would fail 3:1; the moat fixes that the
+ * same way the shared .swatch ring does.
+ */
 .rec-tl-zoom[data-selected='true'] {
   background: var(--accent-ink-pressed);
-  box-shadow: 0 0 0 2px var(--border-focus);
+  box-shadow:
+    0 0 0 2px var(--surface-2),
+    0 0 0 4px var(--ring-selected);
+}
+
+/* Focus is its own ring, so a tabbed-to chip reads distinctly from a merely
+   selected one: outline (crisp, outside the box) vs. the selected state's
+   box-shadow moat (soft-edged, closer in). Declared after [data-selected] so
+   a focused, selected chip still shows it. */
+.rec-tl-zoom:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
 }
 
 .rec-tl-zoom-label {
@@ -615,13 +658,13 @@ body {
   pointer-events: none;
 }
 
+/* Same 24×24-capped-at-a-third technique as .rec-tl-handle above. */
 .rec-tl-zoom-edge {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 6px;
+  width: min(24px, 33%);
   cursor: ew-resize;
-  background: rgba(255, 255, 255, 0.55);
 }
 
 .rec-tl-zoom-edge-start {
@@ -629,6 +672,23 @@ body {
 }
 
 .rec-tl-zoom-edge-end {
+  right: 0;
+}
+
+.rec-tl-zoom-edge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.rec-tl-zoom-edge-start::before {
+  left: 0;
+}
+
+.rec-tl-zoom-edge-end::before {
   right: 0;
 }
 

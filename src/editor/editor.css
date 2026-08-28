@@ -91,6 +91,10 @@ body {
   background: var(--accent-subtle);
   border-color: var(--accent);
 }
+.width-btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
 .width-bar {
   width: 20px;
   background: var(--text-1);
@@ -570,6 +574,10 @@ body {
   border-color: var(--accent);
   background: var(--accent-subtle);
 }
+.format-card:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
 .format-card-disabled {
   opacity: 0.45;
   cursor: not-allowed;
@@ -690,6 +698,10 @@ body {
 }
 .num-input:disabled {
   opacity: 0.45;
+}
+.num-input:focus {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
 }
 .num-input-wide {
   width: 80px;

@@ -413,6 +413,10 @@
     "message": "Delete zoom",
     "description": "Recorder page: button that removes the selected zoom block."
   },
+  "recorderZoomBlock": {
+    "message": "Zoom block",
+    "description": "Recorder page: aria-label prefix of a zoom block on the timeline, followed by its scale (e.g. \"Zoom block, 2×\")."
+  },
   "recorderZoomScale": {
     "message": "Zoom",
     "description": "Recorder page: label of the zoom scale segmented control."

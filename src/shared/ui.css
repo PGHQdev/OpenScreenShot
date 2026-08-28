@@ -82,8 +82,12 @@
 }
 
 .swatch {
-  width: 18px;
-  height: 18px;
+  /* 24px meets the 24x24 minimum pointer target outright — see the Task 15
+     report for why that reads simpler and safer here than shrinking the
+     visual fill inside a bigger hit box would across five swatch variants
+     (plain, transparent, custom-colour, eyedropper) that share this rule. */
+  width: 24px;
+  height: 24px;
   padding: 0;
   border: 2px solid var(--border);
   border-radius: var(--r-full);
@@ -102,6 +106,22 @@
   box-shadow:
     0 0 0 2px var(--surface-1),
     0 0 0 3px var(--accent);
+}
+
+/*
+ * A swatch's own fill is an arbitrary colour (the user's pick, or a preset
+ * that can sit anywhere in the gamut), so a ring drawn straight against it
+ * cannot promise 3:1 — several presets measure under 2:1 against
+ * --border-focus. The --surface-1 beat below is the same fix
+ * [aria-pressed='true'] already uses: a moat of a known colour, then the
+ * ring against that. Declared after [aria-pressed='true'] so a focused,
+ * selected swatch shows the focus ring.
+ */
+.swatch:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--surface-1),
+    0 0 0 4px var(--border-focus);
 }
 
 .swatch-transparent {
@@ -135,6 +155,23 @@
   border: none;
   opacity: 0;
   cursor: pointer;
+}
+
+/*
+ * The focusable element here is the opacity:0 <input>, not the label that
+ * carries the visible conic-gradient wheel. The UA's default ring would draw
+ * on the input's own (invisible) box and get clipped by this label's
+ * overflow: hidden besides, so it is suppressed and forwarded to the visible
+ * proxy via :has() instead — the same box-shadow moat as every other swatch.
+ */
+.swatch-custom input[type='color']:focus-visible {
+  outline: none;
+}
+
+.swatch-custom:has(input[type='color']:focus-visible) {
+  box-shadow:
+    0 0 0 2px var(--surface-1),
+    0 0 0 4px var(--border-focus);
 }
 
 @media (prefers-reduced-motion: reduce) {

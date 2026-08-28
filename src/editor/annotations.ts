@@ -666,13 +666,18 @@ export function getHandles(a: Annotation): HandlePos[] {
   }
 }
 
-/** Hit-test handles in screen space; returns the handle under (sx,sy) or null. */
+/**
+ * Hit-test handles in screen space; returns the handle under (sx,sy) or null.
+ * tol is a half-width: the default 12 gives a 24x24 effective pointer target
+ * around each handle's 8x8 drawn square (drawSelection below), the CSS
+ * target-size minimum applied to a canvas-drawn control.
+ */
 export function handleAt(
   a: Annotation,
   project: (x: number, y: number) => { x: number; y: number },
   sx: number,
   sy: number,
-  tol = 7,
+  tol = 12,
 ): Handle | null {
   for (const h of getHandles(a)) {
     const p = project(h.x, h.y);

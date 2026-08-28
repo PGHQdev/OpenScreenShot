@@ -487,6 +487,10 @@ body {
 .num-input:disabled {
   opacity: 0.45;
 }
+.num-input:focus {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
 
 /* ---- Footer / Ko-fi ---- */
 .footer-row {

@@ -258,7 +258,16 @@ export function Timeline(props: TimelineProps) {
                 key={block.id}
                 data-selected={block.id === selectedId ? 'true' : undefined}
                 style={{ left: pct(from, totalMs), width: pct(to - from, totalMs) }}
+                tabIndex={0}
+                role="button"
+                aria-pressed={block.id === selectedId}
+                aria-label={`${t('recorderZoomBlock')}, ${block.scale}×`}
                 onPointerDown={(e) => startBlockDrag(e, block, 'move')}
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter' && e.key !== ' ') return;
+                  e.preventDefault();
+                  props.onSelect(block.id);
+                }}
               >
                 <span class="rec-tl-zoom-label">{block.scale}&times;</span>
                 <span
