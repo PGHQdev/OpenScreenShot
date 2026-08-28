@@ -15,12 +15,15 @@
  * thing in both places: --s-1..--s-6, --r-*, --sh-*, --fs-*, --dur-*,
  * --ease-out, --accent, --accent-ink, --border and --rule. Values differ where
  * the ground differs: the site sits on warm paper, the extension on white and
- * near-black.
+ * near-black. Motion is not shared: --ease-out is cubic-bezier(0, 0, 0.58, 1)
+ * here (the CSS keyword, spelled out) and cubic-bezier(0.16, 1, 0.3, 1) there.
  *
  * Colour contract.
  *   --accent      non-text marks and large display type only (>= 3:1).
- *   --accent-ink  links, filled-control grounds and body-size accent text
- *                 (>= 4.5:1 on every surface it may sit on).
+ *   --accent-ink  links, filled-control grounds and body-size accent text.
+ *                 Clears 4.5:1 on --surface-1, --surface-2, --surface-3 and
+ *                 --accent-subtle. It does NOT clear it on --stage-bg (4.44:1
+ *                 in light), so text on the stage takes --text-1.
  *   --on-accent   the label colour on an --accent-ink ground.
  *   --border      control boundaries; >= 3:1 on --surface-1..--surface-3.
  *   --rule        a decorative hairline. Never a control's edge, never the only
@@ -54,13 +57,19 @@
   --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* type scale: 11px, x1.125 a step, rounded to the px grid */
+  /*
+   * Type scale: 11px, x1.125 a step, rounded to the px grid (11, 12.375, 13.92,
+   * 15.66, 17.62, 19.82). The 15.66 rung has no name here: the site orders
+   * --fs-md below --fs-base, so naming a rung above --fs-base "md" would invert
+   * that reading for anyone working across both trees. --fs-2xl carries the
+   * setup hero at its shipped 24px, off the ratio.
+   */
   --fs-xs: 11px;
   --fs-sm: 12px;
   --fs-base: 14px;
-  --fs-md: 16px;
   --fs-lg: 18px;
   --fs-xl: 20px;
+  --fs-2xl: 24px;
 
   /* motion — --ease-out is the cubic-bezier form of the CSS ease-out keyword */
   --dur-fast: 120ms;
@@ -68,7 +77,12 @@
   --dur-slow: 250ms;
   --ease-out: cubic-bezier(0, 0, 0.58, 1);
 
-  /* Canvas ink. Painted onto image pixels, so it never follows the UI theme. */
+  /*
+   * Canvas ink. Painted onto image pixels, so it never follows the UI theme.
+   * This group and the frame group below have no CSS callers by design: only
+   * canvas code reads them, through the generated module. They are live, not
+   * dead.
+   */
   --canvas-paper: #ffffff;
   --canvas-check: #e7e7ec;
   --canvas-mark: #ffffff;
