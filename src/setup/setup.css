@@ -66,7 +66,7 @@ body {
   border-radius: var(--r-lg);
   background: var(--surface-1);
   box-shadow: var(--sh-md);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .pin-arrow {
@@ -119,7 +119,7 @@ body {
 .trust-pill svg {
   width: 15px;
   height: 15px;
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 a.trust-pill:hover {
@@ -138,7 +138,7 @@ a.trust-pill:hover {
 
 .banner-attention {
   background: var(--accent-subtle);
-  color: var(--accent-pressed);
+  color: var(--accent-ink);
 }
 
 .banner-ready {
@@ -228,7 +228,7 @@ a.trust-pill:hover {
   flex: none;
   border-radius: var(--r-full);
   background: var(--accent-subtle);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .row-body {
@@ -285,7 +285,7 @@ a.trust-pill:hover {
 
 .tag-required {
   background: var(--accent-subtle);
-  color: var(--accent-pressed);
+  color: var(--accent-ink);
 }
 
 .tag-optional {
@@ -302,15 +302,15 @@ a.trust-pill:hover {
   border: none;
   border-radius: var(--r-sm);
   padding: var(--s-2) var(--s-4);
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent-ink);
+  color: var(--on-accent);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
 }
 
 .btn-primary:hover {
-  background: var(--accent-hover);
+  background: var(--accent-ink-hover);
 }
 
 .btn-ghost {

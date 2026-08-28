@@ -72,7 +72,7 @@ body {
 }
 
 .link-btn:hover {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .link-btn:focus-visible {
@@ -88,8 +88,8 @@ body {
   height: 40px;
   border: none;
   border-radius: var(--r-full);
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent-ink);
+  color: var(--on-accent);
   cursor: pointer;
   transition:
     background var(--dur-mid) var(--ease-out),
@@ -97,7 +97,7 @@ body {
 }
 
 .icon-btn:hover {
-  background: var(--accent-hover);
+  background: var(--accent-ink-hover);
 }
 
 .icon-btn:active {
@@ -200,7 +200,7 @@ body {
 }
 
 .pill-live {
-  color: var(--accent);
+  color: var(--accent-ink);
   background: color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
@@ -436,13 +436,13 @@ body {
 }
 
 .rec-btn-primary {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: #fff;
+  border-color: var(--accent-ink);
+  background: var(--accent-ink);
+  color: var(--on-accent);
 }
 
 .rec-btn-primary:hover {
-  background: var(--accent-hover);
+  background: var(--accent-ink-hover);
 }
 
 .rec-progress {
@@ -603,7 +603,7 @@ body {
   position: absolute;
   top: 0;
   bottom: 0;
-  background: repeating-linear-gradient(-45deg, var(--border) 0 4px, transparent 4px 8px);
+  background: repeating-linear-gradient(-45deg, var(--rule) 0 4px, transparent 4px 8px);
   opacity: 0.7;
   pointer-events: none;
 }
@@ -743,7 +743,7 @@ body {
 
 .rec-seg-btn[aria-pressed='true'] {
   background: var(--accent-subtle);
-  color: var(--accent);
+  color: var(--accent-ink);
   font-weight: 600;
 }
 

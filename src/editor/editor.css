@@ -341,8 +341,8 @@ body {
   padding: 0 14px;
   border: none;
   border-radius: var(--r-md);
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent-ink);
+  color: var(--on-accent);
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
@@ -352,11 +352,11 @@ body {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--accent-hover);
+  background: var(--accent-ink-hover);
 }
 
 .btn-primary:active:not(:disabled) {
-  background: var(--accent-pressed);
+  background: var(--accent-ink-pressed);
 }
 
 .btn-primary:disabled {
@@ -468,7 +468,7 @@ body {
 
 .tool-btn.is-active {
   background: var(--accent-subtle);
-  color: var(--accent);
+  color: var(--accent-ink);
   border-color: var(--accent);
 }
 
@@ -491,7 +491,7 @@ body {
 .toolbar-divider {
   width: 24px;
   height: 1px;
-  background: var(--border);
+  background: var(--rule);
   margin: 4px 0;
 }
 
@@ -706,7 +706,7 @@ body {
 }
 .segmented-btn.is-selected {
   background: var(--accent-subtle);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 .segmented-btn:disabled {
   opacity: 0.45;
@@ -906,7 +906,7 @@ body {
 /* ---- Beautify panel ---- */
 .btn-secondary.is-active {
   background: var(--accent-subtle);
-  color: var(--accent);
+  color: var(--accent-ink);
   border-color: var(--accent);
 }
 

@@ -158,12 +158,12 @@ body {
 
 .mode-card:hover .mode-icon,
 .mode-card[data-busy='true'] .mode-icon {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .mode-card:hover .mode-title,
 .mode-card[data-busy='true'] .mode-title {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .mode-card:disabled:hover .mode-icon,
@@ -241,7 +241,7 @@ body {
   right: 0;
   bottom: 0;
   height: 3px;
-  background: var(--border);
+  background: var(--surface-3);
   overflow: hidden;
 }
 
@@ -291,7 +291,7 @@ body {
 .chip-toggle[aria-pressed='true'] {
   background: var(--accent-subtle);
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .chip-toggle:focus-visible {
@@ -319,7 +319,7 @@ body {
 /* ---- Divider ---- */
 .divider {
   height: 1px;
-  background: var(--border);
+  background: var(--rule);
   margin: var(--s-1) 0;
 }
 
@@ -406,7 +406,7 @@ body {
 }
 .seg-btn[aria-pressed='true'] {
   background: var(--accent-subtle);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 .seg-btn:disabled {
   opacity: 0.45;
@@ -462,7 +462,7 @@ body {
 
 .token-chip:hover {
   border-color: var(--accent);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .token-chip:focus-visible {
@@ -569,7 +569,7 @@ body {
 }
 
 .link-btn:hover {
-  color: var(--accent);
+  color: var(--accent-ink);
   text-decoration: underline;
 }
 
@@ -649,8 +649,8 @@ body {
   padding: var(--s-2) var(--s-4);
   border: none;
   border-radius: var(--r-md);
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent-ink);
+  color: var(--on-accent);
   font-size: var(--fs-base);
   font-weight: 600;
   cursor: pointer;
@@ -660,7 +660,7 @@ body {
 }
 
 .btn-primary:hover {
-  background: var(--accent-hover);
+  background: var(--accent-ink-hover);
 }
 
 .btn-primary:active {

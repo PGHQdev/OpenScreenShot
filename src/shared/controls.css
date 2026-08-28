@@ -35,11 +35,12 @@ input[type='checkbox'].switch::before {
 }
 
 input[type='checkbox'].switch:checked {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--accent-ink);
+  border-color: var(--accent-ink);
 }
 
 input[type='checkbox'].switch:checked::before {
+  background: var(--on-accent);
   transform: translateX(14px);
 }
 

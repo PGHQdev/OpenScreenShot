@@ -10,6 +10,22 @@
  * generator refuses to run on a custom property declared anywhere else, and on
  * a token declared in one theme but not the other. Apply a theme by setting
  * data-theme="light"|"dark" on <html>.
+ *
+ * Names shared with the website (site/src/styles/tokens.css) mean the same
+ * thing in both places: --s-1..--s-6, --r-*, --sh-*, --fs-*, --dur-*,
+ * --ease-out, --accent, --accent-ink, --border and --rule. Values differ where
+ * the ground differs: the site sits on warm paper, the extension on white and
+ * near-black.
+ *
+ * Colour contract.
+ *   --accent      non-text marks and large display type only (>= 3:1).
+ *   --accent-ink  links, filled-control grounds and body-size accent text
+ *                 (>= 4.5:1 on every surface it may sit on).
+ *   --on-accent   the label colour on an --accent-ink ground.
+ *   --border      control boundaries; >= 3:1 on --surface-1..--surface-3.
+ *   --rule        a decorative hairline. Never a control's edge, never the only
+ *                 signal that a boundary exists.
+ * Measured ratios: .superpowers/sdd/tranquil-drifting-lemon/task-9-report.md.
  */
 
 /* @tokens base */
@@ -64,10 +80,13 @@
   --text-2: #6e6e73;
   --text-3: #aeaeb2;
   --accent: #e8503a;
-  --accent-hover: #ee6450;
-  --accent-pressed: #d43f29;
+  --accent-ink: #bd3722;
+  --accent-ink-hover: #c73d26;
+  --accent-ink-pressed: #a52e1c;
   --accent-subtle: #fdece9;
-  --border: #d2d2d7;
+  --on-accent: #ffffff;
+  --border: #818187;
+  --rule: #d2d2d7;
   --border-focus: #e8503a;
   --danger: #b45309;
   --success: #34c759;
@@ -86,10 +105,13 @@
   --text-2: #98989d;
   --text-3: #636366;
   --accent: #f26b57;
-  --accent-hover: #f58170;
-  --accent-pressed: #e8503a;
+  --accent-ink: #f8846f;
+  --accent-ink-hover: #ff9d8b;
+  --accent-ink-pressed: #e8735e;
   --accent-subtle: #46201a;
-  --border: #48484a;
+  --on-accent: #1c1c1e;
+  --border: #8a8a8f;
+  --rule: #48484a;
   --border-focus: #f26b57;
   --danger: #f5a623;
   --success: #30d158;
