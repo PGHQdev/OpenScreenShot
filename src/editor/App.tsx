@@ -5,7 +5,7 @@ import { IMAGE_FORMATS, type ImageFormat } from './export';
 import type { PdfOptions } from './pdf';
 import { STROKE_WIDTHS, type BlurMode, type SpotlightShape } from './annotations';
 import { COLOR_PALETTE, colorName } from './palette';
-import { arrowNav, getFocusable, trapFocus } from './focus';
+import { arrowNav, getFocusable, syncRovingTabIndex, trapFocus } from './focus';
 import { pickImageFile } from './import-image';
 import { BrandMark } from '../shared/BrandMark';
 import {
@@ -51,6 +51,14 @@ export function App() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
   const [dragOver, setDragOver] = useState(false);
+  const toolbarRef = useRef<HTMLElement>(null);
+
+  // TOOL_LIST is fixed, so the tool rail's members never change: one sync at
+  // mount is enough to seed the roving tabindex (member 0 starts as the tab
+  // stop). The focusin handler on the toolbar keeps it in sync after that.
+  useEffect(() => {
+    if (toolbarRef.current) syncRovingTabIndex(toolbarRef.current);
+  }, []);
 
   function copyToClipboard() {
     ed.copyImage()
@@ -211,7 +219,11 @@ export function App() {
           role="toolbar"
           aria-orientation="vertical"
           aria-label="Annotation tools"
+          ref={toolbarRef}
           onKeyDown={(e) => arrowNav(e.currentTarget as HTMLElement, e)}
+          onFocusIn={(e) =>
+            syncRovingTabIndex(e.currentTarget as HTMLElement, e.target as HTMLElement)
+          }
         >
           {TOOL_LIST.map((t) => (
             <button
@@ -372,6 +384,23 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
   const [canPickScreen] = useState(() => hasScreenPicker(window));
   const sel = ed.selectedAnnotation;
   const fields = stylebarFields(ed.tool, sel?.type ?? null);
+  const barRef = useRef<HTMLDivElement>(null);
+
+  // Unlike the tool rail, this toolbar's membership changes: switching tools
+  // swaps which field group renders, and recentColors grows. Re-sync after
+  // every render that can change it, so the tab stop never lands on a member
+  // that just unmounted.
+  useEffect(() => {
+    if (barRef.current) syncRovingTabIndex(barRef.current);
+  }, [
+    fields.color,
+    fields.stroke,
+    fields.shape,
+    fields.redaction,
+    fields.fontSize,
+    ed.recentColors.length,
+  ]);
+
   if (stylebarEmpty(fields)) return null;
 
   function pickFromScreen() {
@@ -386,7 +415,9 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
       role="toolbar"
       aria-orientation="horizontal"
       aria-label="Annotation style"
+      ref={barRef}
       onKeyDown={(e) => arrowNav(e.currentTarget as HTMLElement, e)}
+      onFocusIn={(e) => syncRovingTabIndex(e.currentTarget as HTMLElement, e.target as HTMLElement)}
     >
       {fields.color ? (
         <div class="stylebar-group">
