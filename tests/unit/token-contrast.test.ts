@@ -6,19 +6,35 @@ import { theme } from '../../src/shared/design-tokens';
  * (tokens.css) missed it against real call sites for two release cycles
  * running: task-9-report.md measured the gap, task-11's delivered scope
  * dropped it, and task-20's axe smoke rediscovered the exact same numbers
- * live. task-45 raised both tokens and moved the two call sites that painted
- * --text-3 on a surface it was never meant to clear onto a different token
- * instead (editor.css's `.empty-fallback`/`.empty-alt`, popup.css's
- * `.kbd-os` — see task-45-report.md). This is the guard that stops a fourth
- * round trip: it reads the live generated values, so a future edit to
- * tokens.css that drops either token back under the floor fails here instead
- * of waiting for the axe smoke (which needs a built `dist/` and a real
- * browser) or a human to notice.
+ * live. task-45 raised both tokens and moved the three call sites that
+ * painted --text-3 on a surface it was never meant to clear onto a
+ * different token instead (editor.css's `.empty-fallback`/`.empty-alt` and
+ * `.zoom-item kbd`, popup.css's `.kbd-os` — see task-45-report.md). This is
+ * the guard that stops a fourth round trip: it reads the live generated
+ * values, so a future edit to tokens.css that drops either token back under
+ * the floor fails here instead of waiting for the axe smoke (which needs a
+ * built `dist/` and a real browser) or a human to notice.
  *
- * Only the pairings each token is actually painted on are asserted — see the
- * per-token comment above --text-2/--text-3 in tokens.css for the full list
- * and task-45-report.md for the usage matrix across every surface, including
- * the ones that fail and are why nothing paints them there.
+ * Only the pairings each token is actually painted on TODAY are asserted —
+ * see the per-token comment above --text-2/--text-3 in tokens.css for the
+ * full list and task-45-report.md for the usage matrix across every
+ * surface, including the ones that fail and are why nothing paints them
+ * there.
+ *
+ * RESIDUAL GAP, read this before you add a new --text-2/--text-3 call site:
+ * this test asserts fixed (theme, token, surface) triples, not "wherever
+ * this token is ever painted." It does NOT know which surfaces are actually
+ * used — it will stay green even if you add `color: var(--text-3)` on
+ * --surface-2 or --surface-3 or --stage-bg, all of which fail today
+ * (4.21:1/3.79:1, 3.85:1/3.08:1, 3.62:1/4.91:1 — light/dark) and are exactly
+ * why nothing paints them. Widening this test to assert the full matrix
+ * would be wrong: several cells fail by design and must stay that way. This
+ * is the same failure mode as the .empty-fallback/.empty-alt bug task-45
+ * found and fixed — a real call site on a real surface that no test caught
+ * because nothing was asserting that specific pairing, and the a11y smoke
+ * never rendered the state it appears in. Before painting --text-2 or
+ * --text-3 anywhere new, check the usage matrix in task-45-report.md (or
+ * recompute the ratio) yourself — this file will not do it for you.
  */
 function hexToRgb(hex: string): [number, number, number] {
   const n = Number.parseInt(hex.replace('#', ''), 16);
