@@ -19,12 +19,16 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
-  // Set by the trigger's own onMouseDown, consumed by onFocusOut: records
-  // *why* focus is about to move, not just where it lands. Shift+Tab onto
+  // Set true by the trigger's own onMouseDown; read by onFocusOut to tell
+  // *why* focus is about to move, not just where it lands — Shift+Tab onto
   // the trigger and a mousedown-then-click on the trigger both end with
   // focus on the same element, but only the click should be left for
-  // onClick's toggle to handle alone — Shift+Tab has to close here, or the
-  // panel never closes on that path (a keyboard trap).
+  // onClick's toggle to handle alone (Shift+Tab has no toggle waiting, so it
+  // has to close immediately or the panel never closes on that path — a
+  // keyboard trap). Cleared in exactly two places, both below: onClick, once
+  // the click that set it actually completes; onUp's deferred check, if it
+  // doesn't (a mousedown on the trigger, dragged off, released elsewhere —
+  // no click ever fires to clear it otherwise, and it would strand true).
   const triggerMouseDownRef = useRef(false);
 
   // Non-modal by design: the panel's sliders preview live onto the canvas
@@ -45,20 +49,41 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
     };
     const onFocusOut = (e: FocusEvent) => {
       const next = e.relatedTarget as Node | null;
-      // Focus landing on the trigger *because the user is clicking it* is
-      // the lead-in to a click on it — its own onClick toggle already owns
-      // that case. Closing here too would race that toggle: a functional
-      // setOpen update queued from this handler, then another from onClick
-      // in the same tick, compose into "closed, then immediately reopened".
-      // Focus landing on the trigger for any OTHER reason — Shift+Tab off
-      // the first control, most notably — has no such toggle waiting, so it
-      // has to close here or the panel never closes on that path at all.
-      if (next === triggerRef.current && triggerMouseDownRef.current) {
-        triggerMouseDownRef.current = false;
-        return;
-      }
-      triggerMouseDownRef.current = false;
+      // Focus landing on the trigger *because the user is mid-mousedown on
+      // it* is the lead-in to a click — deferred to onClick/onUp below to
+      // resolve, not decided here. Closing unconditionally would race the
+      // click: a functional setOpen update queued from this handler, then
+      // another from onClick in the same tick, compose into "closed, then
+      // immediately reopened". Left un-cleared here on purpose — onClick
+      // clears it if the click completes, onUp's deferred check clears it
+      // (and closes) if it doesn't. Focus landing on the trigger for any
+      // OTHER reason — Shift+Tab off the first control, most notably — has
+      // no mousedown behind it, so it closes immediately as before.
+      if (next === triggerRef.current && triggerMouseDownRef.current) return;
       if (!next || !popover?.contains(next)) setOpen(false);
+    };
+    // Safety net for a mousedown on the trigger that never becomes a click —
+    // press, drag off, release elsewhere. onFocusOut above already skipped
+    // the close for that mousedown (its own focus-shift fired before mouseup
+    // or click ever happen, and the ref was true, so it looked like an
+    // in-progress click), and nothing else was ever going to close the
+    // panel: no click means onClick's own clear-and-toggle never runs
+    // either. `mouseup` fires for every mousedown regardless of where the
+    // pointer is released, so it can't be skipped the way a same-target
+    // click can. The check is deferred to a `setTimeout(0)`, not a
+    // microtask: `click` does not reliably dispatch before a microtask
+    // queued from `mouseup` gets a turn (confirmed by tracing real event
+    // order) — it does reliably dispatch before the next macrotask. A
+    // completing click still gets to clear the ref itself first; this only
+    // acts when the ref is still true once the timeout runs, i.e. no click
+    // ever came.
+    const onUp = () => {
+      setTimeout(() => {
+        if (triggerMouseDownRef.current) {
+          triggerMouseDownRef.current = false;
+          setOpen(false);
+        }
+      }, 0);
     };
     // Capture phase, for the same reason as ZoomMenu: the popover is not inside
     // a modal subtree, so the editor's window-level shortcut listeners would
@@ -71,10 +96,12 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
       }
     };
     window.addEventListener('mousedown', onDown);
+    window.addEventListener('mouseup', onUp);
     window.addEventListener('keydown', onKey, true);
     popover?.addEventListener('focusout', onFocusOut);
     return () => {
       window.removeEventListener('mousedown', onDown);
+      window.removeEventListener('mouseup', onUp);
       window.removeEventListener('keydown', onKey, true);
       popover?.removeEventListener('focusout', onFocusOut);
     };
@@ -102,7 +129,10 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
         onMouseDown={() => {
           triggerMouseDownRef.current = true;
         }}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          triggerMouseDownRef.current = false;
+          setOpen((v) => !v);
+        }}
       >
         Beautify
       </button>

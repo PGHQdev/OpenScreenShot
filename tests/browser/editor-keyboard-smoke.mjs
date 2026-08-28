@@ -624,6 +624,22 @@ async function main() {
       });
       await page.mouse.click(box.x, box.y);
     };
+    // A real pointer click at an element's own coordinates — as distinct
+    // from page.$eval(...).focus() + Enter, which is keyboard activation and
+    // never dispatches mousedown/mouseup/click at all. The Beautify
+    // click-open trap (task-19 fix round 2) was invisible to every assertion
+    // in this file until it opened panels this way, because only a real
+    // click exercises the trigger's onMouseDown/onClick pointer-intent
+    // tracking.
+    const boxOf = async (sel) =>
+      page.$eval(sel, (el) => {
+        const r = el.getBoundingClientRect();
+        return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+      });
+    const clickOpen = async (sel) => {
+      const box = await boxOf(sel);
+      await page.mouse.click(box.x, box.y);
+    };
 
     step('the Beautify popover is a non-modal dialog: no aria-modal, no trap, and initial focus');
     await page.$eval(beautifyTrigger, (el) => el.focus());
@@ -684,8 +700,8 @@ async function main() {
     step(
       "Shift+Tab off the panel's first control closes it too — a real keyboard trap this shape once had",
     );
-    // The onFocusOut guard that fixes the trigger-click/focusout race (see
-    // task-19 report) has to distinguish *why* focus reached the trigger:
+    // The onFocusOut guard that fixes the trigger-click/focusout race has to
+    // distinguish *why* focus reached the trigger:
     // a click on it (owned by the trigger's own onClick toggle) from a
     // plain Shift+Tab onto it (which has no toggle waiting and must close
     // here). Getting that wrong traps Tab/Shift+Tab cycling between the
@@ -707,6 +723,66 @@ async function main() {
       (await page.$('.beautify-popover')) === null,
       'the panel did not reopen on the next Tab — no trigger <-> first-control cycle',
     );
+
+    step('a real mouse click opens the Beautify popover the same as keyboard activation');
+    await clickOpen(beautifyTrigger);
+    await settle();
+    const beautifyMouseOpen = await page.evaluate(() => {
+      const panel = document.querySelector('.beautify-popover');
+      const first = panel?.querySelector('input, button, select, textarea') ?? null;
+      return { open: !!panel, activeIsFirst: document.activeElement === first };
+    });
+    assert(beautifyMouseOpen.open, 'a real click opened the panel');
+    assert(
+      beautifyMouseOpen.activeIsFirst,
+      'and moved focus onto its first control, same as the keyboard-open path',
+    );
+
+    step(
+      'Shift+Tab off the first control closes the panel even when it was opened by a real click',
+    );
+    // task-19 fix round 2: the trigger's onMouseDown sets a "click in
+    // progress" ref that onFocusOut reads to avoid racing the trigger's own
+    // click-toggle. Opening the panel this way (click, not keyboard) sets
+    // that same ref — round 2's first attempt left it stuck true afterward,
+    // because the only place that had ever cleared it (onFocusOut, for the
+    // close-an-open-panel-by-clicking-the-trigger case) never runs during an
+    // *opening* click (nothing inside the not-yet-rendered popover to blur
+    // from). The next Shift+Tab off the first control then read a stale
+    // "true" and silently skipped its own close — this is that exact path.
+    await chord(['Shift'], 'Tab');
+    await settle();
+    assert(
+      (await page.$('.beautify-popover')) === null,
+      'Shift+Tab off the first control closed a panel that was opened by mouse',
+    );
+    await page.keyboard.press('Tab');
+    await settle();
+    assert((await page.$('.beautify-popover')) === null, 'and it did not reopen on the next Tab');
+
+    step(
+      'a mousedown on the trigger that never becomes a click (press, drag off, release elsewhere) does not strand the panel open',
+    );
+    // Same ref, a different way to abandon it: mousedown alone (not a full
+    // click) already fires the focus-shift that makes onFocusOut skip a
+    // close, believing a click is about to complete it. Drag off before
+    // releasing and no click ever fires, so nothing was ever going to close
+    // the panel on its own — this is what the mouseup-deferred safety net
+    // (BeautifyMenu.tsx's onUp) exists to catch.
+    await clickOpen(beautifyTrigger);
+    await settle();
+    assert((await page.$('.beautify-popover')) !== null, 'reopened for the drag-away check');
+    const dragBox = await boxOf(beautifyTrigger);
+    await page.mouse.move(dragBox.x, dragBox.y);
+    await page.mouse.down();
+    await page.mouse.move(dragBox.x + 300, dragBox.y + 200, { steps: 10 });
+    await page.mouse.up();
+    await settle();
+    assert(
+      (await page.$('.beautify-popover')) === null,
+      'the abandoned drag still closed the panel instead of leaving it stuck open',
+    );
+
     // BeautifyMenu's window-level capture-phase keydown listener is torn down
     // from its effect's cleanup, which — per this file's own opening comment —
     // commits a frame after the DOM does. Without a beat here, a key aimed at
@@ -732,6 +808,22 @@ async function main() {
       (await itemText()) === 'Actual size',
       'ArrowUp on the closed trigger opens on the last item',
     );
+
+    step('a real mouse click opens the zoom menu the same as keyboard activation');
+    // The previous step ends with the menu open (ArrowUp landed on the last
+    // item and nothing closed it since) — clicking the trigger while it's
+    // already open would close it via ZoomMenu's own toggle, not open it.
+    await page.keyboard.press('Escape');
+    await settle();
+    await clickOpen(zoomTrigger);
+    await settle();
+    assert((await page.$('.zoom-popover')) !== null, 'a real click opened the menu');
+    assert(
+      (await itemText()) === 'Zoom in',
+      'and moved focus onto the first item, same as the keyboard-open path',
+    );
+    await page.keyboard.press('Escape');
+    await settle();
 
     step('ArrowDown/ArrowUp wrap at the ends, Home/End jump to the ends');
     await page.keyboard.press('ArrowDown');
@@ -789,6 +881,25 @@ async function main() {
       !(await activeElementIs(zoomTrigger)),
       'focus kept moving forward on Tab — it was not pulled back to the trigger',
     );
+
+    step('Tab off the actual last zoom item also closes the menu, no trap');
+    // The prior Tab step always opens with ArrowDown (first item) before
+    // Tabbing — every existing Tab assertion in this file, old and new,
+    // started from the first item. ZoomMenu's Tab handling is an
+    // unconditional check in the capture-phase keydown listener
+    // (if (e.key === 'Tab') setOpen(false)), not tied to which item holds
+    // the roving tabindex, so this exercises the same code path — but it
+    // had never actually been driven from the last item until now.
+    await page.$eval(zoomTrigger, (el) => el.focus());
+    await page.keyboard.press('ArrowUp'); // opens on the last item
+    await settle();
+    assert((await itemText()) === 'Actual size', 'opened on the last item, as ArrowUp promises');
+    await page.keyboard.press('Tab');
+    await settle();
+    assert((await page.$('.zoom-popover')) === null, 'Tab off the last item closed the menu');
+    await page.keyboard.press('Tab');
+    await settle();
+    assert((await page.$('.zoom-popover')) === null, 'and it did not reopen on a further Tab');
 
     step('Shift+Tab off the first zoom item closes the menu too — symmetry with Beautify above');
     await page.$eval(zoomTrigger, (el) => el.focus());
