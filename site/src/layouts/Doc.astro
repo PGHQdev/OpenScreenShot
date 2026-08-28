@@ -31,10 +31,29 @@ const navLinks: NavLink[] = [
 ];
 
 const { title, description, path, label, heading, lead } = Astro.props;
+
+// Every sub-page is one level below Home, so the trail is always Home > this
+// page. `heading` is each page's own h1 text, which is also the plainest
+// name for the crumb.
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: new URL('/', Astro.site).href },
+    { '@type': 'ListItem', position: 2, name: heading, item: new URL(path, Astro.site).href },
+  ],
+};
+
+// set:html does not escape; none of the values above carry a "<", but this
+// matches the same escape Base's callers use for their own JSON-LD.
+const ld = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
 ---
 
 <Base title={title} description={description} path={path} navLinks={navLinks}>
-  <slot name="head" slot="head" />
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={ld(breadcrumbLd)} />
+    <slot name="head" />
+  </Fragment>
 
   <div class="doc container">
     <header class="doc-head">
