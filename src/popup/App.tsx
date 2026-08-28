@@ -27,6 +27,7 @@ import {
   type RecState,
 } from '../shared/recording-types';
 import { popupWarnings, type DevicePermission } from '../shared/permissions';
+import { applyTheme, watchSystemTheme } from '../shared/theme';
 
 // i18n helper
 function t(id: string): string {
@@ -193,6 +194,9 @@ export function App() {
     void hasLastCapture().then(setHasStash);
     void getLastRegion().then((r) => setHasRegion(r != null));
   }, []);
+
+  // Live-update a "system" theme setting when the OS preference flips.
+  useEffect(() => watchSystemTheme(() => void getSettings().then((s) => applyTheme(s.theme))), []);
 
   // Recorder: settings, active tab, a pending continue-session, and current state.
   useEffect(() => {
@@ -964,12 +968,6 @@ function BackMark() {
       <path d="M19 12H5M12 19l-7-7 7-7" />
     </svg>
   );
-}
-
-function applyTheme(theme: Settings['theme']) {
-  const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
-  const dark = theme === 'dark' || (theme === 'system' && prefersDark);
-  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
 }
 
 /** Sample resolution of the template, shown live under the settings input. */

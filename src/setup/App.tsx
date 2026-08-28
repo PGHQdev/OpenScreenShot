@@ -10,7 +10,8 @@
  */
 import { useEffect, useState } from 'preact/hooks';
 import { BrandMark } from '../shared/BrandMark';
-import { setSettings } from '../shared/storage';
+import { getSettings, setSettings } from '../shared/storage';
+import { applyTheme, watchSystemTheme } from '../shared/theme';
 import {
   classifyMediaError,
   setupComplete,
@@ -70,6 +71,13 @@ export function App() {
     setSnap(await readSnapshot());
     setLoaded(true);
   }
+
+  // Apply the stored theme on mount, then live-update a "system" setting
+  // when the OS preference flips.
+  useEffect(() => {
+    void getSettings().then((s) => applyTheme(s.theme));
+  }, []);
+  useEffect(() => watchSystemTheme(() => void getSettings().then((s) => applyTheme(s.theme))), []);
 
   useEffect(() => {
     void refresh();

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { BrandMark } from '../shared/BrandMark';
 import { frameFromSettings, frameToSettings, type FrameOptions } from '../editor/frame';
 import { getSettings } from '../shared/storage';
-import { DEFAULT_SETTINGS, type Settings } from '../shared/types';
+import { DEFAULT_SETTINGS } from '../shared/types';
+import { applyTheme, watchSystemTheme } from '../shared/theme';
 import { deleteSession, getSegments, listSessions } from '../shared/recording-db';
 import type { RecordingSession, RecState } from '../shared/recording-types';
 import { formatTimer } from '../content/recording-overlay';
@@ -31,12 +32,6 @@ function t(id: string): string {
 // (the recorder page is a separate tab and can't hand off the capture itself).
 const CONTINUE_SESSION_KEY = 'openscreenshot:continue-session';
 
-function applyTheme(theme: Settings['theme']) {
-  const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
-  const dark = theme === 'dark' || (theme === 'system' && prefersDark);
-  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-}
-
 function sessionIdFromLocation(): string | null {
   return new URLSearchParams(window.location.search).get('session');
 }
@@ -48,6 +43,9 @@ export function App() {
   useEffect(() => {
     void getSettings().then((s) => applyTheme(s.theme));
   }, []);
+
+  // Live-update a "system" theme setting when the OS preference flips.
+  useEffect(() => watchSystemTheme(() => void getSettings().then((s) => applyTheme(s.theme))), []);
 
   useEffect(() => {
     if (!hint) return;

@@ -1,3 +1,4 @@
+import { copyFileSync, mkdirSync } from 'node:fs';
 import { defineConfig } from 'vitest/config';
 import preact from '@preact/preset-vite';
 import { crx } from '@crxjs/vite-plugin';
@@ -9,7 +10,22 @@ import pkg from './package.json';
 // package.json from the release tag, so tag -> zip name -> manifest all match.
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [preact(), crx({ manifest: { ...manifest, version: pkg.version } })],
+  plugins: [
+    preact(),
+    crx({ manifest: { ...manifest, version: pkg.version } }),
+    {
+      // src/shared/theme-init.js sets data-theme before first paint and has to
+      // stay a plain classic script outside the module graph (see its own
+      // module doc), so Vite's HTML transform can't bundle it — every
+      // surface's index.html references it directly as /shared/theme-init.js.
+      // Copy it to that path by hand.
+      name: 'copy-theme-init',
+      writeBundle() {
+        mkdirSync('dist/shared', { recursive: true });
+        copyFileSync('src/shared/theme-init.js', 'dist/shared/theme-init.js');
+      },
+    },
+  ],
   resolve: {
     alias: {
       '@': '/src',

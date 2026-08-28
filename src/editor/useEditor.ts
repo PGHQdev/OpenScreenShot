@@ -62,6 +62,7 @@ import {
   setSettings,
 } from '../shared/storage';
 import { formatFilename } from '../shared/utils';
+import { applyTheme, watchSystemTheme } from '../shared/theme';
 import { COLOR_PALETTE, pushRecent } from './palette';
 import { draftFrame, DRAFT_DEBOUNCE_MS, makeDraft, parseDraft, type Draft } from './draft';
 import { canvasToDataUrl, downloadDataUrl, withExtension, type ImageFormat } from './export';
@@ -412,6 +413,9 @@ export function useEditor() {
       controllerRef.current = null;
     };
   }, []);
+
+  // Live-update a "system" theme setting when the OS preference flips.
+  useEffect(() => watchSystemTheme(() => void getSettings().then((s) => applyTheme(s.theme))), []);
 
   // Wheel zoom (non-passive so we can preventDefault trackpad scroll).
   useEffect(() => {
@@ -1207,10 +1211,4 @@ function clampToImage(p: { x: number; y: number }, w: number, h: number): { x: n
 export function isTypingTarget(t: EventTarget | null): boolean {
   const el = t as HTMLElement | null;
   return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
-}
-
-function applyTheme(theme: Settings['theme']): void {
-  const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
-  const dark = theme === 'dark' || (theme === 'system' && prefersDark);
-  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
 }
