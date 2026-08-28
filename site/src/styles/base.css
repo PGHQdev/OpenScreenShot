@@ -192,6 +192,23 @@ samp {
   background: var(--paper-raised);
 }
 
+/* ---- Product slab ----
+ * Shared by the hero shot and every Frame product shot: the deep-ink card a
+ * screenshot sits in.
+ */
+
+.slab {
+  padding: var(--s-4);
+  border-radius: var(--r-lg);
+  background: var(--slab);
+  box-shadow: var(--sh-lg);
+}
+
+.slab img {
+  width: 100%;
+  border-radius: var(--r-md);
+}
+
 /* ---- Scroll reveal ----
  * Declared only where motion is welcome and the timeline is supported, so the
  * fallback is plain visible content rather than a stuck opacity: 0.

@@ -1,13 +1,19 @@
 ---
+import { Picture } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import BrandMark from '../components/BrandMark.astro';
 import CropMarks from '../components/CropMarks.astro';
 import FaqList from '../components/FaqList.astro';
+import Frame from '../components/Frame.astro';
 import FrameLabel from '../components/FrameLabel.astro';
 import PermissionTable from '../components/PermissionTable.astro';
 import { homeFaq } from '../data/faq';
 import { installPermissions, recordingPermissions } from '../data/permissions';
 import hero from '../assets/hero.webp';
+import shotCapture from '../assets/shot-2.webp';
+import shotAnnotate from '../assets/shot-3.webp';
+import shotExport from '../assets/shot-4.webp';
+import shotRecord from '../assets/shot-5.webp';
 
 const STORE_URL = 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp';
 const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
@@ -102,12 +108,15 @@ const ld = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
       <div class="shot-wrap">
         <CropMarks arm="26px" inset="14px">
           <div class="slab">
-            <img
-              src={hero.src}
-              width={hero.width}
-              height={hero.height}
+            <Picture
+              src={hero}
               alt="The OpenScreenShot popup open over a web page, offering Full page, Visible area, and Region capture, with a region selection in progress."
+              formats={['avif', 'webp']}
+              fallbackFormat="webp"
+              widths={[600, 900, 1400, 2320]}
+              sizes="(min-width: 900px) 980px, 100vw"
               fetchpriority="high"
+              loading="eager"
               decoding="async"
             />
           </div>
@@ -125,112 +134,68 @@ const ld = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
   </div>
 
   <!-- Frame 01 -->
-  <section id="capture" class="section reveal">
-    <div class="container-wide">
-      <FrameLabel index="01" label="Capture" />
-      <h2>Take the whole page.</h2>
-      <p class="lede">
-        Full page, visible area, or a region you drag. Start from the popup, a keyboard shortcut, or
-        the right-click menu. Full-page capture scrolls, tiles and stitches the page for you, and a
-        progress bar tells you where it is.
-      </p>
-      <dl class="spec">
-        <div>
-          <dt>Ctrl+Shift+S</dt>
-          <dd>the whole scrolling page, header and all</dd>
-        </div>
-        <div>
-          <dt>Ctrl+Shift+E</dt>
-          <dd>a dragged region, with resize handles on every edge</dd>
-        </div>
-        <div>
-          <dt>Delay 3s</dt>
-          <dd>hold a menu or a hover state open, then capture it</dd>
-        </div>
-      </dl>
-    </div>
-  </section>
+  <Frame
+    id="capture"
+    index="01"
+    label="Capture"
+    title="Take the whole page."
+    lede="Full page, visible area, or a region you drag. Start from the popup, a keyboard shortcut, or the right-click menu. Full-page capture scrolls, tiles and stitches the page for you, and a progress bar tells you where it is."
+    spec={[
+      { dt: 'Ctrl+Shift+S', dd: 'the whole scrolling page, header and all' },
+      { dt: 'Ctrl+Shift+E', dd: 'a dragged region, with resize handles on every edge' },
+      { dt: 'Delay 3s', dd: 'hold a menu or a hover state open, then capture it' },
+    ]}
+    image={shotCapture}
+    alt="OpenScreenShot's popup capturing a long article, showing the stitched full-page result."
+  />
 
   <!-- Frame 02 -->
-  <section id="annotate" class="section reveal">
-    <div class="container-wide">
-      <FrameLabel index="02" label="Annotate" />
-      <h2>Draw on it.</h2>
-      <p class="lede">
-        Arrows, boxes, lines, freehand, highlighter and text. Every tool has a one-letter key, an
-        8-color palette on 1–8, and undo that goes all the way back. Drop in an image you already
-        have and the same tools work on it.
-      </p>
-      <dl class="spec">
-        <div>
-          <dt>B</dt>
-          <dd>blur, mosaic, or an opaque fill that survives recompression</dd>
-        </div>
-        <div>
-          <dt>S</dt>
-          <dd>step numbers that count up, and renumber when you delete one</dd>
-        </div>
-        <div>
-          <dt>O</dt>
-          <dd>spotlight cut-outs that merge into one dim layer</dd>
-        </div>
-      </dl>
-    </div>
-  </section>
+  <Frame
+    id="annotate"
+    index="02"
+    label="Annotate"
+    title="Draw on it."
+    lede="Arrows, boxes, lines, freehand, highlighter and text. Every tool has a one-letter key, an 8-color palette on 1–8, and undo that goes all the way back. Drop in an image you already have and the same tools work on it."
+    spec={[
+      { dt: 'B', dd: 'blur, mosaic, or an opaque fill that survives recompression' },
+      { dt: 'S', dd: 'step numbers that count up, and renumber when you delete one' },
+      { dt: 'O', dd: 'spotlight cut-outs that merge into one dim layer' },
+    ]}
+    image={shotAnnotate}
+    alt="The OpenScreenShot annotation editor with its toolbar, style bar, and export controls called out."
+  />
 
   <!-- Frame 03 -->
-  <section id="export" class="section reveal">
-    <div class="container-wide">
-      <FrameLabel index="03" label="Export" />
-      <h2>Keep it, in your format.</h2>
-      <p class="lede">
-        PNG, JPEG, WebP or PDF. Scale to 25, 50, 100 or 200 %, or to an exact pixel width. Beautify
-        adds padding, rounded corners, a shadow and a background, and that frame travels into every
-        export.
-      </p>
-      <dl class="spec">
-        <div>
-          <dt>PDF</dt>
-          <dd>one page, fit to A4 or Letter, or split with a 5 mm overlap</dd>
-        </div>
-        <div>
-          <dt>Ctrl+C</dt>
-          <dd>the finished image, straight to the clipboard</dd>
-        </div>
-        <div>
-          <dt>{'{date} {title} {domain}'}</dt>
-          <dd>filename tokens you set once, with a live preview</dd>
-        </div>
-      </dl>
-    </div>
-  </section>
+  <Frame
+    id="export"
+    index="03"
+    label="Export"
+    title="Keep it, in your format."
+    lede="PNG, JPEG, WebP or PDF. Scale to 25, 50, 100 or 200 %, or to an exact pixel width. Beautify adds padding, rounded corners, a shadow and a background, and that frame travels into every export."
+    spec={[
+      { dt: 'PDF', dd: 'one page, fit to A4 or Letter, or split with a 5 mm overlap' },
+      { dt: 'Ctrl+C', dd: 'the finished image, straight to the clipboard' },
+      { dt: '{date} {title} {domain}', dd: 'filename tokens you set once, with a live preview' },
+    ]}
+    image={shotExport}
+    alt="The four OpenScreenShot export formats — PNG, JPEG, WebP and PDF — each with its own card."
+  />
 
   <!-- Frame 04 -->
-  <section id="record" class="section reveal">
-    <div class="container-wide">
-      <FrameLabel index="04" label="Record" />
-      <h2>Record the tab too.</h2>
-      <p class="lede">
-        One click starts a tab recording, with your mic, the tab’s audio and a draggable webcam
-        bubble if you want them. Stop opens a timeline editor that zooms to every click you made.
-        Export writes a WebM.
-      </p>
-      <dl class="spec">
-        <div>
-          <dt>Alt+Shift+X</dt>
-          <dd>stop the recording from anywhere</dd>
-        </div>
-        <div>
-          <dt>IndexedDB</dt>
-          <dd>chunks written as you record, so a crash keeps the take</dd>
-        </div>
-        <div>
-          <dt>tabCapture</dt>
-          <dd>optional, asked once, at your first recording</dd>
-        </div>
-      </dl>
-    </div>
-  </section>
+  <Frame
+    id="record"
+    index="04"
+    label="Record"
+    title="Record the tab too."
+    lede="One click starts a tab recording, with your mic, the tab’s audio and a draggable webcam bubble if you want them. Stop opens a timeline editor that zooms to every click you made. Export writes a WebM."
+    spec={[
+      { dt: 'Alt+Shift+X', dd: 'stop the recording from anywhere' },
+      { dt: 'IndexedDB', dd: 'chunks written as you record, so a crash keeps the take' },
+      { dt: 'tabCapture', dd: 'optional, asked once, at your first recording' },
+    ]}
+    image={shotRecord}
+    alt="OpenScreenShot's tab recording feature: one-click start, webcam bubble, timeline editor, and WebM export."
+  />
 
   <!-- Proof strip. Task 7's Worker rewrites the two data-stat elements at the
        edge; the numbers here are the fallback when shields.io is unreachable. -->
@@ -417,18 +382,6 @@ const ld = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
     margin-inline: var(--s-3);
   }
 
-  .slab {
-    padding: var(--s-4);
-    border-radius: var(--r-lg);
-    background: var(--slab);
-    box-shadow: var(--sh-lg);
-  }
-
-  .slab img {
-    width: 100%;
-    border-radius: var(--r-md);
-  }
-
   /* ---- Ticker ---- */
 
   .ticker {
@@ -457,36 +410,6 @@ const ld = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
     to {
       transform: translateX(-50%);
     }
-  }
-
-  /* ---- Frames ---- */
-
-  .spec {
-    display: grid;
-    gap: var(--s-3);
-    max-width: var(--max-w);
-    margin: var(--s-6) 0 0;
-  }
-
-  .spec > div {
-    display: grid;
-    grid-template-columns: 15rem 1fr;
-    gap: var(--s-2) var(--s-4);
-    padding-top: var(--s-3);
-    border-top: 1px solid var(--rule);
-  }
-
-  .spec dt {
-    color: var(--ink);
-    font-family: var(--font-mono);
-    font-weight: 500;
-    font-size: var(--fs-sm);
-  }
-
-  .spec dd {
-    margin: 0;
-    color: var(--ink-2);
-    font-size: var(--fs-md);
   }
 
   /* ---- Proof strip ---- */
@@ -592,11 +515,5 @@ const ld = (data: unknown) => JSON.stringify(data).replace(/</g, '\\u003c');
     display: flex;
     justify-content: center;
     margin-bottom: var(--s-4);
-  }
-
-  @media (max-width: 620px) {
-    .spec > div {
-      grid-template-columns: 1fr;
-    }
   }
 </style>

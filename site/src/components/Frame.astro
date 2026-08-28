@@ -1,0 +1,114 @@
+---
+/**
+ * One numbered section of the homepage contact sheet: label, heading, lede,
+ * a spec list, and a product shot in a crop-marked slab. The four FRAME
+ * sections on the homepage share this skeleton and differ only in copy, the
+ * spec rows and the shot.
+ */
+import type { ImageMetadata } from 'astro';
+import { Picture } from 'astro:assets';
+import CropMarks from './CropMarks.astro';
+import FrameLabel from './FrameLabel.astro';
+
+interface SpecItem {
+  dt: string;
+  dd: string;
+}
+
+interface Props {
+  id: string;
+  index: string;
+  label: string;
+  title: string;
+  lede: string;
+  spec: SpecItem[];
+  image: ImageMetadata;
+  alt: string;
+}
+
+const { id, index, label, title, lede, spec, image, alt } = Astro.props;
+---
+
+<section id={id} class="section reveal frame">
+  <div class="container-wide frame-grid">
+    <div class="frame-copy">
+      <FrameLabel index={index} label={label} />
+      <h2>{title}</h2>
+      <p class="lede">{lede}</p>
+      <dl class="spec">
+        {
+          spec.map((item) => (
+            <div>
+              <dt>{item.dt}</dt>
+              <dd>{item.dd}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+    <div class="frame-shot">
+      <CropMarks arm="18px" inset="10px">
+        <div class="slab">
+          <Picture
+            src={image}
+            alt={alt}
+            formats={['avif', 'webp']}
+            fallbackFormat="webp"
+            widths={[480, 900, 1350, 1800]}
+            sizes="(min-width: 900px) 480px, 100vw"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+      </CropMarks>
+    </div>
+  </div>
+</section>
+
+<style>
+  .frame-grid {
+    display: grid;
+    gap: var(--s-6);
+    align-items: center;
+  }
+
+  .spec {
+    display: grid;
+    gap: var(--s-3);
+    margin: var(--s-6) 0 0;
+  }
+
+  .spec > div {
+    display: grid;
+    grid-template-columns: 15rem 1fr;
+    gap: var(--s-2) var(--s-4);
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--rule);
+  }
+
+  .spec dt {
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: var(--fs-sm);
+  }
+
+  .spec dd {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: var(--fs-md);
+  }
+
+  @media (min-width: 900px) {
+    .frame-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-7);
+    }
+  }
+
+  @media (max-width: 620px) {
+    .spec > div {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
