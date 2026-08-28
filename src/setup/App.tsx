@@ -10,6 +10,20 @@
  */
 import { useEffect, useState } from 'preact/hooks';
 import { BrandMark } from '../shared/BrandMark';
+import {
+  IconCamera,
+  IconCode,
+  IconDisplay,
+  IconEyeOff,
+  IconGift,
+  IconGlobe,
+  IconMic,
+  IconPage,
+  IconPencil,
+  IconPinArrow,
+  IconShield,
+  IconZoom,
+} from '../shared/icons';
 import { getSettings, setSettings } from '../shared/storage';
 import { applyTheme, watchSystemTheme } from '../shared/theme';
 import {
@@ -359,18 +373,7 @@ function PinHint() {
         <span class="pin-hint-text">{t('setupPinDone')}</span>
       ) : (
         <>
-          <svg
-            class="pin-arrow"
-            viewBox="0 0 60 60"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="3"
-            stroke-linecap="round"
-            aria-hidden="true"
-          >
-            <path d="M8 52 C 20 40, 30 24, 44 12" stroke-dasharray="1 7" />
-            <path d="M36 10l9-2 1 9" />
-          </svg>
+          <IconPinArrow class="pin-arrow" />
           <div class="pin-hint-text">
             <strong>{t('setupPinTitle')}</strong>
             <span>{t('setupPinSub')}</span>
@@ -395,96 +398,31 @@ function Feature(props: { icon: IconId; title: string; sub: string }) {
   );
 }
 
-// Same stroke idiom as the popup's ModeIcon.
+// Same icon set as the popup's ModeIcon.
 function SetupIcon({ id }: { id: IconId }) {
-  const common = {
-    width: 20,
-    height: 20,
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: 'currentColor',
-    'stroke-width': 2,
-    'stroke-linecap': 'round' as const,
-    'stroke-linejoin': 'round' as const,
-    'aria-hidden': true,
-  };
   switch (id) {
     case 'display':
-      return (
-        <svg {...common}>
-          <rect x="2" y="4" width="20" height="14" rx="2" />
-          <circle cx="12" cy="11" r="3" fill="currentColor" stroke="none" />
-          <path d="M8 22h8" />
-        </svg>
-      );
+      return <IconDisplay />;
     case 'camera':
-      return (
-        <svg {...common}>
-          <rect x="2" y="6" width="13" height="12" rx="2" />
-          <path d="M15 10l7-3v10l-7-3" />
-        </svg>
-      );
+      return <IconCamera />;
     case 'mic':
-      return (
-        <svg {...common}>
-          <rect x="9" y="2" width="6" height="12" rx="3" />
-          <path d="M5 10a7 7 0 0 0 14 0M12 17v5" />
-        </svg>
-      );
+      return <IconMic />;
     case 'globe':
-      return (
-        <svg {...common}>
-          <circle cx="12" cy="12" r="10" />
-          <path d="M2 12h20M12 2a15 15 0 0 1 0 20a15 15 0 0 1 0-20" />
-        </svg>
-      );
+      return <IconGlobe />;
     case 'code':
-      return (
-        <svg {...common}>
-          <path d="M8 6l-6 6 6 6M16 6l6 6-6 6" />
-        </svg>
-      );
+      return <IconCode />;
     case 'shield':
-      return (
-        <svg {...common}>
-          <path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z" />
-          <path d="M9 12l2 2 4-4" />
-        </svg>
-      );
+      return <IconShield />;
     case 'eye-off':
-      return (
-        <svg {...common}>
-          <path d="M3 3l18 18M10.5 5.2A10 10 0 0 1 23 12a15 15 0 0 1-3.6 4.3M6.6 6.6A15 15 0 0 0 1 12a10 10 0 0 0 12.3 5.4" />
-        </svg>
-      );
+      return <IconEyeOff />;
     case 'page':
-      return (
-        <svg {...common}>
-          <rect x="6" y="3" width="12" height="18" rx="2" />
-          <path d="M9 8h6M9 12h6M9 16h4" />
-        </svg>
-      );
+      return <IconPage />;
     case 'zoom':
-      return (
-        <svg {...common}>
-          <circle cx="11" cy="11" r="7" />
-          <path d="M21 21l-4.5-4.5M11 8v6M8 11h6" />
-        </svg>
-      );
+      return <IconZoom />;
     case 'pencil':
-      return (
-        <svg {...common}>
-          <path d="M17 3l4 4L8 20l-5 1 1-5z" />
-        </svg>
-      );
+      return <IconPencil />;
     case 'gift':
-      return (
-        <svg {...common}>
-          <rect x="3" y="8" width="18" height="4" rx="1" />
-          <path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
-          <path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5" />
-        </svg>
-      );
+      return <IconGift />;
   }
 }
 

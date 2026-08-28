@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { BrandMark } from '../shared/BrandMark';
+import { IconPause, IconPlay } from '../shared/icons';
 import { frameFromSettings, frameToSettings, type FrameOptions } from '../editor/frame';
 import { getSettings } from '../shared/storage';
 import { DEFAULT_SETTINGS } from '../shared/types';
@@ -340,7 +341,7 @@ function SessionView({
             title={sess.playing ? t('recorderPause') : t('recorderPlay')}
             onClick={sess.playing ? sess.pause : sess.play}
           >
-            {sess.playing ? <PauseMark /> : <PlayMark />}
+            {sess.playing ? <IconPause size={16} /> : <IconPlay size={16} />}
           </button>
           <span class="rec-time">
             {formatTimer(sess.playheadMs)} / {formatTimer(sess.totalMs)}
@@ -619,22 +620,5 @@ function Stage({
         />
       ) : null}
     </div>
-  );
-}
-
-function PlayMark() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M6 4l14 8-14 8V4z" fill="currentColor" />
-    </svg>
-  );
-}
-
-function PauseMark() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="5" y="4" width="5" height="16" fill="currentColor" />
-      <rect x="14" y="4" width="5" height="16" fill="currentColor" />
-    </svg>
   );
 }

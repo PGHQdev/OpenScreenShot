@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { IconChevronDown } from '../shared/icons';
 
 export interface ZoomMenuProps {
   zoomPct: number;
@@ -58,7 +59,7 @@ export function ZoomMenu(props: ZoomMenuProps) {
         <span class="zoom-readout" aria-live="polite">
           {props.zoomPct}%
         </span>
-        <Chevron />
+        <IconChevronDown size={12} />
       </button>
       {open ? (
         <div class="zoom-popover" role="menu">
@@ -81,23 +82,5 @@ export function ZoomMenu(props: ZoomMenuProps) {
         </div>
       ) : null}
     </div>
-  );
-}
-
-function Chevron() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M6 9l6 6 6-6" />
-    </svg>
   );
 }

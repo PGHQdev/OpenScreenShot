@@ -8,6 +8,26 @@ import { COLOR_PALETTE, colorName } from './palette';
 import { arrowNav, getFocusable, trapFocus } from './focus';
 import { pickImageFile } from './import-image';
 import { BrandMark } from '../shared/BrandMark';
+import {
+  IconAlert,
+  IconArrow,
+  IconBlur,
+  IconCrop,
+  IconEyedropper,
+  IconHighlight,
+  IconImage,
+  IconLayers,
+  IconLine,
+  IconPen,
+  IconRectangle,
+  IconRedo,
+  IconSelect,
+  IconSpotlight,
+  IconStep,
+  IconText,
+  IconTrash,
+  IconUndo,
+} from '../shared/icons';
 import { getSettings, setSettings } from '../shared/storage';
 import type { LastCapture } from '../shared/types';
 import { ZoomMenu } from './ZoomMenu';
@@ -210,7 +230,7 @@ export function App() {
               class="toolbar-count"
               title={`${ed.annotations.length} annotation${ed.annotations.length === 1 ? '' : 's'}`}
             >
-              <IconLayers />
+              <IconLayers size={14} />
               <span>{ed.annotations.length}</span>
             </div>
           ) : null}
@@ -288,7 +308,7 @@ export function App() {
             <div class="overlay-msg">
               <div class="empty">
                 <div class="empty-icon empty-icon-error" aria-hidden="true">
-                  <IconAlert />
+                  <IconAlert size={40} />
                 </div>
                 <h2>Something went wrong</h2>
                 <p>{ed.error}</p>
@@ -375,7 +395,7 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
                 aria-label="Pick a color from anywhere on screen"
                 onClick={pickFromScreen}
               >
-                <IconDropper />
+                <IconEyedropper size={11} />
               </button>
             ) : null}
           </div>
@@ -961,7 +981,7 @@ function EmptyState() {
     <div class="overlay-msg">
       <div class="empty">
         <div class="empty-icon" aria-hidden="true">
-          <IconImage />
+          <IconImage size={40} />
         </div>
         <h2>Nothing to edit yet</h2>
         <p>Capture a page with OpenScreenShot, and it opens here.</p>
@@ -978,221 +998,32 @@ function EmptyState() {
 }
 
 function ToolIcon({ id }: { id: Tool }) {
-  const common = {
-    width: 20,
-    height: 20,
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: 'currentColor',
-    'stroke-width': 2,
-    'stroke-linecap': 'round' as const,
-    'stroke-linejoin': 'round' as const,
-  };
   switch (id) {
     case 'select':
-      return (
-        <svg {...common}>
-          <path d="M4 4l6 16 2-7 7-2z" />
-        </svg>
-      );
+      return <IconSelect />;
     case 'rect':
-      return (
-        <svg {...common}>
-          <rect x="4" y="6" width="16" height="12" rx="2" />
-        </svg>
-      );
+      return <IconRectangle />;
     case 'arrow':
-      return (
-        <svg {...common}>
-          <path d="M4 20L20 4M20 4h-6M20 4v6" />
-        </svg>
-      );
+      return <IconArrow />;
     case 'line':
-      return (
-        <svg {...common}>
-          <path d="M4 20L20 4" />
-        </svg>
-      );
+      return <IconLine />;
     case 'pen':
-      return (
-        <svg {...common}>
-          <path d="M16.5 3.5l4 4L7 21H3v-4z" />
-        </svg>
-      );
+      return <IconPen />;
     case 'highlight':
-      return (
-        <svg {...common}>
-          <path d="m9 11-6 6v3h9l3-3" />
-          <path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4l8 8Z" />
-        </svg>
-      );
+      return <IconHighlight />;
     case 'step':
-      return (
-        <svg {...common}>
-          <circle cx="12" cy="12" r="9" />
-          <path d="M10.5 9.6L12.2 8.2v7.6" />
-        </svg>
-      );
+      return <IconStep />;
     case 'text':
-      return (
-        <svg {...common}>
-          <path d="M5 5h14M12 5v14M9 19h6" />
-        </svg>
-      );
+      return <IconText />;
     case 'blur':
-      return (
-        <svg {...common}>
-          <circle cx="12" cy="12" r="7" stroke-dasharray="2 3" />
-        </svg>
-      );
+      return <IconBlur />;
     case 'spotlight':
-      return (
-        <svg {...common}>
-          <rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="3 3" />
-          <circle cx="12" cy="12" r="5" />
-        </svg>
-      );
+      return <IconSpotlight />;
     case 'eyedropper':
-      return (
-        <svg {...common}>
-          <path d="M18 3.5a2.1 2.1 0 0 1 3 3L15 12.5l-3-3z" />
-          <path d="M12 9.5 4.5 17v2.5H7L14.5 12" />
-        </svg>
-      );
+      return <IconEyedropper />;
     case 'crop':
-      return (
-        <svg {...common}>
-          <path d="M6 2v14h14M2 6h14v14" />
-        </svg>
-      );
+      return <IconCrop />;
   }
-}
-
-function IconImage() {
-  return (
-    <svg
-      width="40"
-      height="40"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <circle cx="8.5" cy="8.5" r="1.5" />
-      <path d="M21 15l-5-5L5 21" />
-    </svg>
-  );
-}
-
-function IconAlert() {
-  return (
-    <svg
-      width="40"
-      height="40"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-      <path d="M12 9v4M12 17h.01" />
-    </svg>
-  );
-}
-
-function IconUndo() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M9 14L4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3" />
-    </svg>
-  );
-}
-
-function IconRedo() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M15 14l5-5-5-5M20 9H9a5 5 0 0 0 0 10h3" />
-    </svg>
-  );
-}
-
-function IconTrash() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
-    </svg>
-  );
-}
-
-function IconLayers() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M12 2l9 5-9 5-9-5 9-5z" />
-      <path d="M3 12l9 5 9-5" />
-      <path d="M3 17l9 5 9-5" />
-    </svg>
-  );
-}
-
-function IconDropper() {
-  return (
-    <svg
-      width="11"
-      height="11"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M18 3.5a2.1 2.1 0 0 1 3 3L15 12.5l-3-3z" />
-      <path d="M12 9.5 4.5 17v2.5H7L14.5 12" />
-    </svg>
-  );
 }
 
 function labelForSource(mode: LastCapture['mode']): string {

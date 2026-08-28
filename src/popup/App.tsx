@@ -10,6 +10,16 @@ import { DEFAULT_SETTINGS } from '../shared/types';
 import { getLastRegion, getSettings, hasLastCapture, setSettings } from '../shared/storage';
 import { onPopupMessage, sendToBackground } from '../shared/messaging';
 import { BrandMark } from '../shared/BrandMark';
+import {
+  IconBack,
+  IconCoffee,
+  IconGear,
+  IconGift,
+  IconPage,
+  IconRecordDot,
+  IconRegion,
+  IconVisible,
+} from '../shared/icons';
 import { resolveModeKeys } from '../shared/shortcuts';
 import {
   CAPTURE_ACTIONS,
@@ -370,7 +380,7 @@ export function App() {
               aria-label={t('backAria')}
               onClick={() => setShowSettings(false)}
             >
-              <BackMark />
+              <IconBack size={16} />
             </button>
             <span class="brand-name">{t('settingsTitle')}</span>
           </>
@@ -388,7 +398,7 @@ export function App() {
               aria-label={t('settingsTitle')}
               onClick={() => setShowSettings(true)}
             >
-              <GearMark />
+              <IconGear size={16} />
             </button>
           </>
         )}
@@ -497,7 +507,7 @@ export function App() {
               onClick={onRecordClick}
             >
               <span class="mode-icon" aria-hidden="true">
-                <RecordIcon />
+                <IconRecordDot size={20} />
               </span>
               <span class="mode-text">
                 <span class="mode-title">{t(continueSessionId ? 'recContinue' : 'recTitle')}</span>
@@ -639,7 +649,7 @@ export function App() {
               {t('footerShortcuts')}
             </button>
             <button class="link-btn kofi-link" onClick={openKofi} title={t('supportKofiTitle')}>
-              <CoffeeMark />
+              <IconCoffee size={13} />
               {t('footerKofi')}
             </button>
             <button
@@ -648,7 +658,7 @@ export function App() {
               title={t('coolStuffTitle')}
               aria-label={t('footerCoolStuff')}
             >
-              <GiftMark />
+              <IconGift size={13} />
             </button>
           </div>
         </>
@@ -851,123 +861,14 @@ function Welcome({ onDone }: { onDone: () => void }) {
 }
 
 function ModeIcon({ id }: { id: CaptureMode }) {
-  const common = {
-    width: 20,
-    height: 20,
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: 'currentColor',
-    'stroke-width': 2,
-    'stroke-linecap': 'round' as const,
-    'stroke-linejoin': 'round' as const,
-  };
   switch (id) {
     case 'full-page':
-      return (
-        <svg {...common}>
-          <rect x="6" y="3" width="12" height="18" rx="2" />
-          <path d="M9 8h6M9 12h6M9 16h4" />
-        </svg>
-      );
+      return <IconPage />;
     case 'visible':
-      return (
-        <svg {...common}>
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-          <circle cx="12" cy="12" r="3" />
-        </svg>
-      );
+      return <IconVisible />;
     case 'region':
-      return (
-        <svg {...common}>
-          <rect x="4" y="5" width="16" height="14" rx="2" stroke-dasharray="4 3" />
-        </svg>
-      );
+      return <IconRegion />;
   }
-}
-
-function RecordIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="12" r="8" fill="currentColor" />
-    </svg>
-  );
-}
-
-function GearMark() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
-  );
-}
-
-function CoffeeMark() {
-  return (
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M17 8h1a4 4 0 1 1 0 8h-1" />
-      <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" />
-      <line x1="6" x2="6" y1="2" y2="4" />
-      <line x1="10" x2="10" y1="2" y2="4" />
-      <line x1="14" x2="14" y1="2" y2="4" />
-    </svg>
-  );
-}
-
-function GiftMark() {
-  return (
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
-    >
-      <rect x="3" y="8" width="18" height="4" rx="1" />
-      <path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
-      <path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5" />
-    </svg>
-  );
-}
-
-function BackMark() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d="M19 12H5M12 19l-7-7 7-7" />
-    </svg>
-  );
 }
 
 /** Sample resolution of the template, shown live under the settings input. */
