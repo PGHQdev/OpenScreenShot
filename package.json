@@ -12,6 +12,7 @@
   },
   "scripts": {
     "icons": "node scripts/generate-icons.mjs",
+    "tokens": "node scripts/gen-design-tokens.mjs",
     "dev": "vite",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
@@ -19,7 +20,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build": "tsc --noEmit && vite build",
+    "build": "npm run tokens && tsc --noEmit && vite build",
     "package": "npm run build && rm -f openscreenshot-v$npm_package_version.zip && cd dist && zip -r -X ../openscreenshot-v$npm_package_version.zip .",
     "site:build": "astro build --root site",
     "site:dev": "astro dev --root site",

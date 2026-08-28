@@ -1,81 +1,70 @@
 /**
- * Design tokens for OpenScreenShot — the single source of truth for color,
- * typography, spacing, radii, and shadows. Imported by all UI surfaces
- * (popup, editor, settings, onboarding) and also by canvas rendering that
- * needs accent colors programmatically.
+ * Design tokens for canvas code, GENERATED from src/shared/tokens.css.
  *
- * The CSS custom-property equivalents live in each surface's stylesheet
- * (see popup.css). Keep the two in sync.
+ * Do not edit by hand: run `npm run tokens` (`npm run build` runs it too).
+ * tests/unit/design-tokens.test.ts fails when this file drifts from the CSS.
+ *
+ * Stylesheets read the custom properties directly; only code that paints to a
+ * canvas — where no custom property resolves — imports from here.
  */
 
-export type Theme = 'light' | 'dark';
+/** Tokens that do not change with the theme (the `@tokens base` block). */
+export const tokens = {
+  s1: '4px',
+  s2: '8px',
+  s3: '12px',
+  s4: '16px',
+  s5: '24px',
+  s6: '32px',
+  rSm: '6px',
+  rMd: '10px',
+  rLg: '16px',
+  rFull: '9999px',
+  shSm: '0 1px 3px rgba(0, 0, 0, 0.08)',
+  shMd: '0 4px 12px rgba(0, 0, 0, 0.12)',
+  shLg: '0 8px 30px rgba(0, 0, 0, 0.16)',
+  font: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif",
+  fontMono: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace",
+} as const;
 
-export const colors = {
+/** Tokens that change with the theme (the `@tokens light`/`dark` blocks). */
+export const theme = {
   light: {
-    surfacePrimary: '#FFFFFF',
-    surfaceSecondary: '#F5F5F7',
-    surfaceTertiary: '#EBEBED',
-    textPrimary: '#1D1D1F',
-    textSecondary: '#6E6E73',
-    textTertiary: '#AEAEB2',
-    accentPrimary: '#E8503A',
-    accentHover: '#EE6450',
-    accentPressed: '#D43F29',
-    accentSubtle: '#FDECE9',
-    borderDefault: '#D2D2D7',
-    borderFocus: '#E8503A',
-    danger: '#B45309',
-    success: '#34C759',
-    warning: '#FF9500',
-    hoverOverlay: 'rgba(0,0,0,0.05)',
+    surface1: '#ffffff',
+    surface2: '#f5f5f7',
+    surface3: '#ebebed',
+    stageBg: '#e4e4e9',
+    text1: '#1d1d1f',
+    text2: '#6e6e73',
+    text3: '#aeaeb2',
+    accent: '#e8503a',
+    accentHover: '#ee6450',
+    accentPressed: '#d43f29',
+    accentSubtle: '#fdece9',
+    border: '#d2d2d7',
+    borderFocus: '#e8503a',
+    danger: '#b45309',
+    success: '#34c759',
+    warning: '#ff9500',
+    hoverOverlay: 'rgba(0, 0, 0, 0.05)',
   },
   dark: {
-    surfacePrimary: '#1C1C1E',
-    surfaceSecondary: '#2C2C2E',
-    surfaceTertiary: '#3A3A3C',
-    textPrimary: '#F5F5F7',
-    textSecondary: '#98989D',
-    textTertiary: '#636366',
-    accentPrimary: '#F26B57',
-    accentHover: '#F58170',
-    accentPressed: '#E8503A',
-    accentSubtle: '#46201A',
-    borderDefault: '#48484A',
-    borderFocus: '#F26B57',
-    danger: '#F5A623',
-    success: '#30D158',
-    warning: '#FF9F0A',
-    hoverOverlay: 'rgba(255,255,255,0.09)',
+    surface1: '#1c1c1e',
+    surface2: '#2c2c2e',
+    surface3: '#3a3a3c',
+    stageBg: '#161618',
+    text1: '#f5f5f7',
+    text2: '#98989d',
+    text3: '#636366',
+    accent: '#f26b57',
+    accentHover: '#f58170',
+    accentPressed: '#e8503a',
+    accentSubtle: '#46201a',
+    border: '#48484a',
+    borderFocus: '#f26b57',
+    danger: '#f5a623',
+    success: '#30d158',
+    warning: '#ff9f0a',
+    hoverOverlay: 'rgba(255, 255, 255, 0.09)',
   },
-} as const;
-
-export const spacing = {
-  1: '4px',
-  2: '8px',
-  3: '12px',
-  4: '16px',
-  5: '24px',
-  6: '32px',
-  8: '48px',
-} as const;
-
-export const radius = {
-  sm: '6px',
-  md: '10px',
-  lg: '16px',
-  full: '9999px',
-} as const;
-
-export const shadow = {
-  sm: '0 1px 3px rgba(0,0,0,0.08)',
-  md: '0 4px 12px rgba(0,0,0,0.12)',
-  lg: '0 8px 30px rgba(0,0,0,0.16)',
-  xl: '0 20px 60px rgba(0,0,0,0.24)',
-} as const;
-
-export const typography = {
-  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif",
-  fontFamilyMono: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace",
-  size: { xs: '11px', sm: '13px', base: '14px', md: '16px', lg: '20px', xl: '28px' },
-  weight: { regular: 400, medium: 500, semibold: 600, bold: 700 },
 } as const;

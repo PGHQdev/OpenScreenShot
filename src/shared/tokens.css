@@ -1,11 +1,18 @@
 /*
  * OpenScreenShot design tokens (CSS custom properties).
- * Single source of truth for the popup and editor surfaces; mirrors
- * src/shared/design-tokens.ts. Defines spacing, radius, shadows, typography,
- * and light/dark themes. Apply a theme by setting data-theme="light"|"dark"
- * on <html> (the editor/popup do this from settings on load).
+ *
+ * This file is the single source of truth. src/shared/design-tokens.ts is
+ * GENERATED from it by scripts/gen-design-tokens.mjs (`npm run tokens`, which
+ * `npm run build` also runs), so canvas code paints with the same values the
+ * stylesheets use. tests/unit/design-tokens.test.ts fails when the two drift.
+ *
+ * Every token lives inside a block marked `@tokens base|light|dark`. The
+ * generator refuses to run on a custom property declared anywhere else, and on
+ * a token declared in one theme but not the other. Apply a theme by setting
+ * data-theme="light"|"dark" on <html>.
  */
 
+/* @tokens base */
 :root {
   /* spacing */
   --s-1: 4px;
@@ -31,7 +38,7 @@
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-/* ---- Light theme (default) ---- */
+/* @tokens light */
 :root,
 :root[data-theme='light'] {
   --surface-1: #ffffff;
@@ -54,7 +61,7 @@
   --hover-overlay: rgba(0, 0, 0, 0.05);
 }
 
-/* ---- Dark theme ---- */
+/* @tokens dark */
 :root[data-theme='dark'] {
   --surface-1: #1c1c1e;
   --surface-2: #2c2c2e;

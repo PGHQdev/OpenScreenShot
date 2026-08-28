@@ -13,7 +13,10 @@ Thanks for your interest in contributing! 🎉 OpenScreenShot is an open-source 
 ## Development workflow
 
 - **TypeScript strict mode** is on. Please keep types clean — no `any` unless justified in a comment.
-- Use the shared design tokens in `src/shared/design-tokens.ts` for colors, spacing, and typography. Don't hard-code hex values in components.
+- Design values live in `src/shared/tokens.css`, the single source. Stylesheets read the custom
+  properties; canvas code imports `src/shared/design-tokens.ts`, which `npm run tokens` generates
+  from that CSS (`npm run build` runs it too). Edit the CSS, regenerate, and commit both — a test
+  fails when the generated module is stale. Don't hard-code hex values.
 - Run the checks locally before pushing:
 
   ```bash
