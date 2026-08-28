@@ -9,7 +9,9 @@ import { join } from 'node:path';
  * points at (the editor's export-dialog Quality slider is the one control
  * that already does this). Task 18 fixed eleven of the twelve range inputs in
  * the extension that had neither; this walks the source tree and fails if a
- * range input regresses back to having no name.
+ * range input regresses back to having no name — including a name attribute
+ * that is present but empty, `undefined`, or `null`, which reads to a screen
+ * reader exactly like no attribute at all.
  */
 function tsxFiles(dir: string): string[] {
   const out: string[] = [];
@@ -69,6 +71,58 @@ function namedByLabelFor(tag: string, src: string): boolean {
   return forAttr.test(src);
 }
 
+/**
+ * Pulls the raw source of one attribute's value out of a tag: the quoted
+ * string for `attr="..."`, or the brace-balanced expression text for
+ * `attr={...}`. Braces inside the expression (a nested object, a template
+ * literal holding `{`) are tracked the same way extractInputTags tracks them
+ * for the whole tag. Returns undefined when the attribute is not present.
+ */
+function extractAttrValue(tag: string, attrName: string): string | undefined {
+  const m = new RegExp(`\\b${attrName}\\s*=\\s*`).exec(tag);
+  if (!m) return undefined;
+  const start = m.index + m[0].length;
+  const open = tag[start];
+  if (open === '"' || open === "'") {
+    const end = tag.indexOf(open, start + 1);
+    return end === -1 ? undefined : tag.slice(start + 1, end);
+  }
+  if (open === '{') {
+    let depth = 0;
+    let quote: string | null = null;
+    for (let j = start; j < tag.length; j++) {
+      const c = tag[j];
+      if (quote) {
+        if (c === quote && tag[j - 1] !== '\\') quote = null;
+      } else if (c === '"' || c === "'" || c === '`') {
+        quote = c;
+      } else if (c === '{') {
+        depth++;
+      } else if (c === '}') {
+        depth--;
+        if (depth === 0) return tag.slice(start + 1, j);
+      }
+    }
+    return undefined;
+  }
+  return undefined;
+}
+
+// Expression bodies that are syntactically present but name nothing: an
+// explicit undefined/null, or an empty string in any of JS's quote forms.
+// This is a floor, not a static evaluator — a `t('key')` call or a ternary is
+// accepted on faith, the same way the rest of this guard can't run the app to
+// find out what a dynamic name actually renders to.
+const EMPTY_NAME_EXPRESSIONS = new Set(['undefined', 'null', "''", '""', '``']);
+
+/** True when `attrName` is present on the tag with a value that isn't empty/undefined/null. */
+function hasNonEmptyAttr(tag: string, attrName: string): boolean {
+  const raw = extractAttrValue(tag, attrName);
+  if (raw === undefined) return false;
+  const v = raw.trim();
+  return v !== '' && !EMPTY_NAME_EXPRESSIONS.has(v);
+}
+
 describe('every <input type="range"> has an accessible name', () => {
   const files = tsxFiles(join(process.cwd(), 'src'));
 
@@ -89,7 +143,10 @@ describe('every <input type="range"> has an accessible name', () => {
       const src = readFileSync(file, 'utf8');
       const rangeInputs = extractInputTags(src).filter((t) => /type="range"/.test(t));
       const unnamed = rangeInputs.filter(
-        (tag) => !/\baria-label(?:ledby)?=/.test(tag) && !namedByLabelFor(tag, src),
+        (tag) =>
+          !hasNonEmptyAttr(tag, 'aria-label') &&
+          !hasNonEmptyAttr(tag, 'aria-labelledby') &&
+          !namedByLabelFor(tag, src),
       );
       expect(unnamed, unnamed.join('\n---\n')).toEqual([]);
     });
