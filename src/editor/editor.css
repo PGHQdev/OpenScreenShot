@@ -68,6 +68,10 @@ body {
   justify-content: center;
   background: var(--surface-2);
   color: var(--text-1);
+  /* Not a colour choice — a plain icon button that shares .swatch for
+     sizing — so it opts back into the system palette ui.css's .swatch
+     rule turns off for every other swatch variant. */
+  forced-color-adjust: auto;
 }
 .widths {
   display: flex;
@@ -856,6 +860,52 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .spinner {
     animation-duration: 1.4s;
+  }
+  .width-btn,
+  .zoom-trigger,
+  .text-btn,
+  .btn-primary,
+  .tool-btn,
+  .format-card,
+  .segmented-btn {
+    transition: none;
+  }
+}
+
+/*
+ * Active tool, selected width/segment/format and the beautify toggle carry
+ * their state entirely as background/text/border colour today, which forced
+ * colors mode is free to flatten to the same button face as every other
+ * member of the group (it maps arbitrary author colours into a small system
+ * palette by element role, not by hue, so two differently-coloured buttons
+ * of the same role can land on the same system colour). Highlight/
+ * HighlightText is the pair Chromium reserves for "this one is chosen," so
+ * declaring it explicitly is guaranteed to differ from the ButtonFace/
+ * ButtonText an unselected sibling renders with.
+ */
+@media (forced-colors: active) {
+  .tool-btn.is-active,
+  .width-btn[aria-pressed='true'],
+  .segmented-btn.is-selected,
+  .format-card.is-selected,
+  .btn-secondary.is-active {
+    background-color: Highlight;
+    border-color: Highlight;
+    color: HighlightText;
+  }
+
+  /* .format-hint sets its own colour rather than inheriting .format-card's,
+     so it needs its own override to stay legible on the Highlight fill
+     above — .format-name has no colour of its own and inherits correctly. */
+  .format-card.is-selected .format-hint {
+    color: HighlightText;
+  }
+
+  /* .width-bar paints via background, not the inherited color property, so
+     the selected button's Highlight fill above does not reach it on its
+     own. */
+  .width-btn[aria-pressed='true'] .width-bar {
+    background-color: HighlightText;
   }
 }
 

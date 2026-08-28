@@ -771,3 +771,21 @@ body {
     animation: none;
   }
 }
+
+/*
+ * Recording-source chip and settings segment both carry their pressed state
+ * as background/border/text colour only. Forced colors mode maps arbitrary
+ * author colour to a small system palette by element role, so a pressed
+ * chip/segment can end up sharing its unpressed sibling's system colour
+ * unless told otherwise. Highlight/HighlightText is the pair Chromium
+ * reserves for "this one is chosen," guaranteed to differ from the
+ * ButtonFace/ButtonText an unpressed sibling renders with.
+ */
+@media (forced-colors: active) {
+  .chip-toggle[aria-pressed='true'],
+  .seg-btn[aria-pressed='true'] {
+    background-color: Highlight;
+    border-color: Highlight;
+    color: HighlightText;
+  }
+}

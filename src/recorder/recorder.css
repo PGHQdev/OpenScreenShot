@@ -838,3 +838,53 @@ body {
     transition: none;
   }
 }
+
+/*
+ * Three colour-only states in this file:
+ *   - .rec-tl-zoom[data-selected]'s ring is a box-shadow, which forced
+ *     colors mode does not paint at all (Chromium drops it outright); an
+ *     outline stands in, at a different offset than the chip's own
+ *     :focus-visible outline below so a chip that is both still reads as
+ *     two rings, the same inner/outer split the box-shadow moat drew.
+ *   - .rec-seg-btn's pressed state and .rec-bubble-corner's selected state
+ *     are background/border/text colour only; forced colors mode buckets
+ *     arbitrary author colour by element role, so a pressed/selected button
+ *     can land on the same system colour as its unpressed sibling unless
+ *     told otherwise. Highlight/HighlightText is the pair Chromium reserves
+ *     for "this one is chosen."
+ */
+@media (forced-colors: active) {
+  .rec-tl-zoom[data-selected='true'] {
+    outline: 2px solid Highlight;
+    outline-offset: 1px;
+  }
+
+  /*
+   * Declared after [data-selected] above, same reason the ordinary-mode
+   * box-shadow/outline pair is ordered that way (task-15-report.md): both
+   * rules target the same `outline` property here (forced colors gives us
+   * no second paintable layer to keep them simultaneous), so a chip that is
+   * both selected and focused needs the focus ring to win the cascade
+   * rather than go silent.
+   */
+  .rec-tl-zoom:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 3px;
+  }
+
+  .rec-seg-btn[aria-pressed='true'] {
+    background-color: Highlight;
+    color: HighlightText;
+  }
+
+  .rec-bubble-corner[aria-pressed='true'] {
+    background-color: Highlight;
+    border-color: Highlight;
+  }
+
+  /* The corner dot paints via background, not the inherited color property,
+     so the button's Highlight fill above does not reach it on its own. */
+  .rec-bubble-corner[aria-pressed='true']::after {
+    background: HighlightText;
+  }
+}
