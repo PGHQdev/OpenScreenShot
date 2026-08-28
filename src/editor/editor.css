@@ -685,7 +685,9 @@ body {
   justify-content: center;
   gap: var(--s-2);
   pointer-events: none;
-  color: var(--text-2);
+  /* --text-2 on --stage-bg is 4.00:1 in light, under the 4.5:1 body-text
+     floor (see tokens.css); --text-1 clears it in both themes. */
+  color: var(--text-1);
   background: var(--stage-bg);
 }
 
@@ -713,7 +715,8 @@ body {
 
 .empty p {
   margin: 0;
-  color: var(--text-2);
+  /* Same --stage-bg exception as .overlay-msg: --text-2 misses 4.5:1 here. */
+  color: var(--text-1);
   line-height: 1.5;
 }
 
@@ -860,7 +863,9 @@ body {
 }
 
 .stage[data-dropping='true'] {
-  outline: 2px dashed var(--accent);
+  /* --accent is 2.94:1 on --stage-bg, under the 3:1 UI-boundary floor;
+     --accent-ink clears it (4.44:1) without changing what the mark means. */
+  outline: 2px dashed var(--accent-ink);
   outline-offset: -8px;
 }
 
