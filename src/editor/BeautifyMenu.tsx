@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { BACKGROUND_PRESETS, frameMetrics, type FrameBackground, type FrameOptions } from './frame';
 import { tokens } from '../shared/design-tokens';
+import { getFocusable } from './focus';
 
 export interface BeautifyMenuProps {
   frame: FrameOptions;
@@ -16,24 +17,52 @@ export interface BeautifyMenuProps {
 export function BeautifyMenu(props: BeautifyMenuProps) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
+  // Non-modal by design: the panel's sliders preview live onto the canvas
+  // behind it, so nothing here traps focus or hides the canvas from
+  // assistive tech (no aria-modal, no trapFocus). What it still owes a
+  // keyboard user: land focus inside on open, close if focus leaves the
+  // panel (Tab off the last control moves out naturally — that's correct
+  // non-modal behaviour, this just notices and closes), and return focus to
+  // the trigger on Escape specifically, since that's the one close path with
+  // no natural focus target of its own.
   useEffect(() => {
     if (!open) return;
+    const popover = popoverRef.current;
+    if (popover) getFocusable(popover)[0]?.focus();
+
     const onDown = (e: MouseEvent) => {
       if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onFocusOut = (e: FocusEvent) => {
+      const next = e.relatedTarget as Node | null;
+      // Focus landing on the trigger itself means this blur is the lead-in
+      // to a click on it — its own onClick toggle already owns that case.
+      // Closing here too would race that toggle: a functional setOpen
+      // update queued from this handler, then another from onClick in the
+      // same tick, compose into "closed, then immediately reopened".
+      if (next === triggerRef.current) return;
+      if (!next || !popover?.contains(next)) setOpen(false);
     };
     // Capture phase, for the same reason as ZoomMenu: the popover is not inside
     // a modal subtree, so the editor's window-level shortcut listeners would
     // otherwise see keys typed into this panel.
     const onKey = (e: KeyboardEvent) => {
       e.stopPropagation();
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
     };
     window.addEventListener('mousedown', onDown);
     window.addEventListener('keydown', onKey, true);
+    popover?.addEventListener('focusout', onFocusOut);
     return () => {
       window.removeEventListener('mousedown', onDown);
       window.removeEventListener('keydown', onKey, true);
+      popover?.removeEventListener('focusout', onFocusOut);
     };
   }, [open]);
 
@@ -50,6 +79,7 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
   return (
     <div class="beautify-menu" ref={wrapRef}>
       <button
+        ref={triggerRef}
         class={`btn-secondary${f.enabled ? ' is-active' : ''}`}
         disabled={props.disabled}
         aria-haspopup="dialog"
@@ -60,7 +90,7 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
         Beautify
       </button>
       {open ? (
-        <div class="beautify-popover" role="dialog" aria-label="Beautify">
+        <div class="beautify-popover" role="dialog" aria-label="Beautify" ref={popoverRef}>
           <label class="beautify-toggle">
             <input
               type="checkbox"
