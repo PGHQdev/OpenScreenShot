@@ -664,14 +664,14 @@ body {
   bottom: 0;
   min-width: 6px;
   border-radius: var(--r-sm);
-  background: color-mix(in srgb, var(--accent) 70%, transparent);
+  background: var(--accent-ink);
   cursor: grab;
   touch-action: none;
   overflow: hidden;
 }
 
 .rec-tl-zoom[data-selected='true'] {
-  background: var(--accent);
+  background: var(--accent-ink-pressed);
   box-shadow: 0 0 0 2px var(--border-focus);
 }
 
@@ -680,7 +680,7 @@ body {
   padding: 4px 10px;
   font-size: var(--fs-xs);
   font-weight: 600;
-  color: #fff;
+  color: var(--on-accent);
   white-space: nowrap;
   pointer-events: none;
 }
