@@ -1,11 +1,12 @@
 # OpenScreenShot
 
-Open-source full page screenshot tool for Chrome — entire-scrolling-page, region, and visible-area capture with annotation and PDF export. 100% local and private: works fully offline, screenshots never leave the device.
+Free, open-source full page screenshot tool for Chrome — full-page (scroll-and-stitch), region, and visible-area capture with annotation and PDF export, plus tab recording with a timeline editor and WebM export. 100% local and private: works fully offline, screenshots and recordings never leave the device.
 
 - Chrome Web Store: https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp
 - Source: https://github.com/pghqdev/OpenScreenShot
 - Docs: https://openscreenshot.app/docs/
 - Support: https://openscreenshot.app/support/
+- Privacy: https://openscreenshot.app/privacy/
 - License: MIT
 
 ## Features
@@ -13,7 +14,7 @@ Open-source full page screenshot tool for Chrome — entire-scrolling-page, regi
 - Full Page — scroll-and-stitch capture of the entire page
 - Visible Area — capture exactly what's on screen
 - Selected Region — click & drag to grab an area
-- Capture from the popup, a keyboard shortcut, or the page's right-click menu, with an optional 3/5/10s delay and a repeat-last-region shortcut
+- Capture from the popup, a keyboard shortcut, or the page's right-click menu, with an optional 3/5/10s delay and a repeat-last-region item that re-runs the previous selection rectangle
 - Quick capture — send a shot straight to the clipboard or to disk, skipping the editor
 - Annotation editor — rectangle, arrow, line, pen, highlighter, text, numbered step badges, blur (soft, mosaic, or solid redaction), spotlight, eyedropper, crop; select, move, and resize any annotation, with undo/redo
 - Beautify — padding, rounded corners, drop shadow, and a gradient, solid, or transparent background
