@@ -15,6 +15,7 @@ export default tseslint.config(
       sourceType: 'module',
       globals: {
         chrome: 'readonly',
+        HTMLRewriter: 'readonly', // Cloudflare Workers runtime global, used by site-worker.js
         ...globals.browser,
         ...globals.node,
       },

@@ -37,19 +37,26 @@ async function proxyKofiAsset(pathname) {
   });
 }
 
-// Live user and star counts for the homepage proof line. Read from shields.io —
-// the same source as the README badges — and cached at the edge, so the page
-// itself never talks to a third party.
+// Live user and star counts for the homepage proof strip. Read from
+// shields.io — the same source as the README badges — and cached at the
+// edge, so the page itself never talks to a third party. Injected into the
+// HTML server-side with HTMLRewriter; the markup's own 985 / 65 numbers are
+// what ships if shields.io doesn't answer in time.
 const STAT_SOURCES = {
   users: 'https://img.shields.io/chrome-web-store/users/hdabbojjccojlapnfjpdppcpfcnhgmdp.json',
   stars: 'https://img.shields.io/github/stars/pghqdev/OpenScreenShot.json',
-  version: 'https://img.shields.io/chrome-web-store/v/hdabbojjccojlapnfjpdppcpfcnhgmdp.json',
 };
+const STAT_SHAPE = /^\d[\d,.kKmM+]*$/;
 const STATS_TTL = 21600;
+const STATS_TIMEOUT_MS = 1500;
 
 async function shieldValue(url, shape) {
+  const timeout = AbortSignal.timeout(STATS_TIMEOUT_MS);
   try {
-    const upstream = await fetch(url, { cf: { cacheEverything: true, cacheTtl: STATS_TTL } });
+    const upstream = await fetch(url, {
+      cf: { cacheEverything: true, cacheTtl: STATS_TTL },
+      signal: timeout,
+    });
     if (!upstream.ok) return null;
     const badge = await upstream.json();
     return shape.test(badge.value ?? '') ? badge.value : null;
@@ -58,33 +65,42 @@ async function shieldValue(url, shape) {
   }
 }
 
-async function siteStats() {
-  const [users, stars, version] = await Promise.all([
-    shieldValue(STAT_SOURCES.users, /^\d[\d,.kKmM+]*$/),
-    shieldValue(STAT_SOURCES.stars, /^\d[\d,.kKmM+]*$/),
-    shieldValue(STAT_SOURCES.version, /^v?\d+(\.\d+)*$/),
+class StatRewriter {
+  constructor(value) {
+    this.value = value;
+  }
+  element(el) {
+    if (this.value !== null) el.setInnerContent(this.value);
+  }
+}
+
+async function withInjectedStats(response) {
+  const [users, stars] = await Promise.all([
+    shieldValue(STAT_SOURCES.users, STAT_SHAPE),
+    shieldValue(STAT_SOURCES.stars, STAT_SHAPE),
   ]);
-  return new Response(JSON.stringify({ users, stars, version }), {
-    headers: {
-      'content-type': 'application/json; charset=utf-8',
-      'cache-control': `public, max-age=${STATS_TTL}`,
-    },
-  });
+  if (users === null && stars === null) return response;
+  return new HTMLRewriter()
+    .on('[data-stat="users"]', new StatRewriter(users))
+    .on('[data-stat="stars"]', new StatRewriter(stars))
+    .transform(response);
 }
 
 async function route(url, request, env) {
   const accept = request.headers.get('Accept') ?? '';
 
-  if (url.pathname === '/api/stats.json') return siteStats();
   if (url.pathname === '/kofi-widget.js') return proxyKofiWidget();
   if (url.pathname.startsWith('/kofi-cdn/')) return proxyKofiAsset(url.pathname);
 
-  if (url.pathname === '/' && accept.includes('text/markdown')) {
-    const md = await env.ASSETS.fetch(new URL('/index.md', url));
-    return new Response(md.body, {
-      status: md.status,
-      headers: { 'content-type': 'text/markdown; charset=utf-8' },
-    });
+  if (url.pathname === '/') {
+    if (accept.includes('text/markdown')) {
+      const md = await env.ASSETS.fetch(new URL('/index.md', url));
+      return new Response(md.body, {
+        status: md.status,
+        headers: { 'content-type': 'text/markdown; charset=utf-8' },
+      });
+    }
+    return withInjectedStats(await env.ASSETS.fetch(request));
   }
 
   return env.ASSETS.fetch(request);
