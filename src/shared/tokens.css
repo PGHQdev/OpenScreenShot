@@ -19,6 +19,21 @@
  * here (the CSS keyword, spelled out) and cubic-bezier(0.16, 1, 0.3, 1) there.
  *
  * Colour contract.
+ *   --text-2      secondary body text. Clears 4.5:1 on --surface-1,
+ *                 --surface-2 and --surface-3. It does NOT clear it on
+ *                 --stage-bg (4.37:1 in light), so text on the stage takes
+ *                 --text-1 — same exception --accent-ink documents below.
+ *   --text-3      de-emphasised text (status hints, kbd labels, section
+ *                 headings). Clears 4.5:1 on --surface-1 only; nothing paints
+ *                 it on --surface-2, --surface-3 or --stage-bg (those call
+ *                 sites take --text-2 or --text-1 instead — see
+ *                 task-45-report.md for which). Raising it to the 4.5:1 floor
+ *                 (from 2.21:1/2.84:1) compresses its self-contrast against
+ *                 --text-2 from ~2.2:1 to ~1.2–1.5:1: the two are still
+ *                 ordered correctly (text-1 darkest/lightest, text-3
+ *                 palest/most-muted) but a reader leans on each call site's
+ *                 own size/weight/case more than colour now to tell the two
+ *                 apart. task-45-report.md has the full before/after matrix.
  *   --accent      non-text marks and large display type only (>= 3:1).
  *   --accent-ink  links, filled-control grounds and body-size accent text.
  *                 Clears 4.5:1 on --surface-1, --surface-2, --surface-3 and
@@ -172,9 +187,9 @@
   --surface-3: #ebebed;
   --stage-bg: #e4e4e9;
   --text-1: #1d1d1f;
-  --text-2: #6e6e73;
+  --text-2: #68686d;
   --text-2-strong: var(--text-1);
-  --text-3: #aeaeb2;
+  --text-3: #757579;
   --accent: #e8503a;
   --accent-ink: #bd3722;
   --accent-ink-hover: #c73d26;
@@ -182,7 +197,7 @@
   --accent-subtle: #fdece9;
   --on-accent: #ffffff;
   --border: #818187;
-  --border-strong: #6e6e73;
+  --border-strong: #68686d;
   --rule: #d2d2d7;
   --border-focus: #e8503a;
   --ring-selected: #e8503a;
@@ -200,9 +215,9 @@
   --surface-3: #3a3a3c;
   --stage-bg: #161618;
   --text-1: #f5f5f7;
-  --text-2: #98989d;
+  --text-2: #a5a5aa;
   --text-2-strong: var(--text-1);
-  --text-3: #636366;
+  --text-3: #858588;
   --accent: #f26b57;
   --accent-ink: #f8846f;
   --accent-ink-hover: #ff9d8b;
@@ -210,7 +225,7 @@
   --accent-subtle: #46201a;
   --on-accent: #1c1c1e;
   --border: #8a8a8f;
-  --border-strong: #98989d;
+  --border-strong: #a5a5aa;
   --rule: #48484a;
   --border-focus: #f26b57;
   --ring-selected: #f26b57;
@@ -238,9 +253,9 @@
     --surface-3: #3a3a3c;
     --stage-bg: #161618;
     --text-1: #f5f5f7;
-    --text-2: #98989d;
+    --text-2: #a5a5aa;
     --text-2-strong: var(--text-1);
-    --text-3: #636366;
+    --text-3: #858588;
     --accent: #f26b57;
     --accent-ink: #f8846f;
     --accent-ink-hover: #ff9d8b;
@@ -248,7 +263,7 @@
     --accent-subtle: #46201a;
     --on-accent: #1c1c1e;
     --border: #8a8a8f;
-    --border-strong: #98989d;
+    --border-strong: #a5a5aa;
     --rule: #48484a;
     --border-focus: #f26b57;
     --ring-selected: #f26b57;

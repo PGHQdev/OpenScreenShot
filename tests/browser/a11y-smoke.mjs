@@ -48,73 +48,34 @@ const MIME = {
 // see matchesAllowlistedSelector's own comment.) Printed on every run (see
 // main()) so it cannot grow silently.
 //
-// All seven entries below are the same pre-existing gap: --text-3 clears
-// nowhere near 4.5:1 on --surface-1 (measured 2.21:1 light / 2.84:1 dark —
-// task-9-report.md's own contrast sweep), and --text-2 narrowly misses it
-// against --surface-3 (4.25:1 light / 3.95:1 dark, same report — clears the
-// 3:1 large-text/UI floor, misses the 4.5:1 body-text one). All seven fail
-// unconditionally, in the element's normal default rendered state, no
-// interaction required. task-9-report.md's gap table routed both pairs to
-// "Task 11"; task-11-brief.md's actual delivered scope only carried forward
-// `.overlay-msg` and the `prefers-contrast` floor, not the general
-// --text-2-on-surface-3 or --text-3-on-real-content cases. No task from 21
-// through 44 claims this either (checked each brief). It is a token-level
-// gap, not a per-element typo — `.tag-optional` already uses --text-2 and
-// still fails, so the fix is not "use the other token", it needs a token
-// value change or a documented per-surface exception, which is a design
-// call this task should not make unreviewed. Flagged to the controller in
-// task-20-report.md as needing a new task; 'task-TBD-contrast' is a
-// placeholder, not a real task id.
+// Empty on purpose. task-45 raised --text-2 and --text-3 (tokens.css) so
+// every real call site clears 4.5:1: `.status-hint`, `.settings-section`,
+// `.token-label`, `.settings-hint` and `.rec-tl-tick` (--text-3 on
+// --surface-1, was 2.21:1 light / 2.84:1 dark) and `.tag-optional`
+// (--text-2 on --surface-3, was 4.26:1 light / 3.95:1 dark).
 //
-// (An eighth candidate, `.zoom-readout`, was cut: it only fails when the
-// mouse is left resting on the ZoomMenu trigger, pushing `:hover`'s
-// --surface-3 background under its --text-2 — not a persistent failure.
-// The smoke now moves the mouse off before scanning that state, so it no
-// longer fires and does not belong on this list.)
-const ALLOWLIST = [
-  {
-    id: 'color-contrast',
-    selector: '.status-hint',
-    task: 'task-TBD-contrast',
-    note: 'editor status bar hint text, --text-3 on --surface-1',
-  },
-  {
-    id: 'color-contrast',
-    selector: '.zoom-item',
-    task: 'task-TBD-contrast',
-    note: 'ZoomMenu shortcut kbd hints, --text-3 on --surface-1',
-  },
-  {
-    id: 'color-contrast',
-    selector: '.settings-section',
-    task: 'task-TBD-contrast',
-    note: 'popup nav section labels, --text-3',
-  },
-  {
-    id: 'color-contrast',
-    selector: '.token-label',
-    task: 'task-TBD-contrast',
-    note: 'popup filename-token label, --text-3',
-  },
-  {
-    id: 'color-contrast',
-    selector: '.settings-hint',
-    task: 'task-TBD-contrast',
-    note: 'popup settings hint text, --text-3',
-  },
-  {
-    id: 'color-contrast',
-    selector: '.rec-tl-tick',
-    task: 'task-TBD-contrast',
-    note: 'recorder timeline tick labels, --text-3',
-  },
-  {
-    id: 'color-contrast',
-    selector: '.tag-optional',
-    task: 'task-TBD-contrast',
-    note: 'setup optional-permission tag, --text-2 on --surface-3',
-  },
-];
+// Three more call sites painted --text-3 on a surface it was never meant to
+// clear; each moved to a different token instead of widening --text-3's
+// floor to cover it too (that would have pushed --text-3 close enough to
+// --text-2 to erase the muted tier everywhere else it is used — see
+// tokens.css's --text-3 doc comment and task-45-report.md):
+//   - `.empty-fallback` / `.empty-alt` (editor.css) sit on --stage-bg — now
+//     take --text-1, the same exception `.overlay-msg` already used.
+//   - `.kbd-os` (popup.css) sits on --surface-2 once its own --surface-3
+//     background goes transparent — now takes --text-2.
+//   - `.zoom-item kbd` (editor.css) sits on --surface-1, but this smoke's
+//     own ZoomMenu step hovers `.zoom-item` before scanning (see below),
+//     which swaps in --hover-overlay and darkens that --surface-1 enough to
+//     drop --text-3 back under 4.5:1 even though it clears the surface at
+//     rest — now takes --text-2, matching the other <kbd> elements in the
+//     file (.mode-card kbd, .sheet-row kbd).
+// Full matrix and before/after ratios: task-45-report.md.
+//
+// (`.zoom-readout` was never on this list: it only fails when the mouse
+// rests on the ZoomMenu trigger, pushing `:hover`'s --surface-3 background
+// under its --text-2 — not a persistent failure, and now passes anyway
+// since --text-2 on --surface-3 clears 4.5:1 post-task-45.)
+const ALLOWLIST = [];
 
 /**
  * True if `target` (axe's CSS-selector string for a violating node, e.g.

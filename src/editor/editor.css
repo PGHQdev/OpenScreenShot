@@ -257,7 +257,12 @@ body {
 .zoom-item kbd {
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
-  color: var(--text-3);
+  /* Not --text-3: :hover on the parent .zoom-item swaps in --hover-overlay,
+     which darkens --surface-1 enough (in both themes) to drop --text-3 back
+     under 4.5:1 even though it clears the surface at rest. --text-2 clears
+     the hovered background too (4.95:1 light / 5.37:1 dark), matching the
+     other <kbd> elements in this file (.mode-card kbd, .sheet-row kbd). */
+  color: var(--text-2);
 }
 
 /* Sizes the glyph inside the button, not type, so it is off the scale. */
@@ -817,7 +822,9 @@ body {
 .empty-fallback {
   margin-top: var(--s-2) !important;
   font-size: var(--fs-sm);
-  color: var(--text-3);
+  /* Same --stage-bg exception as .overlay-msg above: --text-3 misses 4.5:1
+     here (it only clears --surface-1), and so does --text-2 (4.37:1 light). */
+  color: var(--text-1);
 }
 
 /* ---- Status bar ---- */
@@ -1000,7 +1007,9 @@ body {
 }
 
 .empty-alt {
-  color: var(--text-3);
+  /* Same --stage-bg exception as .overlay-msg above: --text-3 misses 4.5:1
+     here (it only clears --surface-1), and so does --text-2 (4.37:1 light). */
+  color: var(--text-1);
   font-size: var(--fs-sm);
 }
 

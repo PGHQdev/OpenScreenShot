@@ -534,7 +534,11 @@ body {
 
 .mode-card .kbd-os {
   background: transparent;
-  color: var(--text-3);
+  /* Transparent background falls through to .mode-card's --surface-2, not
+     this kbd's own --surface-3 — --text-3 only clears 4.5:1 on --surface-1,
+     so this takes --text-2 (5.09:1 light / 5.68:1 dark on --surface-2)
+     instead, matching the plain <kbd> above. */
+  color: var(--text-2);
 }
 
 /* Warning chip: a toggled-on device whose permission is hard-denied. */
