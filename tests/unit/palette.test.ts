@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { COLOR_PALETTE } from '../../src/editor/annotations';
 import {
   COLOR_NAMES,
+  COLOR_PALETTE,
   MAX_RECENT_COLORS,
   colorName,
   normalizeHex,

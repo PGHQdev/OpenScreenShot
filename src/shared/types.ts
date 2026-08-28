@@ -4,6 +4,7 @@
  */
 
 import type { RecMessage } from './recording-types';
+import { tokens } from './design-tokens';
 
 /** The three capture modes offered in the popup. */
 export type CaptureMode = 'full-page' | 'visible' | 'region';
@@ -150,7 +151,7 @@ export const DEFAULT_SETTINGS: Settings = {
   quality: 0.92,
   filenameTemplate: 'screenshot_{date}_{time}',
   showOnboarding: true,
-  annotationColor: '#ff3b30',
+  annotationColor: tokens.swatchRed,
   annotationStrokeWidth: 6,
   annotationFontSize: 28,
   recentColors: [],

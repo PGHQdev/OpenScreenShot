@@ -15,6 +15,7 @@ import {
 import { centerView, clampZoom, fitZoom } from './viewport';
 import { clipToFrame, DEFAULT_FRAME, frameMetrics, paintFrame, type FrameOptions } from './frame';
 import { rgbToHex } from './eyedropper';
+import { tokens } from '../shared/design-tokens';
 
 /**
  * CanvasController — imperative owner of the editor's <canvas>.
@@ -229,7 +230,7 @@ export class CanvasController {
       ctx.shadowColor = 'rgba(0, 0, 0, 0.24)';
       ctx.shadowBlur = 18;
       ctx.shadowOffsetY = 4;
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = tokens.canvasPaper;
       ctx.fillRect(this.view.panX, this.view.panY, sw, sh);
       ctx.restore();
       drawCheckerboard(ctx, this.view.panX, this.view.panY, sw, sh);
@@ -330,9 +331,9 @@ function drawCheckerboard(
   ctx.beginPath();
   ctx.rect(x, y, w, h);
   ctx.clip();
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = tokens.canvasPaper;
   ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = '#e7e7ec';
+  ctx.fillStyle = tokens.canvasCheck;
   const startX = Math.floor(x / size) * size;
   const startY = Math.floor(y / size) * size;
   for (let yy = startY; yy < y + h; yy += size) {

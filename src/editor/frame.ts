@@ -14,6 +14,7 @@ import type { FrameBackground, PresetId } from '../shared/types';
 import { normalizeHex } from './palette';
 import type { Settings } from '../shared/types';
 import { MAX_CANVAS_HEIGHT_PX } from '../shared/geometry';
+import { tokens } from '../shared/design-tokens';
 
 export type { FrameBackground, PresetId };
 
@@ -48,12 +49,48 @@ export interface BackgroundPreset {
 
 /** Swatch order in the panel. */
 export const BACKGROUND_PRESETS: BackgroundPreset[] = [
-  { id: 'ink', label: 'Ink', from: '#2b303b', to: '#12141a', direction: 'diagonal' },
-  { id: 'coral', label: 'Coral', from: '#ff7a59', to: '#e0326b', direction: 'diagonal' },
-  { id: 'dusk', label: 'Dusk', from: '#4c3a8f', to: '#1e1b3a', direction: 'diagonal' },
-  { id: 'mint', label: 'Mint', from: '#37d2a8', to: '#0f8f8f', direction: 'diagonal' },
-  { id: 'sand', label: 'Sand', from: '#f7d08a', to: '#dd8a5b', direction: 'vertical' },
-  { id: 'sky', label: 'Sky', from: '#8fc4ff', to: '#3f7ae0', direction: 'vertical' },
+  {
+    id: 'ink',
+    label: 'Ink',
+    from: tokens.frameInkFrom,
+    to: tokens.frameInkTo,
+    direction: 'diagonal',
+  },
+  {
+    id: 'coral',
+    label: 'Coral',
+    from: tokens.frameCoralFrom,
+    to: tokens.frameCoralTo,
+    direction: 'diagonal',
+  },
+  {
+    id: 'dusk',
+    label: 'Dusk',
+    from: tokens.frameDuskFrom,
+    to: tokens.frameDuskTo,
+    direction: 'diagonal',
+  },
+  {
+    id: 'mint',
+    label: 'Mint',
+    from: tokens.frameMintFrom,
+    to: tokens.frameMintTo,
+    direction: 'diagonal',
+  },
+  {
+    id: 'sand',
+    label: 'Sand',
+    from: tokens.frameSandFrom,
+    to: tokens.frameSandTo,
+    direction: 'vertical',
+  },
+  {
+    id: 'sky',
+    label: 'Sky',
+    from: tokens.frameSkyFrom,
+    to: tokens.frameSkyTo,
+    direction: 'vertical',
+  },
 ];
 
 /** Fractions of the shorter image side at slider value 100. */
@@ -151,7 +188,7 @@ export function paintFrame(
     ctx.shadowBlur = m.shadowBlur * scale;
     ctx.shadowOffsetY = m.shadowOffsetY * scale;
     // The plate is hidden by the screenshot drawn over it; it exists to cast.
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = tokens.canvasPaper;
     const plate = shadowPlateRect(m.imgW, m.imgH);
     ctx.beginPath();
     ctx.roundRect(plate.x, plate.y, plate.w, plate.h, m.radius);

@@ -8,6 +8,7 @@
  * transform). Coordinates may be signed during drafting (dragging up-left makes
  * w/h negative); {@link normalizeRect} fixes that for drawing and hit-testing.
  */
+import { tokens } from '../shared/design-tokens';
 
 export interface Rect {
   x: number;
@@ -153,7 +154,7 @@ export function hasStroke(a: Annotation): a is StrokedAnnotation {
 }
 
 /** Default annotation styling (a vivid red reads well on most pages). */
-export const DEFAULT_STROKE = '#ff3b30';
+export const DEFAULT_STROKE = tokens.swatchRed;
 export const DEFAULT_STROKE_WIDTH = 6;
 export const DEFAULT_FONT_SIZE = 28;
 export const DEFAULT_BLUR_STRENGTH = 8;
@@ -170,18 +171,6 @@ export const DEFAULT_STYLE: AnnotationStyle = {
   strokeWidth: DEFAULT_STROKE_WIDTH,
   fontSize: DEFAULT_FONT_SIZE,
 };
-
-/** Swatches for the style bar. */
-export const COLOR_PALETTE: string[] = [
-  '#ff3b30',
-  '#ff9500',
-  '#ffcc00',
-  '#34c759',
-  '#0071e3',
-  '#af52de',
-  '#ffffff',
-  '#1d1d1f',
-];
 
 /** Stroke-width presets for the style bar. */
 export const STROKE_WIDTHS: number[] = [3, 6, 12];
@@ -417,10 +406,10 @@ function drawHighlight(ctx: CanvasRenderingContext2D, a: HighlightAnnotation): v
 /** Dark text/ring on light badge colors (white, yellow), white otherwise. */
 function badgeContrast(hex: string): string {
   const m = /^#([0-9a-f]{6})$/i.exec(hex);
-  if (!m) return '#ffffff';
+  if (!m) return tokens.canvasMark;
   const v = parseInt(m[1], 16);
   const lum = 0.299 * ((v >> 16) & 255) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255);
-  return lum > 200 ? '#1d1d1f' : '#ffffff';
+  return lum > 200 ? tokens.canvasMarkInk : tokens.canvasMark;
 }
 
 function drawStep(ctx: CanvasRenderingContext2D, a: StepAnnotation): void {
@@ -453,7 +442,7 @@ function drawText(ctx: CanvasRenderingContext2D, a: TextAnnotation): void {
 }
 
 /** Fill for solid redaction — opaque, so no pixel data survives. */
-const SOLID_REDACTION_FILL = '#111318';
+const SOLID_REDACTION_FILL = tokens.canvasRedact;
 
 /** Mosaic blocks are this much coarser than the soft blur's pixelation. */
 const MOSAIC_FACTOR = 4;
@@ -567,6 +556,7 @@ export function drawSpotlightLayer(
     lctx.fillStyle = `rgba(0,0,0,${SPOTLIGHT_DIM})`;
     lctx.fillRect(0, 0, imageWidth, imageHeight);
     lctx.globalCompositeOperation = 'destination-out';
+    // destination-out reads only alpha, so any opaque fill punches the hole.
     lctx.fillStyle = '#000';
     for (const a of spotlights) {
       lctx.beginPath();
@@ -621,7 +611,7 @@ export function drawCropPreview(
   ctx.fillRect(0, n.y + n.h, imageWidth, imageHeight - (n.y + n.h));
   ctx.fillRect(0, n.y, n.x, n.h);
   ctx.fillRect(n.x + n.w, n.y, imageWidth - (n.x + n.w), n.h);
-  ctx.strokeStyle = '#ffffff';
+  ctx.strokeStyle = tokens.canvasMark;
   ctx.lineWidth = 2;
   ctx.setLineDash([8, 6]);
   ctx.strokeRect(n.x, n.y, n.w, n.h);
@@ -783,12 +773,12 @@ export function drawSelection(
   const br = project(b.x + b.w, b.y + b.h);
   ctx.save();
   ctx.setLineDash([4, 3]);
-  ctx.strokeStyle = '#2f80ed';
+  ctx.strokeStyle = tokens.canvasSelect;
   ctx.lineWidth = 1;
   ctx.strokeRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
   ctx.setLineDash([]);
-  ctx.fillStyle = '#ffffff';
-  ctx.strokeStyle = '#2f80ed';
+  ctx.fillStyle = tokens.canvasMark;
+  ctx.strokeStyle = tokens.canvasSelect;
   ctx.lineWidth = 1.5;
   for (const h of getHandles(a)) {
     const p = project(h.x, h.y);

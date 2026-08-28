@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { BACKGROUND_PRESETS, frameMetrics, type FrameBackground, type FrameOptions } from './frame';
+import { tokens } from '../shared/design-tokens';
 
 export interface BeautifyMenuProps {
   frame: FrameOptions;
@@ -40,7 +41,7 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
   const m = props.imageSize ? frameMetrics(f, props.imageSize.w, props.imageSize.h) : null;
   const px = (v: number | undefined) => (v === undefined ? '' : ` · ${v}px`);
   const isSolid = f.background.kind === 'solid';
-  const solidColor = isSolid ? (f.background as { color: string }).color : '#1d1d1f';
+  const solidColor = isSolid ? (f.background as { color: string }).color : tokens.swatchBlack;
 
   function pickBackground(background: FrameBackground) {
     props.onChange({ background, enabled: true });

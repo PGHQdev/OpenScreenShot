@@ -67,6 +67,42 @@
   --dur-mid: 150ms;
   --dur-slow: 250ms;
   --ease-out: cubic-bezier(0, 0, 0.58, 1);
+
+  /* Canvas ink. Painted onto image pixels, so it never follows the UI theme. */
+  --canvas-paper: #ffffff;
+  --canvas-check: #e7e7ec;
+  --canvas-mark: #ffffff;
+  --canvas-mark-ink: #1d1d1f;
+  --canvas-select: #2f80ed;
+  --canvas-redact: #111318;
+
+  /*
+   * Annotation swatches. These are the product, not the chrome: they land on
+   * the user's screenshot, so they keep their values in both themes. The
+   * screen-reader name for each one lives beside it in src/editor/palette.ts.
+   */
+  --swatch-red: #ff3b30;
+  --swatch-orange: #ff9500;
+  --swatch-yellow: #ffcc00;
+  --swatch-green: #34c759;
+  --swatch-blue: #0071e3;
+  --swatch-purple: #af52de;
+  --swatch-white: #ffffff;
+  --swatch-black: #1d1d1f;
+
+  /* Beautify frame backgrounds, one gradient pair each. */
+  --frame-ink-from: #2b303b;
+  --frame-ink-to: #12141a;
+  --frame-coral-from: #ff7a59;
+  --frame-coral-to: #e0326b;
+  --frame-dusk-from: #4c3a8f;
+  --frame-dusk-to: #1e1b3a;
+  --frame-mint-from: #37d2a8;
+  --frame-mint-to: #0f8f8f;
+  --frame-sand-from: #f7d08a;
+  --frame-sand-to: #dd8a5b;
+  --frame-sky-from: #8fc4ff;
+  --frame-sky-to: #3f7ae0;
 }
 
 /* @tokens light */

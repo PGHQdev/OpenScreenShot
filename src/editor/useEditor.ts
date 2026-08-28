@@ -16,7 +16,6 @@ import { CanvasController } from './canvas';
 import type { Annotation, Rect } from './annotations';
 import {
   bbox,
-  COLOR_PALETTE,
   DEFAULT_STYLE,
   handleAt,
   hasStroke,
@@ -63,7 +62,7 @@ import {
   setSettings,
 } from '../shared/storage';
 import { formatFilename } from '../shared/utils';
-import { pushRecent } from './palette';
+import { COLOR_PALETTE, pushRecent } from './palette';
 import { draftFrame, DRAFT_DEBOUNCE_MS, makeDraft, parseDraft, type Draft } from './draft';
 import { canvasToDataUrl, downloadDataUrl, withExtension, type ImageFormat } from './export';
 import { importSizeError, readImageFile, titleFromFilename } from './import-image';

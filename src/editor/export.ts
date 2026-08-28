@@ -6,6 +6,8 @@
  * added in the next commit; this covers PNG/JPEG/WebP.
  */
 
+import { tokens } from '../shared/design-tokens';
+
 export type ImageFormat = 'png' | 'jpeg' | 'webp';
 
 export const IMAGE_FORMATS: { id: ImageFormat; label: string; hint: string }[] = [
@@ -28,7 +30,7 @@ export function canvasToDataUrl(
     tmp.height = canvas.height;
     const ctx = tmp.getContext('2d');
     if (!ctx) return canvas.toDataURL('image/jpeg', quality);
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = tokens.canvasPaper;
     ctx.fillRect(0, 0, tmp.width, tmp.height);
     ctx.drawImage(canvas, 0, 0);
     return tmp.toDataURL('image/jpeg', quality);
