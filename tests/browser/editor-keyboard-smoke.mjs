@@ -95,6 +95,13 @@ function installChromeStub(seed) {
     action: { setBadgeText() {}, setBadgeBackgroundColor() {} },
     downloads: {
       download: async (opts) => {
+        // Step 10a below flips this on to drive the export dialog's failure
+        // path (role="alert") without a pointing device or a real download
+        // error — it self-resets so the smoke's real export later still lands.
+        if (globalThis.__smoke.failNextDownload) {
+          globalThis.__smoke.failNextDownload = false;
+          throw new Error('smoke-forced export failure');
+        }
         globalThis.__smoke.downloads.push({ filename: opts.filename, bytes: opts.url.length });
         return 1;
       },
@@ -387,6 +394,171 @@ async function main() {
       await page.evaluate(() => document.activeElement.matches('.modal .btn-primary')),
       'Shift+Tab lands on the Export button',
     );
+
+    // The rest of this step targets specific fields by focusing them directly
+    // rather than walking Tab stop by stop — still real keyboard input from
+    // there (typing, Home/Shift+End to select, Tab to commit, Enter to
+    // activate), just without re-deriving the tab order to reach each one.
+    async function selectAllInField() {
+      await page.keyboard.press('End');
+      await page.keyboard.down('Shift');
+      await page.keyboard.press('Home');
+      await page.keyboard.up('Shift');
+    }
+
+    step('the Width field clamps on commit, not on every keystroke, and says so');
+    await page.$eval('.num-input-wide', (el) => el.focus());
+    await selectAllInField();
+    await page.keyboard.type('99999');
+    await settle();
+    const midWidth = await page.evaluate(() => ({
+      value: document.querySelector('.num-input-wide').value,
+      hasNotice: document.querySelector('.field-notice') !== null,
+    }));
+    assert(midWidth.value === '99999', 'the field shows the raw typed text while still focused');
+    assert(!midWidth.hasNotice, 'no clamp notice yet — nothing has been committed');
+    await page.keyboard.press('Tab');
+    await settle();
+    const afterWidth = await page.evaluate(() => {
+      const input = document.querySelector('.num-input-wide');
+      const notice = document.querySelector('.field-notice');
+      return {
+        value: input.value,
+        max: input.max,
+        noticeText: notice?.textContent ?? null,
+        role: notice?.getAttribute('role') ?? null,
+      };
+    });
+    assert(
+      afterWidth.value === afterWidth.max,
+      `99999 clamped to the declared ceiling on blur (${afterWidth.value})`,
+    );
+    assert(
+      afterWidth.noticeText !== null && /clamp/i.test(afterWidth.noticeText),
+      `a clamp notice explains it: "${afterWidth.noticeText}"`,
+    );
+    assert(afterWidth.role === 'status', 'the notice is announced (role="status")');
+
+    step('PDF format exposes Page size / Orientation, each carrying aria-pressed');
+    const segmentedRowButtons = (rowLabel) =>
+      page.evaluate((label) => {
+        const row = [...document.querySelectorAll('.modal-row')].find(
+          (r) => r.querySelector('.field-label')?.textContent === label,
+        );
+        return row
+          ? [...row.querySelectorAll('.segmented-btn')].map((b) => ({
+              label: b.textContent.trim(),
+              pressed: b.getAttribute('aria-pressed'),
+              selected: b.classList.contains('is-selected'),
+            }))
+          : [];
+      }, rowLabel);
+    await page.$eval('.format-grid .format-card:last-child', (el) => el.focus());
+    await page.keyboard.press('Enter');
+    await settle();
+    const beforeSize = await segmentedRowButtons('Page size');
+    assert(
+      beforeSize.find((b) => b.label === 'A4')?.pressed === 'true' &&
+        beforeSize.find((b) => b.label === 'A4')?.selected,
+      'A4 starts pressed and .is-selected',
+    );
+    assert(
+      beforeSize.find((b) => b.label === 'Letter')?.pressed === 'false',
+      'Letter starts unpressed',
+    );
+    await page.evaluate((label) => {
+      const row = [...document.querySelectorAll('.modal-row')].find(
+        (r) => r.querySelector('.field-label')?.textContent === label,
+      );
+      row?.querySelectorAll('.segmented-btn')[1]?.focus(); // A4, Letter, Full — index 1 is Letter
+    }, 'Page size');
+    await page.keyboard.press('Enter');
+    await settle();
+    const afterSize = await segmentedRowButtons('Page size');
+    assert(
+      afterSize.find((b) => b.label === 'Letter')?.pressed === 'true' &&
+        afterSize.find((b) => b.label === 'Letter')?.selected,
+      'Enter on Letter flips it to pressed and .is-selected',
+    );
+    assert(
+      afterSize.find((b) => b.label === 'A4')?.pressed === 'false' &&
+        !afterSize.find((b) => b.label === 'A4')?.selected,
+      'A4 drops both aria-pressed and .is-selected',
+    );
+
+    step('the Margin field enforces its declared 0-40mm range, and says so');
+    await page.$eval('.check-row .num-input', (el) => el.focus());
+    await selectAllInField();
+    await page.keyboard.type('99');
+    await settle();
+    const midMargin = await page.evaluate(
+      () => document.querySelector('.check-row .num-input').value,
+    );
+    assert(midMargin === '99', 'the margin field shows the raw typed text while still focused');
+    await page.keyboard.press('Tab');
+    await settle();
+    const afterMargin = await page.evaluate(() => {
+      const input = document.querySelector('.check-row .num-input');
+      const notice = document.querySelector('.field-notice');
+      return {
+        value: input.value,
+        max: input.max,
+        noticeText: notice?.textContent ?? null,
+        role: notice?.getAttribute('role') ?? null,
+      };
+    });
+    assert(
+      afterMargin.value === afterMargin.max,
+      `99mm refused — clamped to the declared max on blur (${afterMargin.value}mm)`,
+    );
+    assert(
+      afterMargin.noticeText !== null && /clamp/i.test(afterMargin.noticeText),
+      `a clamp notice explains it: "${afterMargin.noticeText}"`,
+    );
+    assert(afterMargin.role === 'status', 'the notice is announced (role="status")');
+
+    step('an export failure renders role="alert", and repeating it still re-announces');
+    await page.evaluate(() => {
+      globalThis.__smoke.failNextDownload = true;
+    });
+    await page.$eval('.modal .btn-primary', (el) => el.focus());
+    await page.keyboard.press('Enter');
+    await settle(500);
+    const err1 = await page.evaluate(() => {
+      const el = document.querySelector('.export-error');
+      if (!el) return null;
+      el.dataset.smokeTag = 'first';
+      return { text: el.textContent, role: el.getAttribute('role') };
+    });
+    assert(err1 !== null, 'the export error renders on failure');
+    assert(err1.role === 'alert', 'it carries role="alert"');
+    assert(err1.text.length > 0, 'it has text');
+    await page.evaluate(() => {
+      globalThis.__smoke.failNextDownload = true;
+    });
+    await page.$eval('.modal .btn-primary', (el) => el.focus());
+    await page.keyboard.press('Enter');
+    await settle(500);
+    const err2 = await page.evaluate(() => {
+      const el = document.querySelector('.export-error');
+      return el ? { text: el.textContent, sameNode: el.dataset.smokeTag === 'first' } : null;
+    });
+    assert(err2 !== null, 'a second identical failure renders the error again');
+    assert(err2.text === err1.text, 'the message text is identical both times');
+    assert(
+      !err2.sameNode,
+      'the alert unmounted and remounted between attempts, so an identical message re-announces',
+    );
+    assert(
+      (await page.evaluate(() => globalThis.__smoke.downloads.length)) === 0,
+      'both forced failures produced no download',
+    );
+
+    step('back to PNG for the real export');
+    await page.$eval('.format-grid .format-card:first-child', (el) => el.focus());
+    await page.keyboard.press('Enter');
+    await settle();
+    await page.$eval('.modal .btn-primary', (el) => el.focus());
     await page.keyboard.press('Enter');
     await settle(800);
     const downloads = await page.evaluate(() => globalThis.__smoke.downloads);

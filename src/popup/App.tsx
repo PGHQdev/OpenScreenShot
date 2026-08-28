@@ -763,6 +763,8 @@ function SettingsView({
             min="0.1"
             max="1"
             step="0.05"
+            aria-label={t('settingsQuality')}
+            aria-valuetext={`${Math.round(settings.quality * 100)}%`}
             value={settings.quality}
             onInput={(e) => onChange({ quality: Number((e.target as HTMLInputElement).value) })}
           />

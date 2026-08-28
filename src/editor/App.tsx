@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { isTypingTarget, useEditor } from './useEditor';
 import { TOOL_LIST, type Tool } from './tools';
 import { IMAGE_FORMATS, type ImageFormat } from './export';
-import type { PdfOptions } from './pdf';
+import { clampPdfMargin, MAX_PDF_MARGIN_MM, MIN_PDF_MARGIN_MM, type PdfOptions } from './pdf';
 import { STROKE_WIDTHS, type BlurMode, type SpotlightShape } from './annotations';
 import { COLOR_PALETTE, colorName } from './palette';
 import { arrowNav, getFocusable, syncRovingTabIndex, trapFocus } from './focus';
@@ -528,6 +528,7 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
             min="12"
             max="96"
             step="2"
+            aria-label="Size"
             value={ed.style.fontSize}
             onInput={(e) => ed.setStyleFontSize(Number((e.target as HTMLInputElement).value))}
           />
@@ -572,6 +573,9 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
   // the derived outW" — set on preset clicks and on commit (blur), so the field
   // never shows stale typed text once a value lands.
   const [widthText, setWidthText] = useState<string | null>(null);
+  // Set only when a commit (blur) actually rewrote the typed value — cleared
+  // on the next keystroke, so it never outlives the field it explains.
+  const [widthNotice, setWidthNotice] = useState<string | null>(null);
   const [filenameBase, setFilenameBase] = useState(ed.defaultFilename());
 
   const [pdfPageSize, setPdfPageSize] = useState<'a4' | 'letter' | 'full'>(
@@ -582,6 +586,9 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
   );
   const [pdfMultiPage, setPdfMultiPage] = useState(ed.settings?.pdfMultiPage ?? true);
   const [pdfMargin, setPdfMargin] = useState(ed.settings?.pdfMarginMm ?? 8);
+  // Same raw-text-then-commit split as widthText/widthNotice above.
+  const [marginText, setMarginText] = useState<string | null>(null);
+  const [marginNotice, setMarginNotice] = useState<string | null>(null);
   const [remember, setRemember] = useState(false);
   const [busy, setBusy] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -769,6 +776,7 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
                   onInput={(e) => {
                     const raw = (e.target as HTMLInputElement).value;
                     setWidthText(raw);
+                    setWidthNotice(null);
                     const n = Number(raw);
                     const ceiling = exportWidthCeiling(composed.w, composed.h);
                     if (Number.isFinite(n) && n >= minExportWidth(ceiling) && n <= ceiling) {
@@ -776,10 +784,15 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
                     }
                   }}
                   onChange={(e) => {
-                    const clamped = clampTargetWidth(
-                      Number((e.target as HTMLInputElement).value),
-                      composed.w,
-                      composed.h,
+                    const raw = (e.target as HTMLInputElement).value;
+                    const n = Number(raw);
+                    const ceiling = exportWidthCeiling(composed.w, composed.h);
+                    const floor = minExportWidth(ceiling);
+                    const clamped = clampTargetWidth(n, composed.w, composed.h);
+                    setWidthNotice(
+                      !Number.isFinite(n) || n !== clamped
+                        ? `Width clamped to ${clamped}px (allowed range ${floor}–${ceiling}px).`
+                        : null,
                     );
                     setTargetWidth(clamped);
                     setWidthText(null);
@@ -791,6 +804,11 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
                 {composed.w} × {composed.h} → {outW} × {outH}
               </span>
             </div>
+            {widthNotice ? (
+              <p class="field-notice" role="status">
+                {widthNotice}
+              </p>
+            ) : null}
           </div>
         ) : null}
 
@@ -806,6 +824,7 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
               min="0.1"
               max="1"
               step="0.05"
+              aria-valuetext={`${Math.round(quality * 100)}%`}
               value={quality}
               onInput={(e) => setQuality(Number((e.target as HTMLInputElement).value))}
             />
@@ -819,18 +838,21 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
               <div class="segmented">
                 <button
                   class={`segmented-btn${pdfPageSize === 'a4' ? ' is-selected' : ''}`}
+                  aria-pressed={pdfPageSize === 'a4'}
                   onClick={() => setPdfPageSize('a4')}
                 >
                   A4
                 </button>
                 <button
                   class={`segmented-btn${pdfPageSize === 'letter' ? ' is-selected' : ''}`}
+                  aria-pressed={pdfPageSize === 'letter'}
                   onClick={() => setPdfPageSize('letter')}
                 >
                   Letter
                 </button>
                 <button
                   class={`segmented-btn${pdfPageSize === 'full' ? ' is-selected' : ''}`}
+                  aria-pressed={pdfPageSize === 'full'}
                   onClick={() => setPdfPageSize('full')}
                 >
                   Full
@@ -842,6 +864,7 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
               <div class="segmented">
                 <button
                   class={`segmented-btn${pdfOrientation === 'portrait' ? ' is-selected' : ''}`}
+                  aria-pressed={pdfOrientation === 'portrait'}
                   disabled={isFull}
                   onClick={() => setPdfOrientation('portrait')}
                 >
@@ -849,6 +872,7 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
                 </button>
                 <button
                   class={`segmented-btn${pdfOrientation === 'landscape' ? ' is-selected' : ''}`}
+                  aria-pressed={pdfOrientation === 'landscape'}
                   disabled={isFull}
                   onClick={() => setPdfOrientation('landscape')}
                 >
@@ -872,16 +896,41 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
                 <input
                   class="num-input"
                   type="number"
-                  min="0"
-                  max="40"
+                  min={MIN_PDF_MARGIN_MM}
+                  max={MAX_PDF_MARGIN_MM}
                   step="1"
-                  value={pdfMargin}
+                  value={marginText ?? String(pdfMargin)}
                   disabled={isFull}
-                  onInput={(e) => setPdfMargin(Number((e.target as HTMLInputElement).value))}
+                  onInput={(e) => {
+                    const raw = (e.target as HTMLInputElement).value;
+                    setMarginText(raw);
+                    setMarginNotice(null);
+                    const n = Number(raw);
+                    if (Number.isFinite(n) && n >= MIN_PDF_MARGIN_MM && n <= MAX_PDF_MARGIN_MM) {
+                      setPdfMargin(n);
+                    }
+                  }}
+                  onChange={(e) => {
+                    const raw = (e.target as HTMLInputElement).value;
+                    const n = Number(raw);
+                    const clamped = clampPdfMargin(n);
+                    setMarginNotice(
+                      !Number.isFinite(n) || n !== clamped
+                        ? `Margin clamped to ${clamped}mm (allowed range ${MIN_PDF_MARGIN_MM}–${MAX_PDF_MARGIN_MM}mm).`
+                        : null,
+                    );
+                    setPdfMargin(clamped);
+                    setMarginText(null);
+                  }}
                 />
                 mm
               </label>
             </div>
+            {marginNotice ? (
+              <p class="field-notice" role="status">
+                {marginNotice}
+              </p>
+            ) : null}
             {isFull ? (
               <p class="pdf-hint">
                 “Full” makes one page sized to the image, so orientation, multi-page and margin
@@ -907,7 +956,11 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
           </div>
         </div>
 
-        {exportError ? <p class="export-error">{exportError}</p> : null}
+        {exportError ? (
+          <p class="export-error" role="alert">
+            {exportError}
+          </p>
+        ) : null}
 
         <div class="modal-actions">
           <label class="check-label">

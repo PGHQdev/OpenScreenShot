@@ -153,6 +153,8 @@ export function Rail(props: RailProps) {
               min="0.12"
               max="0.35"
               step="0.01"
+              aria-label={t('recorderBubbleSize')}
+              aria-valuetext={`${Math.round(props.draft.bubble.size * 100)}%`}
               value={props.draft.bubble.size}
               onInput={(e) =>
                 props.onBubble({ size: Number((e.currentTarget as HTMLInputElement).value) })
@@ -184,6 +186,8 @@ export function Rail(props: RailProps) {
                 min="0"
                 max="1"
                 step="0.05"
+                aria-label={t('recorderVolTab')}
+                aria-valuetext={`${Math.round(props.draft.volumes.tab * 100)}%`}
                 value={props.draft.volumes.tab}
                 disabled={exporting}
                 onInput={(e) =>
@@ -201,6 +205,8 @@ export function Rail(props: RailProps) {
                 min="0"
                 max="1"
                 step="0.05"
+                aria-label={t('recorderVolMic')}
+                aria-valuetext={`${Math.round(props.draft.volumes.mic * 100)}%`}
                 value={props.draft.volumes.mic}
                 disabled={exporting}
                 onInput={(e) =>
@@ -236,6 +242,8 @@ export function Rail(props: RailProps) {
             min="0"
             max="100"
             step="1"
+            aria-label={t('recorderBeautifyPadding')}
+            aria-valuetext={`${metrics.pad}px`}
             disabled={!frame.enabled}
             value={frame.padding}
             onInput={(e) =>
@@ -255,6 +263,8 @@ export function Rail(props: RailProps) {
             min="0"
             max="100"
             step="1"
+            aria-label={t('recorderBeautifyCorners')}
+            aria-valuetext={`${metrics.radius}px`}
             disabled={!frame.enabled}
             value={frame.radius}
             onInput={(e) =>
@@ -274,6 +284,8 @@ export function Rail(props: RailProps) {
             min="0"
             max="100"
             step="1"
+            aria-label={t('recorderBeautifyShadow')}
+            aria-valuetext={`${metrics.shadowBlur}px`}
             disabled={!frame.enabled}
             value={frame.shadow}
             onInput={(e) =>

@@ -79,6 +79,8 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
               min="0"
               max="100"
               step="1"
+              aria-label="Padding"
+              aria-valuetext={m ? `${m.pad}px` : undefined}
               disabled={!f.enabled}
               value={f.padding}
               onInput={(e) =>
@@ -95,6 +97,8 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
               min="0"
               max="100"
               step="1"
+              aria-label="Corners"
+              aria-valuetext={m ? `${m.radius}px` : undefined}
               disabled={!f.enabled}
               value={f.radius}
               onInput={(e) =>
@@ -111,6 +115,8 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
               min="0"
               max="100"
               step="1"
+              aria-label="Shadow"
+              aria-valuetext={m ? `${m.shadowBlur}px` : undefined}
               disabled={!f.enabled}
               value={f.shadow}
               onInput={(e) =>

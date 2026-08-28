@@ -19,6 +19,20 @@ export interface PdfOptions {
   marginMm: number;
 }
 
+export const MIN_PDF_MARGIN_MM = 0;
+export const MAX_PDF_MARGIN_MM = 40;
+
+/**
+ * Hold a typed margin inside the declared 0-40mm range. Non-finite input (an
+ * emptied field parses to 0 via Number(''), which is already in range and
+ * needs no fallback here — this guards the harder case, a value like Infinity
+ * that would otherwise reach the page-layout math below unclamped.
+ */
+export function clampPdfMargin(value: number): number {
+  if (!Number.isFinite(value)) return MIN_PDF_MARGIN_MM;
+  return Math.round(Math.min(MAX_PDF_MARGIN_MM, Math.max(MIN_PDF_MARGIN_MM, value)));
+}
+
 const PAGE_SIZES_MM: Record<'a4' | 'letter', [number, number]> = {
   a4: [210, 297],
   letter: [215.9, 279.4],

@@ -741,6 +741,12 @@ body {
   color: var(--text-2);
   line-height: 1.45;
 }
+.field-notice {
+  margin: var(--s-1) 0 var(--s-3);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  line-height: 1.45;
+}
 .export-error {
   margin: 0 0 var(--s-3);
   font-size: var(--fs-sm);
