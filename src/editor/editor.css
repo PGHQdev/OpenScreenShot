@@ -2,6 +2,7 @@
 
 @import '../shared/tokens.css';
 @import '../shared/controls.css';
+@import '../shared/ui.css';
 
 * {
   box-sizing: border-box;
@@ -55,57 +56,8 @@ body {
   user-select: none;
   white-space: nowrap;
 }
-.swatches {
-  display: flex;
-  gap: 4px;
-}
-.swatch {
-  width: 18px;
-  height: 18px;
-  padding: 0;
-  border: 2px solid var(--border);
-  border-radius: var(--r-full);
-  cursor: pointer;
-  transition:
-    transform var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out);
-}
 .swatch[data-light='1'] {
   border-color: var(--border);
-}
-.swatch:hover {
-  transform: scale(1.12);
-}
-.swatch[aria-pressed='true'] {
-  border-color: var(--text-1);
-  box-shadow:
-    0 0 0 2px var(--surface-1),
-    0 0 0 3px var(--accent);
-}
-.swatch-custom {
-  position: relative;
-  display: inline-flex;
-  overflow: hidden;
-  background: conic-gradient(
-    var(--swatch-red),
-    var(--swatch-orange),
-    var(--swatch-yellow),
-    var(--swatch-green),
-    var(--swatch-blue),
-    var(--swatch-purple),
-    var(--swatch-red)
-  );
-}
-
-.swatch-custom input[type='color'] {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: none;
-  opacity: 0;
-  cursor: pointer;
 }
 .swatch-screen {
   display: inline-flex;
@@ -286,36 +238,10 @@ body {
   color: var(--text-3);
 }
 
+/* Sizes the glyph inside the button, not type, so it is off the scale. */
 .icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: 1px solid transparent;
-  border-radius: var(--r-sm);
-  background: transparent;
-  color: var(--text-1);
-  /* Sizes the glyph inside the button, not type, so it is off the scale. */
   font-size: 16px;
   line-height: 1;
-  cursor: pointer;
-  transition:
-    background var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out);
-}
-
-.icon-btn:hover {
-  background: var(--hover-overlay);
-}
-
-.icon-btn:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-.icon-btn:disabled:hover {
-  background: transparent;
 }
 
 .icon-btn-danger:hover:not(:disabled) {
@@ -338,7 +264,6 @@ body {
   background: var(--hover-overlay);
 }
 
-.icon-btn:focus-visible,
 .text-btn:focus-visible,
 .btn-primary:focus-visible {
   outline: 2px solid var(--border-focus);
@@ -371,33 +296,6 @@ body {
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: default;
-}
-
-.btn-secondary {
-  height: 32px;
-  padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  background: var(--surface-2);
-  color: var(--text-1);
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background var(--dur-fast) var(--ease-out);
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: var(--surface-3);
-}
-
-.btn-secondary:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-.btn-secondary:focus-visible {
-  outline: 2px solid var(--border-focus);
-  outline-offset: 1px;
 }
 
 /* The label cycles through three words; a floor stops the topbar shifting. */
@@ -954,13 +852,6 @@ body {
 
 .beautify-group .range {
   width: 100%;
-}
-
-.swatch-transparent {
-  background:
-    linear-gradient(45deg, #d9d9de 25%, transparent 25%) 0 0 / 8px 8px,
-    linear-gradient(-45deg, #d9d9de 25%, transparent 25%) 0 4px / 8px 8px,
-    #fff;
 }
 
 .scale-readout {

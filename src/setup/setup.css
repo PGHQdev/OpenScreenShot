@@ -5,6 +5,7 @@
 
 @import '../shared/tokens.css';
 @import '../shared/controls.css';
+@import '../shared/ui.css';
 
 * {
   box-sizing: border-box;
@@ -81,7 +82,7 @@ body {
   flex-direction: column;
   gap: var(--s-05);
   color: var(--text-1);
-  font-size: 13px;
+  font-size: var(--fs-base);
 }
 
 .pin-hint-text span {
@@ -111,7 +112,7 @@ body {
   border-radius: var(--r-full);
   background: var(--surface-1);
   color: var(--text-1);
-  font-size: 13px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   text-decoration: none;
 }
@@ -128,7 +129,7 @@ a.trust-pill:hover {
 
 .trust-hint {
   color: var(--text-2);
-  font-size: 13px;
+  font-size: var(--fs-sm);
 }
 
 .banner {
@@ -200,7 +201,7 @@ a.trust-pill:hover {
 
 .btn-hero {
   padding: var(--s-3) var(--s-5);
-  font-size: 15px;
+  font-size: var(--fs-lg);
   border-radius: var(--r-md);
 }
 
@@ -249,19 +250,19 @@ a.trust-pill:hover {
 
 .row-head h2 {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--fs-base);
   font-weight: 600;
 }
 
 .row-desc {
   color: var(--text-2);
-  font-size: 13px;
+  font-size: var(--fs-sm);
 }
 
 .row-hint {
   margin: var(--s-2) 0 0;
   color: var(--text-2);
-  font-size: 13px;
+  font-size: var(--fs-sm);
 }
 
 .row-recover {

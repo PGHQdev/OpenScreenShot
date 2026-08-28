@@ -99,7 +99,7 @@ export function Rail(props: RailProps) {
   return (
     <aside class="rail">
       <div class="rail-section">
-        <button class="rec-btn" onClick={props.onAddZoom}>
+        <button class="btn-secondary" onClick={props.onAddZoom}>
           {t('recorderAddZoom')}
         </button>
         <button class="link-btn rail-link" onClick={props.onRegenerate}>
@@ -344,7 +344,7 @@ export function Rail(props: RailProps) {
             </button>
           </>
         ) : (
-          <button class="rec-btn rec-btn-primary" onClick={runExport}>
+          <button class="btn-secondary rec-btn-primary" onClick={runExport}>
             {t('recorderExport')}
           </button>
         )}

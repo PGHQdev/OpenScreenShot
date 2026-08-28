@@ -1,6 +1,8 @@
 /*
- * Shared form controls for the popup and editor surfaces.
- * Tokens come from tokens.css (imported by each surface's stylesheet).
+ * Shared form controls: native <input> elements restyled with tokens.css
+ * values, imported by all four surfaces. Kept separate from ui.css, which
+ * holds chrome built from <div>/<button> markup instead of overridden
+ * native controls — a different kind of seam, so a different file.
  */
 
 /* ---- Toggle switch (styled native checkbox) ---- */

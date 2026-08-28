@@ -6,6 +6,7 @@
 
 @import '../shared/tokens.css';
 @import '../shared/controls.css';
+@import '../shared/ui.css';
 
 * {
   box-sizing: border-box;
@@ -53,29 +54,24 @@ body {
 }
 
 .brand-name {
-  font-size: 15px;
+  font-size: var(--fs-base);
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
+/* Override of the shared 28px ghost from ui.css: the header back/settings
+   buttons want a bigger touch target and a dimmer resting colour. */
 .icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 30px;
   height: 30px;
   border: none;
-  border-radius: var(--r-sm);
-  background: transparent;
   color: var(--text-2);
-  cursor: pointer;
   transition:
     background var(--dur-mid) var(--ease-out),
     color var(--dur-mid) var(--ease-out);
 }
 
 .icon-btn:hover {
-  background: var(--hover-overlay);
   color: var(--text-1);
 }
 
@@ -346,7 +342,7 @@ body {
   justify-content: space-between;
 }
 .settings-label {
-  font-size: 13px;
+  font-size: var(--fs-base);
   font-weight: 600;
   color: var(--text-1);
   white-space: nowrap;
@@ -473,7 +469,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: var(--s-2);
-  font-size: 13px;
+  font-size: var(--fs-base);
   color: var(--text-1);
 }
 .num-input {
@@ -612,7 +608,7 @@ body {
 
 .welcome-lede {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--fs-base);
   color: var(--text-2);
   line-height: 1.5;
 }
@@ -626,7 +622,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--s-2);
-  font-size: 13px;
+  font-size: var(--fs-base);
   color: var(--text-1);
 }
 
@@ -701,7 +697,7 @@ body {
   border: none;
   background: transparent;
   color: inherit;
-  font-size: 15px;
+  font-size: var(--fs-base);
   line-height: 1.2;
   cursor: pointer;
   opacity: 0.7;

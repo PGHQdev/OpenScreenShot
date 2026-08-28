@@ -335,7 +335,7 @@ function SessionView({
 
         <div class="rec-transport">
           <button
-            class="icon-btn rec-play-btn"
+            class="rec-icon-btn rec-play-btn"
             aria-label={sess.playing ? t('recorderPause') : t('recorderPlay')}
             title={sess.playing ? t('recorderPause') : t('recorderPlay')}
             onClick={sess.playing ? sess.pause : sess.play}

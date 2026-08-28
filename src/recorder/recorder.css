@@ -7,6 +7,7 @@
 
 @import '../shared/tokens.css';
 @import '../shared/controls.css';
+@import '../shared/ui.css';
 
 * {
   box-sizing: border-box;
@@ -55,7 +56,7 @@ body {
 }
 
 .brand-name {
-  font-size: 15px;
+  font-size: var(--fs-base);
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -64,7 +65,7 @@ body {
   border: none;
   background: transparent;
   color: var(--text-2);
-  font-size: 13px;
+  font-size: var(--fs-sm);
   cursor: pointer;
   padding: var(--s-1) var(--s-2);
   border-radius: var(--r-sm);
@@ -80,7 +81,9 @@ body {
   outline-offset: 1px;
 }
 
-.icon-btn {
+/* Filled-circle transport button: a different meaning from ui.css's ghost
+   .icon-btn, so it keeps its own name instead of colliding with it. */
+.rec-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -96,15 +99,15 @@ body {
     transform var(--dur-mid) var(--ease-out);
 }
 
-.icon-btn:hover {
+.rec-icon-btn:hover {
   background: var(--accent-ink-hover);
 }
 
-.icon-btn:active {
+.rec-icon-btn:active {
   transform: scale(0.96);
 }
 
-.icon-btn:focus-visible {
+.rec-icon-btn:focus-visible {
   outline: 2px solid var(--border-focus);
   outline-offset: 2px;
 }
@@ -153,7 +156,7 @@ body {
 
 .rec-empty {
   color: var(--text-2);
-  font-size: 13px;
+  font-size: var(--fs-base);
   padding: var(--s-5) 0;
 }
 
@@ -177,7 +180,7 @@ body {
 }
 
 .rec-row-date {
-  font-size: 13px;
+  font-size: var(--fs-base);
   font-weight: 500;
 }
 
@@ -270,7 +273,7 @@ body {
 }
 
 .rail-row-label {
-  font-size: 13px;
+  font-size: var(--fs-base);
   color: var(--text-1);
 }
 
@@ -305,66 +308,15 @@ body {
 }
 
 /* ---- Beautify background swatches ---- */
+/* Overrides of the shared 18px swatch from ui.css: the beautify grid wraps
+   and its chips read at 22px. */
 .swatches {
-  display: flex;
   flex-wrap: wrap;
-  gap: 4px;
 }
 
 .swatch {
   width: 22px;
   height: 22px;
-  padding: 0;
-  border: 2px solid var(--border);
-  border-radius: var(--r-full);
-  cursor: pointer;
-  transition:
-    transform var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out);
-}
-
-.swatch:hover {
-  transform: scale(1.12);
-}
-
-.swatch[aria-pressed='true'] {
-  border-color: var(--text-1);
-  box-shadow:
-    0 0 0 2px var(--surface-1),
-    0 0 0 3px var(--accent);
-}
-
-.swatch-transparent {
-  background:
-    linear-gradient(45deg, #d9d9de 25%, transparent 25%) 0 0 / 8px 8px,
-    linear-gradient(-45deg, #d9d9de 25%, transparent 25%) 0 4px / 8px 8px,
-    #fff;
-}
-
-.swatch-custom {
-  position: relative;
-  display: inline-flex;
-  overflow: hidden;
-  background: conic-gradient(
-    var(--swatch-red),
-    var(--swatch-orange),
-    var(--swatch-yellow),
-    var(--swatch-green),
-    var(--swatch-blue),
-    var(--swatch-purple),
-    var(--swatch-red)
-  );
-}
-
-.swatch-custom input[type='color'] {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: none;
-  opacity: 0;
-  cursor: pointer;
 }
 
 /* ---- Webcam bubble corner picker ---- */
@@ -471,28 +423,6 @@ body {
   .rec-progress-fill {
     transition: none;
   }
-}
-
-.rec-btn {
-  height: 32px;
-  padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  background: var(--surface-2);
-  color: var(--text-1);
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background var(--dur-fast) var(--ease-out);
-}
-
-.rec-btn:hover {
-  background: var(--surface-3);
-}
-
-.rec-btn:focus-visible {
-  outline: 2px solid var(--border-focus);
-  outline-offset: 1px;
 }
 
 /* ---- Stage ---- */
@@ -807,8 +737,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .icon-btn,
-  .rec-btn {
+  .rec-icon-btn {
     transition: none;
   }
 }
