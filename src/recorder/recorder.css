@@ -834,7 +834,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rec-icon-btn {
+  .rec-icon-btn,
+  /* Colour-only hover fade; nothing about it conveys progress. */
+  .link-btn {
     transition: none;
   }
 }

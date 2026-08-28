@@ -755,7 +755,15 @@ body {
   .mode-card,
   .btn-primary,
   .icon-btn,
-  .toast {
+  .toast,
+  /* Colour-only hover and toggle fades — none of them convey progress the
+     way .spinner does, so they are suppressed outright rather than slowed. */
+  .mode-icon,
+  .mode-title,
+  .chip-toggle,
+  .seg-btn,
+  .token-chip,
+  .link-btn {
     transition: none;
   }
   .spinner {

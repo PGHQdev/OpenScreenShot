@@ -25,17 +25,19 @@
 //     no-explicit-theme default — the compound-selector specificity the
 //     override needs to win in all three is exactly the thing most likely
 //     to silently fail.
-//   - prefers-reduced-motion: two of editor.css's previously-uncovered
-//     colour-transitioning selectors report a zero transition-duration.
+//   - prefers-reduced-motion: every selector this task added to a reduce
+//     block reports a zero transition-duration, and a real (non-zero) one
+//     under an explicitly forced no-preference — editor.css's, recorder.css's
+//     .link-btn, and popup.css's six.
 //   - Baseline (no emulated feature) is captured first and re-checked last,
 //     so a forced-colors or prefers-contrast rule that leaked into ordinary
 //     rendering fails the same run.
 //
 // All three surfaces that carry these rules are opened: editor, recorder and
-// popup. Every forced-colors selector the task's CSS diff touches has an
-// assertion that fails if its rule is reverted (verified by reverting each
-// one — see task-17-report.md's negative-control section), including the
-// shared controls.css switch, checked on the editor and the recorder.
+// popup. Every selector the task's CSS diff touches has an assertion that
+// fails if its rule is reverted (verified by reverting each one — see
+// task-17-report.md's negative-control section), including the shared
+// controls.css switch, which is checked on the editor and the recorder.
 // Run with: npm run build && npm run smoke:media
 import { createReadStream } from 'node:fs';
 import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
@@ -879,6 +881,21 @@ async function testRecorder(browser, base, messages) {
   );
   await emulateMedia(cdp, []);
 
+  step('RECORDER — prefers-reduced-motion: reduce — .link-btn');
+  await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'no-preference' }]);
+  const baseLink = await computedOf(page, '.rail .link-btn', ['transitionDuration']);
+  assert(
+    !allZero(baseLink.transitionDuration),
+    `.link-btn has a real transition under no-preference (${baseLink.transitionDuration})`,
+  );
+  await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+  const reducedLink = await computedOf(page, '.rail .link-btn', ['transitionDuration']);
+  assert(
+    allZero(reducedLink.transitionDuration),
+    `.link-btn transition-duration is ${reducedLink.transitionDuration} under reduce`,
+  );
+  await emulateMedia(cdp, []);
+
   assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
   await page.close();
 }
@@ -941,6 +958,60 @@ async function testPopup(browser, base, messages) {
     idleChip.backgroundColor !== highlight,
     `an unpressed chip does not (${idleChip.backgroundColor}) — the two are distinguishable`,
   );
+  await emulateMedia(cdp, []);
+
+  step('POPUP — prefers-reduced-motion: reduce — the six previously-uncovered transitions');
+  const SELECTORS = [
+    '.mode-icon',
+    '.mode-title',
+    '.chip-toggle',
+    '.seg-btn',
+    '.token-chip',
+    '.link-btn',
+  ];
+  // Some of these only render in a state the popup is not in here (a
+  // recoverable session, a filename template). A detached probe carrying the
+  // class exercises the same rule — CSS matches on the class, not on where
+  // the element sits — and is used only where the real element is absent.
+  await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'no-preference' }]);
+  const baseline = await page.evaluate((sels) => {
+    const out = {};
+    for (const sel of sels) {
+      const real = document.querySelector(sel);
+      const el = real ?? document.createElement('button');
+      if (!real) {
+        el.className = sel.slice(1);
+        document.body.appendChild(el);
+      }
+      out[sel] = { duration: getComputedStyle(el).transitionDuration, real: Boolean(real) };
+      if (!real) el.remove();
+    }
+    return out;
+  }, SELECTORS);
+  for (const sel of SELECTORS) {
+    assert(
+      baseline[sel].duration !== '0s',
+      `${sel} has a real transition under no-preference (${baseline[sel].duration}${baseline[sel].real ? '' : ', via a probe — not rendered in this popup state'})`,
+    );
+  }
+  await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+  const reduced = await page.evaluate((sels) => {
+    const out = {};
+    for (const sel of sels) {
+      const real = document.querySelector(sel);
+      const el = real ?? document.createElement('button');
+      if (!real) {
+        el.className = sel.slice(1);
+        document.body.appendChild(el);
+      }
+      out[sel] = getComputedStyle(el).transitionDuration;
+      if (!real) el.remove();
+    }
+    return out;
+  }, SELECTORS);
+  for (const sel of SELECTORS) {
+    assert(allZero(reduced[sel]), `${sel} transition-duration is ${reduced[sel]} under reduce`);
+  }
   await emulateMedia(cdp, []);
 
   assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
