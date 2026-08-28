@@ -278,6 +278,29 @@ async function testEditor(browser, base, messages) {
   await page.click('.tool-btn[title^="Rectangle"]');
   await page.waitForSelector('.stylebar');
 
+  step(
+    'EDITOR — 1280px width (ordinary desktop): topbar and style bar stay one row, toolbar does not scroll',
+  );
+  const wideEditor = await page.evaluate(() => {
+    const oneRow = (els) => {
+      const rects = [...els].map((el) => el.getBoundingClientRect());
+      return rects.every((a) => rects.every((b) => a.top < b.bottom && a.bottom > b.top));
+    };
+    const toolbar = document.querySelector('.toolbar');
+    return {
+      topbarOneRow: oneRow(document.querySelectorAll('.topbar > *')),
+      stylebarOneRow: oneRow(document.querySelectorAll('.stylebar-group')),
+      toolbarScrollH: toolbar.scrollHeight,
+      toolbarClientH: toolbar.clientHeight,
+    };
+  });
+  assert(wideEditor.topbarOneRow, 'topbar brand, actions and controls share one row at 1280px');
+  assert(wideEditor.stylebarOneRow, 'style bar groups share one row at 1280px');
+  assert(
+    wideEditor.toolbarScrollH === wideEditor.toolbarClientH,
+    `toolbar does not need to scroll at 1280px (${wideEditor.toolbarScrollH}px content in ${wideEditor.toolbarClientH}px box)`,
+  );
+
   step('EDITOR — 320px width: no horizontal overflow, all 12 tools present');
   await page.setViewport({ width: 320, height: 800 });
   await new Promise((r) => setTimeout(r, 150));
@@ -444,6 +467,22 @@ async function testRecorder(browser, base, messages) {
   const sessionId = await page.evaluate(seedRecorderSession);
   await page.goto(`${base}/src/recorder/index.html?session=${sessionId}`, { waitUntil: 'load' });
   await page.waitForSelector('.rail', { timeout: 15_000 });
+
+  step('RECORDER — 1280px width (ordinary desktop): rail stays beside the stage at full height');
+  const wideRecorder = await page.evaluate(() => {
+    const direction = getComputedStyle(document.querySelector('.rec-session')).flexDirection;
+    const session = document.querySelector('.rec-session').getBoundingClientRect();
+    const rail = document.querySelector('.rail').getBoundingClientRect();
+    return { direction, sessionHeight: session.height, railHeight: rail.height };
+  });
+  assert(
+    wideRecorder.direction === 'row',
+    `.rec-session is flex-direction: ${wideRecorder.direction} at 1280px`,
+  );
+  assert(
+    Math.abs(wideRecorder.railHeight - wideRecorder.sessionHeight) <= 1,
+    `rail (${wideRecorder.railHeight.toFixed(0)}px) stretches to the session's full height (${wideRecorder.sessionHeight.toFixed(0)}px)`,
+  );
 
   step('RECORDER — 320px width: rail stacks below the stage, no horizontal overflow');
   await page.setViewport({ width: 320, height: 900 });
