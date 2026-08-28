@@ -6,7 +6,7 @@ import { theme } from '../../src/shared/design-tokens';
  * (tokens.css) missed it against real call sites for two release cycles
  * running: task-9-report.md measured the gap, task-11's delivered scope
  * dropped it, and task-20's axe smoke rediscovered the exact same numbers
- * live. task-45 raised both tokens and moved the three call sites that
+ * live. task-45 raised both tokens and moved the four call sites that
  * painted --text-3 on a surface it was never meant to clear onto a
  * different token instead (editor.css's `.empty-fallback`/`.empty-alt` and
  * `.zoom-item kbd`, popup.css's `.kbd-os` — see task-45-report.md). This is

@@ -54,7 +54,7 @@ const MIME = {
 // --surface-1, was 2.21:1 light / 2.84:1 dark) and `.tag-optional`
 // (--text-2 on --surface-3, was 4.26:1 light / 3.95:1 dark).
 //
-// Three more call sites painted --text-3 on a surface it was never meant to
+// Four more call sites painted --text-3 on a surface it was never meant to
 // clear; each moved to a different token instead of widening --text-3's
 // floor to cover it too (that would have pushed --text-3 close enough to
 // --text-2 to erase the muted tier everywhere else it is used — see

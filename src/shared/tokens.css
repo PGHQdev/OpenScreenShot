@@ -34,6 +34,11 @@
  *                 palest/most-muted) but a reader leans on each call site's
  *                 own size/weight/case more than colour now to tell the two
  *                 apart. task-45-report.md has the full before/after matrix.
+ *                 tests/unit/token-contrast.test.ts guards the 4.5:1 floor
+ *                 for both tokens, but only on the (theme, surface) pairs
+ *                 listed above — it does not know a new call site exists, so
+ *                 check the usage matrix (or that test file's own header
+ *                 comment) before painting either token somewhere new.
  *   --accent      non-text marks and large display type only (>= 3:1).
  *   --accent-ink  links, filled-control grounds and body-size accent text.
  *                 Clears 4.5:1 on --surface-1, --surface-2, --surface-3 and
