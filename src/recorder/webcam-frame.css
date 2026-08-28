@@ -1,0 +1,49 @@
+/*
+ * Webcam bubble / permission-denied styling for webcam-frame.html.
+ *
+ * This page is injected as an iframe into arbitrary host pages
+ * (src/content/recording-overlay.ts), so it stays visually dark on purpose:
+ * it is a small floating bubble, and a light card would read wrong against
+ * most page backgrounds. It does not follow the extension's own light/dark
+ * setting - it never loads theme-init.js/theme.ts - so webcam-frame.html
+ * pins data-theme="dark" directly on <html>, and the colours below resolve
+ * from tokens.css's dark palette rather than one-off literals.
+ */
+@import '../shared/tokens.css';
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+}
+
+video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  background: var(--surface-1);
+  /* Drags land on the host wrapper's handle ring, never on the video. */
+  pointer-events: none;
+}
+
+.denied {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 18px;
+  border-radius: 50%;
+  background: var(--surface-1);
+  color: var(--text-1);
+  text-align: center;
+  font: 500 12px/1.35 var(--font);
+  border: 2px solid var(--accent);
+  pointer-events: none;
+}

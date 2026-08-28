@@ -14,6 +14,7 @@
  * and invisible: it is the only prompt surface for the mic.
  */
 
+import './webcam-frame.css';
 import type { RecState } from '../shared/recording-types';
 
 /** A worker that never answers is treated the same as "nothing is recording". */
