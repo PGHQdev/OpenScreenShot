@@ -242,8 +242,8 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
       <h2>Everything stays on your device.</h2>
       <p class="lede">
         Screenshots are often the most sensitive images on your machine. Capture, editing, export
-        and PDF all run in your browser. The extension makes no network request of its own, and its
-        host permissions are empty, so it has no standing access to any site you visit.
+        and PDF all run in your browser. The extension makes no network request of its own. Its host
+        permissions are empty, so it has no standing access to any site you visit.
       </p>
 
       <h3 class="sub-head">What it asks for at install</h3>
@@ -358,14 +358,15 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
     margin-bottom: var(--s-3);
   }
 
+  /* Sentence case, as the copy block sets it. The eyebrow above the h1 and the
+   * proof strip below already carry the hero's caps voice. --tr-label goes with
+   * it: that tracking is drawn for caps and gaps in lower case. */
   .note {
     margin-bottom: var(--s-7);
     color: var(--ink-3);
     font-family: var(--font-mono);
     font-weight: 500;
     font-size: var(--fs-xs);
-    letter-spacing: var(--tr-label);
-    text-transform: uppercase;
   }
 
   /* ---- Product slab ---- */
