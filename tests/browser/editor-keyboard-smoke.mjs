@@ -407,16 +407,31 @@ async function main() {
     }
 
     step('the Width field clamps on commit, not on every keystroke, and says so');
+    // The notice paragraph must already be in the DOM, empty, before anything
+    // is typed — a polite live region only announces reliably when the AT can
+    // register it before its text changes; a region inserted with its message
+    // already inside it is not what's being tested here (that shape belongs to
+    // role="alert", tested separately below). Tag the node now so the later
+    // assertion can prove the SAME node got new text, not a fresh one.
+    const widthNoticeBefore = await page.evaluate(() => {
+      const notice = document.querySelector('.field-notice');
+      if (!notice) return null;
+      notice.dataset.smokeTag = 'width-notice';
+      return { role: notice.getAttribute('role'), text: notice.textContent };
+    });
+    assert(widthNoticeBefore !== null, 'the notice paragraph is already mounted, before any clamp');
+    assert(widthNoticeBefore.role === 'status', 'it already carries role="status"');
+    assert(widthNoticeBefore.text === '', 'and starts empty — nothing to announce yet');
     await page.$eval('.num-input-wide', (el) => el.focus());
     await selectAllInField();
     await page.keyboard.type('99999');
     await settle();
     const midWidth = await page.evaluate(() => ({
       value: document.querySelector('.num-input-wide').value,
-      hasNotice: document.querySelector('.field-notice') !== null,
+      noticeText: document.querySelector('.field-notice')?.textContent ?? null,
     }));
     assert(midWidth.value === '99999', 'the field shows the raw typed text while still focused');
-    assert(!midWidth.hasNotice, 'no clamp notice yet — nothing has been committed');
+    assert(midWidth.noticeText === '', 'no clamp notice yet — nothing has been committed');
     await page.keyboard.press('Tab');
     await settle();
     const afterWidth = await page.evaluate(() => {
@@ -426,7 +441,7 @@ async function main() {
         value: input.value,
         max: input.max,
         noticeText: notice?.textContent ?? null,
-        role: notice?.getAttribute('role') ?? null,
+        sameNode: notice?.dataset.smokeTag === 'width-notice',
       };
     });
     assert(
@@ -437,7 +452,10 @@ async function main() {
       afterWidth.noticeText !== null && /clamp/i.test(afterWidth.noticeText),
       `a clamp notice explains it: "${afterWidth.noticeText}"`,
     );
-    assert(afterWidth.role === 'status', 'the notice is announced (role="status")');
+    assert(
+      afterWidth.sameNode,
+      'the same node got the new text — a polite region announces by mutation, not by being inserted with text already set',
+    );
 
     step('PDF format exposes Page size / Orientation, each carrying aria-pressed');
     const segmentedRowButtons = (rowLabel) =>
@@ -495,6 +513,21 @@ async function main() {
       () => document.querySelector('.check-row .num-input').value,
     );
     assert(midMargin === '99', 'the margin field shows the raw typed text while still focused');
+    // Same always-mounted check as the Width field above: tag the notice
+    // node before the clamp fires, then prove the tagged node is the one
+    // that ends up holding the message.
+    const marginNoticeBefore = await page.evaluate(() => {
+      const notice = document.querySelector('.field-notice');
+      if (!notice) return null;
+      notice.dataset.smokeTag = 'margin-notice';
+      return { role: notice.getAttribute('role'), text: notice.textContent };
+    });
+    assert(
+      marginNoticeBefore !== null,
+      'the margin notice paragraph is already mounted, before any clamp',
+    );
+    assert(marginNoticeBefore.role === 'status', 'it already carries role="status"');
+    assert(marginNoticeBefore.text === '', 'and starts empty — nothing to announce yet');
     await page.keyboard.press('Tab');
     await settle();
     const afterMargin = await page.evaluate(() => {
@@ -504,7 +537,7 @@ async function main() {
         value: input.value,
         max: input.max,
         noticeText: notice?.textContent ?? null,
-        role: notice?.getAttribute('role') ?? null,
+        sameNode: notice?.dataset.smokeTag === 'margin-notice',
       };
     });
     assert(
@@ -515,7 +548,10 @@ async function main() {
       afterMargin.noticeText !== null && /clamp/i.test(afterMargin.noticeText),
       `a clamp notice explains it: "${afterMargin.noticeText}"`,
     );
-    assert(afterMargin.role === 'status', 'the notice is announced (role="status")');
+    assert(
+      afterMargin.sameNode,
+      'the same node got the new text — a polite region announces by mutation, not by being inserted with text already set',
+    );
 
     step('an export failure renders role="alert", and repeating it still re-announces');
     await page.evaluate(() => {

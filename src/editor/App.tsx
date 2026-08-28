@@ -804,11 +804,9 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
                 {composed.w} × {composed.h} → {outW} × {outH}
               </span>
             </div>
-            {widthNotice ? (
-              <p class="field-notice" role="status">
-                {widthNotice}
-              </p>
-            ) : null}
+            <p class="field-notice" role="status">
+              {widthNotice ?? ''}
+            </p>
           </div>
         ) : null}
 
@@ -926,11 +924,9 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
                 mm
               </label>
             </div>
-            {marginNotice ? (
-              <p class="field-notice" role="status">
-                {marginNotice}
-              </p>
-            ) : null}
+            <p class="field-notice" role="status">
+              {marginNotice ?? ''}
+            </p>
             {isFull ? (
               <p class="pdf-hint">
                 “Full” makes one page sized to the image, so orientation, multi-page and margin

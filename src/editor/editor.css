@@ -735,17 +735,17 @@ body {
 .num-input-wide {
   width: 80px;
 }
-.pdf-hint {
-  margin: 0 0 var(--s-3);
+.pdf-hint,
+.field-notice {
   font-size: var(--fs-sm);
   color: var(--text-2);
   line-height: 1.45;
 }
+.pdf-hint {
+  margin: 0 0 var(--s-3);
+}
 .field-notice {
   margin: var(--s-1) 0 var(--s-3);
-  font-size: var(--fs-sm);
-  color: var(--text-2);
-  line-height: 1.45;
 }
 .export-error {
   margin: 0 0 var(--s-3);
