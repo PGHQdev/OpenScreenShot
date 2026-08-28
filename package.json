@@ -27,6 +27,7 @@
     "site:preview": "wrangler dev",
     "site:deploy": "npm run site:build && wrangler deploy",
     "shots": "node scripts/shots/render.mjs",
+    "smoke:editor": "node tests/browser/editor-keyboard-smoke.mjs",
     "smoke:recorder": "node tests/browser/recorder-smoke.mjs",
     "smoke:setup": "node tests/browser/setup-smoke.mjs"
   },

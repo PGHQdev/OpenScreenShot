@@ -78,6 +78,7 @@ import { applyTheme, watchSystemTheme } from '../shared/theme';
 import { COLOR_PALETTE, pushRecent } from './palette';
 import { draftFrame, DRAFT_DEBOUNCE_MS, makeDraft, parseDraft, type Draft } from './draft';
 import { canvasToDataUrl, downloadDataUrl, withExtension, type ImageFormat } from './export';
+import { historyStep } from './history';
 import { importSizeError, readImageFile, titleFromFilename } from './import-image';
 import { exportPdf as exportPdfFile, type PdfOptions } from './pdf';
 import { resampleToWidth } from './scale';
@@ -179,6 +180,19 @@ export function useEditor() {
    * synced from an effect can be read stale — or be restored to a frame-old
    * value after a newer write — by anything that repeats faster than a frame.
    * A held arrow key, a held Cmd+Z and a tool letter followed by Enter all do.
+   *
+   * There are two ref conventions in this file, and which one a ref follows is
+   * not guessable from its name, so here they are.
+   *
+   *   Eager, written beside their state: annotationsRef, selectedIdRef,
+   *   pastRef, futureRef, toolRef (the four writers below), and cropDraftRef
+   *   (written at each of its own call sites). Anything a keydown reads to
+   *   decide what to do belongs in this group.
+   *
+   *   Lazy, synced from an effect: styleRef, spotlightShapeRef, blurModeRef,
+   *   frameRef. All four are read only when something is being drawn or saved,
+   *   where being one frame behind costs at most the previous colour on one
+   *   shape. Move a ref into the eager group before letting a key chord read it.
    */
 
   /**
@@ -290,8 +304,19 @@ export function useEditor() {
     }
   }, [selectedId]);
 
-  /** Put one mutation into the live region. The newest write is what gets read. */
-  const say = useCallback((m: Mutation) => setAnnouncement(announce(m)), []);
+  /**
+   * Put one mutation into the live region. The newest write is what gets read.
+   *
+   * The alternating trailing space is load-bearing. Two mutations in a row can
+   * produce the same sentence — a second Cmd+Z that undoes another move, or `]`
+   * in a one-layer document — and an identical string is not a state change, so
+   * Preact writes nothing and the region stays silent. Screen readers do not
+   * read the space; they do read the change it forces.
+   */
+  const say = useCallback((m: Mutation) => {
+    const text = announce(m);
+    setAnnouncement((prev) => (prev === text ? `${text} ` : text));
+  }, []);
 
   // --- History ---
   /** The one way the undo stacks change. */
@@ -315,23 +340,21 @@ export function useEditor() {
   }, [applyHistory]);
 
   const undo = useCallback(() => {
-    const past = pastRef.current;
-    if (past.length === 0) return;
-    const last = past[past.length - 1];
-    applyHistory(past.slice(0, -1), [annotationsRef.current, ...futureRef.current]);
-    applyAnnotations(last);
+    const step = historyStep(pastRef.current, futureRef.current, annotationsRef.current, -1);
+    if (!step) return;
+    applyHistory(step.past, step.future);
+    applyAnnotations(step.annotations);
     selectAnnotation(null);
-    say({ kind: 'undo', total: last.length });
+    say({ kind: 'undo', total: step.annotations.length });
   }, [applyAnnotations, applyHistory, selectAnnotation, say]);
 
   const redo = useCallback(() => {
-    const future = futureRef.current;
-    if (future.length === 0) return;
-    const next = future[0];
-    applyHistory([...pastRef.current, annotationsRef.current], future.slice(1));
-    applyAnnotations(next);
+    const step = historyStep(pastRef.current, futureRef.current, annotationsRef.current, 1);
+    if (!step) return;
+    applyHistory(step.past, step.future);
+    applyAnnotations(step.annotations);
     selectAnnotation(null);
-    say({ kind: 'redo', total: next.length });
+    say({ kind: 'redo', total: step.annotations.length });
   }, [applyAnnotations, applyHistory, selectAnnotation, say]);
 
   const deleteSelection = useCallback(() => {
@@ -492,11 +515,6 @@ export function useEditor() {
     return () => canvas.removeEventListener('wheel', onWheel);
   }, []);
 
-  const cropActiveRef = useRef(false);
-  useEffect(() => {
-    cropActiveRef.current = cropActive;
-  }, [cropActive]);
-
   // --- Zoom controls ---
   const zoomAtCenter = useCallback((factor: number) => {
     const c = controllerRef.current;
@@ -564,7 +582,7 @@ export function useEditor() {
       }
       // Escape: cancel crop, else deselect.
       if (e.key === 'Escape') {
-        if (cropActiveRef.current) {
+        if (cropDraftRef.current) {
           cancelCrop();
           e.preventDefault();
         } else if (selectedIdRef.current) {
@@ -1083,8 +1101,8 @@ export function useEditor() {
           intent.kind === 'crop-move'
             ? moveCropBy(cur, intent.dx, intent.dy, iw, ih)
             : resizeCropBy(cur, intent.dx, intent.dy, iw, ih);
-        // The rect stops at the image edge; repeating the same size is noise.
-        if (next.x === cur.x && next.y === cur.y && next.w === cur.w && next.h === cur.h) return;
+        // A rect held at the image edge still gets announced: silence reads as
+        // "the key did nothing", which is a different thing from "it clamped".
         cropDraftRef.current = next;
         setCropDraft(next);
         c.setCropRect(next);

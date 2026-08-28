@@ -981,12 +981,13 @@ function TextOverlay({ ed }: { ed: ReturnType<typeof useEditor> }) {
       onInput={(e) => ed.updateText(id, (e.target as HTMLTextAreaElement).value)}
       onBlur={() => ed.finishText(id)}
       onKeyDown={(e) => {
-        if (e.key === 'Escape') {
+        if (e.key === 'Escape' || (e.key === 'Enter' && !e.shiftKey)) {
           e.preventDefault();
+          // The blur is what commits the text. Focus then goes back to the
+          // canvas rather than to <body>, which is where it lands otherwise —
+          // and <body> is 18 Tab presses away from the canvas.
           (e.target as HTMLTextAreaElement).blur();
-        } else if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          (e.target as HTMLTextAreaElement).blur();
+          ed.canvasRef.current?.focus();
         }
       }}
     />
