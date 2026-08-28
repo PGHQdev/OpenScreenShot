@@ -251,13 +251,38 @@ export function App() {
             if (file) void ed.importFromFile(file);
           }}
         >
+          {/*
+            role="application" so a screen reader hands the arrow keys straight
+            to the canvas instead of using them to read the page. tabindex puts
+            it in the normal tab order and nothing here claims Tab, so focus
+            leaves again the way it arrived.
+          */}
           <canvas
             ref={ed.canvasRef}
             class="stage-canvas"
             data-cursor={cursor}
+            role="application"
+            tabIndex={0}
+            aria-label={
+              ed.imageSize
+                ? `Screenshot canvas, ${ed.imageSize.w} by ${ed.imageSize.h} pixels`
+                : 'Screenshot canvas, empty'
+            }
             onMouseDown={ed.onCanvasMouseDown}
             onDblClick={ed.onCanvasDoubleClick}
-          />
+            onKeyDown={ed.onCanvasKeyDown}
+          >
+            <p>
+              {ed.imageSize
+                ? `The captured screenshot, ${ed.imageSize.w} by ${ed.imageSize.h} pixels, with ${ed.annotations.length} annotation${ed.annotations.length === 1 ? '' : 's'} drawn on it.`
+                : 'No screenshot is open.'}{' '}
+              Press the right bracket to select the next annotation and the left bracket for the
+              previous one. Press Enter to place the tool you picked in the toolbar. Use the arrow
+              keys to move the selection by one pixel, Shift and an arrow to move it by ten, and Alt
+              and an arrow to resize it. With a crop open, the arrow keys move it, Alt and an arrow
+              resize it, Enter applies it and Escape cancels it.
+            </p>
+          </canvas>
 
           {ed.stageNotice && !ed.cropActive ? (
             <div class="stage-notice" role="status">
@@ -323,6 +348,15 @@ export function App() {
         <span class="status-spacer" />
         <span class="status-hint">{hintForTool(ed.tool)}</span>
       </footer>
+
+      {/*
+        Mounted for the life of the page and never rewrapped, so every change to
+        ed.announcement is a text edit inside a region that is already being
+        watched. A region created in the same frame as its message is not.
+      */}
+      <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {ed.announcement}
+      </div>
 
       {exportOpen && ed.capture ? (
         <ExportDialog ed={ed} onClose={() => setExportOpen(false)} />

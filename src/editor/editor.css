@@ -332,6 +332,45 @@ body {
   cursor: text;
 }
 
+/* The UA outline would land on image pixels; the ring below replaces it. */
+.stage-canvas:focus-visible {
+  outline: none;
+}
+
+/*
+ * Focus ring for the canvas. It cannot sit on the canvas itself: the canvas
+ * paints the user's screenshot, so any pixel under a ring drawn there is
+ * unknown and no contrast ratio can be promised. This paints the ring on the
+ * stage as a band with --surface-1 on both of its sides, which puts
+ * --border-focus on a known ground: 3.72:1 light, 5.68:1 dark. ::after comes
+ * after the canvas in tree order, so it paints over the picture. No motion, so
+ * nothing to suppress under prefers-reduced-motion.
+ */
+.stage:has(> .stage-canvas:focus-visible)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 0 2px var(--surface-1),
+    inset 0 0 0 5px var(--border-focus),
+    inset 0 0 0 7px var(--surface-1);
+}
+
+/* Available to a screen reader, out of the way of everything else. Not
+   display:none — a hidden live region announces nothing. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ---- Workspace (toolbar + stage) ---- */
 .workspace {
   display: flex;

@@ -48,6 +48,18 @@ import {
   type ShapeTool,
   type Tool,
 } from './tools';
+import {
+  announce,
+  canvasIntent,
+  cycleSelection,
+  moveCropBy,
+  placementRect,
+  PLACE_SIZE_PX,
+  resizeAnnotationBy,
+  resizeCropBy,
+  type CanvasMode,
+  type Mutation,
+} from './keyboard';
 import type { LastCapture, Settings } from '../shared/types';
 import {
   clearDraft,
@@ -133,6 +145,10 @@ export function useEditor() {
   // failed restore happens on the Restore click, not during a drop.
   const [stageNotice, setStageNotice] = useState<string | null>(null);
   const [draftPrompt, setDraftPrompt] = useState<Draft | null>(null);
+  // What the editor's live region reads out. App.tsx renders it into a
+  // permanently mounted node, so every write here is a text change inside a
+  // region assistive tech is already watching.
+  const [announcement, setAnnouncement] = useState('');
 
   // Refs for use inside stable event handlers (avoid stale closures).
   const toolRef = useRef(tool);
@@ -145,6 +161,9 @@ export function useEditor() {
   const pastRef = useRef(past);
   const futureRef = useRef(future);
   const dragSnapshottedRef = useRef(false);
+  // A held arrow key is one undo step, the same way a drag is: set on the
+  // first nudge, cleared on the key's release (see the keyup handler below).
+  const keyNudgeRef = useRef(false);
   const styleRef = useRef(style);
   const spotlightShapeRef = useRef(spotlightShape);
   const blurModeRef = useRef(blurMode);
@@ -154,6 +173,35 @@ export function useEditor() {
   // restored before it is applied.
   const restoringRef = useRef(false);
 
+  /*
+   * The four writers below own the state their ref mirrors, and write both in
+   * one statement. Preact flushes effects a frame after the commit, so a ref
+   * synced from an effect can be read stale — or be restored to a frame-old
+   * value after a newer write — by anything that repeats faster than a frame.
+   * A held arrow key, a held Cmd+Z and a tool letter followed by Enter all do.
+   */
+
+  /**
+   * The one way the selection changes. The pointer path has a hit-test to name
+   * the annotation; the keyboard has only the layer order, so selection has to
+   * be settable from an id alone. That is also what un-disables the topbar's
+   * Delete button for a keyboard user.
+   */
+  const selectAnnotation = useCallback((id: string | null) => {
+    selectedIdRef.current = id;
+    setSelectedId(id);
+  }, []);
+
+  /** The one way the annotation list changes. */
+  const applyAnnotations = useCallback(
+    (next: Annotation[] | ((prev: Annotation[]) => Annotation[])) => {
+      const list = typeof next === 'function' ? next(annotationsRef.current) : next;
+      annotationsRef.current = list;
+      setAnnotations(list);
+    },
+    [],
+  );
+
   useEffect(() => {
     spotlightShapeRef.current = spotlightShape;
   }, [spotlightShape]);
@@ -162,22 +210,24 @@ export function useEditor() {
     blurModeRef.current = blurMode;
   }, [blurMode]);
 
-  useEffect(() => {
-    toolRef.current = tool;
-  }, [tool]);
+  /** The one way the active tool changes. */
+  const selectTool = useCallback((t: Tool) => {
+    toolRef.current = t;
+    setTool(t);
+  }, []);
 
   // The eyedropper is a one-shot: it sets the colour for whatever you were
   // drawing with, then hands that tool back. Clearing the selection matters too
   // — a handle painted over the pixel would be sampled instead of the pixel.
   const prevToolRef = useRef<Tool>('select');
   useEffect(() => {
-    if (tool === 'eyedropper') setSelectedId(null);
+    if (tool === 'eyedropper') selectAnnotation(null);
     else prevToolRef.current = tool;
-  }, [tool]);
+  }, [tool, selectAnnotation]);
 
-  // Sync annotations to the controller + a ref for history/hit-testing.
+  // Sync annotations to the controller. The ref beside them is written by
+  // applyAnnotations, not here.
   useEffect(() => {
-    annotationsRef.current = annotations;
     controllerRef.current?.setAnnotations(annotations);
   }, [annotations]);
 
@@ -188,8 +238,8 @@ export function useEditor() {
     controllerRef.current?.setFrame(frame);
   }, [frame]);
 
+  // The ref beside the selection is written by selectAnnotation, not here.
   useEffect(() => {
-    selectedIdRef.current = selectedId;
     controllerRef.current?.setSelected(selectedId);
   }, [selectedId]);
 
@@ -240,49 +290,60 @@ export function useEditor() {
     }
   }, [selectedId]);
 
-  useEffect(() => {
-    pastRef.current = past;
-  }, [past]);
-  useEffect(() => {
-    futureRef.current = future;
-  }, [future]);
+  /** Put one mutation into the live region. The newest write is what gets read. */
+  const say = useCallback((m: Mutation) => setAnnouncement(announce(m)), []);
 
   // --- History ---
-  const commit = useCallback((updater: (prev: Annotation[]) => Annotation[]) => {
-    setPast((p) => [...p, annotationsRef.current]);
-    setFuture([]);
-    setAnnotations(updater);
+  /** The one way the undo stacks change. */
+  const applyHistory = useCallback((p: Annotation[][], f: Annotation[][]) => {
+    pastRef.current = p;
+    futureRef.current = f;
+    setPast(p);
+    setFuture(f);
   }, []);
+
+  const commit = useCallback(
+    (updater: (prev: Annotation[]) => Annotation[]) => {
+      applyHistory([...pastRef.current, annotationsRef.current], []);
+      applyAnnotations(updater);
+    },
+    [applyAnnotations, applyHistory],
+  );
 
   const snapshot = useCallback(() => {
-    setPast((p) => [...p, annotationsRef.current]);
-    setFuture([]);
-  }, []);
+    applyHistory([...pastRef.current, annotationsRef.current], []);
+  }, [applyHistory]);
 
   const undo = useCallback(() => {
-    if (pastRef.current.length === 0) return;
-    const last = pastRef.current[pastRef.current.length - 1];
-    setPast((p) => p.slice(0, -1));
-    setFuture((f) => [annotationsRef.current, ...f]);
-    setAnnotations(last);
-    setSelectedId(null);
-  }, []);
+    const past = pastRef.current;
+    if (past.length === 0) return;
+    const last = past[past.length - 1];
+    applyHistory(past.slice(0, -1), [annotationsRef.current, ...futureRef.current]);
+    applyAnnotations(last);
+    selectAnnotation(null);
+    say({ kind: 'undo', total: last.length });
+  }, [applyAnnotations, applyHistory, selectAnnotation, say]);
 
   const redo = useCallback(() => {
-    if (futureRef.current.length === 0) return;
-    const next = futureRef.current[0];
-    setFuture((f) => f.slice(1));
-    setPast((p) => [...p, annotationsRef.current]);
-    setAnnotations(next);
-    setSelectedId(null);
-  }, []);
+    const future = futureRef.current;
+    if (future.length === 0) return;
+    const next = future[0];
+    applyHistory([...pastRef.current, annotationsRef.current], future.slice(1));
+    applyAnnotations(next);
+    selectAnnotation(null);
+    say({ kind: 'redo', total: next.length });
+  }, [applyAnnotations, applyHistory, selectAnnotation, say]);
 
   const deleteSelection = useCallback(() => {
     const id = selectedIdRef.current;
     if (!id) return;
+    const gone = annotationsRef.current.find((x) => x.id === id);
     commit((prev) => renumberSteps(prev.filter((x) => x.id !== id)));
-    setSelectedId(null);
-  }, [commit]);
+    selectAnnotation(null);
+    // commit lands the new list on annotationsRef before it returns, so this
+    // count is what is left rather than what was there.
+    if (gone) say({ kind: 'delete', type: gone.type, remaining: annotationsRef.current.length });
+  }, [commit, selectAnnotation, say]);
 
   // --- Style (color / stroke width / font size) ---
   const applyStyleToSelected = useCallback(
@@ -507,7 +568,7 @@ export function useEditor() {
           cancelCrop();
           e.preventDefault();
         } else if (selectedIdRef.current) {
-          setSelectedId(null);
+          selectAnnotation(null);
           e.preventDefault();
         }
         return;
@@ -525,7 +586,7 @@ export function useEditor() {
       // Tool shortcuts.
       const t = TOOL_LIST.find((x) => x.shortcut === e.key.toUpperCase());
       if (t) {
-        setTool(t.id);
+        selectTool(t.id);
         e.preventDefault();
       }
     };
@@ -534,6 +595,8 @@ export function useEditor() {
         spaceRef.current = false;
         setSpaceHeld(false);
       }
+      // Releasing an arrow ends the run of nudges that share one undo step.
+      if (e.key.startsWith('Arrow')) keyNudgeRef.current = false;
     };
     window.addEventListener('keydown', down);
     window.addEventListener('keyup', up);
@@ -541,7 +604,18 @@ export function useEditor() {
       window.removeEventListener('keydown', down);
       window.removeEventListener('keyup', up);
     };
-  }, [undo, redo, deleteSelection, zoomIn, zoomOut, resetZoom, fit, setStyleColor]);
+  }, [
+    undo,
+    redo,
+    deleteSelection,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    fit,
+    setStyleColor,
+    selectTool,
+    selectAnnotation,
+  ]);
 
   // --- Drag handlers (attached to window during a drag) ---
   const onDragMove = useCallback(
@@ -584,7 +658,7 @@ export function useEditor() {
         it.lastX = p.x;
         it.lastY = p.y;
         const id = it.id;
-        setAnnotations((prev) =>
+        applyAnnotations((prev) =>
           prev.map((a) => (a.id === id ? translateAnnotation(a, dx, dy) : a)),
         );
         return;
@@ -600,7 +674,7 @@ export function useEditor() {
         const handle = it.handle;
         const startBBox = it.startBBox;
         const startAnn = it.startAnn;
-        setAnnotations((prev) =>
+        applyAnnotations((prev) =>
           prev.map((a) => {
             if (a.id !== id) return a;
             if (a.type === 'rect' || a.type === 'blur' || a.type === 'spotlight') {
@@ -625,7 +699,7 @@ export function useEditor() {
       extendDraft(draft, p, e.shiftKey);
       c.setDraft(draft);
     },
-    [snapshot],
+    [applyAnnotations, snapshot],
   );
 
   const onDragUp = useCallback(() => {
@@ -634,6 +708,9 @@ export function useEditor() {
     window.removeEventListener('mousemove', onDragMove);
     window.removeEventListener('mouseup', onDragUp);
     interactionRef.current = null;
+    // Only a drag that snapshotted actually moved something — a plain
+    // click-to-select goes through the 'move' interaction and changes nothing.
+    const dragged = dragSnapshottedRef.current;
     dragSnapshottedRef.current = false;
     if (!c || !it) return;
     if (it.kind === 'crop') {
@@ -643,6 +720,7 @@ export function useEditor() {
         setCropDraft(r);
         setCropActive(true);
         c.setCropRect(r);
+        say({ kind: 'crop', rect: r });
       } else {
         cropDraftRef.current = null;
         c.setCropRect(null);
@@ -655,10 +733,34 @@ export function useEditor() {
       c.setDraft(null);
       if (draft && shouldCommit(draft)) {
         commit((prev) => [...prev, draft]);
+        say({ kind: 'add', annotation: draft });
       }
+      return;
     }
-    // move / resize: changes already applied during drag (one snapshot on first move).
-  }, [onDragMove, commit]);
+    // move / resize: changes already applied during drag (one snapshot on first
+    // move). Announcing per mousemove would be a stream of noise, so the live
+    // region hears the result once, here.
+    if (dragged && (it.kind === 'move' || it.kind === 'resize')) {
+      const moved = annotationsRef.current.find((a) => a.id === it.id);
+      if (moved) say({ kind: it.kind, annotation: moved });
+    }
+  }, [onDragMove, commit, say]);
+
+  /**
+   * Drop a numbered badge at `p`. The pointer path and the keyboard path share
+   * it. The number comes from renumberSteps over the committed list rather than
+   * from a count taken here, so a held Enter cannot mint two badges with the
+   * same number.
+   */
+  const addStep = useCallback(
+    (p: { x: number; y: number }) => {
+      const ann = createStepAnnotation(p, styleRef.current.color, 0, styleRef.current.fontSize);
+      commit((prev) => renumberSteps([...prev, ann]));
+      selectAnnotation(ann.id);
+      say({ kind: 'add', annotation: ann });
+    },
+    [commit, selectAnnotation, say],
+  );
 
   const onCanvasMouseDown = useCallback(
     (e: MouseEvent) => {
@@ -703,15 +805,11 @@ export function useEditor() {
         }
         // Select + move: hit-test annotations topmost-first.
         const hit = hitTestAnnotation(c, annotationsRef.current, sx, sy);
+        selectAnnotation(hit);
         if (hit) {
-          setSelectedId(hit);
-          selectedIdRef.current = hit;
           interactionRef.current = { kind: 'move', id: hit, lastX: p.x, lastY: p.y };
           window.addEventListener('mousemove', onDragMove);
           window.addEventListener('mouseup', onDragUp);
-        } else {
-          setSelectedId(null);
-          selectedIdRef.current = null;
         }
         return;
       }
@@ -721,16 +819,13 @@ export function useEditor() {
         return;
       }
       if (t === 'step') {
-        const n = annotationsRef.current.filter((a) => a.type === 'step').length + 1;
-        const ann = createStepAnnotation(p, styleRef.current.color, n, styleRef.current.fontSize);
-        commit((prev) => [...prev, ann]);
-        setSelectedId(ann.id);
+        addStep(p);
         return;
       }
       if (t === 'eyedropper') {
         const hex = c.sampleAt(sx, sy);
         if (hex) setStyleColor(hex);
-        setTool(prevToolRef.current);
+        selectTool(prevToolRef.current);
         return;
       }
       if (t === 'crop') {
@@ -756,7 +851,7 @@ export function useEditor() {
       window.addEventListener('mousemove', onDragMove);
       window.addEventListener('mouseup', onDragUp);
     },
-    [onDragMove, onDragUp, setStyleColor, setTool],
+    [onDragMove, onDragUp, setStyleColor, selectTool, selectAnnotation, addStep],
   );
 
   // --- Text ---
@@ -772,26 +867,29 @@ export function useEditor() {
     commit((prev) => [...prev, ann]);
     textSnapshottedRef.current = true;
     setTextEdit({ id: ann.id });
+    say({ kind: 'add', annotation: ann });
   }
 
   // Double-click a committed text layer with the select tool to re-open it.
-  const onCanvasDoubleClick = useCallback((e: MouseEvent) => {
-    const c = controllerRef.current;
-    if (!c || !c.image || toolRef.current !== 'select') return;
-    const rect = c.canvas.getBoundingClientRect();
-    const hit = hitTestAnnotation(
-      c,
-      annotationsRef.current,
-      e.clientX - rect.left,
-      e.clientY - rect.top,
-    );
-    const a = hit ? annotationsRef.current.find((x) => x.id === hit) : null;
-    if (!a || a.type !== 'text') return;
-    setSelectedId(a.id);
-    selectedIdRef.current = a.id;
-    textSnapshottedRef.current = false;
-    setTextEdit({ id: a.id });
-  }, []);
+  const onCanvasDoubleClick = useCallback(
+    (e: MouseEvent) => {
+      const c = controllerRef.current;
+      if (!c || !c.image || toolRef.current !== 'select') return;
+      const rect = c.canvas.getBoundingClientRect();
+      const hit = hitTestAnnotation(
+        c,
+        annotationsRef.current,
+        e.clientX - rect.left,
+        e.clientY - rect.top,
+      );
+      const a = hit ? annotationsRef.current.find((x) => x.id === hit) : null;
+      if (!a || a.type !== 'text') return;
+      selectAnnotation(a.id);
+      textSnapshottedRef.current = false;
+      setTextEdit({ id: a.id });
+    },
+    [selectAnnotation],
+  );
 
   const updateText = useCallback(
     (id: string, text: string) => {
@@ -799,7 +897,7 @@ export function useEditor() {
         snapshot();
         textSnapshottedRef.current = true;
       }
-      setAnnotations((prev) =>
+      applyAnnotations((prev) =>
         prev.map((a) => {
           if (a.id !== id || a.type !== 'text') return a;
           const size = measureTextSize(text, a.fontSize);
@@ -807,27 +905,34 @@ export function useEditor() {
         }),
       );
     },
-    [snapshot],
+    [applyAnnotations, snapshot],
   );
 
-  const finishText = useCallback((id: string) => {
-    setTextEdit(null);
-    setAnnotations((prev) => {
-      const a = prev.find((x) => x.id === id);
-      if (a && a.type === 'text' && a.text.trim() === '') {
-        return prev.filter((x) => x.id !== id);
-      }
-      return prev;
-    });
-  }, []);
+  const finishText = useCallback(
+    (id: string) => {
+      setTextEdit(null);
+      applyAnnotations((prev) => {
+        const a = prev.find((x) => x.id === id);
+        if (a && a.type === 'text' && a.text.trim() === '') {
+          return prev.filter((x) => x.id !== id);
+        }
+        return prev;
+      });
+    },
+    [applyAnnotations],
+  );
 
   // --- Crop ---
   const cancelCrop = useCallback(() => {
+    // applyCrop and applyImport also come through here, and both say their own
+    // piece afterwards, so this line never survives to be read in those cases.
+    const had = cropDraftRef.current !== null;
     cropDraftRef.current = null;
     controllerRef.current?.setCropRect(null);
     setCropActive(false);
     setCropDraft(null);
-  }, []);
+    if (had) say({ kind: 'crop-cancelled' });
+  }, [say]);
 
   const applyCrop = useCallback(() => {
     const c = controllerRef.current;
@@ -861,7 +966,7 @@ export function useEditor() {
     img.src = cropped;
     const w = canvas.width;
     const h = canvas.height;
-    setAnnotations((prev) =>
+    applyAnnotations((prev) =>
       renumberSteps(
         prev
           .map((a) => translateAnnotation(a, -n.x, -n.y))
@@ -871,11 +976,142 @@ export function useEditor() {
           }),
       ),
     );
-    setSelectedId(null);
-    setPast([]);
-    setFuture([]);
+    selectAnnotation(null);
+    applyHistory([], []);
     cancelCrop();
-  }, [cancelCrop]);
+    say({ kind: 'crop-applied', w, h });
+  }, [applyAnnotations, applyHistory, cancelCrop, selectAnnotation, say]);
+
+  // --- Keyboard on the canvas ---
+  /**
+   * Put the active tool's shape down without a pointer. A keyboard has no
+   * equivalent of the drag a mouse user makes, so a placement is a starting
+   * box: centred on what the viewport shows, sized to read the same on screen
+   * at any zoom, and reshaped from there with Alt and an arrow.
+   */
+  const placeWithKeyboard = useCallback(() => {
+    const c = controllerRef.current;
+    if (!c || !c.image) return;
+    const t = toolRef.current;
+    // Select has nothing to place, and the eyedropper needs a pixel to aim at.
+    if (t === 'select' || t === 'eyedropper') return;
+    const iw = c.image.naturalWidth;
+    const ih = c.image.naturalHeight;
+    const rect = c.canvas.getBoundingClientRect();
+    const centre = c.toImage(rect.width / 2, rect.height / 2);
+
+    if (t === 'crop') {
+      // The whole image. It is the one crop a keyboard user can start from
+      // without aiming at a corner; the arrows trim it inwards from there.
+      const r: Rect = { x: 0, y: 0, w: iw, h: ih };
+      cropDraftRef.current = r;
+      setCropDraft(r);
+      setCropActive(true);
+      c.setCropRect(r);
+      say({ kind: 'crop', rect: r });
+      return;
+    }
+    const box = placementRect(centre, PLACE_SIZE_PX / c.view.zoom, iw, ih);
+    if (t === 'text') {
+      startText({ x: box.x, y: box.y });
+      return;
+    }
+    if (t === 'step') {
+      addStep({ x: box.x + box.w / 2, y: box.y + box.h / 2 });
+      return;
+    }
+    const draft = createShapeDraft(
+      t,
+      { x: box.x, y: box.y },
+      styleRef.current.color,
+      styleRef.current.strokeWidth,
+      { spotlightShape: spotlightShapeRef.current, blurMode: blurModeRef.current },
+    );
+    // One extension gives every shape tool its second point: the far corner of
+    // a box, the end of an arrow, the second sample of a freehand stroke.
+    extendDraft(draft, { x: box.x + box.w, y: box.y + box.h });
+    commit((prev) => [...prev, draft]);
+    selectAnnotation(draft.id);
+    say({ kind: 'add', annotation: draft });
+  }, [addStep, commit, selectAnnotation, say]);
+
+  /**
+   * The canvas's own keydown. It is bound to the element rather than the
+   * window, so the arrow keys stay with whatever holds focus — the toolbar
+   * keeps its roving arrows and a slider keeps its own. Ctrl and Meta chords
+   * fall through to the window handler untouched.
+   */
+  const onCanvasKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      const c = controllerRef.current;
+      if (!c || !c.image) return;
+      const mode: CanvasMode = cropDraftRef.current
+        ? 'crop'
+        : selectedIdRef.current
+          ? 'selection'
+          : 'idle';
+      const intent = canvasIntent(e, mode);
+      if (!intent) return;
+      e.preventDefault();
+      const iw = c.image.naturalWidth;
+      const ih = c.image.naturalHeight;
+
+      if (intent.kind === 'place') {
+        placeWithKeyboard();
+        return;
+      }
+      if (intent.kind === 'apply-crop') {
+        applyCrop();
+        return;
+      }
+      if (intent.kind === 'cycle') {
+        const list = annotationsRef.current;
+        const next = cycleSelection(list, selectedIdRef.current, intent.dir);
+        const a = next ? (list.find((x) => x.id === next) ?? null) : null;
+        selectAnnotation(next);
+        say(
+          a
+            ? { kind: 'select', annotation: a, index: list.indexOf(a) + 1, total: list.length }
+            : { kind: 'deselect' },
+        );
+        return;
+      }
+      if (intent.kind === 'crop-move' || intent.kind === 'crop-resize') {
+        const cur = cropDraftRef.current;
+        if (!cur) return;
+        const next =
+          intent.kind === 'crop-move'
+            ? moveCropBy(cur, intent.dx, intent.dy, iw, ih)
+            : resizeCropBy(cur, intent.dx, intent.dy, iw, ih);
+        // The rect stops at the image edge; repeating the same size is noise.
+        if (next.x === cur.x && next.y === cur.y && next.w === cur.w && next.h === cur.h) return;
+        cropDraftRef.current = next;
+        setCropDraft(next);
+        c.setCropRect(next);
+        say({ kind: 'crop', rect: next });
+        return;
+      }
+      const list = annotationsRef.current;
+      const id = selectedIdRef.current;
+      const a = id ? list.find((x) => x.id === id) : null;
+      if (!a) return;
+      if (!keyNudgeRef.current) {
+        snapshot();
+        keyNudgeRef.current = true;
+      }
+      const moved =
+        intent.kind === 'move'
+          ? translateAnnotation(a, intent.dx, intent.dy)
+          : resizeAnnotationBy(a, intent.dx, intent.dy);
+      applyAnnotations(list.map((x) => (x.id === a.id ? moved : x)));
+      say(
+        intent.kind === 'move'
+          ? { kind: 'move', annotation: moved }
+          : { kind: 'resize', annotation: moved },
+      );
+    },
+    [applyAnnotations, applyCrop, placeWithKeyboard, selectAnnotation, say, snapshot],
+  );
 
   /**
    * Debounced crash-safety net. It holds off while the restore bar is up: the
@@ -933,9 +1169,8 @@ export function useEditor() {
     restoringRef.current = true;
     setDraftPrompt(null);
     setFrameState(draftFrame(d));
-    setPast([]);
-    setFuture([]);
-    setSelectedId(null);
+    applyHistory([], []);
+    selectAnnotation(null);
     const refuse = () => {
       restoringRef.current = false;
       setStageNotice('Your saved edits could not be restored.');
@@ -946,7 +1181,7 @@ export function useEditor() {
       .then((dataUrl) => {
         if (!dataUrl) {
           restoringRef.current = false;
-          setAnnotations(d.annotations);
+          applyAnnotations(d.annotations);
           return;
         }
         const img = new Image();
@@ -954,13 +1189,13 @@ export function useEditor() {
           restoringRef.current = false;
           controllerRef.current?.setImage(img);
           setImageSize({ w: img.naturalWidth, h: img.naturalHeight });
-          setAnnotations(d.annotations);
+          applyAnnotations(d.annotations);
         };
         img.onerror = refuse;
         img.src = dataUrl;
       })
       .catch(refuse);
-  }, [draftPrompt]);
+  }, [applyAnnotations, applyHistory, selectAnnotation, draftPrompt]);
 
   const discardDraft = useCallback(() => {
     setDraftPrompt(null);
@@ -997,10 +1232,9 @@ export function useEditor() {
       setDraftPrompt(null);
       void clearDraft();
       void clearDraftImage();
-      setAnnotations([]);
-      setPast([]);
-      setFuture([]);
-      setSelectedId(null);
+      applyAnnotations([]);
+      applyHistory([], []);
+      selectAnnotation(null);
       setTextEdit(null);
       cancelCrop();
       setError(null);
@@ -1008,7 +1242,7 @@ export function useEditor() {
       setPendingImport(null);
       c.setImage(p.img);
     },
-    [cancelCrop],
+    [applyAnnotations, applyHistory, cancelCrop, selectAnnotation],
   );
 
   /** Read a dropped or pasted file, then import it — asking first if it would destroy work. */
@@ -1125,7 +1359,7 @@ export function useEditor() {
     canvasRef,
     annotations,
     tool,
-    setTool,
+    setTool: selectTool,
     selectedId,
     capture,
     imageSize,
@@ -1158,6 +1392,8 @@ export function useEditor() {
     resetZoom,
     onCanvasMouseDown,
     onCanvasDoubleClick,
+    onCanvasKeyDown,
+    announcement,
     updateText,
     finishText,
     applyCrop,

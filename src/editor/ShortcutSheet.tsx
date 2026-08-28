@@ -21,6 +21,11 @@ function buildCommands(isMac: boolean): { label: string; keys: string }[] {
     { label: 'Pick a color from the screen', keys: 'Style bar' },
     { label: 'Square / 45° constraint', keys: isMac ? '⇧ + drag' : 'Shift + drag' },
     { label: 'Edit a text layer', keys: 'Double-click' },
+    // The canvas keyboard model. These only fire while the canvas has focus.
+    { label: 'Next / previous layer', keys: '] [' },
+    { label: 'Place the active tool', keys: 'Enter' },
+    { label: 'Move selection 1px / 10px', keys: `Arrows / ${shift}Arrows` },
+    { label: 'Resize selection', keys: isMac ? '⌥Arrows' : 'Alt+Arrows' },
     { label: 'Copy to clipboard', keys: `${mod}C` },
     { label: 'Export', keys: `${mod}S` },
     { label: 'Undo', keys: `${mod}Z` },
