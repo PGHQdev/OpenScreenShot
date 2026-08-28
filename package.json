@@ -27,11 +27,12 @@
     "site:preview": "wrangler dev",
     "site:deploy": "npm run site:build && wrangler deploy",
     "shots": "node scripts/shots/render.mjs",
+    "smoke:a11y": "node tests/browser/a11y-smoke.mjs",
     "smoke:editor": "node tests/browser/editor-keyboard-smoke.mjs",
+    "smoke:media": "node tests/browser/media-a11y-smoke.mjs",
     "smoke:recorder": "node tests/browser/recorder-smoke.mjs",
-    "smoke:setup": "node tests/browser/setup-smoke.mjs",
     "smoke:reflow": "node tests/browser/reflow-smoke.mjs",
-    "smoke:media": "node tests/browser/media-a11y-smoke.mjs"
+    "smoke:setup": "node tests/browser/setup-smoke.mjs"
   },
   "dependencies": {
     "preact": "^10.29.4"
@@ -43,6 +44,7 @@
     "@preact/preset-vite": "^2.10.5",
     "@types/chrome": "^0.2.2",
     "astro": "^7.2.9",
+    "axe-core": "^4.13.0",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "fake-indexeddb": "^6.2.5",
