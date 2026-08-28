@@ -680,6 +680,33 @@ async function main() {
       !(await activeElementIs(beautifyTrigger)),
       'focus kept moving forward on Tab — it was not pulled back to the trigger',
     );
+
+    step(
+      "Shift+Tab off the panel's first control closes it too — a real keyboard trap this shape once had",
+    );
+    // The onFocusOut guard that fixes the trigger-click/focusout race (see
+    // task-19 report) has to distinguish *why* focus reached the trigger:
+    // a click on it (owned by the trigger's own onClick toggle) from a
+    // plain Shift+Tab onto it (which has no toggle waiting and must close
+    // here). Getting that wrong traps Tab/Shift+Tab cycling between the
+    // trigger and the first control forever — this is that trap, driven in
+    // the direction the original smoke never exercised.
+    await page.$eval(beautifyTrigger, (el) => el.focus());
+    await page.keyboard.press('Enter');
+    await settle();
+    assert((await page.$('.beautify-popover')) !== null, 'reopened for the Shift+Tab check');
+    await chord(['Shift'], 'Tab');
+    await settle();
+    assert(
+      (await page.$('.beautify-popover')) === null,
+      'Shift+Tab off the first control closed the panel',
+    );
+    await page.keyboard.press('Tab');
+    await settle();
+    assert(
+      (await page.$('.beautify-popover')) === null,
+      'the panel did not reopen on the next Tab — no trigger <-> first-control cycle',
+    );
     // BeautifyMenu's window-level capture-phase keydown listener is torn down
     // from its effect's cleanup, which — per this file's own opening comment —
     // commits a frame after the DOM does. Without a beat here, a key aimed at
@@ -761,6 +788,24 @@ async function main() {
     assert(
       !(await activeElementIs(zoomTrigger)),
       'focus kept moving forward on Tab — it was not pulled back to the trigger',
+    );
+
+    step('Shift+Tab off the first zoom item closes the menu too — symmetry with Beautify above');
+    await page.$eval(zoomTrigger, (el) => el.focus());
+    await page.keyboard.press('ArrowDown');
+    await settle();
+    assert((await page.$('.zoom-popover')) !== null, 'reopened for the Shift+Tab check');
+    await chord(['Shift'], 'Tab');
+    await settle();
+    assert(
+      (await page.$('.zoom-popover')) === null,
+      'Shift+Tab off the first item closed the menu',
+    );
+    await page.keyboard.press('Tab');
+    await settle();
+    assert(
+      (await page.$('.zoom-popover')) === null,
+      'the menu did not reopen on the next Tab — no trigger <-> first-item cycle',
     );
 
     step('an outside pointer click closes the zoom menu without stealing focus');

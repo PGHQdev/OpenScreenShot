@@ -19,6 +19,13 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  // Set by the trigger's own onMouseDown, consumed by onFocusOut: records
+  // *why* focus is about to move, not just where it lands. Shift+Tab onto
+  // the trigger and a mousedown-then-click on the trigger both end with
+  // focus on the same element, but only the click should be left for
+  // onClick's toggle to handle alone — Shift+Tab has to close here, or the
+  // panel never closes on that path (a keyboard trap).
+  const triggerMouseDownRef = useRef(false);
 
   // Non-modal by design: the panel's sliders preview live onto the canvas
   // behind it, so nothing here traps focus or hides the canvas from
@@ -38,12 +45,19 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
     };
     const onFocusOut = (e: FocusEvent) => {
       const next = e.relatedTarget as Node | null;
-      // Focus landing on the trigger itself means this blur is the lead-in
-      // to a click on it — its own onClick toggle already owns that case.
-      // Closing here too would race that toggle: a functional setOpen
-      // update queued from this handler, then another from onClick in the
-      // same tick, compose into "closed, then immediately reopened".
-      if (next === triggerRef.current) return;
+      // Focus landing on the trigger *because the user is clicking it* is
+      // the lead-in to a click on it — its own onClick toggle already owns
+      // that case. Closing here too would race that toggle: a functional
+      // setOpen update queued from this handler, then another from onClick
+      // in the same tick, compose into "closed, then immediately reopened".
+      // Focus landing on the trigger for any OTHER reason — Shift+Tab off
+      // the first control, most notably — has no such toggle waiting, so it
+      // has to close here or the panel never closes on that path at all.
+      if (next === triggerRef.current && triggerMouseDownRef.current) {
+        triggerMouseDownRef.current = false;
+        return;
+      }
+      triggerMouseDownRef.current = false;
       if (!next || !popover?.contains(next)) setOpen(false);
     };
     // Capture phase, for the same reason as ZoomMenu: the popover is not inside
@@ -85,6 +99,9 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
         aria-haspopup="dialog"
         aria-expanded={open}
         title="Beautify: padding, corners, shadow, background"
+        onMouseDown={() => {
+          triggerMouseDownRef.current = true;
+        }}
         onClick={() => setOpen((v) => !v)}
       >
         Beautify
