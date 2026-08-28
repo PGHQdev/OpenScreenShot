@@ -778,6 +778,7 @@ function SettingsView({
           class="text-input"
           type="text"
           spellcheck={false}
+          aria-label={t('settingsFilename')}
           value={settings.filenameTemplate}
           onInput={(e) => onChange({ filenameTemplate: (e.target as HTMLInputElement).value })}
         />
