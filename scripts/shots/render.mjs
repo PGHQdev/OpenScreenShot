@@ -1,5 +1,7 @@
-// Renders the marketing shots (site/src/assets/shot-N.{jpg,webp}) from the
-// poster pages in this directory, using headless Chrome + sharp.
+// Renders the marketing shots (site/src/assets/shot-N.webp) from the poster
+// pages in this directory, using headless Chrome + sharp. No JPEG is written
+// for the on-page shots; astro:assets re-encodes each .webp into AVIF + WebP
+// at build time, so a JPEG source here would just be dead weight.
 // Run with: npm run shots
 import sharp from 'sharp';
 import { execFile } from 'node:child_process';
@@ -20,15 +22,21 @@ const OUT_DIR = 'site/src/assets';
 const STORE_DIR = 'media/store';
 const STORE_SIZE = { w: 1280, h: 800 };
 const STORE_SHOTS = new Set(['shot-1', 'shot-2', 'shot-3', 'shot-4']);
+// shot-1 is the wordmark/headline slide the Chrome Web Store's first
+// screenshot needs; nothing on the site renders it, so it gets no OUT_DIR
+// write. shot-2..5 are the homepage's four FRAME product shots (Capture,
+// Annotate, Export, Record) and hero is the homepage's top shot — every one
+// of those five is used on the page. There is no step-1..3 entry: the old
+// three-step "how it works" section was folded into the FRAME sections, and
+// nothing on the site references those shots any more.
+const PAGE_SHOTS = new Set(['shot-2', 'shot-3', 'shot-4', 'shot-5', 'hero']);
 const SHOTS = [
   { name: 'shot-1', w: 900, h: 563 },
   { name: 'shot-2', w: 900, h: 563 },
   { name: 'shot-3', w: 900, h: 563 },
   { name: 'shot-4', w: 900, h: 563 },
+  { name: 'shot-5', w: 900, h: 563 },
   { name: 'hero', w: 1160, h: 680 },
-  { name: 'step-1', w: 560, h: 420 },
-  { name: 'step-2', w: 560, h: 420 },
-  { name: 'step-3', w: 560, h: 420 },
 ];
 
 const work = await mkdtemp(join(tmpdir(), 'oss-shots-'));
@@ -54,9 +62,10 @@ try {
       ],
       { timeout: 30_000 },
     );
-    await sharp(png).jpeg({ quality: 84 }).toFile(`${OUT_DIR}/${name}.jpg`);
-    await sharp(png).webp({ quality: 84 }).toFile(`${OUT_DIR}/${name}.webp`);
-    console.log(`✓ ${OUT_DIR}/${name}.jpg + .webp`);
+    if (PAGE_SHOTS.has(name)) {
+      await sharp(png).webp({ quality: 84 }).toFile(`${OUT_DIR}/${name}.webp`);
+      console.log(`✓ ${OUT_DIR}/${name}.webp`);
+    }
 
     if (STORE_SHOTS.has(name)) {
       // `cover` holds the aspect ratio and trims a half-pixel row top and
@@ -71,6 +80,38 @@ try {
       console.log(`✓ ${store} (${STORE_SIZE.w}x${STORE_SIZE.h})`);
     }
   }
+  // The OG/social card: exactly 1200x630, PNG. Social un-furlers (LinkedIn,
+  // iMessage, some Slack previews) do not reliably decode AVIF or WebP og:image
+  // URLs, so this one file stays outside the AVIF+WebP policy that governs
+  // every on-page <img>: it is never rendered inside the page itself, so it
+  // never touches the Lighthouse transfer-weight budget.
+  {
+    const name = 'og-card';
+    const w = 1200;
+    const h = 630;
+    const src = resolve(`scripts/shots/${name}.html`);
+    const png = join(work, `${name}.png`);
+    await execFileP(
+      CHROME,
+      [
+        '--headless=new',
+        '--disable-gpu',
+        '--hide-scrollbars',
+        '--no-first-run',
+        '--disable-extensions',
+        `--user-data-dir=${join(work, 'profile-' + name)}`,
+        `--screenshot=${png}`,
+        `--window-size=${w},${h}`,
+        '--force-device-scale-factor=2',
+        `file://${src}`,
+      ],
+      { timeout: 30_000 },
+    );
+    const out = `${OUT_DIR}/${name}.png`;
+    await sharp(png).resize(w, h).png({ compressionLevel: 9 }).toFile(out);
+    console.log(`✓ ${out} (${w}x${h})`);
+  }
+
   // Store promo images: exact sizes, JPEG or 24-bit PNG. Rendered at 2x like
   // the shots, then downscaled straight into the store directory.
   for (const { name, w, h } of [

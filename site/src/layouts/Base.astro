@@ -1,5 +1,6 @@
 ---
 import BrandMark from '../components/BrandMark.astro';
+import ogCard from '../assets/og-card.png';
 import '../styles/tokens.css';
 import '../styles/fonts.css';
 import '../styles/base.css';
@@ -16,8 +17,10 @@ export interface Props {
   description: string;
   /** Canonical path, leading and trailing slash included: '/', '/docs/'. */
   path: string;
-  /** Site-absolute path to the social card. Must be 1800x1126 if overridden. */
+  /** Site-absolute path to the social card. Pairs with ogImageAlt. */
   ogImage?: string;
+  /** Alt text for ogImage. Required by og:image:alt whenever ogImage is overridden. */
+  ogImageAlt?: string;
   pageType?: 'website' | 'article';
   /**
    * Nav entries between the brand and the install CTA. The homepage passes
@@ -30,13 +33,19 @@ export interface Props {
 
 const STORE_URL = 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp';
 const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
-const OG_DEFAULT = { src: '/assets/shot-1.jpg', width: '1800', height: '1126' };
+const OG_DEFAULT = {
+  src: ogCard.src,
+  width: String(ogCard.width),
+  height: String(ogCard.height),
+  alt: 'OpenScreenShot: full page screenshot and annotation for Chrome. Free, open source, and 100% local.',
+};
 
 const {
   title,
   description,
   path,
   ogImage = OG_DEFAULT.src,
+  ogImageAlt = OG_DEFAULT.alt,
   pageType = 'website',
   navLinks = [],
   preloadItalic = false,
@@ -77,6 +86,7 @@ const footLinks: NavLink[] = [
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:alt" content={ogImageAlt} />
     {
       ogImage === OG_DEFAULT.src && (
         <>
@@ -90,9 +100,12 @@ const footLinks: NavLink[] = [
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageUrl} />
+    <meta name="twitter:image:alt" content={ogImageAlt} />
 
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
 
     <link
       rel="preload"
