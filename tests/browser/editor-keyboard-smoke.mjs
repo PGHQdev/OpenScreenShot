@@ -603,6 +603,179 @@ async function main() {
       `a PNG was exported (${downloads[0]?.filename}, ${downloads[0]?.bytes} bytes)`,
     );
 
+    // The two menus below sit in the topbar, independent of tool/selection
+    // state, so they're driven last — after every canvas-dependent step —
+    // to keep this section self-contained.
+    const beautifyTrigger = '.beautify-menu > .btn-secondary';
+    const zoomTrigger = '.zoom-trigger';
+    const activeElementIs = (sel) =>
+      page.evaluate((s) => document.activeElement === document.querySelector(s), sel);
+    // Deliberately a non-focusable target (a plain <span> in the footer,
+    // no tabindex): clicking something that itself takes focus natively
+    // would mask a "restores focus to the trigger" regression — the
+    // browser's own click-to-focus would land on the clicked element
+    // regardless of what the popover's own mousedown handler does. Only a
+    // click that grabs no focus of its own proves the handler isn't
+    // stealing it back.
+    const outsideClick = async () => {
+      const box = await page.$eval('.statusbar', (el) => {
+        const r = el.getBoundingClientRect();
+        return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+      });
+      await page.mouse.click(box.x, box.y);
+    };
+
+    step('the Beautify popover is a non-modal dialog: no aria-modal, no trap, and initial focus');
+    await page.$eval(beautifyTrigger, (el) => el.focus());
+    await page.keyboard.press('Enter');
+    await settle();
+    const beautifyOpen = await page.evaluate(() => {
+      const panel = document.querySelector('.beautify-popover');
+      const first = panel?.querySelector('input, button, select, textarea') ?? null;
+      return {
+        role: panel?.getAttribute('role') ?? null,
+        modal: panel?.getAttribute('aria-modal') ?? null,
+        activeIsFirst: document.activeElement === first,
+      };
+    });
+    assert(beautifyOpen.role === 'dialog', 'keeps role="dialog"');
+    assert(
+      beautifyOpen.modal === null,
+      'no aria-modal — the panel stays perceivable while its sliders preview onto the canvas',
+    );
+    assert(beautifyOpen.activeIsFirst, 'opening the panel moves focus onto its first control');
+
+    step('Escape closes the Beautify popover and returns focus to the trigger');
+    await page.keyboard.press('Escape');
+    await settle();
+    assert((await page.$('.beautify-popover')) === null, 'Escape closed the panel');
+    assert(await activeElementIs(beautifyTrigger), 'focus returned to the Beautify trigger');
+
+    step('an outside pointer click closes the Beautify popover without stealing focus');
+    await page.keyboard.press('Enter');
+    await settle();
+    assert((await page.$('.beautify-popover')) !== null, 'reopened for the outside-click check');
+    await outsideClick();
+    await settle();
+    assert((await page.$('.beautify-popover')) === null, 'the outside click closed the panel');
+    assert(
+      !(await activeElementIs(beautifyTrigger)),
+      'the outside click did not pull focus back to the Beautify trigger',
+    );
+
+    step("Tab off the panel's last control closes it — non-modal, so nothing traps it");
+    await page.$eval(beautifyTrigger, (el) => el.focus());
+    await page.keyboard.press('Enter');
+    await settle();
+    let tabs = 0;
+    while ((await page.$('.beautify-popover')) !== null && tabs < 20) {
+      await page.keyboard.press('Tab');
+      tabs++;
+    }
+    assert(
+      (await page.$('.beautify-popover')) === null,
+      `Tab walked off the panel and closed it (${tabs} presses)`,
+    );
+    assert(
+      !(await activeElementIs(beautifyTrigger)),
+      'focus kept moving forward on Tab — it was not pulled back to the trigger',
+    );
+    // BeautifyMenu's window-level capture-phase keydown listener is torn down
+    // from its effect's cleanup, which — per this file's own opening comment —
+    // commits a frame after the DOM does. Without a beat here, a key aimed at
+    // ZoomMenu next can still be swallowed by that stale listener's
+    // stopPropagation before it ever reaches ZoomMenu's own handler.
+    await settle();
+
+    step('ZoomMenu: ArrowDown opens with the first item focused, ArrowUp with the last');
+    await page.$eval(zoomTrigger, (el) => el.focus());
+    const itemText = () =>
+      page.evaluate(() => document.activeElement?.querySelector('span')?.textContent ?? null);
+    await page.keyboard.press('ArrowDown');
+    await settle();
+    assert(
+      (await itemText()) === 'Zoom in',
+      'ArrowDown on the closed trigger opens on the first item',
+    );
+    await page.keyboard.press('Escape');
+    await settle();
+    await page.keyboard.press('ArrowUp');
+    await settle();
+    assert(
+      (await itemText()) === 'Actual size',
+      'ArrowUp on the closed trigger opens on the last item',
+    );
+
+    step('ArrowDown/ArrowUp wrap at the ends, Home/End jump to the ends');
+    await page.keyboard.press('ArrowDown');
+    await settle();
+    assert((await itemText()) === 'Zoom in', 'Down from the last item wraps to the first');
+    await page.keyboard.press('ArrowUp');
+    await settle();
+    assert((await itemText()) === 'Actual size', 'Up from the first item wraps to the last');
+    await page.keyboard.press('Home');
+    await settle();
+    assert((await itemText()) === 'Zoom in', 'Home jumps to the first item');
+    await page.keyboard.press('End');
+    await settle();
+    assert((await itemText()) === 'Actual size', 'End jumps to the last item');
+
+    step('Escape closes the zoom menu and returns focus to the trigger');
+    await page.keyboard.press('Escape');
+    await settle();
+    assert((await page.$('.zoom-popover')) === null, 'Escape closed the menu');
+    assert(await activeElementIs(zoomTrigger), 'focus returned to the Zoom trigger');
+
+    step('Enter activates the focused item, runs it, and returns focus to the trigger');
+    const readout = () =>
+      page.evaluate(() => document.querySelector('.zoom-readout').textContent.trim());
+    const beforeEnter = await readout();
+    await page.keyboard.press('ArrowDown');
+    await settle();
+    await page.keyboard.press('Enter');
+    await settle();
+    assert(
+      (await readout()) !== beforeEnter,
+      `Enter on "Zoom in" ran the action (${beforeEnter} -> ${await readout()})`,
+    );
+    assert((await page.$('.zoom-popover')) === null, 'the menu closed after activation');
+    assert(await activeElementIs(zoomTrigger), 'focus returned to the trigger after activation');
+
+    step('Space also activates the focused item (native button semantics)');
+    const beforeSpace = await readout();
+    await page.keyboard.press('ArrowDown');
+    await settle();
+    await page.keyboard.press('Space');
+    await settle();
+    assert(
+      (await readout()) !== beforeSpace,
+      `Space on "Zoom in" ran the action (${beforeSpace} -> ${await readout()})`,
+    );
+
+    step('Tab closes the zoom menu without pulling focus back to the trigger');
+    await page.keyboard.press('ArrowDown');
+    await settle();
+    await page.keyboard.press('Tab');
+    await settle();
+    assert((await page.$('.zoom-popover')) === null, 'Tab closed the menu');
+    assert(
+      !(await activeElementIs(zoomTrigger)),
+      'focus kept moving forward on Tab — it was not pulled back to the trigger',
+    );
+
+    step('an outside pointer click closes the zoom menu without stealing focus');
+    await page.$eval(zoomTrigger, (el) => el.focus());
+    await page.keyboard.press('ArrowDown');
+    await settle();
+    assert((await page.$('.zoom-popover')) !== null, 'reopened for the outside-click check');
+    await outsideClick();
+    await settle();
+    assert((await page.$('.zoom-popover')) === null, 'the outside click closed the menu');
+    assert(
+      !(await activeElementIs(zoomTrigger)),
+      'the outside click did not pull focus back to the Zoom trigger',
+    );
+
     step('every announcement was a text edit inside the one region node');
     const live = await page.evaluate(() => ({
       same: globalThis.__live.el === document.querySelector('[aria-live="polite"][role="status"]'),
