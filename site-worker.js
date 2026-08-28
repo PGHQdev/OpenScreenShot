@@ -98,14 +98,17 @@ async function withInjectedStats(response) {
     shieldValue(STAT_SOURCES.stars, STAT_SHAPE),
   ]);
   if (users === null && stars === null) return response;
-  try {
-    return new HTMLRewriter()
-      .on('[data-stat="users"]', new StatRewriter(users))
-      .on('[data-stat="stars"]', new StatRewriter(stars))
-      .transform(response);
-  } catch {
-    return response;
-  }
+  // Safe by construction, not by a guard here: .transform() returns
+  // synchronously and runs StatRewriter.element() later, lazily, as the body
+  // streams to the client, so a try/catch around this call can never see
+  // that later work. The actual invariant is upstream — STAT_SHAPE rejects
+  // anything that isn't a bare digit-led badge value, so setInnerContent()
+  // here never receives a string that could break the surrounding markup.
+  // Don't loosen that regex without re-deriving this guarantee.
+  return new HTMLRewriter()
+    .on('[data-stat="users"]', new StatRewriter(users))
+    .on('[data-stat="stars"]', new StatRewriter(stars))
+    .transform(response);
 }
 
 async function route(url, request, env) {
