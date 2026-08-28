@@ -176,6 +176,16 @@ a.trust-pill:hover {
   margin: var(--s-3) 0;
 }
 
+/* Below --bp-sm (tokens.css — a var() cannot appear in this condition, so
+   480px is that token's value spelled out; tests/unit/breakpoint-guard.test.ts
+   checks the two stay equal): two columns of icon + heading + body text
+   leave each card too narrow, so the grid stacks to one column. */
+@media (max-width: 480px) {
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .feature {
   display: flex;
   align-items: center;

@@ -32,7 +32,15 @@ body {
 .rec-app {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  /* A fixed viewport height, not a minimum: without it the rail and the
+     session list have no bounded box to scroll inside of, so they simply
+     push the whole page taller — which happens to reach every control via
+     document scroll today, but leaves the header and transport controls
+     behind rather than staying in view the way a scrollable panel would,
+     and is the wrong foundation for the rail to actually scroll instead of
+     clip (see .rail and .rec-list below). */
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* ---- Header ---- */
@@ -146,6 +154,11 @@ body {
   width: 100%;
   margin: 0 auto;
   padding: var(--s-5);
+  /* .rec-app is now a fixed 100vh box (see above), so this is what scrolls a
+     long session list instead of the page growing past the viewport. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .rec-list-title {
@@ -237,14 +250,43 @@ body {
 .rec-main {
   flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  /* The stage, timeline and transport together can run taller than the
+     available height (200% zoom); scrolls instead of clipping. */
+  overflow-y: auto;
 }
 
 .rail {
   flex: 0 0 260px;
+  /* .rec-session stretches this to its own height; the zoom, ripple, webcam
+     and export sections can run taller than that at 200% zoom, so this
+     scrolls instead of clipping. */
+  overflow-y: auto;
   border-left: 1px solid var(--border);
   background: var(--surface-1);
+}
+
+/* Below --bp-md (tokens.css — a var() cannot appear in this condition, so
+   768px is that token's value spelled out; tests/unit/breakpoint-guard.test.ts
+   checks the two stay equal): the 260px rail beside the stage leaves too
+   little width for either, so it stacks below instead. */
+@media (max-width: 768px) {
+  .rec-session {
+    flex-direction: column;
+  }
+  .rail {
+    /* rec-main (flex: 1 1 auto) claims leftover space, same as side-by-side;
+       the rail keeps its natural height when there is room and shrinks —
+       scrolling internally via the base overflow-y: auto above — when
+       there is not, rather than a fixed flex-basis forcing rec-session
+       (now a fixed-height box; see .rec-app) to clip it. */
+    flex: 0 1 auto;
+    min-height: 0;
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
 }
 
 .rail-section {
@@ -308,13 +350,8 @@ body {
 }
 
 /* ---- Beautify background swatches ---- */
-/* The beautify grid wraps. It used to size its chips to 22px here too; Task
-   15 grew the shared .swatch in ui.css to 24px for the pointer-target
-   minimum, which is already >= what this override asked for, so the size
-   rule is gone and only the wrap stays. */
-.swatches {
-  flex-wrap: wrap;
-}
+/* Wrapping now lives on the shared .swatches rule in ui.css (task-16, for the
+   editor style bar's reflow at 320px) — the beautify grid gets it for free. */
 
 /* ---- Webcam bubble corner picker ---- */
 .rec-bubble-corners {

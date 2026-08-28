@@ -38,6 +38,9 @@ body {
 .stylebar {
   display: flex;
   align-items: center;
+  /* Wraps rather than clipping: 13 swatches plus the stroke, shape and size
+     groups run wider than a 320px viewport can hold on one line. */
+  flex-wrap: wrap;
   gap: var(--s-4);
   padding: 6px var(--s-4);
   border-bottom: 1px solid var(--border);
@@ -109,9 +112,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  /* Wraps rather than clipping: the brand, undo/redo and the beautify/zoom/
+     copy/export cluster together run wider than a 320px viewport can hold on
+     one line. min-height (not height) lets a wrapped second or third line
+     grow the bar instead of being clipped by a fixed box. */
+  flex-wrap: wrap;
+  row-gap: var(--s-1);
   gap: var(--s-3);
-  height: 52px;
-  padding: 0 var(--s-4);
+  min-height: 52px;
+  padding: var(--s-2) var(--s-4);
   border-bottom: 1px solid var(--border);
   background: var(--surface-1);
   flex: 0 0 auto;
@@ -153,6 +162,11 @@ body {
 .topbar-controls {
   display: flex;
   align-items: center;
+  /* The beautify/zoom/copy/export cluster is wider than 320px on its own;
+     wraps to a right-aligned second line instead of overflowing. */
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  row-gap: var(--s-1);
   gap: var(--s-3);
 }
 
@@ -392,6 +406,11 @@ body {
   border-right: 1px solid var(--border);
   background: var(--surface-1);
   flex: 0 0 auto;
+  /* 12 tools at 36px plus gaps is ~492px tall (see task-16 report) — taller
+     than .workspace can be at 200% zoom. Scrolls instead of clipping; the
+     parent's overflow: hidden only bounds this box, it does not stop this
+     box scrolling its own content. */
+  overflow-y: auto;
 }
 
 .tool-btn {
@@ -529,6 +548,12 @@ body {
 .modal {
   width: 420px;
   max-width: calc(100vw - 32px);
+  /* Centred by .modal-backdrop's flex alignment, so a modal capped at this
+     height always keeps var(--s-6) of clear space above and below it; taller
+     content scrolls inside the box instead of clipping against the viewport
+     edge (the export dialog's PDF options, the shortcut sheet at 200% zoom). */
+  max-height: calc(100vh - var(--s-6) * 2);
+  overflow-y: auto;
   background: var(--surface-1);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
@@ -842,6 +867,16 @@ body {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: var(--s-5);
+}
+
+/* Below --bp-sm (tokens.css — a var() cannot appear in this condition, so
+   480px is that token's value spelled out; tests/unit/breakpoint-guard.test.ts
+   checks the two stay equal) two columns of "Move selection 1px / 10px" +
+   kbd leave too little room; stack Tools above Commands instead. */
+@media (max-width: 480px) {
+  .sheet-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .sheet-row {

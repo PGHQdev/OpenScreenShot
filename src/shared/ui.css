@@ -78,6 +78,9 @@
 /* ---- Swatch (colour chip) ---- */
 .swatches {
   display: flex;
+  /* Wraps rather than clipping: the editor style bar's 11+ swatches run
+     wider than a 320px viewport can hold on one line. */
+  flex-wrap: wrap;
   gap: 4px;
 }
 

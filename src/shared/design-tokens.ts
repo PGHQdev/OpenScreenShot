@@ -36,6 +36,8 @@ export const tokens = {
   durMid: '150ms',
   durSlow: '250ms',
   easeOut: 'cubic-bezier(0, 0, 0.58, 1)',
+  bpSm: '480px',
+  bpMd: '768px',
   canvasPaper: '#ffffff',
   canvasCheck: '#e7e7ec',
   canvasMark: '#ffffff',

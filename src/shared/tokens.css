@@ -89,6 +89,23 @@
   --ease-out: cubic-bezier(0, 0, 0.58, 1);
 
   /*
+   * Breakpoints. A CSS custom property cannot appear in a @media condition
+   * ("@media (max-width: var(--bp-sm))" is invalid and never matches), so
+   * these have no CSS caller — every "@media (max-width: ...)" in the four
+   * surface stylesheets spells the number out literally instead. These two
+   * tokens are the canonical values that every one of those literals must
+   * equal; tests/unit/breakpoint-guard.test.ts reads them off the generated
+   * src/shared/design-tokens.ts and fails on any stylesheet width that
+   * disagrees, so the numbers cannot drift even though var() can't enforce it.
+   *   --bp-sm  a two-column grid (the shortcut sheet, the setup feature grid)
+   *            stacks to one column below this.
+   *   --bp-md  the recorder's fixed-width settings rail stacks below the
+   *            stage instead of beside it below this.
+   */
+  --bp-sm: 480px;
+  --bp-md: 768px;
+
+  /*
    * Canvas ink. Painted onto image pixels, so it never follows the UI theme.
    * This group and the frame group below have no CSS callers by design: only
    * canvas code reads them, through the generated module. They are live, not
