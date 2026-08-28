@@ -183,8 +183,26 @@ function readBlock(body, offset, group, css, groups) {
     decls.push([custom[1], custom[2].replace(/\s+/g, ' ').trim()]);
   }
   if (!group) return;
-  if (groups.has(group)) throw new TokenError(`two "@tokens ${group}" blocks`);
-  groups.set(group, decls);
+  const existing = groups.get(group);
+  if (!existing) {
+    groups.set(group, decls);
+    return;
+  }
+  // A group may repeat — tokens.css uses this for the prefers-color-scheme
+  // fallback, which needs the dark values a second time under an @media
+  // guard. Repeats must reproduce the first occurrence exactly, name for
+  // name and value for value, so two physical copies can never drift: a
+  // changed, added, or dropped token in one place fails the build.
+  const first = new Map(existing);
+  const repeat = new Map(decls);
+  for (const name of new Set([...first.keys(), ...repeat.keys()])) {
+    if (first.get(name) !== repeat.get(name)) {
+      throw new TokenError(
+        `"@tokens ${group}" blocks disagree at line ${lineAt(css, offset)}: ${name} is ` +
+          `${JSON.stringify(first.get(name) ?? null)} vs ${JSON.stringify(repeat.get(name) ?? null)}`,
+      );
+    }
+  }
 }
 
 /** `--accent-ink` -> `accentInk`, `--s-05` -> `s05`. */

@@ -169,9 +169,38 @@
   --hover-overlay: rgba(255, 255, 255, 0.09);
 }
 
-/* Honour the OS preference when no explicit theme is set. */
+/*
+ * Honour the OS preference when no explicit theme is set: repeat the dark
+ * values from the @tokens dark block above. The generator merges repeats of
+ * the same group and throws if they disagree (scripts/gen-design-tokens.mjs),
+ * so this copy cannot drift from the one above. Guarded against
+ * [data-theme='light'] so an explicit light choice still wins over OS dark;
+ * :root[data-theme='dark'] above already wins over OS light unconditionally,
+ * needing no guard here.
+ */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
+  /* @tokens dark */
+  :root:not([data-theme='light']) {
     color-scheme: dark;
+    --surface-1: #1c1c1e;
+    --surface-2: #2c2c2e;
+    --surface-3: #3a3a3c;
+    --stage-bg: #161618;
+    --text-1: #f5f5f7;
+    --text-2: #98989d;
+    --text-3: #636366;
+    --accent: #f26b57;
+    --accent-ink: #f8846f;
+    --accent-ink-hover: #ff9d8b;
+    --accent-ink-pressed: #e8735e;
+    --accent-subtle: #46201a;
+    --on-accent: #1c1c1e;
+    --border: #8a8a8f;
+    --rule: #48484a;
+    --border-focus: #f26b57;
+    --danger: #f5a623;
+    --success: #30d158;
+    --warning: #ff9f0a;
+    --hover-overlay: rgba(255, 255, 255, 0.09);
   }
 }
