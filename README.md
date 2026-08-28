@@ -17,8 +17,9 @@
 
 </div>
 
-Most screenshot extensions want an account, a watermark, or your browsing history.
-This one runs on your machine and wants nothing: no server, no telemetry, works offline.
+Most screenshot extensions want an account, your browsing history, or a logo in the
+corner of your image. This one runs on your machine and wants nothing: no server, no
+telemetry, works offline.
 
 Capture a full page, the visible area, or a region, then annotate and export.
 Record the current tab when a still image is not enough.
