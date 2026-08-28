@@ -98,6 +98,22 @@
   transition:
     transform var(--dur-fast) var(--ease-out),
     border-color var(--dur-fast) var(--ease-out);
+  /*
+   * A swatch's fill is the product — the colour a user is picking — so it
+   * opts out of forced-colors' system-palette substitution across every
+   * variant that shares this rule (the 8 presets, up to 5 recent colours,
+   * the custom colour wheel, the transparent checkerboard): without this,
+   * forced-colors mode would flatten all of them to the same button face
+   * and the picker would show nothing to pick. The one variant on this
+   * class that is not a colour choice — the eyedropper (.swatch-screen) —
+   * opts back in where it is defined. A side effect, verified live: this
+   * also keeps [aria-pressed='true'] and :focus-visible's box-shadow rings
+   * below painting as authored under forced-colors instead of being
+   * dropped — forced-color-adjust: none opts the whole element out of that
+   * too, not just its own background — so neither ring needs a separate
+   * forced-colors rule.
+   */
+  forced-color-adjust: none;
 }
 
 .swatch:hover {
@@ -182,5 +198,39 @@
   .btn-secondary,
   .swatch {
     transition: none;
+  }
+}
+
+/*
+ * box-shadow is dropped outright once forced-colors is active — verified
+ * live (a minimal box with an author box-shadow and no forced-color-adjust
+ * renders boxShadow: none under Chrome's forced-colors emulation) — which is
+ * the trap task-17's brief calls out for .swatch[aria-pressed='true'],
+ * .swatch:focus-visible and .rec-tl-zoom[data-selected='true']
+ * (recorder.css) alike. It turns out not to need a fix here: .swatch's own
+ * forced-color-adjust: none above (kept for the fill) opts the *whole*
+ * element out of forced-colors handling, box-shadow included — verified the
+ * same way, and confirmed live on the built page: with it, the selected and
+ * focus rings both still paint their ordinary box-shadow moat, unchanged,
+ * under forced-colors. .rec-tl-zoom does not carry forced-color-adjust:
+ * none (it is not a colour swatch), so its ring genuinely needs the
+ * outline substitute — see recorder.css.
+ */
+
+/*
+ * Raise --border and --text-2 to their --*-strong values (tokens.css) when
+ * the user asks for more contrast. The switch lives here, not in tokens.css:
+ * the token generator (scripts/gen-design-tokens.mjs) throws on a custom
+ * property re-declared with a different value inside an @tokens group, so it
+ * cannot host a conditional override — see --border-strong's doc comment in
+ * tokens.css. :is() gives this rule the same specificity as tokens.css's own
+ * highest-specificity :root rule (:root[data-theme='dark']), and every
+ * surface's stylesheet imports ui.css after tokens.css, so this wins in
+ * light, dark and OS-followed theming alike without an !important.
+ */
+@media (prefers-contrast: more) {
+  :is(:root, :root[data-theme='light'], :root[data-theme='dark']) {
+    --border: var(--border-strong);
+    --text-2: var(--text-2-strong);
   }
 }

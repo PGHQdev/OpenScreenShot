@@ -38,8 +38,25 @@
  *                 losing focus. Same value as --border-focus today, kept as
  *                 its own token so the two can diverge and so --border-focus
  *                 stays exclusively a focus signal.
+ *   --border-strong  --border raised to --text-2's darkness/lightness, for
+ *                 the `prefers-contrast: more` floor. A plain token, not a
+ *                 conditional one: the generator (see below) rejects a
+ *                 custom property re-declared with a different value under
+ *                 the same @tokens group, so the media-query switch that
+ *                 actually applies it lives in src/shared/ui.css instead —
+ *                 the nearest shared file this generator does not parse.
+ *                 Holds --text-2's literal hex, not var(--text-2): that
+ *                 switch also raises --text-2 itself (see --text-2-strong
+ *                 below) on the same element in the same rule, and var()
+ *                 always resolves against a property's final cascaded
+ *                 value — so a live reference here would have silently
+ *                 chased --text-2's raised value instead of its original
+ *                 one. Caught live, not by inspection: task-17-report.md.
+ *   --text-2-strong  --text-2 raised to --text-1, same `prefers-contrast:
+ *                 more` floor, same reason it is a plain token here and
+ *                 switched on from ui.css.
  * Measured ratios: .superpowers/sdd/tranquil-drifting-lemon/task-9-report.md,
- * task-15-report.md.
+ * task-15-report.md, task-17-report.md.
  */
 
 /* @tokens base */
@@ -156,6 +173,7 @@
   --stage-bg: #e4e4e9;
   --text-1: #1d1d1f;
   --text-2: #6e6e73;
+  --text-2-strong: var(--text-1);
   --text-3: #aeaeb2;
   --accent: #e8503a;
   --accent-ink: #bd3722;
@@ -164,6 +182,7 @@
   --accent-subtle: #fdece9;
   --on-accent: #ffffff;
   --border: #818187;
+  --border-strong: #6e6e73;
   --rule: #d2d2d7;
   --border-focus: #e8503a;
   --ring-selected: #e8503a;
@@ -182,6 +201,7 @@
   --stage-bg: #161618;
   --text-1: #f5f5f7;
   --text-2: #98989d;
+  --text-2-strong: var(--text-1);
   --text-3: #636366;
   --accent: #f26b57;
   --accent-ink: #f8846f;
@@ -190,6 +210,7 @@
   --accent-subtle: #46201a;
   --on-accent: #1c1c1e;
   --border: #8a8a8f;
+  --border-strong: #98989d;
   --rule: #48484a;
   --border-focus: #f26b57;
   --ring-selected: #f26b57;
@@ -218,6 +239,7 @@
     --stage-bg: #161618;
     --text-1: #f5f5f7;
     --text-2: #98989d;
+    --text-2-strong: var(--text-1);
     --text-3: #636366;
     --accent: #f26b57;
     --accent-ink: #f8846f;
@@ -226,6 +248,7 @@
     --accent-subtle: #46201a;
     --on-accent: #1c1c1e;
     --border: #8a8a8f;
+    --border-strong: #98989d;
     --rule: #48484a;
     --border-focus: #f26b57;
     --ring-selected: #f26b57;
