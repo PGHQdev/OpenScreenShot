@@ -114,7 +114,11 @@ body {
   background: var(--text-1);
   border-radius: 2px;
 }
-.stylebar-range {
+/* Compound with .range (below), not a bare class: equal specificity plus
+   source order used to let .range's own width: 100% win here, squeezing
+   this slider down to whatever its flex row left over instead of the
+   140px this class asks for. */
+.range.stylebar-range {
   width: 140px;
 }
 
@@ -651,8 +655,87 @@ body {
 .modal-row {
   margin-bottom: var(--s-4);
 }
+/*
+ * appearance: none is required to draw a themed track and thumb at all — a
+ * native slider ignores author background/border on its track and thumb
+ * otherwise — but it also opts the control out of accent-color, so track,
+ * thumb, focus, hover and disabled are all drawn by hand below rather than
+ * left to the one-line accent-color fix. -webkit-/-moz- rules are kept
+ * paired throughout: a slider with a styled track and a default thumb (or
+ * the reverse) is the half-done state to avoid.
+ */
 .range {
+  appearance: none;
+  -webkit-appearance: none;
   width: 100%;
+  height: 20px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: var(--r-full);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+}
+.range::-moz-range-track {
+  height: 4px;
+  border-radius: var(--r-full);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+}
+/* Centres a 16px (border included) thumb on the 6px (border included)
+   track: (6 - 20) / 2 — Firefox's ::-moz-range-thumb needs no margin, it
+   centres on the track by default. */
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -7px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  border: 2px solid var(--surface-1);
+  box-shadow: 0 0 0 1px var(--border);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  border: 2px solid var(--surface-1);
+  box-shadow: 0 0 0 1px var(--border);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.range:hover::-webkit-slider-thumb {
+  background: var(--accent-ink-hover);
+}
+.range:hover::-moz-range-thumb {
+  background: var(--accent-ink-hover);
+}
+/* The UA's own focus ring would draw on the host input's box, which is
+   transparent and the wrong size — moved to the thumb, the part a sighted
+   user actually reads as "the control". */
+.range:focus-visible {
+  outline: none;
+}
+.range:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+.range:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+.range:disabled {
+  cursor: default;
+  opacity: 0.5;
 }
 .filename-row {
   display: flex;
@@ -907,6 +990,18 @@ body {
   .segmented-btn {
     transition: none;
   }
+  /* Kept out of the selector list above on purpose: Chromium does not
+     recognise ::-moz-range-thumb, and an unrecognised selector in a
+     comma-separated list invalidates the whole rule (not just its own
+     branch) — which silently dropped transition: none from every selector
+     above it too. Each vendor prefix gets its own rule instead, the same
+     split .range's track/thumb/hover/focus rules already use. */
+  .range::-webkit-slider-thumb {
+    transition: none;
+  }
+  .range::-moz-range-thumb {
+    transition: none;
+  }
 }
 
 .sheet {
@@ -1079,3 +1174,16 @@ body {
     background-color: HighlightText;
   }
 }
+
+/*
+ * No rule needed here for .range's own track/thumb: verified live
+ * (task-21-report.md), Chromium repaints input[type='range']'s track and
+ * thumb under forced-colors on its own — appearance: none does not hand
+ * that off to author CSS the way it does for input[type='checkbox']
+ * (.switch, above), so a background-color declared on
+ * ::-webkit-slider-thumb/::-moz-range-thumb here is inert, not a fix; the
+ * two stay visually distinct without one. forced-color-adjust: none would
+ * turn that off and substitute this file's own --accent/--surface-3 for
+ * the user's chosen palette, which is the wrong direction for a control
+ * whose colour carries no information of its own (unlike .swatch's fill).
+ */

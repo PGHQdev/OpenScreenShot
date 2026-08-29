@@ -358,6 +358,50 @@ async function rootVar(page, name) {
   );
 }
 
+/**
+ * Average RGB of a small screenshot region. getComputedStyle(el, pseudo)
+ * does not reach ::-webkit-slider-thumb/::-webkit-slider-runnable-track in
+ * this Chromium (verified: it silently returns the host element's own
+ * style instead of the pseudo's) — a real rendered pixel is the only way to
+ * check what colour a slider's thumb and track actually paint.
+ */
+async function pixelAt(page, x, y) {
+  const sharp = createRequire(join(ROOT, 'package.json'))('sharp');
+  const buf = await page.screenshot({ clip: { x: x - 1, y: y - 1, width: 3, height: 3 } });
+  const { data, info } = await sharp(buf).raw().toBuffer({ resolveWithObject: true });
+  let r = 0,
+    g = 0,
+    b = 0;
+  const n = info.width * info.height;
+  for (let i = 0; i < data.length; i += info.channels) {
+    r += data[i];
+    g += data[i + 1];
+    b += data[i + 2];
+  }
+  return [Math.round(r / n), Math.round(g / n), Math.round(b / n)];
+}
+
+function hexToRGB(hex) {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex.trim());
+  return m
+    ? [
+        parseInt(m[1].slice(0, 2), 16),
+        parseInt(m[1].slice(2, 4), 16),
+        parseInt(m[1].slice(4, 6), 16),
+      ]
+    : null;
+}
+
+function closeRGB(a, b, tol = 30) {
+  return (
+    !!a &&
+    !!b &&
+    Math.abs(a[0] - b[0]) <= tol &&
+    Math.abs(a[1] - b[1]) <= tol &&
+    Math.abs(a[2] - b[2]) <= tol
+  );
+}
+
 // ---------------------------------------------------------------- editor ---
 async function testEditor(browser, base, messages) {
   step('EDITOR — opening with a seeded capture, Rectangle tool selected');
@@ -400,6 +444,69 @@ async function testEditor(browser, base, messages) {
   );
   const baseBorder = await rootVar(page, '--border');
   const baseEyedropper = await computedOf(page, '.swatch-screen', ['backgroundColor']);
+
+  step(
+    'EDITOR — the range slider: styled track and thumb in the coral tokens, no Chrome default blue',
+  );
+  // The fontSize field is the style bar's only slider (stylebar.ts) — Text
+  // switches it in. Restored to Rectangle at the end so the rest of this
+  // function sees the tool state it expects.
+  await page.click('.tool-btn[title^="Text"]');
+  await page.waitForSelector('.stylebar-range');
+  await page.evaluate(() => {
+    const el = document.querySelector('.stylebar-range');
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+    setter.call(el, el.min);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await new Promise((r) => setTimeout(r, 60));
+  const rangeBox = await page.evaluate(() =>
+    document.querySelector('.stylebar-range').getBoundingClientRect().toJSON(),
+  );
+  // Pinned to min, so the thumb sits at the track's left edge — sampled 8px
+  // in (half its 16px width); the track sample is the opposite end, far
+  // enough from the thumb's own radius to be plain track.
+  const thumbPoint = {
+    x: Math.round(rangeBox.left + 8),
+    y: Math.round(rangeBox.top + rangeBox.height / 2),
+  };
+  const trackPoint = { x: Math.round(rangeBox.right - 4), y: thumbPoint.y };
+  const accentHex = await rootVar(page, '--accent');
+  const surface3Hex = await rootVar(page, '--surface-3');
+  const thumbPixel = await pixelAt(page, thumbPoint.x, thumbPoint.y);
+  const trackPixel = await pixelAt(page, trackPoint.x, trackPoint.y);
+  assert(
+    closeRGB(thumbPixel, hexToRGB(accentHex)),
+    `slider thumb pixel (${thumbPixel}) renders --accent (${accentHex}), not Chrome's default blue thumb`,
+  );
+  assert(
+    closeRGB(trackPixel, hexToRGB(surface3Hex)),
+    `slider track pixel (${trackPixel}) renders --surface-3 (${surface3Hex})`,
+  );
+
+  step(
+    'EDITOR — forced-colors: active — the range slider keeps its thumb visible against its track',
+  );
+  await emulateMedia(cdp, [{ name: 'forced-colors', value: 'active' }]);
+  await new Promise((r) => setTimeout(r, 60));
+  const thumbPixelFC = await pixelAt(page, thumbPoint.x, thumbPoint.y);
+  const trackPixelFC = await pixelAt(page, trackPoint.x, trackPoint.y);
+  // Verified live (task-21-report.md): Chromium repaints input[type='range']'s
+  // UA-shadow track/thumb under forced-colors on its own, even styled with
+  // appearance: none — unlike input[type='checkbox'] (.switch), where Task
+  // 17 had to supply the Highlight/ButtonFace split by hand. An author
+  // background-color on ::-webkit-slider-thumb/::-webkit-slider-runnable-track
+  // is inert here (confirmed by removing it and re-running — no change), so
+  // this checks the property the trap actually cares about — the thumb
+  // never flattens into its track — rather than asserting a specific
+  // colour this file's own CSS does not control.
+  assert(
+    !closeRGB(thumbPixelFC, trackPixelFC, 10),
+    `the thumb (${thumbPixelFC}) stays visually distinct from its track (${trackPixelFC}) under forced-colors`,
+  );
+  await emulateMedia(cdp, []);
+  await page.click('.tool-btn[title^="Rectangle"]');
+  await page.waitForSelector('.stylebar');
 
   step('EDITOR — forced-colors: active — box-shadow really is dropped, generally, in this browser');
   await emulateMedia(cdp, [{ name: 'forced-colors', value: 'active' }]);
