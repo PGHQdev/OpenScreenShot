@@ -3491,6 +3491,321 @@ async function testBeautifyLooks(browser, base) {
   await fresh.close();
 }
 
+/**
+ * task 27 — the crop's eight handles, and the crop as an ordinary undo step.
+ *
+ * Two things unit tests cannot reach. The handles are canvas chrome measured
+ * off real pixels: how many squares are drawn, which of them the small-rect
+ * rule withholds, which one the keyboard is aimed at, and whether any of them
+ * survives into an exported PNG. The undo is the whole editor — applyCrop
+ * pushes a timeline entry holding the pre-crop picture, and only the real app
+ * can show that Ctrl+Z puts that picture, its rows and its layers back.
+ */
+async function testCropHandlesAndUndo(browser, base) {
+  step('task 27: a crop draft carries eight handles, and a small rect only its corners');
+  const { page } = await newSmokePage(browser);
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': await makeStripedCapture(),
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+
+  const sharp = createRequire(join(ROOT, 'package.json'))('sharp');
+  const say = () =>
+    page.evaluate(() =>
+      document.querySelector('[aria-live="polite"][role="status"]').textContent.trim(),
+    );
+  const count = () =>
+    page.evaluate(() => document.querySelector('.toolbar-count span')?.textContent ?? '0');
+  const settle = (ms = 120) => new Promise((r) => setTimeout(r, ms));
+  const focusCanvas = () => page.$eval('.stage-canvas', (el) => el.focus());
+  async function chord(mods, key) {
+    for (const m of mods) await page.keyboard.down(m);
+    await page.keyboard.press(key);
+    for (const m of mods.slice().reverse()) await page.keyboard.up(m);
+  }
+  const repeat = async (n, fn) => {
+    for (let i = 0; i < n; i++) await fn();
+  };
+
+  // Handle squares, read off the live canvas the way task 24 reads selection
+  // handles: the top-left pixel of every run of pure white, plus how wide that
+  // run is. A handle is the only pure-white block the editor draws — the crop
+  // preview's dim is 45% black over stripes that never reach white, and the
+  // dashed outline is one pixel of black-then-white that no 5x5 patch fits in.
+  const handles = () =>
+    page.evaluate(() => {
+      const canvas = document.querySelector('.stage-canvas');
+      const { width, height } = canvas;
+      const data = canvas.getContext('2d').getImageData(0, 0, width, height).data;
+      const pure = (x, y) => {
+        if (x < 0 || y < 0 || x >= width || y >= height) return false;
+        const i = (y * width + x) * 4;
+        return data[i + 3] === 255 && data[i] === 255 && data[i + 1] === 255 && data[i + 2] === 255;
+      };
+      const solid = (x, y) => {
+        for (let yy = y; yy <= y + 4; yy++) {
+          for (let xx = x; xx <= x + 4; xx++) if (!pure(xx, yy)) return false;
+        }
+        return true;
+      };
+      const out = [];
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          if (solid(x, y) && !pure(x - 1, y) && !pure(x, y - 1)) {
+            let run = 0;
+            while (pure(x + run, y + 2)) run++;
+            out.push({ x, y, run });
+          }
+        }
+      }
+      return out;
+    });
+  const whiteInPng = (data, info) => {
+    let n = 0;
+    for (let i = 0; i < data.length; i += info.channels) {
+      if (data[i] > 215 && data[i + 1] > 215 && data[i + 2] > 215) n++;
+    }
+    return n;
+  };
+  const exportPng = async () => {
+    await chord(['Meta'], 's');
+    await page.waitForSelector('.modal');
+    await page.waitForFunction(() =>
+      document.querySelector('.modal').contains(document.activeElement),
+    );
+    await page.$eval('.format-grid .format-card:first-child', (el) => el.focus());
+    await page.keyboard.press('Enter');
+    await settle();
+    await page.$eval('.modal .btn-primary', (el) => el.focus());
+    await page.keyboard.press('Enter');
+    await settle(900);
+    const download = await page.evaluate(() => globalThis.__smoke.downloads.at(-1));
+    const { data, info } = await sharp(
+      Buffer.from(download.url.slice(download.url.indexOf(',') + 1), 'base64'),
+    )
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    return { download, data, info };
+  };
+  // The colour of one pixel of an exported PNG.
+  const pixel = ({ data, info }, x, y) => {
+    const i = (y * info.width + x) * info.channels;
+    return [data[i], data[i + 1], data[i + 2]];
+  };
+
+  const geom = await page.$eval('.stage-canvas', (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.x, y: r.y, w: r.width, h: r.height, bw: el.width, bh: el.height };
+  });
+  // Backing store to CSS pixels, then to the page — the handle positions above
+  // are read out of the backing store.
+  const toPage = (p) => ({
+    x: geom.x + (p.x * geom.w) / geom.bw,
+    y: geom.y + (p.y * geom.h) / geom.bh,
+  });
+
+  await focusCanvas();
+  await page.keyboard.press('c');
+  await settle(80);
+  await page.keyboard.press('Enter');
+  await settle(120);
+  assert(
+    (await say()) === 'Crop 800 by 600 pixels at 0, 0.',
+    `Enter opened a crop over the whole picture: "${await say()}"`,
+  );
+  const full = await handles();
+  assert(
+    full.length === 8,
+    `the whole-picture crop draws eight handles (${full.length} white squares)`,
+  );
+  // The drawn square is 8px with a 1.5px black ring on its edge, so its pure
+  // white core reads narrower than 8. What matters is that the eight agree.
+  const plain = full[0].run;
+  assert(
+    plain >= 5 && full.every((h) => h.run === plain),
+    `the eight are all one size (runs ${full.map((h) => h.run).join(',')})`,
+  );
+
+  step('task 27: the keyboard walks the eight handles, and the live one is drawn larger');
+  await page.keyboard.press('[');
+  await settle(80);
+  assert(
+    (await say()) === 'Right handle. Crop 800 by 600 pixels at 0, 0.',
+    `a bracket names the handle it moved to: "${await say()}"`,
+  );
+  const aimed = await handles();
+  const big = aimed.filter((h) => h.run > plain);
+  assert(
+    aimed.length === 8 && big.length === 1,
+    `exactly one of the eight is emphasised (${big.length} of ${aimed.length} wider than ${plain}px)`,
+  );
+  // 'e' is the right edge midpoint: the emphasised square must be on the right
+  // edge, vertically between the two corners there.
+  const rightmost = Math.max(...aimed.map((h) => h.x));
+  assert(
+    big[0].x >= rightmost - 2,
+    `and it is the right-edge handle the announcement named (x ${big[0].x} of a rightmost ${rightmost})`,
+  );
+
+  step('task 27: Alt and an arrow resize from that handle, not from a fixed corner');
+  // Four more brackets walk on to the left edge — the handle the crop had no
+  // way to reach before, its keyboard resize being nailed to the far corner.
+  await repeat(4, () => page.keyboard.press('['));
+  await settle(80);
+  assert(
+    (await say()) === 'Left handle. Crop 800 by 600 pixels at 0, 0.',
+    `the walk reached the left edge: "${await say()}"`,
+  );
+  await repeat(5, () => chord(['Alt', 'Shift'], 'ArrowRight'));
+  await settle(120);
+  assert(
+    (await say()) === 'Crop 750 by 600 pixels at 50, 0.',
+    `the left edge came in 50px, taking the origin with it: "${await say()}"`,
+  );
+
+  step('task 27: a crop rect too small for edge handles keeps its four corners');
+  await page.keyboard.press('Escape');
+  await settle(80);
+  const mid = { x: geom.x + geom.w / 2, y: geom.y + geom.h / 2 };
+  await page.mouse.move(mid.x - 15, mid.y - 15);
+  await page.mouse.down();
+  await page.mouse.move(mid.x + 15, mid.y + 15, { steps: 6 });
+  await page.mouse.up();
+  await settle(120);
+  const small = await handles();
+  assert(
+    small.length === 4,
+    `a 30px crop offers corners only — an edge handle's target would sit on top of them (${small.length} squares)`,
+  );
+
+  step('task 27: dragging a handle adjusts the open crop instead of starting a new one');
+  await page.keyboard.press('Escape');
+  await settle(80);
+  await focusCanvas();
+  await page.keyboard.press('Enter');
+  await settle(120);
+  const corners = await handles();
+  const nw = corners.reduce((a, b) => (b.x + b.y < a.x + a.y ? b : a));
+  const from = toPage({ x: nw.x + 4, y: nw.y + 4 });
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(from.x + 60, from.y + 40, { steps: 8 });
+  await page.mouse.up();
+  await settle(150);
+  const moved = (await say()).match(/^Crop (\d+) by (\d+) pixels at (\d+), (\d+)\.$/);
+  assert(moved !== null, `the drag announced a crop: "${await say()}"`);
+  const [w, h, x, y] = moved.slice(1).map(Number);
+  assert(x > 0 && y > 0, `the top-left corner came in (now at ${x}, ${y})`);
+  // The discriminator: a mousedown that started a fresh rect would leave a box
+  // the size of the drag. This one kept the far corner it was never asked to
+  // move, so it adjusted the crop that was already open.
+  assert(
+    x + w === 800 && y + h === 600,
+    `and the opposite corner stayed on the picture's own corner (${x}+${w}, ${y}+${h})`,
+  );
+
+  step('task 27: no crop chrome reaches an exported image');
+  const withDraft = await exportPng();
+  assert(
+    withDraft.info.width === 800 && withDraft.info.height === 600,
+    `the export is still the whole picture while a crop is only drafted (${withDraft.info.width}x${withDraft.info.height})`,
+  );
+  assert(
+    whiteInPng(withDraft.data, withDraft.info) === 0,
+    `not one near-white pixel in the export, while the same canvas carries ${corners.length} white handle squares`,
+  );
+
+  step('task 27: applying a crop keeps the undo history it used to throw away');
+  await focusCanvas();
+  await page.keyboard.press('Escape');
+  await settle(80);
+  await page.keyboard.press('r');
+  await page.keyboard.press('Enter');
+  await settle(120);
+  const placed = (await say()).match(/added at (-?\d+), (-?\d+)/);
+  assert(placed !== null, `a rectangle was placed: "${await say()}"`);
+  // Walk it up onto the top stripe, which the crop below takes away. The
+  // placement is 140 image px tall at this zoom, so a top edge under 60 puts
+  // the whole of it above the crop's first kept row.
+  await repeat(20, () => chord(['Shift'], 'ArrowUp'));
+  await settle(120);
+  const high = (await say()).match(/moved to (-?\d+), (-?\d+)/);
+  const topY = high === null ? NaN : Number(high[2]);
+  assert(
+    topY >= 0 && topY + 140 <= 200,
+    `and nudged wholly onto the top stripe the crop removes (y ${high?.[2]})`,
+  );
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('c');
+  await page.keyboard.press('Enter');
+  await settle(120);
+  await repeat(3, () => page.keyboard.press('['));
+  await settle(80);
+  assert(
+    (await say()) === 'Top handle. Crop 800 by 600 pixels at 0, 0.',
+    `three brackets reached the top handle: "${await say()}"`,
+  );
+  await repeat(20, () => chord(['Alt', 'Shift'], 'ArrowDown'));
+  await settle(150);
+  assert(
+    (await say()) === 'Crop 800 by 400 pixels at 0, 200.',
+    `the top edge came down 200 rows, onto the stripe boundary: "${await say()}"`,
+  );
+  await page.keyboard.press('Enter');
+  await settle(250);
+  assert((await say()) === 'Cropped to 800 by 400 pixels.', `the crop applied: "${await say()}"`);
+  assert(
+    (await count()) === '0',
+    `the layer on the removed stripe went with it (${await count()})`,
+  );
+  const cropped = await exportPng();
+  assert(
+    cropped.info.width === 800 && cropped.info.height === 400,
+    `the export is the cropped picture (${cropped.info.width}x${cropped.info.height})`,
+  );
+  assert(
+    pixel(cropped, 400, 5).join(',') === '60,200,60',
+    `and its top row is the middle stripe, the red one having been cropped away (${pixel(cropped, 400, 5)})`,
+  );
+
+  step('task 27: Ctrl+Z puts the picture, its rows and the layer on them back');
+  await focusCanvas();
+  await chord(['Meta'], 'z');
+  await settle(400);
+  assert(
+    (await say()) === 'Undo. Image 800 by 600 pixels. 1 annotation.',
+    `undo announced the picture it restored: "${await say()}"`,
+  );
+  assert((await count()) === '1', `the cropped-away layer is back (${await count()})`);
+  const undone = await exportPng();
+  assert(
+    undone.info.width === 800 && undone.info.height === 600,
+    `the export is the whole capture again (${undone.info.width}x${undone.info.height})`,
+  );
+  assert(
+    pixel(undone, 400, 5).join(',') === '200,60,60',
+    `and the red stripe the crop threw away is back, pixel for pixel (${pixel(undone, 400, 5)})`,
+  );
+
+  step('task 27: and redo takes the crop again, layer and all');
+  await focusCanvas();
+  await chord(['Meta', 'Shift'], 'z');
+  await settle(400);
+  assert(
+    (await say()) === 'Redo. Image 800 by 400 pixels. 0 annotations.',
+    `redo announced the cropped picture: "${await say()}"`,
+  );
+  assert((await count()) === '0', `and dropped the layer again (${await count()})`);
+
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
+}
+
 async function main() {
   const built = await stat(join(DIST, PAGE.slice(1))).then(
     () => true,
@@ -4624,6 +4939,7 @@ async function main() {
     await testCutInPdfExport(browser, base);
     await testCutDraftRestore(browser, base);
     await testBeautifyLooks(browser, base);
+    await testCropHandlesAndUndo(browser, base);
 
     console.log('\nALL STEPS PASSED');
   } finally {

@@ -34,6 +34,8 @@ function buildCommands(isMac: boolean): { label: string; keys: string }[] {
     { label: 'Undo', keys: `${mod}Z` },
     { label: 'Redo', keys: `${mod}${shift}Z` },
     { label: 'Delete selected', keys: '⌫' },
+    { label: 'Crop: next / previous handle', keys: '] [' },
+    { label: 'Crop: resize from that handle', keys: isMac ? '⌥Arrows' : 'Alt+Arrows' },
     // Both rows name the tool: the sheet is one flat list with no per-tool
     // section, so a row reading "Enter" with nothing else on it would claim a
     // key that does something different under every other tool.

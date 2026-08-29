@@ -1048,20 +1048,27 @@ export function drawGroupSelection(
   ctx.restore();
 }
 
+/** The drawn side of a handle square, in screen pixels. */
+export const HANDLE_SIZE = 8;
+
 // Handles: a white fill with a black ring is the same worst-case pairing as the
 // outline — whichever of the two the local background defeats, the other reads.
-function drawHandles(
+// `size` is the drawn side only: the pointer target stays the 24x24 that
+// handleAt's tolerance describes, whatever square is painted inside it.
+export function drawHandles(
   ctx: CanvasRenderingContext2D,
   handles: HandlePos[],
   project: (x: number, y: number) => { x: number; y: number },
+  size = HANDLE_SIZE,
 ): void {
+  const half = size / 2;
   ctx.fillStyle = tokens.canvasMark;
   ctx.strokeStyle = '#000000';
   ctx.lineWidth = 1.5;
   for (const h of handles) {
     const p = project(h.x, h.y);
-    ctx.fillRect(p.x - 4, p.y - 4, 8, 8);
-    ctx.strokeRect(p.x - 4, p.y - 4, 8, 8);
+    ctx.fillRect(p.x - half, p.y - half, size, size);
+    ctx.strokeRect(p.x - half, p.y - half, size, size);
   }
 }
 

@@ -11,7 +11,6 @@ import {
   moveCropBy,
   placementRect,
   resizeAnnotationBy,
-  resizeCropBy,
   resizeSelectionBy,
   STEP_COARSE,
   STEP_FINE,
@@ -73,11 +72,24 @@ const flatPen: Annotation = {
 };
 
 describe('canvasIntent', () => {
-  it('cycles layers on the bracket keys, in every mode', () => {
-    for (const mode of ['idle', 'selection', 'crop'] as const) {
+  it('cycles layers on the bracket keys, in every mode but crop', () => {
+    for (const mode of ['idle', 'selection', 'cut'] as const) {
       expect(canvasIntent({ key: ']' }, mode)).toEqual({ kind: 'cycle', dir: 1, extend: false });
       expect(canvasIntent({ key: '[' }, mode)).toEqual({ kind: 'cycle', dir: -1, extend: false });
     }
+  });
+
+  // With a crop open there is no selection chrome on screen to walk, and the
+  // eight handles are what the keyboard has to be able to reach.
+  it('aims the crop on the bracket keys while one is open', () => {
+    expect(canvasIntent({ key: ']' }, 'crop')).toEqual({ kind: 'crop-handle', dir: 1 });
+    expect(canvasIntent({ key: '[' }, 'crop')).toEqual({ kind: 'crop-handle', dir: -1 });
+    // Shift is the extend modifier for a layer walk; a crop has nothing to
+    // extend, so it changes nothing here.
+    expect(canvasIntent({ key: '}', shiftKey: true }, 'crop')).toEqual({
+      kind: 'crop-handle',
+      dir: 1,
+    });
   });
 
   it('extends the selection when Shift is held with a bracket', () => {
@@ -739,7 +751,9 @@ describe('nudge steps', () => {
   });
 });
 
-describe('crop adjustment', () => {
+// The resize half moved to crop.test.ts with the eight handles: resizing is
+// now a question about which handle acts, and every handle is answered there.
+describe('crop movement', () => {
   const crop = { x: 40, y: 30, w: 200, h: 100 };
 
   it('moves the rect and keeps its size', () => {
@@ -758,22 +772,6 @@ describe('crop adjustment', () => {
       w: 40,
       h: 20,
     });
-  });
-
-  it('resizes from the bottom-right corner', () => {
-    expect(resizeCropBy(crop, 10, 10, 800, 600)).toEqual({ x: 40, y: 30, w: 210, h: 110 });
-  });
-
-  it('never grows past the image or shrinks below a pixel', () => {
-    expect(resizeCropBy(crop, 1000, 1000, 800, 600)).toEqual({ x: 40, y: 30, w: 760, h: 570 });
-    expect(resizeCropBy(crop, -1000, -1000, 800, 600)).toEqual({ x: 40, y: 30, w: 1, h: 1 });
-  });
-
-  it('trims the left edge with a resize then a move', () => {
-    const full = { x: 0, y: 0, w: 800, h: 600 };
-    const narrower = resizeCropBy(full, -100, 0, 800, 600);
-    const shifted = moveCropBy(narrower, 100, 0, 800, 600);
-    expect(shifted).toEqual({ x: 100, y: 0, w: 700, h: 600 });
   });
 });
 

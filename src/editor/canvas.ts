@@ -13,6 +13,7 @@ import {
   drawSelection,
   drawSpotlightLayer,
   pruneBlurCache,
+  type Handle,
   type Rect,
   type SpotlightAnnotation,
   type SpotlightLayerCache,
@@ -29,6 +30,7 @@ import {
   toSource,
   type Band,
 } from './bands';
+import { drawCropHandles } from './crop';
 import { centerView, clampZoom, fitZoom } from './viewport';
 import { clipToFrame, DEFAULT_FRAME, frameMetrics, paintFrame, type FrameOptions } from './frame';
 import { rgbToHex } from './eyedropper';
@@ -79,6 +81,8 @@ export class CanvasController {
   selectedIds: string[] = [];
   /** A transient crop rectangle (tool action), rendered as a dim preview. */
   cropRect: Rect | null = null;
+  /** Which crop handle the keyboard is aimed at, or null while none is picked. */
+  cropHandle: Handle | null = null;
   /**
    * Cut bands, in source image pixels. Applied wherever the picture is drawn —
    * the live canvas, the export and the crop snapshot — so the band list is
@@ -214,6 +218,14 @@ export class CanvasController {
 
   setCropRect(r: Rect | null): void {
     this.cropRect = r;
+    // No rect, no handle: the aim belongs to the rect, so it cannot outlive it
+    // and reappear on the next crop the user opens.
+    if (r === null) this.cropHandle = null;
+    this.render();
+  }
+
+  setCropHandle(h: Handle | null): void {
+    this.cropHandle = h;
     this.render();
   }
 
@@ -520,6 +532,19 @@ export class CanvasController {
       ctx.lineWidth = 1;
       ctx.strokeRect(this.view.panX + 0.5, this.view.panY + 0.5, sw - 1, sh - 1);
       ctx.restore();
+    }
+    // The crop's handles, in screen space so each keeps its 24x24 target at
+    // any zoom. They project through toScreenComposed, not projectAt: a crop
+    // rect is the composed picture's own rectangle, with every cut already
+    // closed up, rather than something anchored on one annotation's row.
+    if (this.cropRect) {
+      drawCropHandles(
+        ctx,
+        this.cropRect,
+        (x, y) => this.toScreenComposed(x, y),
+        this.view.zoom,
+        this.cropHandle,
+      );
     }
     // One selected layer carries its own handles; several share one set, on
     // the box around all of them (drawGroupSelection).

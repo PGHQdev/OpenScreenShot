@@ -24,6 +24,7 @@ import {
   unionBBox,
   type Annotation,
   type AnnotationType,
+  type Handle,
   type Point,
   type Rect,
 } from './annotations';
@@ -61,6 +62,7 @@ export type CanvasIntent =
   | { kind: 'resize'; dx: number; dy: number }
   | { kind: 'crop-move'; dx: number; dy: number }
   | { kind: 'crop-resize'; dx: number; dy: number }
+  | { kind: 'crop-handle'; dir: 1 | -1 }
   | { kind: 'cut-move'; dy: number }
   | { kind: 'cut-resize'; dy: number };
 
@@ -85,9 +87,13 @@ const ARROWS: Record<string, Point> = {
 export function canvasIntent(e: KeyChord, mode: CanvasMode): CanvasIntent | null {
   if (e.ctrlKey || e.metaKey) return null;
   if (e.key === ']' || e.key === '}') {
+    // With a crop open the brackets aim it: there is no selection on screen to
+    // walk, and the eight handles are what the user needs to reach.
+    if (mode === 'crop') return { kind: 'crop-handle', dir: 1 };
     return { kind: 'cycle', dir: 1, extend: e.key === '}' || !!e.shiftKey };
   }
   if (e.key === '[' || e.key === '{') {
+    if (mode === 'crop') return { kind: 'crop-handle', dir: -1 };
     return { kind: 'cycle', dir: -1, extend: e.key === '{' || !!e.shiftKey };
   }
   if (e.key === 'Enter') {
@@ -330,17 +336,6 @@ export function moveCropBy(r: Rect, dx: number, dy: number, imgW: number, imgH: 
   };
 }
 
-/** Resize a crop rect from its bottom-right corner, held inside the image. */
-export function resizeCropBy(r: Rect, dx: number, dy: number, imgW: number, imgH: number): Rect {
-  const n = normalizeRect(r);
-  return {
-    x: n.x,
-    y: n.y,
-    w: clamp(n.w + dx, 1, Math.max(1, imgW - n.x)),
-    h: clamp(n.h + dy, 1, Math.max(1, imgH - n.y)),
-  };
-}
-
 /**
  * Where a keyboard placement lands: a square of `size` image pixels centred on
  * `c`, pushed back inside the image so a placement near an edge stays whole.
@@ -375,12 +370,18 @@ export type Mutation =
   | { kind: 'delete-many'; count: number; remaining: number }
   | { kind: 'duplicate'; count: number }
   /**
-   * `imageHeight` is carried only when the step crossed a cut, so a step that
-   * put a strip back says so instead of naming the layer count alone.
+   * What the step did to the picture, so a step that changed it says so
+   * instead of naming the layer count alone.
+   *
+   * `imageHeight` is a cut put back or taken on a picture that stayed the
+   * same. `imageSize` is a crop put back or retaken — the one edit that
+   * replaces the picture outright — and it wins over the other, both being
+   * true of the same step.
    */
-  | { kind: 'undo'; total: number; imageHeight?: number }
-  | { kind: 'redo'; total: number; imageHeight?: number }
+  | { kind: 'undo'; total: number; imageHeight?: number; imageSize?: { w: number; h: number } }
+  | { kind: 'redo'; total: number; imageHeight?: number; imageSize?: { w: number; h: number } }
   | { kind: 'crop'; rect: Rect }
+  | { kind: 'crop-handle'; handle: Handle; rect: Rect }
   | { kind: 'crop-applied'; w: number; h: number }
   | { kind: 'crop-cancelled' }
   | { kind: 'cut'; band: Band }
@@ -397,9 +398,32 @@ function count(n: number): string {
   return `${n} annotation${n === 1 ? '' : 's'}`;
 }
 
-/** The new picture height, for a timeline step that crossed a cut. */
-function cutSize(imageHeight: number | undefined): string {
-  return imageHeight === undefined ? '' : ` Image ${Math.round(imageHeight)} pixels tall.`;
+/** The new picture, for a timeline step that changed it. */
+function stepSize(m: { imageHeight?: number; imageSize?: { w: number; h: number } }): string {
+  if (m.imageSize)
+    return ` Image ${Math.round(m.imageSize.w)} by ${Math.round(m.imageSize.h)} pixels.`;
+  return m.imageHeight === undefined ? '' : ` Image ${Math.round(m.imageHeight)} pixels tall.`;
+}
+
+/** What each handle is called out loud. */
+const HANDLE_LABEL: Record<Handle, string> = {
+  nw: 'Top left',
+  n: 'Top',
+  ne: 'Top right',
+  e: 'Right',
+  se: 'Bottom right',
+  s: 'Bottom',
+  sw: 'Bottom left',
+  w: 'Left',
+  start: 'Start',
+  end: 'End',
+};
+
+/** The size and place of a crop rect, as one sentence. */
+function cropPhrase(rect: Rect): string {
+  const n = normalizeRect(rect);
+  const size = `${Math.round(n.w)} by ${Math.round(n.h)} pixels`;
+  return `Crop ${size} at ${Math.round(n.x)}, ${Math.round(n.y)}.`;
 }
 
 /** What the live region says for one mutation. */
@@ -441,14 +465,13 @@ export function announce(m: Mutation): string {
     case 'duplicate':
       return `${count(m.count)} duplicated.`;
     case 'undo':
-      return `Undo.${cutSize(m.imageHeight)} ${count(m.total)}.`;
+      return `Undo.${stepSize(m)} ${count(m.total)}.`;
     case 'redo':
-      return `Redo.${cutSize(m.imageHeight)} ${count(m.total)}.`;
-    case 'crop': {
-      const n = normalizeRect(m.rect);
-      const size = `${Math.round(n.w)} by ${Math.round(n.h)} pixels`;
-      return `Crop ${size} at ${Math.round(n.x)}, ${Math.round(n.y)}.`;
-    }
+      return `Redo.${stepSize(m)} ${count(m.total)}.`;
+    case 'crop':
+      return cropPhrase(m.rect);
+    case 'crop-handle':
+      return `${HANDLE_LABEL[m.handle]} handle. ${cropPhrase(m.rect)}`;
     case 'crop-applied':
       return `Cropped to ${m.w} by ${m.h} pixels.`;
     case 'crop-cancelled':

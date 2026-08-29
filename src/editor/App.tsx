@@ -371,10 +371,11 @@ export function App() {
               instead of replacing it. Press Enter to place the tool you picked in the toolbar. Use
               the arrow keys to move the selection by one pixel, Shift and an arrow to move it by
               ten, and Alt and an arrow to resize it. Press Alt and D to duplicate the selection.
-              With a crop open, the arrow keys move it, Alt and an arrow resize it, Enter applies it
-              and Escape cancels it. With the Cut tool, Enter starts a band across the picture, the
-              up and down arrows move it, Alt and an arrow resize it, Enter takes it out and Escape
-              cancels it. Press Delete with the Cut tool to put back the nearest cut.
+              With a crop open, the arrow keys move it, the brackets pick one of its eight handles,
+              Alt and an arrow resize it from that handle, Enter applies it and Escape cancels it.
+              With the Cut tool, Enter starts a band across the picture, the up and down arrows move
+              it, Alt and an arrow resize it, Enter takes it out and Escape cancels it. Press Delete
+              with the Cut tool to put back the nearest cut.
             </p>
           </canvas>
 

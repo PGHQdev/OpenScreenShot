@@ -6,13 +6,16 @@
  * (drawing, selecting, moving, resizing, text, crop, pan/zoom). App.tsx is a
  * thin presentational consumer.
  *
- * History records snapshots of the annotation list, the cut bands and the
- * selection that went with them (history.ts). Each mutating action snapshots
- * the pre-change state (one entry per action — a move/resize drag snapshots on
- * first motion, not per mousemove). Crop is destructive and clears history (the
- * pre-crop annotation coordinates are invalid for the cropped image). A cut is
- * not: it is a band on a list the compose paths read, so it is one ordinary
- * undo step and everything already on the stack survives it.
+ * History records snapshots of the annotation list, the cut bands, the picture
+ * they were measured against and the selection that went with them
+ * (history.ts). Each mutating action snapshots the pre-change state (one entry
+ * per action — a move/resize drag snapshots on first motion, not per
+ * mousemove). Crop rasterises a new picture and moves every surviving
+ * annotation into its coordinates, so its entry carries the picture as well as
+ * the list: the four are captured together and restored together, which makes
+ * a crop one ordinary undo step. A cut is one too, by a cheaper route — it is
+ * a band on a list the compose paths read, so it never replaces the picture at
+ * all.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { CanvasController } from './canvas';
@@ -36,11 +39,18 @@ import {
   type SpotlightShape,
 } from './annotations';
 import {
+  activeCropHandle,
+  cropAnnotations,
+  cropHandleAt,
+  cropSize,
+  cycleCropHandle,
+  resizeCropAt,
+} from './crop';
+import {
   addBand,
   bandAtSeam,
   canCut,
   composedHeight,
-  cutAbove,
   inBand,
   MIN_BAND,
   moveBandBy,
@@ -81,7 +91,6 @@ import {
   placementRect,
   PLACE_SIZE_PX,
   resizeAnnotationBy,
-  resizeCropBy,
   resizeSelectionBy,
   type CanvasMode,
   type CarriedBox,
@@ -112,7 +121,12 @@ import {
   type Draft,
 } from './draft';
 import { canvasToDataUrl, downloadDataUrl, withExtension, type ImageFormat } from './export';
-import { historyStep, type HistoryEntry } from './history';
+import {
+  historyStep,
+  HISTORY_IMAGE_BUDGET_PX,
+  trimHistoryImages,
+  type HistoryEntry,
+} from './history';
 import { agreed } from './stylebar';
 import { importSizeError, readImageFile, titleFromFilename } from './import-image';
 import { exportPdf as exportPdfFile, type PdfExportProgress, type PdfOptions } from './pdf';
@@ -136,6 +150,18 @@ interface PendingImport {
 type Interaction =
   | { kind: 'pan'; lastX: number; lastY: number }
   | { kind: 'crop'; start: { x: number; y: number } }
+  /**
+   * A crop handle being dragged. `start` is the rect as it stood when the
+   * handle was grabbed and `startPt` the composed point it was grabbed at, so
+   * every move re-derives the rect from one fixed pair rather than
+   * accumulating rounding along the drag.
+   */
+  | {
+      kind: 'crop-handle';
+      handle: Handle;
+      start: Rect;
+      startPt: { x: number; y: number };
+    }
   /** A cut band being dragged out; `start` is its fixed edge, in source pixels. */
   | { kind: 'cut'; start: number }
   | { kind: 'shape' }
@@ -208,7 +234,26 @@ export function useEditor() {
   const draftRef = useRef<Annotation | null>(null);
   const interactionRef = useRef<Interaction>(null);
   const cropDraftRef = useRef<Rect | null>(null);
+  /**
+   * The crop handle the arrow keys resize from, or null while none has been
+   * picked and the bottom-right corner stands in. Ref-only, like the cut
+   * draft: the canvas draws it and the live region says it, and nothing in the
+   * DOM renders from it.
+   */
+  const cropHandleRef = useRef<Handle | null>(null);
   const bandsRef = useRef<Band[]>([]);
+  /**
+   * The decoded picture on the canvas right now, written before the controller
+   * sees it so a timeline entry taken inside the same event names the picture
+   * that event is putting up.
+   */
+  const imageRef = useRef<HTMLImageElement | null>(null);
+  /**
+   * The picture decoded straight from the stashed capture. An undo that lands
+   * back on it has no crop to remember, so the stored draft image goes rather
+   * than being rewritten.
+   */
+  const baseImageRef = useRef<HTMLImageElement | null>(null);
   /**
    * A cut band being drafted. Ref-only: nothing in the DOM renders from it —
    * the preview is on the canvas and the wording is in the live region — and a
@@ -558,6 +603,7 @@ export function useEditor() {
       annotations: annotationsRef.current,
       bands: bandsRef.current,
       selectedIds: selectedIdsRef.current,
+      image: imageRef.current,
     }),
     [],
   );
@@ -598,29 +644,87 @@ export function useEditor() {
     return composedHeight(bands, img.naturalHeight);
   }, []);
 
+  /**
+   * Put a timeline step's picture back on the canvas, and nothing when the
+   * step did not change it — which is every step but a crop, since each of
+   * those entries holds the very element that is already up.
+   *
+   * The stored draft image goes back with it. That key is what a reload
+   * measures a restored annotation list against, so leaving a cropped picture
+   * there after an undo would misplace every mark the next time the editor
+   * opened.
+   */
+  const restoreStepImage = useCallback((img: HTMLImageElement | null): boolean => {
+    const c = controllerRef.current;
+    if (!c || !img || img === imageRef.current) return false;
+    imageRef.current = img;
+    c.setImage(img);
+    setImageSize({ w: img.naturalWidth, h: img.naturalHeight });
+    if (img === baseImageRef.current) void clearDraftImage();
+    else void setDraftImage(img.src);
+    return true;
+  }, []);
+
+  /** What a timeline step says out loud about the picture it landed on. */
+  const stepPicture = useCallback(
+    (e: HistoryEntry, changed: boolean) =>
+      changed && e.image
+        ? {
+            imageSize: {
+              w: e.image.naturalWidth,
+              h: composedHeight(e.bands, e.image.naturalHeight),
+            },
+          }
+        : { imageHeight: stepHeight(e.bands) },
+    [stepHeight],
+  );
+
   const undo = useCallback(() => {
     const step = historyStep(pastRef.current, futureRef.current, entry(), -1);
     if (!step) return;
-    const imageHeight = stepHeight(step.entry.bands);
+    // The picture first: stepHeight and the announcement below both measure
+    // the bands against the image that is actually up.
+    const changed = restoreStepImage(step.entry.image);
+    const size = stepPicture(step.entry, changed);
     applyHistory(step.past, step.future);
     applyAnnotations(step.entry.annotations);
     applyBands(step.entry.bands);
-    // The three were captured together, so these ids name layers in the list
-    // that just landed — the selection the undone edit was made against.
+    // The four were captured together, so these ids name layers in the list
+    // that just landed, and that list's coordinates belong to the picture that
+    // landed with it — the state the undone edit was made against.
     selectAnnotations(step.entry.selectedIds);
-    say({ kind: 'undo', total: step.entry.annotations.length, imageHeight });
-  }, [applyAnnotations, applyBands, applyHistory, entry, selectAnnotations, say, stepHeight]);
+    say({ kind: 'undo', total: step.entry.annotations.length, ...size });
+  }, [
+    applyAnnotations,
+    applyBands,
+    applyHistory,
+    entry,
+    restoreStepImage,
+    selectAnnotations,
+    say,
+    stepPicture,
+  ]);
 
   const redo = useCallback(() => {
     const step = historyStep(pastRef.current, futureRef.current, entry(), 1);
     if (!step) return;
-    const imageHeight = stepHeight(step.entry.bands);
+    const changed = restoreStepImage(step.entry.image);
+    const size = stepPicture(step.entry, changed);
     applyHistory(step.past, step.future);
     applyAnnotations(step.entry.annotations);
     applyBands(step.entry.bands);
     selectAnnotations(step.entry.selectedIds);
-    say({ kind: 'redo', total: step.entry.annotations.length, imageHeight });
-  }, [applyAnnotations, applyBands, applyHistory, entry, selectAnnotations, say, stepHeight]);
+    say({ kind: 'redo', total: step.entry.annotations.length, ...size });
+  }, [
+    applyAnnotations,
+    applyBands,
+    applyHistory,
+    entry,
+    restoreStepImage,
+    selectAnnotations,
+    say,
+    stepPicture,
+  ]);
 
   const deleteSelection = useCallback(() => {
     const ids = selectedIdsRef.current;
@@ -791,6 +895,8 @@ export function useEditor() {
       await new Promise<void>((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
+          imageRef.current = img;
+          baseImageRef.current = img;
           c.setImage(img);
           resolve();
         };
@@ -1139,6 +1245,21 @@ export function useEditor() {
         c.setCropRect(r);
         return;
       }
+      if (it.kind === 'crop-handle') {
+        if (!c.image) return;
+        const cp = c.toComposedPoint(sx, sy);
+        const next = resizeCropAt(
+          it.start,
+          it.handle,
+          cp.x - it.startPt.x,
+          cp.y - it.startPt.y,
+          c.image.naturalWidth,
+          c.composedImageHeight(),
+        );
+        cropDraftRef.current = next;
+        c.setCropRect(next);
+        return;
+      }
       if (it.kind === 'cut') {
         // A band spans the picture, so only the pointer's y says anything.
         const ih = c.image ? c.image.naturalHeight : 0;
@@ -1255,6 +1376,16 @@ export function useEditor() {
       } else {
         cropDraftRef.current = null;
         c.setCropRect(null);
+      }
+      return;
+    }
+    if (it.kind === 'crop-handle') {
+      // The rect was already open before the grab, so there is nothing to
+      // discard here: an adjustment that went nowhere leaves it as it was.
+      const r = cropDraftRef.current;
+      if (r) {
+        setCropDraft(r);
+        say({ kind: 'crop', rect: r });
       }
       return;
     }
@@ -1473,6 +1604,31 @@ export function useEditor() {
         return;
       }
       if (t === 'crop') {
+        // A handle on the open rect is grabbed before a new rect is started,
+        // so an adjustment does not throw away the crop it was adjusting.
+        const open = cropDraftRef.current;
+        if (open) {
+          const grabbed = cropHandleAt(
+            open,
+            (x, y) => c.toScreenComposed(x, y),
+            c.view.zoom,
+            sx,
+            sy,
+          );
+          if (grabbed) {
+            cropHandleRef.current = grabbed;
+            c.setCropHandle(grabbed);
+            interactionRef.current = {
+              kind: 'crop-handle',
+              handle: grabbed,
+              start: normalizeRect(open),
+              startPt: c.toComposedPoint(sx, sy),
+            };
+            window.addEventListener('mousemove', onDragMove);
+            window.addEventListener('mouseup', onDragUp);
+            return;
+          }
+        }
         const cp = clampToImage(
           c.toComposedPoint(sx, sy),
           c.image.naturalWidth,
@@ -1607,6 +1763,7 @@ export function useEditor() {
     // piece afterwards, so this line never survives to be read in those cases.
     const had = cropDraftRef.current !== null;
     cropDraftRef.current = null;
+    cropHandleRef.current = null;
     controllerRef.current?.setCropRect(null);
     setCropActive(false);
     setCropDraft(null);
@@ -1625,14 +1782,21 @@ export function useEditor() {
       cancelCrop();
       return;
     }
+    const { w, h } = cropSize(n);
     const canvas = document.createElement('canvas');
-    canvas.width = Math.round(n.w);
-    canvas.height = Math.round(n.h);
+    canvas.width = w;
+    canvas.height = h;
     const cx = canvas.getContext('2d');
     if (!cx) {
       cancelCrop();
       return;
     }
+    // The timeline entry is taken here: after the last branch that can refuse
+    // the crop, and before anything is filtered, translated or replaced. It
+    // holds the annotations the crop is about to drop, the bands it is about
+    // to bake in, the selection it is about to clear and the picture it is
+    // about to replace — an entry taken any later could not put those back.
+    applyHistory(trimHistoryImages([...pastRef.current, entry()], HISTORY_IMAGE_BUDGET_PX), []);
     // Crop rasterises from the picture as it is drawn, cuts closed up, so a
     // crop bakes every cut into the new image. The band list goes with the
     // capture it measured, and the crop rect is in that same composed space.
@@ -1646,28 +1810,16 @@ export function useEditor() {
       c.setImage(img);
       setImageSize({ w: canvas.width, h: canvas.height });
     };
+    // Written before the decode lands, so a second crop in the same breath
+    // takes its entry against this picture rather than the one it replaced.
+    imageRef.current = img;
     img.src = cropped;
-    const w = canvas.width;
-    const h = canvas.height;
-    applyAnnotations((prev) =>
-      renumberSteps(
-        prev
-          // A layer whose top edge was on a cut row marked pixels the crop
-          // did not take, so it goes with them.
-          .filter((a) => !inBand(cut, bbox(a).y))
-          .map((a) => translateAnnotation(a, -n.x, -(cutAbove(cut, bbox(a).y) + n.y)))
-          .filter((a) => {
-            const b = bbox(a);
-            return b.x < w && b.y < h && b.x + b.w > 0 && b.y + b.h > 0;
-          }),
-      ),
-    );
+    applyAnnotations((prev) => cropAnnotations(prev, n, cut));
     applyBands([]);
     selectAnnotations([]);
-    applyHistory([], []);
     cancelCrop();
     say({ kind: 'crop-applied', w, h });
-  }, [applyAnnotations, applyBands, applyHistory, cancelCrop, selectAnnotations, say]);
+  }, [applyAnnotations, applyBands, applyHistory, cancelCrop, entry, selectAnnotations, say]);
 
   // --- Keyboard on the canvas ---
   /**
@@ -1797,6 +1949,15 @@ export function useEditor() {
         sayAboutSelection(next);
         return;
       }
+      if (intent.kind === 'crop-handle') {
+        const cur = cropDraftRef.current;
+        if (!cur) return;
+        const next = cycleCropHandle(cropHandleRef.current, intent.dir, cur, c.view.zoom);
+        cropHandleRef.current = next;
+        c.setCropHandle(next);
+        say({ kind: 'crop-handle', handle: next, rect: cur });
+        return;
+      }
       if (intent.kind === 'crop-move' || intent.kind === 'crop-resize') {
         const cur = cropDraftRef.current;
         if (!cur) return;
@@ -1806,7 +1967,14 @@ export function useEditor() {
         const next =
           intent.kind === 'crop-move'
             ? moveCropBy(cur, intent.dx, intent.dy, iw, ch)
-            : resizeCropBy(cur, intent.dx, intent.dy, iw, ch);
+            : resizeCropAt(
+                cur,
+                activeCropHandle(cropHandleRef.current, cur, c.view.zoom),
+                intent.dx,
+                intent.dy,
+                iw,
+                ch,
+              );
         // A rect held at the image edge still gets announced: silence reads as
         // "the key did nothing", which is a different thing from "it clamped".
         cropDraftRef.current = next;
@@ -1985,6 +2153,10 @@ export function useEditor() {
         const img = new Image();
         img.onload = () => {
           restoringRef.current = false;
+          // The stored image is a crop of the capture, so the base stays what
+          // it was: an undo that reaches it clears the draft image rather than
+          // rewriting one that no longer describes the picture.
+          imageRef.current = img;
           controllerRef.current?.setImage(img);
           setImageSize({ w: img.naturalWidth, h: img.naturalHeight });
           land(img.naturalHeight);
@@ -2040,6 +2212,8 @@ export function useEditor() {
       setError(null);
       setStageNotice(null);
       setPendingImport(null);
+      imageRef.current = p.img;
+      baseImageRef.current = p.img;
       c.setImage(p.img);
     },
     [applyAnnotations, applyBands, applyHistory, cancelCrop, cancelCut, selectAnnotations],
