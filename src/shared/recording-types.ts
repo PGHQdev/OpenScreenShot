@@ -116,6 +116,13 @@ export interface CapturedTracks {
 export type EngineMessage =
   /** `tracks` is absent only from an engine older than this message shape. */
   | { type: 'ENGINE_STARTED'; sessionId: string; tracks?: CapturedTracks }
+  /**
+   * A chunk or event write to IndexedDB rejected. The recording keeps going —
+   * the earlier chunks are real and stopping would throw them away — but the
+   * file is now shorter than the clock says, so the user has to be told.
+   * Sent once per run; the engine will not repeat it.
+   */
+  | { type: 'ENGINE_WRITE_FAILED'; sessionId: string }
   | { type: 'ENGINE_STOPPED'; sessionId: string; canceled: boolean }
   | { type: 'ENGINE_ERROR'; sessionId: string; message: string }
   | { type: 'OVERLAY_LOST'; sessionId: string }

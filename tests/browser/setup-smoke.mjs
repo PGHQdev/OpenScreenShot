@@ -600,6 +600,10 @@ async function main() {
       (await page.evaluate(() => globalThis.__smoke.closed)) === 0,
       'and stays open, with the Stop button still there to press',
     );
+    // role="status" carries its own polite live region and wins over the
+    // container's, so an error announced through it waits for a pause.
+    const toastRole = await page.$eval('.toast-error', (el) => el.getAttribute('role'));
+    assert(toastRole === 'alert', `the error toast announces assertively (role="${toastRole}")`);
     await page.close();
 
     step('popup reopened after a failure the worker had nowhere to show');

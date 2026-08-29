@@ -585,7 +585,14 @@ export function App() {
 
       <div class="toasts" aria-live="polite">
         {toasts.map((toast) => (
-          <div key={toast.id} class={`toast toast-${toast.tone}`} role="status">
+          <div
+            key={toast.id}
+            class={`toast toast-${toast.tone}`}
+            /* role="alert" brings its own assertive live region; role="status"
+               would leave the container's polite one as the only signal for a
+               message the user has to act on. Matches the recorder page. */
+            role={toast.tone === 'error' ? 'alert' : 'status'}
+          >
             <span class="toast-text">{toast.message}</span>
             {toast.tone === 'error' ? (
               <button

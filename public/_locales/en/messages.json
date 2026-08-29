@@ -341,6 +341,14 @@
     "message": "That page couldn\u2019t be opened. Try again.",
     "description": "Popup: error toast when chrome.tabs.create fails for the setup page, the editor or the recorder."
   },
+  "recFailChunkWrite": {
+    "message": "Part of this recording isn\u2019t being saved. Stop it and check what you have on the Recorder page.",
+    "description": "Popup: error toast when a chunk write to IndexedDB failed mid-recording, so the file is shorter than the clock says."
+  },
+  "recFailRecorderOpen": {
+    "message": "Your recording is saved \u2014 the Recorder page didn\u2019t open. Use Recover last recording below.",
+    "description": "Popup: error toast when chrome.tabs.create for the recorder page failed after a recording finished."
+  },
   "recFailQuery": {
     "message": "Recording status is unavailable \u2014 open the Recorder page to check.",
     "description": "Popup: error toast when REC_QUERY threw, so \"not recording\" cannot be trusted."

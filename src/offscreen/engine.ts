@@ -48,6 +48,8 @@ interface EngineState {
   overlayLost: boolean;
   watchdog: ReturnType<typeof setInterval> | null;
   stopping: boolean;
+  /** A write has already been reported; the worker is told once, not per chunk. */
+  writeFailed: boolean;
   /**
    * In-flight `appendChunk`/`appendEvents` writes. `stop()` awaits these
    * after the recorders' `stop` events resolve and before finalizing —
@@ -77,14 +79,27 @@ function elapsed(): number {
   return (state.pausedAt || Date.now()) - state.startedAt - state.pausedAccumMs;
 }
 
-/** Tracks a write so `stop()` can wait for it; a failed write never wedges stop. */
+/**
+ * Tracks a write so `stop()` can wait for it; a failed write never wedges stop.
+ *
+ * The rejection is caught here and must be, but it used to be caught and
+ * dropped: a chunk that never reached IndexedDB left the recording running,
+ * the clock counting and the file silently short. It is reported once per run
+ * now — every following second would report the same broken store — and the
+ * recording is deliberately not stopped, because the chunks already written
+ * are real and tearing down would throw them away.
+ */
 function trackWrite(s: EngineState, write: Promise<void>): void {
   // Store the already-caught promise, not the raw one — `stop()` awaits
   // everything in `pendingWrites` via `Promise.all`, and an unswallowed
   // rejection there would throw out of `stop()` after `stopping = true` was
   // set, permanently wedging the engine (state never nulled, ENGINE_STOPPED
   // never sent).
-  const settled = write.catch(() => {});
+  const settled = write.catch(() => {
+    if (s.writeFailed) return;
+    s.writeFailed = true;
+    send({ type: 'ENGINE_WRITE_FAILED', sessionId: s.sessionId });
+  });
   s.pendingWrites.add(settled);
   void settled.finally(() => s.pendingWrites.delete(settled));
 }
@@ -190,6 +205,7 @@ async function start(msg: Extract<OffscreenMessage, { type: 'OFFSCREEN_START' }>
       overlayLost: false,
       watchdog: null,
       stopping: false,
+      writeFailed: false,
       pendingWrites: new Set(),
     };
 

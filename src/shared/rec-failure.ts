@@ -63,7 +63,15 @@ export type RecFailureCode =
   /** One or more segments would not play and were left out of the export. */
   | 'segment-skipped'
   /** The export itself threw; no file was written. */
-  | 'export-failed';
+  | 'export-failed'
+  /**
+   * A chunk could not be written to IndexedDB while recording. The recording
+   * carries on and the file is silently shorter than the clock says, which is
+   * the only mode in the set that loses data the user believes they have.
+   */
+  | 'chunk-write-failed'
+  /** The recording finished, and the page that shows it would not open. */
+  | 'recorder-open-failed';
 
 /** A failure, and when it happened. Parked in session storage as-is. */
 export interface RecFailure {
@@ -92,6 +100,8 @@ const MESSAGE_KEYS: Record<RecFailureCode, string> = {
   'session-load-failed': 'recFailSessionLoad',
   'segment-skipped': 'recFailSegmentSkipped',
   'export-failed': 'recFailExport',
+  'chunk-write-failed': 'recFailChunkWrite',
+  'recorder-open-failed': 'recFailRecorderOpen',
 };
 
 export const REC_FAILURE_CODES = Object.keys(MESSAGE_KEYS) as RecFailureCode[];

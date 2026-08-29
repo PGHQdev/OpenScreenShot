@@ -6,6 +6,7 @@ import {
   createSession,
   getSession,
   listSessions,
+  updateSession,
 } from '../../src/shared/recording-db';
 import { DEFAULT_RECORDING_SETTINGS } from '../../src/shared/recording-types';
 import { REC_FAILURE_KEY, REC_FAILURE_MESSAGE, isRecFailure } from '../../src/shared/rec-failure';
@@ -113,17 +114,18 @@ async function loadWorker(): Promise<void> {
   await import('../../src/background/recording.ts');
 }
 
-/** Deliver a message to every listener the module registered. */
+/**
+ * Deliver a message to every listener the module registered. A handler that
+ * answers does so asynchronously — REC_QUERY reaches IndexedDB — so the
+ * fallback has to outlast that rather than beat it; it exists only so a
+ * message nobody answers does not hang the test.
+ */
 function send(message: unknown): Promise<unknown> {
   return new Promise((resolve) => {
-    let answered = false;
     for (const fn of fakeChrome.__listeners.message) {
-      fn(message, {}, (r) => {
-        answered = true;
-        resolve(r);
-      });
+      fn(message, {}, resolve);
     }
-    if (!answered) setTimeout(() => resolve(undefined), 0);
+    setTimeout(() => resolve(undefined), 500);
   });
 }
 
@@ -153,7 +155,7 @@ function broadcasts(): string[] {
     .map(([msg]) => (isRecFailure(msg.failure) ? msg.failure.code : 'malformed'));
 }
 
-function liveState(sessionId = 'sess-1', segmentId = 'seg-1') {
+function liveState(sessionId = 'sess-1', segmentId = 'seg-1', overlayMounted = true) {
   return {
     sessionId,
     segmentId,
@@ -163,8 +165,21 @@ function liveState(sessionId = 'sess-1', segmentId = 'seg-1') {
     pausedAccumMs: 0,
     settings: DEFAULT_RECORDING_SETTINGS,
     overlayLost: false,
+    overlayMounted,
     continued: false,
   };
+}
+
+/** An executeScript that answers the viewport read and mounts the bar. */
+function workingTab(): void {
+  fakeChrome.tabs.query = vi.fn(() =>
+    Promise.resolve([{ id: 3, url: 'https://example.com' }]),
+  ) as typeof fakeChrome.tabs.query;
+  fakeChrome.scripting.executeScript = vi.fn((arg: { args?: unknown[] }) =>
+    Promise.resolve([
+      { result: (arg.args?.length ?? 0) > 0 ? 'synced' : { w: 800, h: 600, dpr: 1 } },
+    ]),
+  ) as unknown as typeof fakeChrome.scripting.executeScript;
 }
 
 beforeEach(() => {
@@ -346,16 +361,9 @@ describe('an engine that was never told to begin', () => {
    * and the control bar counts up over a recording that is not happening.
    */
   it('reports engine-unreachable when OFFSCREEN_START never lands', async () => {
-    fakeChrome.tabs.query = vi.fn(() =>
-      Promise.resolve([{ id: 3, url: 'https://example.com' }]),
-    ) as typeof fakeChrome.tabs.query;
     // A start that gets all the way through: the viewport read answers and
     // the bar mounts, so the dropped OFFSCREEN_START is the only thing wrong.
-    fakeChrome.scripting.executeScript = vi.fn((arg: { args?: unknown[] }) =>
-      Promise.resolve([
-        { result: (arg.args?.length ?? 0) > 0 ? 'synced' : { w: 800, h: 600, dpr: 1 } },
-      ]),
-    ) as unknown as typeof fakeChrome.scripting.executeScript;
+    workingTab();
     sendRejects.add('OFFSCREEN_START');
     await loadWorker();
     void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS });
@@ -364,6 +372,109 @@ describe('an engine that was never told to begin', () => {
     expect(parked()).toBe('engine-unreachable');
     // The start itself did not throw, so this is the only report there is.
     expect(broadcasts()).toEqual(['engine-unreachable']);
+  });
+
+  /**
+   * Reporting alone left the phantom standing: the message says "Stop and try
+   * again" and Stop could not work. `OFFSCREEN_STOP` reaches an engine whose
+   * own state is null, which parks it and returns without ENGINE_STOPPED, so
+   * the state was never cleared and `handleQuery`'s escape hatch could not
+   * fire either — `hasOffscreenDocument()` is true. The run is torn down at
+   * the point of failure instead.
+   */
+  it('tears the phantom run down, so nothing is left claiming a recording', async () => {
+    workingTab();
+    sendRejects.add('OFFSCREEN_START');
+    await loadWorker();
+    void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS });
+    await settle();
+
+    expect(session.get(REC_STATE_KEY), 'the stored recording state').toBeUndefined();
+    expect(fakeChrome.offscreen.closeDocument).toHaveBeenCalled();
+    expect(badgeText.at(-1), 'the badge shows the failure, not REC').toBe('!');
+  });
+
+  it('leaves a Stop that follows it with nothing to do and nothing to say', async () => {
+    workingTab();
+    sendRejects.add('OFFSCREEN_START');
+    await loadWorker();
+    void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS });
+    await settle();
+    await chrome.storage.session.remove(REC_FAILURE_KEY);
+
+    // The document is gone, so a forwarded stop would reject and park a
+    // second message for one failure — the class Important 2 closed.
+    sendRejects.add('OFFSCREEN_STOP');
+    void send({ type: 'REC_STOP' });
+    await settle();
+    expect(parked(), 'a stop after the teardown reports nothing').toBe(null);
+  });
+});
+
+describe('a chunk that never reached IndexedDB', () => {
+  it('reports chunk-write-failed without stopping the recording', async () => {
+    session.set(REC_STATE_KEY, liveState());
+    await loadWorker();
+    void send({ type: 'ENGINE_WRITE_FAILED', sessionId: 'sess-1' });
+    await settle();
+
+    expect(parked()).toBe('chunk-write-failed');
+    // The chunks already written are a real recording; tearing down here
+    // would throw away exactly what the message is telling the user to save.
+    expect(session.get(REC_STATE_KEY), 'the recording keeps running').toBeDefined();
+  });
+
+  it('ignores a write failure from a session that already ended', async () => {
+    session.set(REC_STATE_KEY, liveState('sess-2'));
+    await loadWorker();
+    void send({ type: 'ENGINE_WRITE_FAILED', sessionId: 'sess-1' });
+    await settle();
+    expect(parked()).toBe(null);
+  });
+});
+
+describe('a finished recording whose page will not open', () => {
+  it('reports recorder-open-failed and offers the session through Recover', async () => {
+    const done = await createSession(DEFAULT_RECORDING_SETTINGS);
+    await updateSession(done.id, { status: 'complete' });
+    fakeChrome.tabs.create = vi.fn(() =>
+      Promise.reject(new Error('no window to open in')),
+    ) as unknown as typeof fakeChrome.tabs.create;
+    session.set(REC_STATE_KEY, liveState(done.id));
+    await loadWorker();
+    void send({ type: 'ENGINE_STOPPED', sessionId: done.id, canceled: false });
+    await settle();
+
+    expect(parked()).toBe('recorder-open-failed');
+    // The message says "Use Recover last recording below", and the session is
+    // 'complete', so findRecoverableSessions will never offer it. This is
+    // what makes that sentence true.
+    await chrome.storage.session.remove(REC_FAILURE_KEY);
+    const state = (await send({ type: 'REC_QUERY' })) as { recoverableSessionId?: string };
+    expect(state.recoverableSessionId).toBe(done.id);
+  });
+
+  it('stops offering a session the user has since deleted', async () => {
+    session.set('openscreenshot:unopened-session', 'gone-1');
+    await loadWorker();
+    const state = (await send({ type: 'REC_QUERY' })) as { recoverableSessionId?: string };
+    await settle();
+    expect(state.recoverableSessionId).toBeUndefined();
+    expect(session.get('openscreenshot:unopened-session')).toBeUndefined();
+  });
+});
+
+describe('a badge with nothing to restore it to', () => {
+  it('leaves REC alone when the store that would answer has failed', async () => {
+    session.set(REC_STATE_KEY, liveState());
+    await loadWorker();
+    badgeText.length = 0;
+    sessionThrows = true;
+    await send({ type: 'REC_QUERY' });
+    await settle();
+    // clearRecBadge() on an unanswered read used to wipe the REC indicator in
+    // the one state where the badge is the user's only sign of a recording.
+    expect(badgeText).not.toContain('');
   });
 });
 
@@ -375,7 +486,7 @@ describe('one absent control bar, one message', () => {
    * one problem is what §9.3 of the report rules out.
    */
   it('does not let the watchdog report a bar the start already reported', async () => {
-    session.set(REC_STATE_KEY, liveState());
+    session.set(REC_STATE_KEY, liveState('sess-1', 'seg-1', false));
     session.set(REC_FAILURE_KEY, { code: 'overlay-blocked', at: Date.now() });
     await loadWorker();
     void send({ type: 'OVERLAY_LOST', sessionId: 'sess-1' });
@@ -402,6 +513,37 @@ describe('one absent control bar, one message', () => {
     void send({ type: 'OVERLAY_HEALED', sessionId: 'sess-1' });
     await settle();
     expect(parked()).toBe(null);
+  });
+
+  /**
+   * The narrowing. The engine's watchdog is edge-triggered: it returns early
+   * while it believes the bar is already lost, and only a cursor batch clears
+   * that. So a bar that recovers inside its 2500ms window produces no
+   * OVERLAY_HEALED at all, and a guard keyed on the parked message alone
+   * would swallow a genuine loss minutes later. The mount is what flips the
+   * flag, so the heal never has to be noticed.
+   */
+  it('reports a loss after a blocked bar reached the page without any heal event', async () => {
+    fakeChrome.scripting.executeScript = vi.fn(() =>
+      Promise.resolve([{ result: 'synced' }]),
+    ) as unknown as typeof fakeChrome.scripting.executeScript;
+    session.set(REC_STATE_KEY, liveState('sess-1', 'seg-1', false));
+    session.set(REC_FAILURE_KEY, { code: 'overlay-blocked', at: Date.now() });
+    await loadWorker();
+
+    // A navigation completing is the ordinary way the bar gets back on the
+    // page; no OVERLAY_HEALED is involved.
+    const onUpdated = fakeChrome.tabs.onUpdated.addListener.mock.calls[0]?.[0] as (
+      tabId: number,
+      info: { status: string },
+    ) => void;
+    onUpdated(7, { status: 'complete' });
+    await settle();
+    expect(parked(), 'the mount retires its own stale message').toBe(null);
+
+    void send({ type: 'OVERLAY_LOST', sessionId: 'sess-1' });
+    await settle();
+    expect(parked(), 'and a real loss after it is no longer suppressed').toBe('overlay-lost');
   });
 });
 

@@ -41,6 +41,12 @@ import {
 import { isProtectedUrl } from '../shared/utils';
 
 const REC_STATE_KEY = 'openscreenshot:rec-state';
+/**
+ * A finished session whose recorder tab failed to open. `handleQuery` offers
+ * it through the same Recover link a crashed session uses, which is what
+ * makes 'recorder-open-failed' a message the user can act on.
+ */
+const UNOPENED_SESSION_KEY = 'openscreenshot:unopened-session';
 /** Written by the recorder's Continue button; read by the popup and here. */
 const CONTINUE_SESSION_KEY = 'openscreenshot:continue-session';
 const RECORDER_URL = chrome.runtime.getURL('src/recorder/index.html');
@@ -62,6 +68,15 @@ interface StoredRecState {
   pausedAccumMs: number;
   settings: RecordingSettings;
   overlayLost: boolean;
+  /**
+   * Whether the control bar has ever reached the page during this run.
+   * `overlayLost` cannot answer that: it is false both before the first mount
+   * and after a heal, and the engine's watchdog is edge-triggered — it stays
+   * quiet while it believes the bar is already lost — so a bar that recovers
+   * inside its 2500ms window never produces an `OVERLAY_HEALED` to clear
+   * anything. This is the flag the mount itself sets.
+   */
+  overlayMounted: boolean;
   /** True when this run appends to an existing session (Continue). */
   continued: boolean;
 }
@@ -203,7 +218,12 @@ export async function restoreRecBadge(): Promise<void> {
     state = await getRecState();
     failure = await pendingFailure();
   } catch {
-    // Session storage unavailable — fall through and clear, as before.
+    // The store that says whether a recording is live is the store that just
+    // failed, so there is nothing to restore the badge *to*. Leaving it as it
+    // is keeps a live REC up; clearing here used to wipe it on the strength
+    // of a read that never answered — the badge lying in the one state where
+    // it is the user's only indicator.
+    return;
   }
   if (state) await showRecBadge(state.overlayLost);
   else if (failure) await showFailBadge();
@@ -253,6 +273,16 @@ async function healOverlay(tabId: number): Promise<'fresh' | 'synced' | 'failed'
         { mic: s.settings.mic, tabAudio: s.settings.tabAudio, webcam: s.settings.webcam },
       ],
     });
+    // The bar is on the page. If this run had reported that it could not get
+    // there, that message is now wrong, and the flag has to flip so a genuine
+    // loss later is reported rather than suppressed as a repeat.
+    if (!s.overlayMounted) {
+      await setRecState({ sessionId: s.sessionId, overlayMounted: true });
+      const parked = await pendingFailure().catch(() => null);
+      if (parked?.code === 'overlay-blocked') {
+        await chrome.storage.session.remove(REC_FAILURE_KEY).catch(() => {});
+      }
+    }
     return injection?.result === 'fresh' ? 'fresh' : 'synced';
   } catch {
     return 'failed'; // no permission on this origin — overlay stays lost
@@ -388,6 +418,7 @@ async function handleStart(settings: RecordingSettings, continueSessionId?: stri
       pausedAccumMs: 0,
       settings,
       overlayLost: false,
+      overlayMounted: false,
       continued: !!continueSessionId,
     });
 
@@ -419,23 +450,17 @@ async function handleStart(settings: RecordingSettings, continueSessionId?: stri
     // to answer a permission prompt.
     const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tabId });
 
+    const startedSessionId = session.id;
     chrome.runtime
       .sendMessage({
         type: 'OFFSCREEN_START',
         target: 'offscreen',
         streamId,
-        sessionId: session.id,
+        sessionId: startedSessionId,
         segmentId: segment.id,
         settings: effective,
       })
-      .catch(() => {
-        // Nothing downstream can notice this. The engine was never told to
-        // begin, so no ENGINE_ERROR is coming; the state, the badge and the
-        // control bar all keep claiming a recording, and the only thing that
-        // ever moves is the timeout releasing `startPending`. Left alone this
-        // records for as long as the user lets it and produces nothing.
-        void reportFailure('engine-unreachable');
-      });
+      .catch(() => void abandonUnstartedRun(startedSessionId));
     // startPending stays claimed here — resolved by ENGINE_STARTED,
     // ENGINE_ERROR, or the timeout guard in armStartTimeout().
   } catch (err) {
@@ -456,6 +481,34 @@ async function handleStart(settings: RecordingSettings, continueSessionId?: stri
     // that leaves a row behind for the user to deal with.
     await reportFailure(retained ? 'start-failed' : 'cleanup-failed');
   }
+}
+
+/**
+ * `OFFSCREEN_START` never landed, so the engine holds nothing and no
+ * `ENGINE_ERROR` is coming. Everything downstream still claims a live
+ * recording: the stored state, the REC badge, the control bar counting up.
+ *
+ * Reporting alone was not enough — the message says "stop and try again" and
+ * Stop could not work. `OFFSCREEN_STOP` reaches an engine whose own state is
+ * null, which parks it as a pending stop and returns without sending
+ * `ENGINE_STOPPED`, so the state was never cleared; and with the document
+ * already gone the send rejects and parks a second message for the same
+ * failure. So the run is torn down here first, exactly as `handleEngineError`
+ * tears down the same class, and only then reported.
+ */
+async function abandonUnstartedRun(sessionId: string): Promise<void> {
+  const state = await getRecState().catch(() => null);
+  if (state && state.sessionId !== sessionId) return;
+  let retained = true;
+  if (state) {
+    await unmountOverlay(state.tabId);
+    retained = await retainFailedSession(state.sessionId, state.continued, state.segmentId);
+  }
+  await clearRecState();
+  await clearRecBadge();
+  await closeOffscreenSafe();
+  resolveStartPending();
+  await reportFailure(retained ? 'engine-unreachable' : 'cleanup-failed');
 }
 
 /**
@@ -600,10 +653,19 @@ async function handleQuery(sendResponse: (state: RecState) => void): Promise<voi
 
     if (!state) {
       const recoverable = await findRecoverableSessions();
+      // A session whose recorder tab never opened is complete, so it is not
+      // in `recoverable` — it is offered through the same link because the
+      // link does the same thing, and it is dropped once it is gone.
+      const stored = await chrome.storage.session.get(UNOPENED_SESSION_KEY);
+      let unopened = stored[UNOPENED_SESSION_KEY] as string | undefined;
+      if (unopened && !(await getSession(unopened))) {
+        await chrome.storage.session.remove(UNOPENED_SESSION_KEY);
+        unopened = undefined;
+      }
       sendResponse({
         active: false,
         paused: false,
-        recoverableSessionId: recoverable[0]?.id,
+        recoverableSessionId: recoverable[0]?.id ?? unopened,
       });
       return;
     }
@@ -659,14 +721,19 @@ async function handleOverlayLost(sessionId: string): Promise<void> {
   if (!state || state.sessionId !== sessionId) return;
   await setRecState({ sessionId, overlayLost: true });
   await showRecBadge(true);
-  // The start already said this if the bar never went up: the engine's
-  // watchdog reports a bar that stopped sending 2.5-3.5s later, which for a
-  // mount that was refused is the same absent bar reported a second time.
-  // 'overlay-blocked' is the more accurate of the two sentences and arrives
-  // first, so it keeps the slot; the state and badge above still flip either
-  // way, because those are state and not a message.
+  // A bar that never reached the page is one absent bar, and the start
+  // already named it: the engine's watchdog reports a bar that stopped
+  // sending 2.5-3.5s later, which for a refused mount is the same situation
+  // told twice. 'overlay-blocked' is the more accurate of the two sentences
+  // and arrives first, so it keeps the slot. Scoped to a bar that has never
+  // mounted for this run, so a real loss minutes later is still reported —
+  // `overlayMounted` is set by the mount, not by the watchdog, precisely
+  // because the watchdog cannot report a heal it never noticed. The state and
+  // the badge above flip either way: those are state, not a message.
   const parked = await pendingFailure().catch(() => null);
-  if (parked?.code !== 'overlay-blocked') await reportFailure('overlay-lost');
+  if (state.overlayMounted || parked?.code !== 'overlay-blocked') {
+    await reportFailure('overlay-lost');
+  }
 }
 
 async function handleOverlayHealed(sessionId: string): Promise<void> {
@@ -681,6 +748,17 @@ async function handleOverlayHealed(sessionId: string): Promise<void> {
   if (parked?.code === 'overlay-lost' || parked?.code === 'overlay-blocked') {
     await chrome.storage.session.remove(REC_FAILURE_KEY).catch(() => {});
   }
+}
+
+/**
+ * A chunk write rejected mid-recording. Nothing is torn down: the chunks
+ * already written are a real recording and the user may still want the rest
+ * of it. The engine sends this once per run, so this cannot nag.
+ */
+async function handleEngineWriteFailed(sessionId: string): Promise<void> {
+  const state = await getRecState();
+  if (state && state.sessionId !== sessionId) return;
+  await reportFailure('chunk-write-failed');
 }
 
 async function handleEngineError(sessionId: string, message: string): Promise<void> {
@@ -719,7 +797,16 @@ async function handleEngineStopped(sessionId: string, canceled: boolean): Promis
   await restoreRecBadge();
   await closeOffscreenSafe();
   if (!canceled) {
-    await chrome.tabs.create({ url: `${RECORDER_URL}?session=${sessionId}` });
+    try {
+      await chrome.tabs.create({ url: `${RECORDER_URL}?session=${sessionId}` });
+    } catch {
+      // The recording is safe in IndexedDB; only the page that shows it did
+      // not open, and nothing else would ever mention that. Parked with the
+      // id so the popup's Recover link can reach it — the session is
+      // 'complete', so `findRecoverableSessions` will not offer it.
+      await chrome.storage.session.set({ [UNOPENED_SESSION_KEY]: sessionId }).catch(() => {});
+      await reportFailure('recorder-open-failed');
+    }
   }
 }
 
@@ -767,6 +854,9 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
         break;
       case 'OVERLAY_HEALED':
         void handleOverlayHealed(message.sessionId);
+        break;
+      case 'ENGINE_WRITE_FAILED':
+        void handleEngineWriteFailed(message.sessionId);
         break;
       case 'ENGINE_ERROR':
         void handleEngineError(message.sessionId, message.message);
