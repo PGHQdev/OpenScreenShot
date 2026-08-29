@@ -506,6 +506,47 @@ describe('a write that never reached IndexedDB', () => {
     expect(parked(), 'the graver sentence takes the slot').toBe('chunk-write-failed');
   });
 
+  /**
+   * The precedence held inside one run and broke across two. A parked failure
+   * outlives its recording by design — a clean stop is not the user having
+   * read it — so an unread `chunk-write-failed` from an earlier run sat there
+   * suppressing the next run's genuine failure entirely: no parked message,
+   * no broadcast. `RecFailure` carries the run it belongs to now, and every
+   * cross-failure guard is scoped by it.
+   */
+  it("does not let an earlier run's unread failure silence this one", async () => {
+    session.set(REC_FAILURE_KEY, {
+      code: 'chunk-write-failed',
+      at: Date.now() - 60_000,
+      sessionId: 'run-a',
+    });
+    // Run A stopped cleanly; run B is a different recording with its own,
+    // clean, writeFailed flag.
+    session.set(REC_STATE_KEY, liveState('run-b', 'seg-b'));
+    await loadWorker();
+    void send({ type: 'ENGINE_WRITE_FAILED', sessionId: 'run-b', kind: 'events' });
+    await settle();
+
+    const value = session.get(REC_FAILURE_KEY) as { code?: string; sessionId?: string };
+    expect(value.code, "run B's failure is reported, not swallowed").toBe('events-write-failed');
+    expect(value.sessionId, 'and carries the run it belongs to').toBe('run-b');
+    expect(broadcasts()).toEqual(['events-write-failed']);
+  });
+
+  it('still suppresses it inside the run that already reported the graver one', async () => {
+    session.set(REC_FAILURE_KEY, {
+      code: 'chunk-write-failed',
+      at: Date.now(),
+      sessionId: 'run-b',
+    });
+    session.set(REC_STATE_KEY, liveState('run-b', 'seg-b'));
+    await loadWorker();
+    void send({ type: 'ENGINE_WRITE_FAILED', sessionId: 'run-b', kind: 'events' });
+    await settle();
+    expect(parked()).toBe('chunk-write-failed');
+    expect(broadcasts()).toEqual([]);
+  });
+
   it('reads a kind-less message as the graver of the two', async () => {
     session.set(REC_STATE_KEY, liveState());
     await loadWorker();
@@ -636,7 +677,7 @@ describe('one absent control bar, one message', () => {
    */
   it('does not let the watchdog report a bar the start already reported', async () => {
     session.set(REC_STATE_KEY, liveState('sess-1', 'seg-1', false));
-    session.set(REC_FAILURE_KEY, { code: 'overlay-blocked', at: Date.now() });
+    session.set(REC_FAILURE_KEY, { code: 'overlay-blocked', at: Date.now(), sessionId: 'sess-1' });
     await loadWorker();
     void send({ type: 'OVERLAY_LOST', sessionId: 'sess-1' });
     await settle();
@@ -657,7 +698,7 @@ describe('one absent control bar, one message', () => {
 
   it('drops a parked overlay-blocked once the bar reaches the page', async () => {
     session.set(REC_STATE_KEY, liveState());
-    session.set(REC_FAILURE_KEY, { code: 'overlay-blocked', at: Date.now() });
+    session.set(REC_FAILURE_KEY, { code: 'overlay-blocked', at: Date.now(), sessionId: 'sess-1' });
     await loadWorker();
     void send({ type: 'OVERLAY_HEALED', sessionId: 'sess-1' });
     await settle();
@@ -672,12 +713,27 @@ describe('one absent control bar, one message', () => {
    * would swallow a genuine loss minutes later. The mount is what flips the
    * flag, so the heal never has to be noticed.
    */
+  it("does not let an earlier run's blocked bar silence this run's loss", async () => {
+    session.set(REC_FAILURE_KEY, {
+      code: 'overlay-blocked',
+      at: Date.now() - 60_000,
+      sessionId: 'run-a',
+    });
+    // Run B's bar has not mounted either, so only the run id tells the two
+    // situations apart.
+    session.set(REC_STATE_KEY, liveState('run-b', 'seg-b', false));
+    await loadWorker();
+    void send({ type: 'OVERLAY_LOST', sessionId: 'run-b' });
+    await settle();
+    expect(parked()).toBe('overlay-lost');
+  });
+
   it('reports a loss after a blocked bar reached the page without any heal event', async () => {
     fakeChrome.scripting.executeScript = vi.fn(() =>
       Promise.resolve([{ result: 'synced' }]),
     ) as unknown as typeof fakeChrome.scripting.executeScript;
     session.set(REC_STATE_KEY, liveState('sess-1', 'seg-1', false));
-    session.set(REC_FAILURE_KEY, { code: 'overlay-blocked', at: Date.now() });
+    session.set(REC_FAILURE_KEY, { code: 'overlay-blocked', at: Date.now(), sessionId: 'sess-1' });
     await loadWorker();
 
     // A navigation completing is the ordinary way the bar gets back on the

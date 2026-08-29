@@ -172,6 +172,10 @@ function installChromeStub(messages, opts) {
     store,
     session,
     closed: 0,
+    listeners: new Set(),
+    fire: (msg) => {
+      for (const fn of globalThis.__smoke.listeners) fn(msg, {}, () => {});
+    },
   };
   // window.close() is a no-op on a tab the script did not open, so the popup's
   // hand-off has to be observable some other way.
@@ -196,7 +200,12 @@ function installChromeStub(messages, opts) {
           ? { active: true, paused: false, sessionId: 'live-1', elapsedMs: 4000 }
           : { active: false, paused: false };
       },
-      onMessage: { addListener: noop, removeListener: noop },
+      // A real registry: the popup listens here for the worker's failure
+      // broadcasts, and __smoke.fire is how a test delivers one.
+      onMessage: {
+        addListener: (fn) => globalThis.__smoke.listeners.add(fn),
+        removeListener: (fn) => globalThis.__smoke.listeners.delete(fn),
+      },
     },
     action: { getUserSettings: async () => ({ isOnToolbar: opts.pinned !== false }) },
     commands: { getAll: async () => [] },
@@ -604,6 +613,50 @@ async function main() {
     // container's, so an error announced through it waits for a pause.
     const toastRole = await page.$eval('.toast-error', (el) => el.getAttribute('role'));
     assert(toastRole === 'alert', `the error toast announces assertively (role="${toastRole}")`);
+    await page.close();
+
+    step('popup told two things about one broken store: only the true one stays');
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'] });
+    await page.waitForSelector('.mode-card[aria-disabled]');
+    // A store that breaks takes both writers with it inside the same second,
+    // in arbitrary order. Error toasts never expire, so the reassuring one
+    // used to sit on screen beside the message correcting it until the user
+    // dismissed it by hand.
+    await page.evaluate(() => {
+      const at = Date.now();
+      globalThis.__smoke.fire({
+        type: 'RECORDER_FAILURE',
+        failure: { code: 'events-write-failed', at, sessionId: 'run-1' },
+      });
+      globalThis.__smoke.fire({
+        type: 'RECORDER_FAILURE',
+        failure: { code: 'chunk-write-failed', at: at + 1, sessionId: 'run-1' },
+      });
+    });
+    await page.waitForSelector('.toast-error .toast-text');
+    let shown = await page.$$eval('.toast-error .toast-text', (els) =>
+      els.map((el) => el.textContent.trim()),
+    );
+    assert(
+      shown.length === 1 && shown[0] === messages.recFailChunkWrite.message,
+      `the reassuring message is retired, not stacked (${JSON.stringify(shown)})`,
+    );
+
+    // A failure from a different recording is not this one's to retire.
+    await page.evaluate(() => {
+      globalThis.__smoke.fire({
+        type: 'RECORDER_FAILURE',
+        failure: { code: 'events-write-failed', at: Date.now(), sessionId: 'run-2' },
+      });
+    });
+    await page.waitForFunction(() => document.querySelectorAll('.toast-error').length === 2);
+    shown = await page.$$eval('.toast-error .toast-text', (els) =>
+      els.map((el) => el.textContent.trim()),
+    );
+    assert(
+      shown.includes(messages.recFailEventsWrite.message),
+      `another run's failure stands on its own (${JSON.stringify(shown)})`,
+    );
     await page.close();
 
     step('popup reopened after a failure the worker had nowhere to show');

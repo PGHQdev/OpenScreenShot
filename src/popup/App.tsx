@@ -50,6 +50,9 @@ import {
   REC_FAILURE_MESSAGE,
   isRecFailure,
   recFailureMessageKey,
+  sameRun,
+  supersedes,
+  type RecFailure,
   type RecFailureCode,
 } from '../shared/rec-failure';
 import { applyTheme, watchSystemTheme } from '../shared/theme';
@@ -165,6 +168,8 @@ interface Toast {
   id: number;
   message: string;
   tone: ToastTone;
+  /** Set when this toast is a reported failure, so a graver one can retire it. */
+  failure?: RecFailure;
 }
 
 interface ModeDef {
@@ -316,7 +321,7 @@ export function App() {
       const failure: unknown = (stored as Record<string, unknown>)[REC_FAILURE_KEY];
       if (!isRecFailure(failure)) return;
       await chrome.storage.session.remove(REC_FAILURE_KEY).catch(() => {});
-      pushToast(t(recFailureMessageKey(failure.code)), 'error');
+      showFailure(failure);
     })();
   }, []);
 
@@ -329,7 +334,7 @@ export function App() {
       const failure: unknown = (message as { failure?: unknown }).failure;
       if (!isRecFailure(failure)) return;
       void chrome.storage.session.remove(REC_FAILURE_KEY).catch(() => {});
-      pushToast(t(recFailureMessageKey(failure.code)), 'error');
+      showFailure(failure);
     };
     chrome.runtime.onMessage.addListener(listener);
     return () => chrome.runtime.onMessage.removeListener(listener);
@@ -357,9 +362,27 @@ export function App() {
     return off;
   }, []);
 
-  function pushToast(message: string, tone: ToastTone) {
+  function pushToast(message: string, tone: ToastTone, failure?: RecFailure) {
     const id = Date.now() + Math.random();
-    setToasts((t) => [...t, { id, message, tone }]);
+    setToasts((t) => [
+      // Error toasts never expire, so a superseded one does not fade out of
+      // the way — it sits on screen next to the message correcting it until
+      // the user dismisses it by hand. "The cursor track isn't being saved.
+      // The video is fine." is a standing false statement once the video is
+      // going too, whichever order the two arrive in. Same precedence rule
+      // the worker uses to decide what to park, applied to the surface.
+      ...(failure
+        ? t.filter(
+            (x) =>
+              !(
+                x.failure &&
+                sameRun(x.failure, failure) &&
+                supersedes(failure.code, x.failure.code)
+              ),
+          )
+        : t),
+      { id, message, tone, failure },
+    ]);
     // An error is a state the user has to read. Info and success are transient.
     if (tone !== 'error') {
       setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 4000);
@@ -368,7 +391,12 @@ export function App() {
 
   /** Show one of the mapped recording failures on this popup. */
   function pushFailure(code: RecFailureCode) {
-    pushToast(t(recFailureMessageKey(code)), 'error');
+    showFailure({ code, at: Date.now() });
+  }
+
+  /** Show a failure the worker reported, retiring anything it makes untrue. */
+  function showFailure(failure: RecFailure) {
+    pushToast(t(recFailureMessageKey(failure.code)), 'error', failure);
   }
 
   // The setup page is the only fix for a refused grant or a blocked device,

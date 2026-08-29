@@ -82,6 +82,14 @@ export interface RecFailure {
   code: RecFailureCode;
   /** `Date.now()` at the failure. */
   at: number;
+  /**
+   * The recording this failure belongs to, when it belongs to one. A parked
+   * failure outlives its run on purpose — a clean stop does not mean the user
+   * read it — so anything comparing a new failure against a parked one has to
+   * know whether they are even about the same recording. Absent for failures
+   * with no run behind them (a start that never got one, an export).
+   */
+  sessionId?: string;
 }
 
 /**
@@ -111,6 +119,36 @@ const MESSAGE_KEYS: Record<RecFailureCode, string> = {
 
 export const REC_FAILURE_CODES = Object.keys(MESSAGE_KEYS) as RecFailureCode[];
 
+/**
+ * Failures whose message makes another failure's message wrong, keyed by the
+ * one that wins.
+ *
+ * The store backing a recording breaks for both writers at once — media chunks
+ * land every 1000ms and cursor batches every 1000ms, on independent phases —
+ * so both failures arrive inside the same second in arbitrary order. Whichever
+ * lands second must not be the one the user is left with: "The video is fine"
+ * is false once the video is going too, and it is false whether it arrives
+ * first (and is then contradicted) or last (and stands alone).
+ */
+const SUPERSEDED: Partial<Record<RecFailureCode, readonly RecFailureCode[]>> = {
+  'chunk-write-failed': ['events-write-failed'],
+};
+
+/**
+ * Whether `next` makes `prev`'s message untrue, so `prev` should be dropped
+ * rather than sit beside it. Both the worker (deciding what to park) and the
+ * popup (deciding what to leave on screen) ask this, so the rule is here
+ * rather than spelled twice.
+ */
+export function supersedes(next: RecFailureCode, prev: RecFailureCode): boolean {
+  return SUPERSEDED[next]?.includes(prev) ?? false;
+}
+
+/** Whether two failures are about the same recording — or both about none. */
+export function sameRun(a: Pick<RecFailure, 'sessionId'>, b: Pick<RecFailure, 'sessionId'>) {
+  return a.sessionId === b.sessionId;
+}
+
 /** The `messages.json` key whose string this failure shows. */
 export function recFailureMessageKey(code: RecFailureCode): string {
   return MESSAGE_KEYS[code];
@@ -128,5 +166,6 @@ export function isRecFailureCode(value: unknown): value is RecFailureCode {
 export function isRecFailure(value: unknown): value is RecFailure {
   if (!value || typeof value !== 'object') return false;
   const rec = value as Partial<RecFailure>;
-  return isRecFailureCode(rec.code) && typeof rec.at === 'number';
+  if (!isRecFailureCode(rec.code) || typeof rec.at !== 'number') return false;
+  return rec.sessionId === undefined || typeof rec.sessionId === 'string';
 }

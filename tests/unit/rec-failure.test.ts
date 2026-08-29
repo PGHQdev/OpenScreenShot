@@ -7,6 +7,8 @@ import {
   isRecFailure,
   isRecFailureCode,
   recFailureMessageKey,
+  sameRun,
+  supersedes,
   type RecFailure,
   type RecFailureCode,
 } from '../../src/shared/rec-failure';
@@ -98,6 +100,49 @@ describe('isRecFailureCode', () => {
   });
 });
 
+describe('supersedes', () => {
+  it('lets a lost recording retire a lost cursor track', () => {
+    expect(supersedes('chunk-write-failed', 'events-write-failed')).toBe(true);
+  });
+
+  it('does not let it go the other way', () => {
+    expect(supersedes('events-write-failed', 'chunk-write-failed')).toBe(false);
+  });
+
+  it('leaves unrelated failures standing side by side', () => {
+    expect(supersedes('chunk-write-failed', 'export-failed')).toBe(false);
+    expect(supersedes('start-failed', 'engine-failed')).toBe(false);
+  });
+
+  it('does not supersede itself', () => {
+    for (const code of REC_FAILURE_CODES) expect(supersedes(code, code)).toBe(false);
+  });
+
+  it('has no cycle: a superseded code supersedes nothing that supersedes it', () => {
+    for (const a of REC_FAILURE_CODES) {
+      for (const b of REC_FAILURE_CODES) {
+        if (supersedes(a, b)) expect(supersedes(b, a)).toBe(false);
+      }
+    }
+  });
+});
+
+describe('sameRun', () => {
+  it('matches two failures from the same recording', () => {
+    expect(sameRun({ sessionId: 'a' }, { sessionId: 'a' })).toBe(true);
+  });
+
+  it('separates two recordings', () => {
+    expect(sameRun({ sessionId: 'a' }, { sessionId: 'b' })).toBe(false);
+  });
+
+  it('treats a failure with no run as its own case, never any run', () => {
+    expect(sameRun({}, {})).toBe(true);
+    expect(sameRun({ sessionId: 'a' }, {})).toBe(false);
+    expect(sameRun({}, { sessionId: 'a' })).toBe(false);
+  });
+});
+
 describe('isRecFailure', () => {
   const good: RecFailure = { code: 'engine-failed', at: 1_700_000_000_000 };
 
@@ -112,6 +157,11 @@ describe('isRecFailure', () => {
   it('rejects a record with no timestamp', () => {
     expect(isRecFailure({ code: 'engine-failed' })).toBe(false);
     expect(isRecFailure({ code: 'engine-failed', at: 'now' })).toBe(false);
+  });
+
+  it('accepts and rejects a run id by its type', () => {
+    expect(isRecFailure({ code: 'engine-failed', at: 1, sessionId: 'sess-1' })).toBe(true);
+    expect(isRecFailure({ code: 'engine-failed', at: 1, sessionId: 7 })).toBe(false);
   });
 
   it('rejects non-objects', () => {

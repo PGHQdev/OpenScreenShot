@@ -35,6 +35,8 @@ import {
   REC_FAILURE_KEY,
   REC_FAILURE_MESSAGE,
   isRecFailure,
+  sameRun,
+  supersedes,
   type RecFailure,
   type RecFailureCode,
 } from '../shared/rec-failure';
@@ -285,8 +287,8 @@ export async function restoreRecBadge(): Promise<void> {
  * Best-effort throughout. A failure report that throws would replace the
  * failure being reported with a less useful one.
  */
-async function reportFailure(code: RecFailureCode): Promise<void> {
-  const failure: RecFailure = { code, at: Date.now() };
+async function reportFailure(code: RecFailureCode, sessionId?: string): Promise<void> {
+  const failure: RecFailure = { code, at: Date.now(), ...(sessionId ? { sessionId } : {}) };
   await chrome.storage.session.set({ [REC_FAILURE_KEY]: failure }).catch(() => {});
   chrome.runtime.sendMessage({ type: REC_FAILURE_MESSAGE, failure }).catch(() => {});
   await restoreRecBadge().catch(() => {});
@@ -322,7 +324,7 @@ async function healOverlay(tabId: number): Promise<'fresh' | 'synced' | 'failed'
     if (!s.overlayMounted) {
       await setRecState({ sessionId: s.sessionId, overlayMounted: true });
       const parked = await pendingFailure().catch(() => null);
-      if (parked?.code === 'overlay-blocked') {
+      if (parked?.code === 'overlay-blocked' && sameRun(parked, { sessionId: s.sessionId })) {
         await chrome.storage.session.remove(REC_FAILURE_KEY).catch(() => {});
       }
     }
@@ -477,7 +479,7 @@ async function handleStart(settings: RecordingSettings, continueSessionId?: stri
     const mount = await healOverlay(tabId);
     // A bar that never went up leaves the recording running with no in-page
     // stop button; the popup is the remaining way to end it, so say so.
-    if (mount === 'failed') void reportFailure('overlay-blocked');
+    if (mount === 'failed') void reportFailure('overlay-blocked', session.id);
     if (mount === 'fresh' && (settings.webcam || settings.mic)) {
       await waitForFrameReady();
       armStartTimeout();
@@ -775,8 +777,10 @@ async function handleOverlayLost(sessionId: string): Promise<void> {
   // because the watchdog cannot report a heal it never noticed. The state and
   // the badge above flip either way: those are state, not a message.
   const parked = await pendingFailure().catch(() => null);
-  if (state.overlayMounted || parked?.code !== 'overlay-blocked') {
-    await reportFailure('overlay-lost');
+  const blockedThisRun =
+    parked?.code === 'overlay-blocked' && sameRun(parked, { sessionId: state.sessionId });
+  if (state.overlayMounted || !blockedThisRun) {
+    await reportFailure('overlay-lost', state.sessionId);
   }
 }
 
@@ -789,7 +793,8 @@ async function handleOverlayHealed(sessionId: string): Promise<void> {
   // a navigation that heals in a second must not leave the next popup open
   // reporting a problem that has already fixed itself.
   const parked = await pendingFailure().catch(() => null);
-  if (parked?.code === 'overlay-lost' || parked?.code === 'overlay-blocked') {
+  const mine = parked ? sameRun(parked, { sessionId }) : false;
+  if (mine && (parked?.code === 'overlay-lost' || parked?.code === 'overlay-blocked')) {
     await chrome.storage.session.remove(REC_FAILURE_KEY).catch(() => {});
   }
 }
@@ -820,7 +825,7 @@ async function handleEngineWriteFailed(
       await setRecState({ sessionId, writeFailed: true });
       void healOverlay(state.tabId);
     }
-    await reportFailure('chunk-write-failed');
+    await reportFailure('chunk-write-failed', sessionId);
     return;
   }
   // A broken store breaks both writers at once — media chunks land every
@@ -830,9 +835,15 @@ async function handleEngineWriteFailed(
   // time, beside a control bar reading NOT SAVING. The graver sentence keeps
   // the slot, the same rule `handleOverlayLost` uses below.
   if (state?.writeFailed) return;
+  // Scoped to this run, and it has to be: a parked failure outlives its
+  // recording on purpose, so an unread `chunk-write-failed` from an earlier
+  // run would otherwise suppress this one entirely — no message, no
+  // broadcast, for a failure that just happened.
   const parked = await pendingFailure().catch(() => null);
-  if (parked?.code === 'chunk-write-failed') return;
-  await reportFailure('events-write-failed');
+  if (parked && sameRun(parked, { sessionId }) && supersedes(parked.code, 'events-write-failed')) {
+    return;
+  }
+  await reportFailure('events-write-failed', sessionId);
 }
 
 async function handleEngineError(sessionId: string, message: string): Promise<void> {
