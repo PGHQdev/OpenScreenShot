@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   createShapeDraft,
@@ -234,5 +236,32 @@ describe('duplicateAnnotations', () => {
     const [copy] = duplicateAnnotations([step], ['s']);
     expect(copy).toMatchObject({ type: 'step', x: 10 + DUPLICATE_OFFSET, n: 3 });
     expect(renumberSteps([step, copy]).map((a) => (a.type === 'step' ? a.n : 0))).toEqual([1, 2]);
+  });
+});
+
+describe('cut tool', () => {
+  it('is in the toolbar with a free shortcut letter', () => {
+    const cut = TOOL_LIST.find((t) => t.id === 'cut');
+    expect(cut).toBeDefined();
+    expect(cut?.shortcut).toBe('X');
+    const letters = TOOL_LIST.map((t) => t.shortcut);
+    expect(new Set(letters).size).toBe(letters.length);
+  });
+
+  /**
+   * The tool rail is not the only thing in the editor that claims a bare
+   * letter: useEditor's window keydown tests a few of its own before it ever
+   * looks at TOOL_LIST, and the first match wins, so a tool that took one of
+   * those letters would simply never fire. The letters are read out of the
+   * source rather than copied here, so a binding added later is checked too.
+   */
+  it('takes no letter the window keydown already claims before the tool rail', () => {
+    const source = readFileSync(join(process.cwd(), 'src/editor/useEditor.ts'), 'utf8');
+    const claimed = [...source.matchAll(/toUpperCase\(\) === '([A-Z])'/g)].map((m) => m[1]);
+    // F fits the view today. If this ever comes back empty the guard has
+    // stopped guarding, so the count is asserted as well as the overlap.
+    expect(claimed.length).toBeGreaterThan(0);
+    const letters = new Set(TOOL_LIST.map((t) => t.shortcut));
+    expect(claimed.filter((letter) => letters.has(letter))).toEqual([]);
   });
 });

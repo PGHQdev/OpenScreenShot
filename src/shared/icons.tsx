@@ -146,6 +146,20 @@ export function IconCrop(props: IconProps) {
   );
 }
 
+/**
+ * Cut: two seam rules with the picture closing up between them. Deliberately
+ * not scissors — the tool removes a horizontal band and pulls the rest
+ * together, which is what the converging chevrons say and what scissors do
+ * not.
+ */
+export function IconCut(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <path d="M3 5h18M3 19h18M9 9l3 3 3-3M9 15l3-3 3 3" />
+    </StrokeIcon>
+  );
+}
+
 /* ---- Editor chrome ---- */
 
 export function IconImage(props: IconProps) {

@@ -6,11 +6,13 @@
  * (drawing, selecting, moving, resizing, text, crop, pan/zoom). App.tsx is a
  * thin presentational consumer.
  *
- * History records snapshots of the annotation list plus the selection that went
- * with it (history.ts). Each mutating action snapshots the pre-change pair (one
- * entry per action — a move/resize drag snapshots on first motion, not per
- * mousemove). Crop is destructive and clears history (the pre-crop annotation
- * coordinates are invalid for the cropped image).
+ * History records snapshots of the annotation list, the cut bands and the
+ * selection that went with them (history.ts). Each mutating action snapshots
+ * the pre-change state (one entry per action — a move/resize drag snapshots on
+ * first motion, not per mousemove). Crop is destructive and clears history (the
+ * pre-crop annotation coordinates are invalid for the cropped image). A cut is
+ * not: it is a band on a list the compose paths read, so it is one ordinary
+ * undo step and everything already on the stack survives it.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { CanvasController } from './canvas';
@@ -34,6 +36,21 @@ import {
   type Handle,
   type SpotlightShape,
 } from './annotations';
+import {
+  addBand,
+  bandAtSeam,
+  canCut,
+  composedHeight,
+  cutAbove,
+  inBand,
+  MIN_BAND,
+  moveBandBy,
+  normalizeBand,
+  normalizeBands,
+  resizeBandBy,
+  seamPositions,
+  type Band,
+} from './bands';
 import {
   DEFAULT_FRAME,
   frameFromSettings,
@@ -87,7 +104,14 @@ import {
 import { formatFilename } from '../shared/utils';
 import { applyTheme, watchSystemTheme } from '../shared/theme';
 import { COLOR_PALETTE, pushRecent } from './palette';
-import { draftFrame, DRAFT_DEBOUNCE_MS, makeDraft, parseDraft, type Draft } from './draft';
+import {
+  draftFrame,
+  draftHasWork,
+  DRAFT_DEBOUNCE_MS,
+  makeDraft,
+  parseDraft,
+  type Draft,
+} from './draft';
 import { canvasToDataUrl, downloadDataUrl, withExtension, type ImageFormat } from './export';
 import { historyStep, type HistoryEntry } from './history';
 import { agreed } from './stylebar';
@@ -113,6 +137,8 @@ interface PendingImport {
 type Interaction =
   | { kind: 'pan'; lastX: number; lastY: number }
   | { kind: 'crop'; start: { x: number; y: number } }
+  /** A cut band being dragged out; `start` is its fixed edge, in source pixels. */
+  | { kind: 'cut'; start: number }
   | { kind: 'shape' }
   | { kind: 'pen' }
   | { kind: 'move'; ids: string[]; hit: string; lastX: number; lastY: number }
@@ -154,6 +180,7 @@ export function useEditor() {
   const [textEdit, setTextEdit] = useState<{ id: string } | null>(null);
   const [cropActive, setCropActive] = useState(false);
   const [cropDraft, setCropDraft] = useState<Rect | null>(null);
+  const [bands, setBandsState] = useState<Band[]>([]);
   const [spaceHeld, setSpaceHeld] = useState(false);
   const [settings, setSettingsState] = useState<Settings | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -182,6 +209,13 @@ export function useEditor() {
   const draftRef = useRef<Annotation | null>(null);
   const interactionRef = useRef<Interaction>(null);
   const cropDraftRef = useRef<Rect | null>(null);
+  const bandsRef = useRef<Band[]>([]);
+  /**
+   * A cut band being drafted. Ref-only: nothing in the DOM renders from it —
+   * the preview is on the canvas and the wording is in the live region — and a
+   * held arrow key writes it faster than an effect would sync a mirror.
+   */
+  const cutDraftRef = useRef<Band | null>(null);
   const annotationsRef = useRef(annotations);
   const selectedIdsRef = useRef(selectedIds);
   const pastRef = useRef(past);
@@ -312,6 +346,21 @@ export function useEditor() {
     },
     [setGroupBox],
   );
+
+  /**
+   * The one way the cut band list changes. The controller is written here
+   * rather than from an effect: a held arrow key drafts and applies faster
+   * than Preact flushes one, and the canvas has to show the cut it just made.
+   *
+   * The list is kept normalized — sorted, merged and clamped to the image — by
+   * every caller, which is what lets the band geometry walk it once and lets a
+   * seam index name one band (see bands.ts).
+   */
+  const applyBands = useCallback((next: Band[]) => {
+    bandsRef.current = next;
+    setBandsState(next);
+    controllerRef.current?.setBands(next);
+  }, []);
 
   useEffect(() => {
     spotlightShapeRef.current = spotlightShape;
@@ -471,6 +520,7 @@ export function useEditor() {
   const entry = useCallback(
     (): HistoryEntry => ({
       annotations: annotationsRef.current,
+      bands: bandsRef.current,
       selectedIds: selectedIdsRef.current,
     }),
     [],
@@ -488,25 +538,36 @@ export function useEditor() {
     applyHistory([...pastRef.current, entry()], []);
   }, [applyHistory, entry]);
 
+  /** A change to the cut bands, on the timeline like any other edit. */
+  const commitBands = useCallback(
+    (next: Band[]) => {
+      applyHistory([...pastRef.current, entry()], []);
+      applyBands(next);
+    },
+    [applyBands, applyHistory, entry],
+  );
+
   const undo = useCallback(() => {
     const step = historyStep(pastRef.current, futureRef.current, entry(), -1);
     if (!step) return;
     applyHistory(step.past, step.future);
     applyAnnotations(step.entry.annotations);
-    // The pair was captured together, so these ids name layers in the list
+    applyBands(step.entry.bands);
+    // The three were captured together, so these ids name layers in the list
     // that just landed — the selection the undone edit was made against.
     selectAnnotations(step.entry.selectedIds);
     say({ kind: 'undo', total: step.entry.annotations.length });
-  }, [applyAnnotations, applyHistory, entry, selectAnnotations, say]);
+  }, [applyAnnotations, applyBands, applyHistory, entry, selectAnnotations, say]);
 
   const redo = useCallback(() => {
     const step = historyStep(pastRef.current, futureRef.current, entry(), 1);
     if (!step) return;
     applyHistory(step.past, step.future);
     applyAnnotations(step.entry.annotations);
+    applyBands(step.entry.bands);
     selectAnnotations(step.entry.selectedIds);
     say({ kind: 'redo', total: step.entry.annotations.length });
-  }, [applyAnnotations, applyHistory, entry, selectAnnotations, say]);
+  }, [applyAnnotations, applyBands, applyHistory, entry, selectAnnotations, say]);
 
   const deleteSelection = useCallback(() => {
     const ids = selectedIdsRef.current;
@@ -599,12 +660,23 @@ export function useEditor() {
     setFrameState((f) => ({ ...f, ...patch }));
   }, []);
 
+  /**
+   * The picture as it stands: the capture less every cut row. Everything that
+   * describes the image to the user reads this rather than the capture's own
+   * height — the status bar, the canvas label, the beautify preview, the
+   * filename tokens and the export size — because it is what an export holds.
+   */
+  const visibleSize = useMemo(
+    () => (imageSize ? { w: imageSize.w, h: composedHeight(bands, imageSize.h) } : null),
+    [bands, imageSize],
+  );
+
   // Outer size of the export, so the export dialog can show what a scale yields.
   const composedSize = useMemo(() => {
-    if (!imageSize) return null;
-    const m = frameMetrics(frame, imageSize.w, imageSize.h);
+    if (!visibleSize) return null;
+    const m = frameMetrics(frame, visibleSize.w, visibleSize.h);
     return { w: m.outerW, h: m.outerH };
-  }, [frame, imageSize]);
+  }, [frame, visibleSize]);
 
   const setStyleFontSize = useCallback(
     (fontSize: number) => {
@@ -657,7 +729,7 @@ export function useEditor() {
       setImageSize({ w: cap.width, h: cap.height });
       // A draft only fits the capture it was drawn on. Anything else is stale.
       const stored = parseDraft(await getDraft());
-      if (stored && stored.sourceCapturedAt === cap.capturedAt && stored.annotations.length > 0) {
+      if (stored && stored.sourceCapturedAt === cap.capturedAt && draftHasWork(stored)) {
         setDraftPrompt(stored);
       } else if (stored) {
         void clearDraft();
@@ -797,10 +869,21 @@ export function useEditor() {
         deleteSelection();
         return;
       }
-      // Escape: cancel crop, else deselect.
+      // With the Cut tool up and nothing selected, Delete puts back the cut
+      // nearest the middle of the view — a keyboard user's way to a seam,
+      // which a pointer user reaches by clicking it.
+      if ((e.key === 'Delete' || e.key === 'Backspace') && toolRef.current === 'cut') {
+        e.preventDefault();
+        removeNearestBand();
+        return;
+      }
+      // Escape: cancel a crop or a cut, else deselect.
       if (e.key === 'Escape') {
         if (cropDraftRef.current) {
           cancelCrop();
+          e.preventDefault();
+        } else if (cutDraftRef.current) {
+          cancelCut();
           e.preventDefault();
         } else if (selectedIdsRef.current.length > 0) {
           selectAnnotations([]);
@@ -855,6 +938,88 @@ export function useEditor() {
     sayAboutSelection,
   ]);
 
+  // --- Cut ---
+  /**
+   * A cut is a band on a list the compose paths read, so the picture the
+   * editor draws and the picture an export holds are the same picture with the
+   * same rows missing — and the capture itself is untouched. That is what
+   * makes it undoable rather than final: unlike crop, nothing is rasterised
+   * away, so a cut is one ordinary step and the stack in front of it stands.
+   */
+  const applyCutBand = useCallback(
+    (band: Band) => {
+      const c = controllerRef.current;
+      if (!c || !c.image) return;
+      const ih = c.image.naturalHeight;
+      const b = normalizeBand(band);
+      const cur = bandsRef.current;
+      if (!canCut(cur, b, ih)) {
+        say({ kind: 'cut-refused' });
+        return;
+      }
+      const next = addBand(cur, b, ih);
+      const before = composedHeight(cur, ih);
+      const after = composedHeight(next, ih);
+      commitBands(next);
+      // The height that actually went, not the height of the band: a band that
+      // overlaps one already cut removes only the rows still there.
+      say({ kind: 'cut-applied', band: { y: b.y, h: before - after }, imageHeight: after });
+    },
+    [commitBands, say],
+  );
+
+  /** Put one cut back, by its place in the band list. */
+  const removeBand = useCallback(
+    (index: number) => {
+      const c = controllerRef.current;
+      if (!c || !c.image) return;
+      const gone = bandsRef.current[index];
+      if (!gone) return;
+      const next = bandsRef.current.filter((_, i) => i !== index);
+      commitBands(next);
+      say({
+        kind: 'cut-removed',
+        band: gone,
+        imageHeight: composedHeight(next, c.image.naturalHeight),
+      });
+    },
+    [commitBands, say],
+  );
+
+  /**
+   * The seam nearest the middle of the view, put back. A pointer user clicks
+   * the seam itself; this is the keyboard's way to the same place, and the
+   * viewport centre is the same anchor a keyboard placement uses.
+   */
+  const removeNearestBand = useCallback(() => {
+    const c = controllerRef.current;
+    const canvas = canvasRef.current;
+    if (!c || !canvas || bandsRef.current.length === 0) return;
+    const rect = canvas.getBoundingClientRect();
+    const centre = c.toComposedPoint(rect.width / 2, rect.height / 2).y;
+    const seams = seamPositions(bandsRef.current);
+    let best = 0;
+    seams.forEach((at, i) => {
+      if (Math.abs(at - centre) < Math.abs(seams[best] - centre)) best = i;
+    });
+    removeBand(best);
+  }, [removeBand]);
+
+  const cancelCut = useCallback(() => {
+    const had = cutDraftRef.current !== null;
+    cutDraftRef.current = null;
+    controllerRef.current?.setCutDraft(null);
+    if (had) say({ kind: 'cut-cancelled' });
+  }, [say]);
+
+  /** Commit whatever band is drafted, and close the draft either way. */
+  const applyCutDraft = useCallback(() => {
+    const b = cutDraftRef.current;
+    cutDraftRef.current = null;
+    controllerRef.current?.setCutDraft(null);
+    if (b) applyCutBand(b);
+  }, [applyCutBand]);
+
   // --- Drag handlers (attached to window during a drag) ---
   const onDragMove = useCallback(
     (e: MouseEvent) => {
@@ -872,10 +1037,13 @@ export function useEditor() {
       }
       const p = c.toImage(sx, sy);
       if (it.kind === 'crop') {
-        // The frame's padding renders like part of the picture, so a drag that
-        // strays into it must not smear transparent padding pixels into the
-        // crop — hold the point to the image bounds.
-        const cp = c.image ? clampToImage(p, c.image.naturalWidth, c.image.naturalHeight) : p;
+        // Crop works on the picture as it is drawn, cuts closed up, so its
+        // point comes from composed space rather than the source. The frame's
+        // padding renders like part of the picture, so a drag that strays into
+        // it must not smear transparent padding pixels into the crop — hold
+        // the point to the image bounds.
+        const raw = c.toComposedPoint(sx, sy);
+        const cp = c.image ? clampToImage(raw, c.image.naturalWidth, c.composedImageHeight()) : raw;
         const r: Rect = {
           x: it.start.x,
           y: it.start.y,
@@ -884,6 +1052,14 @@ export function useEditor() {
         };
         cropDraftRef.current = r;
         c.setCropRect(r);
+        return;
+      }
+      if (it.kind === 'cut') {
+        // A band spans the picture, so only the pointer's y says anything.
+        const ih = c.image ? c.image.naturalHeight : 0;
+        const b: Band = { y: it.start, h: Math.min(Math.max(p.y, 0), ih) - it.start };
+        cutDraftRef.current = b;
+        c.setCutDraft(b);
         return;
       }
       if (it.kind === 'marquee') {
@@ -993,6 +1169,15 @@ export function useEditor() {
       }
       return;
     }
+    if (it.kind === 'cut') {
+      const b = cutDraftRef.current ? normalizeBand(cutDraftRef.current) : null;
+      cutDraftRef.current = null;
+      c.setCutDraft(null);
+      // A stray click pulls no band at all, and is discarded the way a stray
+      // click with a shape tool is (shouldCommit).
+      if (b && b.h > MIN_BAND) applyCutBand(b);
+      return;
+    }
     if (it.kind === 'marquee') {
       const r = c.marquee;
       c.setMarquee(null);
@@ -1039,7 +1224,7 @@ export function useEditor() {
         sayAboutSelection([it.hit]);
       }
     }
-  }, [onDragMove, commit, say, selectAnnotations, sayAboutSelection]);
+  }, [onDragMove, applyCutBand, commit, say, selectAnnotations, sayAboutSelection]);
 
   /**
    * Drop a numbered badge at `p`. The pointer path and the keyboard path share
@@ -1172,10 +1357,36 @@ export function useEditor() {
         return;
       }
       if (t === 'crop') {
-        const cp = clampToImage(p, c.image.naturalWidth, c.image.naturalHeight);
+        const cp = clampToImage(
+          c.toComposedPoint(sx, sy),
+          c.image.naturalWidth,
+          c.composedImageHeight(),
+        );
         cropDraftRef.current = { x: cp.x, y: cp.y, w: 0, h: 0 };
         c.setCropRect(cropDraftRef.current);
         interactionRef.current = { kind: 'crop', start: cp };
+        window.addEventListener('mousemove', onDragMove);
+        window.addEventListener('mouseup', onDragUp);
+        return;
+      }
+      if (t === 'cut') {
+        // A seam is where a band was removed, so clicking one is how a cut is
+        // put back. It is hit-tested in composed space, at the same tolerance
+        // an annotation is, converted from screen pixels so it stays a
+        // fingertip's width at any zoom.
+        const seam = bandAtSeam(
+          bandsRef.current,
+          c.toComposedPoint(sx, sy).y,
+          SEAM_HIT_PX / c.view.zoom,
+        );
+        if (seam !== -1) {
+          removeBand(seam);
+          return;
+        }
+        const start = Math.min(Math.max(p.y, 0), c.image.naturalHeight);
+        cutDraftRef.current = { y: start, h: 0 };
+        c.setCutDraft(cutDraftRef.current);
+        interactionRef.current = { kind: 'cut', start };
         window.addEventListener('mousemove', onDragMove);
         window.addEventListener('mouseup', onDragUp);
         return;
@@ -1198,6 +1409,7 @@ export function useEditor() {
       activeGroupBox,
       onDragMove,
       onDragUp,
+      removeBand,
       setStyleColor,
       selectTool,
       selectAnnotations,
@@ -1306,7 +1518,11 @@ export function useEditor() {
       cancelCrop();
       return;
     }
-    cx.drawImage(c.image, n.x, n.y, n.w, n.h, 0, 0, canvas.width, canvas.height);
+    // Crop rasterises from the picture as it is drawn, cuts closed up, so a
+    // crop bakes every cut into the new image. The band list goes with the
+    // capture it measured, and the crop rect is in that same composed space.
+    const cut = bandsRef.current;
+    cx.drawImage(c.composeImage(), n.x, n.y, n.w, n.h, 0, 0, canvas.width, canvas.height);
     const cropped = canvas.toDataURL('image/png');
     // The draft's coordinates now belong to this image, not to the stash.
     void setDraftImage(cropped);
@@ -1321,18 +1537,22 @@ export function useEditor() {
     applyAnnotations((prev) =>
       renumberSteps(
         prev
-          .map((a) => translateAnnotation(a, -n.x, -n.y))
+          // A layer whose top edge was on a cut row marked pixels the crop
+          // did not take, so it goes with them.
+          .filter((a) => !inBand(cut, bbox(a).y))
+          .map((a) => translateAnnotation(a, -n.x, -(cutAbove(cut, bbox(a).y) + n.y)))
           .filter((a) => {
             const b = bbox(a);
             return b.x < w && b.y < h && b.x + b.w > 0 && b.y + b.h > 0;
           }),
       ),
     );
+    applyBands([]);
     selectAnnotations([]);
     applyHistory([], []);
     cancelCrop();
     say({ kind: 'crop-applied', w, h });
-  }, [applyAnnotations, applyHistory, cancelCrop, selectAnnotations, say]);
+  }, [applyAnnotations, applyBands, applyHistory, cancelCrop, selectAnnotations, say]);
 
   // --- Keyboard on the canvas ---
   /**
@@ -1355,7 +1575,7 @@ export function useEditor() {
     if (t === 'crop') {
       // The whole image. It is the one crop a keyboard user can start from
       // without aiming at a corner; the arrows trim it inwards from there.
-      const r: Rect = { x: 0, y: 0, w: iw, h: ih };
+      const r: Rect = { x: 0, y: 0, w: iw, h: c.composedImageHeight() };
       cropDraftRef.current = r;
       setCropDraft(r);
       setCropActive(true);
@@ -1364,6 +1584,16 @@ export function useEditor() {
       return;
     }
     const box = placementRect(centre, PLACE_SIZE_PX / c.view.zoom, iw, ih);
+    if (t === 'cut') {
+      // A band as tall as any other placement, across the whole picture,
+      // centred on what the viewport shows. The arrows move and trim it from
+      // there and Enter takes it out, the way a crop is driven.
+      const band: Band = { y: box.y, h: box.h };
+      cutDraftRef.current = band;
+      c.setCutDraft(band);
+      say({ kind: 'cut', band });
+      return;
+    }
     if (t === 'text') {
       startText({ x: box.x, y: box.y });
       return;
@@ -1399,9 +1629,11 @@ export function useEditor() {
       if (!c || !c.image) return;
       const mode: CanvasMode = cropDraftRef.current
         ? 'crop'
-        : selectedIdsRef.current.length > 0
-          ? 'selection'
-          : 'idle';
+        : cutDraftRef.current
+          ? 'cut'
+          : selectedIdsRef.current.length > 0
+            ? 'selection'
+            : 'idle';
       const intent = canvasIntent(e, mode);
       if (!intent) return;
       e.preventDefault();
@@ -1414,6 +1646,24 @@ export function useEditor() {
       }
       if (intent.kind === 'apply-crop') {
         applyCrop();
+        return;
+      }
+      if (intent.kind === 'apply-cut') {
+        applyCutDraft();
+        return;
+      }
+      if (intent.kind === 'cut-move' || intent.kind === 'cut-resize') {
+        const cur = cutDraftRef.current;
+        if (!cur) return;
+        // Held at the image edge and still announced: silence would read as
+        // "the key did nothing", which is not what a clamp means.
+        const next =
+          intent.kind === 'cut-move'
+            ? moveBandBy(cur, intent.dy, ih)
+            : resizeBandBy(cur, intent.dy, ih);
+        cutDraftRef.current = next;
+        c.setCutDraft(next);
+        say({ kind: 'cut', band: next });
         return;
       }
       if (intent.kind === 'cycle') {
@@ -1430,10 +1680,13 @@ export function useEditor() {
       if (intent.kind === 'crop-move' || intent.kind === 'crop-resize') {
         const cur = cropDraftRef.current;
         if (!cur) return;
+        // A crop is held inside the composed picture, which is what it cuts
+        // from — not inside the source rows a cut has already taken out.
+        const ch = c.composedImageHeight();
         const next =
           intent.kind === 'crop-move'
-            ? moveCropBy(cur, intent.dx, intent.dy, iw, ih)
-            : resizeCropBy(cur, intent.dx, intent.dy, iw, ih);
+            ? moveCropBy(cur, intent.dx, intent.dy, iw, ch)
+            : resizeCropBy(cur, intent.dx, intent.dy, iw, ch);
         // A rect held at the image edge still gets announced: silence reads as
         // "the key did nothing", which is a different thing from "it clamped".
         cropDraftRef.current = next;
@@ -1500,6 +1753,7 @@ export function useEditor() {
       activeGroupBox,
       applyAnnotations,
       applyCrop,
+      applyCutDraft,
       movedGroupBox,
       placeWithKeyboard,
       sayAboutSelection,
@@ -1518,15 +1772,15 @@ export function useEditor() {
   useEffect(() => {
     if (loading || !capture || draftPrompt || restoringRef.current) return;
     const timer = window.setTimeout(() => {
-      if (annotations.length === 0) {
+      if (annotations.length === 0 && bands.length === 0) {
         void clearDraft();
         void clearDraftImage();
         return;
       }
-      void setDraft(makeDraft(capture.capturedAt, annotations, frame));
+      void setDraft(makeDraft(capture.capturedAt, annotations, bands, frame));
     }, DRAFT_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
-  }, [annotations, frame, loading, capture, draftPrompt]);
+  }, [annotations, bands, frame, loading, capture, draftPrompt]);
 
   // A closing tab does not wait out the debounce. `beforeunload` is not used:
   // a storage write started there is not guaranteed to land.
@@ -1534,8 +1788,10 @@ export function useEditor() {
     const onVisibility = () => {
       if (document.visibilityState !== 'hidden') return;
       if (loading || !capture || draftPrompt || restoringRef.current) return;
-      if (annotationsRef.current.length === 0) return;
-      void setDraft(makeDraft(capture.capturedAt, annotationsRef.current, frameRef.current));
+      if (annotationsRef.current.length === 0 && bandsRef.current.length === 0) return;
+      void setDraft(
+        makeDraft(capture.capturedAt, annotationsRef.current, bandsRef.current, frameRef.current),
+      );
     };
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
@@ -1573,11 +1829,20 @@ export function useEditor() {
       void clearDraft();
       void clearDraftImage();
     };
+    // The band list is normalized against the image it was measured on, so a
+    // stored draft cannot hand the geometry an unsorted or overlapping list.
+    const land = (imgH: number) => {
+      applyBands(normalizeBands(d.bands, imgH));
+      applyAnnotations(d.annotations);
+    };
     void getDraftImage()
       .then((dataUrl) => {
         if (!dataUrl) {
           restoringRef.current = false;
-          applyAnnotations(d.annotations);
+          // The capture's own height, not the controller's image, which is
+          // still null if Restore is clicked before the decode lands — and a
+          // height of zero would clamp every band away to nothing.
+          land(capture?.height ?? 0);
           return;
         }
         const img = new Image();
@@ -1585,13 +1850,13 @@ export function useEditor() {
           restoringRef.current = false;
           controllerRef.current?.setImage(img);
           setImageSize({ w: img.naturalWidth, h: img.naturalHeight });
-          applyAnnotations(d.annotations);
+          land(img.naturalHeight);
         };
         img.onerror = refuse;
         img.src = dataUrl;
       })
       .catch(refuse);
-  }, [applyAnnotations, applyHistory, selectAnnotations, draftPrompt]);
+  }, [applyAnnotations, applyBands, applyHistory, selectAnnotations, capture, draftPrompt]);
 
   const discardDraft = useCallback(() => {
     setDraftPrompt(null);
@@ -1629,16 +1894,18 @@ export function useEditor() {
       void clearDraft();
       void clearDraftImage();
       applyAnnotations([]);
+      applyBands([]);
       applyHistory([], []);
       selectAnnotations([]);
       setTextEdit(null);
       cancelCrop();
+      cancelCut();
       setError(null);
       setStageNotice(null);
       setPendingImport(null);
       c.setImage(p.img);
     },
-    [applyAnnotations, applyHistory, cancelCrop, selectAnnotations],
+    [applyAnnotations, applyBands, applyHistory, cancelCrop, cancelCut, selectAnnotations],
   );
 
   /** Read a dropped or pasted file, then import it — asking first if it would destroy work. */
@@ -1676,12 +1943,12 @@ export function useEditor() {
   const defaultFilename = useCallback(() => {
     const tmpl = settings?.filenameTemplate ?? 'screenshot_{date}_{time}';
     return formatFilename(tmpl, {
-      width: imageSize?.w ?? 0,
-      height: imageSize?.h ?? 0,
+      width: visibleSize?.w ?? 0,
+      height: visibleSize?.h ?? 0,
       title: capture?.title,
       url: capture?.url,
     });
-  }, [settings, imageSize, capture]);
+  }, [settings, visibleSize, capture]);
 
   const exportImage = useCallback(
     async (format: ImageFormat, quality: number, filenameBase: string, targetWidth?: number) => {
@@ -1777,7 +2044,7 @@ export function useEditor() {
     setTool: selectTool,
     selectedIds,
     capture,
-    imageSize,
+    imageSize: visibleSize,
     loading,
     error,
     retryLoad: loadCapture,
@@ -1837,6 +2104,13 @@ export function useEditor() {
     discardDraft,
   };
 }
+
+/**
+ * How near a seam a click counts as landing on it, in screen pixels. The same
+ * reach the annotation hit test allows, so a seam and a thin layer are equally
+ * easy to hit.
+ */
+const SEAM_HIT_PX = 6;
 
 /** Hit-test annotations topmost-first in screen space; returns an id or null. */
 function hitTestAnnotation(

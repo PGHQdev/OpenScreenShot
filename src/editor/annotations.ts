@@ -654,6 +654,62 @@ export function drawCropPreview(
   ctx.setLineDash([]);
 }
 
+/**
+ * Draw a cut preview: dim the band about to be removed and dash both edges it
+ * will close up along. The same treatment as the crop preview, for the same
+ * reason — the dashed edge is guaranteed to read because the dim it borders is
+ * under half of it. Given in composed image space, so a draft that overlaps a
+ * band already cut is drawn as short as it will actually be.
+ */
+export function drawCutPreview(
+  ctx: CanvasRenderingContext2D,
+  y: number,
+  h: number,
+  imageWidth: number,
+): void {
+  if (h <= 0) return;
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.fillRect(0, y, imageWidth, h);
+  ctx.strokeStyle = tokens.canvasMark;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([8, 6]);
+  ctx.beginPath();
+  ctx.moveTo(0, y);
+  ctx.lineTo(imageWidth, y);
+  ctx.moveTo(0, y + h);
+  ctx.lineTo(imageWidth, y + h);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+/**
+ * The mark where a cut band was removed: two abutting hairlines, black over
+ * white, drawn in screen space so the seam stays one pixel of each at any
+ * zoom.
+ *
+ * The pairing is the selection outline's argument (see SELECTION_DASH) without
+ * the dash — a seam runs the full width of the picture over whatever the
+ * screenshot happens to hold there, so one flat colour cannot be guaranteed to
+ * read against it, and the two-tone pair always leaves one line visible. It is
+ * unbroken rather than dashed so it does not read as a selection.
+ */
+export function drawSeam(ctx: CanvasRenderingContext2D, y: number, x0: number, x1: number): void {
+  ctx.save();
+  ctx.lineWidth = 1;
+  ctx.setLineDash([]);
+  ctx.strokeStyle = '#000000';
+  ctx.beginPath();
+  ctx.moveTo(x0, y - 0.5);
+  ctx.lineTo(x1, y - 0.5);
+  ctx.stroke();
+  ctx.strokeStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.moveTo(x0, y + 0.5);
+  ctx.lineTo(x1, y + 0.5);
+  ctx.stroke();
+  ctx.restore();
+}
+
 export type Handle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'start' | 'end';
 
 export interface HandlePos {

@@ -3,7 +3,8 @@
  *
  * A selection wins over the tool: the bar edits what the user picked. With no
  * selection the bar previews what the active tool will draw. Tools that carry
- * no style collapse the bar rather than leave an inert band across the window.
+ * no style — Select, and the two that reshape the picture itself — collapse
+ * the bar rather than leave an inert band across the window.
  *
  * `agreed` answers the second half of that for a selection of several layers,
  * where a field can have no single value at all.
@@ -72,6 +73,7 @@ export function stylebarFields(
       return { ...NONE, color: true };
     case 'select':
     case 'crop':
+    case 'cut':
       return NONE;
   }
 }

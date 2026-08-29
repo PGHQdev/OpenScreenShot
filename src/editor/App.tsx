@@ -7,12 +7,14 @@ import { STROKE_WIDTHS, type BlurMode, type SpotlightShape } from './annotations
 import { COLOR_PALETTE, colorName, MAX_RECENT_COLORS } from './palette';
 import { arrowNav, getFocusable, syncRovingTabIndex, trapFocus } from './focus';
 import { pickImageFile } from './import-image';
+import type { Draft } from './draft';
 import { BrandMark } from '../shared/BrandMark';
 import {
   IconAlert,
   IconArrow,
   IconBlur,
   IconCrop,
+  IconCut,
   IconEyedropper,
   IconHighlight,
   IconImage,
@@ -117,8 +119,10 @@ export function App() {
     ed.pendingImport ? { name: ed.pendingImport.name, count: ed.annotations.length } : null,
     !!ed.pendingImport,
   );
-  const draftPromptCount = useFrozenWhileClosing(
-    ed.draftPrompt?.annotations.length ?? 0,
+  // What the draft holds, in words, so a draft of nothing but cuts does not
+  // offer itself back as "0 annotations".
+  const draftPromptSummary = useFrozenWhileClosing(
+    ed.draftPrompt ? draftSummary(ed.draftPrompt) : '',
     !!ed.draftPrompt,
   );
 
@@ -368,7 +372,9 @@ export function App() {
               the arrow keys to move the selection by one pixel, Shift and an arrow to move it by
               ten, and Alt and an arrow to resize it. Press Alt and D to duplicate the selection.
               With a crop open, the arrow keys move it, Alt and an arrow resize it, Enter applies it
-              and Escape cancels it.
+              and Escape cancels it. With the Cut tool, Enter starts a band across the picture, the
+              up and down arrows move it, Alt and an arrow resize it, Enter takes it out and Escape
+              cancels it. Press Delete with the Cut tool to put back the nearest cut.
             </p>
           </canvas>
 
@@ -391,10 +397,7 @@ export function App() {
               role="status"
               inert={draftPromptT.closing}
             >
-              <span>
-                Unsaved edits from your last session ({draftPromptCount}{' '}
-                {draftPromptCount === 1 ? 'annotation' : 'annotations'}).
-              </span>
+              <span>Unsaved edits from your last session ({draftPromptSummary}).</span>
               <button class="btn-primary btn-sm" onClick={ed.restoreDraft}>
                 Restore
               </button>
@@ -1335,7 +1338,23 @@ function ToolIcon({ id }: { id: Tool }) {
       return <IconEyedropper />;
     case 'crop':
       return <IconCrop />;
+    case 'cut':
+      return <IconCut />;
   }
+}
+
+/** What a stored draft holds, for the restore pill: annotations, cuts, or both. */
+function draftSummary(draft: Draft): string {
+  const parts: string[] = [];
+  if (draft.annotations.length > 0) {
+    parts.push(
+      `${draft.annotations.length} annotation${draft.annotations.length === 1 ? '' : 's'}`,
+    );
+  }
+  if (draft.bands.length > 0) {
+    parts.push(`${draft.bands.length} cut${draft.bands.length === 1 ? '' : 's'}`);
+  }
+  return parts.join(', ');
 }
 
 function labelForSource(mode: LastCapture['mode']): string {
@@ -1373,6 +1392,8 @@ function hintForTool(tool: Tool): string {
       return 'Drag to keep an area lit — everything else dims · Shift keeps it square';
     case 'crop':
       return 'Drag to select, then Apply to crop';
+    case 'cut':
+      return 'Drag over a band to take it out · click a seam to put it back · nothing is erased';
     case 'eyedropper':
       return 'Click any pixel to take its color · the previous tool comes back';
     case 'select':

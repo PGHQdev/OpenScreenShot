@@ -215,6 +215,44 @@ async function makeCapture() {
   };
 }
 
+/**
+ * Three flat 200-row stripes, so a cut band that lands on one removes a colour
+ * from the picture outright and the rows that close up over it are checkable
+ * one by one. Nothing here is near black or near white, which is what lets the
+ * seam marker (black over white) be counted separately from the picture.
+ */
+const STRIPES = [
+  [200, 60, 60],
+  [60, 200, 60],
+  [60, 60, 200],
+];
+
+async function makeStripedCapture() {
+  const sharp = createRequire(join(ROOT, 'package.json'))('sharp');
+  const [w, h] = [800, 600];
+  const raw = Buffer.alloc(w * h * 3);
+  for (let y = 0; y < h; y++) {
+    const [r, g, b] = STRIPES[Math.floor(y / 200)];
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 3;
+      raw[i] = r;
+      raw[i + 1] = g;
+      raw[i + 2] = b;
+    }
+  }
+  const png = await sharp(raw, { raw: { width: w, height: h, channels: 3 } })
+    .png()
+    .toBuffer();
+  return {
+    dataUrl: `data:image/png;base64,${png.toString('base64')}`,
+    width: w,
+    height: h,
+    mode: 'visible',
+    title: 'cut smoke',
+    capturedAt: Date.now(),
+  };
+}
+
 /** Tall enough that the default A4/portrait/8mm-margin PDF slices it into
  * several pages (task 23's real per-page progress needs more than one page
  * to prove anything). */
@@ -1931,6 +1969,483 @@ async function testMultiSelection(browser, base) {
   await page.close();
 }
 
+/**
+ * Task 25: the Cut tool, end to end.
+ *
+ * A cut is a band on a list applied where the picture is drawn, so the two
+ * things worth driving in a real browser are the two the unit tests cannot
+ * reach: that the live canvas and the exported file are the same picture with
+ * the same rows missing, and that a cut survives the round trip through
+ * storage. The capture is three flat stripes, so "the middle stripe is gone
+ * and the rows closed up" is a pixel fact, not a judgement.
+ */
+async function testCutTool(browser, base) {
+  step('task 25: a cut removes a band from the live canvas and from every export');
+  const { page } = await newSmokePage(browser);
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  const capture = await makeStripedCapture();
+  // The theme is pinned rather than left to the machine: the census below
+  // reads the whole canvas, and the stage plate behind the picture is
+  // near-black in the dark theme — which is exactly the bucket the seam
+  // marker's own hairline is counted in.
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': capture,
+    'openscreenshot:settings': { theme: 'light' },
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+
+  const settle = (ms = 120) => new Promise((r) => setTimeout(r, ms));
+  const say = () =>
+    page.evaluate(() =>
+      document.querySelector('[aria-live="polite"][role="status"]').textContent.trim(),
+    );
+  const size = () => page.$eval('.statusbar > span', (el) => el.textContent.trim());
+  async function chord(mods, key) {
+    for (const m of mods) await page.keyboard.down(m);
+    await page.keyboard.press(key);
+    for (const m of mods.slice().reverse()) await page.keyboard.up(m);
+  }
+  /**
+   * A colour census of the live canvas. The stage around the picture is the
+   * light plate and its checkerboard, so it lands in none of these buckets:
+   * the three stripe buckets are picture, and black/white are the seam
+   * marker's two hairlines.
+   */
+  const census = () =>
+    page.evaluate(() => {
+      const cv = document.querySelector('.stage-canvas');
+      const { data } = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height);
+      const out = { red: 0, green: 0, blue: 0, black: 0 };
+      for (let i = 0; i < data.length; i += 4) {
+        const [r, g, b, a] = [data[i], data[i + 1], data[i + 2], data[i + 3]];
+        // Opaque pixels only. The drop shadow the stage paints around the
+        // plate is black at an alpha of 1 to 4, and it covers thousands of
+        // pixels — far more than the seam's own hairline.
+        if (a !== 255) continue;
+        if (r > 150 && g < 110 && b < 110) out.red++;
+        else if (g > 150 && r < 110 && b < 110) out.green++;
+        else if (b > 150 && r < 110 && g < 110) out.blue++;
+        else if (r < 40 && g < 40 && b < 40) out.black++;
+      }
+      return out;
+    });
+  const band = async () => {
+    const m = (await say()).match(/Cut band (\d+) pixels tall at (\d+)\./);
+    if (!m) throw new Error(`expected a drafted band, got "${await say()}"`);
+    return { h: Number(m[1]), y: Number(m[2]) };
+  };
+  /** Walk a drafted band to an exact height and top edge, 10px then 1px. */
+  const walk = async (mods, delta) => {
+    const key = delta > 0 ? 'ArrowDown' : 'ArrowUp';
+    for (let i = 0; i < Math.floor(Math.abs(delta) / 10); i++) await chord([...mods, 'Shift'], key);
+    for (let i = 0; i < Math.abs(delta) % 10; i++) await chord(mods, key);
+    await settle(60);
+  };
+
+  await page.$eval('.stage-canvas', (el) => el.focus());
+  const before = await census();
+  assert(
+    before.green > 1000 && before.black === 0,
+    `the picture starts with its middle stripe (${before.green} green pixels) and no seam (${before.black} black)`,
+  );
+  assert(
+    (await size()) === '800 × 600px',
+    `the status bar starts at the capture's size (${await size()})`,
+  );
+
+  step('task 25: Enter with the Cut tool drafts a band, and the arrows drive it');
+  await page.keyboard.press('x');
+  await page.keyboard.press('Enter');
+  await settle();
+  const placed = await band();
+  assert(placed.h > 0, `Enter drafted a band (${placed.h} pixels tall at ${placed.y})`);
+  await walk(['Alt'], 200 - placed.h);
+  const sized = await band();
+  assert(sized.h === 200, `Alt and the arrows resized it to exactly 200 (${sized.h})`);
+  await walk([], 200 - sized.y);
+  const aimed = await band();
+  assert(
+    aimed.y === 200 && aimed.h === 200,
+    `the band sits on the middle stripe, rows 200 to 400 (at ${aimed.y}, ${aimed.h} tall)`,
+  );
+  // Nothing is cut yet: the draft is a preview, and the picture is whole.
+  assert((await size()) === '800 × 600px', 'the drafted band has not shortened the picture yet');
+
+  step('task 25: Enter takes the band out — the middle stripe leaves the live canvas');
+  await page.keyboard.press('Enter');
+  await settle();
+  assert(
+    (await say()) === 'Cut 200 pixels. Image 400 pixels tall.',
+    `the live region reports what went and what is left ("${await say()}")`,
+  );
+  const cut = await census();
+  assert(cut.green === 0, `no green pixel is left on the canvas (${cut.green})`);
+  assert(
+    cut.red > 1000 && cut.blue > 1000,
+    `the stripes either side are still there (${cut.red} red, ${cut.blue} blue)`,
+  );
+  assert(cut.black > 200, `a seam marker was drawn where the band was (${cut.black} black pixels)`);
+  assert(
+    (await size()) === '800 × 400px',
+    `the status bar reports the shorter picture (${await size()})`,
+  );
+
+  step('task 25: the cut is in the saved draft, so it survives a crash');
+  await settle(1000); // past DRAFT_DEBOUNCE_MS
+  const saved = await page.evaluate(async () => {
+    const got = await chrome.storage.local.get('openscreenshot:draft');
+    return got['openscreenshot:draft'] ?? null;
+  });
+  assert(
+    JSON.stringify(saved?.bands) === JSON.stringify([{ y: 200, h: 200 }]),
+    `the autosave wrote the band (${JSON.stringify(saved?.bands)})`,
+  );
+
+  step('task 25: the export is the same picture, row for row, and carries no seam marker');
+  const sharp = createRequire(join(ROOT, 'package.json'))('sharp');
+  const exportAs = async (cardIndex) => {
+    await chord(['Meta'], 's');
+    await page.waitForSelector('.modal');
+    await page.waitForFunction(() =>
+      document.querySelector('.modal').contains(document.activeElement),
+    );
+    await page.$$eval('.format-grid .format-card', (cards, i) => cards[i].focus(), cardIndex);
+    await page.keyboard.press('Enter');
+    await settle();
+    await page.$eval('.modal .btn-primary', (el) => el.focus());
+    await page.keyboard.press('Enter');
+    await settle(900);
+    const download = await page.evaluate(() => globalThis.__smoke.downloads.at(-1));
+    const { data, info } = await sharp(
+      Buffer.from(download.url.slice(download.url.indexOf(',') + 1), 'base64'),
+    )
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    return { download, data, info };
+  };
+
+  const png = await exportAs(0);
+  assert(png.download.filename.endsWith('.png'), `exported a PNG (${png.download.filename})`);
+  assert(
+    png.info.width === 800 && png.info.height === 400,
+    `the PNG is 800 by 400 — the capture's 600 rows less the 200 cut (${png.info.width}x${png.info.height})`,
+  );
+  // Every composed row must hold the colour of the source row the band map
+  // sends it to: rows above the cut unchanged, rows below pulled up by 200.
+  let wrongRow = -1;
+  let extremes = 0;
+  for (let y = 0; y < png.info.height; y++) {
+    const i = (y * png.info.width + 400) * png.info.channels;
+    const want = STRIPES[Math.floor((y < 200 ? y : y + 200) / 200)];
+    const got = [png.data[i], png.data[i + 1], png.data[i + 2]];
+    if (wrongRow === -1 && want.some((v, k) => v !== got[k])) wrongRow = y;
+  }
+  for (let i = 0; i < png.data.length; i += png.info.channels) {
+    const [r, g, b] = [png.data[i], png.data[i + 1], png.data[i + 2]];
+    if ((r < 40 && g < 40 && b < 40) || (r > 215 && g > 215 && b > 215)) extremes++;
+  }
+  assert(
+    wrongRow === -1,
+    `every exported row holds the source row the cut maps it to (first mismatch: ${wrongRow})`,
+  );
+  assert(
+    extremes === 0,
+    `no seam marker reached the file (${extremes} near-black or near-white pixels), while the canvas at this moment carries ${cut.black}`,
+  );
+
+  const jpeg = await exportAs(1);
+  assert(
+    jpeg.download.filename.endsWith('.jpg'),
+    `exported a JPEG too (${jpeg.download.filename})`,
+  );
+  assert(
+    jpeg.info.width === 800 && jpeg.info.height === 400,
+    `the JPEG is the same cut picture (${jpeg.info.width}x${jpeg.info.height})`,
+  );
+
+  step('task 25: undo puts the strip back, and does not clear the stack behind it');
+  await page.$eval('.stage-canvas', (el) => el.focus());
+  await chord(['Meta'], 'z');
+  await settle();
+  const undone = await census();
+  assert(undone.green > 1000, `the middle stripe is back (${undone.green} green pixels)`);
+  assert(undone.black === 0, `and the seam went with it (${undone.black} black pixels)`);
+  assert((await size()) === '800 × 600px', `the picture is whole again (${await size()})`);
+
+  step('task 25: Delete with the Cut tool puts back the nearest cut');
+  await chord(['Meta'], 'y'); // redo the cut
+  await settle();
+  assert((await size()) === '800 × 400px', 'redo took the band out again');
+  await page.keyboard.press('Delete');
+  await settle();
+  assert(
+    (await say()) === 'Put back 200 pixels. Image 600 pixels tall.',
+    `Delete named what it put back ("${await say()}")`,
+  );
+  assert((await size()) === '800 × 600px', `and the picture is whole (${await size()})`);
+
+  step('task 25: a drag cuts a band, and a click on the seam puts it back');
+  /**
+   * Where the picture sits on screen, measured off the canvas rather than
+   * recomputed from the viewport maths this is meant to be checking: the first
+   * and last rows and columns holding an opaque stripe colour, converted to
+   * page coordinates the mouse can be driven with.
+   */
+  const geometry = async (composedH) => {
+    const g = await page.evaluate(() => {
+      const cv = document.querySelector('.stage-canvas');
+      const r = cv.getBoundingClientRect();
+      const { data } = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height);
+      const isPicture = (i) => {
+        const [red, green, blue, a] = [data[i], data[i + 1], data[i + 2], data[i + 3]];
+        if (a !== 255) return false;
+        return (
+          (red > 150 && green < 110 && blue < 110) ||
+          (green > 150 && red < 110 && blue < 110) ||
+          (blue > 150 && red < 110 && green < 110)
+        );
+      };
+      let top = -1;
+      let bottom = -1;
+      let left = -1;
+      let right = -1;
+      for (let y = 0; y < cv.height; y++) {
+        for (let x = 0; x < cv.width; x++) {
+          if (!isPicture((y * cv.width + x) * 4)) continue;
+          if (top < 0) top = y;
+          bottom = y;
+          if (left < 0 || x < left) left = x;
+          if (x > right) right = x;
+        }
+      }
+      return {
+        rect: { left: r.left, top: r.top },
+        sx: cv.width / r.width,
+        sy: cv.height / r.height,
+        top,
+        bottom,
+        left,
+        right,
+      };
+    });
+    const scale = (g.bottom - g.top + 1) / composedH;
+    return {
+      x: g.rect.left + (g.left + g.right) / 2 / g.sx,
+      y: (imageY) => g.rect.top + (g.top + imageY * scale) / g.sy,
+    };
+  };
+
+  const whole = await geometry(600);
+  await page.mouse.move(whole.x, whole.y(100));
+  await page.mouse.down();
+  await page.mouse.move(whole.x, whole.y(180), { steps: 8 });
+  await page.mouse.up();
+  await settle(150);
+  const dragged = (await say()).match(/Cut (\d+) pixels\. Image (\d+) pixels tall\./);
+  assert(
+    dragged && Math.abs(Number(dragged[1]) - 80) <= 2,
+    `the drag took the 80 rows it covered ("${await say()}")`,
+  );
+  assert(
+    Number(dragged[2]) === 600 - Number(dragged[1]),
+    `and the picture lost exactly those rows (${dragged?.[2]} left of 600)`,
+  );
+  const afterDrag = await census();
+  assert(afterDrag.black > 200, `the drag left a seam behind it (${afterDrag.black} black pixels)`);
+
+  const shortened = await geometry(Number(dragged[2]));
+  await page.mouse.click(shortened.x, shortened.y(100));
+  await settle(150);
+  assert(
+    (await say()) === `Put back ${dragged[1]} pixels. Image 600 pixels tall.`,
+    `a click on the seam put the strip back ("${await say()}")`,
+  );
+  assert((await size()) === '800 × 600px', `the picture is whole again (${await size()})`);
+  assert((await census()).black === 0, 'and the seam went with the cut it marked');
+
+  step('task 25: a cut carries the marks below it up with the picture');
+  // A rectangle in a palette colour none of the stripes come near, so where it
+  // lands in an export is a pixel search rather than a guess.
+  await page.$eval('.stage-canvas', (el) => el.focus());
+  await page.keyboard.press('6'); // Purple
+  await page.keyboard.press('r');
+  await page.keyboard.press('Enter');
+  await settle();
+  const added = (await say()).match(/Rectangle added at (-?\d+), (-?\d+)\./);
+  assert(added !== null, `a rectangle was placed ("${await say()}")`);
+  const markY = Number(added[2]);
+  await page.keyboard.press('Escape'); // so the band walk below cannot move it
+  await settle();
+
+  /** The topmost row of an export holding the mark's colour, or -1. */
+  const firstMark = ({ data, info }) => {
+    for (let y = 0; y < info.height; y++) {
+      for (let x = 0; x < info.width; x++) {
+        const i = (y * info.width + x) * info.channels;
+        if (
+          Math.abs(data[i] - 175) < 30 &&
+          Math.abs(data[i + 1] - 82) < 40 &&
+          Math.abs(data[i + 2] - 222) < 30
+        ) {
+          return y;
+        }
+      }
+    }
+    return -1;
+  };
+  /** Draft a band with Enter, walk it to an exact place, and take it out. */
+  const cutExactly = async (y, h) => {
+    await page.$eval('.stage-canvas', (el) => el.focus());
+    await page.keyboard.press('x');
+    await page.keyboard.press('Enter');
+    await settle();
+    const placed = await band();
+    await walk(['Alt'], h - placed.h);
+    await walk([], y - (await band()).y);
+    const aimed = await band();
+    assert(
+      aimed.y === y && aimed.h === h,
+      `band drafted at exactly ${y}, ${h} tall (${aimed.y}, ${aimed.h})`,
+    );
+    await page.keyboard.press('Enter');
+    await settle();
+  };
+
+  const uncut = await exportAs(0);
+  const wholeTop = firstMark(uncut);
+  assert(
+    wholeTop > 0 && Math.abs(wholeTop - markY) <= 4,
+    `the mark is in the uncut export, where it was placed (row ${wholeTop}, placed at ${markY})`,
+  );
+
+  await cutExactly(0, 100);
+  const shifted = await exportAs(0);
+  assert(shifted.info.height === 500, `the export lost the 100 cut rows (${shifted.info.height})`);
+  assert(
+    firstMark(shifted) === wholeTop - 100,
+    `the mark came up with the picture under it, by the whole band (row ${firstMark(shifted)}, was ${wholeTop})`,
+  );
+
+  await cutExactly(markY, 20);
+  const covered = await exportAs(0);
+  assert(
+    firstMark(covered) === -1,
+    `a mark whose top edge is on a removed row leaves with those rows (found at row ${firstMark(covered)})`,
+  );
+
+  await page.$eval('.stage-canvas', (el) => el.focus());
+  await chord(['Meta'], 'z');
+  await chord(['Meta'], 'z');
+  await settle();
+  const restored = await exportAs(0);
+  assert(
+    restored.info.height === 600 && firstMark(restored) === wholeTop,
+    `undoing both cuts puts the picture and the mark back exactly (${restored.info.height} tall, mark at row ${firstMark(restored)})`,
+  );
+
+  step('task 25: a crop bakes the cuts into the image it makes');
+  await cutExactly(200, 200);
+  assert((await size()) === '800 × 400px', `the middle stripe is cut again (${await size()})`);
+  await page.keyboard.press('c');
+  await page.keyboard.press('Enter'); // a crop over the whole picture
+  await page.keyboard.press('Enter'); // apply it
+  await settle(500);
+  assert(
+    (await say()) === 'Cropped to 800 by 400 pixels.',
+    `the crop took the picture as it was drawn, not the capture behind it ("${await say()}")`,
+  );
+  assert((await size()) === '800 × 400px', `and the new image is that picture (${await size()})`);
+  assert(
+    (await page.$('.toolbar-count')) === null,
+    'the mark that sat on the cut rows went with them',
+  );
+  const cropped = await exportAs(0);
+  let greenInCrop = 0;
+  for (let i = 0; i < cropped.data.length; i += cropped.info.channels) {
+    const [r, g, b] = [cropped.data[i], cropped.data[i + 1], cropped.data[i + 2]];
+    if (g > 150 && r < 110 && b < 110) greenInCrop++;
+  }
+  assert(
+    cropped.info.height === 400 && greenInCrop === 0,
+    `the cropped export is 400 rows with no cut stripe in it (${cropped.info.height} tall, ${greenInCrop} green pixels) — a crop that had rasterised the capture instead would be 600 and full of it`,
+  );
+
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
+}
+
+/**
+ * A cut in a stored draft comes back with the picture, and a draft written
+ * before the Cut tool existed — no `bands` key at all — still restores.
+ */
+async function testCutDraftRestore(browser, base) {
+  step('task 25: a stored draft restores its cuts, and a pre-Cut draft still restores');
+  const capture = await makeStripedCapture();
+  const settle = (ms = 200) => new Promise((r) => setTimeout(r, ms));
+
+  const open = async (draft) => {
+    const { page } = await newSmokePage(browser);
+    const crashes = [];
+    page.on('pageerror', (err) => crashes.push(String(err)));
+    await page.evaluateOnNewDocument(installChromeStub, {
+      'openscreenshot:last-capture': capture,
+      'openscreenshot:draft': draft,
+    });
+    await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+    await page.waitForSelector('.draft-restore', { timeout: 5000 });
+    return { page, crashes };
+  };
+
+  const withBands = await open({
+    sourceCapturedAt: capture.capturedAt,
+    annotations: [],
+    bands: [{ y: 200, h: 200 }],
+    frame: {},
+    savedAt: Date.now(),
+  });
+  const offer = await withBands.page.$eval('.draft-restore span', (el) => el.textContent);
+  assert(
+    offer === 'Unsaved edits from your last session (1 cut).',
+    `a draft of nothing but a cut still offers itself, in its own words ("${offer}")`,
+  );
+  await withBands.page.click('.draft-restore .btn-primary');
+  await settle(400);
+  const restoredSize = await withBands.page.$eval('.statusbar > span', (el) =>
+    el.textContent.trim(),
+  );
+  assert(restoredSize === '800 × 400px', `the restored cut is applied (${restoredSize})`);
+  assert(
+    withBands.crashes.length === 0,
+    `no page errors (${withBands.crashes.join(' | ') || 'none'})`,
+  );
+  await withBands.page.close();
+
+  // Exactly the shape every draft on disk has today: no `bands` key.
+  const legacy = await open({
+    sourceCapturedAt: capture.capturedAt,
+    annotations: [{ id: 'a1', type: 'rect', x: 10, y: 10, w: 50, h: 50 }],
+    frame: {},
+    savedAt: Date.now(),
+  });
+  const legacyOffer = await legacy.page.$eval('.draft-restore span', (el) => el.textContent);
+  assert(
+    legacyOffer === 'Unsaved edits from your last session (1 annotation).',
+    `a draft written before the Cut tool is still offered ("${legacyOffer}")`,
+  );
+  await legacy.page.click('.draft-restore .btn-primary');
+  await settle(400);
+  const count = await legacy.page.$eval('.toolbar-count span', (el) => el.textContent);
+  assert(count === '1', `and it restores its annotation (${count})`);
+  const legacySize = await legacy.page.$eval('.statusbar > span', (el) => el.textContent.trim());
+  assert(legacySize === '800 × 600px', `with nothing cut (${legacySize})`);
+  assert(legacy.crashes.length === 0, `no page errors (${legacy.crashes.join(' | ') || 'none'})`);
+  await legacy.page.close();
+}
+
 async function main() {
   const built = await stat(join(DIST, PAGE.slice(1))).then(
     () => true,
@@ -3057,6 +3572,8 @@ async function main() {
     await testPdfExportInBackgroundTab(browser, base);
     await testProgressBarColorScheme(browser, base);
     await testMultiSelection(browser, base);
+    await testCutTool(browser, base);
+    await testCutDraftRestore(browser, base);
 
     console.log('\nALL STEPS PASSED');
   } finally {

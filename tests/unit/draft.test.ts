@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { draftFrame, makeDraft, parseDraft } from '../../src/editor/draft';
+import { draftFrame, draftHasWork, makeDraft, parseDraft } from '../../src/editor/draft';
+import type { Band } from '../../src/editor/bands';
 import { DEFAULT_FRAME } from '../../src/editor/frame';
 import type { Annotation } from '../../src/editor/annotations';
 
@@ -15,25 +16,80 @@ const rect: Annotation = {
   fill: null,
 };
 
+const band: Band = { y: 100, h: 40 };
+
 describe('makeDraft', () => {
   it('keeps the annotations and the capture it belongs to', () => {
-    const d = makeDraft(1700, [rect], DEFAULT_FRAME, 1800);
+    const d = makeDraft(1700, [rect], [], DEFAULT_FRAME, 1800);
     expect(d.sourceCapturedAt).toBe(1700);
     expect(d.annotations).toEqual([rect]);
     expect(d.savedAt).toBe(1800);
   });
 
+  it('keeps the cut bands, so a cut survives a crash the way a drawing does', () => {
+    const d = makeDraft(1700, [], [band], DEFAULT_FRAME, 1800);
+    expect(d.bands).toEqual([band]);
+  });
+
   it('stores the frame in Settings shape, so frameFromSettings can validate it', () => {
-    const d = makeDraft(1, [rect], { ...DEFAULT_FRAME, enabled: true, padding: 55 });
+    const d = makeDraft(1, [rect], [], { ...DEFAULT_FRAME, enabled: true, padding: 55 });
     expect(d.frame.beautifyEnabled).toBe(true);
     expect(d.frame.beautifyPadding).toBe(55);
   });
 });
 
+describe('draftHasWork', () => {
+  it('is true for annotations alone, cuts alone, or both', () => {
+    expect(draftHasWork(makeDraft(1, [rect], [], DEFAULT_FRAME))).toBe(true);
+    expect(draftHasWork(makeDraft(1, [], [band], DEFAULT_FRAME))).toBe(true);
+    expect(draftHasWork(makeDraft(1, [rect], [band], DEFAULT_FRAME))).toBe(true);
+  });
+
+  it('is false for a draft holding neither', () => {
+    expect(draftHasWork(makeDraft(1, [], [], DEFAULT_FRAME))).toBe(false);
+  });
+});
+
 describe('parseDraft', () => {
   it('round-trips what makeDraft produced', () => {
-    const d = makeDraft(1700, [rect], { ...DEFAULT_FRAME, enabled: true }, 1800);
+    const d = makeDraft(1700, [rect], [band], { ...DEFAULT_FRAME, enabled: true }, 1800);
     expect(parseDraft(JSON.parse(JSON.stringify(d)))).toEqual(d);
+  });
+
+  it('reads a draft written before the Cut tool existed, with nothing cut', () => {
+    // Exactly what makeDraft produced up to v1.3.0: no `bands` key at all.
+    // Requiring one here would discard every in-progress draft on upgrade.
+    const old = { sourceCapturedAt: 1700, annotations: [rect], frame: {}, savedAt: 1800 };
+    const parsed = parseDraft(old);
+    expect(parsed).not.toBeNull();
+    expect(parsed?.bands).toEqual([]);
+    expect(parsed?.annotations).toEqual([rect]);
+  });
+
+  it('keeps the bands it was given, in order', () => {
+    const parsed = parseDraft({
+      sourceCapturedAt: 1,
+      annotations: [],
+      bands: [
+        { y: 10, h: 20 },
+        { y: 90, h: 5 },
+      ],
+    });
+    expect(parsed?.bands).toEqual([
+      { y: 10, h: 20 },
+      { y: 90, h: 5 },
+    ]);
+  });
+
+  it('voids the draft on a band that is not two finite numbers', () => {
+    expect(parseDraft({ sourceCapturedAt: 1, annotations: [], bands: 'none' })).toBeNull();
+    expect(parseDraft({ sourceCapturedAt: 1, annotations: [], bands: [{ y: 0 }] })).toBeNull();
+    expect(
+      parseDraft({ sourceCapturedAt: 1, annotations: [], bands: [{ y: 0, h: 'tall' }] }),
+    ).toBeNull();
+    expect(
+      parseDraft({ sourceCapturedAt: 1, annotations: [], bands: [{ y: Number.NaN, h: 10 }] }),
+    ).toBeNull();
   });
 
   it('rejects anything that is not a draft, so bad storage cannot break the editor', () => {
@@ -90,7 +146,7 @@ describe('parseDraft', () => {
 describe('draftFrame', () => {
   it('rebuilds the frame the editor stored', () => {
     const frame = { ...DEFAULT_FRAME, enabled: true, radius: 12 };
-    const d = makeDraft(1, [], frame, 2);
+    const d = makeDraft(1, [], [], frame, 2);
     expect(draftFrame(d)).toEqual(frame);
   });
 });

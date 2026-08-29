@@ -34,7 +34,11 @@ function buildCommands(isMac: boolean): { label: string; keys: string }[] {
     { label: 'Undo', keys: `${mod}Z` },
     { label: 'Redo', keys: `${mod}${shift}Z` },
     { label: 'Delete selected', keys: '⌫' },
-    { label: 'Deselect / cancel crop', keys: 'Esc' },
+    // The Cut tool's own two: Enter takes the placed band out of the picture,
+    // and with nothing selected ⌫ puts the nearest cut back.
+    { label: 'Take the placed cut out', keys: 'Enter' },
+    { label: 'Put back the nearest cut', keys: '⌫' },
+    { label: 'Deselect / cancel crop or cut', keys: 'Esc' },
     { label: 'Zoom in', keys: `${mod}+` },
     { label: 'Zoom out', keys: `${mod}−` },
     { label: 'Actual size', keys: `${mod}0` },

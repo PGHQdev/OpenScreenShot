@@ -27,6 +27,7 @@ import {
   type Point,
   type Rect,
 } from './annotations';
+import type { Band } from './bands';
 import { TOOL_LIST } from './tools';
 
 /** Nudge and resize step, in image pixels. Shift takes the coarse one. */
@@ -49,16 +50,19 @@ export interface KeyChord {
 }
 
 /** What the canvas is doing when the key arrives. */
-export type CanvasMode = 'crop' | 'selection' | 'idle';
+export type CanvasMode = 'crop' | 'cut' | 'selection' | 'idle';
 
 export type CanvasIntent =
   | { kind: 'cycle'; dir: 1 | -1; extend: boolean }
   | { kind: 'place' }
   | { kind: 'apply-crop' }
+  | { kind: 'apply-cut' }
   | { kind: 'move'; dx: number; dy: number }
   | { kind: 'resize'; dx: number; dy: number }
   | { kind: 'crop-move'; dx: number; dy: number }
-  | { kind: 'crop-resize'; dx: number; dy: number };
+  | { kind: 'crop-resize'; dx: number; dy: number }
+  | { kind: 'cut-move'; dy: number }
+  | { kind: 'cut-resize'; dy: number };
 
 const ARROWS: Record<string, Point> = {
   ArrowLeft: { x: -1, y: 0 },
@@ -86,7 +90,11 @@ export function canvasIntent(e: KeyChord, mode: CanvasMode): CanvasIntent | null
   if (e.key === '[' || e.key === '{') {
     return { kind: 'cycle', dir: -1, extend: e.key === '{' || !!e.shiftKey };
   }
-  if (e.key === 'Enter') return mode === 'crop' ? { kind: 'apply-crop' } : { kind: 'place' };
+  if (e.key === 'Enter') {
+    if (mode === 'crop') return { kind: 'apply-crop' };
+    if (mode === 'cut') return { kind: 'apply-cut' };
+    return { kind: 'place' };
+  }
   const dir = ARROWS[e.key];
   if (!dir) return null;
   const step = e.shiftKey ? STEP_COARSE : STEP_FINE;
@@ -94,6 +102,13 @@ export function canvasIntent(e: KeyChord, mode: CanvasMode): CanvasIntent | null
   const dy = dir.y * step;
   if (mode === 'crop') {
     return e.altKey ? { kind: 'crop-resize', dx, dy } : { kind: 'crop-move', dx, dy };
+  }
+  // A cut band spans the picture, so only the vertical arrows have anything
+  // to say to it. The horizontal pair is left unclaimed rather than made a
+  // no-op, so nothing swallows a key it does not act on.
+  if (mode === 'cut') {
+    if (dy === 0) return null;
+    return e.altKey ? { kind: 'cut-resize', dy } : { kind: 'cut-move', dy };
   }
   if (mode === 'selection') {
     return e.altKey ? { kind: 'resize', dx, dy } : { kind: 'move', dx, dy };
@@ -363,7 +378,12 @@ export type Mutation =
   | { kind: 'redo'; total: number }
   | { kind: 'crop'; rect: Rect }
   | { kind: 'crop-applied'; w: number; h: number }
-  | { kind: 'crop-cancelled' };
+  | { kind: 'crop-cancelled' }
+  | { kind: 'cut'; band: Band }
+  | { kind: 'cut-applied'; band: Band; imageHeight: number }
+  | { kind: 'cut-removed'; band: Band; imageHeight: number }
+  | { kind: 'cut-cancelled' }
+  | { kind: 'cut-refused' };
 
 function count(n: number): string {
   return `${n} annotation${n === 1 ? '' : 's'}`;
@@ -420,5 +440,15 @@ export function announce(m: Mutation): string {
       return `Cropped to ${m.w} by ${m.h} pixels.`;
     case 'crop-cancelled':
       return 'Crop cancelled.';
+    case 'cut':
+      return `Cut band ${Math.round(m.band.h)} pixels tall at ${Math.round(m.band.y)}.`;
+    case 'cut-applied':
+      return `Cut ${Math.round(m.band.h)} pixels. Image ${Math.round(m.imageHeight)} pixels tall.`;
+    case 'cut-removed':
+      return `Put back ${Math.round(m.band.h)} pixels. Image ${Math.round(m.imageHeight)} pixels tall.`;
+    case 'cut-cancelled':
+      return 'Cut cancelled.';
+    case 'cut-refused':
+      return 'A cut cannot take the whole picture.';
   }
 }

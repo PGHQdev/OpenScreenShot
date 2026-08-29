@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { historyStep, type HistoryEntry } from '../../src/editor/history';
 import type { Annotation } from '../../src/editor/annotations';
+import type { Band } from '../../src/editor/bands';
 
 /** Distinct one-annotation lists, so a step's result names itself. */
 function list(tag: string): Annotation[] {
@@ -19,9 +20,9 @@ function list(tag: string): Annotation[] {
   ];
 }
 
-/** One timeline entry: a named list, and the selection that went with it. */
-function entry(tag: string, selectedIds: string[] = []): HistoryEntry {
-  return { annotations: list(tag), selectedIds };
+/** One timeline entry: a named list, the cuts, and the selection with them. */
+function entry(tag: string, selectedIds: string[] = [], bands: Band[] = []): HistoryEntry {
+  return { annotations: list(tag), bands, selectedIds };
 }
 
 const ids = (e: HistoryEntry) => e.annotations.map((a) => a.id).join(',');
@@ -123,5 +124,23 @@ describe('historyStep', () => {
     const redone = historyStep(past, future, entry('c'), 1)!;
     expect(redone.past).not.toBe(past);
     expect(redone.future).not.toBe(future);
+  });
+});
+
+describe('cut bands on the timeline', () => {
+  it('undo shows the bands that went with the list it shows', () => {
+    // The cut is the newest edit: the current document has the band, the entry
+    // behind it does not, and undoing has to put the strip back.
+    const before = entry('a', [], []);
+    const current = entry('a', [], [{ y: 100, h: 40 }]);
+    const step = historyStep([before], [], current, -1)!;
+    expect(step.entry.bands).toEqual([]);
+    expect(step.future[0].bands).toEqual([{ y: 100, h: 40 }]);
+  });
+
+  it('redo hands the cut back', () => {
+    const cut = entry('a', [], [{ y: 100, h: 40 }]);
+    const step = historyStep([], [cut], entry('a'), 1)!;
+    expect(step.entry.bands).toEqual([{ y: 100, h: 40 }]);
   });
 });

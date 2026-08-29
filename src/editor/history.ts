@@ -18,10 +18,17 @@
  * mutated its inputs would corrupt the state it was asked to describe.
  */
 import type { Annotation } from './annotations';
+import type { Band } from './bands';
 
 /** One point on the timeline: what was on the canvas, and what was selected. */
 export interface HistoryEntry {
   annotations: Annotation[];
+  /**
+   * The cut bands that went with that list. A cut is an edit to the document
+   * like any other, so it is undone like any other — and an undo across one
+   * has to put the removed strip back with the annotations that were on it.
+   */
+  bands: Band[];
   selectedIds: string[];
 }
 

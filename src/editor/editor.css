@@ -543,8 +543,9 @@ body {
   border-right: 1px solid var(--border);
   background: var(--surface-1);
   flex: 0 0 auto;
-  /* 12 tools at 36px plus gaps is ~492px tall (see task-16 report) — taller
-     than .workspace can be at 200% zoom. Scrolls instead of clipping; the
+  /* 13 tools at 36px, plus the gaps and three dividers, is ~560px tall
+     (12 was ~492px — see task-16 report) — taller than .workspace can be at
+     200% zoom. Scrolls instead of clipping; the
      parent's overflow: hidden only bounds this box, it does not stop this
      box scrolling its own content. */
   overflow-y: auto;

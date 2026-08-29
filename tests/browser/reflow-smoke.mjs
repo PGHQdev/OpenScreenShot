@@ -6,7 +6,7 @@
 // keyboard focus trap while scrolled, and no surface that is meant to reflow
 // grows a horizontal scrollbar.
 // Run with: npm run build && npm run smoke:reflow
-import { createReadStream } from 'node:fs';
+import { createReadStream, readFileSync } from 'node:fs';
 import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
@@ -301,13 +301,21 @@ async function testEditor(browser, base, messages) {
     `toolbar does not need to scroll at 1280px (${wideEditor.toolbarScrollH}px content in ${wideEditor.toolbarClientH}px box)`,
   );
 
-  step('EDITOR — 320px width: no horizontal overflow, all 12 tools present');
+  step('EDITOR — 320px width: no horizontal overflow, every tool present');
   await page.setViewport({ width: 320, height: 800 });
   await new Promise((r) => setTimeout(r, 150));
   const overflow320 = await noHorizontalOverflow(page, 320);
   assert(overflow320.ok, `document.scrollWidth ${overflow320.scrollWidth} <= 320`);
+  // Counted out of TOOL_LIST rather than written down here, so adding a tool
+  // does not turn this into a check of a number nobody updated.
+  const expectedTools = (
+    readFileSync(join(ROOT, 'src/editor/tools.ts'), 'utf8').match(/\{ id: '[a-z]+', label: /g) ?? []
+  ).length;
   const toolCount = await page.$$eval('.tool-btn', (els) => els.length);
-  assert(toolCount === 12, `toolbar renders all ${toolCount} tools at 320px width`);
+  assert(
+    expectedTools > 0 && toolCount === expectedTools,
+    `toolbar renders all ${expectedTools} tools at 320px width (${toolCount} found)`,
+  );
   const stylebarWraps = await page.$eval('.stylebar', (el) => el.scrollHeight > 40);
   assert(stylebarWraps, 'stylebar wraps to more than one row rather than clipping horizontally');
 
@@ -331,7 +339,7 @@ async function testEditor(browser, base, messages) {
     const box = toolbar.getBoundingClientRect();
     return r.top >= box.top - 1 && r.bottom <= box.bottom + 1;
   });
-  assert(lastToolReachable, 'the last tool (Crop) scrolls into view inside the toolbar');
+  assert(lastToolReachable, 'the last tool in the rail scrolls into view inside the toolbar');
 
   step('EDITOR — export modal scrolls and keeps its focus trap while scrolled');
   await chord(page, ['Meta'], 's');

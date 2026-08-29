@@ -119,10 +119,11 @@ describe('canvasIntent', () => {
     expect(canvasIntent({ key: ' ' }, 'idle')).toBeNull();
   });
 
-  it('places on Enter, and applies the crop instead when one is open', () => {
+  it('places on Enter, and applies the crop or the cut instead when one is open', () => {
     expect(canvasIntent({ key: 'Enter' }, 'idle')).toEqual({ kind: 'place' });
     expect(canvasIntent({ key: 'Enter' }, 'selection')).toEqual({ kind: 'place' });
     expect(canvasIntent({ key: 'Enter' }, 'crop')).toEqual({ kind: 'apply-crop' });
+    expect(canvasIntent({ key: 'Enter' }, 'cut')).toEqual({ kind: 'apply-cut' });
   });
 
   it('nudges a selection one pixel, and ten with Shift', () => {
@@ -167,6 +168,28 @@ describe('canvasIntent', () => {
   it('ignores the arrows with nothing selected and no crop', () => {
     expect(canvasIntent({ key: 'ArrowRight' }, 'idle')).toBeNull();
     expect(canvasIntent({ key: 'ArrowDown', altKey: true }, 'idle')).toBeNull();
+  });
+
+  it('sends the vertical arrows to the cut band while one is drafted', () => {
+    expect(canvasIntent({ key: 'ArrowDown' }, 'cut')).toEqual({ kind: 'cut-move', dy: STEP_FINE });
+    expect(canvasIntent({ key: 'ArrowUp', shiftKey: true }, 'cut')).toEqual({
+      kind: 'cut-move',
+      dy: -STEP_COARSE,
+    });
+    expect(canvasIntent({ key: 'ArrowDown', altKey: true }, 'cut')).toEqual({
+      kind: 'cut-resize',
+      dy: STEP_FINE,
+    });
+  });
+
+  it('leaves the horizontal arrows unclaimed in cut mode — a band has no width', () => {
+    expect(canvasIntent({ key: 'ArrowLeft' }, 'cut')).toBeNull();
+    expect(canvasIntent({ key: 'ArrowRight', altKey: true }, 'cut')).toBeNull();
+  });
+
+  it('still cycles layers and passes Ctrl chords through in cut mode', () => {
+    expect(canvasIntent({ key: ']' }, 'cut')).toEqual({ kind: 'cycle', dir: 1, extend: false });
+    expect(canvasIntent({ key: 'z', metaKey: true }, 'cut')).toBeNull();
   });
 });
 
@@ -886,6 +909,23 @@ describe('announce', () => {
       'Cropped to 800 by 600 pixels.',
     );
     expect(announce({ kind: 'crop-cancelled' })).toBe('Crop cancelled.');
+  });
+
+  it('reads a drafted band out by its height and where it sits', () => {
+    expect(announce({ kind: 'cut', band: { y: 300.4, h: 140.6 } })).toBe(
+      'Cut band 141 pixels tall at 300.',
+    );
+  });
+
+  it('reports what a cut took and what the picture is now', () => {
+    expect(announce({ kind: 'cut-applied', band: { y: 300, h: 200 }, imageHeight: 400 })).toBe(
+      'Cut 200 pixels. Image 400 pixels tall.',
+    );
+    expect(announce({ kind: 'cut-removed', band: { y: 300, h: 200 }, imageHeight: 600 })).toBe(
+      'Put back 200 pixels. Image 600 pixels tall.',
+    );
+    expect(announce({ kind: 'cut-cancelled' })).toBe('Cut cancelled.');
+    expect(announce({ kind: 'cut-refused' })).toBe('A cut cannot take the whole picture.');
   });
 
   it('rounds the fractional coordinates a scaled resize leaves behind', () => {

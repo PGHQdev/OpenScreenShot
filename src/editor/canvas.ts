@@ -1,12 +1,15 @@
 import {
   type Annotation,
+  bbox,
   type BlurCache,
   createBlurCache,
   createSpotlightLayerCache,
   drawAnnotation,
   drawCropPreview,
+  drawCutPreview,
   drawGroupSelection,
   drawMarquee,
+  drawSeam,
   drawSelection,
   drawSpotlightLayer,
   pruneBlurCache,
@@ -15,6 +18,17 @@ import {
   type SpotlightLayerCache,
   unionBBox,
 } from './annotations';
+import {
+  composedHeight,
+  cutAbove,
+  inBand,
+  normalizeBand,
+  seamPositions,
+  segments,
+  toComposed,
+  toSource,
+  type Band,
+} from './bands';
 import { centerView, clampZoom, fitZoom } from './viewport';
 import { clipToFrame, DEFAULT_FRAME, frameMetrics, paintFrame, type FrameOptions } from './frame';
 import { rgbToHex } from './eyedropper';
@@ -57,6 +71,20 @@ export class CanvasController {
   selectedIds: string[] = [];
   /** A transient crop rectangle (tool action), rendered as a dim preview. */
   cropRect: Rect | null = null;
+  /**
+   * Cut bands, in source image pixels. Applied wherever the picture is drawn —
+   * the live canvas, the export and the crop snapshot — so the band list is
+   * the whole of a cut and the capture itself is never touched.
+   */
+  bands: Band[] = [];
+  /**
+   * A band being drafted (a drag, or a keyboard placement), also in source
+   * pixels and not yet in `bands`. It is previewed as a dim strip rather than
+   * closed up: a drag reads the pointer through toImage, and collapsing the
+   * band under the pointer mid-drag would feed the band's own height back into
+   * the point that sets it.
+   */
+  cutDraft: Band | null = null;
   /** The Select tool's in-progress marquee, in image pixels. */
   marquee: Rect | null = null;
   /**
@@ -176,9 +204,33 @@ export class CanvasController {
     this.render();
   }
 
+  setBands(b: Band[]): void {
+    this.bands = b;
+    this.render();
+  }
+
+  setCutDraft(b: Band | null): void {
+    this.cutDraft = b;
+    this.render();
+  }
+
   setFrame(f: FrameOptions): void {
     this.frame = f;
     this.render();
+  }
+
+  /**
+   * The height of the picture that is drawn and exported: the source height
+   * less every cut row.
+   *
+   * Floored at one row. Nothing in the editor can cut the last row away (see
+   * canCut), but a hand-edited stored draft could, and a zero-height canvas
+   * makes toDataURL return "data:," with no error at all — the same silent
+   * failure the frame's padding cap exists to avoid.
+   */
+  composedImageHeight(): number {
+    if (!this.image) return 0;
+    return Math.max(1, composedHeight(this.bands, this.image.naturalHeight));
   }
 
   resize(): void {
@@ -194,7 +246,7 @@ export class CanvasController {
     if (!this.image) return;
     const rect = this.canvas.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) return;
-    const m = frameMetrics(this.frame, this.image.naturalWidth, this.image.naturalHeight);
+    const m = frameMetrics(this.frame, this.image.naturalWidth, this.composedImageHeight());
     const zoom = fitZoom(rect.width, rect.height, m.outerW, m.outerH);
     this.view = centerView(rect.width, rect.height, m.outerW, m.outerH, m.pad, zoom);
     this.render();
@@ -220,7 +272,7 @@ export class CanvasController {
   resetZoom(): void {
     if (!this.image) return;
     const rect = this.canvas.getBoundingClientRect();
-    const m = frameMetrics(this.frame, this.image.naturalWidth, this.image.naturalHeight);
+    const m = frameMetrics(this.frame, this.image.naturalWidth, this.composedImageHeight());
     this.view = centerView(rect.width, rect.height, m.outerW, m.outerH, m.pad, 1);
     this.render();
     this.onViewChange?.();
@@ -233,14 +285,33 @@ export class CanvasController {
     this.onViewChange?.();
   }
 
-  /** Convert screen (CSS px) to image (native px) coordinates. */
+  /**
+   * Convert screen (CSS px) to source image (native px) coordinates — the
+   * space annotations are stored in. With bands cut, a point below a seam
+   * resolves to the source row it is showing, so every hit test, drag and
+   * draft keeps working in one coordinate space whether or not anything has
+   * been cut.
+   */
   toImage(sx: number, sy: number): Point {
+    const p = this.toComposedPoint(sx, sy);
+    return { x: p.x, y: toSource(this.bands, p.y) };
+  }
+
+  /**
+   * Convert screen (CSS px) to composed image coordinates — the picture as it
+   * is actually drawn, cuts closed up. Crop works in this space: its preview
+   * is drawn over the composed picture and it rasterises from it.
+   */
+  toComposedPoint(sx: number, sy: number): Point {
     return { x: (sx - this.view.panX) / this.view.zoom, y: (sy - this.view.panY) / this.view.zoom };
   }
 
-  /** Convert image (native px) to screen (CSS px) coordinates. */
+  /** Convert source image (native px) to screen (CSS px) coordinates. */
   toScreen(ix: number, iy: number): Point {
-    return { x: ix * this.view.zoom + this.view.panX, y: iy * this.view.zoom + this.view.panY };
+    return {
+      x: ix * this.view.zoom + this.view.panX,
+      y: toComposed(this.bands, iy) * this.view.zoom + this.view.panY,
+    };
   }
 
   /**
@@ -268,9 +339,10 @@ export class CanvasController {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, rect.width, rect.height);
     if (!img) return;
-    const m = frameMetrics(this.frame, img.naturalWidth, img.naturalHeight);
+    const ih = this.composedImageHeight();
+    const m = frameMetrics(this.frame, img.naturalWidth, ih);
     const sw = img.naturalWidth * this.view.zoom;
-    const sh = img.naturalHeight * this.view.zoom;
+    const sh = ih * this.view.zoom;
 
     if (this.frame.enabled) {
       // A transparent background still needs the checkerboard, so alpha reads
@@ -320,28 +392,25 @@ export class CanvasController {
     ctx.scale(this.view.zoom, this.view.zoom);
     if (this.frame.enabled) clipToFrame(ctx, m);
     ctx.imageSmoothingEnabled = this.view.zoom <= 1;
-    ctx.drawImage(img, 0, 0);
-    // The spotlight dim layer (committed + draft) sits under the other annotations.
-    const spotlights = collectSpotlights(this.annotations, this.draft);
-    ctx.save();
-    drawSpotlightLayer(ctx, spotlights, img.naturalWidth, img.naturalHeight, this.spotlightLayer);
-    ctx.restore();
-    for (const a of this.annotations) {
-      ctx.save();
-      drawAnnotation(ctx, a, img, this.blurCache);
-      ctx.restore();
-    }
-    if (this.draft) {
-      ctx.save();
-      drawAnnotation(ctx, this.draft, img, this.blurCache);
-      ctx.restore();
-    }
+    this.paintPicture(ctx, img, this.draft);
     if (this.cropRect) {
       ctx.save();
-      drawCropPreview(ctx, this.cropRect, img.naturalWidth, img.naturalHeight);
+      drawCropPreview(ctx, this.cropRect, img.naturalWidth, ih);
+      ctx.restore();
+    }
+    if (this.cutDraft) {
+      const d = normalizeBand(this.cutDraft);
+      const top = toComposed(this.bands, d.y);
+      ctx.save();
+      drawCutPreview(ctx, top, toComposed(this.bands, d.y + d.h) - top, img.naturalWidth);
       ctx.restore();
     }
     ctx.restore();
+    // The seam each cut left, in screen space so it stays a hairline at any
+    // zoom, and under the selection chrome the same way the frame's is.
+    for (const at of seamPositions(this.bands)) {
+      drawSeam(ctx, this.view.panY + at * this.view.zoom, this.view.panX, this.view.panX + sw);
+    }
     // Hairline frame in screen space, drawn under the selection handles.
     if (!this.frame.enabled) {
       ctx.save();
@@ -367,7 +436,7 @@ export class CanvasController {
   composeFinal(): HTMLCanvasElement {
     const img = this.image;
     if (!img) throw new Error('No image to export');
-    const m = frameMetrics(this.frame, img.naturalWidth, img.naturalHeight);
+    const m = frameMetrics(this.frame, img.naturalWidth, this.composedImageHeight());
     const canvas = document.createElement('canvas');
     canvas.width = m.outerW;
     canvas.height = m.outerH;
@@ -378,31 +447,107 @@ export class CanvasController {
     paintFrame(ctx, m, this.frame.background, 1);
     ctx.save();
     clipToFrame(ctx, m);
-    ctx.drawImage(img, 0, 0);
-    ctx.save();
-    drawSpotlightLayer(
-      ctx,
-      collectSpotlights(this.annotations, null),
-      img.naturalWidth,
-      img.naturalHeight,
-      this.spotlightLayer,
-    );
-    ctx.restore();
-    for (const a of this.annotations) {
-      ctx.save();
-      drawAnnotation(ctx, a, img, this.blurCache);
-      ctx.restore();
-    }
+    this.paintPicture(ctx, img, null);
     ctx.restore();
     return canvas;
   }
-}
 
-/** All spotlights to dim with, including an in-progress spotlight draft. */
-function collectSpotlights(anns: Annotation[], draft: Annotation | null): SpotlightAnnotation[] {
-  const out = anns.filter((a): a is SpotlightAnnotation => a.type === 'spotlight');
-  if (draft && draft.type === 'spotlight') out.push(draft);
-  return out;
+  /**
+   * The screenshot with every cut closed up and nothing drawn on it, at 1:1.
+   * Crop rasterises from this rather than from the capture, so a crop takes
+   * the picture the user is looking at and bakes the cuts into it.
+   */
+  composeImage(): HTMLCanvasElement {
+    const img = this.image;
+    if (!img) throw new Error('No image to compose');
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = this.composedImageHeight();
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas 2D context unavailable');
+    this.drawImageCut(ctx, img);
+    return canvas;
+  }
+
+  /**
+   * The picture itself: the image with its cuts closed up, then the spotlight
+   * dim layer, then every annotation. render() and composeFinal() both call
+   * it, each under its own transform, so what the canvas shows and what the
+   * export holds cannot drift apart.
+   */
+  private paintPicture(
+    ctx: CanvasRenderingContext2D,
+    img: HTMLImageElement,
+    draft: Annotation | null,
+  ): void {
+    this.drawImageCut(ctx, img);
+    const spotlights = this.composedSpotlights(draft);
+    ctx.save();
+    drawSpotlightLayer(
+      ctx,
+      spotlights,
+      img.naturalWidth,
+      this.composedImageHeight(),
+      this.spotlightLayer,
+    );
+    ctx.restore();
+    for (const a of this.annotations) this.paintAnnotation(ctx, a, img);
+    if (draft) this.paintAnnotation(ctx, draft, img);
+  }
+
+  /** The image drawn a kept run at a time, each pulled up by the cuts above it. */
+  private drawImageCut(ctx: CanvasRenderingContext2D, img: HTMLImageElement): void {
+    const w = img.naturalWidth;
+    for (const s of segments(this.bands, img.naturalHeight)) {
+      ctx.drawImage(img, 0, s.sy, w, s.h, 0, s.dy, w, s.h);
+    }
+  }
+
+  /**
+   * How far a cut pulls an annotation up, or null when it sits on rows that
+   * were removed.
+   *
+   * The anchor is the top edge, and the shift is rigid: a mark keeps its shape
+   * and stays glued to the content its top edge is on. An annotation that
+   * spans a seam therefore overhangs by the height of the cut it crosses,
+   * which is the trade for never distorting a shape. One whose top edge is on
+   * a removed row is not drawn at all — it marks pixels that are not in the
+   * picture — but it stays in the document, so deleting the band brings it
+   * back with everything else.
+   */
+  private annotationOffset(a: Annotation): number | null {
+    if (this.bands.length === 0) return 0;
+    const top = bbox(a).y;
+    return inBand(this.bands, top) ? null : cutAbove(this.bands, top);
+  }
+
+  private paintAnnotation(
+    ctx: CanvasRenderingContext2D,
+    a: Annotation,
+    img: HTMLImageElement,
+  ): void {
+    const dy = this.annotationOffset(a);
+    if (dy === null) return;
+    ctx.save();
+    // The blur tile is still sampled from the source image at the annotation's
+    // own coordinates; only where it lands moves.
+    ctx.translate(0, -dy);
+    drawAnnotation(ctx, a, img, this.blurCache);
+    ctx.restore();
+  }
+
+  /** Every spotlight to dim with, moved into composed space, draft included. */
+  private composedSpotlights(draft: Annotation | null): SpotlightAnnotation[] {
+    const out: SpotlightAnnotation[] = [];
+    const all = draft ? [...this.annotations, draft] : this.annotations;
+    for (const a of all) {
+      if (a.type !== 'spotlight') continue;
+      const dy = this.annotationOffset(a);
+      if (dy === null) continue;
+      out.push(dy === 0 ? a : { ...a, y: a.y - dy });
+    }
+    return out;
+  }
 }
 
 function drawCheckerboard(
