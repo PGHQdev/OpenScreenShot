@@ -143,6 +143,16 @@
     0 0 0 4px var(--border-focus);
 }
 
+/*
+ * A reserved slot for a recent colour the session hasn't picked yet
+ * (editor App.tsx pads .recentColors out to MAX_RECENT_COLORS with these) —
+ * present in the layout so the swatch row's width is fixed, invisible so it
+ * reads as empty rather than as an inert swatch.
+ */
+.swatch-empty {
+  visibility: hidden;
+}
+
 .swatch-transparent {
   background:
     linear-gradient(45deg, #d9d9de 25%, transparent 25%) 0 0 / 8px 8px,

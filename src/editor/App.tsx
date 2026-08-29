@@ -4,7 +4,7 @@ import { TOOL_LIST, type Tool } from './tools';
 import { IMAGE_FORMATS, type ImageFormat } from './export';
 import { clampPdfMargin, MAX_PDF_MARGIN_MM, MIN_PDF_MARGIN_MM, type PdfOptions } from './pdf';
 import { STROKE_WIDTHS, type BlurMode, type SpotlightShape } from './annotations';
-import { COLOR_PALETTE, colorName } from './palette';
+import { COLOR_PALETTE, colorName, MAX_RECENT_COLORS } from './palette';
 import { arrowNav, getFocusable, syncRovingTabIndex, trapFocus } from './focus';
 import { pickImageFile } from './import-image';
 import { BrandMark } from '../shared/BrandMark';
@@ -32,7 +32,7 @@ import { getSettings, setSettings } from '../shared/storage';
 import type { LastCapture } from '../shared/types';
 import { ZoomMenu } from './ZoomMenu';
 import { BeautifyMenu } from './BeautifyMenu';
-import { stylebarEmpty, stylebarFields } from './stylebar';
+import { stylebarFields } from './stylebar';
 import { ShortcutSheet } from './ShortcutSheet';
 import { hasScreenPicker, openScreenPicker } from './eyedropper';
 import {
@@ -401,14 +401,16 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
     ed.recentColors.length,
   ]);
 
-  if (stylebarEmpty(fields)) return null;
-
   function pickFromScreen() {
     void openScreenPicker(window).then((hex) => {
       if (hex) ed.setStyleColor(hex);
     });
   }
 
+  // Select and Crop carry no fields (stylebar.ts), so this renders an empty
+  // toolbar for them rather than unmounting: .stylebar's min-height (see
+  // editor.css) is what actually stops the canvas moving on a tool swap —
+  // this is what keeps that promise true regardless of which fields apply.
   return (
     <div
       class="stylebar"
@@ -444,6 +446,17 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
                 aria-pressed={ed.style.color === c}
                 onClick={() => ed.setStyleColor(c)}
               />
+            ))}
+            {/*
+              Reserves room for the recent colours this session hasn't picked
+              yet, so the group's width is set by MAX_RECENT_COLORS, not by
+              ed.recentColors.length — the one thing in the style bar that
+              grows over a session. Without this, each new recent colour
+              nudges every group after Color to the right, the same reflow
+              class of bug .btn-fixed exists to stop (editor.css).
+            */}
+            {Array.from({ length: MAX_RECENT_COLORS - ed.recentColors.length }, (_, i) => (
+              <span key={`recent-empty-${i}`} class="swatch swatch-empty" aria-hidden="true" />
             ))}
             <label class="swatch swatch-custom" title="Custom color">
               <input

@@ -46,6 +46,13 @@ body {
   border-bottom: 1px solid var(--border);
   background: var(--surface-1);
   flex: 0 0 auto;
+  /* App.tsx renders this bar for every tool, including Select and Crop
+     (which carry no fields and so render it empty) — min-height is what
+     actually keeps the canvas still on a V -> R -> V loop, matching the
+     28px swatch row's own height so a field-bearing tool draws no taller
+     than an empty one. See the Copy button's min-width for the same fixed-
+     box pattern against horizontal reflow (.btn-fixed, below). */
+  min-height: 40px;
 }
 .stylebar-group {
   display: flex;
@@ -109,6 +116,23 @@ body {
 }
 .stylebar-range {
   width: 140px;
+}
+
+/*
+ * .segmented-btn's shared 32px height (ui.css/editor.css base rule, also
+ * used by the export modal's PDF page-size picker) is 4px taller than every
+ * other stylebar control (the 28px swatches and width buttons) — enough to
+ * grow .stylebar's own height on the Shape/Redaction tools alone, defeating
+ * the min-height above (every box here is border-box, so .segmented's own
+ * 1px top/bottom wrapper border adds on top of its button's height rather
+ * than being absorbed by it). 24px plus that 2px lands at 26px, at the
+ * Stroke group's own height (.width-btn, the tallest of the other groups) —
+ * comfortably under the 40px floor .stylebar's min-height sets, so every
+ * tool's stylebar renders at exactly that floor. Scoped to the style bar so
+ * the modal's picker keeps its own 32px target.
+ */
+.stylebar .segmented-btn {
+  height: 24px;
 }
 
 /* ---- Top bar ---- */
