@@ -428,7 +428,14 @@ async function handleStart(settings: RecordingSettings, continueSessionId?: stri
         segmentId: segment.id,
         settings: effective,
       })
-      .catch(() => {});
+      .catch(() => {
+        // Nothing downstream can notice this. The engine was never told to
+        // begin, so no ENGINE_ERROR is coming; the state, the badge and the
+        // control bar all keep claiming a recording, and the only thing that
+        // ever moves is the timeout releasing `startPending`. Left alone this
+        // records for as long as the user lets it and produces nothing.
+        void reportFailure('engine-unreachable');
+      });
     // startPending stays claimed here — resolved by ENGINE_STARTED,
     // ENGINE_ERROR, or the timeout guard in armStartTimeout().
   } catch (err) {
@@ -523,7 +530,9 @@ async function handleStop(): Promise<void> {
   const state = await getRecState();
   if (!state) return;
   await healOverlay(state.tabId);
-  chrome.runtime.sendMessage({ type: 'OFFSCREEN_STOP', target: 'offscreen' }).catch(() => {});
+  chrome.runtime
+    .sendMessage({ type: 'OFFSCREEN_STOP', target: 'offscreen' })
+    .catch(() => reportFailure('control-unreachable'));
 }
 
 async function handlePause(): Promise<void> {
@@ -531,7 +540,9 @@ async function handlePause(): Promise<void> {
   const state = await getRecState();
   if (!state || state.pausedAt) return;
   await setRecState({ sessionId: state.sessionId, pausedAt: Date.now() });
-  chrome.runtime.sendMessage({ type: 'OFFSCREEN_PAUSE', target: 'offscreen' }).catch(() => {});
+  chrome.runtime
+    .sendMessage({ type: 'OFFSCREEN_PAUSE', target: 'offscreen' })
+    .catch(() => reportFailure('control-unreachable'));
 }
 
 async function handleResume(): Promise<void> {
@@ -543,14 +554,18 @@ async function handleResume(): Promise<void> {
     pausedAccumMs: state.pausedAccumMs + (Date.now() - state.pausedAt),
     pausedAt: 0,
   });
-  chrome.runtime.sendMessage({ type: 'OFFSCREEN_RESUME', target: 'offscreen' }).catch(() => {});
+  chrome.runtime
+    .sendMessage({ type: 'OFFSCREEN_RESUME', target: 'offscreen' })
+    .catch(() => reportFailure('control-unreachable'));
 }
 
 async function handleCancel(): Promise<void> {
   await waitForStartPending();
   const state = await getRecState();
   if (!state) return;
-  chrome.runtime.sendMessage({ type: 'OFFSCREEN_CANCEL', target: 'offscreen' }).catch(() => {});
+  chrome.runtime
+    .sendMessage({ type: 'OFFSCREEN_CANCEL', target: 'offscreen' })
+    .catch(() => reportFailure('control-unreachable'));
 }
 
 /**
@@ -644,7 +659,14 @@ async function handleOverlayLost(sessionId: string): Promise<void> {
   if (!state || state.sessionId !== sessionId) return;
   await setRecState({ sessionId, overlayLost: true });
   await showRecBadge(true);
-  await reportFailure('overlay-lost');
+  // The start already said this if the bar never went up: the engine's
+  // watchdog reports a bar that stopped sending 2.5-3.5s later, which for a
+  // mount that was refused is the same absent bar reported a second time.
+  // 'overlay-blocked' is the more accurate of the two sentences and arrives
+  // first, so it keeps the slot; the state and badge above still flip either
+  // way, because those are state and not a message.
+  const parked = await pendingFailure().catch(() => null);
+  if (parked?.code !== 'overlay-blocked') await reportFailure('overlay-lost');
 }
 
 async function handleOverlayHealed(sessionId: string): Promise<void> {
@@ -656,7 +678,7 @@ async function handleOverlayHealed(sessionId: string): Promise<void> {
   // a navigation that heals in a second must not leave the next popup open
   // reporting a problem that has already fixed itself.
   const parked = await pendingFailure().catch(() => null);
-  if (parked?.code === 'overlay-lost') {
+  if (parked?.code === 'overlay-lost' || parked?.code === 'overlay-blocked') {
     await chrome.storage.session.remove(REC_FAILURE_KEY).catch(() => {});
   }
 }
@@ -691,7 +713,10 @@ async function handleEngineStopped(sessionId: string, canceled: boolean): Promis
   const state = await getRecState();
   if (state) await unmountOverlay(state.tabId);
   await clearRecState();
-  await clearRecBadge();
+  // Not clearRecBadge: a failure parked during this recording (an overlay
+  // lost, say) still has its '!' owed to it, and the recording ending is not
+  // the user having read it.
+  await restoreRecBadge();
   await closeOffscreenSafe();
   if (!canceled) {
     await chrome.tabs.create({ url: `${RECORDER_URL}?session=${sessionId}` });

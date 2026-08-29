@@ -56,6 +56,16 @@
  *                 every --danger/--warning tint this product paints under
  *                 it (worst pair 5.10:1 — tests/unit/token-contrast.test.ts
  *                 asserts the tinted grounds, not just the flat surfaces).
+ *                 Despite the name it is the ink for --warning grounds too;
+ *                 there is no --warning-ink, and adding one would be a second
+ *                 token for a hue a reader cannot tell apart from this at
+ *                 body size.
+ *   --warning     the amber caution mark: the tints under warning chips and
+ *                 the recorder's Recovered pill, and the degraded REC badge.
+ *                 Non-text, and more strictly so than --danger — it reaches
+ *                 only 1.80:1 on its own 16% tint in light, which is what the
+ *                 Recovered pill used to paint. Text on a --warning ground
+ *                 takes --danger-ink.
  *   --border      control boundaries; >= 3:1 on --surface-1..--surface-3.
  *   --rule        a decorative hairline. Never a control's edge, never the only
  *                 signal that a boundary exists.

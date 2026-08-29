@@ -370,10 +370,11 @@ export function App() {
   }
 
   // The setup page is the only fix for a refused grant or a blocked device,
-  // so a handoff that does not happen has to be said out loud.
+  // so a handoff that does not happen has to be said out loud. No worker is
+  // involved in opening a tab, so this is not `couldNotReach`.
   function goSetup(from?: 'record') {
     void openSetupPage(from).then((ok) => {
-      if (!ok) pushToast(t('couldNotReach'), 'error');
+      if (!ok) pushToast(t('popupOpenFailed'), 'error');
     });
   }
 
@@ -543,7 +544,7 @@ export function App() {
       })
       .then(
         () => window.close(),
-        () => pushToast(t('couldNotReach'), 'error'),
+        () => pushToast(t('popupOpenFailed'), 'error'),
       );
   }
 
@@ -821,7 +822,7 @@ export function App() {
               class="link-btn"
               onClick={() => {
                 void openEditor().then((ok) => {
-                  if (!ok) pushToast(t('couldNotReach'), 'error');
+                  if (!ok) pushToast(t('popupOpenFailed'), 'error');
                 });
               }}
               disabled={!hasStash}

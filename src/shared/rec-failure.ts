@@ -42,6 +42,14 @@ export type RecFailureCode =
   | 'cleanup-failed'
   /** The engine could not open the tab stream or build a recorder. */
   | 'engine-failed'
+  /**
+   * `OFFSCREEN_START` never reached the engine. The worst shape a recording
+   * failure takes: the state, the badge and the control bar all say a
+   * recording is running, no `ENGINE_ERROR` can arrive because the engine was
+   * never told to begin, and the user records for as long as they like and
+   * gets nothing.
+   */
+  | 'engine-unreachable'
   /** `REC_QUERY` threw, so the reported recording state is not trustworthy. */
   | 'query-failed'
   /** The in-page control bar could not be injected on this origin. */
@@ -76,6 +84,7 @@ const MESSAGE_KEYS: Record<RecFailureCode, string> = {
   'start-failed': 'recFailStartFailed',
   'cleanup-failed': 'recFailCleanup',
   'engine-failed': 'recFailEngine',
+  'engine-unreachable': 'recFailEngineUnreachable',
   'query-failed': 'recFailQuery',
   'overlay-blocked': 'recFailOverlayBlocked',
   'overlay-lost': 'recFailOverlayLost',

@@ -39,16 +39,16 @@ export interface ExportProgress {
  * What an export produced. `blob` is null only for a cancel — a partial file
  * is not what was asked for.
  *
- * `skipped` counts the segments the render could not use in full: a tab video
- * that would not play is left out of the file entirely, and a recorder-#2
- * element that would not play costs that segment its mic and its bubble.
- * Either way the file is shorter or quieter than the timeline says, so the
- * caller has to be able to tell the user rather than handing them a file that
- * silently lost part of the recording.
+ * `skippedParts` counts *parts* the render could not use, not segments: a tab
+ * video that would not play is left out of the file entirely, and a
+ * recorder-#2 element that would not play costs that segment its mic and its
+ * bubble, so one segment can contribute two. Either way the file is shorter
+ * or quieter than the timeline says, which is what the caller tells the user;
+ * nothing reads the magnitude, only whether it is above zero.
  */
 export interface ExportResult {
   blob: Blob | null;
-  skipped: number;
+  skippedParts: number;
 }
 
 /**
@@ -194,7 +194,7 @@ export async function exportVideo(
   onProgress: (p: ExportProgress) => void,
   signal: AbortSignal,
 ): Promise<ExportResult> {
-  if (loaded.segments.length === 0) return { blob: null, skipped: 0 };
+  if (loaded.segments.length === 0) return { blob: null, skippedParts: 0 };
 
   const timings = exportTimings(loaded, draft);
   const total = totalDuration(timings);
@@ -347,7 +347,7 @@ export async function exportVideo(
     });
   }
 
-  let skipped = 0;
+  let skippedParts = 0;
   try {
     await Promise.all([
       ...videos.map(prepareVideo),
@@ -357,7 +357,7 @@ export async function exportVideo(
     for (let i = 0; i < videos.length && !signal.aborted; i++) {
       if (!isPlayable(videos[i], timings[i])) {
         console.warn(`[OpenScreenShot] segment ${i} has no playable video; skipping it`);
-        skipped += 1;
+        skippedParts += 1;
         continue;
       }
       await enter(i);
@@ -387,12 +387,12 @@ export async function exportVideo(
                 `[OpenScreenShot] segment ${i} mic/webcam failed to play; exporting without it`,
                 err,
               );
-              skipped += 1;
+              skippedParts += 1;
             })
           : Promise.resolve(),
       ]);
       if (!tabPlaying) {
-        skipped += 1;
+        skippedParts += 1;
         webcams[i]?.pause();
         continue;
       }
@@ -419,9 +419,9 @@ export async function exportVideo(
 
   // A cancel discards the file: a half-length recording is not what was asked
   // for, and keeping it would look like the export finished early.
-  if (signal.aborted) return { blob: null, skipped };
+  if (signal.aborted) return { blob: null, skippedParts };
   if (chunks.length === 0) throw new Error('export produced no data');
 
   onProgress({ fraction: 1 });
-  return { blob: new Blob(chunks, { type: mime || 'video/webm' }), skipped };
+  return { blob: new Blob(chunks, { type: mime || 'video/webm' }), skippedParts };
 }

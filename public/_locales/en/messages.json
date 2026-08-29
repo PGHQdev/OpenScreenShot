@@ -333,6 +333,14 @@
     "message": "Recording stopped before it began \u2014 the tab couldn\u2019t be captured. Try again.",
     "description": "Popup: error toast when the offscreen engine failed to open its streams."
   },
+  "recFailEngineUnreachable": {
+    "message": "Nothing is being recorded \u2014 the recorder never started. Stop and try again.",
+    "description": "Popup: error toast when OFFSCREEN_START never reached the offscreen engine, so the badge and control bar claim a recording that is not happening."
+  },
+  "popupOpenFailed": {
+    "message": "That page couldn\u2019t be opened. Try again.",
+    "description": "Popup: error toast when chrome.tabs.create fails for the setup page, the editor or the recorder."
+  },
   "recFailQuery": {
     "message": "Recording status is unavailable \u2014 open the Recorder page to check.",
     "description": "Popup: error toast when REC_QUERY threw, so \"not recording\" cannot be trusted."

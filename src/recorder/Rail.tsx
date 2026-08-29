@@ -61,7 +61,7 @@ export function Rail(props: RailProps) {
     abortRef.current = controller;
     setProgress(0);
     try {
-      const { blob, skipped } = await exportVideo(
+      const { blob, skippedParts } = await exportVideo(
         props.loaded,
         props.draft,
         (p) => setProgress(p.fraction),
@@ -86,7 +86,7 @@ export function Rail(props: RailProps) {
       // One toast slot, so a skip takes it: the file exists either way and
       // the browser's own download shows that, but a file shorter or quieter
       // than the timeline promised is the thing the user has to be told.
-      if (skipped > 0) props.onToast(t(recFailureMessageKey('segment-skipped')), 'error');
+      if (skippedParts > 0) props.onToast(t(recFailureMessageKey('segment-skipped')), 'error');
       else props.onToast(t('recorderExported', [(blob.size / 1e6).toFixed(1)]));
       if (deleteAfter) {
         await deleteSession(props.loaded.session.id);

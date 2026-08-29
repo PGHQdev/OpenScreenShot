@@ -307,6 +307,45 @@ async function seedEmptySegment(sessionId) {
   return segmentId;
 }
 
+/**
+ * A session holding one chunk-less segment and nothing else. Every part of
+ * the export is unplayable, so no frame is ever recorded and `exportVideo`
+ * throws rather than writing a zero-byte file.
+ */
+async function seedEmptySession() {
+  const db = await new Promise((done, fail) => {
+    const req = indexedDB.open('openscreenshot-recordings', 1);
+    req.onsuccess = () => done(req.result);
+    req.onerror = () => fail(req.error);
+  });
+  const sessionId = crypto.randomUUID();
+  const segmentId = crypto.randomUUID();
+  await new Promise((done, fail) => {
+    const tx = db.transaction(['sessions', 'segments'], 'readwrite');
+    tx.objectStore('sessions').put({
+      id: sessionId,
+      createdAt: Date.now(),
+      status: 'complete',
+      settings: { mic: false, tabAudio: false, webcam: false, ripple: true },
+      segmentIds: [segmentId],
+    });
+    tx.objectStore('segments').put({
+      id: segmentId,
+      sessionId,
+      index: 0,
+      startedAt: Date.now(),
+      duration: 0,
+      viewport: { w: 640, h: 360, dpr: 1 },
+      hasWebcam: false,
+    });
+    tx.oncomplete = () => done();
+    tx.onerror = () => fail(tx.error);
+    tx.onabort = () => fail(tx.error);
+  });
+  db.close();
+  return sessionId;
+}
+
 /** Share of the stage canvas that is painted, 0..1. */
 function stageOpacity() {
   const canvas = document.querySelector('.rec-canvas');
@@ -464,6 +503,45 @@ async function main() {
     );
     const second = await page.evaluate(() => window.__smoke.downloads.length);
     assert(second === 1, `the export still produced a file (${second} download)`);
+
+    step('exporting a session with nothing playable in it at all');
+    const emptyId = await page.evaluate(seedEmptySession);
+    await page.goto(`${base}${PAGE}?session=${emptyId}`, { waitUntil: 'load' });
+    await page.waitForSelector('.rec-btn-primary', { timeout: 15_000 });
+    await (await page.$('.rec-btn-primary')).click();
+    await page.waitForSelector('.toast-error .toast-text', { timeout: 180_000 });
+    const failedToast = await page.$eval('.toast-error .toast-text', (el) =>
+      el.textContent?.trim(),
+    );
+    assert(
+      failedToast === messages.recFailExport.message,
+      `an export that produced nothing says so ("${failedToast}")`,
+    );
+
+    step('opening a session whose media the page cannot read');
+    // The failure the hook was already computing into `error` and no one was
+    // reading. Injected at the one place a load can realistically break after
+    // the rows are read: turning the assembled chunks into a playable URL.
+    await page.evaluateOnNewDocument(() => {
+      const real = URL.createObjectURL.bind(URL);
+      let first = true;
+      URL.createObjectURL = (source) => {
+        if (first && source instanceof Blob && source.type === 'video/webm') {
+          first = false;
+          throw new Error('object URL refused');
+        }
+        return real(source);
+      };
+    });
+    await page.goto(`${base}${PAGE}?session=${seeded.sessionId}`, { waitUntil: 'load' });
+    await page.waitForSelector('.toast-error .toast-text', { timeout: 15_000 });
+    const loadToast = await page.$eval('.toast-error .toast-text', (el) => el.textContent?.trim());
+    assert(
+      loadToast === messages.recFailSessionLoad.message,
+      `a session that will not load says so ("${loadToast}")`,
+    );
+    await page.waitForSelector('.rec-list', { timeout: 15_000 });
+    assert(true, 'and the page falls back to the session list rather than a blank stage');
 
     assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
   } finally {

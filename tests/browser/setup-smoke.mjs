@@ -190,7 +190,11 @@ function installChromeStub(messages, opts) {
       getURL: (p) => '/' + String(p).replace(/^\//, ''),
       sendMessage: async (msg) => {
         globalThis.__smoke.sent.push(msg);
-        return { active: false, paused: false };
+        // `recActive` puts the popup in its live-recording state, which is
+        // the only state its Stop and Cancel buttons exist in.
+        return opts.recActive
+          ? { active: true, paused: false, sessionId: 'live-1', elapsedMs: 4000 }
+          : { active: false, paused: false };
       },
       onMessage: { addListener: noop, removeListener: noop },
     },
@@ -569,6 +573,32 @@ async function main() {
     assert(
       (await page.evaluate(() => globalThis.__smoke.closed)) === 0,
       'and stays open, instead of closing over a start that never happened',
+    );
+    await page.close();
+
+    step('popup Stop the worker never received: the recording is still running, so say so');
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'], recActive: true });
+    await page.waitForSelector('.rec-live');
+    // The other half of the same `.finally` defect: a stop that never arrived
+    // used to close the popup, leaving the recording running with the REC
+    // badge as the user's only evidence that nothing had happened.
+    await page.evaluate(() => {
+      chrome.runtime.sendMessage = async (msg) => {
+        globalThis.__smoke.sent.push(msg);
+        throw new Error('Could not establish connection. Receiving end does not exist.');
+      };
+    });
+    const [stopBtn] = await page.$$('.rec-live .seg-btn');
+    await stopBtn.click();
+    await page.waitForSelector('.toast-error .toast-text');
+    failText = await page.$eval('.toast-error .toast-text', (el) => el.textContent.trim());
+    assert(
+      failText === messages.recFailControlUnreachable.message,
+      `the popup names the failed stop ("${failText}")`,
+    );
+    assert(
+      (await page.evaluate(() => globalThis.__smoke.closed)) === 0,
+      'and stays open, with the Stop button still there to press',
     );
     await page.close();
 

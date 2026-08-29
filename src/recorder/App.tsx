@@ -97,9 +97,12 @@ export function App() {
         ) : null}
       </header>
 
+      {/* role="alert" carries its own assertive live region and wins over the
+          container's; role="status" on an error node would have left the
+          container's aria-live as the only signal, and a polite one. */}
       {hint ? (
-        <div class="toasts" aria-live={hint.tone === 'error' ? 'assertive' : 'polite'}>
-          <div class={`toast toast-${hint.tone}`} role="status">
+        <div class="toasts" aria-live="polite">
+          <div class={`toast toast-${hint.tone}`} role={hint.tone === 'error' ? 'alert' : 'status'}>
             <span class="toast-text">{hint.message}</span>
             {hint.tone === 'error' ? (
               <button
