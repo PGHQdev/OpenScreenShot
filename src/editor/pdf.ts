@@ -131,10 +131,26 @@ export async function exportPdf(
     onProgress?.({ page: pages.length, total: pageCount });
     // Slicing a tile is synchronous, so without a yield here the whole loop
     // runs in one microtask burst and every onProgress call above lands
-    // between two paints — real numbers that never actually get drawn. One
-    // frame between tiles is enough for the dialog to paint the one that
-    // just landed.
-    await new Promise((resolve) => requestAnimationFrame(resolve));
+    // between two paints — real numbers that never actually get drawn. A
+    // bare rAF wait would fix that while the tab is visible, but Chrome
+    // never runs rAF callbacks while a tab is hidden — a plain rAF yield
+    // here would stall the whole export on "Exporting page N of M…" until
+    // the user switches back, with no way out. Racing it against a short
+    // timer (setTimeout keeps firing, just possibly throttled, while
+    // hidden) means a foregrounded tab still gets the one-frame paint
+    // guarantee (rAF wins in ~16ms), and a backgrounded one still finishes
+    // the export instead of hanging on it.
+    await new Promise((resolve) => {
+      let rafId = 0;
+      let timerId = 0;
+      const done = () => {
+        cancelAnimationFrame(rafId);
+        clearTimeout(timerId);
+        resolve(undefined);
+      };
+      rafId = requestAnimationFrame(done);
+      timerId = window.setTimeout(done, 50);
+    });
   }
   await savePdf(pages, filename);
 }

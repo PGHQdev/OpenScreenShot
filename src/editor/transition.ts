@@ -11,11 +11,11 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { tokens } from '../shared/design-tokens';
 
-/** ms, read off tokens.css (see gen-design-tokens.mjs) so these can never
- * drift from what editor.css's own --dur-* declarations say. */
-export const DUR_FAST = parseInt(tokens.durFast, 10);
+/** ms, read off tokens.css (see gen-design-tokens.mjs) so this can never
+ * drift from what editor.css's own --dur-mid declares. Only --dur-mid has a
+ * caller today (every surface built on this hook uses it) — add --dur-fast/
+ * --dur-slow here when a surface actually needs them, not ahead of one. */
 export const DUR_MID = parseInt(tokens.durMid, 10);
-export const DUR_SLOW = parseInt(tokens.durSlow, 10);
 
 function reducedMotion(): boolean {
   return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;

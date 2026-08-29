@@ -124,6 +124,13 @@ export function ZoomMenu(props: ZoomMenuProps) {
           role="menu"
           aria-orientation="vertical"
           ref={popoverRef}
+          // Removes the whole subtree from the a11y tree and from focus/Tab
+          // order the instant it starts closing — the roving-tabindex item
+          // that had tabIndex=0 while open (focus.ts's syncRovingTabIndex
+          // sets that on the live DOM node directly, so it survives the
+          // is-closing render on its own) would otherwise still be a real
+          // Tab stop for the whole exit window.
+          inert={closing}
         >
           <button
             class="zoom-item"

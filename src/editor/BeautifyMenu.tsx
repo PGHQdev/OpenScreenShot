@@ -144,6 +144,11 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
           role="dialog"
           aria-label="Beautify"
           ref={popoverRef}
+          // Unlike ZoomMenu's items, every control here (the switch, three
+          // sliders, the swatches) is a real Tab stop with no tabIndex=-1
+          // guard — inert is what keeps a Tab pressed during the exit
+          // window from landing on one of them.
+          inert={closing}
         >
           <label class="beautify-toggle">
             <input

@@ -47,17 +47,18 @@ export function ShortcutSheet({ onClose, closing }: { onClose: () => void; closi
   const COMMANDS = buildCommands(isMacPlatform(navigator.platform));
 
   useEffect(() => {
+    // See ExportDialog's own consolidated focus effect (App.tsx) for why
+    // this must re-run on any closing -> not-closing edge, not just the
+    // true mount — a fast reopen (this sheet closing, then ? pressed again
+    // before the exit timer unmounts it) survives as the same instance
+    // under useExitDelay.
+    if (closing) {
+      prevFocusRef.current?.focus?.();
+      return;
+    }
     prevFocusRef.current = (document.activeElement as HTMLElement | null) ?? null;
     const focusable = modalRef.current ? getFocusable(modalRef.current) : [];
     focusable[0]?.focus();
-  }, []);
-
-  useEffect(() => {
-    // See ExportDialog's own closing-focus effect (App.tsx) for why this
-    // fires the moment `closing` starts, not at unmount — a shortcut typed
-    // right after this sheet closes must not be swallowed by a modal that
-    // is only still mounted to finish fading out.
-    if (closing) prevFocusRef.current?.focus?.();
   }, [closing]);
 
   return (
@@ -68,6 +69,7 @@ export function ShortcutSheet({ onClose, closing }: { onClose: () => void; closi
         role="dialog"
         aria-modal="true"
         aria-label="Keyboard shortcuts"
+        inert={closing}
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           if (closing) return; // let keys bubble normally during the exit fade

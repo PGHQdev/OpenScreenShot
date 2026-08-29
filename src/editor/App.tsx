@@ -62,13 +62,28 @@ export function App() {
   const sheetT = useExitDelay(sheetOpen, DUR_MID);
   const importT = useExitDelay(!!ed.pendingImport, DUR_MID);
   const stageNoticeT = useExitDelay(!!ed.stageNotice && !ed.cropActive, DUR_MID);
-  // ed.pendingImport/ed.stageNotice null out the moment confirm/cancel/dismiss
-  // fires — the same tick the exit transition above starts — so the closing
-  // frame needs its own frozen copy of the text rather than reading ed live.
+  // draft-restore and crop-confirm share the stage-notice pill's exact
+  // position (top: s-3, centred), so each also waits for stage-notice to be
+  // fully gone (mounted, not just ed.stageNotice) before it starts — without
+  // that, dismissing a notice while a draft prompt or a crop was pending
+  // would show both pills stacked at identical coordinates for 150ms.
+  const draftPromptT = useExitDelay(
+    !!ed.draftPrompt && !stageNoticeT.mounted && !ed.cropActive,
+    DUR_MID,
+  );
+  const cropConfirmT = useExitDelay(ed.cropActive && !stageNoticeT.mounted, DUR_MID);
+  // ed.pendingImport/ed.stageNotice/ed.draftPrompt null out the moment
+  // confirm/cancel/dismiss/restore fires — the same tick the exit transition
+  // above starts — so the closing frame needs its own frozen copy of the
+  // text rather than reading ed live.
   const stageNoticeText = useFrozenWhileClosing(ed.stageNotice, !!ed.stageNotice);
   const pendingImportSnapshot = useFrozenWhileClosing(
     ed.pendingImport ? { name: ed.pendingImport.name, count: ed.annotations.length } : null,
     !!ed.pendingImport,
+  );
+  const draftPromptCount = useFrozenWhileClosing(
+    ed.draftPrompt?.annotations.length ?? 0,
+    !!ed.draftPrompt,
   );
 
   // TOOL_LIST is fixed, so the tool rail's members never change: one sync at
@@ -320,7 +335,11 @@ export function App() {
           </canvas>
 
           {stageNoticeT.mounted ? (
-            <div class={`stage-notice${stageNoticeT.closing ? ' is-closing' : ''}`} role="status">
+            <div
+              class={`stage-notice${stageNoticeT.closing ? ' is-closing' : ''}`}
+              role="status"
+              inert={stageNoticeT.closing}
+            >
               <span>{stageNoticeText}</span>
               <button class="text-btn" onClick={ed.dismissStageNotice}>
                 Dismiss
@@ -328,11 +347,15 @@ export function App() {
             </div>
           ) : null}
 
-          {ed.draftPrompt && !ed.stageNotice && !ed.cropActive ? (
-            <div class="draft-restore" role="status">
+          {draftPromptT.mounted ? (
+            <div
+              class={`draft-restore${draftPromptT.closing ? ' is-closing' : ''}`}
+              role="status"
+              inert={draftPromptT.closing}
+            >
               <span>
-                Unsaved edits from your last session ({ed.draftPrompt.annotations.length}{' '}
-                {ed.draftPrompt.annotations.length === 1 ? 'annotation' : 'annotations'}).
+                Unsaved edits from your last session ({draftPromptCount}{' '}
+                {draftPromptCount === 1 ? 'annotation' : 'annotations'}).
               </span>
               <button class="btn-primary btn-sm" onClick={ed.restoreDraft}>
                 Restore
@@ -343,8 +366,11 @@ export function App() {
             </div>
           ) : null}
 
-          {ed.cropActive ? (
-            <div class="crop-confirm">
+          {cropConfirmT.mounted ? (
+            <div
+              class={`crop-confirm${cropConfirmT.closing ? ' is-closing' : ''}`}
+              inert={cropConfirmT.closing}
+            >
               <span>Crop to selection</span>
               <button class="btn-primary btn-sm" onClick={ed.applyCrop}>
                 Apply
@@ -750,22 +776,30 @@ function ExportDialog({
   const modalRef = useRef<HTMLDivElement>(null);
   const prevFocusRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
-    // Focus the first control on mount.
+    // Runs on the true mount AND on every later render where `closing` goes
+    // back to false without one — a fast reopen (click Export again before
+    // the exit timer unmounts it) cancels the close via useExitDelay's own
+    // render-phase update, so this SAME component instance survives and a
+    // []-only mount effect would never fire again to refocus into it. That
+    // used to leave a real keyboard trap: onKeyDown resumes trapping the
+    // instant `closing` clears, but nothing had moved focus back inside, so
+    // Shift+Tab from outside would suddenly jump into a dialog the user
+    // never re-focused into on purpose.
+    if (closing) {
+      // The dialog stays mounted through its exit animation (useExitDelay),
+      // so unmount-time focus restoration would leave focus trapped inside a
+      // modal that is only still there to fade out — a shortcut typed right
+      // after Escape (⌘S closes, then ? for the shortcut sheet) would be
+      // swallowed by this modal's own onKeyDown below instead of reaching
+      // the window listener. Restoring the moment closing starts, not at
+      // unmount, is what keeps that keystroke free; onKeyDown stops trapping
+      // the same moment, for the same reason.
+      prevFocusRef.current?.focus?.();
+      return;
+    }
     prevFocusRef.current = (document.activeElement as HTMLElement | null) ?? null;
     const focusable = modalRef.current ? getFocusable(modalRef.current) : [];
     focusable[0]?.focus();
-  }, []);
-
-  useEffect(() => {
-    // The dialog stays mounted through its exit animation (useExitDelay), so
-    // unmount-time focus restoration would leave focus trapped inside a
-    // modal that is only still there to fade out — a shortcut typed right
-    // after Escape (⌘S closes, then ? for the shortcut sheet) would be
-    // swallowed by this modal's own onKeyDown below instead of reaching the
-    // window listener. Restoring the moment closing starts, not at unmount,
-    // is what keeps that keystroke free; onKeyDown stops trapping the same
-    // moment, for the same reason.
-    if (closing) prevFocusRef.current?.focus?.();
   }, [closing]);
 
   return (
@@ -777,6 +811,7 @@ function ExportDialog({
         aria-modal="true"
         aria-label="Export screenshot"
         tabIndex={-1}
+        inert={closing}
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           if (closing) return; // let keys bubble normally during the exit fade
@@ -1041,11 +1076,13 @@ function ExportDialog({
           <div class="export-progress" role="status">
             {ed.exportProgress ? (
               <>
-                <progress
-                  class="export-progress-bar"
-                  value={ed.exportProgress.page}
-                  max={ed.exportProgress.total}
-                />
+                <span class="export-progress-bar-track">
+                  <progress
+                    class="export-progress-bar"
+                    value={ed.exportProgress.page}
+                    max={ed.exportProgress.total}
+                  />
+                </span>
                 <span>
                   Exporting page {ed.exportProgress.page} of {ed.exportProgress.total}…
                 </span>
@@ -1103,15 +1140,16 @@ function ImportConfirm({
   const prevFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
+    // See ExportDialog's own consolidated focus effect for why this must
+    // re-run on any closing -> not-closing edge, not just the true mount —
+    // a fast reopen survives as the same instance under useExitDelay.
+    if (closing) {
+      prevFocusRef.current?.focus?.();
+      return;
+    }
     prevFocusRef.current = (document.activeElement as HTMLElement | null) ?? null;
     const focusable = modalRef.current ? getFocusable(modalRef.current) : [];
     focusable[0]?.focus();
-  }, []);
-
-  useEffect(() => {
-    // See ExportDialog's own closing-focus effect for why this fires on
-    // closing, not on unmount.
-    if (closing) prevFocusRef.current?.focus?.();
   }, [closing]);
 
   return (
@@ -1123,6 +1161,7 @@ function ImportConfirm({
         aria-modal="true"
         aria-label="Replace the current image"
         tabIndex={-1}
+        inert={closing}
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           if (closing) return; // let keys bubble normally during the exit fade

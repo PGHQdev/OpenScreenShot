@@ -447,12 +447,15 @@ body {
  * than Copy's three words, so it needs its own floor rather than reusing
  * .btn-fixed's 92px (measured for Copy's own set; too narrow for
  * "Exporting…" and there's no reason to widen Copy's button to cover a word
- * it never shows). 148px is a measured floor (tests/browser/editor-
- * keyboard-smoke.mjs asserts the button's own outerWidth is unchanged across
- * both label states at the shipped font), not a guess.
+ * it never shows). 116px is the button's own unfloored "Exporting…" width
+ * (~107px, read via getBoundingClientRect in tests/browser/editor-keyboard-
+ * smoke.mjs's negative control) plus a small margin for font-metric
+ * variance across machines/zoom — not a round number picked in advance, and
+ * not claimed to be the exact minimum either. The same smoke asserts the
+ * button's outerWidth is identical across both label states at this floor.
  */
 .btn-fixed-export {
-  min-width: 148px;
+  min-width: 116px;
   text-align: center;
 }
 
@@ -636,6 +639,17 @@ body {
   box-shadow: var(--sh-md);
   font-size: var(--fs-base);
   z-index: 5;
+  animation: oss-notice-in var(--dur-mid) var(--ease-out);
+  transition:
+    opacity var(--dur-mid) var(--ease-out),
+    transform var(--dur-mid) var(--ease-out);
+}
+/* Same pill as .stage-notice — applied by transition.ts's useExitDelay,
+   see .stage-notice.is-closing for why the transform is replaced wholesale. */
+.crop-confirm.is-closing {
+  opacity: 0;
+  transform: translate(-50%, -6px);
+  pointer-events: none;
 }
 
 .draft-restore {
@@ -654,6 +668,15 @@ body {
   box-shadow: var(--sh-md);
   font-size: var(--fs-base);
   z-index: 8;
+  animation: oss-notice-in var(--dur-mid) var(--ease-out);
+  transition:
+    opacity var(--dur-mid) var(--ease-out),
+    transform var(--dur-mid) var(--ease-out);
+}
+.draft-restore.is-closing {
+  opacity: 0;
+  transform: translate(-50%, -6px);
+  pointer-events: none;
 }
 
 .text-overlay {
@@ -924,19 +947,30 @@ body {
   color: var(--text-2);
   animation: oss-fade-in var(--dur-fast) var(--ease-out);
 }
-.export-progress-bar {
+/*
+ * ::-webkit-progress-bar/-value are inert in the shipped Chromium this
+ * extension runs on (verified by screenshot: the pseudo-element rules
+ * compile and match, but the element still paints Chromium's own default
+ * blue-on-grey, unaffected) — accent-color is the API that actually works,
+ * confirmed the same way. It only styles the *filled* portion; the track
+ * stays Chromium's own neutral grey, which this doesn't fight (verified:
+ * giving the <progress> itself a background, border or border-radius of
+ * its own — anything beyond accent-color and box sizing — makes it fall
+ * back further, to native green-on-grey, losing the filled colour too).
+ * The outer .export-progress-bar-track carries the rounding + clip instead,
+ * around an inner, minimally-styled <progress>.
+ */
+.export-progress-bar-track {
   width: 120px;
   height: 6px;
   border-radius: var(--r-full);
   overflow: hidden;
 }
-.export-progress-bar::-webkit-progress-bar {
-  background: var(--surface-3);
-  border-radius: var(--r-full);
-}
-.export-progress-bar::-webkit-progress-value {
-  background: var(--accent-ink);
-  border-radius: var(--r-full);
+.export-progress-bar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  accent-color: var(--accent-ink);
 }
 
 /* ---- Scale row (export dialog) ---- */
@@ -1259,7 +1293,9 @@ body {
   .beautify-popover,
   .modal-backdrop,
   .modal,
-  .stage-notice {
+  .stage-notice,
+  .crop-confirm,
+  .draft-restore {
     animation: none;
     transition: none;
   }

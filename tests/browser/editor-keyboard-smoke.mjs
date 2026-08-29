@@ -43,6 +43,17 @@ function assert(condition, message) {
   console.log(`    ok: ${message}`);
 }
 
+function hexToRGB(hex) {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex.trim());
+  return m
+    ? [
+        parseInt(m[1].slice(0, 2), 16),
+        parseInt(m[1].slice(2, 4), 16),
+        parseInt(m[1].slice(4, 6), 16),
+      ]
+    : null;
+}
+
 /** Same resolution walk as recorder-smoke.mjs — puppeteer-core lives in mcp/. */
 async function loadPuppeteer() {
   let dir = ROOT;
@@ -124,7 +135,15 @@ function installChromeStub(seed) {
     },
     storage: {
       local: {
-        get: async (key) => (store.has(key) ? { [key]: store.get(key) } : {}),
+        get: async (key) => {
+          // task 23 fix round: R-23b's storage-read failure branch — self-
+          // resetting, same shape as failNextDownload above.
+          if (globalThis.__smoke.failNextStorageGet) {
+            globalThis.__smoke.failNextStorageGet = false;
+            throw new Error('smoke-forced storage read failure');
+          }
+          return store.has(key) ? { [key]: store.get(key) } : {};
+        },
         set: async (items) => {
           for (const [k, v] of Object.entries(items)) store.set(k, v);
         },
@@ -321,7 +340,88 @@ async function testPdfRealProgress(browser, base) {
     globalThis.__progressObs = obs;
   });
 
+  const accentInk = await page.evaluate(() =>
+    getComputedStyle(document.documentElement).getPropertyValue('--accent-ink').trim(),
+  );
+  const sharp = createRequire(join(ROOT, 'package.json'))('sharp');
+  // A one-shot "screenshot the bar's filled region" — used once for real, once
+  // more below as a negative control with accent-color stripped live. Reads
+  // value/max fresh each call (not a stale rect from a previous call), since
+  // the export keeps racing forward between the two.
+  async function sampleFilledPixel() {
+    let found = null;
+    for (let i = 0; i < 200 && !found; i++) {
+      const state = await page.evaluate(() => {
+        const bar = document.querySelector('.export-progress-bar');
+        if (!bar) return null;
+        const r = bar.getBoundingClientRect();
+        return {
+          value: bar.value,
+          max: bar.max,
+          rect: { x: r.x, y: r.y, width: r.width, height: r.height },
+        };
+      });
+      if (state && state.value > 0 && state.value < state.max) {
+        const fillRatio = state.value / state.max;
+        const clip = {
+          x: Math.round(state.rect.x + state.rect.width * (fillRatio * 0.5) - 1),
+          y: Math.round(state.rect.y + state.rect.height / 2 - 1),
+          width: 3,
+          height: 3,
+        };
+        const buf = await page.screenshot({ clip });
+        const { data } = await sharp(buf).raw().toBuffer({ resolveWithObject: true });
+        found = [data[0], data[1], data[2]];
+      } else {
+        await new Promise((r) => setTimeout(r, 5));
+      }
+    }
+    return found;
+  }
+
   await page.click('.modal-actions .btn-fixed-export');
+
+  // ::-webkit-progress-bar/-value are inert in this Chromium (verified by
+  // screenshot while building this fix — the rules match but nothing they
+  // declare paints); accent-color is the one that actually works here, and
+  // only for the filled portion (see editor.css's own comment on
+  // .export-progress-bar for what was tried and ruled out). accent-color
+  // styling on a native control is not a flat, exact-hex fill — Chromium
+  // shades it — so the check is the fill's hue direction (warm, red over
+  // blue, matching the coral token) against Chromium's own unstyled default
+  // fill (a cool blue, blue over red), not a close-enough hex match.
+  const filledPixel = await sampleFilledPixel();
+  assert(
+    !!filledPixel,
+    'caught the bar with a genuine partial value and screenshotted its filled region',
+  );
+  const accentRGB = hexToRGB(accentInk);
+  assert(
+    filledPixel[0] > filledPixel[2],
+    `filled region (${filledPixel}) is warm (red > blue), matching --accent-ink (${accentInk} = ${accentRGB}) rather than Chromium's cool default fill`,
+  );
+
+  // Negative control: strip accent-color live (an inline style wins over the
+  // class rule) and confirm the same element's filled region actually
+  // flips hue direction back to Chromium's own default (cool blue) — proving
+  // the CSS is load-bearing, not coincidentally already the right colour.
+  await page.evaluate(() => {
+    document.querySelector('.export-progress-bar').style.setProperty('accent-color', 'auto');
+  });
+  const strippedPixel = await sampleFilledPixel();
+  if (strippedPixel) {
+    assert(
+      strippedPixel[2] > strippedPixel[0],
+      `negative control: stripping accent-color flips the filled pixel (${strippedPixel}, was ${filledPixel}) to cool (blue > red) — Chromium's own default, proving the token was doing real work`,
+    );
+  } else {
+    // The export finished before this second sample landed — the first,
+    // positive sample above still stands; nothing to assert here.
+    console.log(
+      '    (export finished before the negative-control sample — positive check above still holds)',
+    );
+  }
+
   await page.waitForFunction(() => !document.querySelector('.modal'), { timeout: 15000 });
 
   const log = await page.evaluate(() => {
@@ -440,6 +540,274 @@ async function testStageErrorRetryAndDismiss(browser, base) {
   assert((await page2.$eval('.btn-fixed', (el) => el.disabled)) === true, 'Copy disables too');
   assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
   await page2.close();
+
+  // The OTHER failure branch R-23b put in scope: a storage/settings read
+  // that rejects (not a decode failure) — a good capture is seeded, but the
+  // very first chrome.storage.local.get (inside getSettings) is forced to
+  // throw once, so the load never even reaches getLastCapture.
+  const page3 = await browser.newPage();
+  page3.on('pageerror', (err) => crashes.push(String(err)));
+  await page3.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': await makeCapture(),
+  });
+  await page3.evaluateOnNewDocument(() => {
+    globalThis.__smoke.failNextStorageGet = true;
+  });
+  await page3.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page3.waitForFunction(
+    () => document.querySelector('.overlay-msg h2')?.textContent === 'Something went wrong',
+    { timeout: 5000 },
+  );
+  const storageMessage = await page3.$eval('.overlay-msg p', (p) => p.textContent);
+  assert(
+    storageMessage === 'Could not load your settings or the saved screenshot.',
+    `the storage-read-failure branch reports its own, different message ("${storageMessage}")`,
+  );
+  // The forced failure is self-resetting (see installChromeStub), and the
+  // capture seeded above was always good, so Retry should succeed this time.
+  await page3.click('.overlay-msg .btn-primary'); // Retry
+  await page3.waitForFunction(() => !document.querySelector('.overlay-msg'), { timeout: 5000 });
+  await page3.waitForSelector('.stage-canvas[aria-label*="800 by 600"]', { timeout: 5000 });
+  assert(
+    (await page3.$eval('header .btn-secondary[title^="Export"]', (el) => el.disabled)) === false,
+    'Retry after a storage failure still lands on the real capture once the read stops failing',
+  );
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page3.close();
+}
+
+/**
+ * task 23 fix round — R-23's own trap 1, plus the reviewer's Important-
+ * adjacent minor: a Tab pressed *during* a popover's exit window (the
+ * ~150ms tail useExitDelay keeps it mounted for) must not land inside it.
+ * Both surfaces get `inert` on `.is-closing` (App.tsx/ZoomMenu.tsx/
+ * BeautifyMenu.tsx) — this presses Tab in that exact window and checks
+ * where focus actually lands, not the attribute. The "still closing at the
+ * moment Tab was pressed" assertion is what proves the window was real,
+ * not a race that happened to run after the exit already finished.
+ */
+async function testPopoverTabDuringExit(browser, base) {
+  step('task 23 fix: Tab pressed during a popover exit does not land inside it');
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1280, height: 860 });
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': await makeCapture(),
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+
+  // This exact machine's real OS "Reduce Motion" is on (see media-a11y-
+  // smoke.mjs's own header comment) — useExitDelay collapses the unmount
+  // timer to ~0ms under that, which would make the exit window this test
+  // exists to probe close to zero and this test pass for the wrong reason
+  // (confirmed: without forcing no-preference here, the assertions below
+  // still happened to pass, purely on ambient-setting luck, not because the
+  // window was genuinely open). Forcing no-preference makes the real
+  // DUR_MID (150ms) window the thing under test, on any machine.
+  const cdp = await page.createCDPSession();
+  await cdp.send('Emulation.setEmulatedMedia', {
+    features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
+  });
+
+  // ZoomMenu: ArrowDown opens it with the first item focused, which is also
+  // what makes focus.ts's syncRovingTabIndex set that item's live tabIndex
+  // to 0 — the exact lingering tab stop the reviewer named.
+  const zoomTrigger = '.zoom-trigger';
+  await page.$eval(zoomTrigger, (el) => el.focus());
+  await page.keyboard.press('ArrowDown');
+  await page.waitForSelector('.zoom-popover', { timeout: 5000 });
+  // waitForSelector resolves on insertion; the effect that actually attaches
+  // the window keydown listener Escape needs lands a render later (Preact
+  // flushes effects a frame after the commit — see this file's own header
+  // comment). Escape pressed before that listener exists does nothing.
+  await new Promise((r) => setTimeout(r, 60));
+  await page.keyboard.press('Escape');
+  const zoomStillClosing = await page.evaluate(
+    () => document.querySelector('.zoom-popover')?.classList.contains('is-closing') ?? false,
+  );
+  assert(
+    zoomStillClosing,
+    'the zoom popover is still mounted and mid-exit at the moment Tab is pressed below',
+  );
+  await page.keyboard.press('Tab');
+  const zoomLandedInside = await page.evaluate(
+    () => !!document.activeElement?.closest?.('.zoom-popover'),
+  );
+  assert(!zoomLandedInside, 'Tab during the zoom popover exit did not land inside it');
+
+  // BeautifyMenu: every control is a real tab stop (no tabIndex=-1 guard at
+  // all), the more direct case of the same trap.
+  const beautifyTrigger = '.beautify-menu > .btn-secondary';
+  await page.$eval(beautifyTrigger, (el) => el.focus());
+  await page.keyboard.press('Enter');
+  await page.waitForSelector('.beautify-popover', { timeout: 5000 });
+  await new Promise((r) => setTimeout(r, 60)); // see the zoom step above
+  await page.keyboard.press('Escape');
+  const beautifyStillClosing = await page.evaluate(
+    () => document.querySelector('.beautify-popover')?.classList.contains('is-closing') ?? false,
+  );
+  assert(
+    beautifyStillClosing,
+    'the Beautify popover is still mounted and mid-exit at the moment Tab is pressed below',
+  );
+  await page.keyboard.press('Tab');
+  const beautifyLandedInside = await page.evaluate(
+    () => !!document.activeElement?.closest?.('.beautify-popover'),
+  );
+  assert(!beautifyLandedInside, 'Tab during the Beautify popover exit did not land inside it');
+
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
+}
+
+/**
+ * task 23 fix round — a fast reopen (Escape, then reopen before the ~150ms
+ * exit timer ever unmounts it) reuses the SAME ExportDialog instance under
+ * useExitDelay, so a []-only mount effect would never refocus into it again
+ * — App.tsx's consolidated focus effect (keyed on `closing`, not `[]`) is
+ * what fixes that. Proven by actually reopening fast and reading where
+ * focus landed, not by reasoning about the effect dependency array.
+ */
+async function testModalFastReopen(browser, base) {
+  step('task 23 fix: a fast reopen before the exit timer fires still refocuses into the dialog');
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1280, height: 860 });
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': await makeCapture(),
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+
+  // See testPopoverTabDuringExit's own comment: this machine's ambient
+  // reduced-motion setting would otherwise collapse the 150ms exit window
+  // this test means to reopen inside of.
+  const cdp = await page.createCDPSession();
+  await cdp.send('Emulation.setEmulatedMedia', {
+    features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
+  });
+
+  await page.click('header .btn-secondary[title^="Export"]');
+  await page.waitForSelector('.modal', { timeout: 5000 });
+  // waitForSelector resolves on insertion; the mount effect that moves focus
+  // onto the first control lands a render later (Preact flushes effects a
+  // frame after the commit). Escape pressed before that settles would find
+  // focus still on the header trigger, outside the modal's DOM subtree, so
+  // its own onKeyDown (a direct prop, not a delayed listener) never even
+  // sees the keydown bubble through it.
+  await new Promise((r) => setTimeout(r, 60));
+  await page.keyboard.press('Escape');
+  // No further wait: reopen immediately, well inside the 150ms exit window.
+  await page.click('header .btn-secondary[title^="Export"]');
+  // Long enough that, if the bug were present, the stray unmount timer would
+  // already have fired and left the reopened dialog visibly broken.
+  await new Promise((r) => setTimeout(r, 250));
+  const state = await page.evaluate(() => {
+    const modal = document.querySelector('.modal');
+    return {
+      present: !!modal,
+      closing: modal?.classList.contains('is-closing') ?? null,
+      focusInside: !!modal && modal.contains(document.activeElement),
+      focusIsFirstControl: document.activeElement === modal?.querySelector('.format-card'),
+    };
+  });
+  assert(state.present, 'the dialog is open after the fast reopen');
+  assert(state.closing === false, 'it settled back to fully open, not stuck mid-exit');
+  assert(state.focusInside, 'focus is back inside the reopened dialog');
+  assert(state.focusIsFirstControl, 'focus landed on the first control, same as any other open');
+
+  // And it still traps Tab correctly — the other half of "not a keyboard
+  // trap the other way", confirming onKeyDown resumed trapping too.
+  let stayedInModal = true;
+  for (let i = 0; i < 15; i++) {
+    await page.keyboard.press('Tab');
+    const inside = await page.evaluate(
+      () =>
+        !!document.activeElement?.closest?.('.modal') && document.activeElement !== document.body,
+    );
+    if (!inside) stayedInModal = false;
+  }
+  assert(stayedInModal, 'Tab cycling stayed inside the reopened dialog');
+
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
+}
+
+/**
+ * task 23 fix round — the Important finding: pdf.ts's per-page yield used to
+ * be a bare requestAnimationFrame wait, which Chrome never runs while a tab
+ * is hidden, stalling a multi-page export forever if the user switches away
+ * mid-export. Fixed by racing rAF against a short timer. Proven here by
+ * really backgrounding the export's tab — a second real tab, brought to
+ * front, pushes it into the background the same way alt-tabbing would — and
+ * confirming the download still lands while it stays hidden the whole time.
+ */
+async function testPdfExportInBackgroundTab(browser, base) {
+  step('task 23 fix: a multi-page PDF export still completes while its tab is backgrounded');
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1280, height: 860 });
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': await makeTallCapture(),
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+
+  await page.click('header .btn-secondary[title^="Export"]');
+  await page.waitForSelector('.modal', { timeout: 5000 });
+  await page.click('.format-grid .format-card:last-child');
+  await page.waitForSelector('.field-label');
+
+  const blankPage = await browser.newPage();
+  await blankPage.bringToFront();
+  const hiddenAtStart = await page.evaluate(() => document.visibilityState);
+  assert(
+    hiddenAtStart === 'hidden',
+    'the export tab is really backgrounded (document.visibilityState) before the export starts',
+  );
+
+  // Puppeteer's own page.click() dispatches synthetic input via CDP, which
+  // this Chrome does not deliver to a backgrounded tab (confirmed: it just
+  // hangs forever) — a real constraint of driving this scenario, not
+  // something to route around by giving up on it. A plain DOM .click() call
+  // fires the exact same onClick a real click would (no CDP input injection
+  // involved), and still works while hidden.
+  await page.evaluate(() => {
+    document.querySelector('.modal-actions .btn-fixed-export').click();
+  });
+  // waitForFunction's default polling strategy is requestAnimationFrame —
+  // the same primitive this whole fix is about, so left at its default this
+  // wait would never observe the modal actually closing in a hidden tab,
+  // whether or not the export itself finished. 'mutation' polls via
+  // MutationObserver instead, which does fire while hidden (confirmed:
+  // without this the wait times out at 15s even though the export and
+  // download both genuinely completed underneath it).
+  await page.waitForFunction(() => !document.querySelector('.modal'), {
+    timeout: 15000,
+    polling: 'mutation',
+  });
+  const stillHidden = await page.evaluate(() => document.visibilityState);
+  assert(
+    stillHidden === 'hidden',
+    'the tab was hidden the entire time — this is not a lucky foreground finish',
+  );
+
+  const downloaded = await page.evaluate(() => globalThis.__smoke.downloads.at(-1));
+  assert(
+    !!downloaded?.filename?.endsWith('.pdf'),
+    'the backgrounded multi-page export still completed and downloaded',
+  );
+
+  await blankPage.close();
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
 }
 
 async function main() {
@@ -1551,6 +1919,9 @@ async function main() {
     await testExportButtonWidthFloor(browser, base);
     await testPdfRealProgress(browser, base);
     await testStageErrorRetryAndDismiss(browser, base);
+    await testPopoverTabDuringExit(browser, base);
+    await testModalFastReopen(browser, base);
+    await testPdfExportInBackgroundTab(browser, base);
 
     console.log('\nALL STEPS PASSED');
   } finally {
