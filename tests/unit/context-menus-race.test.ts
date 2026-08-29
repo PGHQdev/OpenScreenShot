@@ -3,17 +3,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 /**
  * `createContextMenus()` runs from `chrome.runtime.onInstalled`, which can
  * fire twice in quick succession (e.g. an extension reload while a prior
- * install/update event is still being handled). Two overlapping runs both
- * clear the menus and both try to (re)create `oss-express`, so the second
- * `create` throws "Cannot create item with duplicate id oss-express". This
- * test fires two overlapping calls and asserts `oss-express` is only ever
- * created once, whichever run creates it.
+ * install/update event is still being handled). The user-reported symptom
+ * was "duplicate id oss-express" specifically, but a fully-simultaneous
+ * double-fire collides on every menu id this function creates, not just
+ * that one — so this test pins the defect that exists (every id created
+ * exactly once) rather than only the narrower symptom that was reported.
  *
  * The module under test (`src/background/index.ts`) has heavy import-time
  * side effects (it registers several `chrome.*` listeners, and its sibling
  * `./recording` registers more) — every `chrome` API it or its imports touch
  * at module scope has to exist before the dynamic import below runs.
  */
+
+/** Every id `createContextMenus()` creates, in no particular order. */
+const ALL_MENU_IDS = ['oss-parent', 'oss-full-page', 'oss-visible', 'oss-region', 'oss-express'];
 
 /** Ids actually handed to `chrome.contextMenus.create` across both runs. */
 let createdIds: string[];
@@ -58,8 +61,9 @@ function makeFakeChrome() {
           liveIds.add(props.id);
         }
         // Real Chrome invokes the callback (if any) with `lastError` set for
-        // the duration of the call, then clears it. An uncalled callback
-        // leaves it set — the "Unchecked runtime.lastError" Chrome logs.
+        // the duration of the call, then clears it before the next API call
+        // — so `lastError` can't be asserted on after the fact; a collision
+        // has to be observed through `createdIds` instead (below).
         callback?.();
         fake.runtime.lastError = undefined;
         return props.id;
@@ -114,7 +118,7 @@ describe('createContextMenus concurrency', () => {
     vi.unstubAllGlobals();
   });
 
-  it('does not double-create oss-express when two onInstalled events overlap', async () => {
+  it('creates every menu id exactly once when two onInstalled events overlap', async () => {
     const mod = await import('../../src/background/index.ts');
 
     // Two `onInstalled` events firing close together: both calls start
@@ -132,8 +136,9 @@ describe('createContextMenus concurrency', () => {
     while (getResolvers.length > 0) getResolvers.shift()?.({});
     await Promise.all([runA, runB]);
 
-    const expressCreates = createdIds.filter((id) => id === 'oss-express');
-    expect(expressCreates.length).toBe(1);
-    expect(fakeChrome.runtime.lastError).toBeUndefined();
+    const counts = Object.fromEntries(
+      ALL_MENU_IDS.map((id) => [id, createdIds.filter((created) => created === id).length]),
+    );
+    expect(counts).toEqual(Object.fromEntries(ALL_MENU_IDS.map((id) => [id, 1])));
   });
 });
