@@ -182,16 +182,25 @@ function installChromeStub(messages, opts) {
   globalThis.close = () => {
     globalThis.__smoke.closed += 1;
   };
-  // Only overridden when a case needs the grant to be present: everywhere
-  // else the popup runs the browser's own `navigator.permissions.query`,
-  // which is the whole point — a service worker has no such API, so the read
-  // has to happen in a document and travel with the click.
-  if (opts.devicePermission) {
-    Object.defineProperty(navigator, 'permissions', {
-      configurable: true,
-      value: { query: async () => ({ state: opts.devicePermission }) },
-    });
-  }
+  // The browser's own `navigator.permissions.query` still answers unless a
+  // case needs the grant present — that is the whole point, since a service
+  // worker has no such API and the read has to happen in a document. The
+  // wrapper only records which descriptors were answered, so a test can wait
+  // for the popup's device read the way it waits for its tabCapture read.
+  const realPermissions = navigator.permissions;
+  globalThis.__smoke.deviceQueries = [];
+  Object.defineProperty(navigator, 'permissions', {
+    configurable: true,
+    value: {
+      query: async (descriptor) => {
+        const status = opts.devicePermission
+          ? { state: opts.devicePermission }
+          : await realPermissions.query(descriptor);
+        globalThis.__smoke.deviceQueries.push({ name: descriptor.name, state: status.state });
+        return status;
+      },
+    },
+  });
   globalThis.chrome = {
     i18n: { getMessage },
     storage: {
@@ -285,6 +294,21 @@ async function settlePermissionRead(page) {
   );
   // One further round trip through the same storage the chain uses, so a
   // consume that costs an extra await would also have landed by now.
+  await page.evaluate(() => chrome.storage.session.get('smoke:flush'));
+}
+
+/**
+ * Wait until the popup's `navigator.permissions.query` has answered for both
+ * devices. `settlePermissionRead` waits on the tabCapture `contains` call,
+ * which is a different chain: an assertion about `devicesGranted` placed
+ * after that one alone also passes while the device read is still in flight,
+ * because the popup's initial state is 'prompt' either way.
+ */
+async function settleDeviceRead(page) {
+  await page.waitForFunction(() => {
+    const seen = globalThis.__smoke.deviceQueries.map((q) => q.name);
+    return seen.includes('camera') && seen.includes('microphone');
+  });
   await page.evaluate(() => chrome.storage.session.get('smoke:flush'));
 }
 
@@ -615,6 +639,12 @@ async function main() {
     };
     page = await open(POPUP_PAGE, { grants: ['tabCapture'], local: micOn });
     await settlePermissionRead(page);
+    await settleDeviceRead(page);
+    const asked = await page.evaluate(() => globalThis.__smoke.deviceQueries);
+    assert(
+      asked.some((q) => q.name === 'microphone' && q.state === 'prompt'),
+      `the browser's own query answered for the mic (${JSON.stringify(asked)})`,
+    );
     await page.click('[data-testid="rec-start"]');
     await page.waitForFunction(() => globalThis.__smoke.sent.some((m) => m.type === 'REC_START'));
     let recStart = await page.evaluate(() =>
@@ -635,6 +665,7 @@ async function main() {
       devicePermission: 'granted',
     });
     await settlePermissionRead(page);
+    await settleDeviceRead(page);
     await page.click('[data-testid="rec-start"]');
     await page.waitForFunction(() => globalThis.__smoke.sent.some((m) => m.type === 'REC_START'));
     recStart = await page.evaluate(() =>

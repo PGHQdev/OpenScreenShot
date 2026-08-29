@@ -50,6 +50,17 @@ export type RecFailureCode =
    * gets nothing.
    */
   | 'engine-unreachable'
+  /**
+   * A Stop pressed before the engine ever reported in, which the engine then
+   * did not answer. Its sibling `engine-unreachable` covers a start the
+   * engine never received; this covers one it received and never came back
+   * from. `OFFSCREEN_STOP` reaching an engine whose own state is null parks a
+   * pending stop and returns without `ENGINE_STOPPED`, so nothing downstream
+   * clears: the badge stays REC, the bar stays up reading "Starting…", and
+   * `handleQuery`'s escape hatch cannot fire because the offscreen document
+   * exists and is merely hung.
+   */
+  | 'engine-stalled'
   /** `REC_QUERY` threw, so the reported recording state is not trustworthy. */
   | 'query-failed'
   /** The in-page control bar could not be injected on this origin. */
@@ -105,6 +116,7 @@ const MESSAGE_KEYS: Record<RecFailureCode, string> = {
   'cleanup-failed': 'recFailCleanup',
   'engine-failed': 'recFailEngine',
   'engine-unreachable': 'recFailEngineUnreachable',
+  'engine-stalled': 'recFailEngineStalled',
   'query-failed': 'recFailQuery',
   'overlay-blocked': 'recFailOverlayBlocked',
   'overlay-lost': 'recFailOverlayLost',

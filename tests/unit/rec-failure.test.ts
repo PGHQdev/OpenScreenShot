@@ -186,11 +186,12 @@ describe('REC_FAILURE_KEY', () => {
 describe('the enumerated modes', () => {
   /**
    * Pinning the count means adding a mode without a message — or dropping one
-   * — is a test failure rather than a silent regression. Seventeen, not the
+   * — is a test failure rather than a silent regression. Eighteen, not the
    * plan's estimated eleven: the enumeration reads the code (see
-   * task-32-report.md §1), and review rounds 1-3 found four more.
+   * task-32-report.md §1), review rounds 1-3 found four more, and task 33
+   * added the stalled engine a Stop cannot get an answer out of.
    */
-  it('covers seventeen', () => {
+  it('covers eighteen', () => {
     const codes: RecFailureCode[] = [
       'start-unreachable',
       'start-blocked',
@@ -199,6 +200,7 @@ describe('the enumerated modes', () => {
       'cleanup-failed',
       'engine-failed',
       'engine-unreachable',
+      'engine-stalled',
       'query-failed',
       'overlay-blocked',
       'overlay-lost',

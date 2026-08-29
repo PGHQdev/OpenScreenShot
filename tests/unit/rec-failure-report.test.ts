@@ -176,6 +176,41 @@ function liveState(sessionId = 'sess-1', segmentId = 'seg-1', overlayMounted = t
   };
 }
 
+/**
+ * What the worker injected into the page, in order. The three injections are
+ * told apart by their arguments, which is how they differ in production too:
+ * the viewport read passes an empty array, the control-bar mount passes six,
+ * and the unmount passes none at all.
+ */
+function injections(): string[] {
+  const calls = fakeChrome.scripting.executeScript.mock.calls as [{ args?: unknown[] }][];
+  return calls.map(([call]) =>
+    call.args === undefined ? 'unmount' : call.args.length === 0 ? 'viewport' : 'mount',
+  );
+}
+
+/**
+ * `workingTab` reports every mount as 'synced', which is the state a heal
+ * finds. Only a *fresh* mount raises the permission prompt, so only a fresh
+ * mount makes the start wait for the frame — these tests are about that
+ * wait, so the injection has to answer the way a first mount does.
+ */
+function freshMount(): void {
+  workingTab();
+  fakeChrome.scripting.executeScript = vi.fn((arg: { args?: unknown[] }) =>
+    Promise.resolve([
+      { result: (arg.args?.length ?? 0) > 0 ? 'fresh' : { w: 800, h: 600, dpr: 1 } },
+    ]),
+  ) as unknown as typeof fakeChrome.scripting.executeScript;
+}
+
+/** An offscreen document exists, so REC_QUERY treats the run as live. */
+function liveOffscreen(): void {
+  fakeChrome.runtime.getContexts = vi.fn(() =>
+    Promise.resolve([{ contextType: 'OFFSCREEN_DOCUMENT' }]),
+  ) as unknown as typeof fakeChrome.runtime.getContexts;
+}
+
 /** Messages the worker aimed at the offscreen document, by type. */
 function offscreenSends(): string[] {
   const calls = fakeChrome.runtime.sendMessage.mock.calls as [{ type?: string; target?: string }][];
@@ -890,28 +925,6 @@ describe('the badge when the store cannot answer', () => {
 describe('the start window', () => {
   const withMic = { ...DEFAULT_RECORDING_SETTINGS, mic: true };
 
-  /**
-   * `workingTab` reports every mount as 'synced', which is the state a heal
-   * finds. Only a *fresh* mount raises the permission prompt, so only a fresh
-   * mount makes the start wait for the frame — these tests are about that
-   * wait, so the injection has to answer the way a first mount does.
-   */
-  function freshMount(): void {
-    workingTab();
-    fakeChrome.scripting.executeScript = vi.fn((arg: { args?: unknown[] }) =>
-      Promise.resolve([
-        { result: (arg.args?.length ?? 0) > 0 ? 'fresh' : { w: 800, h: 600, dpr: 1 } },
-      ]),
-    ) as unknown as typeof fakeChrome.scripting.executeScript;
-  }
-
-  /** An offscreen document exists, so REC_QUERY treats the run as live. */
-  function liveOffscreen(): void {
-    fakeChrome.runtime.getContexts = vi.fn(() =>
-      Promise.resolve([{ contextType: 'OFFSCREEN_DOCUMENT' }]),
-    ) as unknown as typeof fakeChrome.runtime.getContexts;
-  }
-
   it('waits for the permission frame when the grant is missing', async () => {
     freshMount();
     await loadWorker();
@@ -1152,6 +1165,42 @@ describe('the start window', () => {
     expect(after.anchored).toBe(true);
   });
 
+  it('anchors at zero even when the start window was paused', async () => {
+    // Pause is reachable here: the 10s claim deadline releases its wait while
+    // the start is still waiting on the permission frame. The clock used to
+    // keep the mount as its zero in that case, so the bar went
+    // "Starting…" -> 0:11, paused, for a recording holding nothing.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      freshMount();
+      liveOffscreen();
+      await loadWorker();
+      void send({ type: 'REC_START', settings: withMic, devicesGranted: false });
+      await settle();
+      await vi.advanceTimersByTimeAsync(11_000);
+      await settle();
+
+      void send({ type: 'REC_PAUSE' });
+      await settle();
+      void send({ type: 'REC_FRAME_READY' });
+      await settle();
+      const sessionId = (await listSessions())[0].id;
+      void send({ type: 'ENGINE_STARTED', sessionId, tracks: { mic: true, webcam: false } });
+      await settle();
+
+      const reply = (await send({ type: 'REC_QUERY' })) as {
+        anchored?: boolean;
+        paused?: boolean;
+        elapsedMs?: number;
+      };
+      expect(reply.anchored).toBe(true);
+      expect(reply.paused).toBe(true);
+      expect(reply.elapsedMs).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('mounts the bar unanchored and re-injects it anchored on ENGINE_STARTED', async () => {
     workingTab();
     liveOffscreen();
@@ -1170,5 +1219,145 @@ describe('the start window', () => {
     void send({ type: 'ENGINE_STARTED', sessionId, tracks: { mic: true, webcam: false } });
     await settle();
     expect(anchoredArgs().at(-1)).toBe(true);
+  });
+});
+
+/**
+ * Teardowns racing the gestures that can now reach them. Stop no longer waits
+ * for the start round trip, so it can land inside a teardown that is still
+ * running — a window the old wait had closed by accident rather than by rule.
+ */
+describe('a teardown a Stop can land inside', () => {
+  const withMic = { ...DEFAULT_RECORDING_SETTINGS, mic: true };
+
+  it('does not let a Stop heal the bar back onto a page it is abandoning', async () => {
+    workingTab();
+    sendRejects.add('OFFSCREEN_START');
+    await loadWorker();
+    void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+    // Two rounds is inside `abandonUnstartedRun`: the dispatch has rejected
+    // and the teardown is on its way through IndexedDB.
+    await settle(2);
+    void send({ type: 'REC_STOP' });
+    await settle();
+
+    // A fourth injection is the bar going back up after the unmount, on a run
+    // whose state is then cleared under it — nothing would ever take it down.
+    expect(injections()).toEqual(['viewport', 'mount', 'unmount']);
+    expect(session.get(REC_STATE_KEY)).toBeUndefined();
+    expect(broadcasts()).toEqual(['engine-unreachable']);
+  });
+
+  it('tears a stalled run down when its Stop gets no answer', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      workingTab();
+      liveOffscreen();
+      await loadWorker();
+      void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+      await settle();
+      // The engine took the start and never reported in — a hung
+      // getUserMedia. Its own state is null, so OFFSCREEN_STOP parks a
+      // pending stop and no ENGINE_STOPPED ever comes back.
+      void send({ type: 'REC_STOP' });
+      await settle();
+      expect(session.get(REC_STATE_KEY)).toBeDefined();
+
+      await vi.advanceTimersByTimeAsync(3500);
+      await settle();
+      expect(parked()).toBe('engine-stalled');
+      expect(session.get(REC_STATE_KEY)).toBeUndefined();
+      expect(badgeText.at(-1)).toBe('!');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('leaves an engine that answers its Stop in time alone', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      workingTab();
+      liveOffscreen();
+      await loadWorker();
+      void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+      await settle();
+      const sessionId = (await listSessions())[0].id;
+      void send({ type: 'REC_STOP' });
+      await settle();
+      void send({ type: 'ENGINE_STOPPED', sessionId, canceled: false });
+      await settle();
+
+      await vi.advanceTimersByTimeAsync(3500);
+      await settle();
+      expect(parked()).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not watch a Stop on a run the engine has reported in for', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      workingTab();
+      liveOffscreen();
+      await loadWorker();
+      void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+      await settle();
+      const sessionId = (await listSessions())[0].id;
+      void send({ type: 'ENGINE_STARTED', sessionId, tracks: { mic: true, webcam: false } });
+      await settle();
+      void send({ type: 'REC_STOP' });
+      await settle();
+
+      // A real recording whose stop is slow — flushing recorders and writes —
+      // must not be torn down and reported from under the user.
+      await vi.advanceTimersByTimeAsync(3500);
+      await settle();
+      expect(parked()).toBeNull();
+      expect(session.get(REC_STATE_KEY)).toBeDefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('reports a stop it could not place, when the store cannot say the run is gone', async () => {
+    workingTab();
+    liveOffscreen();
+    await loadWorker();
+    void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+    await settle();
+    const inner = fakeChrome.runtime.sendMessage;
+    fakeChrome.runtime.sendMessage = vi.fn((msg: { type?: string }) => {
+      if (msg?.type === 'OFFSCREEN_STOP') {
+        // The store breaks between the gesture and its failure. Silence here
+        // would be a guess that the run had ended; the badge still works.
+        sessionThrows = true;
+        return Promise.reject(new Error('Receiving end does not exist.'));
+      }
+      return inner(msg);
+    }) as typeof fakeChrome.runtime.sendMessage;
+
+    void send({ type: 'REC_STOP' });
+    await settle();
+    expect(broadcasts()).toContain('control-unreachable');
+  });
+});
+
+describe('recording state written before this build', () => {
+  it('mounts the bar anchored rather than stuck on "Starting…"', async () => {
+    workingTab();
+    liveOffscreen();
+    const legacy: Record<string, unknown> = { ...liveState() };
+    delete legacy.anchored;
+    session.set(REC_STATE_KEY, legacy);
+    await loadWorker();
+
+    const reply = (await send({ type: 'REC_QUERY' })) as { anchored?: boolean };
+    await settle();
+    expect(reply.anchored).toBe(true);
+    const mounts = (fakeChrome.scripting.executeScript.mock.calls as [{ args?: unknown[] }][])
+      .map(([call]) => call.args)
+      .filter((args): args is unknown[] => (args?.length ?? 0) > 1);
+    expect(mounts.at(-1)?.[5]).toBe(true);
   });
 });

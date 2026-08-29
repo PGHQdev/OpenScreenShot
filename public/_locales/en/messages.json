@@ -341,6 +341,10 @@
     "message": "Nothing is being recorded \u2014 the recorder never started. Stop and try again.",
     "description": "Popup: error toast when OFFSCREEN_START never reached the offscreen engine, so the badge and control bar claim a recording that is not happening."
   },
+  "recFailEngineStalled": {
+    "message": "Recording didn\u2019t start, and stopping it got no answer. Nothing was saved \u2014 try again.",
+    "description": "Popup: the user pressed Stop on a recording that had not begun, and the offscreen recorder never answered. The run was torn down."
+  },
   "popupOpenFailed": {
     "message": "That page couldn\u2019t be opened. Try again.",
     "description": "Popup: error toast when chrome.tabs.create fails for the setup page, the editor or the recorder."

@@ -60,6 +60,15 @@ const START_TIMEOUT_MS = 10_000;
  * for a frame that never loaded at all (blocked iframe, dead tab).
  */
 const FRAME_READY_TIMEOUT_MS = 15_000;
+/**
+ * How long a Stop on a run that has not anchored waits for `ENGINE_STOPPED`
+ * before the run is torn down as stalled. It only has to outlast a healthy
+ * engine's own stop — which has no recorders to flush, because it never
+ * started any — so it is short: the user is already waiting on a gesture they
+ * made, and every second past this one is a second of "Starting…" over dead
+ * buttons.
+ */
+const STALLED_STOP_TIMEOUT_MS = 3000;
 
 interface StoredRecState {
   sessionId: string;
@@ -367,7 +376,10 @@ async function healOverlay(tabId: number): Promise<'fresh' | 'synced' | 'failed'
         s.pausedAt !== 0,
         { mic: s.settings.mic, tabAudio: s.settings.tabAudio, webcam: s.settings.webcam },
         s.writeFailed,
-        s.anchored,
+        // A state written by a build that predates the field would otherwise
+        // read as unanchored and leave a live recording's bar on "Starting…".
+        // Only an explicit false is unanchored.
+        s.anchored !== false,
       ],
     });
     // The bar is on the page. If this run had reported that it could not get
@@ -684,16 +696,54 @@ async function discardPreparedRun(
 async function abandonUnstartedRun(sessionId: string): Promise<void> {
   const state = await getRecState().catch(() => null);
   if (state && state.sessionId !== sessionId) return;
+  await tearDownUnstartedRun(state, 'engine-unreachable');
+}
+
+/**
+ * A Stop the engine never answered, on a run it never started. `handleStop`
+ * arms this when it stops a run that is not yet anchored; by the time it runs
+ * either `ENGINE_STOPPED` has cleared the state, or the anchor has arrived and
+ * the recording is real, or neither — and neither is the hung engine.
+ *
+ * That last case has no other exit. `OFFSCREEN_STOP` to an engine whose own
+ * `state` is null parks a pending stop and returns, so no `ENGINE_STOPPED`
+ * comes back and nothing clears; `handleQuery`'s escape hatch checks for an
+ * offscreen document, which exists and is merely hung. Without this the bar
+ * stays up reading "Starting…" over dead buttons, with a REC badge that never
+ * goes down, until the tab is closed.
+ */
+async function abandonStalledRun(sessionId: string): Promise<void> {
+  const state = await getRecState().catch(() => null);
+  if (!state || state.sessionId !== sessionId || state.anchored) return;
+  await tearDownUnstartedRun(state, 'engine-stalled');
+}
+
+/**
+ * Tear down a run the engine never took charge of, and say so.
+ *
+ * **The state goes first, and the bar goes after it.** The other order —
+ * unmount, then several awaits of IndexedDB, then clear — leaves a window in
+ * which a Stop reads a live state and `healOverlay`s the bar back onto the
+ * page. The state is then cleared under it and nothing will ever unmount that
+ * bar again: it sits there reading "Starting…", with a live REC dot and a
+ * webcam frame, over buttons whose messages all hit `if (!state) return`.
+ * Clearing first shuts that window, because `healOverlay` re-reads the state
+ * and returns 'failed' once there is none.
+ */
+async function tearDownUnstartedRun(
+  state: StoredRecState | null,
+  code: RecFailureCode,
+): Promise<void> {
+  await clearRecState();
   let retained = true;
   if (state) {
-    await unmountOverlay(state.tabId);
     retained = await retainFailedSession(state.sessionId, state.continued, state.segmentId);
+    await unmountOverlay(state.tabId);
   }
-  await clearRecState();
   await clearRecBadge();
   await closeOffscreenSafe();
   resolveStartPending();
-  await reportFailure(retained ? 'engine-unreachable' : 'cleanup-failed');
+  await reportFailure(retained ? code : 'cleanup-failed');
 }
 
 /**
@@ -770,7 +820,12 @@ async function execInTab<A extends unknown[], R>(
  * broken. A live run means nothing else is reporting this, so it must.
  */
 async function reportControlUnreachable(): Promise<void> {
-  if (await getRecState().catch(() => null)) await reportFailure('control-unreachable');
+  // A read that threw is not evidence the run is gone, and reporting still
+  // does something useful when it is: the badge half of `reportFailure` works
+  // even where the park cannot. Only a store that answered "nothing is
+  // running" buys the silence.
+  const state = await getRecState().catch(() => 'unreadable' as const);
+  if (state !== null) await reportFailure('control-unreachable');
 }
 
 async function handleStop(): Promise<void> {
@@ -784,6 +839,12 @@ async function handleStop(): Promise<void> {
   chrome.runtime
     .sendMessage({ type: 'OFFSCREEN_STOP', target: 'offscreen' })
     .catch(() => reportControlUnreachable());
+  // A run the engine has not reported in for is the one shape of Stop that
+  // can go unanswered forever; see `abandonStalledRun`. An anchored run's
+  // engine holds state and stops for real, so it needs no watchdog.
+  if (!state.anchored) {
+    setTimeout(() => void abandonStalledRun(state.sessionId), STALLED_STOP_TIMEOUT_MS);
+  }
 }
 
 async function handlePause(): Promise<void> {
@@ -872,13 +933,16 @@ async function handleQuery(sendResponse: (state: RecState) => void): Promise<voi
 
     // Zero until the engine has reported in: before that `startedAt` is the
     // mount, not a recording, and a surface that showed it would have to take
-    // the number back when the anchor lands.
-    const elapsedMs = state.anchored
+    // the number back when the anchor lands. Read the same defensive way as
+    // `healOverlay` does — only an explicit false is unanchored, so a state
+    // written before the field existed still reports its elapsed.
+    const anchored = state.anchored !== false;
+    const elapsedMs = anchored
       ? (state.pausedAt || Date.now()) - state.startedAt - state.pausedAccumMs
       : 0;
     sendResponse({
       active: true,
-      anchored: state.anchored,
+      anchored,
       paused: state.pausedAt !== 0,
       sessionId: state.sessionId,
       elapsedMs,
@@ -909,14 +973,29 @@ async function handleEngineStarted(sessionId: string, tracks?: CapturedTracks): 
   if (!state || state.sessionId !== sessionId) return;
 
   const settings = applyCapturedTracks(state.settings, tracks);
-  // Re-anchor only an untouched start: a pause during the wait already owns
-  // the clock, and moving the zero under it would report the wrong elapsed.
-  const fresh = state.pausedAt === 0 && state.pausedAccumMs === 0;
+  // The anchor lands once, on the first ENGINE_STARTED, and it lands on zero.
+  //
+  // It used to be skipped for a run whose clock had been touched — the old
+  // `pausedAt === 0 && pausedAccumMs === 0` test — on the reasoning that a
+  // pause owned the clock. A pause is reachable in this window: the 10s claim
+  // deadline releases `handlePause`'s wait while the start is still waiting
+  // for the permission frame. So the run kept the mount as its zero and the
+  // bar went "Starting…" -> 0:11, paused, for zero seconds of content, which
+  // is the exact reading the anchor exists to prevent. Both counters are
+  // reset with it, and an open pause is re-stamped to now, so a paused run
+  // anchors at 0:00 rather than at however long the prompt was up.
+  const now = Date.now();
   await setRecState({
     sessionId,
     settings,
     anchored: true,
-    ...(fresh ? { startedAt: Date.now() } : {}),
+    ...(state.anchored
+      ? {}
+      : {
+          startedAt: now,
+          pausedAccumMs: 0,
+          ...(state.pausedAt ? { pausedAt: now } : {}),
+        }),
   });
   void healOverlay(state.tabId);
 }
@@ -1013,19 +1092,12 @@ async function handleEngineError(sessionId: string, message: string): Promise<vo
   // from a session that already ended would otherwise delete the recording
   // that replaced it, along with its state, badge and offscreen document.
   if (state && state.sessionId !== sessionId) return;
-  let retained = true;
-  if (state) {
-    await unmountOverlay(state.tabId);
-    // The engine only reports this from its own start, before any recorder
-    // ran, so the session holds nothing recorded. Left at 'recording' it
-    // would offer the user an empty recording to recover; marked 'failed' it
-    // stays visible on the Recorder page as the attempt that did not work.
-    retained = await retainFailedSession(state.sessionId, state.continued, state.segmentId);
-  }
-  await clearRecState();
-  await clearRecBadge();
-  await closeOffscreenSafe();
-  await reportFailure(retained ? 'engine-failed' : 'cleanup-failed');
+  // The engine only reports this from its own start, before any recorder ran,
+  // so the session holds nothing recorded. Left at 'recording' it would offer
+  // the user an empty recording to recover; `tearDownUnstartedRun` marks it
+  // 'failed' so it stays visible on the Recorder page as an attempt that did
+  // not work, and clears the state before the bar for the reason given there.
+  await tearDownUnstartedRun(state, 'engine-failed');
 }
 
 async function handleEngineStopped(sessionId: string, canceled: boolean): Promise<void> {
@@ -1033,8 +1105,11 @@ async function handleEngineStopped(sessionId: string, canceled: boolean): Promis
   // Read the tab before the state is cleared; `handleStop` healed the overlay
   // on the way in, so the bar and frame are live right up to this point.
   const state = await getRecState();
-  if (state) await unmountOverlay(state.tabId);
+  // Cleared before the unmount, so a Stop landing in this window cannot heal
+  // the bar back onto a page nothing will unmount it from again — the same
+  // ordering `tearDownUnstartedRun` explains.
   await clearRecState();
+  if (state) await unmountOverlay(state.tabId);
   // Not clearRecBadge: a failure parked during this recording (an overlay
   // lost, say) still has its '!' owed to it, and the recording ending is not
   // the user having read it.
