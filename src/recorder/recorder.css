@@ -350,11 +350,6 @@ body {
   margin-top: var(--s-2);
 }
 
-/* popup.css defines the same rule locally; recorder.css does not import it. */
-.range {
-  width: 100%;
-}
-
 /* ---- Beautify background swatches ---- */
 /* Wrapping now lives on the shared .swatches rule in ui.css (task-16, for the
    editor style bar's reflow at 320px) — the beautify grid gets it for free. */

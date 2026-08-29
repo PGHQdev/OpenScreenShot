@@ -422,6 +422,8 @@ body {
   outline: 2px solid var(--border-focus);
   outline-offset: -2px;
 }
+/* Overrides the 100% width shared/controls.css's .range sets — the quality
+   slider sits in a row with its own label, not a full-width rail row. */
 .range {
   width: 150px;
 }
