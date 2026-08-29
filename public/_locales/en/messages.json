@@ -285,6 +285,10 @@
     "message": "Paused",
     "description": "Popup: status label shown while a recording is paused."
   },
+  "recStarting": {
+    "message": "Starting…",
+    "description": "Popup: shown in place of the elapsed time while the recording is still opening its streams, before the clock has a zero."
+  },
   "recMic": {
     "message": "Mic",
     "description": "Popup: toggle chip for the microphone track."
@@ -348,6 +352,10 @@
   "recFailEventsWrite": {
     "message": "The cursor track isn\u2019t being saved. The video is fine; zoom and click effects will be missing.",
     "description": "Popup: error toast when cursor-event writes to IndexedDB failed mid-recording, leaving the video intact."
+  },
+  "recOverlayStarting": {
+    "message": "Starting…",
+    "description": "Recording control bar: shown in place of the timer while the recording is still opening its streams. Keep it short; it replaces a 0:00 clock."
   },
   "recOverlayNotSaving": {
     "message": "NOT SAVING",

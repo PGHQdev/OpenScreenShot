@@ -65,8 +65,13 @@ let state: EngineState | null = null;
 /**
  * A stop/cancel that arrived while `start()` was still opening streams. The
  * engine has no state to stop yet at that point, and dropping the gesture
- * would leave a recording nobody asked for running until the tab closes —
- * with a camera prompt in the way, `start()` can stay open for seconds.
+ * would leave a recording nobody asked for running until the tab closes.
+ *
+ * This is the ordinary path now, not the rare one: the worker used to hold
+ * every gesture until the start round trip finished, so this only ever saw
+ * one that outlasted the worker's own 10s deadline. It forwards them as they
+ * land, so any stop pressed between OFFSCREEN_START and ENGINE_STARTED
+ * arrives here.
  */
 let pendingStop: 'stop' | 'cancel' | null = null;
 

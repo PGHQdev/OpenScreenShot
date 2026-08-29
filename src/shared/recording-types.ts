@@ -62,7 +62,18 @@ export type CursorEvent =
 // --- Gesture surfaces (popup / overlay / command) → worker -----------------
 
 export type RecMessage =
-  | { type: 'REC_START'; settings: RecordingSettings; continueSessionId?: string }
+  | {
+      type: 'REC_START';
+      settings: RecordingSettings;
+      continueSessionId?: string;
+      /**
+       * The popup's `devicesGranted` answer: true when every device this
+       * recording wants is already granted, so the start skips the wait for
+       * the permission frame. `isRecMessage` is a prefix check, so the
+       * handler reads this defensively — absent or malformed keeps the wait.
+       */
+      devicesGranted?: boolean;
+    }
   | { type: 'REC_STOP' }
   | { type: 'REC_PAUSE' }
   | { type: 'REC_RESUME' }
@@ -82,8 +93,15 @@ export interface RecState {
   active: boolean;
   paused: boolean;
   sessionId?: string;
-  /** Elapsed recorded ms at reply time, pauses excluded. */
+  /** Elapsed recorded ms at reply time, pauses excluded. 0 until anchored. */
   elapsedMs?: number;
+  /**
+   * Whether the engine has reported that the recorders actually began. The
+   * clock has no zero before that — the run is still opening streams — so a
+   * surface that shows elapsed has to show that it is starting instead of a
+   * number it would have to take back.
+   */
+  anchored?: boolean;
   settings?: RecordingSettings;
   overlayLost?: boolean;
   recoverableSessionId?: string;

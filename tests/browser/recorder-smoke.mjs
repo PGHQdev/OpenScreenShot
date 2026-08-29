@@ -606,10 +606,11 @@ async function main() {
 
     const mounted = await page.evaluate(async (file) => {
       const mod = await import(`/assets/${file}`);
-      const mount = Object.values(mod).find((v) => typeof v === 'function' && v.length >= 4);
+      // 6 arity is unique to the mount; `isNearBar` also takes 4.
+      const mount = Object.values(mod).find((v) => typeof v === 'function' && v.length === 6);
       window.__mount = mount;
       // Mount clean, exactly as a healthy recording does.
-      return mount('seg-1', 0, false, { mic: false, tabAudio: true, webcam: false }, false);
+      return mount('seg-1', 0, false, { mic: false, tabAudio: true, webcam: false }, false, true);
     }, overlayFile);
     const warningChip = () => pierced('rec-overlay-warning');
     const announcer = () => pierced('rec-overlay-announcer');
@@ -628,7 +629,14 @@ async function main() {
     // The worker re-heals with the flag set: the 'synced' branch, which is the
     // one production takes mid-recording (see handleEngineWriteFailed).
     const synced = await page.evaluate(() =>
-      window.__mount('seg-1', 4000, false, { mic: false, tabAudio: true, webcam: false }, true),
+      window.__mount(
+        'seg-1',
+        4000,
+        false,
+        { mic: false, tabAudio: true, webcam: false },
+        true,
+        true,
+      ),
     );
     assert(synced === 'synced', `the re-heal updated the live bar (${synced})`);
     const chipHtml = await warningChip();
@@ -647,7 +655,14 @@ async function main() {
     // region is the same node with the same text — a replaced alert node is
     // a fresh announcement.
     await page.evaluate(() =>
-      window.__mount('seg-1', 5000, false, { mic: false, tabAudio: true, webcam: false }, true),
+      window.__mount(
+        'seg-1',
+        5000,
+        false,
+        { mic: false, tabAudio: true, webcam: false },
+        true,
+        true,
+      ),
     );
     const chipAgain = await warningChip();
     const spokenAgain = await announcer();
@@ -674,6 +689,64 @@ async function main() {
       return value;
     });
     assert(opacity === '1', `and holds the bar open past its 3s idle hide (opacity ${opacity})`);
+
+    step("the bar's clock anchors once and never runs backwards");
+    // Same built module, same closed shadow root, read through CDP. The bar
+    // mounts at step 7 of the start and the engine reports in at step 10, so
+    // every mount begins in the unanchored state this first call describes.
+    const timerText = async () => {
+      const node = await pierced('rec-overlay-timer');
+      return node?.html.replace(/<[^>]*>/g, '').trim();
+    };
+    const sync = (elapsed, anchored) =>
+      page.evaluate(
+        (args) =>
+          window.__mount(
+            'seg-1',
+            args[0],
+            false,
+            { mic: false, tabAudio: true, webcam: false },
+            false,
+            args[1],
+          ),
+        [elapsed, anchored],
+      );
+
+    await page.evaluate(() =>
+      window.__mount(
+        'seg-1',
+        12_000,
+        false,
+        { mic: false, tabAudio: true, webcam: false },
+        false,
+        false,
+      ),
+    );
+    const starting = await timerText();
+    assert(
+      starting === messages.recOverlayStarting.message,
+      `an unanchored bar shows no number at all (${starting})`,
+    );
+
+    await sync(0, true);
+    const anchoredAt = await timerText();
+    assert(anchoredAt === '0:00', `the anchor sets the zero (${anchoredAt})`);
+
+    await sync(64_000, true);
+    assert((await timerText()) === '1:04', 'and the clock runs from it');
+
+    // A heal computed before the anchor, delivered after it: two
+    // executeScript injections have no ordering guarantee between them.
+    await sync(1000, true);
+    const afterStale = await timerText();
+    assert(afterStale === '1:04', `a stale heal cannot move the clock back (${afterStale})`);
+
+    // The same race the other way: an unanchored heal landing after the
+    // anchor must not put the bar back to "starting" mid-recording.
+    await sync(0, false);
+    const afterUnanchored = await timerText();
+    assert(afterUnanchored === '1:04', `and cannot un-anchor a running clock (${afterUnanchored})`);
+    await page.evaluate(() => window.__ossRecOverlay?.());
     await dom.detach();
 
     assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);

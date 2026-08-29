@@ -49,6 +49,37 @@ export function shouldShowBar(args: {
   return args.sinceMountMs < OVERLAY_GRACE_MS || args.sinceNearMs < OVERLAY_GRACE_MS;
 }
 
+/**
+ * What a re-sync should do to the bar's clock. The bar mounts while the start
+ * is still opening streams, so there is a window in which no zero exists yet:
+ * the worker's `startedAt` is the mount, the engine's is whenever its
+ * recorders actually began, and `ENGINE_STARTED` moves the second under the
+ * first. Counting through that window and then re-anchoring is what made the
+ * timer visibly jump back to 0:00.
+ *
+ * Two rules, and both are properties rather than values:
+ *
+ * - **The clock anchors once.** Until a sync arrives saying the engine has
+ *   started, the bar shows no number at all, and the first such sync is the
+ *   anchor — whatever elapsed it carries is taken as-is. An unanchored sync
+ *   can never take an anchor back: a heal that raced the anchoring one would
+ *   otherwise put the bar back to "starting" mid-recording.
+ * - **After the anchor the clock is monotonic.** Heals are re-injections that
+ *   can land out of order (a navigation and a popup open in the same second,
+ *   each carrying the elapsed read at its own moment), so the later-arriving
+ *   one is not always the later-computed one. The larger elapsed is the true
+ *   one, and taking it is what makes "never jumps backwards" hold under every
+ *   ordering rather than under the orderings anyone thought to test.
+ */
+export function anchoredElapsed(
+  current: { elapsedMs: number; anchored: boolean },
+  next: { elapsedMs: number; anchored: boolean },
+): { elapsedMs: number; anchored: boolean } {
+  if (!next.anchored) return current;
+  if (!current.anchored) return { elapsedMs: next.elapsedMs, anchored: true };
+  return { elapsedMs: Math.max(current.elapsedMs, next.elapsedMs), anchored: true };
+}
+
 /** "0:07", "1:23", "1:23:45". Floors ragged ms, clamps negatives to zero. */
 export function formatTimer(ms: number): string {
   const totalSec = Math.floor(Math.max(0, ms) / 1000);
@@ -76,17 +107,24 @@ export function mountRecordingOverlay(
   paused: boolean,
   tracks: { mic: boolean; tabAudio: boolean; webcam: boolean },
   /** Chunks are failing to reach IndexedDB; show it here and hold the bar open. */
-  writeFailed = false,
+  writeFailed: boolean,
+  /**
+   * Whether the engine has reported that the recorders began. Required, not
+   * defaulted: a forgotten argument would put the bar back to counting from
+   * its own mount, which is the bug this replaces. See `anchoredElapsed`.
+   */
+  anchored: boolean,
 ): 'fresh' | 'synced' {
   type SyncFn = (
     elapsedMs: number,
     paused: boolean,
     tracks: { mic: boolean; tabAudio: boolean; webcam: boolean },
     writeFailed: boolean,
+    anchored: boolean,
   ) => void;
   const win = window as unknown as { __ossRecOverlay?: () => void; __ossRecSync?: SyncFn };
   if (win.__ossRecOverlay) {
-    win.__ossRecSync?.(elapsedMs, paused, tracks, writeFailed);
+    win.__ossRecSync?.(elapsedMs, paused, tracks, writeFailed, anchored);
     return 'synced';
   }
 
@@ -115,6 +153,18 @@ export function mountRecordingOverlay(
     return args.sinceMountMs < OVERLAY_GRACE_MS || args.sinceNearMs < OVERLAY_GRACE_MS;
   }
 
+  // Duplicated for the same reason as the constants above; the exported copy
+  // in this file's module scope is the one under test, and the two are
+  // spelled identically on purpose.
+  function anchoredElapsed(
+    current: { elapsedMs: number; anchored: boolean },
+    next: { elapsedMs: number; anchored: boolean },
+  ): { elapsedMs: number; anchored: boolean } {
+    if (!next.anchored) return current;
+    if (!current.anchored) return { elapsedMs: next.elapsedMs, anchored: true };
+    return { elapsedMs: Math.max(current.elapsedMs, next.elapsedMs), anchored: true };
+  }
+
   function formatTimer(ms: number): string {
     const totalSec = Math.floor(Math.max(0, ms) / 1000);
     const h = Math.floor(totalSec / 3600);
@@ -139,6 +189,7 @@ export function mountRecordingOverlay(
     | { kind: 'resize'; t: number; w: number; h: number; dpr: number };
 
   let isPaused = paused;
+  let isAnchored = anchored;
   let startedAt = Date.now() - elapsedMs;
   let pausedAccum = 0;
   let pauseStartedAt: number | null = isPaused ? Date.now() : null;
@@ -253,6 +304,7 @@ export function mountRecordingOverlay(
 
   const timer = document.createElement('span');
   timer.className = 'timer';
+  timer.setAttribute('data-testid', 'rec-overlay-timer');
   bar.appendChild(timer);
 
   const chips = document.createElement('div');
@@ -504,11 +556,18 @@ export function mountRecordingOverlay(
 
   // --- Timer ------------------------------------------------------------
 
+  // Never a number before the engine has a zero to count from — see
+  // `anchoredElapsed`. The bar is up and its Stop and Cancel work throughout
+  // this window; what it does not do is claim a duration nothing recorded.
+  function renderTimer(): void {
+    timer.textContent = isAnchored ? formatTimer(nowT()) : t('recOverlayStarting', 'Starting…');
+  }
+
   const timerInterval = setInterval(() => {
-    timer.textContent = formatTimer(nowT());
+    renderTimer();
     applyBarVisibility();
   }, 500);
-  timer.textContent = formatTimer(nowT());
+  renderTimer();
 
   // --- Cursor logger ------------------------------------------------------
 
@@ -575,19 +634,24 @@ export function mountRecordingOverlay(
 
   // --- Re-sync ---------------------------------------------------------------
 
-  win.__ossRecSync = (nextElapsedMs, nextPaused, nextTracks, nextWriteFailed) => {
+  win.__ossRecSync = (nextElapsedMs, nextPaused, nextTracks, nextWriteFailed, nextAnchored) => {
     // Shift what is still buffered by the same amount the clock moves, so a
     // re-anchor cannot leave the last second of cursor events pointing at a
     // timestamp the video never had.
     const before = nowT();
-    startedAt = Date.now() - nextElapsedMs;
+    const adopted = anchoredElapsed(
+      { elapsedMs: before, anchored: isAnchored },
+      { elapsedMs: nextElapsedMs, anchored: nextAnchored },
+    );
+    isAnchored = adopted.anchored;
+    startedAt = Date.now() - adopted.elapsedMs;
     pausedAccum = 0;
     pauseStartedAt = nextPaused ? Date.now() : null;
     isPaused = nextPaused;
     const shift = before - nowT();
     for (const e of buffer) e.t -= shift;
     renderPauseState();
-    timer.textContent = formatTimer(nowT());
+    renderTimer();
 
     // One-way, like the tracks above: a run that has started losing chunks
     // does not stop having lost them, and a stale heal carrying `false`

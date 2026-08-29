@@ -19,6 +19,10 @@ import { REC_FAILURE_KEY, REC_FAILURE_MESSAGE, isRecFailure } from '../../src/sh
  * again. Each test enters the failure for real — a stubbed `chrome` that
  * fails the way the real API does — and reads what the worker parked for the
  * next popup open.
+ *
+ * The last block is start timing rather than failure reporting: the same
+ * listener, the same stubbed `chrome`, and the paths it drives are the ones
+ * `handleStart` takes on its way to (or away from) the engine.
  */
 
 const REC_STATE_KEY = 'openscreenshot:rec-state';
@@ -167,8 +171,15 @@ function liveState(sessionId = 'sess-1', segmentId = 'seg-1', overlayMounted = t
     overlayLost: false,
     overlayMounted,
     writeFailed: false,
+    anchored: true,
     continued: false,
   };
+}
+
+/** Messages the worker aimed at the offscreen document, by type. */
+function offscreenSends(): string[] {
+  const calls = fakeChrome.runtime.sendMessage.mock.calls as [{ type?: string; target?: string }][];
+  return calls.filter(([m]) => m?.target === 'offscreen').map(([m]) => m.type ?? '');
 }
 
 /** An executeScript that answers the viewport read and mounts the bar. */
@@ -867,5 +878,231 @@ describe('the badge when the store cannot answer', () => {
     sessionThrows = true;
     await mod.restoreRecBadge();
     expect(badgeText).not.toContain('');
+  });
+});
+
+/**
+ * The window between the Record click and the engine reporting in. Everything
+ * here is driven with the mic on and no `REC_FRAME_READY` ever delivered,
+ * which is exactly the state the 25-second hang lived in: the start parked on
+ * the permission frame, and every gesture parked behind the start.
+ */
+describe('the start window', () => {
+  const withMic = { ...DEFAULT_RECORDING_SETTINGS, mic: true };
+
+  /**
+   * `workingTab` reports every mount as 'synced', which is the state a heal
+   * finds. Only a *fresh* mount raises the permission prompt, so only a fresh
+   * mount makes the start wait for the frame — these tests are about that
+   * wait, so the injection has to answer the way a first mount does.
+   */
+  function freshMount(): void {
+    workingTab();
+    fakeChrome.scripting.executeScript = vi.fn((arg: { args?: unknown[] }) =>
+      Promise.resolve([
+        { result: (arg.args?.length ?? 0) > 0 ? 'fresh' : { w: 800, h: 600, dpr: 1 } },
+      ]),
+    ) as unknown as typeof fakeChrome.scripting.executeScript;
+  }
+
+  /** An offscreen document exists, so REC_QUERY treats the run as live. */
+  function liveOffscreen(): void {
+    fakeChrome.runtime.getContexts = vi.fn(() =>
+      Promise.resolve([{ contextType: 'OFFSCREEN_DOCUMENT' }]),
+    ) as unknown as typeof fakeChrome.runtime.getContexts;
+  }
+
+  it('waits for the permission frame when the grant is missing', async () => {
+    freshMount();
+    await loadWorker();
+    void send({ type: 'REC_START', settings: withMic, devicesGranted: false });
+    await settle();
+    expect(offscreenSends()).not.toContain('OFFSCREEN_START');
+    // Same start, unblocked by the frame it was waiting for.
+    void send({ type: 'REC_FRAME_READY' });
+    await settle();
+    expect(offscreenSends()).toContain('OFFSCREEN_START');
+  });
+
+  it('skips the wait when every wanted device is already granted', async () => {
+    workingTab();
+    await loadWorker();
+    void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+    await settle();
+    expect(offscreenSends()).toContain('OFFSCREEN_START');
+  });
+
+  it('waits when the click carries no answer at all', async () => {
+    freshMount();
+    await loadWorker();
+    // An older popup, or a message shape `isRecMessage` never validated.
+    void send({ type: 'REC_START', settings: withMic });
+    await settle();
+    expect(offscreenSends()).not.toContain('OFFSCREEN_START');
+  });
+
+  it('does not wait for a frame a mute, cameraless recording never mounts', async () => {
+    workingTab();
+    await loadWorker();
+    void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS, devicesGranted: false });
+    await settle();
+    expect(offscreenSends()).toContain('OFFSCREEN_START');
+  });
+
+  it('answers a Stop mid-start by giving the run back, not by asking the engine', async () => {
+    freshMount();
+    await loadWorker();
+    void send({ type: 'REC_START', settings: withMic, devicesGranted: false });
+    await settle();
+    expect(session.get(REC_STATE_KEY)).toBeDefined();
+    const started = (await listSessions()).map((s) => s.id);
+    expect(started).toHaveLength(1);
+
+    void send({ type: 'REC_STOP' });
+    await settle();
+
+    // Nothing was ever handed over, so there is nothing to unwind at the
+    // engine: OFFSCREEN_STOP would have parked a pendingStop that the start
+    // then consumed, producing a recording of nothing.
+    expect(offscreenSends()).toEqual([]);
+    expect(session.get(REC_STATE_KEY)).toBeUndefined();
+    expect(badgeText.at(-1)).toBe('');
+    // A gesture is not a failure; the bar going and the badge clearing is the
+    // whole answer.
+    expect(parked()).toBeNull();
+    expect(await listSessions()).toEqual([]);
+  });
+
+  it('answers a Cancel mid-start the same way', async () => {
+    freshMount();
+    await loadWorker();
+    void send({ type: 'REC_START', settings: withMic, devicesGranted: false });
+    await settle();
+    void send({ type: 'REC_CANCEL' });
+    await settle();
+    expect(offscreenSends()).toEqual([]);
+    expect(session.get(REC_STATE_KEY)).toBeUndefined();
+    expect(await listSessions()).toEqual([]);
+  });
+
+  it('gives a continued session back its earlier segments, not a failed row', async () => {
+    freshMount();
+    const existing = await createSession(DEFAULT_RECORDING_SETTINGS);
+    await updateSession(existing.id, { status: 'complete', segmentIds: ['old-seg'] });
+    await loadWorker();
+    void send({
+      type: 'REC_START',
+      settings: withMic,
+      continueSessionId: existing.id,
+      devicesGranted: false,
+    });
+    await settle();
+    void send({ type: 'REC_STOP' });
+    await settle();
+    const after = await getSession(existing.id);
+    expect(after?.status).toBe('complete');
+    expect(after?.segmentIds).toEqual(['old-seg']);
+  });
+
+  it('forwards a Stop that lands after the engine has been asked to begin', async () => {
+    workingTab();
+    await loadWorker();
+    void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+    await settle();
+    expect(offscreenSends()).toContain('OFFSCREEN_START');
+    void send({ type: 'REC_STOP' });
+    await settle();
+    // The engine parks it as a pendingStop and consumes it the moment its own
+    // getUserMedia resolves; the worker must not withhold it until then.
+    expect(offscreenSends()).toContain('OFFSCREEN_STOP');
+  });
+
+  it('does not let a second Record click start a run beside the one preparing', async () => {
+    freshMount();
+    await loadWorker();
+    void send({ type: 'REC_START', settings: withMic, devicesGranted: false });
+    await settle();
+    void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+    await settle();
+    expect(offscreenSends()).toEqual([]);
+    expect(await listSessions()).toHaveLength(1);
+  });
+
+  it('stays quiet about a stop whose run a teardown already took down', async () => {
+    workingTab();
+    liveOffscreen();
+    await loadWorker();
+    void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+    await settle();
+    // The interleaving `abandonUnstartedRun` produces: the stop is in flight
+    // when the run is torn down under it, so the send rejects against an
+    // offscreen document that is already gone. Both ends reporting is one
+    // failure told twice, which is the rule this module keeps everywhere else.
+    const inner = fakeChrome.runtime.sendMessage;
+    fakeChrome.runtime.sendMessage = vi.fn((msg: { type?: string }) => {
+      if (msg?.type === 'OFFSCREEN_STOP') {
+        session.delete(REC_STATE_KEY);
+        return Promise.reject(new Error('Receiving end does not exist.'));
+      }
+      return inner(msg);
+    }) as typeof fakeChrome.runtime.sendMessage;
+
+    void send({ type: 'REC_STOP' });
+    await settle();
+    expect(parked()).toBeNull();
+  });
+
+  it('still reports a stop that never reached a run that is still live', async () => {
+    workingTab();
+    liveOffscreen();
+    sendRejects.add('OFFSCREEN_STOP');
+    await loadWorker();
+    void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+    await settle();
+    void send({ type: 'REC_STOP' });
+    await settle();
+    expect(parked()).toBe('control-unreachable');
+  });
+
+  it('reports no elapsed until the engine says the recorders began', async () => {
+    workingTab();
+    liveOffscreen();
+    await loadWorker();
+    void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+    await settle();
+    const before = (await send({ type: 'REC_QUERY' })) as {
+      active: boolean;
+      anchored?: boolean;
+      elapsedMs?: number;
+    };
+    expect(before.active).toBe(true);
+    expect(before.anchored).toBe(false);
+    expect(before.elapsedMs).toBe(0);
+
+    const sessionId = (await listSessions())[0].id;
+    void send({ type: 'ENGINE_STARTED', sessionId, tracks: { mic: true, webcam: false } });
+    await settle();
+    const after = (await send({ type: 'REC_QUERY' })) as { anchored?: boolean };
+    expect(after.anchored).toBe(true);
+  });
+
+  it('mounts the bar unanchored and re-injects it anchored on ENGINE_STARTED', async () => {
+    workingTab();
+    liveOffscreen();
+    await loadWorker();
+    void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+    await settle();
+    // args[5] is `anchored`; the mount is the injection that carries args.
+    const anchoredArgs = () =>
+      (fakeChrome.scripting.executeScript.mock.calls as [{ args?: unknown[] }][])
+        .map(([call]) => call.args)
+        .filter((args): args is unknown[] => (args?.length ?? 0) > 1)
+        .map((args) => args[5]);
+    expect(anchoredArgs()).toEqual([false]);
+
+    const sessionId = (await listSessions())[0].id;
+    void send({ type: 'ENGINE_STARTED', sessionId, tracks: { mic: true, webcam: false } });
+    await settle();
+    expect(anchoredArgs().at(-1)).toBe(true);
   });
 });

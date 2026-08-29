@@ -41,6 +41,7 @@ import {
 } from '../shared/recording-types';
 import {
   PENDING_RECORD_KEY,
+  devicesGranted,
   popupWarnings,
   type DevicePermission,
   type PendingRecord,
@@ -291,11 +292,13 @@ export function App() {
     if (!recState?.active) return;
     const baseMs = recState.elapsedMs ?? 0;
     setDisplayMs(baseMs);
-    if (recState.paused) return;
+    // No zero to tick from until the engine reports in; the row says
+    // "Starting" instead, and the next popup open reads the real elapsed.
+    if (recState.paused || recState.anchored === false) return;
     const start = Date.now();
     const id = setInterval(() => setDisplayMs(baseMs + (Date.now() - start)), 250);
     return () => clearInterval(id);
-  }, [recState?.active, recState?.paused, recState?.elapsedMs]);
+  }, [recState?.active, recState?.paused, recState?.anchored, recState?.elapsedMs]);
 
   // 1/2/3 fire a capture while the mode list is showing.
   useEffect(() => {
@@ -471,6 +474,10 @@ export function App() {
       type: 'REC_START',
       settings: recSettings,
       continueSessionId: continueSessionId ?? undefined,
+      // Only this side can answer it: `navigator.permissions` needs a
+      // document, and the worker has none. Without it the start waits up to
+      // 15s for a permission frame that had nothing to ask.
+      devicesGranted: devicesGranted(recSettings, deviceStates),
     }).then(
       async () => {
         // Spent only once the worker has the click. Cleared ahead of the send
@@ -504,6 +511,9 @@ export function App() {
       continueSessionId: continueSessionId ?? undefined,
       tabId,
       at: Date.now(),
+      // Parked with the click: Chrome's dialog can tear this popup down, and
+      // the worker that picks the click up cannot read this for itself.
+      devicesGranted: devicesGranted(recSettings, deviceStates),
     };
     let parked = true;
     await chrome.storage.session.set({ [PENDING_RECORD_KEY]: pending }).catch(() => {
@@ -706,7 +716,9 @@ export function App() {
                 <span class="mode-title">
                   {recState.paused ? t('recPaused') : t('recRecording')}
                 </span>
-                <span class="mode-sub">{formatElapsed(displayMs)}</span>
+                <span class="mode-sub">
+                  {recState.anchored === false ? t('recStarting') : formatElapsed(displayMs)}
+                </span>
               </span>
               <span class="mode-keys">
                 <button class="seg-btn" onClick={stopRecording}>
@@ -720,6 +732,7 @@ export function App() {
           ) : (
             <button
               class="mode-card"
+              data-testid="rec-start"
               aria-disabled={activeTabProtected}
               title={activeTabProtected ? t('recProtected') : undefined}
               onClick={onRecordClick}

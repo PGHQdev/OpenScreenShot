@@ -86,6 +86,12 @@ export interface PendingRecord {
    * was made and answered.
    */
   asked?: boolean;
+  /**
+   * `devicesGranted` at the click. The worker cannot recompute it — it has no
+   * `navigator.permissions` — and this click may be resumed by the worker
+   * after Chrome's dialog tore the popup down, so the answer travels with it.
+   */
+  devicesGranted?: boolean;
 }
 
 /**
@@ -112,4 +118,29 @@ export function pendingRecordIsLive(
   if (!rec.settings || typeof rec.settings !== 'object') return false;
   if (activeTabId == null || rec.tabId !== activeTabId) return false;
   return now - rec.at >= 0 && now - rec.at <= PENDING_RECORD_TTL_MS;
+}
+
+/**
+ * Whether the camera/mic prompt this recording would raise has already been
+ * answered, so the start has nothing to wait for.
+ *
+ * The start mounts the overlay's permission iframe and parks on its
+ * `REC_FRAME_READY` because that iframe is the only surface on this origin
+ * that can show the prompt. Once the grant exists the frame raises no prompt
+ * at all, and the engine's own `getUserMedia` succeeds silently — so the wait
+ * buys nothing and costs up to `FRAME_READY_TIMEOUT_MS`.
+ *
+ * A worker cannot answer this: `navigator.permissions` needs a document. The
+ * popup, which already queries both devices for its warning chips, reads it
+ * and hands the answer to the start. Anything other than 'granted' — 'prompt',
+ * 'denied', or a query that threw and fell back to 'prompt' — keeps the wait,
+ * so being wrong here can only be slow, never silent.
+ */
+export function devicesGranted(
+  rec: { mic: boolean; webcam: boolean },
+  snap: Pick<PermissionSnapshot, 'camera' | 'mic'>,
+): boolean {
+  if (rec.webcam && snap.camera !== 'granted') return false;
+  if (rec.mic && snap.mic !== 'granted') return false;
+  return true;
 }

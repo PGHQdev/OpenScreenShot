@@ -81,6 +81,12 @@ interface StoredRecState {
   overlayMounted: boolean;
   /** Media chunks are failing to reach IndexedDB; the control bar says so. */
   writeFailed: boolean;
+  /**
+   * Whether `ENGINE_STARTED` has arrived, i.e. whether `startedAt` is the
+   * moment the recorders began rather than the moment the bar was mounted.
+   * The clock has no zero until then, so no surface may show elapsed.
+   */
+  anchored: boolean;
   /** True when this run appends to an existing session (Continue). */
   continued: boolean;
 }
@@ -144,11 +150,56 @@ let startPending: Promise<void> | null = null;
 let resolveStartPendingFn: (() => void) | null = null;
 let startTimeout: ReturnType<typeof setTimeout> | null = null;
 
+/**
+ * True while `handleStart` is preparing a run the engine has not been asked
+ * to begin yet. Distinct from `startPending`, which the deadline above can
+ * release while the start is still running: this one is owned by
+ * `handleStart` itself, so it answers "has `OFFSCREEN_START` gone out?"
+ * without ever being wrong about it.
+ *
+ * Two things read it. The concurrent-start guard, which a released deadline
+ * used to let a second Record click walk straight through; and Stop/Cancel,
+ * which have to know whether the gesture belongs to this worker (tear the
+ * preparation down) or to the engine (forward it).
+ */
+let preparingStart = false;
+
+/**
+ * A Stop or Cancel that landed while the start was still preparing. It is
+ * recorded rather than acted on directly, because the start owns the session
+ * row, the segment row, the badge and the overlay it has to give back, and
+ * they are locals inside `handleStart`.
+ */
+let startAbort: 'stop' | 'cancel' | null = null;
+
 function beginStartPending(): void {
   startPending = new Promise<void>((resolve) => {
     resolveStartPendingFn = resolve;
   });
   armStartTimeout();
+}
+
+/**
+ * Take a Stop or Cancel that arrived before `OFFSCREEN_START` went out, and
+ * say whether it was taken.
+ *
+ * Forwarding it instead would be worse than dropping it, which is what used
+ * to happen: `OFFSCREEN_STOP` reaching an engine with no state parks a
+ * `pendingStop` that the start then consumes on its way in, so the user's
+ * Stop would produce a recording that starts, runs for a frame and stops —
+ * a session with nothing in it. The preparation is abandoned instead, and
+ * nothing is ever handed to the engine.
+ *
+ * The frame wait is released here on purpose. Without it the gesture would
+ * sit unread until the permission frame answered or its 15s timeout ran out,
+ * which is the whole complaint: Stop looked broken because it was queued
+ * behind the longest wait in the start.
+ */
+function abortPreparingStart(gesture: 'stop' | 'cancel'): boolean {
+  if (!preparingStart) return false;
+  startAbort = gesture;
+  resolveFrameReadyFn?.();
+  return true;
 }
 
 /**
@@ -316,6 +367,7 @@ async function healOverlay(tabId: number): Promise<'fresh' | 'synced' | 'failed'
         s.pausedAt !== 0,
         { mic: s.settings.mic, tabAudio: s.settings.tabAudio, webcam: s.settings.webcam },
         s.writeFailed,
+        s.anchored,
       ],
     });
     // The bar is on the page. If this run had reported that it could not get
@@ -394,11 +446,22 @@ async function closeOffscreenSafe(): Promise<void> {
 
 // --- REC_* handlers ------------------------------------------------------
 
-async function handleStart(settings: RecordingSettings, continueSessionId?: string): Promise<void> {
-  if (startPending) return; // a start is already mid-flight
+/**
+ * `devicesGranted` is the popup's answer to "is there a permission prompt
+ * coming?" — see `src/shared/permissions.ts`. A worker has no
+ * `navigator.permissions`, so it cannot ask; absent or false keeps the wait.
+ */
+async function handleStart(
+  settings: RecordingSettings,
+  continueSessionId?: string,
+  devicesGranted = false,
+): Promise<void> {
+  if (startPending || preparingStart) return; // a start is already mid-flight
   // Claim the slot synchronously, before any `await` — otherwise two
   // near-simultaneous REC_STARTs can both pass the check above while the
   // first is suspended on an await (check-then-act split across awaits).
+  preparingStart = true;
+  startAbort = null;
   beginStartPending();
 
   let session: RecordingSession | undefined;
@@ -465,6 +528,7 @@ async function handleStart(settings: RecordingSettings, continueSessionId?: stri
       overlayLost: false,
       overlayMounted: false,
       writeFailed: false,
+      anchored: false,
       continued: !!continueSessionId,
     });
 
@@ -480,7 +544,12 @@ async function handleStart(settings: RecordingSettings, continueSessionId?: stri
     // A bar that never went up leaves the recording running with no in-page
     // stop button; the popup is the remaining way to end it, so say so.
     if (mount === 'failed') void reportFailure('overlay-blocked', session.id);
-    if (mount === 'fresh' && (settings.webcam || settings.mic)) {
+    // Gated on the grant, because the wait exists for the prompt and nothing
+    // else: with camera and mic already granted the frame raises no prompt,
+    // reports ready as fast as an iframe can load, and the engine's own
+    // getUserMedia would have succeeded anyway. Waiting there spent up to
+    // FRAME_READY_TIMEOUT_MS of a start that had nothing to wait for.
+    if (mount === 'fresh' && (settings.webcam || settings.mic) && !devicesGranted) {
       await waitForFrameReady();
       armStartTimeout();
     }
@@ -495,6 +564,15 @@ async function handleStart(settings: RecordingSettings, continueSessionId?: stri
     // consumed promptly, and the wait above can run as long as a human takes
     // to answer a permission prompt.
     const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tabId });
+
+    // The last moment a Stop or Cancel can be answered by giving the run back
+    // instead of by asking the engine to undo it. Nothing awaits between here
+    // and the dispatch below, so a gesture is either taken by this branch or
+    // reaches an engine that has been asked to begin — never neither.
+    if (startAbort) {
+      await discardPreparedRun(session.id, tabId, segmentId, !!continueSessionId);
+      return;
+    }
 
     const startedSessionId = session.id;
     chrome.runtime
@@ -526,7 +604,50 @@ async function handleStart(settings: RecordingSettings, continueSessionId?: stri
     // cleanup that also failed is the message worth showing: it is the one
     // that leaves a row behind for the user to deal with.
     await reportFailure(retained ? 'start-failed' : 'cleanup-failed');
+  } finally {
+    // Cleared the moment `handleStart` returns, which is right after the
+    // dispatch above — from there on the gesture belongs to the engine.
+    preparingStart = false;
   }
+}
+
+/**
+ * The user stopped or cancelled while the start was still preparing. Give the
+ * run back and go quiet.
+ *
+ * Nothing was recorded: no recorder ever ran, so there is no file to keep and
+ * no shortfall to explain. It is not a failure either — the user asked for
+ * it — so no message is parked and no '!' is raised. The bar going away and
+ * the badge clearing is the whole answer, which is the same answer a Stop one
+ * second later would give.
+ *
+ * The DB half is a discard rather than `retainFailedSession`'s retention: a
+ * 'failed' row on the Recorder page would report a deliberate cancel as
+ * something that went wrong.
+ */
+async function discardPreparedRun(
+  sessionId: string,
+  tabId: number,
+  segmentId: string | undefined,
+  continued: boolean,
+): Promise<void> {
+  await unmountOverlay(tabId);
+  try {
+    if (continued) {
+      if (segmentId) await deleteSegment(segmentId);
+      await updateSession(sessionId, { status: 'complete' });
+    } else {
+      await deleteSession(sessionId);
+    }
+  } catch (err) {
+    console.error('[OpenScreenShot] discarding the abandoned start failed', err);
+  }
+  await clearRecState();
+  await closeOffscreenSafe();
+  resolveStartPending();
+  // Not clearRecBadge: this start may already have parked its own
+  // 'overlay-blocked', and that '!' is still owed to the user.
+  await restoreRecBadge();
 }
 
 /**
@@ -624,14 +745,27 @@ async function execInTab<A extends unknown[], R>(
   return result as Awaited<R>;
 }
 
+/**
+ * A stop or a cancel that never reached the engine. Silent when a teardown has
+ * already taken the run down — `abandonUnstartedRun` reports the same failure
+ * from the other end, and both firing is the one-message-per-failure rule
+ * broken. A live run means nothing else is reporting this, so it must.
+ */
+async function reportControlUnreachable(): Promise<void> {
+  if (await getRecState().catch(() => null)) await reportFailure('control-unreachable');
+}
+
 async function handleStop(): Promise<void> {
-  await waitForStartPending();
+  // Checked before anything is awaited, so it cannot race the dispatch it is
+  // deciding against — `handleStart` sets `preparingStart` false in the same
+  // synchronous run as the send.
+  if (abortPreparingStart('stop')) return;
   const state = await getRecState();
   if (!state) return;
   await healOverlay(state.tabId);
   chrome.runtime
     .sendMessage({ type: 'OFFSCREEN_STOP', target: 'offscreen' })
-    .catch(() => reportFailure('control-unreachable'));
+    .catch(() => reportControlUnreachable());
 }
 
 async function handlePause(): Promise<void> {
@@ -659,12 +793,12 @@ async function handleResume(): Promise<void> {
 }
 
 async function handleCancel(): Promise<void> {
-  await waitForStartPending();
+  if (abortPreparingStart('cancel')) return;
   const state = await getRecState();
   if (!state) return;
   chrome.runtime
     .sendMessage({ type: 'OFFSCREEN_CANCEL', target: 'offscreen' })
-    .catch(() => reportFailure('control-unreachable'));
+    .catch(() => reportControlUnreachable());
 }
 
 /**
@@ -718,9 +852,15 @@ async function handleQuery(sendResponse: (state: RecState) => void): Promise<voi
 
     void healOverlay(state.tabId);
 
-    const elapsedMs = (state.pausedAt || Date.now()) - state.startedAt - state.pausedAccumMs;
+    // Zero until the engine has reported in: before that `startedAt` is the
+    // mount, not a recording, and a surface that showed it would have to take
+    // the number back when the anchor lands.
+    const elapsedMs = state.anchored
+      ? (state.pausedAt || Date.now()) - state.startedAt - state.pausedAccumMs
+      : 0;
     sendResponse({
       active: true,
+      anchored: state.anchored,
       paused: state.pausedAt !== 0,
       sessionId: state.sessionId,
       elapsedMs,
@@ -757,6 +897,7 @@ async function handleEngineStarted(sessionId: string, tracks?: CapturedTracks): 
   await setRecState({
     sessionId,
     settings,
+    anchored: true,
     ...(fresh ? { startedAt: Date.now() } : {}),
   });
   void healOverlay(state.tabId);
@@ -909,7 +1050,11 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
     }
     switch (message.type) {
       case 'REC_START':
-        void handleStart(message.settings, message.continueSessionId);
+        void handleStart(
+          message.settings,
+          message.continueSessionId,
+          message.devicesGranted === true,
+        );
         break;
       case 'REC_STOP':
         void handleStop();
@@ -992,7 +1137,7 @@ chrome.permissions.onAdded.addListener((added) => {
     // Same consumption the popup's own start does: a continue that is about
     // to be spent must not keep being offered as "Continue recording".
     if (pending.continueSessionId) await chrome.storage.session.remove(CONTINUE_SESSION_KEY);
-    await handleStart(pending.settings, pending.continueSessionId);
+    await handleStart(pending.settings, pending.continueSessionId, pending.devicesGranted);
   })();
 });
 

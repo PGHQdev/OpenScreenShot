@@ -124,7 +124,7 @@ function installChromeStub(messages, opts) {
     );
   };
 
-  const store = new Map();
+  const store = new Map(Object.entries(opts.local ?? {}));
   const session = new Map(Object.entries(opts.session ?? {}));
   const sessionRemoved = [];
   const area = (map) => ({
@@ -182,6 +182,16 @@ function installChromeStub(messages, opts) {
   globalThis.close = () => {
     globalThis.__smoke.closed += 1;
   };
+  // Only overridden when a case needs the grant to be present: everywhere
+  // else the popup runs the browser's own `navigator.permissions.query`,
+  // which is the whole point — a service worker has no such API, so the read
+  // has to happen in a document and travel with the click.
+  if (opts.devicePermission) {
+    Object.defineProperty(navigator, 'permissions', {
+      configurable: true,
+      value: { query: async () => ({ state: opts.devicePermission }) },
+    });
+  }
   globalThis.chrome = {
     i18n: { getMessage },
     storage: {
@@ -196,9 +206,18 @@ function installChromeStub(messages, opts) {
         globalThis.__smoke.sent.push(msg);
         // `recActive` puts the popup in its live-recording state, which is
         // the only state its Stop and Cancel buttons exist in.
-        return opts.recActive
-          ? { active: true, paused: false, sessionId: 'live-1', elapsedMs: 4000 }
-          : { active: false, paused: false };
+        if (!opts.recActive) return { active: false, paused: false };
+        // `recStarting` is the run the engine has not reported in for yet:
+        // active, with no zero for its clock to count from.
+        return opts.recStarting
+          ? { active: true, paused: false, sessionId: 'live-1', anchored: false, elapsedMs: 0 }
+          : {
+              active: true,
+              paused: false,
+              sessionId: 'live-1',
+              anchored: true,
+              elapsedMs: 4000,
+            };
       },
       // A real registry: the popup listens here for the worker's failure
       // broadcasts, and __smoke.fire is how a test delivers one.
@@ -583,6 +602,69 @@ async function main() {
       (await page.evaluate(() => globalThis.__smoke.closed)) === 0,
       'and stays open, instead of closing over a start that never happened',
     );
+    await page.close();
+
+    step('the Record click carries the device grant a worker cannot read for itself');
+    // `navigator.permissions` needs a document. The worker has none, so the
+    // start would otherwise wait up to FRAME_READY_TIMEOUT_MS for a
+    // permission frame that had nothing to ask. This case runs the browser's
+    // own query in a real popup document: headless Chrome has never granted
+    // the mic, so the answer is a genuine 'prompt'.
+    const micOn = {
+      'openscreenshot:rec-settings': { mic: true, tabAudio: true, webcam: false, ripple: true },
+    };
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'], local: micOn });
+    await settlePermissionRead(page);
+    await page.click('[data-testid="rec-start"]');
+    await page.waitForFunction(() => globalThis.__smoke.sent.some((m) => m.type === 'REC_START'));
+    let recStart = await page.evaluate(() =>
+      globalThis.__smoke.sent.find((m) => m.type === 'REC_START'),
+    );
+    assert(
+      recStart.devicesGranted === false,
+      `an ungranted mic keeps the wait (devicesGranted=${recStart.devicesGranted})`,
+    );
+    await page.close();
+
+    // The same click with the grant in place. Two cases, not one: a constant
+    // would satisfy either on its own, and only the pair shows the value
+    // tracking what the query answered.
+    page = await open(POPUP_PAGE, {
+      grants: ['tabCapture'],
+      local: micOn,
+      devicePermission: 'granted',
+    });
+    await settlePermissionRead(page);
+    await page.click('[data-testid="rec-start"]');
+    await page.waitForFunction(() => globalThis.__smoke.sent.some((m) => m.type === 'REC_START'));
+    recStart = await page.evaluate(() =>
+      globalThis.__smoke.sent.find((m) => m.type === 'REC_START'),
+    );
+    assert(
+      recStart.devicesGranted === true,
+      `a granted mic drops it (devicesGranted=${recStart.devicesGranted})`,
+    );
+    await page.close();
+
+    step('a recording that has not started yet shows no elapsed time');
+    page = await open(POPUP_PAGE, {
+      grants: ['tabCapture'],
+      recActive: true,
+      recStarting: true,
+    });
+    await page.waitForSelector('.rec-live');
+    const startingSub = await page.$eval('.rec-live .mode-sub', (el) => el.textContent.trim());
+    assert(
+      startingSub === messages.recStarting.message,
+      `the row says it is starting rather than counting (${startingSub})`,
+    );
+    // The same row on an anchored run, so the assertion above is reading the
+    // flag and not a permanently blank slot.
+    await page.close();
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'], recActive: true });
+    await page.waitForSelector('.rec-live');
+    const runningSub = await page.$eval('.rec-live .mode-sub', (el) => el.textContent.trim());
+    assert(runningSub === '0:04', `an anchored run counts (${runningSub})`);
     await page.close();
 
     step('popup Stop the worker never received: the recording is still running, so say so');
