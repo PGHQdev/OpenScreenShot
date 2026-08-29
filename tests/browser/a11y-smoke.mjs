@@ -334,6 +334,20 @@ async function seedRecorderSession() {
 
 async function newPage(browser, messages, seed) {
   const page = await browser.newPage();
+  // Forced once here so every scan below inherits a known state instead of
+  // this machine's real OS accessibility setting — the four settle() waits
+  // before an entrance-animated surface is scanned (the export dialog,
+  // Beautify popover, ZoomMenu, shortcut sheet) exist to let a real,
+  // non-collapsed entrance animation finish before axe reads computed
+  // colour; on a machine with reduced motion on, those waits were no-ops
+  // and the animation was already collapsed to nothing, so they proved
+  // nothing about the real (non-reduced) path. This file does not test
+  // reduced-motion behaviour itself — that is media-a11y-smoke.mjs's job —
+  // so there is no opt-in case to preserve here.
+  const cdp = await page.createCDPSession();
+  await cdp.send('Emulation.setEmulatedMedia', {
+    features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
+  });
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
   page.on('console', (msg) => {

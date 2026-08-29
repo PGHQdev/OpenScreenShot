@@ -97,6 +97,34 @@ function serveDist() {
   });
 }
 
+/**
+ * Every page this file opens goes through here, so every assertion inherits
+ * a known, forced prefers-reduced-motion state instead of whatever this
+ * machine's real OS accessibility setting happens to be. That gap has now
+ * shipped three separate broken assertions across three rounds of this task
+ * (the original crop-confirm check, round 1's replacement of it, and round
+ * 2's testDraftRestoreFailureNoOverlap) — a missing default, not three
+ * unrelated mistakes.
+ *
+ * Default is 'no-preference': most of this file drives real CSS transitions
+ * and needs the genuine (non-collapsed) duration to mean anything. A test
+ * that specifically wants reduced-motion behaviour forces 'reduce' itself,
+ * explicitly, at its own call site — visible there as a deliberate choice,
+ * not inherited silently. A test that needs a DIFFERENT media feature too
+ * (prefers-color-scheme, say) must include prefers-reduced-motion in that
+ * same `Emulation.setEmulatedMedia` call — each call replaces the whole
+ * feature list, it does not merge with this one.
+ */
+async function newSmokePage(browser, { width = 1280, height = 860 } = {}) {
+  const page = await browser.newPage();
+  await page.setViewport({ width, height });
+  const cdp = await page.createCDPSession();
+  await cdp.send('Emulation.setEmulatedMedia', {
+    features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
+  });
+  return { page, cdp };
+}
+
 /** storage.local seeded with one capture, plus a downloads sink for the export. */
 function installChromeStub(seed) {
   const store = new Map(Object.entries(seed));
@@ -233,8 +261,7 @@ function makeBadCapture() {
  */
 async function testExportButtonWidthFloor(browser, base) {
   step('task 23: the export dialog Export button does not shift width when "Exporting…"');
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1280, height: 860 });
+  const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
   await page.evaluateOnNewDocument(installChromeStub, {
@@ -259,7 +286,15 @@ async function testExportButtonWidthFloor(browser, base) {
     (await page.$eval(btn, (el) => el.textContent)) === 'Export',
     'button reads "Export" before the click',
   );
-  const widthExport = await page.$eval(btn, (el) => el.getBoundingClientRect().width);
+  // offsetWidth, not getBoundingClientRect().width: the latter reflects
+  // :active's transform: scale(0.98) press feedback too, which (now that
+  // prefers-reduced-motion: no-preference is forced — see newSmokePage)
+  // genuinely animates for --dur-fast after the click that follows below,
+  // so a rect read shortly after can land mid-transition and report a
+  // width that has nothing to do with the layout-shift question this test
+  // asks. offsetWidth is a layout metric; transform is paint-time only and
+  // never touches it, click-feedback animation or not.
+  const widthExport = await page.$eval(btn, (el) => el.offsetWidth);
 
   await page.evaluate(() => {
     globalThis.__smoke.holdNextDownload = true;
@@ -270,7 +305,7 @@ async function testExportButtonWidthFloor(browser, base) {
     {},
     btn,
   );
-  const widthExporting = await page.$eval(btn, (el) => el.getBoundingClientRect().width);
+  const widthExporting = await page.$eval(btn, (el) => el.offsetWidth);
   assert(
     widthExporting === widthExport,
     `button width unchanged across the label swap: "Export" ${widthExport}px, "Exporting…" ${widthExporting}px`,
@@ -278,7 +313,7 @@ async function testExportButtonWidthFloor(browser, base) {
 
   const widthWithoutFloor = await page.$eval(btn, (el) => {
     el.classList.remove('btn-fixed-export');
-    return el.getBoundingClientRect().width;
+    return el.offsetWidth;
   });
   assert(
     widthWithoutFloor < widthExporting,
@@ -308,8 +343,7 @@ async function testExportButtonWidthFloor(browser, base) {
  */
 async function testPdfRealProgress(browser, base) {
   step('task 23: multi-page PDF export reports real, increasing per-page progress');
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1280, height: 860 });
+  const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
   await page.evaluateOnNewDocument(installChromeStub, {
@@ -321,6 +355,16 @@ async function testPdfRealProgress(browser, base) {
 
   await page.click('header .btn-secondary[title^="Export"]');
   await page.waitForSelector('.modal', { timeout: 5000 });
+  // waitForSelector resolves on insertion, mid-way through the modal's own
+  // real (now that no-preference is forced) entrance animation — a pixel
+  // sample taken too soon after can land while the modal is still fading
+  // in, reading a blend with whatever is behind it instead of the actual
+  // painted colour (confirmed: this is what first broke the accent-color
+  // check below once the ambient-reduced-motion default stopped
+  // collapsing the animation to nothing). 220ms clears the 150ms entrance
+  // (--dur-mid) with margin — same value a11y-smoke.mjs uses for the same
+  // reason.
+  await new Promise((r) => setTimeout(r, 220));
   // PDF is the last format card — IMAGE_FORMATS.map(...) then one more
   // explicit PDF button, all inside the same .format-grid (App.tsx).
   await page.click('.format-grid .format-card:last-child');
@@ -481,8 +525,7 @@ async function testDraftRestoreFailureNoOverlap(browser, base) {
   step(
     'fix round 2: a failed draft restore never shows the stage notice pill while draft-restore is still exiting',
   );
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1280, height: 860 });
+  const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
   const capture = await makeCapture();
@@ -530,11 +573,105 @@ async function testDraftRestoreFailureNoOverlap(browser, base) {
   await page.close();
 }
 
+/**
+ * fix round 3, two promotions from round 2's own gate —
+ *
+ * 1. An import failure (a genuine error — "Could not read that image.")
+ *    used to be gated behind a still-*pending* draft-restore prompt the
+ *    same way restoreDraft's own failure notice is gated behind draft-
+ *    restore's exit tail — but those are not the same situation. A pill
+ *    the user has not acted on yet is not more important than a real
+ *    error; it should yield, not block. App.tsx's stageNoticeT now only
+ *    waits for draft-restore's bare exit tail (draftPrompt already
+ *    cleared), not for an active pending prompt.
+ * 2. draftPromptT's own gate used to read a plain ref that stage-notice's
+ *    unmount wrote to — a ref write schedules no render, so draft-restore
+ *    could stay hidden after the stage notice genuinely finished, waiting
+ *    on whatever unrelated future render happened to notice. The ref is
+ *    now state updated from an effect, which guarantees the follow-up
+ *    render happens on its own.
+ */
+async function testStageNoticeDraftPromptPriority(browser, base) {
+  step(
+    'fix round 3: an import failure interrupts a pending draft prompt instead of queuing behind it',
+  );
+  const { page } = await newSmokePage(browser);
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  const capture = await makeCapture();
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': capture,
+    'openscreenshot:draft': {
+      sourceCapturedAt: capture.capturedAt,
+      annotations: [{ id: 'a1', type: 'rect', x: 10, y: 10, w: 50, h: 50 }],
+      frame: {},
+      savedAt: Date.now(),
+    },
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.draft-restore', { timeout: 5000 });
+  assert(
+    (await page.$('.stage-notice')) === null,
+    'no stage notice yet — the draft prompt is the only pending pill so far',
+  );
+
+  // A real import failure: paste a file with an image MIME type but bytes
+  // that cannot decode, driving the same importFromFile catch a genuinely
+  // corrupt drag-and-drop would.
+  await page.evaluate(() => {
+    const file = new File([new Uint8Array([1, 2, 3, 4, 5])], 'bad.png', { type: 'image/png' });
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    window.dispatchEvent(
+      new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }),
+    );
+  });
+
+  await page.waitForSelector('.stage-notice', { timeout: 5000 });
+  const message = await page.$eval('.stage-notice span', (el) => el.textContent);
+  assert(
+    message === 'Could not read that image.',
+    `the import-failure notice showed up (not swallowed behind the pending draft prompt): "${message}"`,
+  );
+  assert(
+    (await page.$('.stage-notice[role="status"]')) !== null,
+    'it carries role="status", so it is actually announced',
+  );
+  // The draft prompt yields to the error — this is what "interrupts" means
+  // rather than "queues behind": it should already be on its way out, not
+  // still fully shown next to the new notice.
+  const draftStillFullyShown = await page.evaluate(
+    () => !document.querySelector('.draft-restore')?.classList.contains('is-closing'),
+  );
+  assert(!draftStillFullyShown, 'the draft prompt is closing (yielding), not still fully shown');
+
+  // Promotion 2: dismiss the notice, then prove draft-restore comes back
+  // WITHOUT any further interaction — the guarantee a plain ref write could
+  // not make. Poll without touching the page again.
+  await page.click('.stage-notice .text-btn'); // Dismiss
+  await page.waitForFunction(() => !document.querySelector('.stage-notice'), { timeout: 5000 });
+  let draftReappeared = false;
+  for (let i = 0; i < 100; i++) {
+    if (await page.evaluate(() => !!document.querySelector('.draft-restore'))) {
+      draftReappeared = true;
+      break;
+    }
+    await new Promise((r) => setTimeout(r, 5));
+  }
+  assert(
+    draftReappeared,
+    'the draft prompt reappeared on its own once the stage notice fully cleared — not stuck waiting on an unrelated render',
+  );
+
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
+}
+
 async function testStageErrorRetryAndDismiss(browser, base) {
   step('task 23: stage error — Retry re-runs the real load; Dismiss clears the capture');
   const crashes = [];
 
-  const page = await browser.newPage();
+  const { page } = await newSmokePage(browser);
   page.on('pageerror', (err) => crashes.push(String(err)));
   await page.evaluateOnNewDocument(installChromeStub, {
     'openscreenshot:last-capture': makeBadCapture(),
@@ -579,7 +716,7 @@ async function testStageErrorRetryAndDismiss(browser, base) {
   // Dismiss, on its own fresh bad-capture page — independent of the retry
   // path above (retry already replaced the seed, so a shared page would not
   // exercise dismiss against a real failure).
-  const page2 = await browser.newPage();
+  const { page: page2 } = await newSmokePage(browser);
   page2.on('pageerror', (err) => crashes.push(String(err)));
   await page2.evaluateOnNewDocument(installChromeStub, {
     'openscreenshot:last-capture': makeBadCapture(),
@@ -607,7 +744,7 @@ async function testStageErrorRetryAndDismiss(browser, base) {
   // that rejects (not a decode failure) — a good capture is seeded, but the
   // very first chrome.storage.local.get (inside getSettings) is forced to
   // throw once, so the load never even reaches getLastCapture.
-  const page3 = await browser.newPage();
+  const { page: page3 } = await newSmokePage(browser);
   page3.on('pageerror', (err) => crashes.push(String(err)));
   await page3.evaluateOnNewDocument(installChromeStub, {
     'openscreenshot:last-capture': await makeCapture(),
@@ -650,8 +787,11 @@ async function testStageErrorRetryAndDismiss(browser, base) {
  */
 async function testPopoverTabDuringExit(browser, base) {
   step('task 23 fix: Tab pressed during a popover exit does not land inside it');
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1280, height: 860 });
+  // newSmokePage forces prefers-reduced-motion: no-preference by default —
+  // load-bearing here specifically, since this test exists to probe a real,
+  // non-collapsed exit window (see newSmokePage's own doc comment for why
+  // that default exists at all).
+  const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
   await page.evaluateOnNewDocument(installChromeStub, {
@@ -660,19 +800,6 @@ async function testPopoverTabDuringExit(browser, base) {
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
-
-  // This exact machine's real OS "Reduce Motion" is on (see media-a11y-
-  // smoke.mjs's own header comment) — useExitDelay collapses the unmount
-  // timer to ~0ms under that, which would make the exit window this test
-  // exists to probe close to zero and this test pass for the wrong reason
-  // (confirmed: without forcing no-preference here, the assertions below
-  // still happened to pass, purely on ambient-setting luck, not because the
-  // window was genuinely open). Forcing no-preference makes the real
-  // DUR_MID (150ms) window the thing under test, on any machine.
-  const cdp = await page.createCDPSession();
-  await cdp.send('Emulation.setEmulatedMedia', {
-    features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
-  });
 
   // ZoomMenu: ArrowDown opens it with the first item focused, which is also
   // what makes focus.ts's syncRovingTabIndex set that item's live tabIndex
@@ -765,8 +892,11 @@ async function testPopoverTabDuringExit(browser, base) {
  */
 async function testModalFastReopen(browser, base) {
   step('task 23 fix: a fast reopen before the exit timer fires still refocuses into the dialog');
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1280, height: 860 });
+  // newSmokePage forces prefers-reduced-motion: no-preference by default —
+  // see testPopoverTabDuringExit's own comment: without it, this machine's
+  // ambient setting would collapse the 150ms exit window this test means
+  // to reopen inside of.
+  const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
   await page.evaluateOnNewDocument(installChromeStub, {
@@ -775,14 +905,6 @@ async function testModalFastReopen(browser, base) {
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
-
-  // See testPopoverTabDuringExit's own comment: this machine's ambient
-  // reduced-motion setting would otherwise collapse the 150ms exit window
-  // this test means to reopen inside of.
-  const cdp = await page.createCDPSession();
-  await cdp.send('Emulation.setEmulatedMedia', {
-    features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
-  });
 
   await page.click('header .btn-secondary[title^="Export"]');
   await page.waitForSelector('.modal', { timeout: 5000 });
@@ -857,8 +979,7 @@ async function testModalFastReopen(browser, base) {
  */
 async function testPdfExportInBackgroundTab(browser, base) {
   step('task 23 fix: a multi-page PDF export still completes while its tab is backgrounded');
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1280, height: 860 });
+  const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
   await page.evaluateOnNewDocument(installChromeStub, {
@@ -935,8 +1056,7 @@ async function testPdfExportInBackgroundTab(browser, base) {
  */
 async function testProgressBarColorScheme(browser, base) {
   step('fix round 2: the export progress bar tracks the app theme, not just the OS one');
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1280, height: 860 });
+  const { page, cdp } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
 
@@ -952,9 +1072,15 @@ async function testProgressBarColorScheme(browser, base) {
 
   // The exact regression: an explicit dark theme while the OS itself
   // reports light — the one combination :root's own rules never cover.
-  const cdp = await page.createCDPSession();
+  // Emulation.setEmulatedMedia replaces the whole feature list, so
+  // prefers-reduced-motion has to be repeated here alongside prefers-
+  // color-scheme — otherwise this call would silently drop newSmokePage's
+  // own no-preference default back to unset.
   await cdp.send('Emulation.setEmulatedMedia', {
-    features: [{ name: 'prefers-color-scheme', value: 'light' }],
+    features: [
+      { name: 'prefers-color-scheme', value: 'light' },
+      { name: 'prefers-reduced-motion', value: 'no-preference' },
+    ],
   });
   await page.evaluateOnNewDocument(installChromeStub, {
     'openscreenshot:last-capture': await makeCapture(),
@@ -980,12 +1106,14 @@ async function testProgressBarColorScheme(browser, base) {
   // its own seed is the real way to flip the scenario): explicit light
   // theme under an OS-dark emulation reports light — proving this isn't
   // just hardcoded to dark.
-  const page2 = await browser.newPage();
-  await page2.setViewport({ width: 1280, height: 860 });
+  const { page: page2, cdp: cdp2 } = await newSmokePage(browser);
   page2.on('pageerror', (err) => crashes.push(String(err)));
-  const cdp2 = await page2.createCDPSession();
+  // See the first page's own comment: both features have to be set together.
   await cdp2.send('Emulation.setEmulatedMedia', {
-    features: [{ name: 'prefers-color-scheme', value: 'dark' }],
+    features: [
+      { name: 'prefers-color-scheme', value: 'dark' },
+      { name: 'prefers-reduced-motion', value: 'no-preference' },
+    ],
   });
   await page2.evaluateOnNewDocument(installChromeStub, {
     'openscreenshot:last-capture': await makeCapture(),
@@ -1037,8 +1165,7 @@ async function main() {
       userDataDir: join(work, 'profile'),
       args: ['--no-first-run', '--no-default-browser-check', '--disable-gpu'],
     });
-    const page = await browser.newPage();
-    await page.setViewport({ width: 1280, height: 860 });
+    const { page } = await newSmokePage(browser);
     const crashes = [];
     page.on('pageerror', (err) => crashes.push(String(err)));
     page.on('console', (msg) => {
@@ -1661,7 +1788,14 @@ async function main() {
     const padA = await padBand();
     assert(padA !== null, 'a transparent-background padding band is visible around the image');
 
-    await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: themeB }]);
+    // emulateMediaFeatures replaces the whole feature list — repeating
+    // prefers-reduced-motion here keeps newSmokePage's no-preference default
+    // from silently reverting to this machine's ambient setting for every
+    // step after this one.
+    await page.emulateMediaFeatures([
+      { name: 'prefers-color-scheme', value: themeB },
+      { name: 'prefers-reduced-motion', value: 'no-preference' },
+    ]);
     await settle(300);
     assert(
       (await currentTheme()) === themeB,
@@ -1687,7 +1821,11 @@ async function main() {
     // Restore theme A so nothing later in this file inherits a flipped OS
     // preference, and close the panel — the Beautify a11y steps right below
     // this one assume it starts closed.
-    await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: themeA }]);
+    // See the flip to themeB above for why prefers-reduced-motion repeats here.
+    await page.emulateMediaFeatures([
+      { name: 'prefers-color-scheme', value: themeA },
+      { name: 'prefers-reduced-motion', value: 'no-preference' },
+    ]);
     await settle(300);
     assert(
       (await currentTheme()) === themeA,
@@ -2126,6 +2264,7 @@ async function main() {
     await testPdfRealProgress(browser, base);
     await testStageErrorRetryAndDismiss(browser, base);
     await testDraftRestoreFailureNoOverlap(browser, base);
+    await testStageNoticeDraftPromptPriority(browser, base);
     await testPopoverTabDuringExit(browser, base);
     await testModalFastReopen(browser, base);
     await testPdfExportInBackgroundTab(browser, base);
