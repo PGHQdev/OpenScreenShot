@@ -925,7 +925,9 @@ describe('the start window', () => {
   });
 
   it('skips the wait when every wanted device is already granted', async () => {
-    workingTab();
+    // Fresh, not synced: a synced mount skips the wait on its own, so a
+    // 'synced' fixture here would pass whether the gate existed or not.
+    freshMount();
     await loadWorker();
     void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
     await settle();
@@ -942,7 +944,7 @@ describe('the start window', () => {
   });
 
   it('does not wait for a frame a mute, cameraless recording never mounts', async () => {
-    workingTab();
+    freshMount();
     await loadWorker();
     void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS, devicesGranted: false });
     await settle();
@@ -970,6 +972,39 @@ describe('the start window', () => {
     // A gesture is not a failure; the bar going and the badge clearing is the
     // whole answer.
     expect(parked()).toBeNull();
+    expect(await listSessions()).toEqual([]);
+  });
+
+  it('answers a Stop that arrives before the wait it would have released', async () => {
+    // Parked on the viewport read, which runs several steps ahead of the
+    // permission wait. There is no frame-ready resolver yet for the gesture
+    // to release, so the only thing that can answer it is the check the start
+    // makes on its way in to the wait.
+    let releaseViewport = (): void => {};
+    let parked = false;
+    workingTab();
+    fakeChrome.scripting.executeScript = vi.fn((arg: { args?: unknown[] }) => {
+      if ((arg.args?.length ?? 0) > 0) return Promise.resolve([{ result: 'fresh' }]);
+      // Only the viewport read parks. The teardown's own unmount injection is
+      // argument-less too, and holding that one open would hang the discard
+      // this test is measuring.
+      if (parked) return Promise.resolve([{ result: undefined }]);
+      parked = true;
+      return new Promise((resolve) => {
+        releaseViewport = () => resolve([{ result: { w: 800, h: 600, dpr: 1 } }]);
+      });
+    }) as unknown as typeof fakeChrome.scripting.executeScript;
+    await loadWorker();
+    void send({ type: 'REC_START', settings: withMic, devicesGranted: false });
+    await settle();
+
+    void send({ type: 'REC_STOP' });
+    await settle();
+    releaseViewport();
+    await settle();
+
+    expect(offscreenSends()).toEqual([]);
+    expect(session.get(REC_STATE_KEY)).toBeUndefined();
     expect(await listSessions()).toEqual([]);
   });
 
@@ -1026,6 +1061,37 @@ describe('the start window', () => {
     await settle();
     expect(offscreenSends()).toEqual([]);
     expect(await listSessions()).toHaveLength(1);
+  });
+
+  it('holds that guard after the start deadline has released its claim', async () => {
+    // The deadline releases `startPending` while the start is still parked on
+    // the permission frame, so from here on it is the only thing that knows a
+    // start is live. Real time still advances, which IndexedDB needs.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      freshMount();
+      await loadWorker();
+      void send({ type: 'REC_START', settings: withMic, devicesGranted: false });
+      await settle();
+      await vi.advanceTimersByTimeAsync(11_000);
+      await settle();
+
+      void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+      await settle();
+      expect(offscreenSends()).toEqual([]);
+      expect(await listSessions()).toHaveLength(1);
+
+      // The damage a second start does is not a second recording — the live
+      // state answers that with 'start-busy' either way — it is that the
+      // first start stops being recognised as preparing. Stop is what reads
+      // that, so Stop is what has to still work.
+      void send({ type: 'REC_STOP' });
+      await settle();
+      expect(offscreenSends()).toEqual([]);
+      expect(session.get(REC_STATE_KEY)).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('stays quiet about a stop whose run a teardown already took down', async () => {

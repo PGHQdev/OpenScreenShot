@@ -460,7 +460,6 @@ async function handleStart(
   // Claim the slot synchronously, before any `await` — otherwise two
   // near-simultaneous REC_STARTs can both pass the check above while the
   // first is suspended on an await (check-then-act split across awaits).
-  preparingStart = true;
   startAbort = null;
   beginStartPending();
 
@@ -484,6 +483,13 @@ async function handleStart(
       return;
     }
     tabId = tab.id;
+
+    // Only from here is there a run to give back, so only from here is a Stop
+    // or Cancel this start's to answer. Claimed later than the slot above on
+    // purpose: a gesture that lands while the two checks above are running
+    // belongs to whatever was already recording, and swallowing it would
+    // leave that recording running with the user's Stop spent.
+    preparingStart = true;
 
     await ensureOffscreen();
 
@@ -534,16 +540,30 @@ async function handleStart(
 
     await showRecBadge(false);
 
+    /**
+     * A Stop or Cancel that landed while this start was preparing. Checked on
+     * both sides of the permission wait: before it, because a gesture that
+     * arrives ahead of the wait finds no wait to release and would otherwise
+     * go unanswered until the frame reported or its 15s timeout ran out; and
+     * after it, so the last steps are not run for a run nobody wants.
+     */
+    const abandoned = async (): Promise<boolean> => {
+      if (!startAbort || !session || tabId == null) return false;
+      await discardPreparedRun(session.id, tabId, segmentId, !!continueSessionId);
+      return true;
+    };
+
     // The overlay goes up before the engine is asked to capture, because its
     // iframe is the only surface that can prompt for camera/mic on this
     // extension origin. A fresh mount means that prompt is now on screen, so
     // hold the engine until the frame reports the answer — its own
     // `getUserMedia` runs in the offscreen document, which cannot prompt and
-    // would just fail. `ENGINE_STARTED` re-anchors the clock afterwards.
+    // would just fail. `ENGINE_STARTED` anchors the clock afterwards.
     const mount = await healOverlay(tabId);
     // A bar that never went up leaves the recording running with no in-page
     // stop button; the popup is the remaining way to end it, so say so.
     if (mount === 'failed') void reportFailure('overlay-blocked', session.id);
+    if (await abandoned()) return;
     // Gated on the grant, because the wait exists for the prompt and nothing
     // else: with camera and mic already granted the frame raises no prompt,
     // reports ready as fast as an iframe can load, and the engine's own
@@ -566,13 +586,11 @@ async function handleStart(
     const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tabId });
 
     // The last moment a Stop or Cancel can be answered by giving the run back
-    // instead of by asking the engine to undo it. Nothing awaits between here
-    // and the dispatch below, so a gesture is either taken by this branch or
-    // reaches an engine that has been asked to begin — never neither.
-    if (startAbort) {
-      await discardPreparedRun(session.id, tabId, segmentId, !!continueSessionId);
-      return;
-    }
+    // instead of by asking the engine to undo it. Only microtasks separate
+    // this check from the dispatch below, and a message listener runs as a
+    // task, so a gesture is either taken here or reaches an engine that has
+    // been asked to begin — never neither.
+    if (await abandoned()) return;
 
     const startedSessionId = session.id;
     chrome.runtime
