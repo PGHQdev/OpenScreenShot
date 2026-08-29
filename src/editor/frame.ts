@@ -25,7 +25,12 @@ export interface FrameOptions {
   radius: number;
   shadow: number;
   background: FrameBackground;
+  /** The named look these values came from, or null when none matches. */
+  look: LookId | null;
 }
+
+/** The four values a look sets — everything about the frame except whether it is on. */
+type FrameValues = Pick<FrameOptions, 'padding' | 'radius' | 'shadow' | 'background'>;
 
 export interface FrameMetrics {
   pad: number;
@@ -93,6 +98,89 @@ export const BACKGROUND_PRESETS: BackgroundPreset[] = [
   },
 ];
 
+/**
+ * A named look — every frame value in one click.
+ *
+ * Deliberately not called a preset: `BackgroundPreset` above already owns that
+ * word for a gradient, and a look *contains* a background rather than being
+ * one. Two things called "preset" in one file would have to be told apart by
+ * context on every read.
+ */
+export type LookId = 'clean' | 'airy' | 'snug' | 'flat' | 'poster' | 'cutout';
+
+export interface FrameLook extends FrameValues {
+  id: LookId;
+  label: string;
+  /** What the look is for; shown as the button's tooltip. */
+  hint: string;
+}
+
+/** Button order in the panel. */
+export const FRAME_LOOKS: FrameLook[] = [
+  {
+    id: 'clean',
+    label: 'Clean',
+    hint: 'The shipped default: a soft dark card.',
+    // Kept equal to DEFAULT_FRAME on purpose, so a user who has never opened
+    // the panel already sees a look selected rather than an empty row. A unit
+    // test holds the two in step.
+    padding: 40,
+    radius: 30,
+    shadow: 45,
+    background: { kind: 'preset', id: 'ink' },
+  },
+  {
+    id: 'airy',
+    label: 'Airy',
+    hint: 'A small crop given room to fill a wide slot.',
+    // A frame this large reads as a block of colour in its own right, so it
+    // takes the warm light ground rather than ink.
+    padding: 85,
+    radius: 30,
+    shadow: 45,
+    background: { kind: 'preset', id: 'sand' },
+  },
+  {
+    id: 'snug',
+    label: 'Snug',
+    hint: 'A tall screenshot in a narrow column.',
+    padding: 12,
+    radius: 18,
+    shadow: 25,
+    background: { kind: 'preset', id: 'ink' },
+  },
+  {
+    id: 'flat',
+    label: 'Flat',
+    hint: 'Square and shadowless, for docs and print.',
+    // The only one-click route to no rounding and no shadow at once.
+    padding: 30,
+    radius: 0,
+    shadow: 0,
+    background: { kind: 'preset', id: 'ink' },
+  },
+  {
+    id: 'poster',
+    label: 'Poster',
+    hint: 'A hero shot: deep corners, strong lift.',
+    padding: 70,
+    radius: 55,
+    shadow: 80,
+    background: { kind: 'preset', id: 'coral' },
+  },
+  {
+    id: 'cutout',
+    label: 'Cutout',
+    hint: 'Shadow on transparency, to drop onto any page.',
+    // Transparent skips the background fill but still casts the shadow plate,
+    // so a PNG export carries a real drop shadow with no ground behind it.
+    padding: 24,
+    radius: 45,
+    shadow: 55,
+    background: { kind: 'transparent' },
+  },
+];
+
 /** Fractions of the shorter image side at slider value 100. */
 const PAD_FRACTION = 0.12;
 const RADIUS_FRACTION = 0.06;
@@ -107,7 +195,70 @@ export const DEFAULT_FRAME: FrameOptions = {
   radius: 30,
   shadow: 45,
   background: { kind: 'preset', id: 'ink' },
+  look: 'clean',
 };
+
+const LOOK_BY_ID: Record<LookId, FrameLook> = Object.fromEntries(
+  FRAME_LOOKS.map((l) => [l.id, l]),
+) as Record<LookId, FrameLook>;
+
+function sameBackground(a: FrameBackground, b: FrameBackground): boolean {
+  if (a.kind === 'preset' && b.kind === 'preset') return a.id === b.id;
+  if (a.kind === 'solid' && b.kind === 'solid') return a.color === b.color;
+  return a.kind === 'transparent' && b.kind === 'transparent';
+}
+
+/**
+ * Whether the frame still holds every value the look set.
+ *
+ * A value comparison, not a dirty flag: a slider dragged away and dragged back
+ * reads as unmodified again, which is what the panel should say. `enabled` is
+ * left out because a look describes the frame's shape, not whether it is on —
+ * switching beautify off and on must not mark the look as changed.
+ */
+function matchesLook(f: FrameValues, look: FrameLook): boolean {
+  return (
+    f.padding === look.padding &&
+    f.radius === look.radius &&
+    f.shadow === look.shadow &&
+    sameBackground(f.background, look.background)
+  );
+}
+
+/** The look a set of values spells out, or null when none does. */
+export function matchLook(f: FrameValues): LookId | null {
+  return FRAME_LOOKS.find((l) => matchesLook(f, l))?.id ?? null;
+}
+
+/** True when a look is selected but its values have since been changed. */
+export function lookIsModified(f: FrameOptions): boolean {
+  const look = f.look === null ? undefined : LOOK_BY_ID[f.look];
+  return look !== undefined && !matchesLook(f, look);
+}
+
+/**
+ * The patch a look applies. Beautify turns on with it: a one-click look that
+ * left the frame disabled would change nothing on screen. Same bargain the
+ * background swatches already strike (see `pickBackground` in BeautifyMenu).
+ */
+export function applyLook(id: LookId): Partial<FrameOptions> {
+  const l = LOOK_BY_ID[id];
+  return {
+    enabled: true,
+    look: id,
+    padding: l.padding,
+    radius: l.radius,
+    shadow: l.shadow,
+    background: l.background,
+  };
+}
+
+const LOOK_IDS = new Set<string>(FRAME_LOOKS.map((l) => l.id));
+
+/** Coerce a stored look id; anything unknown reads as no look selected. */
+export function normalizeLook(value: unknown): LookId | null {
+  return typeof value === 'string' && LOOK_IDS.has(value) ? (value as LookId) : null;
+}
 
 /** Slider value (0..100) to a 0..1 fraction, clamped. */
 function unit(v: number): number {
@@ -258,14 +409,24 @@ function slider(value: unknown, fallback: number): number {
   return Math.max(0, Math.min(100, value));
 }
 
+/**
+ * `Settings` stores the four values but no look id, so the look is derived
+ * from them on the way out: a look that was picked and left alone comes back
+ * selected. One thing derivation cannot recover is a look the user then
+ * adjusted — its values match no look, so it reads as none selected rather
+ * than as that look, modified. The draft carries the id itself and does not
+ * lose it (see `src/editor/draft.ts`), so this only shows after an editor
+ * restart with no draft restored; the slider values themselves are exact
+ * either way.
+ */
 export function frameFromSettings(s: Settings): FrameOptions {
-  return {
-    enabled: s.beautifyEnabled === true,
+  const values: FrameValues = {
     padding: slider(s.beautifyPadding, DEFAULT_FRAME.padding),
     radius: slider(s.beautifyRadius, DEFAULT_FRAME.radius),
     shadow: slider(s.beautifyShadow, DEFAULT_FRAME.shadow),
     background: normalizeBackground(s.beautifyBackground),
   };
+  return { enabled: s.beautifyEnabled === true, ...values, look: matchLook(values) };
 }
 
 export function frameToSettings(

@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { BACKGROUND_PRESETS, frameMetrics, type FrameBackground, type FrameOptions } from './frame';
+import {
+  applyLook,
+  BACKGROUND_PRESETS,
+  FRAME_LOOKS,
+  frameMetrics,
+  lookIsModified,
+  type FrameBackground,
+  type FrameOptions,
+} from './frame';
 import { tokens } from '../shared/design-tokens';
 import { getFocusable } from './focus';
 import { DUR_MID, useExitDelay } from './transition';
@@ -112,6 +120,7 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
   const f = props.frame;
   const m = props.imageSize ? frameMetrics(f, props.imageSize.w, props.imageSize.h) : null;
   const px = (v: number | undefined) => (v === undefined ? '' : ` · ${v}px`);
+  const modified = lookIsModified(f);
   const isSolid = f.background.kind === 'solid';
   const solidColor = isSolid ? (f.background as { color: string }).color : tokens.swatchBlack;
 
@@ -144,10 +153,10 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
           role="dialog"
           aria-label="Beautify"
           ref={popoverRef}
-          // Unlike ZoomMenu's items, every control here (the switch, three
-          // sliders, the swatches) is a real Tab stop with no tabIndex=-1
-          // guard — inert is what keeps a Tab pressed during the exit
-          // window from landing on one of them.
+          // Unlike ZoomMenu's items, every control here (the switch, the
+          // look buttons, three sliders, the swatches) is a real Tab stop
+          // with no tabIndex=-1 guard — inert is what keeps a Tab pressed
+          // during the exit window from landing on one of them.
           inert={closing}
         >
           <label class="beautify-toggle">
@@ -159,6 +168,33 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
             />
             <span>Beautify</span>
           </label>
+
+          <div class="beautify-group">
+            <span class="stylebar-label">Look</span>
+            {/* Not disabled while beautify is off: picking a look is the one
+                click that turns it on, the same bargain the swatches strike. */}
+            <div class="looks">
+              {FRAME_LOOKS.map((l) => {
+                const selected = f.look === l.id;
+                const changed = selected && modified;
+                return (
+                  <button
+                    key={l.id}
+                    class={`look-btn${changed ? ' is-modified' : ''}`}
+                    title={l.hint}
+                    aria-pressed={selected}
+                    // The dot is decoration; "modified" reaches assistive tech
+                    // only through the name. Keeps the visible label as its
+                    // first word, so speech input still matches what is drawn.
+                    aria-label={changed ? `${l.label}, modified` : undefined}
+                    onClick={() => props.onChange(applyLook(l.id))}
+                  >
+                    {l.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           <div class="beautify-group">
             <span class="stylebar-label">Padding{px(m?.pad)}</span>

@@ -1215,6 +1215,57 @@ body {
   width: 100%;
 }
 
+.looks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-1);
+}
+.look-btn {
+  position: relative;
+  height: 26px;
+  padding: 0 var(--s-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-1);
+  color: var(--text-1);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.look-btn:hover {
+  background: var(--surface-2);
+}
+.look-btn:active {
+  transform: scale(0.98);
+}
+.look-btn[aria-pressed='true'] {
+  background: var(--accent-subtle);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.look-btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+/* The selected look's values have been changed since it was picked. Painted
+   in currentColor, not --accent: the mark has to survive forced-colors mode,
+   where an author colour is discarded but the button's own text colour is
+   mapped. The word "modified" is in the button's accessible name — this dot
+   is the sighted half of the same statement. */
+.look-btn.is-modified::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: var(--r-full);
+  background: currentColor;
+}
+
 .scale-readout {
   color: var(--text-2);
   font-variant-numeric: tabular-nums;
@@ -1291,6 +1342,7 @@ body {
   .spinner {
     animation-duration: 1.4s;
   }
+  .look-btn,
   .width-btn,
   .zoom-trigger,
   .zoom-item,
@@ -1344,6 +1396,7 @@ body {
  */
 @media (forced-colors: active) {
   .tool-btn.is-active,
+  .look-btn[aria-pressed='true'],
   .width-btn[aria-pressed='true'],
   .segmented-btn.is-selected,
   .format-card.is-selected,

@@ -1,7 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { draftFrame, draftHasWork, makeDraft, parseDraft } from '../../src/editor/draft';
 import type { Band } from '../../src/editor/bands';
-import { DEFAULT_FRAME } from '../../src/editor/frame';
+import {
+  applyLook,
+  DEFAULT_FRAME,
+  lookIsModified,
+  type FrameOptions,
+} from '../../src/editor/frame';
 import type { Annotation } from '../../src/editor/annotations';
 
 const rect: Annotation = {
@@ -148,5 +153,64 @@ describe('draftFrame', () => {
     const frame = { ...DEFAULT_FRAME, enabled: true, radius: 12 };
     const d = makeDraft(1, [], [], frame, 2);
     expect(draftFrame(d)).toEqual(frame);
+  });
+});
+
+describe('looks through the draft', () => {
+  const poster: FrameOptions = { ...DEFAULT_FRAME, ...applyLook('poster') };
+
+  it('brings an adjusted look back as that look, still modified', () => {
+    // The case settings alone cannot carry: the values match no look, so only
+    // the stored id can say which one the user was adjusting.
+    const adjusted: FrameOptions = { ...poster, padding: 33 };
+    expect(lookIsModified(adjusted)).toBe(true);
+    const d = parseDraft(JSON.parse(JSON.stringify(makeDraft(1, [rect], [], adjusted))));
+    const back = draftFrame(d!);
+    expect(back.look).toBe('poster');
+    expect(back.padding).toBe(33);
+    expect(lookIsModified(back)).toBe(true);
+  });
+
+  it('brings an untouched look back unmodified', () => {
+    const d = parseDraft(JSON.parse(JSON.stringify(makeDraft(1, [rect], [], poster))));
+    expect(draftFrame(d!)).toEqual(poster);
+    expect(lookIsModified(draftFrame(d!))).toBe(false);
+  });
+
+  it('keeps a frame that matches no look as no look', () => {
+    const freehand: FrameOptions = { ...DEFAULT_FRAME, look: null, padding: 7, radius: 3 };
+    const d = parseDraft(JSON.parse(JSON.stringify(makeDraft(1, [rect], [], freehand))));
+    expect(draftFrame(d!).look).toBeNull();
+  });
+
+  it('reads a draft written before looks existed, without discarding it', () => {
+    // Exactly what makeDraft produced up to v1.3.0: no `look` key at all, and
+    // a frame blob holding only the four beautify settings keys. Requiring one
+    // here would throw away every in-progress draft on upgrade.
+    const old = {
+      sourceCapturedAt: 1700,
+      annotations: [rect],
+      bands: [],
+      frame: {
+        beautifyEnabled: true,
+        beautifyPadding: 70,
+        beautifyRadius: 55,
+        beautifyShadow: 80,
+        beautifyBackground: { kind: 'preset', id: 'coral' },
+      },
+      savedAt: 1800,
+    };
+    const parsed = parseDraft(old);
+    expect(parsed).not.toBeNull();
+    expect(parsed?.annotations).toEqual([rect]);
+    // Nothing stored, so the look comes from the values — which are Poster's.
+    expect(parsed?.look).toBeNull();
+    expect(draftFrame(parsed!).look).toBe('poster');
+  });
+
+  it('reads a junk look id as no look rather than voiding the draft', () => {
+    const parsed = parseDraft({ sourceCapturedAt: 1, annotations: [rect], look: 'gorgeous' });
+    expect(parsed).not.toBeNull();
+    expect(parsed?.look).toBeNull();
   });
 });

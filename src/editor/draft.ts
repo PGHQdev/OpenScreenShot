@@ -8,10 +8,20 @@
  *
  * The frame rides along in `Settings` shape so `frameFromSettings` — which
  * already clamps sliders and vets backgrounds — is the only validator it needs.
+ * The beautify look sits beside it rather than inside it: `Settings` has no
+ * field for a look id, and re-deriving it from the values would lose exactly
+ * the state a draft exists to keep — a look the user was midway through
+ * adjusting.
  */
 import type { Annotation, AnnotationType } from './annotations';
 import type { Band } from './bands';
-import { frameFromSettings, frameToSettings, type FrameOptions } from './frame';
+import {
+  frameFromSettings,
+  frameToSettings,
+  normalizeLook,
+  type FrameOptions,
+  type LookId,
+} from './frame';
 import { DEFAULT_SETTINGS, type Settings } from '../shared/types';
 
 /** How long the editor waits after the last edit before writing. */
@@ -26,6 +36,8 @@ export interface Draft {
   /** Cut bands, in the same source pixels the annotations are stored in. */
   bands: Band[];
   frame: FrameSettings;
+  /** The named look the frame was set from, or null when none was. */
+  look: LookId | null;
   savedAt: number;
 }
 
@@ -48,7 +60,14 @@ export function makeDraft(
   frame: FrameOptions,
   savedAt: number = Date.now(),
 ): Draft {
-  return { sourceCapturedAt, annotations, bands, frame: frameToSettings(frame), savedAt };
+  return {
+    sourceCapturedAt,
+    annotations,
+    bands,
+    frame: frameToSettings(frame),
+    look: frame.look,
+    savedAt,
+  };
 }
 
 /** Whether a draft holds anything worth offering back. */
@@ -56,9 +75,16 @@ export function draftHasWork(draft: Draft): boolean {
   return draft.annotations.length > 0 || draft.bands.length > 0;
 }
 
-/** The frame a draft was saved with, clamped and vetted on the way out. */
+/**
+ * The frame a draft was saved with, clamped and vetted on the way out.
+ *
+ * A stored look id wins over the one `frameFromSettings` derives, so a look
+ * that was adjusted before the crash comes back as that look, modified. A
+ * draft written before looks existed has no id and keeps the derived one.
+ */
 export function draftFrame(draft: Draft): FrameOptions {
-  return frameFromSettings({ ...DEFAULT_SETTINGS, ...draft.frame });
+  const frame = frameFromSettings({ ...DEFAULT_SETTINGS, ...draft.frame });
+  return draft.look === null ? frame : { ...frame, look: draft.look };
 }
 
 /**
@@ -71,7 +97,7 @@ export function draftFrame(draft: Draft): FrameOptions {
  *
  * A missing `bands` field is not malformed — it is every draft written before
  * the Cut tool existed, and every one of those reads back as a draft with
- * nothing cut.
+ * nothing cut. A missing `look` is the same story one release later.
  */
 export function parseDraft(value: unknown): Draft | null {
   if (!value || typeof value !== 'object') return null;
@@ -80,6 +106,7 @@ export function parseDraft(value: unknown): Draft | null {
     annotations?: unknown;
     bands?: unknown;
     frame?: unknown;
+    look?: unknown;
     savedAt?: unknown;
   };
   if (typeof v.sourceCapturedAt !== 'number' || !Number.isFinite(v.sourceCapturedAt)) return null;
@@ -98,6 +125,7 @@ export function parseDraft(value: unknown): Draft | null {
     annotations: v.annotations as Annotation[],
     bands: rawBands as Band[],
     frame: frameToSettings(frameFromSettings({ ...DEFAULT_SETTINGS, ...stored })),
+    look: normalizeLook(v.look),
     savedAt: typeof v.savedAt === 'number' && Number.isFinite(v.savedAt) ? v.savedAt : 0,
   };
 }

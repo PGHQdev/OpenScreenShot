@@ -3214,6 +3214,252 @@ async function testCutDraftRestore(browser, base) {
   await legacy.page.close();
 }
 
+async function testBeautifyLooks(browser, base) {
+  step('task 26: a named look sets every frame value at once, and says when it has been changed');
+  // The theme is pinned for the same reason testCutTool pins it: the census
+  // below reads the whole canvas, and the stage plate behind the picture is
+  // near-black in the dark theme.
+  const capture = await makeCapture();
+  const seed = {
+    'openscreenshot:last-capture': capture,
+    'openscreenshot:settings': { theme: 'light' },
+  };
+  const { page } = await newSmokePage(browser);
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  await page.evaluateOnNewDocument(installChromeStub, seed);
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+
+  const settle = (ms = 150) => new Promise((r) => setTimeout(r, ms));
+  const looks = (p = page) =>
+    p.evaluate(() =>
+      [...document.querySelectorAll('.look-btn')].map((b) => ({
+        label: b.textContent.trim(),
+        pressed: b.getAttribute('aria-pressed') === 'true',
+        modified: b.classList.contains('is-modified'),
+        name: b.getAttribute('aria-label'),
+      })),
+    );
+  const sliders = () =>
+    page.evaluate(() =>
+      Object.fromEntries(
+        [...document.querySelectorAll('.beautify-popover .range')].map((r) => [
+          r.getAttribute('aria-label'),
+          Number(r.value),
+        ]),
+      ),
+    );
+  /**
+   * A range's value has to go through the native setter for Preact's onInput
+   * to see it — assigning `.value` fires nothing, and the panel would read
+   * back unchanged whatever this test did.
+   */
+  const setSlider = (name, value) =>
+    page.evaluate(
+      (n, v) => {
+        const el = document.querySelector(`.beautify-popover .range[aria-label="${n}"]`);
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(
+          el,
+          String(v),
+        );
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      },
+      name,
+      value,
+    );
+  const clickLook = async (label) => {
+    await page.evaluate((l) => {
+      [...document.querySelectorAll('.look-btn')].find((b) => b.textContent.trim() === l).click();
+    }, label);
+    await settle();
+  };
+  /**
+   * Opaque red-dominant pixels on the live canvas. The capture is solid blue
+   * and the light stage plate is near-white, so neither lands in this bucket;
+   * the Coral gradient (#ff7a59 -> #e0326b) is all of it.
+   */
+  const coral = () =>
+    page.evaluate(() => {
+      const cv = document.querySelector('.stage-canvas');
+      const { data } = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height);
+      let n = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        if (data[i + 3] === 255 && data[i] > 180 && data[i] - data[i + 2] > 40) n++;
+      }
+      return n;
+    });
+  const beautifyOn = () =>
+    page.evaluate(() => !!document.querySelector('.beautify-menu > .is-active'));
+
+  const coralOff = await coral();
+  assert(!(await beautifyOn()), 'beautify starts off, as it ships');
+  assert(coralOff === 0, `and the stage carries no Coral frame (${coralOff} px)`);
+
+  await page.click('.beautify-menu > .btn-secondary');
+  await page.waitForSelector('.beautify-popover', { timeout: 5000 });
+  await settle();
+
+  const start = await looks();
+  assert(
+    start.map((l) => l.label).join(', ') === 'Clean, Airy, Snug, Flat, Poster, Cutout',
+    `the panel offers six named looks (${start.map((l) => l.label).join(', ')})`,
+  );
+  assert(
+    start
+      .filter((l) => l.pressed)
+      .map((l) => l.label)
+      .join() === 'Clean',
+    'exactly one is shown as chosen, and on a fresh install it is Clean — the shipped defaults',
+  );
+  assert(
+    start.every((l) => !l.modified),
+    'none is marked modified before anything has been touched',
+  );
+
+  step('task 26: one click sets padding, corners, shadow and background, and turns beautify on');
+  await clickLook('Poster');
+  const posterSliders = await sliders();
+  assert(
+    JSON.stringify(posterSliders) === JSON.stringify({ Padding: 70, Corners: 55, Shadow: 80 }),
+    `Poster moved all three sliders at once (${JSON.stringify(posterSliders)})`,
+  );
+  const swatch = await page.evaluate(() =>
+    document.querySelector('.swatch[aria-label="Coral"]')?.getAttribute('aria-pressed'),
+  );
+  assert(swatch === 'true', `and took the Coral background with it (aria-pressed=${swatch})`);
+  assert(await beautifyOn(), 'and turned beautify on, so the click changes something on screen');
+  const coralOn = await coral();
+  assert(
+    coralOn > 20000,
+    `the Coral frame is really painted on the stage (${coralOff} px -> ${coralOn} px)`,
+  );
+
+  step('task 26: moving a slider afterwards leaves the look chosen, and marks it modified');
+  await setSlider('Padding', 33);
+  await settle();
+  const adjusted = (await looks()).find((l) => l.label === 'Poster');
+  assert(adjusted.pressed, 'Poster is still the chosen look after the padding moved');
+  assert(adjusted.modified, 'and it is marked modified rather than silently mismatched');
+  assert(
+    adjusted.name === 'Poster, modified',
+    `the mark is in the accessible name too, not colour alone ("${adjusted.name}")`,
+  );
+  const dot = await page.evaluate(() => {
+    const b = [...document.querySelectorAll('.look-btn')].find((x) =>
+      x.classList.contains('is-modified'),
+    );
+    const s = getComputedStyle(b, '::after');
+    return { content: s.content, w: s.width, bg: s.backgroundColor };
+  });
+  assert(
+    dot.content === '""' && dot.w === '4px',
+    `and a dot is drawn on the button (content ${dot.content}, ${dot.w}, ${dot.bg})`,
+  );
+
+  step('task 26: moving it back clears the mark — modified is a comparison, not a flag');
+  await setSlider('Padding', 70);
+  await settle();
+  const restored = (await looks()).find((l) => l.label === 'Poster');
+  assert(restored.pressed && !restored.modified, 'Poster reads as unmodified again');
+  assert(restored.name === null, 'and its accessible name is back to the plain label');
+
+  step('task 26: a background picked by hand modifies the look the same way');
+  await page.click('.swatch[aria-label="Mint"]');
+  await settle();
+  const bgChanged = (await looks()).find((l) => l.label === 'Poster');
+  assert(
+    bgChanged.pressed && bgChanged.modified,
+    'the background is part of the comparison, not just the three sliders',
+  );
+  await clickLook('Poster');
+  const reapplied = (await looks()).find((l) => l.label === 'Poster');
+  assert(
+    reapplied.pressed && !reapplied.modified,
+    'clicking the look again puts every value back and clears the mark',
+  );
+
+  step('task 26: the adjusted look reaches the autosaved draft');
+  // The autosave only writes when there is work to keep, so one rectangle
+  // goes on first. It is drawn now rather than at the top because the census
+  // above counts red pixels, and the default annotation colour is red.
+  // The panel has to close for the canvas to see the keys at all: its own
+  // capture-phase keydown handler swallows every key while it is open.
+  await page.keyboard.press('Escape');
+  await settle();
+  await page.$eval('.stage-canvas', (el) => el.focus());
+  await page.keyboard.press('r');
+  await page.keyboard.press('Enter');
+  await settle();
+  await page.click('.beautify-menu > .btn-secondary');
+  await page.waitForSelector('.beautify-popover', { timeout: 5000 });
+  await settle();
+  await setSlider('Padding', 33);
+  await new Promise((r) => setTimeout(r, 1200)); // past DRAFT_DEBOUNCE_MS
+  const stored = await page.evaluate(async () => ({
+    draft: (await chrome.storage.local.get('openscreenshot:draft'))['openscreenshot:draft'] ?? null,
+    settings:
+      (await chrome.storage.local.get('openscreenshot:settings'))['openscreenshot:settings'] ??
+      null,
+  }));
+  assert(
+    stored.draft?.look === 'poster' && stored.draft?.frame?.beautifyPadding === 33,
+    `the draft holds the look id beside the changed value (look=${stored.draft?.look}, padding=${stored.draft?.frame?.beautifyPadding})`,
+  );
+  assert(
+    !('beautifyLook' in (stored.settings ?? {})) && stored.settings?.beautifyPadding === 33,
+    'settings hold the four values and no look id — the shared Settings shape is untouched',
+  );
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
+
+  step('task 26: restoring that draft brings the look back, still modified');
+  const { page: back, cdp: backCdp } = await newSmokePage(browser);
+  const backCrashes = [];
+  back.on('pageerror', (err) => backCrashes.push(String(err)));
+  await back.evaluateOnNewDocument(installChromeStub, {
+    ...seed,
+    'openscreenshot:settings': { ...stored.settings },
+    'openscreenshot:draft': stored.draft,
+  });
+  await back.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await back.waitForSelector('.draft-restore', { timeout: 5000 });
+  await back.click('.draft-restore .btn-primary');
+  await settle(400);
+  await back.click('.beautify-menu > .btn-secondary');
+  await back.waitForSelector('.beautify-popover', { timeout: 5000 });
+  await settle();
+  const afterRestore = (await looks(back)).find((l) => l.label === 'Poster');
+  assert(
+    afterRestore.pressed && afterRestore.modified,
+    'the restored frame is Poster, modified — the id survived the crash, not just the numbers',
+  );
+  const restoredPadding = await back.$eval('.beautify-popover .range[aria-label="Padding"]', (el) =>
+    Number(el.value),
+  );
+  assert(restoredPadding === 33, `with the adjustment intact (padding ${restoredPadding})`);
+  step('task 26: the look row goes still under prefers-reduced-motion: reduce');
+  const motion = () => back.$eval('.look-btn', (el) => getComputedStyle(el).transitionDuration);
+  const fullMotion = await motion();
+  assert(
+    fullMotion !== '0s',
+    `.look-btn has a real transition at no-preference (${fullMotion}) — otherwise the reduce check below proves nothing`,
+  );
+  // Replaces the whole feature list newSmokePage set, which is this one alone.
+  await backCdp.send('Emulation.setEmulatedMedia', {
+    features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
+  });
+  const reducedMotion = await motion();
+  assert(
+    reducedMotion.split(',').every((d) => d.trim() === '0s'),
+    `and none of it under reduce (${reducedMotion})`,
+  );
+
+  assert(backCrashes.length === 0, `no page errors (${backCrashes.join(' | ') || 'none'})`);
+  await back.close();
+}
+
 async function main() {
   const built = await stat(join(DIST, PAGE.slice(1))).then(
     () => true,
@@ -4346,6 +4592,7 @@ async function main() {
     await testCutMixedSelectionGrab(browser, base);
     await testCutInPdfExport(browser, base);
     await testCutDraftRestore(browser, base);
+    await testBeautifyLooks(browser, base);
 
     console.log('\nALL STEPS PASSED');
   } finally {
