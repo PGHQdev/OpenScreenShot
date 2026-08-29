@@ -839,12 +839,14 @@ async function handleStop(): Promise<void> {
   chrome.runtime
     .sendMessage({ type: 'OFFSCREEN_STOP', target: 'offscreen' })
     .catch(() => reportControlUnreachable());
-  // A run the engine has not reported in for is the one shape of Stop that
-  // can go unanswered forever; see `abandonStalledRun`. An anchored run's
-  // engine holds state and stops for real, so it needs no watchdog.
-  if (!state.anchored) {
-    setTimeout(() => void abandonStalledRun(state.sessionId), STALLED_STOP_TIMEOUT_MS);
-  }
+  // Armed on every stop, and it is `abandonStalledRun` that decides. Testing
+  // `state.anchored` here as well would be a second guard on the same
+  // question that no test could tell apart from the first — and it would be
+  // the wrong one of the two, because the anchor can arrive *after* this
+  // gesture: a Stop pressed on "Starting…" whose ENGINE_STARTED lands a beat
+  // later is stopping a real recording, and only a check made at the deadline
+  // can know that.
+  setTimeout(() => void abandonStalledRun(state.sessionId), STALLED_STOP_TIMEOUT_MS);
 }
 
 async function handlePause(): Promise<void> {

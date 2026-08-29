@@ -1232,14 +1232,22 @@ describe('a teardown a Stop can land inside', () => {
 
   it('does not let a Stop heal the bar back onto a page it is abandoning', async () => {
     workingTab();
-    sendRejects.add('OFFSCREEN_START');
     await loadWorker();
+    const inner = fakeChrome.runtime.sendMessage;
+    fakeChrome.runtime.sendMessage = vi.fn((msg: { type?: string }) => {
+      if (msg?.type === 'OFFSCREEN_START') {
+        // The Stop is pressed as the dropped start is being discovered, which
+        // is the one window `abandonUnstartedRun` runs in. Timing it from
+        // outside does not reach it: a Stop a tick earlier is taken by
+        // `abortPreparingStart` and never becomes a teardown race at all.
+        setTimeout(() => void send({ type: 'REC_STOP' }), 0);
+        return Promise.reject(new Error('Receiving end does not exist.'));
+      }
+      return inner(msg);
+    }) as typeof fakeChrome.runtime.sendMessage;
+
     void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
-    // Two rounds is inside `abandonUnstartedRun`: the dispatch has rejected
-    // and the teardown is on its way through IndexedDB.
-    await settle(2);
-    void send({ type: 'REC_STOP' });
-    await settle();
+    await settle(40);
 
     // A fourth injection is the bar going back up after the unmount, on a run
     // whose state is then cleared under it — nothing would ever take it down.
@@ -1290,6 +1298,32 @@ describe('a teardown a Stop can land inside', () => {
       await vi.advanceTimersByTimeAsync(3500);
       await settle();
       expect(parked()).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('spares a run whose anchor arrived after the Stop that was watching it', async () => {
+    // The reason the guard is at the deadline and not at the gesture. Stop is
+    // pressed on "Starting…", the engine reports in a beat later, and what is
+    // now a real recording must not be torn down and called stalled.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      workingTab();
+      liveOffscreen();
+      await loadWorker();
+      void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+      await settle();
+      const sessionId = (await listSessions())[0].id;
+      void send({ type: 'REC_STOP' });
+      await settle();
+      void send({ type: 'ENGINE_STARTED', sessionId, tracks: { mic: true, webcam: false } });
+      await settle();
+
+      await vi.advanceTimersByTimeAsync(3500);
+      await settle();
+      expect(parked()).toBeNull();
+      expect(session.get(REC_STATE_KEY)).toBeDefined();
     } finally {
       vi.useRealTimers();
     }
