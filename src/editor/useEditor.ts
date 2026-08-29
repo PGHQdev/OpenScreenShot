@@ -286,11 +286,19 @@ export function useEditor() {
    * outlives a selection narrowing to some of its layers (carryGroupBox), and
    * a box measured around three of them is not the box to resize two in, nor
    * the box to hang two layers' handles on.
+   *
+   * Dropped as well once a cut takes its anchor row: the frame is then drawn
+   * nowhere and its handles are grabbable nowhere, and a frame nobody can see
+   * is not a frame the arrows should keep resizing through. Every reader falls
+   * back to the union of what is drawn, which is always drawable — its top
+   * edge is some drawn member's top edge — and render() falls back to the same
+   * box, so the two never disagree.
    */
-  const activeGroupBox = useCallback(
-    () => groupBoxFor(groupBoxRef.current, selectedIdsRef.current),
-    [],
-  );
+  const activeGroupBox = useCallback(() => {
+    const box = groupBoxFor(groupBoxRef.current, selectedIdsRef.current);
+    const c = controllerRef.current;
+    return box && c && !c.projectAt(box.y) ? null : box;
+  }, []);
 
   /** That box after a translate of everything selected, which maps onto it. */
   const movedGroupBox = useCallback(
@@ -320,6 +328,36 @@ export function useEditor() {
     },
     [setGroupBox],
   );
+
+  /**
+   * Drop from the selection every mark a cut has taken out of the picture, and
+   * say whether it dropped any.
+   *
+   * The drop is at selection time, not at move time, and the difference
+   * matters. Refusing to move a mark that is still selected leaves the arrows
+   * silently inert and the live region reporting a move nobody can see;
+   * dropping it says what happened once, and what is left is what the next
+   * press acts on. It is called where a mark can newly become hidden — when a
+   * band is taken out, and at the end of a gesture that moved or resized one
+   * onto rows a band already took.
+   *
+   * Nothing is lost either way: the mark stays in the document, and clicking
+   * the seam or undoing the cut brings it back, visible and selectable again.
+   */
+  const pruneHiddenFromSelection = useCallback((): boolean => {
+    const c = controllerRef.current;
+    const ids = selectedIdsRef.current;
+    if (!c || c.bands.length === 0 || ids.length === 0) return false;
+    const kept = ids.filter((id) => {
+      const a = annotationsRef.current.find((x) => x.id === id);
+      // An id with no layer behind it is not hidden, just gone; the selection
+      // paths that produce one already tolerate it.
+      return !a || c.annotationOffset(a) !== null;
+    });
+    if (kept.length === ids.length) return false;
+    selectAnnotations(kept);
+    return true;
+  }, [selectAnnotations]);
 
   /**
    * The one way the annotation list changes. `groupBox` is the resize box that
@@ -890,22 +928,28 @@ export function useEditor() {
         duplicateSelection();
         return;
       }
-      // Delete selected.
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIdsRef.current.length > 0) {
-        e.preventDefault();
-        deleteSelection();
-        return;
-      }
-      // With the Cut tool up and nothing selected, Delete puts back the cut
-      // nearest the middle of the view — a keyboard user's way to a seam,
+      // Delete, in the order the things it could mean sit on screen. A drafted
+      // band is the newest and the most immediate, so it goes first — ahead of
+      // a selection that may have been made long before the band was drawn.
+      // Then the selection, and last, with the Cut tool up and neither, the
+      // cut nearest the middle of the view: a keyboard user's way to a seam,
       // which a pointer user reaches by clicking it.
-      if ((e.key === 'Delete' || e.key === 'Backspace') && toolRef.current === 'cut') {
-        e.preventDefault();
-        // A band on screen is the thing Delete is aimed at; only with none
-        // drafted does it reach for a cut already taken.
-        if (cutDraftRef.current) cancelCut();
-        else removeNearestBand();
-        return;
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (cutDraftRef.current) {
+          e.preventDefault();
+          cancelCut();
+          return;
+        }
+        if (selectedIdsRef.current.length > 0) {
+          e.preventDefault();
+          deleteSelection();
+          return;
+        }
+        if (toolRef.current === 'cut') {
+          e.preventDefault();
+          removeNearestBand();
+          return;
+        }
       }
       // Escape: cancel a crop or a cut, else deselect.
       if (e.key === 'Escape') {
@@ -969,12 +1013,6 @@ export function useEditor() {
   ]);
 
   // --- Cut ---
-  /** The top edge of one annotation by id, or -1 when it is no longer there. */
-  const topEdgeOf = useCallback((id: string): number => {
-    const a = annotationsRef.current.find((x) => x.id === id);
-    return a ? bbox(a).y : -1;
-  }, []);
-
   /**
    * A cut is a band on a list the compose paths read, so the picture the
    * editor draws and the picture an export holds are the same picture with the
@@ -1008,13 +1046,12 @@ export function useEditor() {
       // stay selected through the cut that hid it. The history entry pushed
       // above still carries the selection as it was, so an undo brings it back
       // with the strip.
-      const kept = selectedIdsRef.current.filter((id) => !inBand(next, topEdgeOf(id)));
-      if (kept.length !== selectedIdsRef.current.length) selectAnnotations(kept);
+      pruneHiddenFromSelection();
       // The height that actually went, not the height of the band: a band that
       // overlaps one already cut removes only the rows still there.
       say({ kind: 'cut-applied', band: { y: b.y, h: before - after }, imageHeight: after });
     },
-    [topEdgeOf, commitBands, selectAnnotations, say],
+    [commitBands, pruneHiddenFromSelection, say],
   );
 
   /** Put one cut back, by its place in the band list. */
@@ -1112,7 +1149,11 @@ export function useEditor() {
         return;
       }
       if (it.kind === 'marquee') {
-        c.setMarquee({ x: it.start.x, y: it.start.y, w: p.x - it.start.x, h: p.y - it.start.y });
+        // Composed space, like the rectangle the user is watching: a marquee
+        // held in source coordinates would cover the rows a cut took and miss
+        // marks it visibly crossed.
+        const m = c.toComposedPoint(sx, sy);
+        c.setMarquee({ x: it.start.x, y: it.start.y, w: m.x - it.start.x, h: m.y - it.start.y });
         return;
       }
       if (it.kind === 'move') {
@@ -1233,9 +1274,9 @@ export function useEditor() {
       // A press-and-release with no drag pulls no rect at all, so there is
       // nothing to catch — the mousedown already cleared the selection.
       if (!r) return;
-      // In the picture only: a marquee dragged across a seam covers the source
-      // rows a cut took, and catching marks on them would select the invisible.
-      const caught = annotationsInRect(drawnAnnotations(c, annotationsRef.current), r);
+      // Both sides in composed space, so what the marquee visibly crosses is
+      // what it catches — and marks on rows a cut took are not there to catch.
+      const caught = annotationsInRect(composedAnnotations(c, annotationsRef.current), r);
       const next = [...it.base.filter((id) => !caught.includes(id)), ...caught];
       selectAnnotations(next);
       sayAboutSelection(next);
@@ -1254,6 +1295,17 @@ export function useEditor() {
     // move / resize: changes already applied during drag (one snapshot on first
     // move). Announcing per mousemove would be a stream of noise, so the live
     // region hears the result once, here.
+    //
+    // A drag can carry a mark onto rows a band already took, and it vanishes
+    // as it crosses. It leaves the selection here rather than at the next
+    // gesture, and that is what the region reports — the drag's own result is
+    // the mark going out of the picture.
+    if (dragged && (it.kind === 'move' || it.kind === 'resize' || it.kind === 'resize-group')) {
+      if (pruneHiddenFromSelection()) {
+        sayAboutSelection(selectedIdsRef.current);
+        return;
+      }
+    }
     if (dragged && it.kind === 'resize') {
       const resized = annotationsRef.current.find((a) => a.id === it.id);
       if (resized) say({ kind: 'resize', annotation: resized });
@@ -1275,7 +1327,15 @@ export function useEditor() {
         sayAboutSelection([it.hit]);
       }
     }
-  }, [onDragMove, applyCutBand, commit, say, selectAnnotations, sayAboutSelection]);
+  }, [
+    onDragMove,
+    applyCutBand,
+    commit,
+    pruneHiddenFromSelection,
+    say,
+    selectAnnotations,
+    sayAboutSelection,
+  ]);
 
   /**
    * Drop a numbered badge at `p`. The pointer path and the keyboard path share
@@ -1389,7 +1449,11 @@ export function useEditor() {
           selectAnnotations([]);
           sayAboutSelection([]);
         }
-        interactionRef.current = { kind: 'marquee', start: p, base: e.shiftKey ? ids : [] };
+        interactionRef.current = {
+          kind: 'marquee',
+          start: c.toComposedPoint(sx, sy),
+          base: e.shiftKey ? ids : [],
+        };
         window.addEventListener('mousemove', onDragMove);
         window.addEventListener('mouseup', onDragUp);
         return;
@@ -1753,6 +1817,15 @@ export function useEditor() {
         say({ kind: 'crop', rect: next });
         return;
       }
+      // A mark a cut hides cannot be seen to move, so it leaves the selection
+      // before the arrows act rather than being nudged where nobody can watch.
+      // This press reports the selection it found; the next one moves what is
+      // left. See pruneHiddenFromSelection for why the drop is at selection
+      // time rather than at move time.
+      if (pruneHiddenFromSelection()) {
+        sayAboutSelection(selectedIdsRef.current);
+        return;
+      }
       const list = annotationsRef.current;
       const ids = selectedIdsRef.current;
       const touched = list.filter((x) => ids.includes(x.id));
@@ -1778,11 +1851,14 @@ export function useEditor() {
         );
         box = null;
       } else {
+        // Every member is drawn (the prune above saw to it), so the union is
+        // a frame the handles are on — which is what activeGroupBox falls
+        // back to once a cut takes the carried frame's anchor row.
         const resized = resizeSelectionBy(
           touched,
           intent.dx,
           intent.dy,
-          activeGroupBox() ?? undefined,
+          activeGroupBox() ?? unionBBox(touched),
         );
         const scaled = new Map(resized.annotations.map((a) => [a.id, a]));
         next = list.map((x) => scaled.get(x.id) ?? x);
@@ -1814,6 +1890,7 @@ export function useEditor() {
       applyCutDraft,
       movedGroupBox,
       placeWithKeyboard,
+      pruneHiddenFromSelection,
       sayAboutSelection,
       selectAnnotations,
       say,
@@ -2175,10 +2252,11 @@ const SEAM_HIT_PX = 6;
 /**
  * Hit-test annotations topmost-first in screen space; returns an id or null.
  *
- * The box comes from the annotation's own projector, not from toScreen: a mark
- * is drawn rigidly and a cut inside it would otherwise leave the box short and
- * the drawn rows below it dead. A mark on rows a cut removed has no projector
- * and is skipped — it is not in the picture, so a click cannot land on it.
+ * The box comes from the annotation's own projector: a mark is drawn rigidly,
+ * and projecting its corners one row at a time through the cut map would leave
+ * the box short and the drawn rows below it dead. A mark on rows a cut removed
+ * has no projector and is skipped — it is not in the picture, so a click
+ * cannot land on it.
  */
 function hitTestAnnotation(
   c: CanvasController,
@@ -2203,6 +2281,20 @@ function hitTestAnnotation(
 /** The marks that are actually in the picture — everything a cut did not take. */
 function drawnAnnotations(c: CanvasController, anns: Annotation[]): Annotation[] {
   return anns.filter((a) => c.annotationOffset(a) !== null);
+}
+
+/**
+ * Those same marks, moved into composed space — where they are painted, and
+ * where the marquee is dragged. Copies, so nothing in the document moves.
+ */
+function composedAnnotations(c: CanvasController, anns: Annotation[]): Annotation[] {
+  const out: Annotation[] = [];
+  for (const a of anns) {
+    const dy = c.annotationOffset(a);
+    if (dy === null) continue;
+    out.push(dy === 0 ? a : translateAnnotation(a, 0, -dy));
+  }
+  return out;
 }
 
 /** Hold a point inside the image bounds — used to keep crop drags out of the beautify padding. */

@@ -85,7 +85,12 @@ export class CanvasController {
    * the point that sets it.
    */
   cutDraft: Band | null = null;
-  /** The Select tool's in-progress marquee, in image pixels. */
+  /**
+   * The Select tool's in-progress marquee, in composed image pixels — the
+   * space it is dragged across and drawn in. Source coordinates would be the
+   * odd one out here: the rectangle exists only on screen, and what it has to
+   * agree with is where the marks are painted, not where they are stored.
+   */
   marquee: Rect | null = null;
   /**
    * The resize frame a multi-selection is being resized by, when useEditor is
@@ -307,22 +312,14 @@ export class CanvasController {
   }
 
   /**
-   * Convert source image (native px) to screen (CSS px) coordinates, one row
-   * at a time through the cut map — the exact inverse of {@link toImage}.
-   *
-   * That makes it right for anything measured off the screen and kept in
-   * source coordinates, the marquee being the only one. It is NOT right for a
-   * point that belongs to an annotation: a mark is drawn rigidly, shifted by
-   * the cut above its own top edge (see {@link annotationOffset}), so a mark a
-   * band crosses is drawn taller than this map would put it. Project those
-   * through {@link projectAt} instead, or the outline, the handles and the hit
-   * box land somewhere the mark is not.
+   * Convert composed image coordinates to screen (CSS px) — toComposedPoint
+   * the other way round. The marquee is drawn through it, and nothing that
+   * belongs to an annotation is: a mark is drawn rigidly, shifted by the cut
+   * above its own top edge, so its outline, handles and hit box go through
+   * {@link projectAt} instead.
    */
-  toScreen(ix: number, iy: number): Point {
-    return {
-      x: ix * this.view.zoom + this.view.panX,
-      y: toComposed(this.bands, iy) * this.view.zoom + this.view.panY,
-    };
+  toScreenComposed(cx: number, cy: number): Point {
+    return { x: cx * this.view.zoom + this.view.panX, y: cy * this.view.zoom + this.view.panY };
   }
 
   /**
@@ -460,16 +457,27 @@ export class CanvasController {
     const selected = this.selectedIds
       .map((id) => this.annotations.find((a) => a.id === id))
       .filter((a): a is Annotation => !!a);
-    for (const sel of selected) {
+    // Only what is in the picture. A selection holding a mark a cut hides
+    // carries chrome for the rest of it, and the lone survivor of such a
+    // selection keeps its own handles rather than a group frame around one.
+    const drawn = selected.filter((a) => this.annotationOffset(a) !== null);
+    for (const sel of drawn) {
       const project = this.projectFor(sel);
-      if (project) drawSelection(ctx, sel, project, selected.length === 1);
+      if (project) drawSelection(ctx, sel, project, drawn.length === 1);
     }
-    if (selected.length > 1) {
-      const box = this.groupBox ?? unionBBox(selected);
+    if (drawn.length > 1) {
+      // The carried frame while it is one the user can see; the union of the
+      // drawn members once its anchor row has been cut away. That union is
+      // always drawable — its top edge is some drawn member's top edge — so
+      // the handles never go missing, and the frame the arrows resize through
+      // stays the frame on screen (useEditor's activeGroupBox drops the same
+      // box for the same reason).
+      const carried = this.groupBox;
+      const box = carried && this.projectAt(carried.y) ? carried : unionBBox(drawn);
       const project = this.projectAt(box.y);
       if (project) drawGroupSelection(ctx, box, project);
     }
-    if (this.marquee) drawMarquee(ctx, this.marquee, (x, y) => this.toScreen(x, y));
+    if (this.marquee) drawMarquee(ctx, this.marquee, (x, y) => this.toScreenComposed(x, y));
   }
 
   /** Composite the frame + image + annotations at full image resolution for export. */

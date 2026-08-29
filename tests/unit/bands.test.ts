@@ -376,3 +376,91 @@ describe('normalizeBand', () => {
     expect(normalizeBand({ y: 200, h: 100 })).toEqual({ y: 200, h: 100 });
   });
 });
+
+/**
+ * The group resize frame is a source-space box, and both it and the members
+ * inside it are drawn rigidly, each shifted by the cut above its own top edge
+ * (CanvasController.projectAt). Two questions follow, and Task 24's defect is
+ * the first of them.
+ *
+ * Containment holds because `cutAbove` over a merged, disjoint band list is
+ * monotone and 1-Lipschitz: a member can never be drawn outside the frame it
+ * sits in. What does happen is the other direction — the frame over-encloses,
+ * by the cut lying between its own top edge and the member's, which is why the
+ * slack is asserted against that bound rather than against zero.
+ */
+describe('a drawn frame and the drawn members inside it', () => {
+  const drawnTop = (bands: Band[], y: number) => y - cutAbove(bands, y);
+
+  /** A deterministic generator, so a failure is reproducible from the seed. */
+  function rng(seed: number): () => number {
+    let s = seed >>> 0;
+    return () => {
+      s = (s * 1664525 + 1013904223) >>> 0;
+      return s / 0x100000000;
+    };
+  }
+
+  it('never draws a member outside the frame, and over-encloses by no more than the cut between them', () => {
+    const next = rng(20250830);
+    const H = 1000;
+    let checked = 0;
+    let worstSlack = 0;
+    for (let iter = 0; iter < 4000; iter++) {
+      const bands = normalizeBands(
+        Array.from({ length: 1 + Math.floor(next() * 3) }, () => ({
+          y: Math.floor(next() * 1200) - 100,
+          h: Math.floor(next() * 400) - 50,
+        })),
+        H,
+      );
+      const fy = Math.floor(next() * H);
+      const frame = { y: fy, h: Math.floor(next() * (H - fy)) };
+      if (inBand(bands, frame.y)) continue;
+      const members = Array.from({ length: 3 }, () => {
+        const my = frame.y + Math.floor(next() * (frame.h + 1));
+        return { y: my, h: Math.floor(next() * (frame.y + frame.h - my + 1)) };
+      }).filter((m) => !inBand(bands, m.y));
+      const top = drawnTop(bands, frame.y);
+      const bottom = top + frame.h;
+      for (const m of members) {
+        const mTop = drawnTop(bands, m.y);
+        // Containment, both edges. These are what monotone and 1-Lipschitz
+        // buy: no member is ever drawn outside the frame it sits in.
+        expect(mTop).toBeGreaterThanOrEqual(top);
+        expect(mTop + m.h).toBeLessThanOrEqual(bottom);
+        const slack = bottom - (mTop + m.h);
+        // ...and the over-enclosure is the slack the member already had in
+        // source space plus the cut lying between the two top edges, which is
+        // at most everything the bands take.
+        expect(slack).toBeLessThanOrEqual(frame.y + frame.h - m.y - m.h + cutHeight(bands));
+        worstSlack = Math.max(worstSlack, slack);
+        checked++;
+      }
+    }
+    expect(checked).toBeGreaterThan(5000);
+    // The direction of the error, locked in: this frame over-encloses, and by
+    // a lot. If it ever hugs the drawn members instead, this fails and the
+    // disclosure that goes with it has to be rewritten.
+    expect(
+      worstSlack,
+      `worst over-enclosure over ${checked} drawn members on a ${H}-row image`,
+    ).toBeGreaterThan(400);
+  });
+
+  it('over-encloses by nearly the whole picture when the cut sits between frame and member', () => {
+    // The frame's top is row 0 and its only drawn member sits below a band
+    // that takes almost everything between them: the frame is drawn 991 rows
+    // tall around a member drawn 1 row tall, its bottom handles nowhere near
+    // anything. That is the resize frame doing its job — it is the box
+    // scaleInBox measures against, not a bounding box of the marks.
+    const bands: Band[] = [{ y: 1, h: 990 }];
+    const frame = { y: 0, h: 1000 };
+    const member = { y: 991, h: 1 };
+    const top = drawnTop(bands, frame.y);
+    const mTop = drawnTop(bands, member.y);
+    expect(top).toBe(0);
+    expect(mTop).toBe(1);
+    expect(top + frame.h - (mTop + member.h)).toBe(998);
+  });
+});

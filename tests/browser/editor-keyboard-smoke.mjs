@@ -1969,6 +1969,54 @@ async function testMultiSelection(browser, base) {
   await page.close();
 }
 
+async function pictureGeometry(page, composedH) {
+  const g = await page.evaluate(() => {
+    const cv = document.querySelector('.stage-canvas');
+    const r = cv.getBoundingClientRect();
+    const { data } = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height);
+    const isPicture = (i) => {
+      const [red, green, blue, a] = [data[i], data[i + 1], data[i + 2], data[i + 3]];
+      if (a !== 255) return false;
+      return (
+        (red > 150 && green < 110 && blue < 110) ||
+        (green > 150 && red < 110 && blue < 110) ||
+        (blue > 150 && red < 110 && green < 110)
+      );
+    };
+    let top = -1;
+    let bottom = -1;
+    let left = -1;
+    let right = -1;
+    for (let y = 0; y < cv.height; y++) {
+      for (let x = 0; x < cv.width; x++) {
+        if (!isPicture((y * cv.width + x) * 4)) continue;
+        if (top < 0) top = y;
+        bottom = y;
+        if (left < 0 || x < left) left = x;
+        if (x > right) right = x;
+      }
+    }
+    return {
+      rect: { left: r.left, top: r.top },
+      sx: cv.width / r.width,
+      sy: cv.height / r.height,
+      top,
+      bottom,
+      left,
+      right,
+    };
+  });
+  // The zoom is uniform, so one scale serves both axes.
+  const scale = (g.bottom - g.top + 1) / composedH;
+  return {
+    x: g.rect.left + (g.left + g.right) / 2 / g.sx,
+    xAt: (imageX) => g.rect.left + (g.left + imageX * scale) / g.sx,
+    y: (imageY) => g.rect.top + (g.top + imageY * scale) / g.sy,
+    /** A canvas backing-store row, back to the composed image row it shows. */
+    imageY: (row) => (row - g.top) / scale,
+  };
+}
+
 /**
  * Task 25: the Cut tool, end to end.
  *
@@ -2195,51 +2243,7 @@ async function testCutTool(browser, base) {
    * and last rows and columns holding an opaque stripe colour, converted to
    * page coordinates the mouse can be driven with.
    */
-  const geometry = async (composedH) => {
-    const g = await page.evaluate(() => {
-      const cv = document.querySelector('.stage-canvas');
-      const r = cv.getBoundingClientRect();
-      const { data } = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height);
-      const isPicture = (i) => {
-        const [red, green, blue, a] = [data[i], data[i + 1], data[i + 2], data[i + 3]];
-        if (a !== 255) return false;
-        return (
-          (red > 150 && green < 110 && blue < 110) ||
-          (green > 150 && red < 110 && blue < 110) ||
-          (blue > 150 && red < 110 && green < 110)
-        );
-      };
-      let top = -1;
-      let bottom = -1;
-      let left = -1;
-      let right = -1;
-      for (let y = 0; y < cv.height; y++) {
-        for (let x = 0; x < cv.width; x++) {
-          if (!isPicture((y * cv.width + x) * 4)) continue;
-          if (top < 0) top = y;
-          bottom = y;
-          if (left < 0 || x < left) left = x;
-          if (x > right) right = x;
-        }
-      }
-      return {
-        rect: { left: r.left, top: r.top },
-        sx: cv.width / r.width,
-        sy: cv.height / r.height,
-        top,
-        bottom,
-        left,
-        right,
-      };
-    });
-    const scale = (g.bottom - g.top + 1) / composedH;
-    return {
-      x: g.rect.left + (g.left + g.right) / 2 / g.sx,
-      y: (imageY) => g.rect.top + (g.top + imageY * scale) / g.sy,
-    };
-  };
-
-  const whole = await geometry(600);
+  const whole = await pictureGeometry(page, 600);
   await page.mouse.move(whole.x, whole.y(100));
   await page.mouse.down();
   await page.mouse.move(whole.x, whole.y(180), { steps: 8 });
@@ -2257,7 +2261,7 @@ async function testCutTool(browser, base) {
   const afterDrag = await census();
   assert(afterDrag.black > 200, `the drag left a seam behind it (${afterDrag.black} black pixels)`);
 
-  const shortened = await geometry(Number(dragged[2]));
+  const shortened = await pictureGeometry(page, Number(dragged[2]));
   await page.mouse.click(shortened.x, shortened.y(100));
   await settle(150);
   assert(
@@ -2380,7 +2384,7 @@ async function testCutTool(browser, base) {
   // drawn its full height while the rows under the band close up beneath it.
   await cutExactly(250, 80);
   assert((await size()) === '800 × 520px', `the picture lost the 80 rows (${await size()})`);
-  const crossed = await geometry(520);
+  const crossed = await pictureGeometry(page, 520);
   await page.keyboard.press('v');
   // Composed row 340: inside the mark as drawn (230 to 370), and 50 rows below
   // where a hit box built out of the piecewise row map would end.
@@ -2407,7 +2411,7 @@ async function testCutTool(browser, base) {
     await page.$eval('[aria-label="Delete selected"]', (b) => b.disabled),
     'the cut dropped the hidden mark from the selection — it cannot be dragged or nudged',
   );
-  const hidden = await geometry(540);
+  const hidden = await pictureGeometry(page, 540);
   await page.keyboard.press('v');
   // Composed row 280: inside the box the piecewise row map would give the
   // hidden mark (200 to 310), and over picture it does not paint.
@@ -2500,6 +2504,326 @@ async function testCutTool(browser, base) {
   assert(
     cropped.info.height === 400 && greenInCrop === 0,
     `the cropped export is 400 rows with no cut stripe in it (${cropped.info.height} tall, ${greenInCrop} green pixels) — a crop that had rasterised the capture instead would be 600 and full of it`,
+  );
+
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
+}
+
+/**
+ * Fix round 2: the three consumers that were still outside the projection rule,
+ * and the precedence Delete reads its own meaning from.
+ *
+ * The rule is that everything about a mark — where it is drawn, outlined,
+ * grabbed, caught and moved — goes through the same offset. These are the
+ * places where it did not.
+ */
+async function testCutSelectionRules(browser, base) {
+  step('task 25 fix 2: a marquee catches what it visibly crosses, cuts and all');
+  const { page } = await newSmokePage(browser);
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': await makeStripedCapture(),
+    'openscreenshot:settings': { theme: 'light' },
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+
+  const settle = (ms = 130) => new Promise((r) => setTimeout(r, ms));
+  const say = () =>
+    page.evaluate(() =>
+      document.querySelector('[aria-live="polite"][role="status"]').textContent.trim(),
+    );
+  const size = () => page.$eval('.statusbar > span', (el) => el.textContent.trim());
+  const layers = () =>
+    page.$eval('.toolbar', (el) => el.querySelector('.toolbar-count span')?.textContent ?? '0');
+  async function chord(mods, key) {
+    for (const m of mods) await page.keyboard.down(m);
+    await page.keyboard.press(key);
+    for (const m of mods.slice().reverse()) await page.keyboard.up(m);
+  }
+  const band = async () => {
+    const m = (await say()).match(/Cut band (\d+) pixels tall at (\d+)\./);
+    if (!m) throw new Error(`expected a drafted band, got "${await say()}"`);
+    return { h: Number(m[1]), y: Number(m[2]) };
+  };
+  const walk = async (mods, delta) => {
+    const key = delta > 0 ? 'ArrowDown' : 'ArrowUp';
+    for (let i = 0; i < Math.floor(Math.abs(delta) / 10); i++) await chord([...mods, 'Shift'], key);
+    for (let i = 0; i < Math.abs(delta) % 10; i++) await chord(mods, key);
+    await settle(60);
+  };
+  const cutExactly = async (y, h) => {
+    await page.$eval('.stage-canvas', (el) => el.focus());
+    await page.keyboard.press('x');
+    await page.keyboard.press('Enter');
+    await settle();
+    const placed = await band();
+    await walk(['Alt'], h - placed.h);
+    await walk([], y - (await band()).y);
+    const aimed = await band();
+    assert(
+      aimed.y === y && aimed.h === h,
+      `band drafted at exactly ${y}, ${h} tall (${aimed.y}, ${aimed.h})`,
+    );
+    await page.keyboard.press('Enter');
+    await settle();
+  };
+
+  await page.$eval('.stage-canvas', (el) => el.focus());
+  await page.keyboard.press('6'); // Purple, so nothing in the stripes is near it
+  await page.keyboard.press('r');
+  await page.keyboard.press('Enter');
+  await settle();
+  const placed = (await say()).match(/Rectangle added at (-?\d+), (-?\d+)\./);
+  assert(placed !== null, `a rectangle was placed ("${await say()}")`);
+  const markY = Number(placed[2]);
+  await page.keyboard.press('Escape');
+
+  // The band starts inside the mark, below its top edge, so the mark keeps its
+  // full drawn height while the rows under the band close up beneath it.
+  await cutExactly(markY + 20, 80);
+  assert((await size()) === '800 × 520px', `the picture lost the 80 rows (${await size()})`);
+  const g = await pictureGeometry(page, 520);
+  await page.keyboard.press('v');
+  // A marquee across composed rows 340 to 360, started clear of the mark's own
+  // box so it is a marquee and not a drag, and drawn over rows the mark is
+  // painted on. In source coordinates that band of rows is 420 to 440 — past
+  // the mark entirely, which is what the catch used to compare against.
+  await page.mouse.move(g.xAt(100), g.y(340));
+  await page.mouse.down();
+  await page.mouse.move(g.xAt(600), g.y(360), { steps: 8 });
+  await page.mouse.up();
+  await settle(150);
+  assert(
+    (await say()) === 'Rectangle selected, layer 1 of 1.',
+    `the marquee caught the mark it was dragged across ("${await say()}")`,
+  );
+  await page.keyboard.press('Escape');
+  await chord(['Meta'], 'z');
+  await settle();
+  assert((await size()) === '800 × 600px', 'the picture is whole again');
+
+  step('task 25 fix 2: a mark nudged onto cut rows leaves the selection instead of moving unseen');
+  await cutExactly(100, 100);
+  await page.$eval('.stage-canvas', (el) => el.focus());
+  await page.keyboard.press(']');
+  await settle();
+  assert(
+    (await say()) === 'Rectangle selected, layer 1 of 1.',
+    `the mark is selected before it is nudged ("${await say()}")`,
+  );
+  // The band covers rows 100 to 199, and the mark's top starts at 230. Three
+  // coarse nudges put it on row 200, the last row above the band.
+  for (let i = 0; i < 3; i++) await chord(['Shift'], 'ArrowUp');
+  await settle();
+  assert(
+    (await say()) === `Rectangle moved to 330, ${markY - 30}.`,
+    `three nudges leave it on the last row above the band ("${await say()}")`,
+  );
+  // The fourth takes its top onto a cut row. It was in the picture when the
+  // key came down, so that press is still a move.
+  await chord(['Shift'], 'ArrowUp');
+  await settle();
+  assert(
+    (await say()) === `Rectangle moved to 330, ${markY - 40}.`,
+    `the press that hides it still reports the move it made ("${await say()}")`,
+  );
+  await chord(['Shift'], 'ArrowUp');
+  await settle();
+  assert(
+    (await say()) === 'Selection cleared.',
+    `and the next press says the mark left the picture rather than moving it unseen ("${await say()}")`,
+  );
+  await chord(['Meta'], 'z');
+  await chord(['Meta'], 'z');
+  await settle();
+
+  step('task 25 fix 2: Delete cancels a drafted band before it deletes a selection');
+  await page.$eval('.stage-canvas', (el) => el.focus());
+  await page.keyboard.press(']');
+  await settle();
+  assert(
+    (await say()) === 'Rectangle selected, layer 1 of 1.',
+    `a mark is selected and a band is about to be drafted ("${await say()}")`,
+  );
+  await page.keyboard.press('x');
+  await page.keyboard.press('Enter');
+  await settle();
+  await band(); // a band really is drafted
+  await page.keyboard.press('Delete');
+  await settle();
+  assert(
+    (await say()) === 'Cut cancelled.',
+    `Delete took the band, the newest thing on screen ("${await say()}")`,
+  );
+  assert(
+    (await layers()) === '1',
+    `and left the selected mark where it was (${await layers()} layer on the canvas)`,
+  );
+  await page.keyboard.press('Escape');
+  await chord(['Meta'], 'z'); // put the picture back for the frame check below
+  await settle();
+
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
+}
+
+/**
+ * The group resize frame is a source-space box, and a cut can take the row it
+ * is anchored on while every member it holds stays in the picture. Only a
+ * frame of glyphs reaches that state — a badge scales by one factor on both
+ * axes (uniformFactor), so growing the frame vertically leaves both badges'
+ * top edges strictly below the frame's own.
+ */
+async function testCutGroupFrame(browser, base) {
+  step('task 25 fix 2: a group frame whose anchor row is cut falls back to one that is drawn');
+  const { page } = await newSmokePage(browser);
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': await makeStripedCapture(),
+    'openscreenshot:settings': { theme: 'light' },
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+
+  const settle = (ms = 130) => new Promise((r) => setTimeout(r, ms));
+  const say = () =>
+    page.evaluate(() =>
+      document.querySelector('[aria-live="polite"][role="status"]').textContent.trim(),
+    );
+  async function chord(mods, key) {
+    for (const m of mods) await page.keyboard.down(m);
+    await page.keyboard.press(key);
+    for (const m of mods.slice().reverse()) await page.keyboard.up(m);
+  }
+  const band = async () => {
+    const m = (await say()).match(/Cut band (\d+) pixels tall at (\d+)\./);
+    if (!m) throw new Error(`expected a drafted band, got "${await say()}"`);
+    return { h: Number(m[1]), y: Number(m[2]) };
+  };
+  const walk = async (mods, delta) => {
+    const key = delta > 0 ? 'ArrowDown' : 'ArrowUp';
+    for (let i = 0; i < Math.floor(Math.abs(delta) / 10); i++) await chord([...mods, 'Shift'], key);
+    for (let i = 0; i < Math.abs(delta) % 10; i++) await chord(mods, key);
+    await settle(60);
+  };
+  /** A layer's top edge, read the way this file reads every coordinate. */
+  const topOfNext = async () => {
+    await page.keyboard.press(']');
+    await page.keyboard.press('ArrowLeft');
+    await page.keyboard.press('ArrowRight');
+    await settle(60);
+    const m = (await say()).match(/moved to (-?\d+), (-?\d+)\./);
+    if (!m) throw new Error(`expected a move announcement, got "${await say()}"`);
+    return Number(m[2]);
+  };
+  /**
+   * The topmost canvas row painted in the badge colour: the drawn top edge of
+   * the upper badge. Read off the canvas because nothing here may move a
+   * member — a nudge changes a member's bbox, and that is what drops the
+   * carried frame this test needs to still be carrying.
+   */
+  const topBadgeRow = () =>
+    page.evaluate(() => {
+      const cv = document.querySelector('.stage-canvas');
+      const { data } = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height);
+      for (let y = 0; y < cv.height; y++) {
+        for (let x = 0; x < cv.width; x++) {
+          const i = (y * cv.width + x) * 4;
+          if (
+            data[i + 3] === 255 &&
+            Math.abs(data[i] - 175) < 40 &&
+            Math.abs(data[i + 1] - 82) < 45 &&
+            Math.abs(data[i + 2] - 222) < 40
+          ) {
+            return y;
+          }
+        }
+      }
+      return -1;
+    });
+
+  await page.$eval('.stage-canvas', (el) => el.focus());
+  await page.keyboard.press('6'); // Purple: no stripe colour, so it reads apart from the picture
+  await page.keyboard.press('s');
+  await page.keyboard.press('Enter');
+  await settle();
+  for (let i = 0; i < 10; i++) await chord(['Shift'], 'ArrowDown');
+  await page.keyboard.press('Enter');
+  await settle();
+  await page.keyboard.press('Escape');
+  await settle();
+  const first = await topOfNext();
+  const second = await topOfNext();
+  // The announced top edge is rounded and a badge's own is fractional (its
+  // radius is four fifths of the font size), so the band is aimed one row
+  // higher than the reading to be sure it covers the frame's anchor row.
+  const frameTop = Math.min(first, second) - 1;
+  assert(
+    Math.abs(first - second) === 100,
+    `two badges, a hundred rows apart (tops at ${first} and ${second})`,
+  );
+
+  await chord(['Shift'], ']');
+  await settle();
+  assert(
+    (await say()) === '2 of 2 annotations selected.',
+    `both badges selected, so the frame is the box around them ("${await say()}")`,
+  );
+  // Growing the frame downward keeps its top where the union was, while both
+  // badges scale by the square root of the one axis that moved — so their own
+  // top edges end up well below it, and a band on the frame's anchor row hides
+  // neither of them. Nothing below may move a badge: the frame under test is
+  // the carried one, and an edit to a member's bbox drops it.
+  for (let i = 0; i < 30; i++) await chord(['Alt', 'Shift'], 'ArrowDown');
+  await settle();
+
+  await page.keyboard.press('x');
+  await page.keyboard.press('Enter');
+  await settle();
+  const placed = await band();
+  await walk(['Alt'], 6 - placed.h);
+  await walk([], frameTop - (await band()).y);
+  const aimed = await band();
+  assert(
+    aimed.y === frameTop && aimed.h === 6,
+    `a band drafted on the frame's own anchor row (${aimed.y}, ${aimed.h} tall)`,
+  );
+  await page.keyboard.press('Enter');
+  await settle();
+  assert(
+    (await say()) === 'Cut 6 pixels. Image 594 pixels tall.',
+    `the frame's anchor row is gone ("${await say()}")`,
+  );
+
+  const g = await pictureGeometry(page, 594);
+  const before = g.imageY(await topBadgeRow());
+  assert(
+    before > frameTop + 12,
+    `both badges are drawn clear of that row (upper badge drawn at ${Math.round(before)}, band at ${frameTop})`,
+  );
+
+  // Which frame the arrows resize through, read off where the members land.
+  // A downward resize holds the frame's top edge still and stretches
+  // everything below it, so the upper badge's own top moves down by more the
+  // further above it the frame's top sits. Anchored on the drawn union its top
+  // IS the badge's, and the badge moves ~17 rows; left anchored on the cut
+  // rows 31 above, it moves ~38.
+  for (let i = 0; i < 30; i++) await chord(['Alt', 'Shift'], 'ArrowDown');
+  await settle();
+  const moved = g.imageY(await topBadgeRow()) - before;
+  assert(
+    (await say()) === '2 annotations resized.',
+    `the cut hid neither badge, so this is the state under test ("${await say()}")`,
+  );
+  assert(
+    moved < 25,
+    `the arrows resized through a frame anchored on the drawn members (upper badge's top moved ${Math.round(moved)} rows)`,
   );
 
   assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
@@ -3796,6 +4120,8 @@ async function main() {
     await testProgressBarColorScheme(browser, base);
     await testMultiSelection(browser, base);
     await testCutTool(browser, base);
+    await testCutSelectionRules(browser, base);
+    await testCutGroupFrame(browser, base);
     await testCutInPdfExport(browser, base);
     await testCutDraftRestore(browser, base);
 

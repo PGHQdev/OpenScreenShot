@@ -1003,8 +1003,10 @@ function strokeAnts(ctx: CanvasRenderingContext2D, r: Rect): void {
 }
 
 /**
- * Draw the selection bbox + resize handles in screen space via project
- * (toScreen). `handles` is false for every member of a multi-selection: the
+ * Draw the selection bbox + resize handles in screen space via `project` —
+ * the caller's projector for whatever the points belong to (see
+ * CanvasController.projectAt). `handles` is false for every member of a
+ * multi-selection: the
  * handles are a resize target, and a drag can only resize one annotation, so
  * painting eight of them per layer would offer a control that does not exist.
  */
