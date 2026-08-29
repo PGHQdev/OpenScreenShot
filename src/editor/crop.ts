@@ -44,6 +44,7 @@ import {
   type Rect,
 } from './annotations';
 import { cutAbove, inBand, type Band } from './bands';
+import type { HistoryEntry } from './history';
 import { renumberSteps } from './tools';
 
 /** Half-width of a crop handle's pointer target, in screen px — a 24x24 square. */
@@ -213,6 +214,50 @@ export function cropAnnotations(anns: Annotation[], rect: Rect, bands: Band[]): 
         return b.x < w && b.y < h && b.x + b.w > 0 && b.y + b.h > 0;
       }),
   );
+}
+
+/** The document a crop is applied to — what an entry is taken from. */
+export interface CropDocument {
+  annotations: Annotation[];
+  bands: Band[];
+  selectedIds: string[];
+  image: HTMLImageElement | null;
+}
+
+/** What applying a crop leaves behind: one timeline entry and one new list. */
+export interface CropStep {
+  /**
+   * The document as it stood *before* the crop — what an undo restores. It
+   * holds the very arrays it was handed, so `entry.annotations` still carries
+   * every layer {@link cropAnnotations} is about to drop.
+   */
+  entry: HistoryEntry;
+  /** The list the crop leaves, in the new picture's coordinates. */
+  annotations: Annotation[];
+}
+
+/**
+ * One crop, as a step along the timeline.
+ *
+ * The order is the whole point of this function existing, and it is why
+ * useEditor calls it rather than doing the two halves itself. The entry is
+ * built from the document *as handed in*, and only then are the annotations
+ * filtered and translated. Taken the other way round the entry would hold the
+ * cropped list, and undoing the crop would restore a document that never
+ * existed — the layers outside the new rect, and the ones on a cut row, would
+ * be gone for good.
+ *
+ * Nothing here mutates the document, so the entry and the new list can share
+ * one input array safely.
+ */
+export function cropStep(doc: CropDocument, rect: Rect): CropStep {
+  const entry: HistoryEntry = {
+    annotations: doc.annotations,
+    bands: doc.bands,
+    selectedIds: doc.selectedIds,
+    image: doc.image,
+  };
+  return { entry, annotations: cropAnnotations(doc.annotations, rect, doc.bands) };
 }
 
 /**

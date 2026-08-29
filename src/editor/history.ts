@@ -51,9 +51,10 @@ export interface HistoryEntry {
 }
 
 /**
- * How many image pixels the past may hold in superseded pictures — the crops
- * an undo could still walk back to. Roughly four bytes each once decoded, so
- * 32 megapixels is about 128 MB.
+ * How many image pixels the past may hold in *reclaimable* superseded pictures
+ * — the intermediate crops an undo could still walk back to, not counting the
+ * capture the editor pins for its own life. Roughly four bytes each once
+ * decoded, so 32 megapixels is about 128 MB.
  *
  * Only a crop adds a picture, and a crop always shrinks the one before it, so
  * a run of them costs a decreasing series rather than a multiple of the
@@ -64,8 +65,19 @@ export interface HistoryEntry {
 export const HISTORY_IMAGE_BUDGET_PX = 32_000_000;
 
 /**
- * The past with its oldest entries dropped until the distinct pictures it
+ * The past with its oldest entries dropped until the *reclaimable* pictures it
  * still refers to fit inside `budgetPx`.
+ *
+ * `pinned` is the picture the editor holds for its own life whatever the
+ * timeline does — the capture decoded at load, which `baseImageRef` and the
+ * stashed `capture.dataUrl` both keep alive. It is excluded from the sum,
+ * because dropping the entries that name it frees nothing at all and would
+ * spend the user's undo history for no memory. Only the intermediate crops are
+ * reclaimable, and a trim is only worth running for those.
+ *
+ * That exclusion is also what makes a first crop free: every entry before it
+ * shares the base, so the sum is zero and nothing is ever dropped, at any
+ * capture size.
  *
  * The newest entry is always kept, whatever it costs: it is the one a crop
  * just pushed, and a crop that could not be undone at all would be a worse
@@ -77,16 +89,21 @@ export const HISTORY_IMAGE_BUDGET_PX = 32_000_000;
  * Returns the array it was handed when nothing needs dropping, so the common
  * case allocates nothing.
  */
-export function trimHistoryImages(past: HistoryEntry[], budgetPx: number): HistoryEntry[] {
+export function trimHistoryImages(
+  past: HistoryEntry[],
+  budgetPx: number,
+  pinned: HTMLImageElement | null = null,
+): HistoryEntry[] {
   if (past.length === 0) return past;
   const seen = new Set<HTMLImageElement>();
+  if (pinned) seen.add(pinned);
   let sum = 0;
   // The newest entry is taken before the budget is consulted at all — that is
   // where "a crop is always undoable once" lives. The walk then goes backwards
   // and every older entry has to fit.
   let keepFrom = past.length - 1;
   const newest = past[keepFrom].image;
-  if (newest) {
+  if (newest && !seen.has(newest)) {
     seen.add(newest);
     sum = newest.naturalWidth * newest.naturalHeight;
   }

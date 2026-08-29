@@ -40,9 +40,9 @@ import {
 } from './annotations';
 import {
   activeCropHandle,
-  cropAnnotations,
   cropHandleAt,
   cropSize,
+  cropStep,
   cycleCropHandle,
   resizeCropAt,
 } from './crop';
@@ -1503,6 +1503,28 @@ export function useEditor() {
       const p = c.toImage(sx, sy);
       const t = toolRef.current;
 
+      // A crop draft outlives a tool change on purpose, and render() draws its
+      // handles for as long as it is open, so the grab is answered here rather
+      // than inside the crop tool's branch: a handle the user can see is a
+      // handle the pointer can take hold of, whatever tool is armed.
+      const open = cropDraftRef.current;
+      if (open) {
+        const grabbed = cropHandleAt(open, (x, y) => c.toScreenComposed(x, y), c.view.zoom, sx, sy);
+        if (grabbed) {
+          cropHandleRef.current = grabbed;
+          c.setCropHandle(grabbed);
+          interactionRef.current = {
+            kind: 'crop-handle',
+            handle: grabbed,
+            start: normalizeRect(open),
+            startPt: c.toComposedPoint(sx, sy),
+          };
+          window.addEventListener('mousemove', onDragMove);
+          window.addEventListener('mouseup', onDragUp);
+          return;
+        }
+      }
+
       if (t === 'select') {
         const ids = selectedIdsRef.current;
         // Resize: handle hit on the selected annotation. The two branches
@@ -1604,31 +1626,11 @@ export function useEditor() {
         return;
       }
       if (t === 'crop') {
-        // A handle on the open rect is grabbed before a new rect is started,
-        // so an adjustment does not throw away the crop it was adjusting.
-        const open = cropDraftRef.current;
-        if (open) {
-          const grabbed = cropHandleAt(
-            open,
-            (x, y) => c.toScreenComposed(x, y),
-            c.view.zoom,
-            sx,
-            sy,
-          );
-          if (grabbed) {
-            cropHandleRef.current = grabbed;
-            c.setCropHandle(grabbed);
-            interactionRef.current = {
-              kind: 'crop-handle',
-              handle: grabbed,
-              start: normalizeRect(open),
-              startPt: c.toComposedPoint(sx, sy),
-            };
-            window.addEventListener('mousemove', onDragMove);
-            window.addEventListener('mouseup', onDragUp);
-            return;
-          }
-        }
+        // The press missed every handle (they are answered above), so this is
+        // a fresh rect. The aim was picked on the rect being replaced, so it
+        // goes with it rather than marking a corner of the new one.
+        cropHandleRef.current = null;
+        c.setCropHandle(null);
         const cp = clampToImage(
           c.toComposedPoint(sx, sy),
           c.image.naturalWidth,
@@ -1791,22 +1793,43 @@ export function useEditor() {
       cancelCrop();
       return;
     }
-    // The timeline entry is taken here: after the last branch that can refuse
-    // the crop, and before anything is filtered, translated or replaced. It
-    // holds the annotations the crop is about to drop, the bands it is about
-    // to bake in, the selection it is about to clear and the picture it is
-    // about to replace — an entry taken any later could not put those back.
-    applyHistory(trimHistoryImages([...pastRef.current, entry()], HISTORY_IMAGE_BUDGET_PX), []);
     // Crop rasterises from the picture as it is drawn, cuts closed up, so a
     // crop bakes every cut into the new image. The band list goes with the
     // capture it measured, and the crop rect is in that same composed space.
     const cut = bandsRef.current;
+    // One call, so the entry and the new list cannot be taken in the wrong
+    // order here: cropStep builds the entry from the document as it stands and
+    // only then filters. The entry holds the annotations the crop is about to
+    // drop, the bands it is about to bake in, the selection it is about to
+    // clear and the picture it is about to replace.
+    const stepped = cropStep(
+      {
+        annotations: annotationsRef.current,
+        bands: cut,
+        selectedIds: selectedIdsRef.current,
+        image: imageRef.current,
+      },
+      n,
+    );
+    applyHistory(
+      trimHistoryImages(
+        [...pastRef.current, stepped.entry],
+        HISTORY_IMAGE_BUDGET_PX,
+        baseImageRef.current,
+      ),
+      [],
+    );
     cx.drawImage(c.composeImage(), n.x, n.y, n.w, n.h, 0, 0, canvas.width, canvas.height);
     const cropped = canvas.toDataURL('image/png');
     // The draft's coordinates now belong to this image, not to the stash.
     void setDraftImage(cropped);
     const img = new Image();
     img.onload = () => {
+      // An undo taken while this was decoding has already put the pre-crop
+      // picture back, and the list on screen is that picture's. Landing this
+      // one now would leave one picture wearing another's marks, permanently —
+      // the undo is what the user asked for, so the late decode gives way.
+      if (imageRef.current !== img) return;
       c.setImage(img);
       setImageSize({ w: canvas.width, h: canvas.height });
     };
@@ -1814,12 +1837,12 @@ export function useEditor() {
     // takes its entry against this picture rather than the one it replaced.
     imageRef.current = img;
     img.src = cropped;
-    applyAnnotations((prev) => cropAnnotations(prev, n, cut));
+    applyAnnotations(stepped.annotations);
     applyBands([]);
     selectAnnotations([]);
     cancelCrop();
     say({ kind: 'crop-applied', w, h });
-  }, [applyAnnotations, applyBands, applyHistory, cancelCrop, entry, selectAnnotations, say]);
+  }, [applyAnnotations, applyBands, applyHistory, cancelCrop, selectAnnotations, say]);
 
   // --- Keyboard on the canvas ---
   /**

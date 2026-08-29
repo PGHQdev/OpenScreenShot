@@ -8,6 +8,7 @@ import {
   cropHandleAt,
   cropHandles,
   cropSize,
+  cropStep,
   cycleCropHandle,
   resizeCropAt,
 } from '../../src/editor/crop';
@@ -272,5 +273,42 @@ describe('cropAnnotations', () => {
     const copy = JSON.parse(JSON.stringify(before));
     cropAnnotations(before, crop, []);
     expect(before).toEqual(copy);
+  });
+});
+
+describe('cropStep', () => {
+  const area: Rect = { x: 100, y: 50, w: 300, h: 200 };
+  const doc = () => ({
+    annotations: [rect('kept', 150, 100), rect('gone', 10, 10)],
+    bands: [{ y: 400, h: 40 }],
+    selectedIds: ['kept', 'gone'],
+    image: { naturalWidth: 800, naturalHeight: 600 } as HTMLImageElement,
+  });
+
+  // The order is the reason this function exists. useEditor calls it rather
+  // than taking the entry and filtering itself, so the guarantee below is a
+  // property of shipped code and not of a test's model of it.
+  it('takes the entry from the document as handed in, before the filter', () => {
+    const d = doc();
+    const out = cropStep(d, area);
+    // Identity, not equality: the entry holds the very array it was given, so
+    // there is no order in which it could hold the filtered one.
+    expect(out.entry.annotations).toBe(d.annotations);
+    expect(out.entry.bands).toBe(d.bands);
+    expect(out.entry.selectedIds).toBe(d.selectedIds);
+    expect(out.entry.image).toBe(d.image);
+  });
+
+  it('and the list it leaves is the cropped one, which the entry is not', () => {
+    const out = cropStep(doc(), area);
+    expect(out.annotations.map((a) => a.id)).toEqual(['kept']);
+    expect(out.entry.annotations.map((a) => a.id)).toEqual(['kept', 'gone']);
+  });
+
+  it('leaves the document it was handed untouched', () => {
+    const d = doc();
+    const copy = JSON.parse(JSON.stringify(d.annotations));
+    cropStep(d, area);
+    expect(d.annotations).toEqual(copy);
   });
 });

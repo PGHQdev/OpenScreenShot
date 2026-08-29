@@ -5,7 +5,7 @@ import {
   trimHistoryImages,
   type HistoryEntry,
 } from '../../src/editor/history';
-import { cropAnnotations, cropSize } from '../../src/editor/crop';
+import { cropSize, cropStep } from '../../src/editor/crop';
 import type { Annotation, Rect } from '../../src/editor/annotations';
 import type { Band } from '../../src/editor/bands';
 
@@ -224,16 +224,43 @@ describe('trimHistoryImages', () => {
   it('has nothing to do with an empty past', () => {
     expect(trimHistoryImages([], HISTORY_IMAGE_BUDGET_PX)).toEqual([]);
   });
+
+  // The capture is held for the editor's life by baseImageRef and by the
+  // stashed capture, so dropping the entries that name it frees nothing.
+  // Counting it would spend the user's undo history for no memory at all.
+  it('does not count the picture the editor pins for its own life', () => {
+    const base = big();
+    const past = [
+      entry('a', [], [], base),
+      entry('b', [], [], base),
+      entry('c', [], [], big()),
+      entry('d', [], [], big()),
+    ];
+    // Unpinned the three distinct pictures come to 48 MP and the oldest go.
+    expect(stack(trimHistoryImages(past, HISTORY_IMAGE_BUDGET_PX))).toEqual(['c', 'd']);
+    // Pinned, only the two reclaimable crops are counted: 32 MP, which fits.
+    expect(trimHistoryImages(past, HISTORY_IMAGE_BUDGET_PX, base)).toBe(past);
+  });
+
+  // Everything before a first crop shares the base, so there is nothing
+  // reclaimable to weigh and nothing is ever dropped — at any capture size.
+  it('drops nothing on a first crop, however large the capture', () => {
+    const base = image(20000, 20000); // 400 megapixels
+    const past = Array.from({ length: 40 }, (_, i) => entry(`e${i}`, [], [], base));
+    expect(trimHistoryImages(past, HISTORY_IMAGE_BUDGET_PX, base)).toBe(past);
+  });
 });
 
 /**
- * A crop, driven along the timeline the way useEditor drives it.
+ * A crop, driven along the timeline.
  *
- * The three moves below are the editor's, in the editor's order: `cropStep`
- * pushes the entry *before* it filters and translates anything (applyCrop),
- * `drawStep` is commit(), and `back`/`forward` are undo() and redo(). What
- * they compose is what the brief asks about — an undone crop that puts the
- * picture, the coordinates and the dropped layers back.
+ * The crop half is not modelled here: `applyStep` calls the very `cropStep`
+ * useEditor's applyCrop calls, which is where the order that matters lives —
+ * the entry is built from the document as handed in, and only then are the
+ * annotations filtered. A test that reimplemented that order could only prove
+ * itself right. What is left around it is the plumbing applyCrop does with
+ * cropStep's two results, plus commit(), undo() and redo(), which are
+ * `historyStep` in each direction.
  */
 interface Doc {
   anns: Annotation[];
@@ -262,18 +289,16 @@ const asDoc = (e: HistoryEntry, fallback: HTMLImageElement): Doc => ({
   img: e.image ?? fallback,
 });
 
-function cropStep(t: Timeline, rect: Rect): Timeline {
-  const past = trimHistoryImages([...t.past, asEntry(t.doc)], HISTORY_IMAGE_BUDGET_PX);
+function applyStep(t: Timeline, rect: Rect, pinned: HTMLImageElement | null = null): Timeline {
+  const stepped = cropStep(
+    { annotations: t.doc.anns, bands: t.doc.bands, selectedIds: t.doc.sel, image: t.doc.img },
+    rect,
+  );
   const size = cropSize(rect);
   return {
-    past,
+    past: trimHistoryImages([...t.past, stepped.entry], HISTORY_IMAGE_BUDGET_PX, pinned),
     future: [],
-    doc: {
-      anns: cropAnnotations(t.doc.anns, rect, t.doc.bands),
-      bands: [],
-      sel: [],
-      img: image(size.w, size.h),
-    },
+    doc: { anns: stepped.annotations, bands: [], sel: [], img: image(size.w, size.h) },
   };
 }
 
@@ -311,7 +336,7 @@ describe('a crop on the timeline', () => {
   it('crop then undo puts the picture, the coordinates and the dropped layer back', () => {
     // 'kept' is inside the crop, 'gone' is above it — the crop drops it.
     const t0 = start([box('kept', 150, 100), box('gone', 10, 10)]);
-    const t1 = cropStep(t0, { x: 100, y: 50, w: 300, h: 200 });
+    const t1 = applyStep(t0, { x: 100, y: 50, w: 300, h: 200 });
     expect(t1.doc.anns.map((a) => a.id)).toEqual(['kept']);
     expect(at(t1.doc, 'kept')).toEqual({ x: 50, y: 50 });
     expect(t1.doc.img).not.toBe(source);
@@ -330,7 +355,7 @@ describe('a crop on the timeline', () => {
   // would restore a document that never existed.
   it('pushes the entry the crop found, not the one it made', () => {
     const t0 = start([box('kept', 150, 100), box('gone', 10, 10)], [{ y: 400, h: 40 }]);
-    const t1 = cropStep(t0, { x: 100, y: 50, w: 300, h: 200 });
+    const t1 = applyStep(t0, { x: 100, y: 50, w: 300, h: 200 });
     const pushed = t1.past.at(-1)!;
     expect(pushed.annotations.map((a) => a.id)).toEqual(['kept', 'gone']);
     expect(pushed.bands).toEqual([{ y: 400, h: 40 }]);
@@ -341,7 +366,7 @@ describe('a crop on the timeline', () => {
   it('a cut the crop baked in comes back with the picture', () => {
     const t0 = start([box('below', 150, 500)], [{ y: 100, h: 100 }]);
     // The crop takes composed rows 300..500, which are source rows 400..600.
-    const t1 = cropStep(t0, { x: 0, y: 300, w: 800, h: 200 });
+    const t1 = applyStep(t0, { x: 0, y: 300, w: 800, h: 200 });
     expect(at(t1.doc, 'below')).toEqual({ x: 150, y: 500 - 100 - 300 });
     const back = walk(t1, -1);
     expect(back.doc.bands).toEqual([{ y: 100, h: 100 }]);
@@ -350,7 +375,7 @@ describe('a crop on the timeline', () => {
 
   it('crop, annotate, undo, redo lands back on the annotated crop', () => {
     const t0 = start([box('kept', 150, 100)]);
-    const t1 = cropStep(t0, { x: 100, y: 50, w: 300, h: 200 });
+    const t1 = applyStep(t0, { x: 100, y: 50, w: 300, h: 200 });
     const t2 = drawStep(t1, box('drawn', 10, 10));
     expect(t2.doc.anns.map((a) => a.id)).toEqual(['kept', 'drawn']);
 
@@ -369,8 +394,8 @@ describe('a crop on the timeline', () => {
 
   it('a crop applied twice, undone once, lands on the picture between them', () => {
     const t0 = start([box('kept', 150, 100)]);
-    const t1 = cropStep(t0, { x: 100, y: 50, w: 300, h: 200 }); // 'kept' at 50,50
-    const t2 = cropStep(t1, { x: 20, y: 20, w: 100, h: 100 }); // 'kept' at 30,30
+    const t1 = applyStep(t0, { x: 100, y: 50, w: 300, h: 200 }); // 'kept' at 50,50
+    const t2 = applyStep(t1, { x: 20, y: 20, w: 100, h: 100 }); // 'kept' at 30,30
     expect(at(t2.doc, 'kept')).toEqual({ x: 30, y: 30 });
     expect([t2.doc.img.naturalWidth, t2.doc.img.naturalHeight]).toEqual([100, 100]);
 
@@ -396,9 +421,9 @@ describe('a crop on the timeline', () => {
 
   it('holds one picture per crop and nothing per ordinary edit', () => {
     let t = start([box('kept', 150, 100)]);
-    t = cropStep(t, { x: 0, y: 0, w: 400, h: 400 });
+    t = applyStep(t, { x: 0, y: 0, w: 400, h: 400 });
     for (let i = 0; i < 20; i++) t = drawStep(t, box(`d${i}`, 1, 1));
-    t = cropStep(t, { x: 0, y: 0, w: 200, h: 200 });
+    t = applyStep(t, { x: 0, y: 0, w: 200, h: 200 });
     const distinct = new Set(t.past.map((e) => e.image));
     expect(t.past.length).toBe(22);
     expect(distinct.size).toBe(2);

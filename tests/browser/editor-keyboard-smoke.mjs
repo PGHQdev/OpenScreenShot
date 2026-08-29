@@ -3709,7 +3709,61 @@ async function testCropHandlesAndUndo(browser, base) {
     `and the opposite corner stayed on the picture's own corner (${x}+${w}, ${y}+${h})`,
   );
 
+  step('task 27: a handle that is drawn is grabbable whatever tool is armed');
+  // The draft outlives a tool change by design and render() keeps drawing its
+  // handles, so a press on one has to reach the crop rather than start a
+  // marquee under Select or an annotation under Rectangle.
+  await focusCanvas();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('c');
+  await page.keyboard.press('Enter');
+  await settle(120);
+  await page.keyboard.press('v');
+  await settle(100);
+  const afterTool = await handles();
+  assert(
+    afterTool.length === 8,
+    `the crop keeps its eight handles after the tool change (${afterTool.length})`,
+  );
+  const se = afterTool.reduce((a, b) => (b.x + b.y > a.x + a.y ? b : a));
+  const grab = toPage({ x: se.x + 3, y: se.y + 3 });
+  await page.mouse.move(grab.x, grab.y);
+  await page.mouse.down();
+  await page.mouse.move(grab.x - 80, grab.y - 60, { steps: 8 });
+  await page.mouse.up();
+  await settle(150);
+  assert(
+    (await say()) === 'Crop 720 by 540 pixels at 0, 0.',
+    `the Select tool's press took the handle, not a marquee: "${await say()}"`,
+  );
+
+  step('task 27: a fresh rect drops the aim picked on the one it replaces');
+  await focusCanvas();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('c');
+  await page.keyboard.press('Enter');
+  await settle(120);
+  await page.keyboard.press('[');
+  await settle(100);
+  assert(
+    (await handles()).filter((hh) => hh.run > plain).length === 1,
+    'an aim is armed on the rect about to be replaced',
+  );
+  await page.mouse.move(mid.x - 100, mid.y - 75);
+  await page.mouse.down();
+  await page.mouse.move(mid.x + 100, mid.y + 75, { steps: 8 });
+  await page.mouse.up();
+  await settle(150);
+  const drawnFresh = await handles();
+  assert(
+    drawnFresh.length === 8 && drawnFresh.every((hh) => hh.run === plain),
+    `the new rect carries eight plain handles and no inherited marker (runs ${drawnFresh
+      .map((hh) => hh.run)
+      .join(',')})`,
+  );
+
   step('task 27: no crop chrome reaches an exported image');
+  const onCanvas = await handles();
   const withDraft = await exportPng();
   assert(
     withDraft.info.width === 800 && withDraft.info.height === 600,
@@ -3717,7 +3771,7 @@ async function testCropHandlesAndUndo(browser, base) {
   );
   assert(
     whiteInPng(withDraft.data, withDraft.info) === 0,
-    `not one near-white pixel in the export, while the same canvas carries ${corners.length} white handle squares`,
+    `not one near-white pixel in the export, while the same canvas carries ${onCanvas.length} white handle squares`,
   );
 
   step('task 27: applying a crop keeps the undo history it used to throw away');
@@ -3801,6 +3855,69 @@ async function testCropHandlesAndUndo(browser, base) {
     `redo announced the cropped picture: "${await say()}"`,
   );
   assert((await count()) === '0', `and dropped the layer again (${await count()})`);
+
+  step('task 27: an undo taken while the crop is still decoding is not overwritten by it');
+  // Undo the redo above, back to the whole picture with its one layer.
+  await focusCanvas();
+  await chord(['Meta'], 'z');
+  await settle(400);
+  assert((await count()) === '1', 'back on the whole picture for the decode-window check');
+  // Hold the next PNG data URL a page image is given, so the window between
+  // applyCrop and its onload is wide enough to press Ctrl+Z inside. Nothing
+  // else in the editor assigns a PNG data URL to an <img> at this moment.
+  await page.evaluate(() => {
+    const d = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+    globalThis.__hold = 0;
+    globalThis.__held = 0;
+    Object.defineProperty(HTMLImageElement.prototype, 'src', {
+      configurable: true,
+      enumerable: d.enumerable,
+      get() {
+        return d.get.call(this);
+      },
+      set(v) {
+        const ms = globalThis.__hold;
+        if (ms > 0 && String(v).startsWith('data:image/png')) {
+          globalThis.__hold = 0;
+          globalThis.__held += 1;
+          setTimeout(() => d.set.call(this, v), ms);
+          return;
+        }
+        d.set.call(this, v);
+      },
+    });
+  });
+  await page.keyboard.press('c');
+  await page.keyboard.press('Enter');
+  await settle(120);
+  await repeat(3, () => page.keyboard.press('['));
+  await repeat(20, () => chord(['Alt', 'Shift'], 'ArrowDown'));
+  await settle(150);
+  assert(
+    (await say()) === 'Crop 800 by 400 pixels at 0, 200.',
+    `the same 800 by 400 crop is drafted again: "${await say()}"`,
+  );
+  await page.evaluate(() => {
+    globalThis.__hold = 1500;
+  });
+  await page.keyboard.press('Enter');
+  await settle(80);
+  await chord(['Meta'], 'z');
+  await settle(2400); // well past the hold, so the late decode has landed
+  assert(
+    (await page.evaluate(() => globalThis.__held)) === 1,
+    'exactly one decode was really held, so the undo landed inside the window',
+  );
+  const late = await exportPng();
+  assert(
+    late.info.width === 800 && late.info.height === 600,
+    `the late decode did not replace the picture the undo restored (${late.info.width}x${late.info.height})`,
+  );
+  assert(
+    pixel(late, 400, 5).join(',') === '200,60,60',
+    `the red stripe is still there, so picture and marks describe one document (${pixel(late, 400, 5)})`,
+  );
+  assert((await count()) === '1', `and the restored layer is still there (${await count()})`);
 
   assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
   await page.close();
