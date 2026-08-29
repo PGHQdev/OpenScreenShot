@@ -5,6 +5,7 @@ import {
   createSpotlightLayerCache,
   drawAnnotation,
   drawCropPreview,
+  drawMarquee,
   drawSelection,
   drawSpotlightLayer,
   pruneBlurCache,
@@ -50,10 +51,12 @@ export class CanvasController {
   annotations: Annotation[] = [];
   /** An in-progress annotation (drag-to-draw); not yet in `annotations`. */
   draft: Annotation | null = null;
-  /** Currently selected annotation id (handles drawn in screen space later). */
-  selectedId: string | null = null;
+  /** Currently selected annotation ids (handles drawn in screen space later). */
+  selectedIds: string[] = [];
   /** A transient crop rectangle (tool action), rendered as a dim preview. */
   cropRect: Rect | null = null;
+  /** The Select tool's in-progress marquee, in image pixels. */
+  marquee: Rect | null = null;
   /** Beautify frame. Document-level, so it lives beside the image, not the annotations. */
   frame: FrameOptions = DEFAULT_FRAME;
   /** Called whenever the viewport changes (zoom/pan) — not on annotation edits. */
@@ -131,8 +134,13 @@ export class CanvasController {
     this.render();
   }
 
-  setSelected(id: string | null): void {
-    this.selectedId = id;
+  setSelected(ids: string[]): void {
+    this.selectedIds = ids;
+    this.render();
+  }
+
+  setMarquee(r: Rect | null): void {
+    this.marquee = r;
     this.render();
   }
 
@@ -315,10 +323,13 @@ export class CanvasController {
       ctx.strokeRect(this.view.panX + 0.5, this.view.panY + 0.5, sw - 1, sh - 1);
       ctx.restore();
     }
-    if (this.selectedId) {
-      const sel = this.annotations.find((a) => a.id === this.selectedId);
-      if (sel) drawSelection(ctx, sel, (x, y) => this.toScreen(x, y));
+    // Handles belong to a single selection only — see drawSelection.
+    const withHandles = this.selectedIds.length === 1;
+    for (const id of this.selectedIds) {
+      const sel = this.annotations.find((a) => a.id === id);
+      if (sel) drawSelection(ctx, sel, (x, y) => this.toScreen(x, y), withHandles);
     }
+    if (this.marquee) drawMarquee(ctx, this.marquee, (x, y) => this.toScreen(x, y));
   }
 
   /** Composite the frame + image + annotations at full image resolution for export. */

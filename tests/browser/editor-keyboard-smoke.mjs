@@ -1144,6 +1144,356 @@ async function testProgressBarColorScheme(browser, base) {
   await page2.close();
 }
 
+/**
+ * task 24 — multi-selection: shift-bracket, marquee, shift-click, Alt+D, and
+ * every read of the selection that moved with it.
+ *
+ * The trap this exists for is the same one steps 4-6 of main() cover for the
+ * single selection: the keydown path reads selectedIdsRef, not the state, so a
+ * migration that left the ref behind renders perfectly and acts on stale
+ * selection. Everything below is driven at keyboard speed, and every position
+ * is read back out of the live region — the only place the annotation
+ * geometry is observable without a DOM node per layer.
+ */
+async function testMultiSelection(browser, base) {
+  step('task 24: multi-selection by keyboard, marquee and shift-click');
+  const { page } = await newSmokePage(browser);
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': await makeCapture(),
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+
+  const say = () =>
+    page.evaluate(() =>
+      document.querySelector('[aria-live="polite"][role="status"]').textContent.trim(),
+    );
+  const count = () =>
+    page.evaluate(() => document.querySelector('.toolbar-count span')?.textContent ?? '0');
+  const settle = (ms = 120) => new Promise((r) => setTimeout(r, ms));
+  const focusCanvas = () => page.$eval('.stage-canvas', (el) => el.focus());
+  async function chord(mods, key) {
+    for (const m of mods) await page.keyboard.down(m);
+    await page.keyboard.press(key);
+    for (const m of mods.slice().reverse()) await page.keyboard.up(m);
+  }
+  // A layer's position, read the only way the page exposes it: select it, nudge
+  // one pixel each way (a net-zero move), and take the coordinates the live
+  // region reads out. `]` walks one layer up the paint order per call.
+  const readNextLayer = async () => {
+    await page.keyboard.press(']');
+    await page.keyboard.press('ArrowLeft');
+    await page.keyboard.press('ArrowRight');
+    await settle(60);
+    const m = (await say()).match(/to (-?\d+), (-?\d+)/);
+    if (!m) throw new Error(`expected a move announcement, got "${await say()}"`);
+    return m.slice(1).map(Number);
+  };
+
+  await focusCanvas();
+  // Two rectangles, 30px apart, so a move that touches one and not the other
+  // is visible in the coordinates each reads back.
+  await page.keyboard.press('r');
+  await page.keyboard.press('Enter');
+  await settle();
+  for (let i = 0; i < 3; i++) {
+    await chord(['Shift'], 'ArrowLeft');
+    await settle(40);
+  }
+  await page.keyboard.press('r');
+  await page.keyboard.press('Enter');
+  await settle();
+  assert((await count()) === '2', 'two rectangles on the canvas');
+
+  await page.keyboard.press('Escape');
+  const [ax0] = await readNextLayer();
+  const [bx0] = await readNextLayer();
+  assert(ax0 + 30 === bx0, `the two layers are 30px apart (${ax0} and ${bx0})`);
+
+  step('task 24: Shift and a bracket extends the selection, and says how many');
+  // Selection here is the layer readNextLayer just left selected (layer 2).
+  await chord(['Shift'], ']');
+  await settle();
+  assert(
+    (await say()) === '2 of 2 annotations selected.',
+    `Shift+] added the other layer: "${await say()}"`,
+  );
+  assert(
+    !(await page.$eval('[aria-label="Delete selected"]', (b) => b.disabled)),
+    'the topbar Delete button is live for a multi-selection',
+  );
+
+  step('task 24: an arrow nudge moves every selected layer, as one undo step');
+  for (let i = 0; i < 3; i++) {
+    await page.keyboard.press('ArrowRight');
+    await settle(40);
+  }
+  assert(
+    (await say()) === '2 annotations moved.',
+    `the live region counted the layers the nudge touched: "${await say()}"`,
+  );
+  await page.keyboard.press('Escape');
+  const [ax1] = await readNextLayer();
+  const [bx1] = await readNextLayer();
+  assert(
+    ax1 - ax0 === 3 && bx1 - bx0 === 3,
+    `both selected layers moved 3px (${ax0}->${ax1}, ${bx0}->${bx1})`,
+  );
+
+  // Negative control for the assertion above: with only one of the two
+  // selected, the same key moves that one and leaves the other where it is.
+  // Without it, "both moved" would also pass on a build where an arrow moved
+  // every annotation on the canvas regardless of the selection.
+  await page.keyboard.press('Escape');
+  await page.keyboard.press(']');
+  await page.keyboard.press('ArrowRight');
+  await settle(60);
+  assert(
+    /^Rectangle moved to /.test(await say()),
+    `a lone selection still announces itself by name: "${await say()}"`,
+  );
+  await page.keyboard.press('Escape');
+  const [ax2] = await readNextLayer();
+  const [bx2] = await readNextLayer();
+  assert(
+    ax2 - ax1 === 1 && bx2 === bx1,
+    `negative control: one selected layer moved and the other did not (${ax1}->${ax2}, ${bx1}->${bx2})`,
+  );
+
+  step('task 24: Alt+D duplicates the selection, and undo puts the selection back');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press(']');
+  await chord(['Shift'], ']');
+  await settle();
+  assert((await say()) === '2 of 2 annotations selected.', 'both layers selected again');
+  await chord(['Alt'], 'd');
+  await settle();
+  assert((await say()) === '2 annotations duplicated.', `Alt+D announced: "${await say()}"`);
+  assert((await count()) === '4', 'the two copies landed on the canvas');
+
+  await chord(['Meta'], 'z');
+  await settle();
+  assert((await count()) === '2', 'undo took the copies away again');
+  assert(
+    !(await page.$eval('[aria-label="Delete selected"]', (b) => b.disabled)),
+    'undo restored a selection rather than clearing it — the history entry carries one',
+  );
+  await page.keyboard.press('ArrowRight');
+  await settle(60);
+  assert(
+    (await say()) === '2 annotations moved.',
+    `and the restored selection is both originals, not one of them: "${await say()}"`,
+  );
+  await chord(['Meta'], 'z');
+  await settle();
+
+  step('task 24: each copy lands offset from the layer it was made from');
+  await chord(['Alt'], 'd');
+  await settle();
+  assert((await count()) === '4', 'a second duplicate, this time to measure');
+  await page.keyboard.press('Escape');
+  const [ax3, ay3] = await readNextLayer();
+  const [bx3, by3] = await readNextLayer();
+  const [cx, cy] = await readNextLayer();
+  const [dx, dy] = await readNextLayer();
+  assert(
+    cx - ax3 === 16 && cy - ay3 === 16 && dx - bx3 === 16 && dy - by3 === 16,
+    `both copies sit 16px down and right of their originals (${ax3},${ay3} -> ${cx},${cy}; ${bx3},${by3} -> ${dx},${dy})`,
+  );
+  assert(
+    ax3 === ax2 + 0 && bx3 === bx2,
+    `negative control: duplicating did not move the originals (${ax2}->${ax3}, ${bx2}->${bx3})`,
+  );
+
+  step('task 24: a marquee drag on the Select tool catches what it covers');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('v');
+  await settle(60);
+  const box = await page.$eval('.stage-canvas', (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.x, y: r.y, w: r.width, h: r.height };
+  });
+  const drag = async (x1, y1, x2, y2) => {
+    await page.mouse.move(x1, y1);
+    await page.mouse.down();
+    await page.mouse.move(x2, y2, { steps: 8 });
+    await page.mouse.up();
+    await settle(80);
+  };
+  await drag(box.x + 4, box.y + 4, box.x + box.w - 4, box.y + box.h - 4);
+  assert(
+    (await say()) === '4 of 4 annotations selected.',
+    `a marquee over the whole stage caught every layer: "${await say()}"`,
+  );
+  // Negative control: the same gesture over an empty corner catches nothing,
+  // so the reading above is the rect doing work rather than any drag
+  // selecting everything.
+  await drag(box.x + 4, box.y + 4, box.x + 20, box.y + 20);
+  assert(
+    (await say()) === 'Selection cleared.',
+    `a marquee over empty stage caught nothing: "${await say()}"`,
+  );
+
+  step('task 24: shift-click adds a layer to the selection and takes it back out');
+  await drag(box.x + 4, box.y + 4, box.x + box.w - 4, box.y + box.h - 4);
+  assert((await say()) === '4 of 4 annotations selected.', 'four selected going in');
+  const cx0 = box.x + box.w / 2;
+  const cy0 = box.y + box.h / 2;
+  await page.keyboard.down('Shift');
+  await page.mouse.click(cx0, cy0);
+  await page.keyboard.up('Shift');
+  await settle(80);
+  assert(
+    (await say()) === '3 of 4 annotations selected.',
+    `shift-clicking a selected layer removed it: "${await say()}"`,
+  );
+  await page.keyboard.down('Shift');
+  await page.mouse.click(cx0, cy0);
+  await page.keyboard.up('Shift');
+  await settle(80);
+  assert(
+    (await say()) === '4 of 4 annotations selected.',
+    `shift-clicking it again put it back: "${await say()}"`,
+  );
+  await page.mouse.click(cx0, cy0);
+  await settle(80);
+  assert(
+    /^Rectangle selected, layer \d+ of 4\.$/.test(await say()),
+    `a plain click drops back to one layer: "${await say()}"`,
+  );
+
+  step('task 24: a multi-selection draws an outline per layer and no handles at all');
+  // Two readings off the live canvas, neither of them a raw colour count: the
+  // marching ants land on fractional screen coordinates and anti-alias, so
+  // "how many pure black pixels" answers a question about rounding rather than
+  // about what was drawn.
+  //   - `block`: is there a 5x5 patch of pure white anywhere? A handle is an
+  //     8x8 white fill; a dash is 1px. Only handles can produce one.
+  //   - `box`: the bounding box of every pixel that differs from the canvas
+  //     with nothing selected. One outline bounds one layer; a second outline
+  //     30 image px away widens it.
+  const baseline = () =>
+    page.evaluate(() => {
+      const canvas = document.querySelector('.stage-canvas');
+      globalThis.__base = canvas
+        .getContext('2d')
+        .getImageData(0, 0, canvas.width, canvas.height)
+        .data.slice();
+    });
+  const chrome = () =>
+    page.evaluate(() => {
+      const canvas = document.querySelector('.stage-canvas');
+      const { width, height } = canvas;
+      const data = canvas.getContext('2d').getImageData(0, 0, width, height).data;
+      const base = globalThis.__base;
+      const pure = (i) =>
+        data[i + 3] === 255 && data[i] === 255 && data[i + 1] === 255 && data[i + 2] === 255;
+      let diff = 0;
+      let block = false;
+      let x0 = Infinity;
+      let x1 = -Infinity;
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const i = (y * width + x) * 4;
+          if (
+            data[i] !== base[i] ||
+            data[i + 1] !== base[i + 1] ||
+            data[i + 2] !== base[i + 2] ||
+            data[i + 3] !== base[i + 3]
+          ) {
+            diff++;
+            if (x < x0) x0 = x;
+            if (x > x1) x1 = x;
+          }
+          if (!block && pure(i) && x + 4 < width && y + 4 < height) {
+            block = true;
+            for (let yy = y; yy <= y + 4 && block; yy++) {
+              for (let xx = x; xx <= x + 4 && block; xx++) {
+                if (!pure((yy * width + xx) * 4)) block = false;
+              }
+            }
+          }
+        }
+      }
+      return { diff, block, width: x1 >= x0 ? x1 - x0 + 1 : 0 };
+    });
+  await focusCanvas();
+  await page.keyboard.press('Escape');
+  await settle(80);
+  await baseline();
+  const none = await chrome();
+  assert(
+    none.diff === 0 && !none.block,
+    'nothing selected: no chrome on the canvas, and it matches its own baseline',
+  );
+  await page.keyboard.press(']');
+  await settle(80);
+  const one = await chrome();
+  assert(
+    one.diff > 200 && one.block,
+    `a lone selection paints an outline and solid white handles (${one.diff} pixels changed, handle block found)`,
+  );
+  await chord(['Shift'], ']');
+  await settle(80);
+  assert(
+    (await say()) === '2 of 4 annotations selected.',
+    'two layers selected for the pixel read',
+  );
+  const two = await chrome();
+  assert(
+    two.width > one.width + 20,
+    `the second layer got its own outline: the changed region widened from ${one.width}px to ${two.width}px, the two layers being 30 image px apart`,
+  );
+  assert(
+    !two.block,
+    'and no handle block anywhere once a second layer joins — handles belong to a single selection, which is the only thing a drag can resize',
+  );
+
+  step('task 24: none of that selection chrome reaches an exported image');
+  await chord(['Meta'], 's');
+  await page.waitForSelector('.modal');
+  await page.waitForFunction(() =>
+    document.querySelector('.modal').contains(document.activeElement),
+  );
+  await page.$eval('.format-grid .format-card:first-child', (el) => el.focus());
+  await page.keyboard.press('Enter');
+  await settle();
+  await page.$eval('.modal .btn-primary', (el) => el.focus());
+  await page.keyboard.press('Enter');
+  await settle(800);
+  const download = await page.evaluate(() => globalThis.__smoke.downloads.at(-1));
+  assert(download.filename.endsWith('.png'), 'exported a PNG with two layers selected');
+  const sharp = createRequire(join(ROOT, 'package.json'))('sharp');
+  const { data, info } = await sharp(
+    Buffer.from(download.url.slice(download.url.indexOf(',') + 1), 'base64'),
+  )
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  // The capture is a flat blue and every annotation is drawn in the palette
+  // red, so nothing in a clean export comes near black or white — while the
+  // canvas at this same moment is full of both (the counts above).
+  let extremes = 0;
+  for (let i = 0; i < data.length; i += info.channels) {
+    const [r, g, b] = [data[i], data[i + 1], data[i + 2]];
+    if ((r < 40 && g < 40 && b < 40) || (r > 215 && g > 215 && b > 215)) extremes++;
+  }
+  assert(
+    info.width === 800 && info.height === 600,
+    `the export is the whole capture (${info.width}x${info.height}), so the scan below covers where the outlines were`,
+  );
+  assert(
+    extremes === 0,
+    `no near-black or near-white pixel anywhere in the export (${extremes} found), while the same selection puts ${two.diff} pixels of chrome on the live canvas`,
+  );
+
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
+}
+
 async function main() {
   const built = await stat(join(DIST, PAGE.slice(1))).then(
     () => true,
@@ -2269,6 +2619,7 @@ async function main() {
     await testModalFastReopen(browser, base);
     await testPdfExportInBackgroundTab(browser, base);
     await testProgressBarColorScheme(browser, base);
+    await testMultiSelection(browser, base);
 
     console.log('\nALL STEPS PASSED');
   } finally {

@@ -363,9 +363,11 @@ export function App() {
                 ? `The captured screenshot, ${ed.imageSize.w} by ${ed.imageSize.h} pixels, with ${ed.annotations.length} annotation${ed.annotations.length === 1 ? '' : 's'} drawn on it.`
                 : 'No screenshot is open.'}{' '}
               Press the right bracket to select the next annotation and the left bracket for the
-              previous one. Press Enter to place the tool you picked in the toolbar. Use the arrow
-              keys to move the selection by one pixel, Shift and an arrow to move it by ten, and Alt
-              and an arrow to resize it. With a crop open, the arrow keys move it, Alt and an arrow
+              previous one. Hold Shift with either bracket to add that annotation to the selection
+              instead of replacing it. Press Enter to place the tool you picked in the toolbar. Use
+              the arrow keys to move the selection by one pixel, Shift and an arrow to move it by
+              ten, and Alt and an arrow to resize it. Press Alt and D, or Control and D, to
+              duplicate the selection. With a crop open, the arrow keys move it, Alt and an arrow
               resize it, Enter applies it and Escape cancels it.
             </p>
           </canvas>

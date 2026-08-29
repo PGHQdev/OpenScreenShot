@@ -50,7 +50,7 @@ export interface KeyChord {
 export type CanvasMode = 'crop' | 'selection' | 'idle';
 
 export type CanvasIntent =
-  | { kind: 'cycle'; dir: 1 | -1 }
+  | { kind: 'cycle'; dir: 1 | -1; extend: boolean }
   | { kind: 'place' }
   | { kind: 'apply-crop' }
   | { kind: 'move'; dx: number; dy: number }
@@ -70,11 +70,20 @@ const ARROWS: Record<string, Point> = {
  *
  * Ctrl and Meta chords always pass: undo, redo, zoom, copy and export are
  * window-level and must keep working while the canvas holds focus.
+ *
+ * Shift with a bracket extends the selection instead of replacing it. A US
+ * layout reports that chord as `}` / `{` rather than as a shifted bracket, so
+ * both spellings are claimed — on a layout that keeps the bracket, shiftKey is
+ * what carries the meaning.
  */
 export function canvasIntent(e: KeyChord, mode: CanvasMode): CanvasIntent | null {
   if (e.ctrlKey || e.metaKey) return null;
-  if (e.key === ']') return { kind: 'cycle', dir: 1 };
-  if (e.key === '[') return { kind: 'cycle', dir: -1 };
+  if (e.key === ']' || e.key === '}') {
+    return { kind: 'cycle', dir: 1, extend: e.key === '}' || !!e.shiftKey };
+  }
+  if (e.key === '[' || e.key === '{') {
+    return { kind: 'cycle', dir: -1, extend: e.key === '{' || !!e.shiftKey };
+  }
   if (e.key === 'Enter') return mode === 'crop' ? { kind: 'apply-crop' } : { kind: 'place' };
   const dir = ARROWS[e.key];
   if (!dir) return null;
@@ -91,19 +100,32 @@ export function canvasIntent(e: KeyChord, mode: CanvasMode): CanvasIntent | null
 }
 
 /**
- * The id one layer from `selectedId`. `]` walks up the paint order, `[` walks
- * down, and both wrap. From nothing selected, `]` starts at the bottom layer
- * and `[` at the top, so either key reaches every layer on its own.
+ * The selection one layer from the one it is handed. `]` walks up the paint
+ * order, `[` walks down, and both wrap. From nothing selected, `]` starts at
+ * the bottom layer and `[` at the top, so either key reaches every layer on
+ * its own.
+ *
+ * The walk starts from the last id in `selectedIds` — the layer the previous
+ * press landed on — so a run of presses keeps travelling in one direction
+ * whether or not it is extending. `extend` keeps what is already selected and
+ * appends the layer it arrives at; re-arriving at a layer already in the
+ * selection moves it to the end rather than duplicating it, which keeps the
+ * walk anchored on where the user actually is.
  */
 export function cycleSelection(
   anns: Annotation[],
-  selectedId: string | null,
+  selectedIds: string[],
   dir: 1 | -1,
-): string | null {
-  if (anns.length === 0) return null;
-  const i = anns.findIndex((a) => a.id === selectedId);
-  if (i === -1) return (dir === 1 ? anns[0] : anns[anns.length - 1]).id;
-  return anns[(i + dir + anns.length) % anns.length].id;
+  extend = false,
+): string[] {
+  if (anns.length === 0) return [];
+  const from = selectedIds[selectedIds.length - 1] ?? null;
+  const i = anns.findIndex((a) => a.id === from);
+  const next =
+    i === -1
+      ? (dir === 1 ? anns[0] : anns[anns.length - 1]).id
+      : anns[(i + dir + anns.length) % anns.length].id;
+  return extend ? [...selectedIds.filter((id) => id !== next), next] : [next];
 }
 
 /**
@@ -175,11 +197,16 @@ export function annotationLabel(type: AnnotationType): string {
 /** Everything the live region has something to say about. */
 export type Mutation =
   | { kind: 'select'; annotation: Annotation; index: number; total: number }
+  | { kind: 'select-many'; count: number; total: number }
   | { kind: 'deselect' }
   | { kind: 'add'; annotation: Annotation }
   | { kind: 'move'; annotation: Annotation }
+  | { kind: 'move-many'; count: number }
   | { kind: 'resize'; annotation: Annotation }
+  | { kind: 'resize-many'; count: number }
   | { kind: 'delete'; type: AnnotationType; remaining: number }
+  | { kind: 'delete-many'; count: number; remaining: number }
+  | { kind: 'duplicate'; count: number }
   | { kind: 'undo'; total: number }
   | { kind: 'redo'; total: number }
   | { kind: 'crop'; rect: Rect }
@@ -197,6 +224,8 @@ export function announce(m: Mutation): string {
       const label = annotationLabel(m.annotation.type);
       return `${label} selected, layer ${m.index} of ${m.total}.`;
     }
+    case 'select-many':
+      return `${m.count} of ${count(m.total)} selected.`;
     case 'deselect':
       return 'Selection cleared.';
     case 'add': {
@@ -207,15 +236,25 @@ export function announce(m: Mutation): string {
       const b = bbox(m.annotation);
       return `${annotationLabel(m.annotation.type)} moved to ${Math.round(b.x)}, ${Math.round(b.y)}.`;
     }
+    case 'move-many':
+      return `${count(m.count)} moved.`;
     case 'resize': {
       const b = bbox(m.annotation);
       const label = annotationLabel(m.annotation.type);
       return `${label} resized to ${Math.round(b.w)} by ${Math.round(b.h)} pixels.`;
     }
+    case 'resize-many':
+      return `${count(m.count)} resized.`;
     case 'delete': {
       const left = m.remaining === 0 ? 'no annotations' : count(m.remaining);
       return `${annotationLabel(m.type)} deleted, ${left} left.`;
     }
+    case 'delete-many': {
+      const left = m.remaining === 0 ? 'no annotations' : count(m.remaining);
+      return `${count(m.count)} deleted, ${left} left.`;
+    }
+    case 'duplicate':
+      return `${count(m.count)} duplicated.`;
     case 'undo':
       return `Undo. ${count(m.total)}.`;
     case 'redo':

@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  annotationsInRect,
   bbox,
   createBlurCache,
+  drawMarquee,
+  drawSelection,
   genId,
   getHandles,
   handleAt,
@@ -515,5 +518,113 @@ describe('hasStroke', () => {
     const blur: Annotation = { id: 'b', type: 'blur', x: 0, y: 0, w: 1, h: 1, strength: 8 };
     const spot: Annotation = { id: 'o', type: 'spotlight', x: 0, y: 0, w: 1, h: 1, shape: 'rect' };
     for (const a of [text, step, blur, spot]) expect(hasStroke(a)).toBe(false);
+  });
+});
+
+describe('annotationsInRect', () => {
+  const box = (id: string, x: number, y: number): Annotation => ({
+    id,
+    type: 'rect',
+    x,
+    y,
+    w: 20,
+    h: 20,
+    stroke: '#f00',
+    strokeWidth: 4,
+    fill: null,
+  });
+  const list = [box('a', 0, 0), box('b', 100, 100), box('c', 200, 200)];
+
+  it('catches every annotation the rect covers, in layer order', () => {
+    expect(annotationsInRect(list, { x: -10, y: -10, w: 220, h: 220 })).toEqual(['a', 'b', 'c']);
+  });
+
+  it('leaves out what the rect misses', () => {
+    expect(annotationsInRect(list, { x: 90, y: 90, w: 40, h: 40 })).toEqual(['b']);
+    expect(annotationsInRect(list, { x: 50, y: 50, w: 10, h: 10 })).toEqual([]);
+  });
+
+  it('counts a graze: a rect touching one edge still catches it', () => {
+    expect(annotationsInRect(list, { x: 20, y: 0, w: 10, h: 10 })).toEqual(['a']);
+    expect(annotationsInRect(list, { x: 21, y: 0, w: 10, h: 10 })).toEqual([]);
+  });
+
+  it('normalizes a marquee dragged up and to the left', () => {
+    expect(annotationsInRect(list, { x: 130, y: 130, w: -40, h: -40 })).toEqual(['b']);
+  });
+
+  it('catches nothing from an empty document', () => {
+    expect(annotationsInRect([], { x: 0, y: 0, w: 100, h: 100 })).toEqual([]);
+  });
+});
+
+describe('drawSelection and drawMarquee', () => {
+  /** Records the calls the two draw helpers make, so the shapes are checkable. */
+  function recorder() {
+    const calls: { op: string; args: number[]; style?: unknown; dash?: number[] }[] = [];
+    let dash: number[] = [];
+    const ctx = {
+      strokeStyle: '',
+      fillStyle: '',
+      lineWidth: 0,
+      lineDashOffset: 0,
+      save() {},
+      restore() {},
+      setLineDash(d: number[]) {
+        dash = d;
+      },
+      strokeRect(...args: number[]) {
+        calls.push({ op: 'strokeRect', args, style: ctx.strokeStyle, dash: [...dash] });
+      },
+      fillRect(...args: number[]) {
+        calls.push({ op: 'fillRect', args, style: ctx.fillStyle });
+      },
+    };
+    return { ctx: ctx as unknown as CanvasRenderingContext2D, calls };
+  }
+
+  const identity = (x: number, y: number) => ({ x, y });
+  const box: Annotation = {
+    id: 'r',
+    type: 'rect',
+    x: 10,
+    y: 20,
+    w: 100,
+    h: 50,
+    stroke: '#f00',
+    strokeWidth: 4,
+    fill: null,
+  };
+
+  it('outlines a lone selection in two dashed passes, then draws its handles', () => {
+    const { ctx, calls } = recorder();
+    drawSelection(ctx, box, identity);
+    const outline = calls.filter((c) => c.op === 'strokeRect' && c.dash!.length > 0);
+    expect(outline.map((c) => c.style)).toEqual(['#000000', '#ffffff']);
+    expect(outline[0].args).toEqual([10, 20, 100, 50]);
+    expect(calls.filter((c) => c.op === 'fillRect')).toHaveLength(getHandles(box).length);
+  });
+
+  it('draws no handle at all when the caller asks for none', () => {
+    const { ctx, calls } = recorder();
+    drawSelection(ctx, box, identity, false);
+    expect(calls.filter((c) => c.op === 'fillRect')).toHaveLength(0);
+    // The outline is still both passes — a member of a multi-selection is
+    // outlined exactly like a lone one, it just carries no resize target.
+    expect(calls.filter((c) => c.op === 'strokeRect').map((c) => c.style)).toEqual([
+      '#000000',
+      '#ffffff',
+    ]);
+  });
+
+  it('draws the marquee in the same two-tone dash, normalized, with no handles', () => {
+    const { ctx, calls } = recorder();
+    drawMarquee(ctx, { x: 100, y: 100, w: -40, h: -20 }, identity);
+    expect(calls.filter((c) => c.op === 'fillRect')).toHaveLength(0);
+    const outline = calls.filter((c) => c.op === 'strokeRect');
+    expect(outline.map((c) => c.style)).toEqual(['#000000', '#ffffff']);
+    expect(outline[0].args).toEqual([60, 80, 40, 20]);
+    expect(outline[0].dash).toEqual(outline[1].dash);
+    expect(outline[0].dash!.length).toBeGreaterThan(0);
   });
 });

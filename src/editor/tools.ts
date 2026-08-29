@@ -9,6 +9,7 @@
 import {
   DEFAULT_BLUR_STRENGTH,
   genId,
+  translateAnnotation,
   type Annotation,
   type BlurMode,
   type Point,
@@ -252,6 +253,29 @@ export function createStepAnnotation(
 export function renumberSteps(anns: Annotation[]): Annotation[] {
   let n = 0;
   return anns.map((a) => (a.type === 'step' ? { ...a, n: ++n } : a));
+}
+
+/**
+ * How far a duplicate lands from its original, in image pixels. Big enough
+ * that the copy reads as a second object at a fit-to-window zoom rather than
+ * as a thickened edge on the first one.
+ */
+export const DUPLICATE_OFFSET = 16;
+
+/**
+ * Copies of `ids`, each a new annotation offset down and right. Layer order is
+ * kept: the copies come back in the order their originals sit in `anns`, so a
+ * duplicated pair stacks the way the pair it came from does. Step badges are
+ * renumbered by the caller, once the copies are appended to the document.
+ */
+export function duplicateAnnotations(
+  anns: Annotation[],
+  ids: string[],
+  offset = DUPLICATE_OFFSET,
+): Annotation[] {
+  return anns
+    .filter((a) => ids.includes(a.id))
+    .map((a) => ({ ...translateAnnotation(a, offset, offset), id: genId() }));
 }
 
 /** Distance between two points. */

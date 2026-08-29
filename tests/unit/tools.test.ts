@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
   createShapeDraft,
+  DUPLICATE_OFFSET,
+  duplicateAnnotations,
   extendDraft,
+  renumberSteps,
   shouldCommit,
   snapTo45,
   squareDelta,
   TOOL_LIST,
 } from '../../src/editor/tools';
-import type { Annotation } from '../../src/editor/annotations';
+import { bbox, type Annotation } from '../../src/editor/annotations';
 
 describe('squareDelta', () => {
   it('grows the short axis to match the long one', () => {
@@ -176,5 +179,60 @@ describe('eyedropper tool', () => {
     expect(dropper?.shortcut).toBe('I');
     const letters = TOOL_LIST.map((t) => t.shortcut);
     expect(new Set(letters).size).toBe(letters.length);
+  });
+});
+
+describe('duplicateAnnotations', () => {
+  const box = (id: string, x: number): Annotation => ({
+    id,
+    type: 'rect',
+    x,
+    y: 0,
+    w: 20,
+    h: 20,
+    stroke: '#f00',
+    strokeWidth: 4,
+    fill: null,
+  });
+  const list = [box('a', 0), box('b', 100), box('c', 200)];
+
+  it('copies only the ids it was given, in layer order', () => {
+    const copies = duplicateAnnotations(list, ['c', 'a']);
+    expect(copies).toHaveLength(2);
+    expect(copies.map((a) => (a.type === 'rect' ? a.x : -1))).toEqual([
+      DUPLICATE_OFFSET,
+      200 + DUPLICATE_OFFSET,
+    ]);
+  });
+
+  it('offsets each copy so it does not hide under its original', () => {
+    const [copy] = duplicateAnnotations(list, ['b']);
+    expect(bbox(copy)).toEqual({
+      x: 100 + DUPLICATE_OFFSET,
+      y: DUPLICATE_OFFSET,
+      w: 20,
+      h: 20,
+    });
+    expect(DUPLICATE_OFFSET).toBeGreaterThan(0);
+  });
+
+  it('gives every copy a new id, and leaves the originals alone', () => {
+    const copies = duplicateAnnotations(list, ['a', 'b']);
+    const fresh = new Set(copies.map((a) => a.id));
+    expect(fresh.size).toBe(2);
+    expect([...fresh].some((id) => id === 'a' || id === 'b')).toBe(false);
+    expect(list.map((a) => (a.type === 'rect' ? a.x : -1))).toEqual([0, 100, 200]);
+  });
+
+  it('copies nothing when nothing is selected', () => {
+    expect(duplicateAnnotations(list, [])).toEqual([]);
+    expect(duplicateAnnotations(list, ['gone'])).toEqual([]);
+  });
+
+  it('carries a step badge across, for the caller to renumber', () => {
+    const step: Annotation = { id: 's', type: 'step', x: 10, y: 10, r: 12, n: 3, color: '#f00' };
+    const [copy] = duplicateAnnotations([step], ['s']);
+    expect(copy).toMatchObject({ type: 'step', x: 10 + DUPLICATE_OFFSET, n: 3 });
+    expect(renumberSteps([step, copy]).map((a) => (a.type === 'step' ? a.n : 0))).toEqual([1, 2]);
   });
 });

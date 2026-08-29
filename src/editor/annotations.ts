@@ -231,6 +231,21 @@ export function bbox(a: Annotation): Rect {
   }
 }
 
+/**
+ * Ids of every annotation whose bounding box meets `r` — what a marquee drag
+ * catches. Touching counts: a marquee dragged along an edge selects what it
+ * grazes, the same as the 6px slack the click hit-test already allows.
+ */
+export function annotationsInRect(anns: Annotation[], r: Rect): string[] {
+  const n = normalizeRect(r);
+  return anns
+    .filter((a) => {
+      const b = bbox(a);
+      return b.x <= n.x + n.w && b.x + b.w >= n.x && b.y <= n.y + n.h && b.y + b.h >= n.y;
+    })
+    .map((a) => a.id);
+}
+
 /** Measure rendered text (single or multi-line) for hit-testing & selection bbox. */
 export function measureText(
   ctx: CanvasRenderingContext2D,
@@ -780,25 +795,40 @@ export function scaleAnnotation(
  */
 const SELECTION_DASH = [4, 3];
 
-/** Draw the selection bbox + resize handles in screen space via project (toScreen). */
+/** The two-tone dashed outline of `r`, given in screen space. */
+function strokeAnts(ctx: CanvasRenderingContext2D, r: Rect): void {
+  ctx.setLineDash(SELECTION_DASH);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = '#000000';
+  ctx.lineDashOffset = 0;
+  ctx.strokeRect(r.x, r.y, r.w, r.h);
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineDashOffset = SELECTION_DASH[0];
+  ctx.strokeRect(r.x, r.y, r.w, r.h);
+  ctx.setLineDash([]);
+}
+
+/**
+ * Draw the selection bbox + resize handles in screen space via project
+ * (toScreen). `handles` is false for every member of a multi-selection: the
+ * handles are a resize target, and a drag can only resize one annotation, so
+ * painting eight of them per layer would offer a control that does not exist.
+ */
 export function drawSelection(
   ctx: CanvasRenderingContext2D,
   a: Annotation,
   project: (x: number, y: number) => { x: number; y: number },
+  handles = true,
 ): void {
   const b = bbox(a);
   const tl = project(b.x, b.y);
   const br = project(b.x + b.w, b.y + b.h);
   ctx.save();
-  ctx.setLineDash(SELECTION_DASH);
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = '#000000';
-  ctx.lineDashOffset = 0;
-  ctx.strokeRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineDashOffset = SELECTION_DASH[0];
-  ctx.strokeRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
-  ctx.setLineDash([]);
+  strokeAnts(ctx, { x: tl.x, y: tl.y, w: br.x - tl.x, h: br.y - tl.y });
+  if (!handles) {
+    ctx.restore();
+    return;
+  }
   // Handles: a white fill with a black ring is the same worst-case pairing —
   // whichever of the two the local background defeats, the other still reads.
   ctx.fillStyle = tokens.canvasMark;
@@ -809,5 +839,23 @@ export function drawSelection(
     ctx.fillRect(p.x - 4, p.y - 4, 8, 8);
     ctx.strokeRect(p.x - 4, p.y - 4, 8, 8);
   }
+  ctx.restore();
+}
+
+/**
+ * The marquee a Select-tool drag pulls out, in the same two-tone dash as the
+ * selection outline: it sits over the same arbitrary screenshot, so it needs
+ * the same guarantee of being visible against whatever is under it.
+ */
+export function drawMarquee(
+  ctx: CanvasRenderingContext2D,
+  r: Rect,
+  project: (x: number, y: number) => { x: number; y: number },
+): void {
+  const n = normalizeRect(r);
+  const tl = project(n.x, n.y);
+  const br = project(n.x + n.w, n.y + n.h);
+  ctx.save();
+  strokeAnts(ctx, { x: tl.x, y: tl.y, w: br.x - tl.x, h: br.y - tl.y });
   ctx.restore();
 }

@@ -4,7 +4,14 @@
  * useEditor owns the two stacks and writes them through applyHistory; the step
  * itself lives here, apart from the state plumbing, so it can be tested without
  * a DOM. Undo and redo are mirror images: each pops one stack, pushes the
- * current list onto the other, and shows what it popped.
+ * current entry onto the other, and shows what it popped.
+ *
+ * An entry is the annotation list *and* the selection that went with it. A
+ * nudge, a delete and a duplicate all act on the whole selection, so a stack of
+ * bare lists would undo the edit and leave the user with nothing selected —
+ * they would have to find the layers again before they could act on them. The
+ * pair is captured together and restored together, so the ids in an entry
+ * always name annotations in that same entry's list.
  *
  * Every field of the result is a fresh array. useEditor stores them straight
  * into refs that other handlers read back inside the same event, so a step that
@@ -12,11 +19,17 @@
  */
 import type { Annotation } from './annotations';
 
+/** One point on the timeline: what was on the canvas, and what was selected. */
+export interface HistoryEntry {
+  annotations: Annotation[];
+  selectedIds: string[];
+}
+
 /** Where one step leaves the document and its two stacks. */
 export interface HistoryStep {
-  annotations: Annotation[];
-  past: Annotation[][];
-  future: Annotation[][];
+  entry: HistoryEntry;
+  past: HistoryEntry[];
+  future: HistoryEntry[];
 }
 
 /**
@@ -25,22 +38,22 @@ export interface HistoryStep {
  * than to write empty stacks back.
  */
 export function historyStep(
-  past: Annotation[][],
-  future: Annotation[][],
-  current: Annotation[],
+  past: HistoryEntry[],
+  future: HistoryEntry[],
+  current: HistoryEntry,
   dir: -1 | 1,
 ): HistoryStep | null {
   if (dir === -1) {
     if (past.length === 0) return null;
     return {
-      annotations: past[past.length - 1],
+      entry: past[past.length - 1],
       past: past.slice(0, -1),
       future: [current, ...future],
     };
   }
   if (future.length === 0) return null;
   return {
-    annotations: future[0],
+    entry: future[0],
     past: [...past, current],
     future: future.slice(1),
   };

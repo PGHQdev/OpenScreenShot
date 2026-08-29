@@ -6,15 +6,17 @@
  * (drawing, selecting, moving, resizing, text, crop, pan/zoom). App.tsx is a
  * thin presentational consumer.
  *
- * History records annotation-list snapshots. Each mutating action snapshots the
- * pre-change list (one entry per action — a move/resize drag snapshots on first
- * motion, not per mousemove). Crop is destructive and clears history (the
- * pre-crop annotation coordinates are invalid for the cropped image).
+ * History records snapshots of the annotation list plus the selection that went
+ * with it (history.ts). Each mutating action snapshots the pre-change pair (one
+ * entry per action — a move/resize drag snapshots on first motion, not per
+ * mousemove). Crop is destructive and clears history (the pre-crop annotation
+ * coordinates are invalid for the cropped image).
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { CanvasController } from './canvas';
 import type { Annotation, Rect } from './annotations';
 import {
+  annotationsInRect,
   bbox,
   DEFAULT_STYLE,
   handleAt,
@@ -41,6 +43,7 @@ import {
   createStepAnnotation,
   createTextAnnotation,
   dist,
+  duplicateAnnotations,
   extendDraft,
   renumberSteps,
   shouldCommit,
@@ -78,7 +81,7 @@ import { applyTheme, watchSystemTheme } from '../shared/theme';
 import { COLOR_PALETTE, pushRecent } from './palette';
 import { draftFrame, DRAFT_DEBOUNCE_MS, makeDraft, parseDraft, type Draft } from './draft';
 import { canvasToDataUrl, downloadDataUrl, withExtension, type ImageFormat } from './export';
-import { historyStep } from './history';
+import { historyStep, type HistoryEntry } from './history';
 import { importSizeError, readImageFile, titleFromFilename } from './import-image';
 import { exportPdf as exportPdfFile, type PdfExportProgress, type PdfOptions } from './pdf';
 import { resampleToWidth } from './scale';
@@ -103,7 +106,8 @@ type Interaction =
   | { kind: 'crop'; start: { x: number; y: number } }
   | { kind: 'shape' }
   | { kind: 'pen' }
-  | { kind: 'move'; id: string; lastX: number; lastY: number }
+  | { kind: 'move'; ids: string[]; hit: string; lastX: number; lastY: number }
+  | { kind: 'marquee'; start: { x: number; y: number }; base: string[] }
   | {
       kind: 'resize';
       id: string;
@@ -121,9 +125,9 @@ export function useEditor() {
 
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [tool, setTool] = useState<Tool>('select');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [past, setPast] = useState<Annotation[][]>([]);
-  const [future, setFuture] = useState<Annotation[][]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [past, setPast] = useState<HistoryEntry[]>([]);
+  const [future, setFuture] = useState<HistoryEntry[]>([]);
   const [, setViewTick] = useState(0);
   const [capture, setCapture] = useState<LastCapture | null>(null);
   const [imageSize, setImageSize] = useState<{ w: number; h: number } | null>(null);
@@ -161,7 +165,7 @@ export function useEditor() {
   const interactionRef = useRef<Interaction>(null);
   const cropDraftRef = useRef<Rect | null>(null);
   const annotationsRef = useRef(annotations);
-  const selectedIdRef = useRef(selectedId);
+  const selectedIdsRef = useRef(selectedIds);
   const pastRef = useRef(past);
   const futureRef = useRef(future);
   const dragSnapshottedRef = useRef(false);
@@ -187,7 +191,7 @@ export function useEditor() {
    * There are two ref conventions in this file, and which one a ref follows is
    * not guessable from its name, so here they are.
    *
-   *   Eager, written beside their state: annotationsRef, selectedIdRef,
+   *   Eager, written beside their state: annotationsRef, selectedIdsRef,
    *   pastRef, futureRef, toolRef (the four writers below), and cropDraftRef
    *   (written at each of its own call sites). Anything a keydown reads to
    *   decide what to do belongs in this group.
@@ -200,13 +204,17 @@ export function useEditor() {
 
   /**
    * The one way the selection changes. The pointer path has a hit-test to name
-   * the annotation; the keyboard has only the layer order, so selection has to
-   * be settable from an id alone. That is also what un-disables the topbar's
+   * the annotations; the keyboard has only the layer order, so selection has to
+   * be settable from ids alone. That is also what un-disables the topbar's
    * Delete button for a keyboard user.
+   *
+   * The list is ordered by when each layer joined the selection, newest last.
+   * The bracket keys walk on from that newest one, so extending the selection
+   * and then carrying on in the same direction goes where the user is looking.
    */
-  const selectAnnotation = useCallback((id: string | null) => {
-    selectedIdRef.current = id;
-    setSelectedId(id);
+  const selectAnnotations = useCallback((ids: string[]) => {
+    selectedIdsRef.current = ids;
+    setSelectedIds(ids);
   }, []);
 
   /** The one way the annotation list changes. */
@@ -238,9 +246,9 @@ export function useEditor() {
   // — a handle painted over the pixel would be sampled instead of the pixel.
   const prevToolRef = useRef<Tool>('select');
   useEffect(() => {
-    if (tool === 'eyedropper') selectAnnotation(null);
+    if (tool === 'eyedropper') selectAnnotations([]);
     else prevToolRef.current = tool;
-  }, [tool, selectAnnotation]);
+  }, [tool, selectAnnotations]);
 
   // Sync annotations to the controller. The ref beside them is written by
   // applyAnnotations, not here.
@@ -255,10 +263,10 @@ export function useEditor() {
     controllerRef.current?.setFrame(frame);
   }, [frame]);
 
-  // The ref beside the selection is written by selectAnnotation, not here.
+  // The ref beside the selection is written by selectAnnotations, not here.
   useEffect(() => {
-    controllerRef.current?.setSelected(selectedId);
-  }, [selectedId]);
+    controllerRef.current?.setSelected(selectedIds);
+  }, [selectedIds]);
 
   useEffect(() => {
     styleRef.current = style;
@@ -290,22 +298,37 @@ export function useEditor() {
     void setSettings(frameToSettings(frame));
   }, [frame]);
 
-  // When a new annotation is selected, adopt its style in the style bar.
+  /**
+   * When the selection changes, adopt its style in the style bar — but only
+   * the parts of it the selection agrees on.
+   *
+   * Two annotations of different colours have no "its colour" to show, and
+   * picking one of them (the first, the newest) would be a coin toss the user
+   * cannot see. So each field is adopted on agreement and left alone on
+   * disagreement: the bar keeps showing what it showed, which is what the next
+   * shape would be drawn in anyway. Editing a field still writes it to every
+   * selected annotation, so a mixed selection is how you make it agree.
+   */
   useEffect(() => {
-    const a = annotationsRef.current.find((x) => x.id === selectedId);
-    if (!a) return;
-    if (hasStroke(a)) {
-      setStyle((s) => ({ ...s, color: a.stroke, strokeWidth: a.strokeWidth }));
-    } else if (a.type === 'text') {
-      setStyle((s) => ({ ...s, color: a.color, fontSize: a.fontSize }));
-    } else if (a.type === 'step') {
-      setStyle((s) => ({ ...s, color: a.color }));
-    } else if (a.type === 'spotlight') {
-      setSpotlightShapeState(a.shape);
-    } else if (a.type === 'blur') {
-      setBlurModeState(a.mode ?? 'blur');
+    const sel = annotationsRef.current.filter((a) => selectedIds.includes(a.id));
+    if (sel.length === 0) return;
+    const color = agreed(sel, (a) =>
+      hasStroke(a) ? a.stroke : a.type === 'text' || a.type === 'step' ? a.color : undefined,
+    );
+    const strokeWidth = agreed(sel, (a) => (hasStroke(a) ? a.strokeWidth : undefined));
+    const fontSize = agreed(sel, (a) => (a.type === 'text' ? a.fontSize : undefined));
+    const shape = agreed(sel, (a) => (a.type === 'spotlight' ? a.shape : undefined));
+    const mode = agreed(sel, (a) => (a.type === 'blur' ? (a.mode ?? 'blur') : undefined));
+    if (color !== null || strokeWidth !== null || fontSize !== null) {
+      setStyle((s) => ({
+        color: color ?? s.color,
+        strokeWidth: strokeWidth ?? s.strokeWidth,
+        fontSize: fontSize ?? s.fontSize,
+      }));
     }
-  }, [selectedId]);
+    if (shape !== null) setSpotlightShapeState(shape);
+    if (mode !== null) setBlurModeState(mode);
+  }, [selectedIds]);
 
   /**
    * Put one mutation into the live region. The newest write is what gets read.
@@ -321,62 +344,123 @@ export function useEditor() {
     setAnnouncement((prev) => (prev === text ? `${text} ` : text));
   }, []);
 
+  /**
+   * Read out a selection, whichever gesture made it. One layer names itself and
+   * its place in the paint order; several are a count against the document;
+   * none is the cleared message. Every selection gesture goes through here —
+   * the brackets, a shift-click, a marquee — because a selection a pointer user
+   * can see is exactly what a live region has to say out loud.
+   */
+  const sayAboutSelection = useCallback(
+    (ids: string[]) => {
+      const list = annotationsRef.current;
+      if (ids.length === 0) {
+        say({ kind: 'deselect' });
+        return;
+      }
+      const only = ids.length === 1 ? list.find((x) => x.id === ids[0]) : undefined;
+      say(
+        only
+          ? { kind: 'select', annotation: only, index: list.indexOf(only) + 1, total: list.length }
+          : { kind: 'select-many', count: ids.length, total: list.length },
+      );
+    },
+    [say],
+  );
+
   // --- History ---
   /** The one way the undo stacks change. */
-  const applyHistory = useCallback((p: Annotation[][], f: Annotation[][]) => {
+  const applyHistory = useCallback((p: HistoryEntry[], f: HistoryEntry[]) => {
     pastRef.current = p;
     futureRef.current = f;
     setPast(p);
     setFuture(f);
   }, []);
 
+  /**
+   * The document as one timeline entry: the list and the selection that goes
+   * with it, read from the eager refs so a snapshot taken inside a keydown
+   * carries that keydown's state, not the previous frame's.
+   */
+  const entry = useCallback(
+    (): HistoryEntry => ({
+      annotations: annotationsRef.current,
+      selectedIds: selectedIdsRef.current,
+    }),
+    [],
+  );
+
   const commit = useCallback(
     (updater: (prev: Annotation[]) => Annotation[]) => {
-      applyHistory([...pastRef.current, annotationsRef.current], []);
+      applyHistory([...pastRef.current, entry()], []);
       applyAnnotations(updater);
     },
-    [applyAnnotations, applyHistory],
+    [applyAnnotations, applyHistory, entry],
   );
 
   const snapshot = useCallback(() => {
-    applyHistory([...pastRef.current, annotationsRef.current], []);
-  }, [applyHistory]);
+    applyHistory([...pastRef.current, entry()], []);
+  }, [applyHistory, entry]);
 
   const undo = useCallback(() => {
-    const step = historyStep(pastRef.current, futureRef.current, annotationsRef.current, -1);
+    const step = historyStep(pastRef.current, futureRef.current, entry(), -1);
     if (!step) return;
     applyHistory(step.past, step.future);
-    applyAnnotations(step.annotations);
-    selectAnnotation(null);
-    say({ kind: 'undo', total: step.annotations.length });
-  }, [applyAnnotations, applyHistory, selectAnnotation, say]);
+    applyAnnotations(step.entry.annotations);
+    // The pair was captured together, so these ids name layers in the list
+    // that just landed — the selection the undone edit was made against.
+    selectAnnotations(step.entry.selectedIds);
+    say({ kind: 'undo', total: step.entry.annotations.length });
+  }, [applyAnnotations, applyHistory, entry, selectAnnotations, say]);
 
   const redo = useCallback(() => {
-    const step = historyStep(pastRef.current, futureRef.current, annotationsRef.current, 1);
+    const step = historyStep(pastRef.current, futureRef.current, entry(), 1);
     if (!step) return;
     applyHistory(step.past, step.future);
-    applyAnnotations(step.annotations);
-    selectAnnotation(null);
-    say({ kind: 'redo', total: step.annotations.length });
-  }, [applyAnnotations, applyHistory, selectAnnotation, say]);
+    applyAnnotations(step.entry.annotations);
+    selectAnnotations(step.entry.selectedIds);
+    say({ kind: 'redo', total: step.entry.annotations.length });
+  }, [applyAnnotations, applyHistory, entry, selectAnnotations, say]);
 
   const deleteSelection = useCallback(() => {
-    const id = selectedIdRef.current;
-    if (!id) return;
-    const gone = annotationsRef.current.find((x) => x.id === id);
-    commit((prev) => renumberSteps(prev.filter((x) => x.id !== id)));
-    selectAnnotation(null);
+    const ids = selectedIdsRef.current;
+    if (ids.length === 0) return;
+    const gone = annotationsRef.current.filter((x) => ids.includes(x.id));
+    if (gone.length === 0) return;
+    commit((prev) => renumberSteps(prev.filter((x) => !ids.includes(x.id))));
+    selectAnnotations([]);
     // commit lands the new list on annotationsRef before it returns, so this
     // count is what is left rather than what was there.
-    if (gone) say({ kind: 'delete', type: gone.type, remaining: annotationsRef.current.length });
-  }, [commit, selectAnnotation, say]);
+    const remaining = annotationsRef.current.length;
+    say(
+      gone.length === 1
+        ? { kind: 'delete', type: gone[0].type, remaining }
+        : { kind: 'delete-many', count: gone.length, remaining },
+    );
+  }, [commit, selectAnnotations, say]);
+
+  /**
+   * Copy the selection and select the copies, so the next drag or nudge moves
+   * what was just made. The copies are offset, then renumbered with the rest of
+   * the list — a duplicated step badge takes the next number rather than a
+   * second copy of the one it came from.
+   */
+  const duplicateSelection = useCallback(() => {
+    const ids = selectedIdsRef.current;
+    if (ids.length === 0) return;
+    const copies = duplicateAnnotations(annotationsRef.current, ids);
+    if (copies.length === 0) return;
+    commit((prev) => renumberSteps([...prev, ...copies]));
+    selectAnnotations(copies.map((a) => a.id));
+    say({ kind: 'duplicate', count: copies.length });
+  }, [commit, selectAnnotations, say]);
 
   // --- Style (color / stroke width / font size) ---
   const applyStyleToSelected = useCallback(
     (patch: (a: Annotation) => Annotation) => {
-      const id = selectedIdRef.current;
-      if (!id) return;
-      commit((prev) => prev.map((a) => (a.id === id ? patch(a) : a)));
+      const ids = selectedIdsRef.current;
+      if (ids.length === 0) return;
+      commit((prev) => prev.map((a) => (ids.includes(a.id) ? patch(a) : a)));
     },
     [commit],
   );
@@ -614,8 +698,23 @@ export function useEditor() {
         fit();
         return;
       }
+      // Duplicate the selection.
+      //
+      // Two chords, because neither one is safe alone. Alt+D is the binding the
+      // shortcut sheet leads with, but Chrome on Windows and Linux gives Alt+D
+      // to the address bar, and an accelerator the browser claims may never
+      // reach this listener; Ctrl/Cmd+D is the duplicate chord editors use, and
+      // is a page-overridable one (Chrome's bookmark star yields to
+      // preventDefault). `e.code`, not `e.key`: macOS turns Option+D into "∂".
+      if (e.code === 'KeyD' && (e.altKey || isMod(e)) && !e.shiftKey) {
+        if (selectedIdsRef.current.length > 0) {
+          e.preventDefault();
+          duplicateSelection();
+          return;
+        }
+      }
       // Delete selected.
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIdRef.current) {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIdsRef.current.length > 0) {
         e.preventDefault();
         deleteSelection();
         return;
@@ -625,8 +724,8 @@ export function useEditor() {
         if (cropDraftRef.current) {
           cancelCrop();
           e.preventDefault();
-        } else if (selectedIdRef.current) {
-          selectAnnotation(null);
+        } else if (selectedIdsRef.current.length > 0) {
+          selectAnnotations([]);
           e.preventDefault();
         }
         return;
@@ -666,13 +765,14 @@ export function useEditor() {
     undo,
     redo,
     deleteSelection,
+    duplicateSelection,
     zoomIn,
     zoomOut,
     resetZoom,
     fit,
     setStyleColor,
     selectTool,
-    selectAnnotation,
+    selectAnnotations,
   ]);
 
   // --- Drag handlers (attached to window during a drag) ---
@@ -706,6 +806,10 @@ export function useEditor() {
         c.setCropRect(r);
         return;
       }
+      if (it.kind === 'marquee') {
+        c.setMarquee({ x: it.start.x, y: it.start.y, w: p.x - it.start.x, h: p.y - it.start.y });
+        return;
+      }
       if (it.kind === 'move') {
         if (!dragSnapshottedRef.current) {
           snapshot();
@@ -715,9 +819,9 @@ export function useEditor() {
         const dy = p.y - it.lastY;
         it.lastX = p.x;
         it.lastY = p.y;
-        const id = it.id;
+        const ids = it.ids;
         applyAnnotations((prev) =>
-          prev.map((a) => (a.id === id ? translateAnnotation(a, dx, dy) : a)),
+          prev.map((a) => (ids.includes(a.id) ? translateAnnotation(a, dx, dy) : a)),
         );
         return;
       }
@@ -785,6 +889,18 @@ export function useEditor() {
       }
       return;
     }
+    if (it.kind === 'marquee') {
+      const r = c.marquee;
+      c.setMarquee(null);
+      // A press-and-release with no drag pulls no rect at all, so there is
+      // nothing to catch — the mousedown already cleared the selection.
+      if (!r) return;
+      const caught = annotationsInRect(annotationsRef.current, r);
+      const next = [...it.base.filter((id) => !caught.includes(id)), ...caught];
+      selectAnnotations(next);
+      sayAboutSelection(next);
+      return;
+    }
     if (it.kind === 'shape' || it.kind === 'pen') {
       const draft = draftRef.current;
       draftRef.current = null;
@@ -798,11 +914,25 @@ export function useEditor() {
     // move / resize: changes already applied during drag (one snapshot on first
     // move). Announcing per mousemove would be a stream of noise, so the live
     // region hears the result once, here.
-    if (dragged && (it.kind === 'move' || it.kind === 'resize')) {
-      const moved = annotationsRef.current.find((a) => a.id === it.id);
-      if (moved) say({ kind: it.kind, annotation: moved });
+    if (dragged && it.kind === 'resize') {
+      const resized = annotationsRef.current.find((a) => a.id === it.id);
+      if (resized) say({ kind: 'resize', annotation: resized });
     }
-  }, [onDragMove, commit, say]);
+    if (it.kind === 'move') {
+      if (dragged) {
+        const moved = annotationsRef.current.filter((a) => it.ids.includes(a.id));
+        if (moved.length === 1) say({ kind: 'move', annotation: moved[0] });
+        else if (moved.length > 1) say({ kind: 'move-many', count: moved.length });
+      } else if (it.ids.length > 1) {
+        // A click on a layer that is already in the selection holds the whole
+        // selection down, so the drag that may follow moves all of it. When no
+        // drag followed, the click was a plain click: it collapses onto the
+        // layer it landed on, which is the only pointer way back to one layer.
+        selectAnnotations([it.hit]);
+        sayAboutSelection([it.hit]);
+      }
+    }
+  }, [onDragMove, commit, say, selectAnnotations, sayAboutSelection]);
 
   /**
    * Drop a numbered badge at `p`. The pointer path and the keyboard path share
@@ -814,10 +944,10 @@ export function useEditor() {
     (p: { x: number; y: number }) => {
       const ann = createStepAnnotation(p, styleRef.current.color, 0, styleRef.current.fontSize);
       commit((prev) => renumberSteps([...prev, ann]));
-      selectAnnotation(ann.id);
+      selectAnnotations([ann.id]);
       say({ kind: 'add', annotation: ann });
     },
-    [commit, selectAnnotation, say],
+    [commit, selectAnnotations, say],
   );
 
   const onCanvasMouseDown = useCallback(
@@ -840,17 +970,19 @@ export function useEditor() {
       const t = toolRef.current;
 
       if (t === 'select') {
-        // Resize: handle hit on the currently selected annotation.
-        const selId = selectedIdRef.current;
-        if (selId) {
+        const ids = selectedIdsRef.current;
+        // Resize: handle hit on the selected annotation. Only a lone selection
+        // carries handles (canvas.ts draws none for several), so only a lone
+        // selection is hit-tested for one.
+        if (ids.length === 1) {
           // handleAt yields null for the types that carry no handles, so the
           // annotation type needs no separate check here.
-          const sel = annotationsRef.current.find((a) => a.id === selId) ?? null;
+          const sel = annotationsRef.current.find((a) => a.id === ids[0]) ?? null;
           const h = sel ? handleAt(sel, (x, y) => c.toScreen(x, y), sx, sy) : null;
           if (sel && h) {
             interactionRef.current = {
               kind: 'resize',
-              id: selId,
+              id: sel.id,
               handle: h,
               startBBox: bbox(sel),
               startPt: p,
@@ -863,12 +995,37 @@ export function useEditor() {
         }
         // Select + move: hit-test annotations topmost-first.
         const hit = hitTestAnnotation(c, annotationsRef.current, sx, sy);
-        selectAnnotation(hit);
+        // Shift-click is a selection gesture, not a drag: it adds the layer
+        // under the pointer, or takes it back out.
+        if (e.shiftKey && hit) {
+          const next = ids.includes(hit) ? ids.filter((id) => id !== hit) : [...ids, hit];
+          selectAnnotations(next);
+          sayAboutSelection(next);
+          return;
+        }
         if (hit) {
-          interactionRef.current = { kind: 'move', id: hit, lastX: p.x, lastY: p.y };
+          // Clicking a layer that is already part of the selection moves the
+          // whole selection; clicking any other layer selects that one alone.
+          const next = ids.includes(hit) ? ids : [hit];
+          if (next !== ids) {
+            selectAnnotations(next);
+            sayAboutSelection(next);
+          }
+          interactionRef.current = { kind: 'move', ids: next, hit, lastX: p.x, lastY: p.y };
           window.addEventListener('mousemove', onDragMove);
           window.addEventListener('mouseup', onDragUp);
+          return;
         }
+        // Empty space starts a marquee. Shift keeps what is already selected
+        // and adds to it; without Shift the selection goes first, so a click
+        // that catches nothing reads as "deselect", the way it always has.
+        if (!e.shiftKey && ids.length > 0) {
+          selectAnnotations([]);
+          sayAboutSelection([]);
+        }
+        interactionRef.current = { kind: 'marquee', start: p, base: e.shiftKey ? ids : [] };
+        window.addEventListener('mousemove', onDragMove);
+        window.addEventListener('mouseup', onDragUp);
         return;
       }
 
@@ -909,7 +1066,15 @@ export function useEditor() {
       window.addEventListener('mousemove', onDragMove);
       window.addEventListener('mouseup', onDragUp);
     },
-    [onDragMove, onDragUp, setStyleColor, selectTool, selectAnnotation, addStep],
+    [
+      onDragMove,
+      onDragUp,
+      setStyleColor,
+      selectTool,
+      selectAnnotations,
+      sayAboutSelection,
+      addStep,
+    ],
   );
 
   // --- Text ---
@@ -942,11 +1107,11 @@ export function useEditor() {
       );
       const a = hit ? annotationsRef.current.find((x) => x.id === hit) : null;
       if (!a || a.type !== 'text') return;
-      selectAnnotation(a.id);
+      selectAnnotations([a.id]);
       textSnapshottedRef.current = false;
       setTextEdit({ id: a.id });
     },
-    [selectAnnotation],
+    [selectAnnotations],
   );
 
   const updateText = useCallback(
@@ -1034,11 +1199,11 @@ export function useEditor() {
           }),
       ),
     );
-    selectAnnotation(null);
+    selectAnnotations([]);
     applyHistory([], []);
     cancelCrop();
     say({ kind: 'crop-applied', w, h });
-  }, [applyAnnotations, applyHistory, cancelCrop, selectAnnotation, say]);
+  }, [applyAnnotations, applyHistory, cancelCrop, selectAnnotations, say]);
 
   // --- Keyboard on the canvas ---
   /**
@@ -1089,9 +1254,9 @@ export function useEditor() {
     // a box, the end of an arrow, the second sample of a freehand stroke.
     extendDraft(draft, { x: box.x + box.w, y: box.y + box.h });
     commit((prev) => [...prev, draft]);
-    selectAnnotation(draft.id);
+    selectAnnotations([draft.id]);
     say({ kind: 'add', annotation: draft });
-  }, [addStep, commit, selectAnnotation, say]);
+  }, [addStep, commit, selectAnnotations, say]);
 
   /**
    * The canvas's own keydown. It is bound to the element rather than the
@@ -1105,7 +1270,7 @@ export function useEditor() {
       if (!c || !c.image) return;
       const mode: CanvasMode = cropDraftRef.current
         ? 'crop'
-        : selectedIdRef.current
+        : selectedIdsRef.current.length > 0
           ? 'selection'
           : 'idle';
       const intent = canvasIntent(e, mode);
@@ -1123,15 +1288,14 @@ export function useEditor() {
         return;
       }
       if (intent.kind === 'cycle') {
-        const list = annotationsRef.current;
-        const next = cycleSelection(list, selectedIdRef.current, intent.dir);
-        const a = next ? (list.find((x) => x.id === next) ?? null) : null;
-        selectAnnotation(next);
-        say(
-          a
-            ? { kind: 'select', annotation: a, index: list.indexOf(a) + 1, total: list.length }
-            : { kind: 'deselect' },
+        const next = cycleSelection(
+          annotationsRef.current,
+          selectedIdsRef.current,
+          intent.dir,
+          intent.extend,
         );
+        selectAnnotations(next);
+        sayAboutSelection(next);
         return;
       }
       if (intent.kind === 'crop-move' || intent.kind === 'crop-resize') {
@@ -1150,25 +1314,45 @@ export function useEditor() {
         return;
       }
       const list = annotationsRef.current;
-      const id = selectedIdRef.current;
-      const a = id ? list.find((x) => x.id === id) : null;
-      if (!a) return;
+      const ids = selectedIdsRef.current;
+      const touched = list.filter((x) => ids.includes(x.id));
+      if (touched.length === 0) return;
       if (!keyNudgeRef.current) {
         snapshot();
         keyNudgeRef.current = true;
       }
-      const moved =
+      // Every selected layer takes the same delta, so a nudge holds the
+      // selection's shape and a resize grows each layer by the same amount.
+      const apply = (a: Annotation) =>
         intent.kind === 'move'
           ? translateAnnotation(a, intent.dx, intent.dy)
           : resizeAnnotationBy(a, intent.dx, intent.dy);
-      applyAnnotations(list.map((x) => (x.id === a.id ? moved : x)));
-      say(
-        intent.kind === 'move'
-          ? { kind: 'move', annotation: moved }
-          : { kind: 'resize', annotation: moved },
-      );
+      const next = list.map((x) => (ids.includes(x.id) ? apply(x) : x));
+      applyAnnotations(next);
+      if (touched.length === 1) {
+        const one = next.find((x) => x.id === touched[0].id)!;
+        say(
+          intent.kind === 'move'
+            ? { kind: 'move', annotation: one }
+            : { kind: 'resize', annotation: one },
+        );
+      } else {
+        say(
+          intent.kind === 'move'
+            ? { kind: 'move-many', count: touched.length }
+            : { kind: 'resize-many', count: touched.length },
+        );
+      }
     },
-    [applyAnnotations, applyCrop, placeWithKeyboard, selectAnnotation, say, snapshot],
+    [
+      applyAnnotations,
+      applyCrop,
+      placeWithKeyboard,
+      sayAboutSelection,
+      selectAnnotations,
+      say,
+      snapshot,
+    ],
   );
 
   /**
@@ -1228,7 +1412,7 @@ export function useEditor() {
     setDraftPrompt(null);
     setFrameState(draftFrame(d));
     applyHistory([], []);
-    selectAnnotation(null);
+    selectAnnotations([]);
     const refuse = () => {
       restoringRef.current = false;
       setStageNotice('Your saved edits could not be restored.');
@@ -1253,7 +1437,7 @@ export function useEditor() {
         img.src = dataUrl;
       })
       .catch(refuse);
-  }, [applyAnnotations, applyHistory, selectAnnotation, draftPrompt]);
+  }, [applyAnnotations, applyHistory, selectAnnotations, draftPrompt]);
 
   const discardDraft = useCallback(() => {
     setDraftPrompt(null);
@@ -1292,7 +1476,7 @@ export function useEditor() {
       void clearDraftImage();
       applyAnnotations([]);
       applyHistory([], []);
-      selectAnnotation(null);
+      selectAnnotations([]);
       setTextEdit(null);
       cancelCrop();
       setError(null);
@@ -1300,7 +1484,7 @@ export function useEditor() {
       setPendingImport(null);
       c.setImage(p.img);
     },
-    [applyAnnotations, applyHistory, cancelCrop, selectAnnotation],
+    [applyAnnotations, applyHistory, cancelCrop, selectAnnotations],
   );
 
   /** Read a dropped or pasted file, then import it — asking first if it would destroy work. */
@@ -1416,16 +1600,28 @@ export function useEditor() {
 
   const c = controllerRef.current;
   const zoomPct = c ? Math.round(c.view.zoom * 100) : 100;
-  const selectedAnnotation = selectedId
-    ? (annotations.find((a) => a.id === selectedId) ?? null)
-    : null;
+  /**
+   * The annotation the style bar takes its field groups from: the sole
+   * selection, or the topmost member of a selection that agrees on its type.
+   * A selection of mixed types has no answer here — a rectangle and a text
+   * layer do not share a set of controls — so it falls back to null and the
+   * bar shows what the active tool would draw instead. Which values those
+   * fields carry is a separate question, answered by the adoption effect
+   * above.
+   */
+  const selectedAnnotation = (() => {
+    const sel = annotations.filter((a) => selectedIds.includes(a.id));
+    if (sel.length === 0) return null;
+    const type = sel[0].type;
+    return sel.every((a) => a.type === type) ? sel[sel.length - 1] : null;
+  })();
 
   return {
     canvasRef,
     annotations,
     tool,
     setTool: selectTool,
-    selectedId,
+    selectedIds,
     capture,
     imageSize,
     loading,
@@ -1439,7 +1635,7 @@ export function useEditor() {
     zoomPct,
     canUndo: past.length > 0,
     canRedo: future.length > 0,
-    hasSelection: !!selectedId,
+    hasSelection: selectedIds.length > 0,
     selectedAnnotation,
     style,
     recentColors,
@@ -1469,6 +1665,7 @@ export function useEditor() {
     undo,
     redo,
     deleteSelection,
+    duplicateSelection,
     exportImage,
     exportPdf,
     copyImage,
@@ -1486,6 +1683,23 @@ export function useEditor() {
     restoreDraft,
     discardDraft,
   };
+}
+
+/**
+ * The one value a selection carries for a style field, or null when the layers
+ * that carry the field disagree — the style bar's answer to "what colour is
+ * this?" when there is more than one. Layers the field does not apply to (a
+ * blur has no colour) read as undefined and are passed over.
+ */
+function agreed<T>(sel: Annotation[], read: (a: Annotation) => T | undefined): T | null {
+  let seen: T | undefined;
+  for (const a of sel) {
+    const v = read(a);
+    if (v === undefined) continue;
+    if (seen === undefined) seen = v;
+    else if (seen !== v) return null;
+  }
+  return seen ?? null;
 }
 
 /** Hit-test annotations topmost-first in screen space; returns an id or null. */

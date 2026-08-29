@@ -64,9 +64,36 @@ const flatPen: Annotation = {
 describe('canvasIntent', () => {
   it('cycles layers on the bracket keys, in every mode', () => {
     for (const mode of ['idle', 'selection', 'crop'] as const) {
-      expect(canvasIntent({ key: ']' }, mode)).toEqual({ kind: 'cycle', dir: 1 });
-      expect(canvasIntent({ key: '[' }, mode)).toEqual({ kind: 'cycle', dir: -1 });
+      expect(canvasIntent({ key: ']' }, mode)).toEqual({ kind: 'cycle', dir: 1, extend: false });
+      expect(canvasIntent({ key: '[' }, mode)).toEqual({ kind: 'cycle', dir: -1, extend: false });
     }
+  });
+
+  it('extends the selection when Shift is held with a bracket', () => {
+    expect(canvasIntent({ key: ']', shiftKey: true }, 'selection')).toEqual({
+      kind: 'cycle',
+      dir: 1,
+      extend: true,
+    });
+    expect(canvasIntent({ key: '[', shiftKey: true }, 'selection')).toEqual({
+      kind: 'cycle',
+      dir: -1,
+      extend: true,
+    });
+  });
+
+  it('reads the shifted bracket a US layout actually reports', () => {
+    // Shift+] arrives as "}" with shiftKey set; the brace alone is enough.
+    expect(canvasIntent({ key: '}', shiftKey: true }, 'selection')).toEqual({
+      kind: 'cycle',
+      dir: 1,
+      extend: true,
+    });
+    expect(canvasIntent({ key: '{' }, 'selection')).toEqual({
+      kind: 'cycle',
+      dir: -1,
+      extend: true,
+    });
   });
 
   it('leaves Ctrl and Meta chords to the window handler', () => {
@@ -140,38 +167,68 @@ describe('cycleSelection', () => {
   ];
 
   it('selects nothing in an empty document', () => {
-    expect(cycleSelection([], null, 1)).toBeNull();
-    expect(cycleSelection([], 'one', -1)).toBeNull();
+    expect(cycleSelection([], [], 1)).toEqual([]);
+    expect(cycleSelection([], ['one'], -1)).toEqual([]);
   });
 
   it('starts at the bottom layer going up, and the top layer going down', () => {
-    expect(cycleSelection(list, null, 1)).toBe('one');
-    expect(cycleSelection(list, null, -1)).toBe('three');
+    expect(cycleSelection(list, [], 1)).toEqual(['one']);
+    expect(cycleSelection(list, [], -1)).toEqual(['three']);
   });
 
   it('walks the layer order one step at a time', () => {
-    expect(cycleSelection(list, 'one', 1)).toBe('two');
-    expect(cycleSelection(list, 'two', 1)).toBe('three');
-    expect(cycleSelection(list, 'three', -1)).toBe('two');
+    expect(cycleSelection(list, ['one'], 1)).toEqual(['two']);
+    expect(cycleSelection(list, ['two'], 1)).toEqual(['three']);
+    expect(cycleSelection(list, ['three'], -1)).toEqual(['two']);
   });
 
   it('wraps at both ends', () => {
-    expect(cycleSelection(list, 'three', 1)).toBe('one');
-    expect(cycleSelection(list, 'one', -1)).toBe('three');
+    expect(cycleSelection(list, ['three'], 1)).toEqual(['one']);
+    expect(cycleSelection(list, ['one'], -1)).toEqual(['three']);
   });
 
   it('treats an id that is no longer there as no selection', () => {
-    expect(cycleSelection(list, 'deleted', 1)).toBe('one');
+    expect(cycleSelection(list, ['deleted'], 1)).toEqual(['one']);
   });
 
   it('reaches every layer from one key alone', () => {
     const seen: string[] = [];
-    let id: string | null = null;
+    let ids: string[] = [];
     for (let i = 0; i < list.length; i++) {
-      id = cycleSelection(list, id, 1);
-      seen.push(id!);
+      ids = cycleSelection(list, ids, 1);
+      seen.push(...ids);
     }
     expect(seen).toEqual(['one', 'two', 'three']);
+  });
+
+  it('replaces the whole selection when it is not extending', () => {
+    expect(cycleSelection(list, ['one', 'two'], 1)).toEqual(['three']);
+  });
+
+  it('adds the next layer when extending, keeping what was there', () => {
+    expect(cycleSelection(list, ['one'], 1, true)).toEqual(['one', 'two']);
+    expect(cycleSelection(list, ['one', 'two'], 1, true)).toEqual(['one', 'two', 'three']);
+  });
+
+  it('walks on from the newest member, not the first one', () => {
+    // ['three','one'] is what shift-clicking the top layer then the bottom one
+    // leaves behind: the walk continues from 'one', the layer just added.
+    expect(cycleSelection(list, ['three', 'one'], 1, true)).toEqual(['three', 'one', 'two']);
+  });
+
+  it('re-anchors on a layer already selected rather than duplicating it', () => {
+    const back = cycleSelection(list, ['one', 'two'], -1, true);
+    expect(back).toEqual(['two', 'one']);
+    // And the walk goes on from 'one' — no id is ever in the list twice.
+    expect(cycleSelection(list, back, -1, true)).toEqual(['two', 'one', 'three']);
+  });
+
+  it('gathers the whole document when extending all the way round', () => {
+    let ids: string[] = [];
+    for (let i = 0; i < list.length; i++) ids = cycleSelection(list, ids, 1, true);
+    expect(ids).toEqual(['one', 'two', 'three']);
+    // One more press wraps onto a layer already selected and changes nothing.
+    expect(cycleSelection(list, ids, 1, true)).toEqual(['two', 'three', 'one']);
   });
 });
 
@@ -324,6 +381,15 @@ describe('announce', () => {
     );
   });
 
+  it('counts a multi-selection against the document', () => {
+    expect(announce({ kind: 'select-many', count: 3, total: 7 })).toBe(
+      '3 of 7 annotations selected.',
+    );
+    expect(announce({ kind: 'select-many', count: 2, total: 2 })).toBe(
+      '2 of 2 annotations selected.',
+    );
+  });
+
   it('says when the selection went away', () => {
     expect(announce({ kind: 'deselect' })).toBe('Selection cleared.');
   });
@@ -341,6 +407,29 @@ describe('announce', () => {
     const bigger = resizeAnnotationBy(rect, 10, 10);
     expect(announce({ kind: 'resize', annotation: bigger })).toBe(
       'Rectangle resized to 110 by 60 pixels.',
+    );
+  });
+
+  it('counts the layers a multi-selection move or resize touched', () => {
+    // No one position or size fits several layers, so the count is what there
+    // is to say. The singular is still reachable: it is what a one-layer
+    // marquee catch announces.
+    expect(announce({ kind: 'move-many', count: 3 })).toBe('3 annotations moved.');
+    expect(announce({ kind: 'resize-many', count: 2 })).toBe('2 annotations resized.');
+    expect(announce({ kind: 'move-many', count: 1 })).toBe('1 annotation moved.');
+  });
+
+  it('counts a duplicate, and pluralizes it', () => {
+    expect(announce({ kind: 'duplicate', count: 1 })).toBe('1 annotation duplicated.');
+    expect(announce({ kind: 'duplicate', count: 4 })).toBe('4 annotations duplicated.');
+  });
+
+  it('counts both sides of a multi-selection delete', () => {
+    expect(announce({ kind: 'delete-many', count: 3, remaining: 2 })).toBe(
+      '3 annotations deleted, 2 annotations left.',
+    );
+    expect(announce({ kind: 'delete-many', count: 2, remaining: 0 })).toBe(
+      '2 annotations deleted, no annotations left.',
     );
   });
 
