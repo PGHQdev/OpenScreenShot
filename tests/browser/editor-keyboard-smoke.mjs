@@ -249,6 +249,49 @@ async function main() {
     assert(region.hidden === null && region.display !== 'none', 'not hidden from the a11y tree');
     assert(region.text === '', 'empty at rest, so the first message is a change');
 
+    step('the style bar renders for every tool at a fixed height — no tool swap moves the canvas');
+    // task-16's report measured a real ~39px pump on this exact loop, back
+    // when .stylebar unmounted for Select/Crop and had no min-height. The
+    // property under test is "0px", not today's pixel height (task-16
+    // review) — a future deliberate restyle should not have to come back
+    // here and edit a pinned number.
+    const rectOf = (sel) =>
+      page.evaluate((s) => document.querySelector(s).getBoundingClientRect().toJSON(), sel);
+    const barHeights = {};
+    for (const t of ['V', 'R', 'A', 'L', 'P', 'H', 'T', 'S', 'B', 'O', 'I', 'C']) {
+      await page.keyboard.press(t);
+      await settle(60);
+      const h = await page.evaluate(() => {
+        const bar = document.querySelector('.stylebar');
+        return bar ? bar.getBoundingClientRect().height : null;
+      });
+      barHeights[t] = h;
+      assert(h !== null, `.stylebar is rendered for tool "${t}" (not unmounted)`);
+    }
+    console.log(`    style bar height per tool: ${JSON.stringify(barHeights)}`);
+    const heightSet = new Set(Object.values(barHeights));
+    assert(
+      heightSet.size === 1,
+      `every tool renders the style bar at the same height (saw: ${[...heightSet].join(', ')})`,
+    );
+    await page.keyboard.press('V');
+    await settle(60);
+    const canvasV1 = await rectOf('.stage-canvas');
+    await page.keyboard.press('R');
+    await settle(60);
+    const canvasR = await rectOf('.stage-canvas');
+    await page.keyboard.press('V');
+    await settle(60);
+    const canvasV2 = await rectOf('.stage-canvas');
+    assert(
+      canvasR.top === canvasV1.top && canvasR.height === canvasV1.height,
+      `V -> R does not move the canvas (top ${canvasV1.top} -> ${canvasR.top}, height ${canvasV1.height} -> ${canvasR.height})`,
+    );
+    assert(
+      canvasV2.top === canvasV1.top && canvasV2.height === canvasV1.height,
+      `V -> R -> V moves the canvas by 0px (top delta ${canvasV2.top - canvasV1.top}, height delta ${canvasV2.height - canvasV1.height})`,
+    );
+
     step('a tool letter followed straight by Enter places a layer');
     // No round-trip between the two: this is the pairing of `tool` with toolRef,
     // and a frame-late ref makes Enter place nothing at all, silently.
