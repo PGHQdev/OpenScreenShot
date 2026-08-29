@@ -162,7 +162,7 @@ body {
    accent, and a failure must not read as a neutral hint. */
 .toast-error {
   background: color-mix(in srgb, var(--danger) 14%, var(--surface-1));
-  color: var(--danger);
+  color: var(--danger-ink);
   border-color: color-mix(in srgb, var(--danger) 40%, transparent);
 }
 
@@ -255,7 +255,7 @@ body {
 }
 
 .pill-recovered {
-  color: var(--warning);
+  color: var(--danger-ink);
   background: color-mix(in srgb, var(--warning) 16%, transparent);
 }
 
@@ -267,7 +267,7 @@ body {
 /* A start that never reached the engine. The row is kept so the attempt is
    visible; there is nothing in it to open. */
 .pill-failed {
-  color: var(--danger);
+  color: var(--danger-ink);
   background: color-mix(in srgb, var(--danger) 16%, transparent);
 }
 
@@ -287,7 +287,7 @@ body {
 }
 
 .rec-delete-btn[data-armed='true'] {
-  color: var(--danger);
+  color: var(--danger-ink);
   font-weight: 600;
 }
 
@@ -839,11 +839,11 @@ body {
 }
 
 .rec-zoom-delete {
-  color: var(--danger);
+  color: var(--danger-ink);
 }
 
 .rec-zoom-delete:hover {
-  color: var(--danger);
+  color: var(--danger-ink);
   text-decoration: underline;
 }
 

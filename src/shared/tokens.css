@@ -45,6 +45,17 @@
  *                 --accent-subtle. It does NOT clear it on --stage-bg (4.44:1
  *                 in light), so text on the stage takes --text-1.
  *   --on-accent   the label colour on an --accent-ink ground.
+ *   --danger      the amber danger mark: warning-chip and error-toast tints,
+ *                 and the border on them. Non-text only, same rule as
+ *                 --accent — it is 5.02:1 on --surface-1 in light but falls
+ *                 to 3.73:1 on its own 16% tint, and its --warning sibling
+ *                 reaches 1.80:1 there.
+ *   --danger-ink  body-size danger text: error toasts, the denied/permission
+ *                 chips, armed destructive buttons, the recorder's session
+ *                 pills. Clears 4.5:1 on --surface-1, --surface-2 and on
+ *                 every --danger/--warning tint this product paints under
+ *                 it (worst pair 5.10:1 — tests/unit/token-contrast.test.ts
+ *                 asserts the tinted grounds, not just the flat surfaces).
  *   --border      control boundaries; >= 3:1 on --surface-1..--surface-3.
  *   --rule        a decorative hairline. Never a control's edge, never the only
  *                 signal that a boundary exists.
@@ -214,6 +225,7 @@
   --border-focus: #e8503a;
   --ring-selected: #e8503a;
   --danger: #b45309;
+  --danger-ink: #8f4208;
   --success: #34c759;
   --warning: #ff9500;
   /* translucent hover for ghost (transparent-background) buttons */
@@ -242,6 +254,7 @@
   --border-focus: #f26b57;
   --ring-selected: #f26b57;
   --danger: #f5a623;
+  --danger-ink: #ffbb4d;
   --success: #30d158;
   --warning: #ff9f0a;
   --hover-overlay: rgba(255, 255, 255, 0.09);
@@ -280,6 +293,7 @@
     --border-focus: #f26b57;
     --ring-selected: #f26b57;
     --danger: #f5a623;
+    --danger-ink: #ffbb4d;
     --success: #30d158;
     --warning: #ff9f0a;
     --hover-overlay: rgba(255, 255, 255, 0.09);

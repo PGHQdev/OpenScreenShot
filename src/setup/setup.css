@@ -199,7 +199,7 @@ a.trust-pill:hover {
 
 .tag-denied {
   background: color-mix(in srgb, var(--warning) 20%, var(--surface-1));
-  color: var(--danger);
+  color: var(--danger-ink);
 }
 
 .btn-primary {

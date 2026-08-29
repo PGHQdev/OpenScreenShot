@@ -565,7 +565,7 @@ body {
   border-radius: var(--r-full);
   padding: var(--s-05) 10px;
   background: color-mix(in srgb, var(--warning) 20%, var(--surface-1));
-  color: var(--danger);
+  color: var(--danger-ink);
   font: inherit;
   font-size: var(--fs-sm);
   font-weight: 600;
@@ -745,7 +745,7 @@ a.rec-trust-pill:focus-visible {
 
 .toast-error {
   background: color-mix(in srgb, var(--danger) 14%, var(--surface-1));
-  color: var(--danger);
+  color: var(--danger-ink);
   border-color: color-mix(in srgb, var(--danger) 40%, transparent);
 }
 
@@ -767,7 +767,7 @@ a.rec-trust-pill:focus-visible {
 }
 
 .reset-btn[data-armed='true'] {
-  color: var(--danger);
+  color: var(--danger-ink);
   font-weight: 600;
 }
 

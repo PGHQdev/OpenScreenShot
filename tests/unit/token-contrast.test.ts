@@ -119,3 +119,73 @@ describe('every foreground token clears the 4.5:1 body-text floor on the surface
     });
   }
 });
+
+/**
+ * task-32 widened it again, in the one direction the block above cannot
+ * reach: a token painted on a `color-mix()` ground rather than on a flat
+ * surface. Every warm-coloured text in this product sits on a tint of its own
+ * mark colour, and the tint is what fails — --danger is 5.02:1 on --surface-1
+ * in light but 3.73:1 on its own 16% tint, and .pill-recovered's --warning
+ * reached 1.80:1 there. Seven of the ten call sites below failed the 4.5:1
+ * floor in light theme and none of them was asserted anywhere, because this
+ * file only ever compared a token to a flat surface token.
+ *
+ * They all take --danger-ink now (--danger keeps the tints and borders, the
+ * same non-text/text split --accent and --accent-ink already use). These are
+ * the real (theme, ground) pairs those call sites paint, mixes included, so
+ * re-tinting a chip or moving a pill onto a different surface has to come
+ * back here.
+ */
+function mix(fgHex: string, bgHex: string, fraction: number): string {
+  const [fr, fg, fb] = hexToRgb(fgHex);
+  const [br, bg, bb] = hexToRgb(bgHex);
+  const channel = (f: number, b: number) =>
+    Math.round(fraction * f + (1 - fraction) * b)
+      .toString(16)
+      .padStart(2, '0');
+  return `#${channel(fr, br)}${channel(fg, bg)}${channel(fb, bb)}`;
+}
+
+/**
+ * A ground built from the live token values. `tint`/`over` mirror the
+ * `color-mix(in srgb, var(--<tint>) <pct>%, var(--<over>))` in the stylesheet;
+ * a `color-mix(..., transparent)` composites over whatever the element sits
+ * on, which is what `over` names in that case.
+ */
+interface Ground {
+  site: string;
+  tint?: 'danger' | 'warning';
+  pct?: number;
+  over: 'surface1' | 'surface2';
+}
+
+const DANGER_INK_GROUNDS: Ground[] = [
+  // Warning chips: a hard-denied device (popup) and a denied row tag (setup).
+  { site: 'popup .perm-chip / setup .tag-denied', tint: 'warning', pct: 0.2, over: 'surface1' },
+  { site: 'popup .perm-chip:hover', tint: 'warning', pct: 0.32, over: 'surface1' },
+  // Error toasts: the popup's, which carries ten of the thirteen recording
+  // failure messages, and the recorder page's, which carries the other three.
+  { site: 'popup/recorder .toast-error', tint: 'danger', pct: 0.14, over: 'surface1' },
+  // Recorder session-list pills, composited over the row's --surface-2.
+  { site: 'recorder .pill-failed', tint: 'danger', pct: 0.16, over: 'surface2' },
+  { site: 'recorder .pill-recovered', tint: 'warning', pct: 0.16, over: 'surface2' },
+  // Armed destructive buttons and the rail's delete link, on flat surfaces.
+  { site: 'popup .reset-btn[armed] / recorder .rec-zoom-delete', over: 'surface1' },
+  { site: 'recorder .rec-delete-btn[armed]', over: 'surface2' },
+];
+
+describe('--danger-ink clears the 4.5:1 body-text floor on every tinted ground that paints it', () => {
+  for (const themeName of ['light', 'dark'] as const) {
+    for (const { site, tint, pct, over } of DANGER_INK_GROUNDS) {
+      it(`${themeName}: --danger-ink on ${site}`, () => {
+        const surface = theme[themeName][over];
+        const ground = tint ? mix(theme[themeName][tint], surface, pct as number) : surface;
+        const ratio = contrastRatio(theme[themeName].dangerInk, ground);
+        expect(
+          ratio,
+          `${theme[themeName].dangerInk} on ${ground} is ${ratio.toFixed(2)}:1, below the ${BODY_TEXT_FLOOR}:1 floor`,
+        ).toBeGreaterThanOrEqual(BODY_TEXT_FLOOR);
+      });
+    }
+  }
+});
