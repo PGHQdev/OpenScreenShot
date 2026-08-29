@@ -43,7 +43,7 @@ video {
   background: var(--surface-1);
   color: var(--text-1);
   text-align: center;
-  font: 500 12px/1.35 var(--font);
+  font: 500 var(--fs-sm)/1.35 var(--font);
   border: 2px solid var(--accent);
   pointer-events: none;
 }
