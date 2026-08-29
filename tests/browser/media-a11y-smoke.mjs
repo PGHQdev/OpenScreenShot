@@ -1425,11 +1425,13 @@ async function testSetup(browser, base, messages) {
   await page.waitForSelector('[data-testid="row-tabcapture"]');
 
   step('SETUP — prefers-reduced-motion: reduce — .btn-primary and .btn-ghost');
-  // .btn-primary (the row's Enable button) is real whenever the grant is
-  // missing; .btn-ghost only renders for a blocked-permission device row, a
-  // fixture this smoke does not seed — a detached probe carrying the class
-  // exercises the same rule, the same fallback testPopup above already uses
-  // for selectors that are not always mounted.
+  // This file's stub answers `permissions.contains` true, so the page renders
+  // in its ready state and .btn-primary is the ready banner's finish button —
+  // the row's own Enable button only exists while a grant is missing.
+  // .btn-ghost only renders for a blocked-permission device row, a fixture
+  // this smoke does not seed — a detached probe carrying the class exercises
+  // the same rule, the same fallback testPopup above already uses for
+  // selectors that are not always mounted.
   await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'no-preference' }]);
   const SELECTORS = ['.btn-primary', '.btn-ghost'];
   const readTransitions = () =>

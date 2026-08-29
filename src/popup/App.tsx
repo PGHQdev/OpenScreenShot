@@ -226,7 +226,20 @@ export function App() {
     void queryDeviceStates().then(setDeviceStates);
     void chrome.permissions
       .contains({ permissions: ['tabCapture'] })
-      .then(setHasTabCapture)
+      .then(async (granted) => {
+        setHasTabCapture(granted);
+        // A parked click still sitting here with the grant still missing means
+        // the last Record click asked and never got it: Chrome's dialog tore
+        // that popup down, so the refusal had nowhere to show. Show it now.
+        // It is consumed on sight, so it says its piece once rather than
+        // nagging every open after. A grant that did land is not this popup's
+        // to consume — permissions.onAdded in the worker owns that click.
+        if (granted) return;
+        const stored = await chrome.storage.session.get(PENDING_RECORD_KEY);
+        if (stored[PENDING_RECORD_KEY] === undefined) return;
+        await chrome.storage.session.remove(PENDING_RECORD_KEY);
+        setTabCaptureRefused(true);
+      })
       .catch(() => setHasTabCapture(null));
     void chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
       setActiveTabProtected(isProtectedUrl(tab?.url));
@@ -359,37 +372,41 @@ export function App() {
    * Ask Chrome for tabCapture from the Record click itself. Two constraints
    * shape this:
    *
-   * - `chrome.permissions.request` is only granted a dialog on a user gesture,
-   *   so it is the first thing the click does — nothing is awaited before it,
-   *   and no part of the ask goes through the worker, which has no gesture.
-   * - The dialog can tear this popup down, which kills everything after the
-   *   await. So the click is parked in session storage first (fire-and-forget,
-   *   dispatched before the request) and `permissions.onAdded` in the worker
-   *   starts the recording. That path runs whether this popup lived or died,
-   *   which is also why nothing is started from here on success.
+   * - `chrome.permissions.request` needs a user gesture, and no part of the
+   *   ask may go through the worker, which has none. The await ahead of it is
+   *   safe: transient activation is time-bounded (~5s), not task-bounded, and
+   *   a live probe against the packed extension measured this write keeping
+   *   the gesture while a 6.5s wait loses it (task-31-report.md).
+   * - Chrome's dialog can tear this popup down, which kills everything after
+   *   the request's await. So the click is parked first — awaited, so it is
+   *   durable before the dialog can appear — and `permissions.onAdded` in the
+   *   worker starts the recording. That path runs whether this popup lived or
+   *   died, which is why nothing is started from here on success.
    */
-  function requestTabCapture(tabId: number) {
+  async function requestTabCapture(tabId: number) {
     const pending: PendingRecord = {
       settings: recSettings,
       continueSessionId: continueSessionId ?? undefined,
       tabId,
       at: Date.now(),
     };
-    void chrome.storage.session.set({ [PENDING_RECORD_KEY]: pending });
-    chrome.permissions
-      .request({ permissions: ['tabCapture'] })
-      .then((granted) => {
-        if (granted) {
-          window.close();
-          return;
-        }
-        void chrome.storage.session.remove(PENDING_RECORD_KEY);
-        setTabCaptureRefused(true);
-      })
-      .catch(() => {
-        void chrome.storage.session.remove(PENDING_RECORD_KEY);
-        setTabCaptureRefused(true);
-      });
+    let parked = true;
+    await chrome.storage.session.set({ [PENDING_RECORD_KEY]: pending }).catch(() => {
+      parked = false;
+    });
+    try {
+      if (await chrome.permissions.request({ permissions: ['tabCapture'] })) {
+        // A park that failed leaves the worker nothing to act on, so this
+        // popup — which evidently survived the dialog — has to start it.
+        if (parked) window.close();
+        else void startRecording();
+        return;
+      }
+    } catch {
+      // A request Chrome refused outright reads the same as a declined one.
+    }
+    await chrome.storage.session.remove(PENDING_RECORD_KEY).catch(() => {});
+    setTabCaptureRefused(true);
   }
 
   function onRecordClick() {
@@ -401,7 +418,7 @@ export function App() {
       // With no tab id there is nothing to aim a parked click at, and the
       // worker would refuse it; the setup page can still take the grant.
       if (activeTabId == null) openSetupPage('record');
-      else requestTabCapture(activeTabId);
+      else void requestTabCapture(activeTabId);
       return;
     }
     void startRecording();
@@ -483,6 +500,7 @@ export function App() {
         <SettingsView settings={settings} onChange={updateSettings} />
       ) : (
         <>
+          <PinHint />
           <span class="settings-section">{t('popupSectionScreenshot')}</span>
           <nav class="modes" aria-label={t('captureModesAria')}>
             {MODES.map((m, i) => {
@@ -571,33 +589,9 @@ export function App() {
             </button>
           )}
 
-          {/*
-            The Record click asks Chrome for tabCapture, and every surface
-            that asks for a permission carries the assurance with it. It sits
-            under Record while the grant is missing — the moment of the ask —
-            and leaves once there is nothing left to ask for.
-          */}
-          {!recState?.active && hasTabCapture === false && (
-            <div class="rec-trust" data-testid="rec-trust">
-              <div class="rec-trust-pills">
-                <a
-                  class="rec-trust-pill"
-                  href="https://github.com/pghqdev/OpenScreenShot"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <IconCode /> {t('setupTrustOpenSource')}
-                </a>
-                <span class="rec-trust-pill">
-                  <IconShield /> {t('setupTrustLocal')}
-                </span>
-                <span class="rec-trust-pill">
-                  <IconEyeOff /> {t('setupTrustNoTracking')}
-                </span>
-              </div>
-              <span class="rec-trust-hint">{t('setupTrustHint')}</span>
-            </div>
-          )}
+          {/* The Record click asks Chrome for tabCapture — the assurance sits
+              with it until that grant lands. */}
+          {!recState?.active && hasTabCapture === false && <TrustStrip testid="rec-trust" />}
 
           {/* The prompt was refused: the setup page is where it is fixed. */}
           {tabCaptureRefused && (
@@ -913,6 +907,9 @@ function SettingsView({
         </div>
       </div>
       <span class="settings-hint">{t('recAcrossSitesHint')}</span>
+      {/* Turning this on asks Chrome for <all_urls>, so the assurance sits
+          with it too, until that grant lands. */}
+      {!acrossSites && <TrustStrip testid="sites-trust" />}
 
       <div class="divider" />
       <button
@@ -922,6 +919,62 @@ function SettingsView({
       >
         {confirmReset ? t('resetConfirm') : t('resetDefaults')}
       </button>
+    </div>
+  );
+}
+
+/**
+ * The local-only assurance that rides with a permission ask. Every surface
+ * that asks carries it, so it renders next to the control that triggers the
+ * prompt and only while that prompt is still to come. Nothing here claims an
+ * audit — none exists to cite.
+ */
+function TrustStrip({ testid }: { testid: string }) {
+  return (
+    <div class="rec-trust" data-testid={testid}>
+      <div class="rec-trust-pills">
+        <a
+          class="rec-trust-pill"
+          href="https://github.com/pghqdev/OpenScreenShot"
+          target="_blank"
+          rel="noreferrer"
+        >
+          <IconCode /> {t('setupTrustOpenSource')}
+        </a>
+        <span class="rec-trust-pill">
+          <IconShield /> {t('setupTrustLocal')}
+        </span>
+        <span class="rec-trust-pill">
+          <IconEyeOff /> {t('setupTrustNoTracking')}
+        </span>
+      </div>
+      <span class="rec-trust-hint">{t('setupTrustHint')}</span>
+    </div>
+  );
+}
+
+/**
+ * Chrome does not pin an extension on install, so a new user reaches this
+ * popup through the puzzle menu every time until they pin it. One-shot: the
+ * only way to pin is the puzzle menu, which closes this popup, so there is
+ * nothing to poll for.
+ */
+function PinHint() {
+  const [pinned, setPinned] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!chrome.action?.getUserSettings) return;
+    chrome.action
+      .getUserSettings()
+      .then((s) => setPinned(s.isOnToolbar))
+      .catch(() => setPinned(null));
+  }, []);
+
+  if (pinned !== false) return null;
+  return (
+    <div class="pin-hint" data-testid="pin-hint">
+      <strong>{t('setupPinTitle')}</strong>
+      <span>{t('setupPinSub')}</span>
     </div>
   );
 }

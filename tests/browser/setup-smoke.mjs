@@ -105,7 +105,10 @@ function installChromeStub(messages, opts) {
     return text;
   }
 
-  const granted = { permissions: new Set(opts.grants ?? []), origins: new Set() };
+  const granted = {
+    permissions: new Set(opts.grants ?? []),
+    origins: new Set(opts.origins ?? []),
+  };
   const added = new Set();
   const removed = new Set();
   const fire = (listeners, arg) => listeners.forEach((fn) => fn(arg));
@@ -119,7 +122,7 @@ function installChromeStub(messages, opts) {
   };
 
   const store = new Map();
-  const session = new Map();
+  const session = new Map(Object.entries(opts.session ?? {}));
   const area = (map) => ({
     async get(keys) {
       const out = {};
@@ -168,7 +171,7 @@ function installChromeStub(messages, opts) {
       },
       onMessage: { addListener: noop, removeListener: noop },
     },
-    action: { getUserSettings: async () => ({ isOnToolbar: true }) },
+    action: { getUserSettings: async () => ({ isOnToolbar: opts.pinned !== false }) },
     commands: { getAll: async () => [] },
     windows: { update: async () => ({}) },
     tabs: {
@@ -326,6 +329,101 @@ async function main() {
     await page.waitForFunction(() => globalThis.__smoke.created.length > 0);
     const routed = await page.evaluate(() => globalThis.__smoke.created[0]);
     assert(/setup\/index\.html\?from=record/.test(routed), `refusal routes to ${routed}`);
+    await page.close();
+
+    step('popup reopened after a refusal it never got to show');
+    // The popup that asked was torn down by Chrome's dialog, so the parked
+    // click outlived it. That leftover is the only evidence a request went
+    // unanswered, and it is what the recovery route now hangs off.
+    page = await open(POPUP_PAGE, {
+      grants: [],
+      session: {
+        [PENDING_RECORD_KEY]: {
+          settings: { mic: false, tabAudio: true, webcam: false, ripple: true },
+          tabId: 5,
+          at: Date.now() - 30_000,
+        },
+      },
+    });
+    await page.waitForSelector('[data-testid="rec-refused"]');
+    assert(true, 'the refusal shows on the next open, not nowhere');
+    state = await page.evaluate(
+      (key) => ({
+        parked: globalThis.__smoke.session.get(key),
+        sent: globalThis.__smoke.sent.map((m) => m.type),
+      }),
+      PENDING_RECORD_KEY,
+    );
+    assert(state.parked === undefined, 'the leftover is consumed, so it shows once and not again');
+    assert(!state.sent.includes('REC_START'), 'nothing is started on the strength of a leftover');
+    await page.close();
+
+    step("popup reopened after the grant landed: the leftover is the worker's, not the popup's");
+    page = await open(POPUP_PAGE, {
+      grants: ['tabCapture'],
+      session: {
+        [PENDING_RECORD_KEY]: {
+          settings: { mic: false, tabAudio: true, webcam: false, ripple: true },
+          tabId: 5,
+          at: Date.now() - 200,
+        },
+      },
+    });
+    await page.waitForSelector('.mode-card[aria-disabled]');
+    assert(
+      (await page.$('[data-testid="rec-refused"]')) === null,
+      'a granted permission shows no refusal',
+    );
+    state = await page.evaluate((key) => globalThis.__smoke.session.get(key), PENDING_RECORD_KEY);
+    assert(
+      state !== undefined,
+      'and the popup does not eat the click the worker is about to start',
+    );
+    await page.close();
+
+    step('popup, unpinned: the pin nudge has a home again');
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'], pinned: false });
+    await page.waitForSelector('[data-testid="pin-hint"]');
+    const pin = await page.$eval('[data-testid="pin-hint"]', (el) => el.textContent);
+    assert(/pin/i.test(pin), `the popup asks to be pinned ("${pin.trim()}")`);
+    await page.close();
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'], pinned: true });
+    await page.waitForSelector('.mode-card[aria-disabled]');
+    assert(
+      (await page.$('[data-testid="pin-hint"]')) === null,
+      'and stops asking once it is pinned',
+    );
+    await page.close();
+
+    step('popup settings: the record-across-sites ask carries the assurance too');
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'] });
+    await page.waitForSelector('.mode-card[aria-disabled]');
+    await page.click('.icon-btn[aria-label]');
+    await page.waitForSelector('.settings');
+    await page.waitForSelector('[data-testid="sites-trust"]');
+    const sites = await page.$eval('[data-testid="sites-trust"]', (el) => el.textContent);
+    for (const claim of [/open source/i, /100% local/i, /no tracking/i, /never leave/i]) {
+      assert(claim.test(sites), `the all-sites ask states ${claim}`);
+    }
+    assert(!/audit/i.test(sites), 'and claims nothing about an audit');
+    await page.close();
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'], origins: ['<all_urls>'] });
+    await page.waitForSelector('.mode-card[aria-disabled]');
+    await page.click('.icon-btn[aria-label]');
+    await page.waitForSelector('.settings');
+    // The row reads its grant asynchronously and renders "off" for the frame
+    // before the answer lands, so wait for the settled state rather than
+    // sampling a frame that has not read it yet.
+    await page.waitForFunction(() => {
+      const row = [...document.querySelectorAll('.settings-row')].find((r) =>
+        /across sites/i.test(r.querySelector('.settings-label')?.textContent ?? ''),
+      );
+      return row?.querySelectorAll('.seg-btn')[1]?.getAttribute('aria-pressed') === 'true';
+    });
+    assert(
+      (await page.$('[data-testid="sites-trust"]')) === null,
+      'the assurance leaves once all-sites is granted',
+    );
     await page.close();
 
     step('popup with tabCapture already granted: no ask, no assurance to carry');

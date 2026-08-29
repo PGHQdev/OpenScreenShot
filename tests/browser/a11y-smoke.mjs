@@ -223,7 +223,13 @@ function installChromeStub(messages, seed, grants) {
       sendMessage: async () => ({}),
       onMessage: { addListener: noop, removeListener: noop },
     },
-    action: { setBadgeText: noop, setBadgeBackgroundColor: noop },
+    action: {
+      setBadgeText: noop,
+      setBadgeBackgroundColor: noop,
+      // `grants` doubles as "nothing is granted yet", which is also the state
+      // the pin nudge belongs to: a first run has neither.
+      getUserSettings: async () => ({ isOnToolbar: grants == null }),
+    },
     downloads: {
       download: async (opts) => {
         globalThis.__smoke.downloads.push(opts);
@@ -241,7 +247,11 @@ function installChromeStub(messages, seed, grants) {
     commands: { getAll: async () => [] },
     permissions: {
       contains: async (query) =>
-        grants == null || (query.permissions ?? []).every((p) => grants.includes(p)),
+        grants == null ||
+        ([...(query.permissions ?? []), ...(query.origins ?? [])].every((p) =>
+          grants.includes(p),
+        ) &&
+          (query.permissions ?? []).length + (query.origins ?? []).length > 0),
       request: async () => true,
       remove: async () => true,
       onAdded: { addListener: noop, removeListener: noop },
@@ -525,18 +535,25 @@ async function testPopup(browser, base, messages) {
 }
 
 /**
- * First run: `tabCapture` is not granted yet, so the Record card carries the
- * trust strip that rides with the inline permission ask. That strip only
- * exists in this state, so scanning the granted popup alone would never see
- * its contrast.
+ * First run: nothing granted and not pinned, so three surfaces exist that a
+ * granted, pinned popup never renders — the pin nudge, the trust strip that
+ * rides with the inline tabCapture ask, and the same strip under the
+ * record-across-sites row in settings. Scanning only the settled popup would
+ * never read their contrast.
  */
 async function popupFirstRun(browser, base, messages) {
   const { page, crashes } = await newPage(browser, messages, {}, []);
   await page.setViewport({ width: 340, height: 600 });
-  step('POPUP — first run (Record carries the permission-ask trust strip)');
+  step('POPUP — first run (pin nudge + the permission-ask trust strip)');
   await page.goto(`${base}/src/popup/index.html`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('[data-testid="rec-trust"]');
+  await page.waitForSelector('[data-testid="pin-hint"]');
   await scan(page, 'popup first run');
+
+  step('POPUP — first-run settings (the across-sites ask carries it too)');
+  await page.click('.icon-btn[aria-label]');
+  await page.waitForSelector('[data-testid="sites-trust"]');
+  await scan(page, 'popup first-run settings');
   assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
   await page.close();
 }

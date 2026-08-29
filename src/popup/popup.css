@@ -620,7 +620,28 @@ body {
   outline-offset: 2px;
 }
 
-/* ---- Trust strip: the assurance that rides with the tabCapture ask ---- */
+/* ---- Pin nudge: Chrome does not pin on install, so say so once ---- */
+.pin-hint {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-05);
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  font-size: var(--fs-sm);
+}
+
+.pin-hint strong {
+  color: var(--text-1);
+  font-weight: 600;
+}
+
+.pin-hint span {
+  color: var(--text-2);
+}
+
+/* ---- Trust strip: the assurance that rides with a permission ask ---- */
 .rec-trust {
   display: flex;
   flex-direction: column;

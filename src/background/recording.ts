@@ -33,6 +33,8 @@ import { PENDING_RECORD_KEY, pendingRecordIsLive, type PendingRecord } from '../
 import { isProtectedUrl } from '../shared/utils';
 
 const REC_STATE_KEY = 'openscreenshot:rec-state';
+/** Written by the recorder's Continue button; read by the popup and here. */
+const CONTINUE_SESSION_KEY = 'openscreenshot:continue-session';
 const RECORDER_URL = chrome.runtime.getURL('src/recorder/index.html');
 const START_TIMEOUT_MS = 10_000;
 /**
@@ -687,6 +689,9 @@ chrome.permissions.onAdded.addListener((added) => {
     const activeTabId = (await getActiveTab())?.id ?? null;
     if (!pendingRecordIsLive(parked, Date.now(), activeTabId)) return;
     const pending: PendingRecord = parked;
+    // Same consumption the popup's own start does: a continue that is about
+    // to be spent must not keep being offered as "Continue recording".
+    if (pending.continueSessionId) await chrome.storage.session.remove(CONTINUE_SESSION_KEY);
     await handleStart(pending.settings, pending.continueSessionId);
   })();
 });

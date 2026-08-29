@@ -20,7 +20,6 @@ import {
   IconGift,
   IconGlobe,
   IconMic,
-  IconPinArrow,
   IconShield,
 } from '../shared/icons';
 import { getSettings } from '../shared/storage';
@@ -159,7 +158,6 @@ export function App() {
 
   return (
     <div class="setup">
-      <PinHint />
       <header class="setup-header">
         <BrandMark size={36} />
         <div>
@@ -279,58 +277,6 @@ function Tag({ kind }: { kind: 'granted' | 'required' | 'optional' | 'denied' })
 }
 
 type IconId = 'display' | 'camera' | 'mic' | 'globe' | 'code' | 'shield' | 'eye-off' | 'gift';
-
-/**
- * Floating top-right nudge to pin the extension, with an arrow at Chrome's
- * puzzle menu. Live state from chrome.action.getUserSettings (polled — Chrome
- * has no pin-change event); once pinned it celebrates briefly, then leaves.
- */
-function PinHint() {
-  const [pinned, setPinned] = useState<boolean | null>(null);
-  const [justPinned, setJustPinned] = useState(false);
-
-  useEffect(() => {
-    let last: boolean | null = null;
-    let hideTimer: ReturnType<typeof setTimeout> | null = null;
-    const check = () => {
-      if (!chrome.action?.getUserSettings) return;
-      chrome.action
-        .getUserSettings()
-        .then((s) => {
-          if (last === false && s.isOnToolbar) {
-            setJustPinned(true);
-            hideTimer = setTimeout(() => setJustPinned(false), 4000);
-          }
-          last = s.isOnToolbar;
-          setPinned(s.isOnToolbar);
-        })
-        .catch(() => setPinned(null));
-    };
-    check();
-    const id = setInterval(check, 1500);
-    return () => {
-      clearInterval(id);
-      if (hideTimer) clearTimeout(hideTimer);
-    };
-  }, []);
-
-  if (pinned == null || (pinned && !justPinned)) return null;
-  return (
-    <div class={`pin-hint ${pinned ? 'pin-hint-done' : ''}`} data-testid="pin-hint">
-      {pinned ? (
-        <span class="pin-hint-text">{t('setupPinDone')}</span>
-      ) : (
-        <>
-          <IconPinArrow class="pin-arrow" />
-          <div class="pin-hint-text">
-            <strong>{t('setupPinTitle')}</strong>
-            <span>{t('setupPinSub')}</span>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
 
 // Same icon set as the popup's ModeIcon.
 function SetupIcon({ id }: { id: IconId }) {

@@ -61,7 +61,7 @@ const BODY_TEXT_FLOOR = 4.5;
 
 const CASES: Array<{
   theme: 'light' | 'dark';
-  fg: 'text2' | 'text3';
+  fg: 'text1' | 'text2' | 'text3' | 'accentInk';
   bg: 'surface1' | 'surface2' | 'surface3';
 }> = [
   // --text-3: every real call site sits on --surface-1 (.status-hint,
@@ -77,11 +77,28 @@ const CASES: Array<{
   { theme: 'dark', fg: 'text2', bg: 'surface2' },
   { theme: 'light', fg: 'text2', bg: 'surface3' },
   { theme: 'dark', fg: 'text2', bg: 'surface3' },
+  // --text-1 and --accent-ink on --surface-1/--surface-2: the popup's and
+  // setup page's trust pills paint both (pill label and its stroke icon), and
+  // the browser smokes scan the light theme only, so the dark half of that
+  // surface has no other check.
+  { theme: 'light', fg: 'text1', bg: 'surface1' },
+  { theme: 'dark', fg: 'text1', bg: 'surface1' },
+  { theme: 'light', fg: 'accentInk', bg: 'surface1' },
+  { theme: 'dark', fg: 'accentInk', bg: 'surface1' },
+  { theme: 'light', fg: 'accentInk', bg: 'surface2' },
+  { theme: 'dark', fg: 'accentInk', bg: 'surface2' },
 ];
 
-describe('--text-2 / --text-3 clear the 4.5:1 body-text floor on every surface that paints them', () => {
+const TOKEN_NAME: Record<(typeof CASES)[number]['fg'], string> = {
+  text1: '--text-1',
+  text2: '--text-2',
+  text3: '--text-3',
+  accentInk: '--accent-ink',
+};
+
+describe('every foreground token clears the 4.5:1 body-text floor on the surfaces that paint it', () => {
   for (const { theme: themeName, fg, bg } of CASES) {
-    it(`${themeName}: --${fg === 'text2' ? 'text-2' : 'text-3'} on --${bg.replace('surface', 'surface-')} `, () => {
+    it(`${themeName}: ${TOKEN_NAME[fg]} on --${bg.replace('surface', 'surface-')} `, () => {
       const fgHex = theme[themeName][fg];
       const bgHex = theme[themeName][bg];
       const ratio = contrastRatio(fgHex, bgHex);

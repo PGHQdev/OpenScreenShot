@@ -81,9 +81,16 @@ export interface PendingRecord {
 
 /**
  * Whether a parked Record click may still start a recording. It must be
- * shaped right, recent, and still aimed at the tab in front: a grant that
- * arrives later, or from another tab, belongs to a different intent, and
- * starting on it would record whatever the user happens to be looking at.
+ * shaped right, recent, and still aimed at the tab that was in front when it
+ * was made.
+ *
+ * The tab id does not pin the recording to that tab — the start queries the
+ * active tab again and records whatever it finds. What the check does is
+ * narrow the window in which a leftover click can be picked up by an
+ * unrelated grant: from the whole TTL down to the microseconds between the
+ * worker reading the active tab and the start reading it again. Without it, a
+ * refusal the popup never saw could sit here and turn a later grant from the
+ * setup page into a recording of the setup page.
  */
 export function pendingRecordIsLive(
   value: unknown,
