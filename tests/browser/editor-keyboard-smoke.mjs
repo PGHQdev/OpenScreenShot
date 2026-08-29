@@ -1976,10 +1976,20 @@ async function testMultiSelection(browser, base) {
  * member's bbox, and that is what drops a carried group frame.
  */
 function topPaintedRow(page) {
-  return page.evaluate(() => {
+  return paintedRow(page, 1);
+}
+
+/** The same, from the bottom of the canvas up. */
+function bottomPaintedRow(page) {
+  return paintedRow(page, -1);
+}
+
+function paintedRow(page, dir) {
+  return page.evaluate((step) => {
     const cv = document.querySelector('.stage-canvas');
     const { data } = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height);
-    for (let y = 0; y < cv.height; y++) {
+    const from = step > 0 ? 0 : cv.height - 1;
+    for (let y = from; y >= 0 && y < cv.height; y += step) {
       for (let x = 0; x < cv.width; x++) {
         const i = (y * cv.width + x) * 4;
         if (
@@ -1993,7 +2003,7 @@ function topPaintedRow(page) {
       }
     }
     return -1;
-  });
+  }, dir);
 }
 
 /**
@@ -2614,6 +2624,28 @@ async function testCutSelectionRules(browser, base) {
   assert(placed !== null, `a rectangle was placed ("${await say()}")`);
   const markY = Number(placed[2]);
   await page.keyboard.press('Escape');
+  await settle();
+
+  step('task 25 fix 4: a cut names the marks it took out of the picture, and only those');
+  // The layer count keeps counting a mark on cut rows, so the cut says how
+  // many it took — otherwise the user sees more layers than marks with no
+  // explanation.
+  await cutExactly(markY, 20);
+  assert(
+    (await say()) === 'Cut 20 pixels. Image 580 pixels tall. 1 annotation out of the picture.',
+    `the cut named the mark it took out of the picture ("${await say()}")`,
+  );
+  // A second, disjoint band takes nothing with it. The mark already out of the
+  // picture belongs to the first cut and is not counted again.
+  await cutExactly(500, 20);
+  assert(
+    (await say()) === 'Cut 20 pixels. Image 560 pixels tall.',
+    `a band that took no mark says so by saying nothing more ("${await say()}")`,
+  );
+  await page.$eval('.stage-canvas', (el) => el.focus());
+  await chord(['Meta'], 'z');
+  await chord(['Meta'], 'z');
+  await settle();
 
   // The band starts inside the mark, below its top edge, so the mark keeps its
   // full drawn height while the rows under the band close up beneath it.
@@ -2697,7 +2729,6 @@ async function testCutSelectionRules(browser, base) {
     `and left the selected mark where it was (${await layers()} layer on the canvas)`,
   );
   await page.keyboard.press('Escape');
-  await chord(['Meta'], 'z'); // put the picture back for the frame check below
   await settle();
 
   assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
@@ -2985,6 +3016,7 @@ async function testCutMixedSelectionGrab(browser, base) {
   await settle();
   const g = await pictureGeometry(page, 500);
   const beforeGrab = g.imageY(await topPaintedRow(page));
+  const beforeBottom = g.imageY(await bottomPaintedRow(page));
 
   // The frame around the two copies that are in the picture spans source rows
   // 336 to 556, drawn a hundred rows higher. Grab its bottom handle and pull:
@@ -3001,9 +3033,18 @@ async function testCutMixedSelectionGrab(browser, base) {
     `the copy on the cut rows was in the selection right up to the mouse-up ("${await say()}")`,
   );
   const afterGrab = g.imageY(await topPaintedRow(page));
+  const afterBottom = g.imageY(await bottomPaintedRow(page));
+  // Two readings, because one of them alone cannot tell a resize from nothing
+  // happening at all: the top edge stays where it was and the bottom edge
+  // follows the handle down by the thirty rows it was dragged. A drag that
+  // caught a layer instead carries both down together.
   assert(
     Math.abs(afterGrab - beforeGrab) < 4,
-    `the grab resized the frame drawn around the copies that are there, holding the upper one's top edge (row ${Math.round(beforeGrab)} -> ${Math.round(afterGrab)})`,
+    `the grab held the upper copy's top edge (row ${Math.round(beforeGrab)} -> ${Math.round(afterGrab)})`,
+  );
+  assert(
+    Math.abs(afterBottom - beforeBottom - 30) < 5,
+    `and pulled the frame's bottom edge down with the handle (row ${Math.round(beforeBottom)} -> ${Math.round(afterBottom)})`,
   );
 
   assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);

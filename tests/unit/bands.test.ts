@@ -475,9 +475,16 @@ describe('a drawn frame and the drawn members inside it', () => {
     }
     expect(checked).toBeGreaterThan(5000);
     // The number the disclosure quotes: what the cut alone adds to the frame's
-    // drawn height over its members. If the drawn frame is ever changed to hug
-    // the members' drawn positions this collapses to zero and the disclosure
-    // has to be rewritten with it.
+    // drawn height over its members, kept apart from the slack a member
+    // already had in source space, which the cut has nothing to do with.
+    //
+    // This measures the geometry; it does not lock the product's choice of
+    // frame, and cannot — both frames here are built by the test, out of
+    // bands.ts and annotations.ts alone. What locks the choice is the browser
+    // smoke's step 84 against step 85: the same resize moves a badge 36 rows
+    // through a carried frame thirty rows above it and 14 through the frame
+    // drawn around the members, so a frame changed to hug its members reads 14
+    // in both and step 84 fails.
     expect(
       worstCutPart,
       `worst cut-borne over-enclosure over ${checked} drawn members on a ${H}-row image ` +

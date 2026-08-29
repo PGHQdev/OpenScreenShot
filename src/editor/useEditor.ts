@@ -1035,9 +1035,12 @@ export function useEditor() {
       // above still carries the selection as it was, so an undo brings it back
       // with the strip.
       pruneHiddenFromSelection();
-      // Every mark the cut took out of the picture, not only the selected
-      // ones: the layer count keeps counting all of them.
-      const hidden = annotationsRef.current.filter((a) => inBand(next, bbox(a).y)).length;
+      // Every mark this cut took out of the picture, not only the selected
+      // ones, because the layer count keeps counting all of them — and not the
+      // ones an earlier cut had already taken, which this band did not touch.
+      const hidden = annotationsRef.current.filter(
+        (a) => inBand(next, bbox(a).y) && !inBand(cur, bbox(a).y),
+      ).length;
       // The height that actually went, not the height of the band: a band that
       // overlaps one already cut removes only the rows still there.
       say({
@@ -1824,8 +1827,14 @@ export function useEditor() {
       }
       const list = annotationsRef.current;
       const ids = selectedIdsRef.current;
-      const touched = list.filter((x) => ids.includes(x.id));
+      // The marks in the picture, from the same answer render paints from.
+      // Which of the two resize branches applies is the question of whether
+      // one mark carries its own handles or several share a frame, and that
+      // has to be decided the way the handles are drawn — not from the raw
+      // selection, which agrees only for as long as a prune ran first.
+      const touched = c.drawnSelection(list, ids);
       if (touched.length === 0) return;
+      const moving = new Set(touched.map((a) => a.id));
       if (!keyNudgeRef.current) {
         snapshot();
         keyNudgeRef.current = true;
@@ -1838,7 +1847,7 @@ export function useEditor() {
       let box: Rect | null;
       if (intent.kind === 'move') {
         next = list.map((x) =>
-          ids.includes(x.id) ? translateAnnotation(x, intent.dx, intent.dy) : x,
+          moving.has(x.id) ? translateAnnotation(x, intent.dx, intent.dy) : x,
         );
         box = movedGroupBox(intent.dx, intent.dy);
       } else if (touched.length === 1) {
@@ -1847,10 +1856,10 @@ export function useEditor() {
         );
         box = null;
       } else {
-        // The frame on screen, from the one place that answers what it is.
-        // The prune above means every selected mark is in the picture, so its
-        // members are `touched`; a null here would mean there is no frame to
-        // resize through and nothing to do.
+        // The frame on screen, from the one place that answers what it is. Its
+        // members are `touched` — both come from drawnSelection — and a null
+        // here would mean there is no frame to resize through, so nothing to
+        // do.
         const frame = c.liveGroupFrame(list, ids);
         if (!frame) return;
         const resized = resizeSelectionBy(frame.members, intent.dx, intent.dy, frame.box);

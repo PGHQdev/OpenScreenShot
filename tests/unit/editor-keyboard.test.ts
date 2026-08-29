@@ -918,15 +918,33 @@ describe('announce', () => {
   });
 
   it('reports what a cut took and what the picture is now', () => {
-    expect(announce({ kind: 'cut-applied', band: { y: 300, h: 200 }, imageHeight: 400 })).toBe(
-      'Cut 200 pixels. Image 400 pixels tall.',
-    );
+    expect(
+      announce({ kind: 'cut-applied', band: { y: 300, h: 200 }, imageHeight: 400, hidden: 0 }),
+    ).toBe('Cut 200 pixels. Image 400 pixels tall.');
     expect(announce({ kind: 'cut-removed', band: { y: 300, h: 200 }, imageHeight: 600 })).toBe(
       'Put back 200 pixels. Image 600 pixels tall.',
     );
     expect(announce({ kind: 'cut-cancelled' })).toBe('Cut cancelled.');
     expect(announce({ kind: 'cut-refused' })).toBe('A cut cannot take the whole picture.');
     expect(announce({ kind: 'cut-none' })).toBe('Those rows are cut already.');
+  });
+
+  it('names the marks a cut took out of the picture, since the layer count keeps them', () => {
+    expect(
+      announce({ kind: 'cut-applied', band: { y: 300, h: 200 }, imageHeight: 400, hidden: 1 }),
+    ).toBe('Cut 200 pixels. Image 400 pixels tall. 1 annotation out of the picture.');
+    expect(
+      announce({ kind: 'cut-applied', band: { y: 300, h: 200 }, imageHeight: 400, hidden: 3 }),
+    ).toBe('Cut 200 pixels. Image 400 pixels tall. 3 annotations out of the picture.');
+  });
+
+  it('says what left the picture when a gesture carried a mark onto cut rows', () => {
+    expect(announce({ kind: 'hidden', count: 1, remaining: 0 })).toBe(
+      '1 annotation out of the picture. Selection cleared.',
+    );
+    expect(announce({ kind: 'hidden', count: 2, remaining: 3 })).toBe(
+      '2 annotations out of the picture. 3 annotations selected.',
+    );
   });
 
   it('names the new height when a timeline step crossed a cut, and not when it did not', () => {

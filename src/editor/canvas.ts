@@ -357,14 +357,26 @@ export class CanvasController {
 
   /**
    * The selected marks that are in the picture — what selection chrome is
-   * drawn for, and what a pointer can reach.
+   * drawn for, and what a pointer or a key press can reach.
    *
-   * The list and the ids are arguments rather than `this.annotations` and
-   * `this.selectedIds` because the two callers hold them at different
-   * freshness: render draws the controller's own copies, which is what the
-   * user is looking at, while a keydown reads useEditor's eager refs, which
-   * can be a frame ahead of them. Same rule either way, applied to whichever
-   * list the caller is answering for.
+   * ## Which list to pass
+   *
+   * The rule for a caller is: pass the list your answer has to agree with.
+   *
+   * - Answering for the canvas — anything drawn, and anything hit-tested
+   *   against what is drawn — passes `this.annotations` and `this.selectedIds`.
+   *   Those are what render() last painted, so a hit test against them cannot
+   *   miss a mark the user can see.
+   * - Answering for the model an input is acting on passes useEditor's eager
+   *   refs (`annotationsRef.current`, `selectedIdsRef.current`), which carry
+   *   the edit the current event just made.
+   *
+   * The two differ only while a held key outruns Preact's effect flush, which
+   * is a lag on the same rule over the same ids, reconciled by the next
+   * render. A pointer event cannot see the gap at all: a mousedown is a
+   * discrete task and the flush is a microtask, so the effects have run before
+   * it is dispatched. The carried half of the frame — `this.groupBox` — is
+   * written eagerly and so is the same for every caller either way.
    */
   drawnSelection(anns: Annotation[], ids: string[]): Annotation[] {
     const out: Annotation[] = [];
@@ -392,6 +404,8 @@ export class CanvasController {
    * The carried box is used while it is one the user can see; once a cut takes
    * its anchor row it is dropped for the union of the drawn members, which is
    * always drawable because its top edge is one of their top edges.
+   *
+   * See {@link drawnSelection} for which annotation list a caller passes.
    */
   liveGroupFrame(anns: Annotation[], ids: string[]): GroupFrame | null {
     const members = this.drawnSelection(anns, ids);
