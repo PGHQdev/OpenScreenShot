@@ -34,11 +34,20 @@ export function selectRegion(): Promise<PageRect | null> {
     root.style.cssText = 'position:fixed;inset:0;z-index:2147483647;pointer-events:none;';
 
     // The selection itself: transparent interior + giant outward box-shadow that
-    // dims everything outside the rectangle (the "cutout" effect).
+    // dims everything outside the rectangle (the "cutout" effect). The border
+    // sits over an arbitrary page, so a flat colour (this used to be the
+    // product's off-palette #2f80ed blue) is not guaranteed visible against
+    // it: a dashed black border plus a solid white halo just outside it means
+    // whichever colour the local page content defeats, the other still
+    // reads. Same reasoning as the editor canvas's selection chrome
+    // (src/editor/annotations.ts's drawSelection) — this file is a content
+    // script serialized via toString() into the host page, so it cannot read
+    // the extension's CSS custom properties there; these are the same
+    // max-contrast literals, not a themed value.
     const mask = doc.createElement('div');
     mask.style.cssText =
-      'position:absolute;box-shadow:0 0 0 9999px rgba(0,0,0,0.4);border:2px dashed #2f80ed;' +
-      'box-sizing:border-box;pointer-events:none;';
+      'position:absolute;box-shadow:0 0 0 9999px rgba(0,0,0,0.4);border:2px dashed #000;' +
+      'outline:1px solid #fff;outline-offset:1px;box-sizing:border-box;pointer-events:none;';
     root.appendChild(mask);
 
     // Transparent interaction layer catches all mouse events on the page area.
@@ -58,8 +67,9 @@ export function selectRegion(): Promise<PageRect | null> {
     for (const corner of ['nw', 'ne', 'sw', 'se'] as const) {
       const el = doc.createElement('div');
       const cursor = corner === 'nw' || corner === 'se' ? 'nwse-resize' : 'nesw-resize';
+      // Same halo pairing as the mask border: a white fill with a black ring.
       el.style.cssText =
-        `position:absolute;width:13px;height:13px;background:#fff;border:2px solid #2f80ed;` +
+        `position:absolute;width:13px;height:13px;background:#fff;border:2px solid #000;` +
         `border-radius:50%;pointer-events:auto;cursor:${cursor};box-sizing:border-box;`;
       handles.push({ el, corner });
       root.appendChild(el);
@@ -74,8 +84,12 @@ export function selectRegion(): Promise<PageRect | null> {
       'font:600 12px/1 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;';
     const captureBtn = doc.createElement('button');
     captureBtn.textContent = 'Capture';
+    // The bar's own background is a fixed near-black regardless of the
+    // extension's theme, so this hardcodes the dark theme's --accent-ink
+    // (#f8846f) / --on-accent (#1c1c1e) pairing from src/shared/tokens.css —
+    // same fixed choice, same reason as the mask/handle colours above.
     captureBtn.style.cssText =
-      'border:none;border-radius:5px;padding:6px 12px;background:#2f80ed;color:#fff;' +
+      'border:none;border-radius:5px;padding:6px 12px;background:#f8846f;color:#1c1c1e;' +
       'font:inherit;cursor:pointer;';
     const cancelBtn = doc.createElement('button');
     cancelBtn.textContent = 'Cancel';
