@@ -28,16 +28,19 @@
 //   - prefers-reduced-motion: every selector this task added to a reduce
 //     block reports a zero transition-duration, and a real (non-zero) one
 //     under an explicitly forced no-preference — editor.css's, recorder.css's
-//     .link-btn, and popup.css's six.
+//     .link-btn, popup.css's six, and setup.css's .btn-primary/.btn-ghost
+//     (task-21: setup.css's first reduced-motion block ever, added with no
+//     smoke coverage until this one — see task-21-report.md).
 //   - Baseline (no emulated feature) is captured first and re-checked last,
 //     so a forced-colors or prefers-contrast rule that leaked into ordinary
 //     rendering fails the same run.
 //
-// All three surfaces that carry these rules are opened: editor, recorder and
-// popup. Every selector the task's CSS diff touches has an assertion that
-// fails if its rule is reverted (verified by reverting each one — see
-// task-17-report.md's negative-control section), including the shared
-// controls.css switch, which is checked on the editor and the recorder.
+// All four surfaces that carry these rules are opened: editor, recorder,
+// popup and setup. Every selector the task's CSS diff touches has an
+// assertion that fails if its rule is reverted (verified by reverting each
+// one — see task-17-report.md's and task-21-report.md's negative-control
+// sections), including the shared controls.css switch, which is checked on
+// the editor and the recorder.
 // Run with: npm run build && npm run smoke:media
 import { createReadStream } from 'node:fs';
 import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
@@ -482,6 +485,17 @@ async function testEditor(browser, base, messages) {
   assert(
     closeRGB(trackPixel, hexToRGB(surface3Hex)),
     `slider track pixel (${trackPixel}) renders --surface-3 (${surface3Hex})`,
+  );
+  // .range { width: 100% } and .stylebar-range { width: 140px } are an equal-
+  // specificity cascade tie; .range being declared *after* .stylebar-range in
+  // source used to win it, squeezing this slider to whatever its flex row
+  // left over (measured 129px) instead of the 140px .stylebar-range asks
+  // for. Fixed by compounding the selector to .range.stylebar-range (0,2,0
+  // beats 0,1,0 regardless of source order) — pinned here so a future edit
+  // reordering the two rules cannot silently reintroduce the squeeze.
+  assert(
+    rangeBox.width === 140,
+    `.stylebar-range is 140px wide (${rangeBox.width}), not squeezed by the .range/.stylebar-range cascade tie`,
   );
 
   step(
@@ -1148,6 +1162,64 @@ async function testPopup(browser, base, messages) {
   await page.close();
 }
 
+// ------------------------------------------------------------------ setup ---
+async function testSetup(browser, base, messages) {
+  step('SETUP — opening the install welcome view');
+  // this task's own near-miss (the -webkit-/-moz- comma-list bug that
+  // silently dropped reduced-motion from six unrelated editor.css selectors,
+  // caught only because an unrelated forced-colors smoke happened to sample
+  // one of them mid-transition) is exactly why setup.css's own new
+  // reduced-motion block — its first ever — gets a real assertion here
+  // instead of staying hand-reviewed.
+  const { page, cdp, crashes } = await newPage(browser, messages, {});
+  await page.setViewport({ width: 1280, height: 860 });
+  await page.goto(`${base}/src/setup/index.html?from=install`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('[data-testid="hero"]');
+
+  step('SETUP — prefers-reduced-motion: reduce — .btn-primary and .btn-ghost');
+  // .btn-primary (the hero CTA) is real and on screen already; .btn-ghost
+  // only renders for a blocked-permission device row, a fixture this smoke
+  // does not seed — a detached probe carrying the class exercises the same
+  // rule, the same fallback testPopup above already uses for selectors that
+  // are not always mounted.
+  await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'no-preference' }]);
+  const SELECTORS = ['.btn-primary', '.btn-ghost'];
+  const readTransitions = () =>
+    page.evaluate((sels) => {
+      const out = {};
+      for (const sel of sels) {
+        const real = document.querySelector(sel);
+        const el = real ?? document.createElement('button');
+        if (!real) {
+          el.className = sel.slice(1);
+          document.body.appendChild(el);
+        }
+        out[sel] = { duration: getComputedStyle(el).transitionDuration, real: Boolean(real) };
+        if (!real) el.remove();
+      }
+      return out;
+    }, SELECTORS);
+  const baseline = await readTransitions();
+  for (const sel of SELECTORS) {
+    assert(
+      baseline[sel].duration !== '0s',
+      `${sel} has a real transition under no-preference (${baseline[sel].duration}${baseline[sel].real ? '' : ', via a probe — not rendered on this view'})`,
+    );
+  }
+  await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+  const reduced = await readTransitions();
+  for (const sel of SELECTORS) {
+    assert(
+      allZero(reduced[sel].duration),
+      `${sel} transition-duration is ${reduced[sel].duration} under reduce`,
+    );
+  }
+  await emulateMedia(cdp, []);
+
+  assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
+  await page.close();
+}
+
 async function main() {
   step('checking the build');
   const built = await stat(join(DIST, 'manifest.json')).then(
@@ -1176,6 +1248,7 @@ async function main() {
     await testEditor(browser, base, messages);
     await testRecorder(browser, base, messages);
     await testPopup(browser, base, messages);
+    await testSetup(browser, base, messages);
   } finally {
     await browser?.close();
     server.closeAllConnections();
