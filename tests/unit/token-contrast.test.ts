@@ -15,13 +15,20 @@ import { theme } from '../../src/shared/design-tokens';
  * the floor fails here instead of waiting for the axe smoke (which needs a
  * built `dist/` and a real browser) or a human to notice.
  *
+ * task-31 widened it past those two tokens: --text-1 and --accent-ink are
+ * asserted here too, because the trust pill that rides with a permission ask
+ * paints both (its label and its stroke icon) and the browser smokes scan the
+ * light theme only, so the dark half of that surface has no other check. The
+ * floor and the method are the same for every token in CASES; only the list
+ * of pairings grew.
+ *
  * Only the pairings each token is actually painted on TODAY are asserted —
  * see the per-token comment above --text-2/--text-3 in tokens.css for the
  * full list and task-45-report.md for the usage matrix across every
  * surface, including the ones that fail and are why nothing paints them
  * there.
  *
- * RESIDUAL GAP, read this before you add a new --text-2/--text-3 call site:
+ * RESIDUAL GAP, read this before you add a new call site for any token here:
  * this test asserts fixed (theme, token, surface) triples, not "wherever
  * this token is ever painted." It does NOT know which surfaces are actually
  * used — it will stay green even if you add `color: var(--text-3)` on
@@ -83,6 +90,9 @@ const CASES: Array<{
   // surface has no other check.
   { theme: 'light', fg: 'text1', bg: 'surface1' },
   { theme: 'dark', fg: 'text1', bg: 'surface1' },
+  // --surface-2 as well: the popup's pin nudge paints its title there.
+  { theme: 'light', fg: 'text1', bg: 'surface2' },
+  { theme: 'dark', fg: 'text1', bg: 'surface2' },
   { theme: 'light', fg: 'accentInk', bg: 'surface1' },
   { theme: 'dark', fg: 'accentInk', bg: 'surface1' },
   { theme: 'light', fg: 'accentInk', bg: 'surface2' },

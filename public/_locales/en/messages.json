@@ -545,15 +545,11 @@
   },
   "setupPinTitle": {
     "message": "Pin OpenScreenShot",
-    "description": "Setup page: floating hint asking the user to pin the extension."
+    "description": "Popup: nudge to pin the extension, shown while it is not on the toolbar."
   },
   "setupPinSub": {
     "message": "Click the 🧩 up there, then the 📌 next to OpenScreenShot.",
-    "description": "Setup page: how to pin, pointing at Chrome's toolbar."
-  },
-  "setupPinDone": {
-    "message": "📌 Pinned — one click to record!",
-    "description": "Setup page: hint state once the extension is pinned."
+    "description": "Popup: how to pin — the puzzle menu sits directly above the popup."
   },
   "setupFromRecord": {
     "message": "One step left: enable tab recording below.",

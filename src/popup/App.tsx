@@ -236,9 +236,12 @@ export function App() {
         // to consume — permissions.onAdded in the worker owns that click.
         if (granted) return;
         const stored = await chrome.storage.session.get(PENDING_RECORD_KEY);
-        if (stored[PENDING_RECORD_KEY] === undefined) return;
+        const parked = stored[PENDING_RECORD_KEY] as PendingRecord | undefined;
+        if (parked === undefined) return;
         await chrome.storage.session.remove(PENDING_RECORD_KEY);
-        setTabCaptureRefused(true);
+        // A park whose request never went out says nothing about permission:
+        // clear it, stay quiet. Only an asked-and-unanswered click is a refusal.
+        if (parked.asked) setTabCaptureRefused(true);
       })
       .catch(() => setHasTabCapture(null));
     void chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
@@ -394,8 +397,16 @@ export function App() {
     await chrome.storage.session.set({ [PENDING_RECORD_KEY]: pending }).catch(() => {
       parked = false;
     });
+    // Dispatched, not awaited: the request IPC is on its way the moment this
+    // returns, so a teardown from here on is a click that did ask. Marking it
+    // is best-effort on purpose — a mark that never lands leaves the record
+    // looking un-asked, and staying quiet is the safe way to be wrong.
+    const asking = chrome.permissions.request({ permissions: ['tabCapture'] });
+    void chrome.storage.session
+      .set({ [PENDING_RECORD_KEY]: { ...pending, asked: true } })
+      .catch(() => {});
     try {
-      if (await chrome.permissions.request({ permissions: ['tabCapture'] })) {
+      if (await asking) {
         // A park that failed leaves the worker nothing to act on, so this
         // popup — which evidently survived the dialog — has to start it.
         if (parked) window.close();

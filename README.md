@@ -52,17 +52,17 @@ browser storage until you export or delete them. Full policy: [PRIVACY.md](./PRI
 
 <br />
 
-| Permission                       | Why                                                                                                                                                            |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `activeTab`                      | Access the current tab — only when you click the extension, use a shortcut, or pick a capture from the right-click menu                                        |
-| `scripting`                      | Inject on-demand page functions for scroll-and-stitch, region selection, the quick-mode clipboard write, and the in-page recording control bar                 |
-| `storage` (+ `unlimitedStorage`) | Settings, the last region rect, editing drafts, a Record click parked while Chrome asks, and stashing large full-page PNGs and recording chunks for the editor |
-| `downloads`                      | Save exports, quick-mode captures, and recording exports to your Downloads folder                                                                              |
-| `contextMenus`                   | Add one capture submenu to the page right-click menu                                                                                                           |
-| `clipboardWrite`                 | Copy a screenshot from the editor or from quick mode; it never reads the clipboard                                                                             |
-| `offscreen`                      | Run the recording engine in a hidden document — `MediaRecorder` and the IndexedDB writes need a page context a service worker doesn't have                     |
-| `tabCapture` (optional)          | Requested once, at your first recording; every recording after that starts in one click                                                                        |
-| `<all_urls>` (optional host)     | Only if you turn on "Record across sites" — keeps the cursor overlay alive when a recording navigates to a new origin                                          |
+| Permission                       | Why                                                                                                                                            |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `activeTab`                      | Access the current tab — only when you click the extension, use a shortcut, or pick a capture from the right-click menu                        |
+| `scripting`                      | Inject on-demand page functions for scroll-and-stitch, region selection, the quick-mode clipboard write, and the in-page recording control bar |
+| `storage` (+ `unlimitedStorage`) | Settings, the last region rect, editing drafts, a parked Record click, and stashing large full-page PNGs and recording chunks for the editor   |
+| `downloads`                      | Save exports, quick-mode captures, and recording exports to your Downloads folder                                                              |
+| `contextMenus`                   | Add one capture submenu to the page right-click menu                                                                                           |
+| `clipboardWrite`                 | Copy a screenshot from the editor or from quick mode; it never reads the clipboard                                                             |
+| `offscreen`                      | Run the recording engine in a hidden document — `MediaRecorder` and the IndexedDB writes need a page context a service worker doesn't have     |
+| `tabCapture` (optional)          | Requested once, at your first recording; every recording after that starts in one click                                                        |
+| `<all_urls>` (optional host)     | Only if you turn on "Record across sites" — keeps the cursor overlay alive when a recording navigates to a new origin                          |
 
 </details>
 

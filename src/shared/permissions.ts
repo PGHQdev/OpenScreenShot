@@ -77,6 +77,15 @@ export interface PendingRecord {
   tabId: number;
   /** `Date.now()` at the click. */
   at: number;
+  /**
+   * True once `chrome.permissions.request` has actually been dispatched. The
+   * park is written and made durable *before* the request, so a popup dismissed
+   * in between leaves a record of a click that never asked anything — and a
+   * later popup must not report that as a refusal. The worker ignores this
+   * field: it only ever runs from `onAdded`, which is itself proof a request
+   * was made and answered.
+   */
+  asked?: boolean;
 }
 
 /**

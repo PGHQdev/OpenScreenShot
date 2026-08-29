@@ -93,6 +93,8 @@ function serveDist() {
  * the recovery route exists for.
  */
 function installChromeStub(messages, opts) {
+  const PENDING_KEY = 'openscreenshot:pending-record';
+
   function getMessage(key, subs) {
     const entry = messages[key];
     if (!entry) return key;
@@ -123,6 +125,7 @@ function installChromeStub(messages, opts) {
 
   const store = new Map();
   const session = new Map(Object.entries(opts.session ?? {}));
+  const sessionRemoved = [];
   const area = (map) => ({
     async get(keys) {
       const out = {};
@@ -138,10 +141,16 @@ function installChromeStub(messages, opts) {
       return out;
     },
     async set(items) {
+      if (opts.failPark && map === session && PENDING_KEY in items) {
+        throw new Error('quota exceeded');
+      }
       for (const [k, v] of Object.entries(items)) map.set(k, v);
     },
     async remove(keys) {
-      for (const key of Array.isArray(keys) ? keys : [keys]) map.delete(key);
+      for (const key of Array.isArray(keys) ? keys : [keys]) {
+        if (map === session) sessionRemoved.push(key);
+        map.delete(key);
+      }
     },
     async getBytesInUse(key) {
       return map.has(key) ? JSON.stringify(map.get(key)).length : 0;
@@ -149,7 +158,20 @@ function installChromeStub(messages, opts) {
   });
 
   const noop = () => {};
-  globalThis.__smoke = { created: [], removed: [], sent: [], granted, store, session, closed: 0 };
+  globalThis.__smoke = {
+    created: [],
+    removed: [],
+    sent: [],
+    // Every permissions.contains answer, recorded as the stub returns it, so
+    // a test can settle on the popup's permission read having resolved rather
+    // than on some unrelated element that happens to render first.
+    contains: [],
+    sessionRemoved,
+    granted,
+    store,
+    session,
+    closed: 0,
+  };
   // window.close() is a no-op on a tab the script did not open, so the popup's
   // hand-off has to be observable some other way.
   globalThis.close = () => {
@@ -189,7 +211,11 @@ function installChromeStub(messages, opts) {
       },
     },
     permissions: {
-      contains: async (query) => matches(query, true),
+      contains: async (query) => {
+        const answer = matches(query, true);
+        globalThis.__smoke.contains.push({ query, answer });
+        return answer;
+      },
       request: async (query) => {
         if (opts.allowRequest === false) return false;
         (query.permissions ?? []).forEach((p) => granted.permissions.add(p));
@@ -210,6 +236,23 @@ function installChromeStub(messages, opts) {
       },
     },
   };
+}
+
+/**
+ * Wait until the popup's `permissions.contains({permissions:['tabCapture']})`
+ * has been answered. The stub records the answer as it returns it, and a
+ * `waitForFunction` poll is a CDP round trip — orders of magnitude more time
+ * than the microtasks the popup's own continuation takes — so an assertion
+ * placed after this is reading a chain that has run, not one that has not
+ * started.
+ */
+async function settlePermissionRead(page) {
+  await page.waitForFunction(() =>
+    globalThis.__smoke.contains.some((c) => (c.query.permissions ?? []).includes('tabCapture')),
+  );
+  // One further round trip through the same storage the chain uses, so a
+  // consume that costs an extra await would also have landed by now.
+  await page.evaluate(() => chrome.storage.session.get('smoke:flush'));
 }
 
 async function main() {
@@ -342,6 +385,7 @@ async function main() {
           settings: { mic: false, tabAudio: true, webcam: false, ripple: true },
           tabId: 5,
           at: Date.now() - 30_000,
+          asked: true,
         },
       },
     });
@@ -366,19 +410,75 @@ async function main() {
           settings: { mic: false, tabAudio: true, webcam: false, ripple: true },
           tabId: 5,
           at: Date.now() - 200,
+          asked: true,
         },
       },
     });
-    await page.waitForSelector('.mode-card[aria-disabled]');
+    // Settle on the state this case is about: the tabCapture read answering.
+    // `.mode-card` is gated on the recorder state, not on this, so waiting for
+    // it would leave the assertions below resting on incidental ordering.
+    await settlePermissionRead(page);
     assert(
       (await page.$('[data-testid="rec-refused"]')) === null,
       'a granted permission shows no refusal',
     );
-    state = await page.evaluate((key) => globalThis.__smoke.session.get(key), PENDING_RECORD_KEY);
-    assert(
-      state !== undefined,
-      'and the popup does not eat the click the worker is about to start',
+    state = await page.evaluate(
+      (key) => ({
+        parked: globalThis.__smoke.session.get(key),
+        removed: globalThis.__smoke.sessionRemoved,
+      }),
+      PENDING_RECORD_KEY,
     );
+    assert(
+      state.parked !== undefined && !state.removed.includes(PENDING_RECORD_KEY),
+      'and the popup neither eats nor deletes the click the worker is about to start',
+    );
+    await page.close();
+
+    step('popup Record click whose park fails: the popup starts it itself');
+    // With no parked click the worker has nothing to act on, so the popup —
+    // which by then has evidently survived the dialog — is the only context
+    // left that can start the recording.
+    page = await open(POPUP_PAGE, { grants: [], failPark: true });
+    await page.waitForSelector('[data-testid="rec-trust"]');
+    await page.click('.mode-card[aria-disabled]');
+    await page.waitForFunction(() => globalThis.__smoke.sent.some((m) => m.type === 'REC_START'));
+    state = await page.evaluate(
+      (key) => ({
+        parked: globalThis.__smoke.session.get(key),
+        granted: [...globalThis.__smoke.granted.permissions],
+      }),
+      PENDING_RECORD_KEY,
+    );
+    assert(state.granted.includes('tabCapture'), 'the grant still lands');
+    assert(state.parked === undefined, 'nothing is parked — the write is what failed');
+    assert(
+      (await page.$('[data-testid="rec-refused"]')) === null,
+      'and a failed park is not reported as a refusal',
+    );
+    await page.close();
+
+    step('popup reopened after a click that was dismissed before it could ask');
+    // Torn down between the durable park and the request going out. Nothing
+    // was ever asked, so nothing may be claimed about permission.
+    page = await open(POPUP_PAGE, {
+      grants: [],
+      session: {
+        [PENDING_RECORD_KEY]: {
+          settings: { mic: false, tabAudio: true, webcam: false, ripple: true },
+          tabId: 5,
+          at: Date.now() - 30_000,
+        },
+      },
+    });
+    await page.waitForSelector('[data-testid="rec-trust"]');
+    await settlePermissionRead(page);
+    assert(
+      (await page.$('[data-testid="rec-refused"]')) === null,
+      'a park that never asked is not reported as a refusal',
+    );
+    state = await page.evaluate((key) => globalThis.__smoke.session.get(key), PENDING_RECORD_KEY);
+    assert(state === undefined, 'and it is cleared rather than left to age');
     await page.close();
 
     step('popup, unpinned: the pin nudge has a home again');
