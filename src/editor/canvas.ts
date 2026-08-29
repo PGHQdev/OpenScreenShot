@@ -57,6 +57,14 @@ export interface Point {
   y: number;
 }
 
+/** A live group resize frame: the box, what it holds, and how it projects. */
+export interface GroupFrame {
+  box: Rect;
+  /** The drawn members it holds, which is what a resize scales. */
+  members: Annotation[];
+  project: (x: number, y: number) => Point;
+}
+
 export class CanvasController {
   readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
@@ -348,6 +356,53 @@ export class CanvasController {
   }
 
   /**
+   * The selected marks that are in the picture — what selection chrome is
+   * drawn for, and what a pointer can reach.
+   *
+   * The list and the ids are arguments rather than `this.annotations` and
+   * `this.selectedIds` because the two callers hold them at different
+   * freshness: render draws the controller's own copies, which is what the
+   * user is looking at, while a keydown reads useEditor's eager refs, which
+   * can be a frame ahead of them. Same rule either way, applied to whichever
+   * list the caller is answering for.
+   */
+  drawnSelection(anns: Annotation[], ids: string[]): Annotation[] {
+    const out: Annotation[] = [];
+    for (const id of ids) {
+      const a = anns.find((x) => x.id === id);
+      if (a && this.annotationOffset(a) !== null) out.push(a);
+    }
+    return out;
+  }
+
+  /**
+   * The resize frame that is live for a selection right now: the box the
+   * handles are drawn on, the box a pointer grabs them from, and the box the
+   * arrows scale members inside — one answer, so those three cannot drift
+   * apart. Null when there is no group frame, which is any selection with
+   * fewer than two marks in the picture.
+   *
+   * Every caller went through its own copy of this rule before, and they
+   * diverged twice: a frame drawn around the members that are there while a
+   * grab was hit-tested against a box built from every selected mark, hidden
+   * ones included, put eight handles on screen that the pointer could not
+   * reach. A fourth caller should not be able to disagree without deleting a
+   * call to this.
+   *
+   * The carried box is used while it is one the user can see; once a cut takes
+   * its anchor row it is dropped for the union of the drawn members, which is
+   * always drawable because its top edge is one of their top edges.
+   */
+  liveGroupFrame(anns: Annotation[], ids: string[]): GroupFrame | null {
+    const members = this.drawnSelection(anns, ids);
+    if (members.length < 2) return null;
+    const carried = this.groupBox;
+    const box = carried && this.projectAt(carried.y) ? carried : unionBBox(members);
+    const project = this.projectAt(box.y);
+    return project ? { box, members, project } : null;
+  }
+
+  /**
    * Colour of the rendered pixel under a screen point, as #rrggbb, or null when
    * the point is off-canvas or fully transparent.
    *
@@ -454,29 +509,16 @@ export class CanvasController {
     }
     // One selected layer carries its own handles; several share one set, on
     // the box around all of them (drawGroupSelection).
-    const selected = this.selectedIds
-      .map((id) => this.annotations.find((a) => a.id === id))
-      .filter((a): a is Annotation => !!a);
     // Only what is in the picture. A selection holding a mark a cut hides
     // carries chrome for the rest of it, and the lone survivor of such a
     // selection keeps its own handles rather than a group frame around one.
-    const drawn = selected.filter((a) => this.annotationOffset(a) !== null);
+    const drawn = this.drawnSelection(this.annotations, this.selectedIds);
     for (const sel of drawn) {
       const project = this.projectFor(sel);
       if (project) drawSelection(ctx, sel, project, drawn.length === 1);
     }
-    if (drawn.length > 1) {
-      // The carried frame while it is one the user can see; the union of the
-      // drawn members once its anchor row has been cut away. That union is
-      // always drawable — its top edge is some drawn member's top edge — so
-      // the handles never go missing, and the frame the arrows resize through
-      // stays the frame on screen (useEditor's activeGroupBox drops the same
-      // box for the same reason).
-      const carried = this.groupBox;
-      const box = carried && this.projectAt(carried.y) ? carried : unionBBox(drawn);
-      const project = this.projectAt(box.y);
-      if (project) drawGroupSelection(ctx, box, project);
-    }
+    const frame = this.liveGroupFrame(this.annotations, this.selectedIds);
+    if (frame) drawGroupSelection(ctx, frame.box, frame.project);
     if (this.marquee) drawMarquee(ctx, this.marquee, (x, y) => this.toScreenComposed(x, y));
   }
 

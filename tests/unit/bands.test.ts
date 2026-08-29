@@ -17,6 +17,7 @@ import {
   toSource,
   type Band,
 } from '../../src/editor/bands';
+import { bbox, unionBBox, type Annotation } from '../../src/editor/annotations';
 
 const IMG_H = 1000;
 
@@ -380,14 +381,19 @@ describe('normalizeBand', () => {
 /**
  * The group resize frame is a source-space box, and both it and the members
  * inside it are drawn rigidly, each shifted by the cut above its own top edge
- * (CanvasController.projectAt). Two questions follow, and Task 24's defect is
- * the first of them.
+ * (CanvasController.projectAt / annotationOffset). Two questions follow, and
+ * Task 24's defect is the first of them.
  *
  * Containment holds because `cutAbove` over a merged, disjoint band list is
  * monotone and 1-Lipschitz: a member can never be drawn outside the frame it
  * sits in. What does happen is the other direction — the frame over-encloses,
- * by the cut lying between its own top edge and the member's, which is why the
- * slack is asserted against that bound rather than against zero.
+ * and the part of that the cut adds is what the disclosure in the task report
+ * is about, so it is measured on its own rather than folded into the slack a
+ * member already had.
+ *
+ * The frame is built with the real `unionBBox` over real annotations, which is
+ * the fallback frame `CanvasController.liveGroupFrame` computes; the arbitrary
+ * containing box is the carried frame, which can sit anywhere above them.
  */
 describe('a drawn frame and the drawn members inside it', () => {
   const drawnTop = (bands: Band[], y: number) => y - cutAbove(bands, y);
@@ -401,11 +407,24 @@ describe('a drawn frame and the drawn members inside it', () => {
     };
   }
 
-  it('never draws a member outside the frame, and over-encloses by no more than the cut between them', () => {
+  const box = (id: string, y: number, h: number): Annotation => ({
+    id,
+    type: 'rect',
+    x: 0,
+    y,
+    w: 50,
+    h,
+    stroke: '#ff3b30',
+    strokeWidth: 6,
+    fill: null,
+  });
+
+  it('never draws a member outside its frame, whether the frame is the union or a carried box', () => {
     const next = rng(20250830);
     const H = 1000;
     let checked = 0;
-    let worstSlack = 0;
+    let worstSourceSlack = 0;
+    let worstCutPart = 0;
     for (let iter = 0; iter < 4000; iter++) {
       const bands = normalizeBands(
         Array.from({ length: 1 + Math.floor(next() * 3) }, () => ({
@@ -414,53 +433,72 @@ describe('a drawn frame and the drawn members inside it', () => {
         })),
         H,
       );
-      const fy = Math.floor(next() * H);
-      const frame = { y: fy, h: Math.floor(next() * (H - fy)) };
-      if (inBand(bands, frame.y)) continue;
-      const members = Array.from({ length: 3 }, () => {
-        const my = frame.y + Math.floor(next() * (frame.h + 1));
-        return { y: my, h: Math.floor(next() * (frame.y + frame.h - my + 1)) };
-      }).filter((m) => !inBand(bands, m.y));
-      const top = drawnTop(bands, frame.y);
-      const bottom = top + frame.h;
-      for (const m of members) {
-        const mTop = drawnTop(bands, m.y);
-        // Containment, both edges. These are what monotone and 1-Lipschitz
-        // buy: no member is ever drawn outside the frame it sits in.
-        expect(mTop).toBeGreaterThanOrEqual(top);
-        expect(mTop + m.h).toBeLessThanOrEqual(bottom);
-        const slack = bottom - (mTop + m.h);
-        // ...and the over-enclosure is the slack the member already had in
-        // source space plus the cut lying between the two top edges, which is
-        // at most everything the bands take.
-        expect(slack).toBeLessThanOrEqual(frame.y + frame.h - m.y - m.h + cutHeight(bands));
-        worstSlack = Math.max(worstSlack, slack);
-        checked++;
+      const members = Array.from({ length: 3 }, (_, i) => {
+        const y = Math.floor(next() * H);
+        return box(`m${i}`, y, Math.floor(next() * (H - y)));
+      }).filter((m) => !inBand(bands, bbox(m).y));
+      if (members.length < 2) continue;
+
+      // The fallback frame liveGroupFrame builds, from the real union.
+      const union = unionBBox(members);
+      // ...and a carried frame: any box that still contains them, which is
+      // what a resize leaves behind once a glyph has scaled inside it.
+      const carried = {
+        x: union.x,
+        y: Math.max(0, union.y - Math.floor(next() * 200)),
+        w: union.w,
+        h: 0,
+      };
+      carried.h = union.y + union.h - carried.y + Math.floor(next() * 200);
+
+      for (const frame of [union, carried]) {
+        if (inBand(bands, frame.y)) continue;
+        const top = drawnTop(bands, frame.y);
+        const bottom = top + frame.h;
+        for (const m of members) {
+          const b = bbox(m);
+          const mTop = drawnTop(bands, b.y);
+          // Containment, both edges. These are what monotone and 1-Lipschitz
+          // buy: no member is ever drawn outside the frame it sits in.
+          expect(mTop).toBeGreaterThanOrEqual(top);
+          expect(mTop + b.h).toBeLessThanOrEqual(bottom);
+          // The over-enclosure decomposed: the slack the member already had in
+          // source space, and the cut lying between the two top edges.
+          const sourceSlack = frame.y + frame.h - b.y - b.h;
+          const cutPart = cutAbove(bands, b.y) - cutAbove(bands, frame.y);
+          expect(bottom - (mTop + b.h)).toBe(sourceSlack + cutPart);
+          worstSourceSlack = Math.max(worstSourceSlack, sourceSlack);
+          worstCutPart = Math.max(worstCutPart, cutPart);
+          checked++;
+        }
       }
     }
     expect(checked).toBeGreaterThan(5000);
-    // The direction of the error, locked in: this frame over-encloses, and by
-    // a lot. If it ever hugs the drawn members instead, this fails and the
-    // disclosure that goes with it has to be rewritten.
+    // The number the disclosure quotes: what the cut alone adds to the frame's
+    // drawn height over its members. If the drawn frame is ever changed to hug
+    // the members' drawn positions this collapses to zero and the disclosure
+    // has to be rewritten with it.
     expect(
-      worstSlack,
-      `worst over-enclosure over ${checked} drawn members on a ${H}-row image`,
-    ).toBeGreaterThan(400);
+      worstCutPart,
+      `worst cut-borne over-enclosure over ${checked} drawn members on a ${H}-row image ` +
+        `(worst source-space slack, which the cut has nothing to do with: ${worstSourceSlack})`,
+    ).toBeGreaterThan(300);
   });
 
   it('over-encloses by nearly the whole picture when the cut sits between frame and member', () => {
-    // The frame's top is row 0 and its only drawn member sits below a band
-    // that takes almost everything between them: the frame is drawn 991 rows
-    // tall around a member drawn 1 row tall, its bottom handles nowhere near
-    // anything. That is the resize frame doing its job — it is the box
-    // scaleInBox measures against, not a bounding box of the marks.
+    // A frame whose top is row 0 around one member below a band that takes
+    // almost everything between them: 991 rows of frame around 1 row of mark,
+    // its bottom handles nowhere near anything. That is the resize frame doing
+    // its job — it is the box scaleInBox measures against, not a bounding box.
     const bands: Band[] = [{ y: 1, h: 990 }];
-    const frame = { y: 0, h: 1000 };
-    const member = { y: 991, h: 1 };
+    const member = box('m', 991, 1);
+    const frame = { x: 0, y: 0, w: 50, h: 1000 };
+    const b = bbox(member);
     const top = drawnTop(bands, frame.y);
-    const mTop = drawnTop(bands, member.y);
+    const mTop = drawnTop(bands, b.y);
     expect(top).toBe(0);
     expect(mTop).toBe(1);
-    expect(top + frame.h - (mTop + member.h)).toBe(998);
+    expect(cutAbove(bands, b.y) - cutAbove(bands, frame.y)).toBe(990);
+    expect(top + frame.h - (mTop + b.h)).toBe(998);
   });
 });

@@ -384,11 +384,14 @@ export type Mutation =
   | { kind: 'crop-applied'; w: number; h: number }
   | { kind: 'crop-cancelled' }
   | { kind: 'cut'; band: Band }
-  | { kind: 'cut-applied'; band: Band; imageHeight: number }
+  /** `hidden` counts the marks the cut took out of the picture with the rows. */
+  | { kind: 'cut-applied'; band: Band; imageHeight: number; hidden: number }
   | { kind: 'cut-removed'; band: Band; imageHeight: number }
   | { kind: 'cut-cancelled' }
   | { kind: 'cut-refused' }
-  | { kind: 'cut-none' };
+  | { kind: 'cut-none' }
+  /** A mark left the picture, and what is still selected after it went. */
+  | { kind: 'hidden'; count: number; remaining: number };
 
 function count(n: number): string {
   return `${n} annotation${n === 1 ? '' : 's'}`;
@@ -453,7 +456,13 @@ export function announce(m: Mutation): string {
     case 'cut':
       return `Cut band ${Math.round(m.band.h)} pixels tall at ${Math.round(m.band.y)}.`;
     case 'cut-applied':
-      return `Cut ${Math.round(m.band.h)} pixels. Image ${Math.round(m.imageHeight)} pixels tall.`;
+      return (
+        `Cut ${Math.round(m.band.h)} pixels. Image ${Math.round(m.imageHeight)} pixels tall.` +
+        // The layer count keeps counting a mark on cut rows, so the cut says
+        // how many it took out of the picture rather than leaving the user to
+        // notice more layers than marks.
+        (m.hidden > 0 ? ` ${count(m.hidden)} out of the picture.` : '')
+      );
     case 'cut-removed':
       return `Put back ${Math.round(m.band.h)} pixels. Image ${Math.round(m.imageHeight)} pixels tall.`;
     case 'cut-cancelled':
@@ -462,5 +471,10 @@ export function announce(m: Mutation): string {
       return 'A cut cannot take the whole picture.';
     case 'cut-none':
       return 'Those rows are cut already.';
+    case 'hidden':
+      return (
+        `${count(m.count)} out of the picture. ` +
+        (m.remaining === 0 ? 'Selection cleared.' : `${count(m.remaining)} selected.`)
+      );
   }
 }

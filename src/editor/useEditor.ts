@@ -30,7 +30,6 @@ import {
   scaleAnnotation,
   scaleInBox,
   translateAnnotation,
-  unionBBox,
   type AnnotationStyle,
   type BlurMode,
   type Handle,
@@ -282,32 +281,21 @@ export function useEditor() {
   }, []);
 
   /**
-   * The carried box, when it is the box for exactly what is selected. It
-   * outlives a selection narrowing to some of its layers (carryGroupBox), and
-   * a box measured around three of them is not the box to resize two in, nor
-   * the box to hang two layers' handles on.
+   * The carried box after a translate of everything selected, which maps onto
+   * it exactly. It is the box for exactly what is selected (groupBoxFor), and
+   * it is carried through the move whether or not a cut currently hides the
+   * row it is anchored on: a move is a move, and dropping the box because the
+   * frame is momentarily undrawable would cost a widen and a narrow either
+   * side of it their cancellation for good.
    *
-   * Dropped as well once a cut takes its anchor row: the frame is then drawn
-   * nowhere and its handles are grabbable nowhere, and a frame nobody can see
-   * is not a frame the arrows should keep resizing through. Every reader falls
-   * back to the union of what is drawn, which is always drawable — its top
-   * edge is some drawn member's top edge — and render() falls back to the same
-   * box, so the two never disagree.
+   * Whether that box is the frame anything is drawn on or grabbed by is a
+   * different question, and it has one answer, in the controller
+   * (liveGroupFrame).
    */
-  const activeGroupBox = useCallback(() => {
+  const movedGroupBox = useCallback((dx: number, dy: number): Rect | null => {
     const box = groupBoxFor(groupBoxRef.current, selectedIdsRef.current);
-    const c = controllerRef.current;
-    return box && c && !c.projectAt(box.y) ? null : box;
+    return box ? { ...box, x: box.x + dx, y: box.y + dy } : null;
   }, []);
-
-  /** That box after a translate of everything selected, which maps onto it. */
-  const movedGroupBox = useCallback(
-    (dx: number, dy: number): Rect | null => {
-      const box = activeGroupBox();
-      return box ? { ...box, x: box.x + dx, y: box.y + dy } : null;
-    },
-    [activeGroupBox],
-  );
 
   /**
    * The one way the selection changes. The pointer path has a hit-test to name
@@ -331,7 +319,7 @@ export function useEditor() {
 
   /**
    * Drop from the selection every mark a cut has taken out of the picture, and
-   * say whether it dropped any.
+   * return how many went.
    *
    * The drop is at selection time, not at move time, and the difference
    * matters. Refusing to move a mark that is still selected leaves the arrows
@@ -344,19 +332,19 @@ export function useEditor() {
    * Nothing is lost either way: the mark stays in the document, and clicking
    * the seam or undoing the cut brings it back, visible and selectable again.
    */
-  const pruneHiddenFromSelection = useCallback((): boolean => {
+  const pruneHiddenFromSelection = useCallback((): number => {
     const c = controllerRef.current;
     const ids = selectedIdsRef.current;
-    if (!c || c.bands.length === 0 || ids.length === 0) return false;
+    if (!c || c.bands.length === 0 || ids.length === 0) return 0;
     const kept = ids.filter((id) => {
       const a = annotationsRef.current.find((x) => x.id === id);
       // An id with no layer behind it is not hidden, just gone; the selection
       // paths that produce one already tolerate it.
       return !a || c.annotationOffset(a) !== null;
     });
-    if (kept.length === ids.length) return false;
+    if (kept.length === ids.length) return 0;
     selectAnnotations(kept);
-    return true;
+    return ids.length - kept.length;
   }, [selectAnnotations]);
 
   /**
@@ -1047,9 +1035,17 @@ export function useEditor() {
       // above still carries the selection as it was, so an undo brings it back
       // with the strip.
       pruneHiddenFromSelection();
+      // Every mark the cut took out of the picture, not only the selected
+      // ones: the layer count keeps counting all of them.
+      const hidden = annotationsRef.current.filter((a) => inBand(next, bbox(a).y)).length;
       // The height that actually went, not the height of the band: a band that
       // overlaps one already cut removes only the rows still there.
-      say({ kind: 'cut-applied', band: { y: b.y, h: before - after }, imageHeight: after });
+      say({
+        kind: 'cut-applied',
+        band: { y: b.y, h: before - after },
+        imageHeight: after,
+        hidden,
+      });
     },
     [commitBands, pruneHiddenFromSelection, say],
   );
@@ -1301,8 +1297,9 @@ export function useEditor() {
     // gesture, and that is what the region reports — the drag's own result is
     // the mark going out of the picture.
     if (dragged && (it.kind === 'move' || it.kind === 'resize' || it.kind === 'resize-group')) {
-      if (pruneHiddenFromSelection()) {
-        sayAboutSelection(selectedIdsRef.current);
+      const gone = pruneHiddenFromSelection();
+      if (gone > 0) {
+        say({ kind: 'hidden', count: gone, remaining: selectedIdsRef.current.length });
         return;
       }
     }
@@ -1374,16 +1371,19 @@ export function useEditor() {
 
       if (t === 'select') {
         const ids = selectedIdsRef.current;
-        // Resize: handle hit on the selected annotation. A lone selection
-        // carries its own handles; a selection of several carries one set on
-        // the box around them, hit-tested a few lines below.
-        if (ids.length === 1) {
+        // Resize: handle hit on the selected annotation. The two branches
+        // below are the two render() draws, keyed off the same two answers —
+        // one mark in the picture carries its own handles, several share the
+        // live group frame — so every handle that is painted is grabbable and
+        // nothing is grabbable where none is painted.
+        const drawn = c.drawnSelection(annotationsRef.current, ids);
+        if (drawn.length === 1) {
           // handleAt yields null for the types that carry no handles, so the
           // annotation type needs no separate check here.
-          const sel = annotationsRef.current.find((a) => a.id === ids[0]) ?? null;
-          const project = sel ? c.projectFor(sel) : null;
-          const h = sel && project ? handleAt(sel, project, sx, sy) : null;
-          if (sel && h) {
+          const sel = drawn[0];
+          const project = c.projectFor(sel);
+          const h = project ? handleAt(sel, project, sx, sy) : null;
+          if (h) {
             interactionRef.current = {
               kind: 'resize',
               id: sel.id,
@@ -1397,22 +1397,18 @@ export function useEditor() {
             return;
           }
         }
-        // Several selected: one set of handles on the box around all of them,
-        // and a drag on one scales every member inside that box.
-        if (ids.length > 1) {
-          const sel = annotationsRef.current.filter((a) => ids.includes(a.id));
-          // The carried box when there is one, so a drag out and a drag back
-          // cancel the same way two key presses do (see resizeSelectionBy).
-          const startBBox = activeGroupBox() ?? unionBBox(sel);
-          const boxProject = c.projectAt(startBBox.y);
-          const h = boxProject ? handleAtRect(startBBox, boxProject, sx, sy) : null;
+        // Several in the picture: one set of handles on the frame around them,
+        // and a drag on one scales every member inside that frame.
+        const frame = c.liveGroupFrame(annotationsRef.current, ids);
+        if (frame) {
+          const h = handleAtRect(frame.box, frame.project, sx, sy);
           if (h) {
             interactionRef.current = {
               kind: 'resize-group',
               handle: h,
-              startBBox,
+              startBBox: frame.box,
               startPt: p,
-              startAnns: sel,
+              startAnns: frame.members,
             };
             window.addEventListener('mousemove', onDragMove);
             window.addEventListener('mouseup', onDragUp);
@@ -1523,7 +1519,6 @@ export function useEditor() {
       window.addEventListener('mouseup', onDragUp);
     },
     [
-      activeGroupBox,
       onDragMove,
       onDragUp,
       removeBand,
@@ -1822,8 +1817,9 @@ export function useEditor() {
       // This press reports the selection it found; the next one moves what is
       // left. See pruneHiddenFromSelection for why the drop is at selection
       // time rather than at move time.
-      if (pruneHiddenFromSelection()) {
-        sayAboutSelection(selectedIdsRef.current);
+      const gone = pruneHiddenFromSelection();
+      if (gone > 0) {
+        say({ kind: 'hidden', count: gone, remaining: selectedIdsRef.current.length });
         return;
       }
       const list = annotationsRef.current;
@@ -1851,15 +1847,13 @@ export function useEditor() {
         );
         box = null;
       } else {
-        // Every member is drawn (the prune above saw to it), so the union is
-        // a frame the handles are on — which is what activeGroupBox falls
-        // back to once a cut takes the carried frame's anchor row.
-        const resized = resizeSelectionBy(
-          touched,
-          intent.dx,
-          intent.dy,
-          activeGroupBox() ?? unionBBox(touched),
-        );
+        // The frame on screen, from the one place that answers what it is.
+        // The prune above means every selected mark is in the picture, so its
+        // members are `touched`; a null here would mean there is no frame to
+        // resize through and nothing to do.
+        const frame = c.liveGroupFrame(list, ids);
+        if (!frame) return;
+        const resized = resizeSelectionBy(frame.members, intent.dx, intent.dy, frame.box);
         const scaled = new Map(resized.annotations.map((a) => [a.id, a]));
         next = list.map((x) => scaled.get(x.id) ?? x);
         box = resized.box;
@@ -1884,7 +1878,6 @@ export function useEditor() {
       }
     },
     [
-      activeGroupBox,
       applyAnnotations,
       applyCrop,
       applyCutDraft,

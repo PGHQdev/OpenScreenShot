@@ -1969,6 +1969,39 @@ async function testMultiSelection(browser, base) {
   await page.close();
 }
 
+/**
+ * The topmost canvas row painted in the palette purple, which no stripe comes
+ * near: the drawn top edge of the highest mark drawn in it. Read off the
+ * canvas because a test may need it without moving a mark — a nudge changes a
+ * member's bbox, and that is what drops a carried group frame.
+ */
+function topPaintedRow(page) {
+  return page.evaluate(() => {
+    const cv = document.querySelector('.stage-canvas');
+    const { data } = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height);
+    for (let y = 0; y < cv.height; y++) {
+      for (let x = 0; x < cv.width; x++) {
+        const i = (y * cv.width + x) * 4;
+        if (
+          data[i + 3] === 255 &&
+          Math.abs(data[i] - 175) < 40 &&
+          Math.abs(data[i + 1] - 82) < 45 &&
+          Math.abs(data[i + 2] - 222) < 40
+        ) {
+          return y;
+        }
+      }
+    }
+    return -1;
+  });
+}
+
+/**
+ * Where the picture sits on screen, measured off the canvas rather than
+ * recomputed from the viewport maths this is meant to be checking: the first
+ * and last rows and columns holding an opaque stripe colour, converted to page
+ * coordinates the mouse can be driven with. `y(imageY)` takes a composed row.
+ */
 async function pictureGeometry(page, composedH) {
   const g = await page.evaluate(() => {
     const cv = document.querySelector('.stage-canvas');
@@ -2634,8 +2667,8 @@ async function testCutSelectionRules(browser, base) {
   await chord(['Shift'], 'ArrowUp');
   await settle();
   assert(
-    (await say()) === 'Selection cleared.',
-    `and the next press says the mark left the picture rather than moving it unseen ("${await say()}")`,
+    (await say()) === '1 annotation out of the picture. Selection cleared.',
+    `and the next press says the mark left the picture, not that it moved unseen ("${await say()}")`,
   );
   await chord(['Meta'], 'z');
   await chord(['Meta'], 'z');
@@ -2722,31 +2755,6 @@ async function testCutGroupFrame(browser, base) {
     if (!m) throw new Error(`expected a move announcement, got "${await say()}"`);
     return Number(m[2]);
   };
-  /**
-   * The topmost canvas row painted in the badge colour: the drawn top edge of
-   * the upper badge. Read off the canvas because nothing here may move a
-   * member — a nudge changes a member's bbox, and that is what drops the
-   * carried frame this test needs to still be carrying.
-   */
-  const topBadgeRow = () =>
-    page.evaluate(() => {
-      const cv = document.querySelector('.stage-canvas');
-      const { data } = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height);
-      for (let y = 0; y < cv.height; y++) {
-        for (let x = 0; x < cv.width; x++) {
-          const i = (y * cv.width + x) * 4;
-          if (
-            data[i + 3] === 255 &&
-            Math.abs(data[i] - 175) < 40 &&
-            Math.abs(data[i + 1] - 82) < 45 &&
-            Math.abs(data[i + 2] - 222) < 40
-          ) {
-            return y;
-          }
-        }
-      }
-      return -1;
-    });
 
   await page.$eval('.stage-canvas', (el) => el.focus());
   await page.keyboard.press('6'); // Purple: no stripe colour, so it reads apart from the picture
@@ -2802,28 +2810,200 @@ async function testCutGroupFrame(browser, base) {
   );
 
   const g = await pictureGeometry(page, 594);
-  const before = g.imageY(await topBadgeRow());
+  const cut = g.imageY(await topPaintedRow(page));
   assert(
-    before > frameTop + 12,
-    `both badges are drawn clear of that row (upper badge drawn at ${Math.round(before)}, band at ${frameTop})`,
+    cut > frameTop + 12,
+    `both badges are drawn clear of that row (upper badge drawn at ${Math.round(cut)}, band at ${frameTop})`,
   );
 
-  // Which frame the arrows resize through, read off where the members land.
-  // A downward resize holds the frame's top edge still and stretches
-  // everything below it, so the upper badge's own top moves down by more the
-  // further above it the frame's top sits. Anchored on the drawn union its top
-  // IS the badge's, and the badge moves ~17 rows; left anchored on the cut
-  // rows 31 above, it moves ~38.
-  for (let i = 0; i < 30; i++) await chord(['Alt', 'Shift'], 'ArrowDown');
+  /**
+   * Which frame the arrows resized through, read off where the members land.
+   * A downward resize holds the frame's top edge still and stretches
+   * everything below it, so the upper badge's own top moves down by more the
+   * further above it the frame's top sits. Anchored on the carried frame,
+   * thirty rows above the badge, it moves about twice as far as it does
+   * anchored on the drawn union, where the frame's top IS the badge's top.
+   */
+  const resizeAndMeasure = async () => {
+    const from = g.imageY(await topPaintedRow(page));
+    for (let i = 0; i < 30; i++) await chord(['Alt', 'Shift'], 'ArrowDown');
+    await settle();
+    return g.imageY(await topPaintedRow(page)) - from;
+  };
+
+  step('task 25 fix 3: a move carries the frame across a band rather than dropping it');
+  // The carried frame's anchor row is on the cut rows right now. A move maps
+  // onto the frame exactly, so it travels with the members and comes out the
+  // other side still theirs — the drawable question belongs to what is drawn
+  // and grabbed, not to what a translate does.
+  await chord(['Shift'], 'ArrowDown');
   await settle();
-  const moved = g.imageY(await topBadgeRow()) - before;
+  const carried = await resizeAndMeasure();
   assert(
     (await say()) === '2 annotations resized.',
-    `the cut hid neither badge, so this is the state under test ("${await say()}")`,
+    `both badges are still the selection being resized ("${await say()}")`,
   );
   assert(
-    moved < 25,
-    `the arrows resized through a frame anchored on the drawn members (upper badge's top moved ${Math.round(moved)} rows)`,
+    carried > 25,
+    `the move carried the frame, so the resize is still anchored above the members (upper badge's top moved ${Math.round(carried)} rows)`,
+  );
+
+  step('task 25 fix 3: and a frame left on cut rows falls back to one that is drawn');
+  // Cut the carried frame's anchor row again — it is thirty rows above the
+  // badges once more after that resize — and the fallback takes over.
+  // The frame's anchor row is where it was, one coarse nudge lower: the move
+  // above translated it by ten source rows and the resize since holds its top
+  // edge still.
+  const frameTop2 = frameTop + 10;
+  await page.keyboard.press('x');
+  await page.keyboard.press('Enter');
+  await settle();
+  const placed2 = await band();
+  await walk(['Alt'], 6 - placed2.h);
+  await walk([], frameTop2 - (await band()).y);
+  await page.keyboard.press('Enter');
+  await settle();
+  const fellBack = await resizeAndMeasure();
+  assert(
+    (await say()) === '2 annotations resized.',
+    `both badges survived the second cut too ("${await say()}")`,
+  );
+  assert(
+    fellBack < 25,
+    `the arrows resized through the frame drawn around the members (upper badge's top moved ${Math.round(fellBack)} rows)`,
+  );
+
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
+}
+
+/**
+ * Fix round 3: the frame that is drawn and the frame that is grabbed are one
+ * frame. A selection can hold a mark a cut hides — Alt+D offsets its copies by
+ * sixteen pixels and selects them with no prune, so a copy can land on cut
+ * rows — and the two used to be computed apart: chrome around the marks that
+ * are there, a grab box built from every selected mark including the hidden
+ * one. Nothing in this suite grabbed a group handle with a pointer before, and
+ * that is why it survived two rounds.
+ */
+async function testCutMixedSelectionGrab(browser, base) {
+  step('task 25 fix 3: a group handle is grabbable exactly where it is painted');
+  const { page } = await newSmokePage(browser);
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': await makeStripedCapture(),
+    'openscreenshot:settings': { theme: 'light' },
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+
+  const settle = (ms = 130) => new Promise((r) => setTimeout(r, ms));
+  const say = () =>
+    page.evaluate(() =>
+      document.querySelector('[aria-live="polite"][role="status"]').textContent.trim(),
+    );
+  async function chord(mods, key) {
+    for (const m of mods) await page.keyboard.down(m);
+    await page.keyboard.press(key);
+    for (const m of mods.slice().reverse()) await page.keyboard.up(m);
+  }
+  const nudge = async (rows) => {
+    const key = rows > 0 ? 'ArrowDown' : 'ArrowUp';
+    for (let i = 0; i < Math.abs(rows) / 10; i++) await chord(['Shift'], key);
+    await settle(60);
+  };
+  const band = async () => {
+    const m = (await say()).match(/Cut band (\d+) pixels tall at (\d+)\./);
+    if (!m) throw new Error(`expected a drafted band, got "${await say()}"`);
+    return { h: Number(m[1]), y: Number(m[2]) };
+  };
+  const walk = async (mods, delta) => {
+    const key = delta > 0 ? 'ArrowDown' : 'ArrowUp';
+    for (let i = 0; i < Math.floor(Math.abs(delta) / 10); i++) await chord([...mods, 'Shift'], key);
+    for (let i = 0; i < Math.abs(delta) % 10; i++) await chord(mods, key);
+    await settle(60);
+  };
+
+  // Three rectangles: one just above the band, two well below it. Alt+D then
+  // offsets every copy by sixteen rows, which puts the first copy on the cut
+  // rows and leaves the other two in the picture.
+  await page.$eval('.stage-canvas', (el) => el.focus());
+  await page.keyboard.press('r');
+  await page.keyboard.press('Enter');
+  await nudge(-40); // top 190
+  await page.keyboard.press('Enter');
+  await nudge(90); // top 320
+  await page.keyboard.press('Enter');
+  await nudge(170); // top 400
+  await settle();
+
+  await page.keyboard.press('x');
+  await page.keyboard.press('Enter');
+  await settle();
+  const placed = await band();
+  await walk(['Alt'], 100 - placed.h);
+  await walk([], 200 - (await band()).y);
+  const aimed = await band();
+  assert(
+    aimed.y === 200 && aimed.h === 100,
+    `band at exactly 200, 100 tall (${aimed.y}, ${aimed.h})`,
+  );
+  await page.keyboard.press('Enter');
+  await settle();
+  assert(
+    (await say()) === 'Cut 100 pixels. Image 500 pixels tall.',
+    `the band came out with nothing on it ("${await say()}")`,
+  );
+
+  await page.keyboard.press('v');
+  await page.$eval('.stage-canvas', (el) => el.focus());
+  await page.keyboard.press(']');
+  await chord(['Shift'], ']');
+  await chord(['Shift'], ']');
+  await settle();
+  assert(
+    (await say()) === '3 of 3 annotations selected.',
+    `all three marks selected ("${await say()}")`,
+  );
+  await chord(['Alt'], 'd');
+  await settle();
+  assert(
+    (await say()) === '3 annotations duplicated.',
+    `Alt+D selected three copies, with no prune between ("${await say()}")`,
+  );
+  // The first copy landed on the cut rows: six layers, five in the picture.
+  assert(
+    (await page.$eval('.toolbar-count span', (el) => el.textContent)) === '6',
+    'six layers on the canvas',
+  );
+
+  // Only the copies go purple, so the topmost purple row is the top edge of
+  // the upper copy and nothing else.
+  await page.keyboard.press('6');
+  await settle();
+  const g = await pictureGeometry(page, 500);
+  const beforeGrab = g.imageY(await topPaintedRow(page));
+
+  // The frame around the two copies that are in the picture spans source rows
+  // 336 to 556, drawn a hundred rows higher. Grab its bottom handle and pull:
+  // a resize about that frame holds the upper copy's top edge still, while a
+  // drag that missed the handle and caught a layer instead carries every
+  // selected copy down with it.
+  await page.mouse.move(g.xAt(416), g.y(456));
+  await page.mouse.down();
+  await page.mouse.move(g.xAt(416), g.y(486), { steps: 6 });
+  await page.mouse.up();
+  await settle(150);
+  assert(
+    (await say()) === '1 annotation out of the picture. 2 annotations selected.',
+    `the copy on the cut rows was in the selection right up to the mouse-up ("${await say()}")`,
+  );
+  const afterGrab = g.imageY(await topPaintedRow(page));
+  assert(
+    Math.abs(afterGrab - beforeGrab) < 4,
+    `the grab resized the frame drawn around the copies that are there, holding the upper one's top edge (row ${Math.round(beforeGrab)} -> ${Math.round(afterGrab)})`,
   );
 
   assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
@@ -4122,6 +4302,7 @@ async function main() {
     await testCutTool(browser, base);
     await testCutSelectionRules(browser, base);
     await testCutGroupFrame(browser, base);
+    await testCutMixedSelectionGrab(browser, base);
     await testCutInPdfExport(browser, base);
     await testCutDraftRestore(browser, base);
 
