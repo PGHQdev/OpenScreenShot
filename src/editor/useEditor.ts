@@ -26,6 +26,7 @@ import {
   normalizeRect,
   resizeRect,
   scaleAnnotation,
+  scaleInBox,
   translateAnnotation,
   unionBBox,
   type AnnotationStyle,
@@ -843,7 +844,7 @@ export function useEditor() {
         applyAnnotations((prev) =>
           prev.map((a) => {
             const start = startAnns.find((s) => s.id === a.id);
-            return start ? scaleAnnotation(start, startBBox, handle, dx, dy) : a;
+            return start ? scaleInBox(start, startBBox, handle, dx, dy) : a;
           }),
         );
         return;
@@ -997,9 +998,9 @@ export function useEditor() {
 
       if (t === 'select') {
         const ids = selectedIdsRef.current;
-        // Resize: handle hit on the selected annotation. Only a lone selection
-        // carries handles (canvas.ts draws none for several), so only a lone
-        // selection is hit-tested for one.
+        // Resize: handle hit on the selected annotation. A lone selection
+        // carries its own handles; a selection of several carries one set on
+        // the box around them, hit-tested a few lines below.
         if (ids.length === 1) {
           // handleAt yields null for the types that carry no handles, so the
           // annotation type needs no separate check here.

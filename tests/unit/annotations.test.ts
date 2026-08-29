@@ -15,9 +15,11 @@ import {
   pruneBlurCache,
   resizeRect,
   scaleAnnotation,
+  scaleInBox,
   translateAnnotation,
   unionBBox,
   type Annotation,
+  type Rect,
   type BlurCache,
 } from '../../src/editor/annotations';
 
@@ -368,11 +370,11 @@ describe('scaleAnnotation', () => {
     expect(out.type === 'step' && out.r).toBe(6);
   });
 
-  // These used to pass through untouched, because a lone rect or arrow resizes
-  // through its own path in useEditor and never reached here. A multi-selection
-  // scales every member inside one shared box, so they are covered now — the
-  // lone-annotation paths still short-circuit before this function.
-  it('scales a rect against the box it was handed', () => {
+  // A lone rect or arrow resizes through its own path in useEditor (a rect by
+  // its dragged edge, an arrow by the endpoint under the pointer) and never
+  // reaches this function, so it passes through. Scaling those types inside a
+  // shared box is scaleInBox's job, covered below.
+  it('returns endpoint-handle and rect types unchanged', () => {
     const rect: Annotation = {
       id: 'r',
       type: 'rect',
@@ -384,12 +386,7 @@ describe('scaleAnnotation', () => {
       strokeWidth: 4,
       fill: null,
     };
-    expect(scaleAnnotation(rect, { x: 0, y: 0, w: 10, h: 10 }, 'se', 5, 5)).toMatchObject({
-      x: 0,
-      y: 0,
-      w: 15,
-      h: 15,
-    });
+    expect(scaleAnnotation(rect, { x: 0, y: 0, w: 10, h: 10 }, 'se', 5, 5)).toBe(rect);
   });
 });
 
@@ -677,7 +674,7 @@ describe('unionBBox', () => {
   });
 });
 
-describe('scaleAnnotation inside a group box', () => {
+describe('scaleInBox: a member scaled inside a shared box', () => {
   // The multi-selection case: the box being dragged is not the annotation's
   // own, so position and size both scale inside it.
   const group = { x: 0, y: 0, w: 100, h: 100 };
@@ -695,18 +692,18 @@ describe('scaleAnnotation inside a group box', () => {
 
   it('moves and grows a rect member by the box it sits in', () => {
     // The box doubles from the se handle: everything inside doubles with it.
-    const out = scaleAnnotation(rect, group, 'se', 100, 100);
+    const out = scaleInBox(rect, group, 'se', 100, 100);
     expect(bbox(out)).toEqual({ x: 100, y: 100, w: 40, h: 40 });
   });
 
   it('keeps the corner the drag anchors on fixed', () => {
     const atOrigin: Annotation = { ...rect, x: 0, y: 0 };
-    const out = scaleAnnotation(atOrigin, group, 'se', 100, 100);
+    const out = scaleInBox(atOrigin, group, 'se', 100, 100);
     expect(bbox(out)).toMatchObject({ x: 0, y: 0 });
   });
 
   it('scales one axis only from an edge handle', () => {
-    const out = scaleAnnotation(rect, group, 'e', 100, 0);
+    const out = scaleInBox(rect, group, 'e', 100, 0);
     expect(bbox(out)).toEqual({ x: 100, y: 50, w: 40, h: 20 });
   });
 
@@ -721,7 +718,7 @@ describe('scaleAnnotation inside a group box', () => {
       stroke: '#f00',
       strokeWidth: 4,
     };
-    expect(scaleAnnotation(arrow, group, 'se', 100, 100)).toMatchObject({
+    expect(scaleInBox(arrow, group, 'se', 100, 100)).toMatchObject({
       x1: 0,
       y1: 0,
       x2: 100,
@@ -731,7 +728,7 @@ describe('scaleAnnotation inside a group box', () => {
 
   it('normalizes a member drawn inside out before scaling it', () => {
     const inverted: Annotation = { ...rect, x: 70, y: 70, w: -20, h: -20 };
-    expect(bbox(scaleAnnotation(inverted, group, 'se', 100, 100))).toEqual({
+    expect(bbox(scaleInBox(inverted, group, 'se', 100, 100))).toEqual({
       x: 100,
       y: 100,
       w: 40,
@@ -788,5 +785,140 @@ describe('handleAtRect', () => {
 
   it('finds nothing in the middle of the box', () => {
     expect(handleAtRect(box, identity, 60, 60)).toBeNull();
+  });
+});
+
+describe('scaleInBox: a member that cannot be stretched on one axis', () => {
+  const group = { x: 0, y: 0, w: 100, h: 100 };
+  const text: Annotation = {
+    id: 't',
+    type: 'text',
+    x: 10,
+    y: 10,
+    text: 'hi',
+    fontSize: 20,
+    color: '#f00',
+    width: 40,
+    height: 20,
+  };
+  const badge: Annotation = { id: 's', type: 'step', x: 50, y: 50, r: 20, n: 1, color: '#f00' };
+  const inside = (a: Annotation, box: Rect) => {
+    const b = bbox(a);
+    return b.x >= box.x - 0.001 && b.y >= box.y - 0.001;
+  };
+
+  it('keeps a text member inside the box being dragged', () => {
+    // The box widens only: kx=2, ky=1. Taking the larger factor for the
+    // member's *position* used to throw it 80px above the box's top edge,
+    // because the error scales with its distance from the anchored corner.
+    const out = scaleInBox(text, group, 'e', 100, 0);
+    const target = { x: 0, y: 0, w: 200, h: 100 };
+    expect(inside(out, target)).toBe(true);
+    expect(bbox(out).y).toBeGreaterThanOrEqual(0);
+    expect(bbox(out).x).toBeGreaterThanOrEqual(0);
+  });
+
+  it('places a text member where it sat in the box, per axis', () => {
+    const out = scaleInBox(text, group, 'e', 100, 0);
+    // x was a tenth of the way across a 100-wide box; it still is, of a 200.
+    expect(out.type === 'text' && out.x).toBeCloseTo(20);
+    // The axis that did not scale does not move the member on it.
+    expect(out.type === 'text' && out.y).toBeCloseTo(10);
+  });
+
+  it('scales the glyph by the geometric mean of the two factors', () => {
+    const out = scaleInBox(text, group, 'e', 100, 0);
+    expect(out.type === 'text' && out.fontSize).toBeCloseTo(20 * Math.SQRT2);
+    expect(out.type === 'text' && out.width).toBeCloseTo(40 * Math.SQRT2);
+  });
+
+  it('returns a text member to its exact size and origin on the drag back', () => {
+    // Widen the box, then narrow the widened box by the same amount. Taking
+    // the larger factor made this a ratchet: 2 out, 1 back, so the glyph kept
+    // its doubled size for good. The geometric mean cancels: sqrt(2)/sqrt(2).
+    const widened = scaleInBox(text, group, 'e', 100, 0);
+    const back = scaleInBox(widened, { x: 0, y: 0, w: 200, h: 100 }, 'e', -100, 0);
+    expect(back.type === 'text' && back.fontSize).toBeCloseTo(20);
+    expect(back.type === 'text' && back.width).toBeCloseTo(40);
+    expect(back.type === 'text' && back.height).toBeCloseTo(20);
+    expect(back.type === 'text' && back.x).toBeCloseTo(10);
+    expect(back.type === 'text' && back.y).toBeCloseTo(10);
+  });
+
+  it('moves a step badge by its centre and returns it on the drag back', () => {
+    const out = scaleInBox(badge, group, 's', 0, 100);
+    expect(out.type === 'step' && out.x).toBeCloseTo(50);
+    expect(out.type === 'step' && out.y).toBeCloseTo(100);
+    expect(out.type === 'step' && out.r).toBeCloseTo(20 * Math.SQRT2);
+    const back = scaleInBox(out, { x: 0, y: 0, w: 100, h: 200 }, 's', 0, -100);
+    expect(back.type === 'step' && back.r).toBeCloseTo(20);
+    expect(back.type === 'step' && back.y).toBeCloseTo(50);
+  });
+
+  it('never scales a glyph below its own floor, whatever the box does', () => {
+    const small: Annotation = { ...text, fontSize: 9, width: 18, height: 9 };
+    const out = scaleInBox(small, group, 'se', -99, -99);
+    expect(out.type === 'text' && out.fontSize).toBeCloseTo(8);
+    const tiny = scaleInBox(badge, group, 'se', -99, -99);
+    expect(tiny.type === 'step' && tiny.r).toBeCloseTo(6);
+  });
+});
+
+describe('scaleInBox: degenerate and inverted boxes', () => {
+  const rect = (id: string, x: number, y: number, w: number, h: number): Annotation => ({
+    id,
+    type: 'rect',
+    x,
+    y,
+    w,
+    h,
+    stroke: '#f00',
+    strokeWidth: 4,
+    fill: null,
+  });
+
+  it('leaves a flat axis alone when the drag anchors on it', () => {
+    // Two annotations on one horizontal line: the union has no height, so
+    // there is no factor to scale by and the guard holds the axis at 1. The
+    // se handle anchors the top edge, so nothing on that axis moves either.
+    const flat = { x: 0, y: 50, w: 100, h: 0 };
+    const out = scaleInBox(rect('a', 0, 50, 20, 0), flat, 'se', 0, 40);
+    expect(bbox(out)).toMatchObject({ y: 50, h: 0 });
+  });
+
+  it('translates a flat axis when the drag moves the edge it sits on', () => {
+    const flat = { x: 0, y: 50, w: 100, h: 0 };
+    const out = scaleInBox(rect('a', 0, 50, 20, 0), flat, 'n', 0, -40);
+    expect(bbox(out)).toMatchObject({ y: 10, h: 0 });
+  });
+
+  it('scales the other axis normally while one axis is flat', () => {
+    const flat = { x: 0, y: 50, w: 100, h: 0 };
+    const out = scaleInBox(rect('a', 0, 50, 20, 0), flat, 'se', 100, 0);
+    expect(bbox(out)).toMatchObject({ x: 0, w: 40 });
+  });
+
+  it('cannot invert a member, however far the drag folds through zero', () => {
+    // resizeRect normalizes, so a drag past the opposite edge flips the box
+    // rather than giving it a negative size — and every factor stays positive.
+    const box = { x: 0, y: 0, w: 100, h: 100 };
+    const out = scaleInBox(rect('a', 80, 0, 20, 100), box, 'e', -200, 0);
+    const b = bbox(out);
+    expect(b.w).toBeGreaterThan(0);
+    expect(b.h).toBeGreaterThan(0);
+    // The box folded through its anchored left edge to sit 100 wide on the
+    // other side of it, and the member came along at the same width.
+    expect(b).toMatchObject({ x: -20, w: 20 });
+  });
+});
+
+describe('handleAtRect on a degenerate box', () => {
+  it('answers with one of the handles stacked at the same point', () => {
+    // A flat union puts nw, w and sw (and n, s) on the same pixel. The hit-test
+    // walks them in order, so the first one wins; every one of them drives the
+    // same axis, so which it is does not change the drag.
+    const flat = { x: 0, y: 50, w: 100, h: 0 };
+    expect(handleAtRect(flat, (x, y) => ({ x, y }), 0, 50)).toBe('nw');
+    expect(handleAtRect(flat, (x, y) => ({ x, y }), 100, 50)).toBe('ne');
   });
 });

@@ -774,18 +774,35 @@ function scaleAnchor(r: Rect, handle: Handle): Point {
 }
 
 /**
- * Scale an annotation from a handle drag, always derived from its state at drag
- * start (`a` + `startBBox`) so repeated calls during one drag never compound.
- * Pen and highlight strokes scale freely per axis; text and step badges scale
- * uniformly (fontSize / radius) around the fixed corner, with a size floor.
+ * The two factors a handle drag applies, and the point map that goes with them.
+ * `startBBox` is the box the drag started from; `target` is where the drag has
+ * taken it. A point keeps its place in the box: the corner the drag anchors on
+ * is a fixed point of the map, because resizeRect leaves that corner alone.
+ */
+function boxMap(startBBox: Rect, handle: Handle, dx: number, dy: number) {
+  const target = resizeRect(startBBox, handle, dx, dy);
+  const kx = startBBox.w > 0 ? target.w / startBBox.w : 1;
+  const ky = startBBox.h > 0 ? target.h / startBBox.h : 1;
+  return {
+    kx,
+    ky,
+    x: (x: number) => target.x + (x - startBBox.x) * kx,
+    y: (y: number) => target.y + (y - startBBox.y) * ky,
+  };
+}
+
+/**
+ * Scale one annotation from a handle drag on its own box, always derived from
+ * its state at drag start (`a` + `startBBox`) so repeated calls during one drag
+ * never compound. Pen and highlight strokes scale freely per axis; text and
+ * step badges scale uniformly (fontSize / radius) around the fixed corner, with
+ * a size floor.
  *
- * `startBBox` is the box being dragged, which is not always the annotation's
- * own: a multi-selection drags one box around all of it, and every member is
- * scaled inside that box by the same pair of factors. That is why rect, blur,
- * spotlight, arrow and line are handled here as well, even though a lone
- * annotation of those types resizes through its own path in useEditor (a rect
- * by its dragged edge, an arrow by the endpoint under the pointer) and never
- * reaches this function.
+ * Rect, blur, spotlight, arrow and line resize through their own paths in
+ * useEditor (a rect by its dragged edge, an arrow by the endpoint under the
+ * pointer) and pass through here untouched. A selection of several is a
+ * different problem — one box around annotations that are not it — and has its
+ * own function below.
  */
 export function scaleAnnotation(
   a: Annotation,
@@ -794,29 +811,15 @@ export function scaleAnnotation(
   dx: number,
   dy: number,
 ): Annotation {
-  const target = resizeRect(startBBox, handle, dx, dy);
-  const kx = startBBox.w > 0 ? target.w / startBBox.w : 1;
-  const ky = startBBox.h > 0 ? target.h / startBBox.h : 1;
-  const px = (x: number) => target.x + (x - startBBox.x) * kx;
-  const py = (y: number) => target.y + (y - startBBox.y) * ky;
+  const m = boxMap(startBBox, handle, dx, dy);
   switch (a.type) {
-    case 'rect':
-    case 'blur':
-    case 'spotlight': {
-      const n = normalizeRect(a);
-      return { ...a, x: px(n.x), y: py(n.y), w: n.w * kx, h: n.h * ky };
-    }
-    case 'arrow':
-    case 'line':
-      return { ...a, x1: px(a.x1), y1: py(a.y1), x2: px(a.x2), y2: py(a.y2) };
     case 'pen':
     case 'highlight':
-      return {
-        ...a,
-        points: a.points.map((p) => ({ x: px(p.x), y: py(p.y) })),
-      };
+      return { ...a, points: a.points.map((p) => ({ x: m.x(p.x), y: m.y(p.y) })) };
     case 'text': {
-      const k = Math.max(kx, ky, MIN_FONT_SIZE / a.fontSize);
+      // A lone text layer exposes corner handles only, so its own box and the
+      // uniform factor grow together and it cannot leave the box being drawn.
+      const k = Math.max(m.kx, m.ky, MIN_FONT_SIZE / a.fontSize);
       const anchor = scaleAnchor(startBBox, handle);
       return {
         ...a,
@@ -829,7 +832,7 @@ export function scaleAnnotation(
       };
     }
     case 'step': {
-      const k = Math.max(kx, ky, MIN_STEP_RADIUS / a.r);
+      const k = Math.max(m.kx, m.ky, MIN_STEP_RADIUS / a.r);
       const anchor = scaleAnchor(startBBox, handle);
       return {
         ...a,
@@ -837,6 +840,76 @@ export function scaleAnnotation(
         y: anchor.y + (a.y - anchor.y) * k,
         r: a.r * k,
       };
+    }
+    default:
+      return a;
+  }
+}
+
+/**
+ * The uniform factor for something that cannot be stretched on one axis — a
+ * glyph, a badge — inside a box that can. The geometric mean of the two, so
+ * that a drag and the drag back cancel exactly: widening by kx=2 with ky=1
+ * gives sqrt(2), narrowing back gives 1/sqrt(2), and the product is 1. The
+ * larger of the two does not have that property (2 then 1), which is a ratchet:
+ * every widen-and-narrow cycle would leave the glyph permanently bigger.
+ *
+ * `floor` is that annotation's smallest legal factor, and it wins — a size
+ * floor is the one place the round trip is allowed to be lossy, because the
+ * alternative is a badge scaled to nothing.
+ */
+function uniformFactor(kx: number, ky: number, floor: number): number {
+  return Math.max(Math.sqrt(kx * ky), floor);
+}
+
+/**
+ * Scale one member of a multi-selection inside the box around all of them.
+ *
+ * Every member's position comes from the same per-axis map, so a member sits
+ * where it sat in the box and cannot be carried outside it. Rect, blur,
+ * spotlight, arrow, line, pen and highlight take their size from the same two
+ * factors. Text and step badges cannot be stretched on one axis, so their size
+ * takes the uniform factor above; on the axis that scaled less they can overhang
+ * the box by up to that factor minus one, times their own width or height. That
+ * is bounded by the member's own size — unlike a position error, which grows
+ * with the member's distance from the anchored corner.
+ */
+export function scaleInBox(
+  a: Annotation,
+  startBox: Rect,
+  handle: Handle,
+  dx: number,
+  dy: number,
+): Annotation {
+  const m = boxMap(startBox, handle, dx, dy);
+  switch (a.type) {
+    case 'rect':
+    case 'blur':
+    case 'spotlight': {
+      const n = normalizeRect(a);
+      return { ...a, x: m.x(n.x), y: m.y(n.y), w: n.w * m.kx, h: n.h * m.ky };
+    }
+    case 'arrow':
+    case 'line':
+      return { ...a, x1: m.x(a.x1), y1: m.y(a.y1), x2: m.x(a.x2), y2: m.y(a.y2) };
+    case 'pen':
+    case 'highlight':
+      return { ...a, points: a.points.map((p) => ({ x: m.x(p.x), y: m.y(p.y) })) };
+    case 'text': {
+      const k = uniformFactor(m.kx, m.ky, MIN_FONT_SIZE / a.fontSize);
+      return {
+        ...a,
+        x: m.x(a.x),
+        y: m.y(a.y),
+        fontSize: a.fontSize * k,
+        width: a.width * k,
+        height: a.height * k,
+      };
+    }
+    case 'step': {
+      const k = uniformFactor(m.kx, m.ky, MIN_STEP_RADIUS / a.r);
+      // A badge is drawn around its centre, so that is the point the map moves.
+      return { ...a, x: m.x(a.x), y: m.y(a.y), r: a.r * k };
     }
   }
 }

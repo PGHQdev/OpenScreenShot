@@ -20,6 +20,7 @@ import {
   normalizeRect,
   resizeRect,
   scaleAnnotation,
+  scaleInBox,
   unionBBox,
   type Annotation,
   type AnnotationType,
@@ -150,6 +151,22 @@ export function resizeAnnotationBy(a: Annotation, dx: number, dy: number): Annot
 }
 
 /**
+ * The most a box may shrink on one axis: enough to keep the box itself above
+ * MIN_SIZE, and enough to keep its smallest member above it too. Every member
+ * takes the same factor, so a box floor alone would let a small member inside a
+ * large box be scaled to a sub-pixel sliver long before the box got near its
+ * own floor. Members with no extent on the axis (a flat stroke, a horizontal
+ * line) are passed over: nothing can keep them above a floor, and counting them
+ * would freeze the axis for everything else.
+ */
+function shrinkFloor(boxSize: number, sizes: number[]): number {
+  const byBox = MIN_SIZE - boxSize;
+  const smallest = Math.min(...sizes.filter((s) => s > 0));
+  if (!Number.isFinite(smallest) || boxSize <= 0) return byBox;
+  return Math.max(byBox, (boxSize * MIN_SIZE) / smallest - boxSize);
+}
+
+/**
  * Grow or shrink a whole selection by a keyboard delta. The arrows drive the
  * bottom-right corner of the box around the selection while the opposite
  * corner stays put — the same gesture resizeAnnotationBy applies to one
@@ -159,9 +176,12 @@ export function resizeAnnotationBy(a: Annotation, dx: number, dy: number): Annot
  */
 export function resizeSelectionBy(sel: Annotation[], dx: number, dy: number): Annotation[] {
   const box = unionBBox(sel);
-  const cdx = dx === 0 ? 0 : Math.max(dx, MIN_SIZE - box.w);
-  const cdy = dy === 0 ? 0 : Math.max(dy, MIN_SIZE - box.h);
-  return sel.map((a) => scaleAnnotation(a, box, 'se', cdx, cdy));
+  const boxes = sel.map((a) => bbox(a));
+  const widths = boxes.map((b) => b.w);
+  const heights = boxes.map((b) => b.h);
+  const cdx = dx === 0 ? 0 : Math.max(dx, shrinkFloor(box.w, widths));
+  const cdy = dy === 0 ? 0 : Math.max(dy, shrinkFloor(box.h, heights));
+  return sel.map((a) => scaleInBox(a, box, 'se', cdx, cdy));
 }
 
 function clamp(v: number, lo: number, hi: number): number {

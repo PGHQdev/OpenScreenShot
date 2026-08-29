@@ -1190,8 +1190,8 @@ async function testMultiSelection(browser, base) {
   // A layer's position, read the only way the page exposes it: select it, nudge
   // one pixel each way (a net-zero move), and take the coordinates the live
   // region reads out. `]` walks one layer up the paint order per call.
-  const readNextLayer = async () => {
-    await page.keyboard.press(']');
+  const readNextLayer = async (key = ']') => {
+    await page.keyboard.press(key);
     await page.keyboard.press('ArrowLeft');
     await page.keyboard.press('ArrowRight');
     await settle(60);
@@ -1511,8 +1511,18 @@ async function testMultiSelection(browser, base) {
   step('task 24: Alt and an arrow resizes every selected layer, about the group box');
   // A layer's size, read the way its position is read: select it alone, resize
   // one pixel each way, and take the size the live region reads out.
-  const readNextLayerSize = async () => {
-    await page.keyboard.press(']');
+  // The size of whatever is selected right now, with no bracket press: reading
+  // one layer's size must not move the selection onto the next one.
+  const sizeOfSelected = async () => {
+    await chord(['Alt'], 'ArrowRight');
+    await chord(['Alt'], 'ArrowLeft');
+    await settle(60);
+    const m = (await say()).match(/resized to (\d+) by (\d+)/);
+    if (!m) throw new Error(`expected a resize announcement, got "${await say()}"`);
+    return m.slice(1).map(Number);
+  };
+  const readNextLayerSize = async (key = ']') => {
+    await page.keyboard.press(key);
     await chord(['Alt'], 'ArrowRight');
     await chord(['Alt'], 'ArrowLeft');
     await settle(60);
@@ -1594,6 +1604,79 @@ async function testMultiSelection(browser, base) {
   assert(
     w1d > w1c && w2d > w2c,
     `both layers grew from one handle drag (${w1c}->${w1d}, ${w2c}->${w2d})`,
+  );
+
+  step('task 24: a text member scales with the group box and comes back exactly');
+  // Text and step badges cannot be stretched on one axis, so a group hands them
+  // a uniform factor. Taking the larger of the two used to scale their POSITION
+  // by it as well, which threw them out of the box being dragged — by more the
+  // further they sat from the anchored corner — and made every widen-and-narrow
+  // pair leave the glyph permanently bigger.
+  await focusCanvas();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('t');
+  await page.keyboard.press('Enter');
+  await page.waitForSelector('textarea.text-overlay');
+  await page.keyboard.type('note');
+  await page.keyboard.press('Enter');
+  await settle(200);
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('[');
+  await settle(60);
+  assert(/^Text selected/.test(await say()), `the text layer is on top: "${await say()}"`);
+  // Down and right, away from the box's top-left: a member sitting on the
+  // anchored corner cannot show a position error, because that corner is the
+  // fixed point of the map on both axes.
+  for (let i = 0; i < 10; i++) await chord(['Shift'], 'ArrowDown');
+  for (let i = 0; i < 5; i++) await chord(['Shift'], 'ArrowRight');
+  await settle(80);
+  await page.keyboard.press('Escape');
+  const [tx0, ty0] = await readNextLayer('[');
+  const [tw0] = await sizeOfSelected();
+  await page.keyboard.press('r');
+  await page.keyboard.press('Enter');
+  await settle(80);
+  await chord(['Shift'], '[');
+  await settle(60);
+  assert(
+    /^2 of \d+ annotations selected\.$/.test(await say()),
+    `the text and the rectangle over it, selected together: "${await say()}"`,
+  );
+  for (let i = 0; i < 10; i++) await chord(['Alt', 'Shift'], 'ArrowRight');
+  await settle(120);
+  assert((await say()) === '2 annotations resized.', `the group widened: "${await say()}"`);
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('[');
+  const [tx1, ty1] = await readNextLayer('[');
+  assert(
+    ty1 === ty0,
+    `a width-only group resize left the text where it was on the other axis (y ${ty0} -> ${ty1})`,
+  );
+  assert(tx1 > tx0, `and carried it across with the box (x ${tx0} -> ${tx1})`);
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('[');
+  await chord(['Shift'], '[');
+  await settle(60);
+  assert(
+    /^2 of \d+ annotations selected\.$/.test(await say()),
+    `both selected again for the drag back: "${await say()}"`,
+  );
+  for (let i = 0; i < 10; i++) await chord(['Alt', 'Shift'], 'ArrowLeft');
+  await settle(120);
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('[');
+  const [tx2, ty2] = await readNextLayer('[');
+  assert(
+    tx2 === tx0 && ty2 === ty0,
+    `the drag back returned the text to its exact origin (${tx0},${ty0} -> ${tx2},${ty2})`,
+  );
+  const [tw2] = await sizeOfSelected();
+  // Each size reading grows a lone text layer by one pixel and does not shrink
+  // it back — the single-annotation rule, unchanged by this task and left
+  // alone deliberately. So one pixel is the whole expected difference here.
+  assert(
+    tw2 - tw0 === 1,
+    `and to its size: ${tw0}px before, ${tw2}px after, the 1px being this reading itself`,
   );
 
   step(

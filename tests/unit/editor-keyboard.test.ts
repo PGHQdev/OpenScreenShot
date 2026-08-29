@@ -320,14 +320,95 @@ describe('resizeSelectionBy', () => {
 
   it('floors the shrink so the selection cannot fold inside out', () => {
     const out = resizeSelectionBy(pair, -1000, -1000);
-    expect(unionBBox(out).w).toBe(MIN_SIZE);
-    expect(unionBBox(out).h).toBe(MIN_SIZE);
+    // Both members are 100 tall, so the vertical floor binds on the box: it
+    // stops at MIN_SIZE. Across, the box spans 300 for two 100-wide members,
+    // so it stops at 6 — the width at which those members are MIN_SIZE
+    // themselves (see the member floor cases below).
+    expect(unionBBox(out).h).toBeCloseTo(MIN_SIZE);
+    expect(unionBBox(out).w).toBeCloseTo(6);
+    for (const a of out) {
+      expect(bbox(a).w).toBeGreaterThanOrEqual(MIN_SIZE - 0.001);
+      expect(bbox(a).h).toBeGreaterThanOrEqual(MIN_SIZE - 0.001);
+    }
   });
 
   it('ten fine steps land where one coarse step does', () => {
     let fine = pair;
     for (let i = 0; i < 10; i++) fine = resizeSelectionBy(fine, STEP_FINE, 0);
     expect(unionBBox(fine).w).toBeCloseTo(unionBBox(resizeSelectionBy(pair, STEP_COARSE, 0)).w);
+  });
+});
+
+describe('resizeSelectionBy: members that scale differently', () => {
+  const box = (id: string, x: number, w: number): Annotation => ({
+    ...rect,
+    id,
+    x,
+    y: 0,
+    w,
+    h: 100,
+  });
+  const glyph: Annotation = {
+    id: 't',
+    type: 'text',
+    x: 10,
+    y: 10,
+    text: 'hi',
+    fontSize: 20,
+    color: '#1d1d1f',
+    width: 40,
+    height: 20,
+  };
+
+  it('returns a text member to its exact size after a widen and a narrow', () => {
+    // The gesture a user makes without thinking: Alt+Right, then Alt+Left.
+    // Every rect returns exactly; before the geometric mean the text did not,
+    // and each repeat of the pair multiplied it again with no limit.
+    const sel = [box('a', 0, 100), glyph];
+    const wide = resizeSelectionBy(sel, 100, 0);
+    const back = resizeSelectionBy(wide, -100, 0);
+    const t = back.find((a) => a.id === 't')!;
+    expect(t.type === 'text' && t.fontSize).toBeCloseTo(20);
+    expect(t.type === 'text' && t.width).toBeCloseTo(40);
+    expect(t.type === 'text' && t.x).toBeCloseTo(10);
+    expect(bbox(back.find((a) => a.id === 'a')!)).toEqual(bbox(sel[0]));
+  });
+
+  it('keeps every member inside the box it just resized', () => {
+    const sel = [box('a', 0, 100), glyph];
+    const out = resizeSelectionBy(sel, 100, 0);
+    const group = unionBBox(out);
+    for (const a of out) {
+      const b = bbox(a);
+      expect(b.x).toBeGreaterThanOrEqual(group.x - 0.001);
+      expect(b.y).toBeGreaterThanOrEqual(group.y - 0.001);
+    }
+  });
+
+  it('stops shrinking when the smallest member reaches the floor, not the box', () => {
+    // Every member takes the same factor, so a box floor on its own would
+    // scale a small member to a sliver long before the box got near its own.
+    const sel = [box('big', 0, 300), box('small', 0, 4)];
+    const out = resizeSelectionBy(sel, -1000, 0);
+    expect(bbox(out.find((a) => a.id === 'small')!).w).toBeCloseTo(MIN_SIZE);
+    expect(unionBBox(out).w).toBeCloseTo(150);
+  });
+
+  it('is not frozen by a member with no extent on the axis', () => {
+    // A horizontal line has no height; nothing can hold it above a floor, and
+    // counting it would stop the whole selection from shrinking vertically.
+    const line: Annotation = {
+      id: 'l',
+      type: 'line',
+      x1: 0,
+      y1: 0,
+      x2: 100,
+      y2: 0,
+      stroke: '#ff3b30',
+      strokeWidth: 6,
+    };
+    const out = resizeSelectionBy([box('a', 0, 100), line], 0, -1000);
+    expect(unionBBox(out).h).toBeCloseTo(MIN_SIZE);
   });
 });
 
