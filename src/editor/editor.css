@@ -971,6 +971,22 @@ body {
   width: 100%;
   height: 100%;
   accent-color: var(--accent-ink);
+  /* The track (the part accent-color above does not reach) still falls back
+     to Chromium's own native rendering, which reads color-scheme — and
+     :root never sets one for an explicit data-theme="dark" on a light-OS
+     machine (only the @media (prefers-color-scheme: dark) block in
+     tokens.css does, guarded to OS dark). That gap is pre-existing and
+     out of this task's scope; fixed here, at the one element it actually
+     paints wrong (a light track in a dark panel), not at the root. */
+  color-scheme: light;
+}
+:root[data-theme='dark'] .export-progress-bar {
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .export-progress-bar {
+    color-scheme: dark;
+  }
 }
 
 /* ---- Scale row (export dialog) ---- */

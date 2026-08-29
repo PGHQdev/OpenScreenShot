@@ -53,6 +53,9 @@ export function App() {
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
   const [dragOver, setDragOver] = useState(false);
   const toolbarRef = useRef<HTMLElement>(null);
+  // One render behind on purpose — see the draftPromptT/stageNoticeT
+  // coordination comment just below.
+  const stageNoticeMountedRef = useRef(false);
 
   // Each modal/notice stays mounted for its own exit transition — see
   // transition.ts. `active` mirrors the render condition each one used
@@ -61,16 +64,32 @@ export function App() {
   const exportT = useExitDelay(exportOpen && !!ed.capture, DUR_MID);
   const sheetT = useExitDelay(sheetOpen, DUR_MID);
   const importT = useExitDelay(!!ed.pendingImport, DUR_MID);
-  const stageNoticeT = useExitDelay(!!ed.stageNotice && !ed.cropActive, DUR_MID);
-  // draft-restore and crop-confirm share the stage-notice pill's exact
-  // position (top: s-3, centred), so each also waits for stage-notice to be
-  // fully gone (mounted, not just ed.stageNotice) before it starts — without
-  // that, dismissing a notice while a draft prompt or a crop was pending
-  // would show both pills stacked at identical coordinates for 150ms.
+  // draft-restore, stage-notice and crop-confirm all share the same pill
+  // position (top: s-3, centred), so each waits for the others to be fully
+  // gone (mounted, not just the ed state that names them) before it starts
+  // — without that, they stack at identical coordinates for 150ms whenever
+  // one becomes true within a window of another's exit. Two directions need
+  // this: dismissing a stage notice while a draft prompt is pending (fixed
+  // by gating draftPromptT below on stageNoticeT), and restoreDraft's own
+  // failure path, which clears draftPrompt and — milliseconds later, once
+  // getDraftImage's promise settles — sets a stage notice, well inside
+  // draft-restore's own exit window (useEditor.ts's restoreDraft). Gating
+  // both hooks on each other's live `.mounted` is circular within one
+  // render, so draftPromptT reads stageNoticeMountedRef — one render behind,
+  // which does not matter here since neither ed.stageNotice nor
+  // ed.draftPrompt are ever true at the very same instant a render starts
+  // (restoreDraft always clears one before the other can be set) — while
+  // stageNoticeT reads draftPromptT.mounted directly, computed earlier this
+  // same render.
   const draftPromptT = useExitDelay(
-    !!ed.draftPrompt && !stageNoticeT.mounted && !ed.cropActive,
+    !!ed.draftPrompt && !stageNoticeMountedRef.current && !ed.cropActive,
     DUR_MID,
   );
+  const stageNoticeT = useExitDelay(
+    !!ed.stageNotice && !draftPromptT.mounted && !ed.cropActive,
+    DUR_MID,
+  );
+  stageNoticeMountedRef.current = stageNoticeT.mounted;
   const cropConfirmT = useExitDelay(ed.cropActive && !stageNoticeT.mounted, DUR_MID);
   // ed.pendingImport/ed.stageNotice/ed.draftPrompt null out the moment
   // confirm/cancel/dismiss/restore fires — the same tick the exit transition

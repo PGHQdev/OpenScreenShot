@@ -468,6 +468,68 @@ async function testPdfRealProgress(browser, base) {
  * message clears), and Dismiss clears capture/imageSize too, not just the
  * message — confirmed by the topbar's Copy/Export buttons re-disabling.
  */
+/**
+ * fix round 2, promoted finding 1 — useEditor.ts's restoreDraft clears
+ * draftPrompt synchronously but only sets a stage notice later, once
+ * getDraftImage's promise settles (the failure path) — well inside
+ * draft-restore's own 150ms exit window this task added. App.tsx now gates
+ * stageNoticeT on draftPromptT.mounted (not just ed.draftPrompt) to close
+ * that. Proven by polling for the two pills ever being mounted at once, not
+ * by reasoning about the gate.
+ */
+async function testDraftRestoreFailureNoOverlap(browser, base) {
+  step(
+    'fix round 2: a failed draft restore never shows the stage notice pill while draft-restore is still exiting',
+  );
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1280, height: 860 });
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  const capture = await makeCapture();
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': capture,
+    'openscreenshot:draft': {
+      sourceCapturedAt: capture.capturedAt,
+      annotations: [{ id: 'a1', type: 'rect', x: 10, y: 10, w: 50, h: 50 }],
+      frame: {},
+      savedAt: Date.now(),
+    },
+    // Syntactically a data: URL, not real image bytes — getDraftImage()
+    // resolves it fine, so restoreDraft's img.onerror -> refuse() path is
+    // what actually fires (the failure branch that sets the stage notice).
+    'openscreenshot:draft-image': 'data:image/png;base64,bm90LWEtcG5n',
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.draft-restore', { timeout: 5000 });
+
+  await page.click('.draft-restore .btn-primary'); // Restore
+
+  let sawOverlap = false;
+  let sawStageNotice = false;
+  for (let i = 0; i < 100; i++) {
+    const s = await page.evaluate(() => ({
+      draft: !!document.querySelector('.draft-restore'),
+      notice: !!document.querySelector('.stage-notice'),
+    }));
+    if (s.draft && s.notice) sawOverlap = true;
+    if (s.notice) sawStageNotice = true;
+    if (!s.draft && sawStageNotice) break; // draft-restore fully gone, notice landed
+    await new Promise((r) => setTimeout(r, 5));
+  }
+  assert(!sawOverlap, 'draft-restore and the stage notice were never mounted at the same time');
+  assert(sawStageNotice, 'the stage notice did eventually appear (the failure path really ran)');
+
+  await page.waitForSelector('.stage-notice', { timeout: 5000 });
+  const message = await page.$eval('.stage-notice span', (el) => el.textContent);
+  assert(
+    message === 'Your saved edits could not be restored.',
+    `the stage notice carries the real restore-failure message ("${message}")`,
+  );
+
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
+}
+
 async function testStageErrorRetryAndDismiss(browser, base) {
   step('task 23: stage error — Retry re-runs the real load; Dismiss clears the capture');
   const crashes = [];
@@ -633,10 +695,33 @@ async function testPopoverTabDuringExit(browser, base) {
     'the zoom popover is still mounted and mid-exit at the moment Tab is pressed below',
   );
   await page.keyboard.press('Tab');
+  const zoomPresentAfterTab = await page.evaluate(() => !!document.querySelector('.zoom-popover'));
+  assert(
+    zoomPresentAfterTab,
+    'the zoom popover is still in the DOM when Tab lands — otherwise "did not land inside it" below is vacuously true (nothing left to land inside)',
+  );
   const zoomLandedInside = await page.evaluate(
     () => !!document.activeElement?.closest?.('.zoom-popover'),
   );
   assert(!zoomLandedInside, 'Tab during the zoom popover exit did not land inside it');
+
+  // The central behaviour of this whole task, checked directly for the
+  // first time: a panel with a real (non-zero) exit window actually
+  // unmounts, and does so only once that window has elapsed — not
+  // immediately, and not "eventually" in the open-ended sense closed()'s
+  // poll would also report for a window of zero length. Two bounded reads,
+  // both under the no-preference emulation forced above: still present
+  // partway through DUR_MID (150ms), gone once it has passed.
+  await new Promise((r) => setTimeout(r, 50));
+  assert(
+    (await page.$('.zoom-popover')) !== null,
+    'the zoom popover is still in the DOM 50ms after Escape — the exit window has not elapsed yet',
+  );
+  await new Promise((r) => setTimeout(r, 200)); // ~250ms since Escape, past the 150ms window
+  assert(
+    (await page.$('.zoom-popover')) === null,
+    'the zoom popover has actually unmounted once its exit window elapsed',
+  );
 
   // BeautifyMenu: every control is a real tab stop (no tabIndex=-1 guard at
   // all), the more direct case of the same trap.
@@ -654,6 +739,13 @@ async function testPopoverTabDuringExit(browser, base) {
     'the Beautify popover is still mounted and mid-exit at the moment Tab is pressed below',
   );
   await page.keyboard.press('Tab');
+  const beautifyPresentAfterTab = await page.evaluate(
+    () => !!document.querySelector('.beautify-popover'),
+  );
+  assert(
+    beautifyPresentAfterTab,
+    'the Beautify popover is still in the DOM when Tab lands — otherwise "did not land inside it" below is vacuously true',
+  );
   const beautifyLandedInside = await page.evaluate(
     () => !!document.activeElement?.closest?.('.beautify-popover'),
   );
@@ -694,6 +786,17 @@ async function testModalFastReopen(browser, base) {
 
   await page.click('header .btn-secondary[title^="Export"]');
   await page.waitForSelector('.modal', { timeout: 5000 });
+  // A marker on the live DOM node, outside Preact's own bookkeeping — the
+  // one thing that proves this test actually hit the "same instance
+  // survives a fast reopen" scenario it claims to, rather than a real
+  // unmount-then-remount coincidentally reinitialising everything fresh
+  // (which would also produce a correctly-focused dialog below, for the
+  // wrong reason — confirmed this happens on this exact machine when
+  // reduced motion is not forced off, which is why that emulation call
+  // above is not just about the exit animation).
+  await page.evaluate(() => {
+    document.querySelector('.modal').dataset.reopenMarker = 'original-instance';
+  });
   // waitForSelector resolves on insertion; the mount effect that moves focus
   // onto the first control lands a render later (Preact flushes effects a
   // frame after the commit). Escape pressed before that settles would find
@@ -712,11 +815,16 @@ async function testModalFastReopen(browser, base) {
     return {
       present: !!modal,
       closing: modal?.classList.contains('is-closing') ?? null,
+      sameInstance: modal?.dataset.reopenMarker === 'original-instance',
       focusInside: !!modal && modal.contains(document.activeElement),
       focusIsFirstControl: document.activeElement === modal?.querySelector('.format-card'),
     };
   });
   assert(state.present, 'the dialog is open after the fast reopen');
+  assert(
+    state.sameInstance,
+    'the reopened modal is the SAME DOM node marked above — this really did exercise the same-instance-survives path, not a real unmount+remount that would reinitialise everything fresh regardless of the fix',
+  );
   assert(state.closing === false, 'it settled back to fully open, not stuck mid-exit');
   assert(state.focusInside, 'focus is back inside the reopened dialog');
   assert(state.focusIsFirstControl, 'focus landed on the first control, same as any other open');
@@ -808,6 +916,104 @@ async function testPdfExportInBackgroundTab(browser, base) {
   await blankPage.close();
   assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
   await page.close();
+}
+
+/**
+ * fix round 2, promoted finding 2 — .export-progress-bar's track falls
+ * back to Chromium's own native rendering (accent-color only reaches the
+ * filled portion — see editor.css's own comment), which reads color-scheme.
+ * :root never sets one for an explicit data-theme="dark" on a light-OS
+ * machine, so that combination used to paint a light track in a dark
+ * panel. Fixed at the element, not the root (out of scope). Checked via
+ * computed style on a probe element (a real <progress class="export-
+ * progress-bar"> inserted and measured, not a screenshot) — pixel-timing
+ * during a live multi-page export turned out to be too unreliable to
+ * pin an unfilled-track sample to a specific fill ratio (confirmed while
+ * building this: the bar can advance several pages between reading
+ * value/max and a screenshot actually landing), so this checks the
+ * property the fix actually sets instead of trying to outrun that race.
+ */
+async function testProgressBarColorScheme(browser, base) {
+  step('fix round 2: the export progress bar tracks the app theme, not just the OS one');
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1280, height: 860 });
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+
+  const probe = () =>
+    page.evaluate(() => {
+      const p = document.createElement('progress');
+      p.className = 'export-progress-bar';
+      document.body.appendChild(p);
+      const v = getComputedStyle(p).colorScheme;
+      p.remove();
+      return v;
+    });
+
+  // The exact regression: an explicit dark theme while the OS itself
+  // reports light — the one combination :root's own rules never cover.
+  const cdp = await page.createCDPSession();
+  await cdp.send('Emulation.setEmulatedMedia', {
+    features: [{ name: 'prefers-color-scheme', value: 'light' }],
+  });
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': await makeCapture(),
+    'openscreenshot:settings': { theme: 'dark' },
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+  assert(
+    (await page.evaluate(() => document.documentElement.getAttribute('data-theme'))) === 'dark',
+    'the app really is themed dark for this check',
+  );
+  assert(
+    (await probe()) === 'dark',
+    'the progress bar reports color-scheme: dark under an explicit dark theme, even though the OS itself is light',
+  );
+
+  await page.close();
+
+  // Negative-direction check, on its own fresh page (evaluateOnNewDocument
+  // re-seeds the same store on every navigation of the first page, so
+  // reusing it after a reload just reinstates 'dark' — a fresh page with
+  // its own seed is the real way to flip the scenario): explicit light
+  // theme under an OS-dark emulation reports light — proving this isn't
+  // just hardcoded to dark.
+  const page2 = await browser.newPage();
+  await page2.setViewport({ width: 1280, height: 860 });
+  page2.on('pageerror', (err) => crashes.push(String(err)));
+  const cdp2 = await page2.createCDPSession();
+  await cdp2.send('Emulation.setEmulatedMedia', {
+    features: [{ name: 'prefers-color-scheme', value: 'dark' }],
+  });
+  await page2.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': await makeCapture(),
+    'openscreenshot:settings': { theme: 'light' },
+  });
+  await page2.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page2.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+  assert(
+    (await page2.evaluate(() => document.documentElement.getAttribute('data-theme'))) === 'light',
+    'the app really is themed light for this check',
+  );
+  const probe2 = () =>
+    page2.evaluate(() => {
+      const p = document.createElement('progress');
+      p.className = 'export-progress-bar';
+      document.body.appendChild(p);
+      const v = getComputedStyle(p).colorScheme;
+      p.remove();
+      return v;
+    });
+  assert(
+    (await probe2()) === 'light',
+    'the progress bar reports color-scheme: light under an explicit light theme, even though the OS itself is dark',
+  );
+
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page2.close();
 }
 
 async function main() {
@@ -1041,7 +1247,7 @@ async function main() {
     await page.keyboard.press('Escape');
     await settle();
     assert((await say()) === 'Crop cancelled.', 'Escape reached the crop it had just opened');
-    assert((await page.$('.crop-confirm')) === null, 'the confirm bar went away');
+    assert(await closed('.crop-confirm'), 'the confirm bar went away');
 
     step('the crop rect moves, clamps and keeps announcing');
     await page.keyboard.press('Enter');
@@ -1919,9 +2125,11 @@ async function main() {
     await testExportButtonWidthFloor(browser, base);
     await testPdfRealProgress(browser, base);
     await testStageErrorRetryAndDismiss(browser, base);
+    await testDraftRestoreFailureNoOverlap(browser, base);
     await testPopoverTabDuringExit(browser, base);
     await testModalFastReopen(browser, base);
     await testPdfExportInBackgroundTab(browser, base);
+    await testProgressBarColorScheme(browser, base);
 
     console.log('\nALL STEPS PASSED');
   } finally {
