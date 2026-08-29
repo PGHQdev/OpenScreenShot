@@ -246,6 +246,27 @@ export function annotationsInRect(anns: Annotation[], r: Rect): string[] {
     .map((a) => a.id);
 }
 
+/**
+ * The box around several annotations — what a multi-selection is resized by,
+ * and where its handles sit. An empty list has no box, so it reads as a point
+ * at the origin, which no caller draws (canvas.ts only asks once it has two).
+ */
+export function unionBBox(anns: Annotation[]): Rect {
+  if (anns.length === 0) return { x: 0, y: 0, w: 0, h: 0 };
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const a of anns) {
+    const b = bbox(a);
+    x0 = Math.min(x0, b.x);
+    y0 = Math.min(y0, b.y);
+    x1 = Math.max(x1, b.x + b.w);
+    y1 = Math.max(y1, b.y + b.h);
+  }
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+
 /** Measure rendered text (single or multi-line) for hit-testing & selection bbox. */
 export function measureText(
   ctx: CanvasRenderingContext2D,
@@ -641,6 +662,21 @@ export interface HandlePos {
   y: number;
 }
 
+/** The eight handle positions around a box, in image space. */
+export function rectHandles(r: Rect): HandlePos[] {
+  const { x, y, w, h } = r;
+  return [
+    { handle: 'nw', x, y },
+    { handle: 'n', x: x + w / 2, y },
+    { handle: 'ne', x: x + w, y },
+    { handle: 'e', x: x + w, y: y + h / 2 },
+    { handle: 'se', x: x + w, y: y + h },
+    { handle: 's', x: x + w / 2, y: y + h },
+    { handle: 'sw', x, y: y + h },
+    { handle: 'w', x, y: y + h / 2 },
+  ];
+}
+
 /** Handle positions (image space) for resizing a selected annotation. */
 export function getHandles(a: Annotation): HandlePos[] {
   switch (a.type) {
@@ -648,19 +684,8 @@ export function getHandles(a: Annotation): HandlePos[] {
     case 'blur':
     case 'spotlight':
     case 'pen':
-    case 'highlight': {
-      const { x, y, w, h } = bbox(a);
-      return [
-        { handle: 'nw', x, y },
-        { handle: 'n', x: x + w / 2, y },
-        { handle: 'ne', x: x + w, y },
-        { handle: 'e', x: x + w, y: y + h / 2 },
-        { handle: 'se', x: x + w, y: y + h },
-        { handle: 's', x: x + w / 2, y: y + h },
-        { handle: 'sw', x, y: y + h },
-        { handle: 'w', x, y: y + h / 2 },
-      ];
-    }
+    case 'highlight':
+      return rectHandles(bbox(a));
     case 'arrow':
     case 'line':
       return [
@@ -694,7 +719,28 @@ export function handleAt(
   sy: number,
   tol = 12,
 ): Handle | null {
-  for (const h of getHandles(a)) {
+  return handleAtPoints(getHandles(a), project, sx, sy, tol);
+}
+
+/** The same hit-test against a bare box — the handles a multi-selection carries. */
+export function handleAtRect(
+  r: Rect,
+  project: (x: number, y: number) => { x: number; y: number },
+  sx: number,
+  sy: number,
+  tol = 12,
+): Handle | null {
+  return handleAtPoints(rectHandles(r), project, sx, sy, tol);
+}
+
+function handleAtPoints(
+  handles: HandlePos[],
+  project: (x: number, y: number) => { x: number; y: number },
+  sx: number,
+  sy: number,
+  tol: number,
+): Handle | null {
+  for (const h of handles) {
     const p = project(h.x, h.y);
     if (Math.abs(p.x - sx) <= tol && Math.abs(p.y - sy) <= tol) return h.handle;
   }
@@ -732,7 +778,14 @@ function scaleAnchor(r: Rect, handle: Handle): Point {
  * start (`a` + `startBBox`) so repeated calls during one drag never compound.
  * Pen and highlight strokes scale freely per axis; text and step badges scale
  * uniformly (fontSize / radius) around the fixed corner, with a size floor.
- * Rect, blur, arrow and line resize through their own paths and pass through.
+ *
+ * `startBBox` is the box being dragged, which is not always the annotation's
+ * own: a multi-selection drags one box around all of it, and every member is
+ * scaled inside that box by the same pair of factors. That is why rect, blur,
+ * spotlight, arrow and line are handled here as well, even though a lone
+ * annotation of those types resizes through its own path in useEditor (a rect
+ * by its dragged edge, an arrow by the endpoint under the pointer) and never
+ * reaches this function.
  */
 export function scaleAnnotation(
   a: Annotation,
@@ -744,15 +797,23 @@ export function scaleAnnotation(
   const target = resizeRect(startBBox, handle, dx, dy);
   const kx = startBBox.w > 0 ? target.w / startBBox.w : 1;
   const ky = startBBox.h > 0 ? target.h / startBBox.h : 1;
+  const px = (x: number) => target.x + (x - startBBox.x) * kx;
+  const py = (y: number) => target.y + (y - startBBox.y) * ky;
   switch (a.type) {
+    case 'rect':
+    case 'blur':
+    case 'spotlight': {
+      const n = normalizeRect(a);
+      return { ...a, x: px(n.x), y: py(n.y), w: n.w * kx, h: n.h * ky };
+    }
+    case 'arrow':
+    case 'line':
+      return { ...a, x1: px(a.x1), y1: py(a.y1), x2: px(a.x2), y2: py(a.y2) };
     case 'pen':
     case 'highlight':
       return {
         ...a,
-        points: a.points.map((p) => ({
-          x: target.x + (p.x - startBBox.x) * kx,
-          y: target.y + (p.y - startBBox.y) * ky,
-        })),
+        points: a.points.map((p) => ({ x: px(p.x), y: py(p.y) })),
       };
     case 'text': {
       const k = Math.max(kx, ky, MIN_FONT_SIZE / a.fontSize);
@@ -777,8 +838,6 @@ export function scaleAnnotation(
         r: a.r * k,
       };
     }
-    default:
-      return a;
   }
 }
 
@@ -829,17 +888,44 @@ export function drawSelection(
     ctx.restore();
     return;
   }
-  // Handles: a white fill with a black ring is the same worst-case pairing —
-  // whichever of the two the local background defeats, the other still reads.
+  drawHandles(ctx, getHandles(a), project);
+  ctx.restore();
+}
+
+/**
+ * The box a multi-selection is dragged by: one outline around every selected
+ * layer, with the eight handles that scale all of them at once. Each member
+ * keeps its own plain outline (drawSelection with no handles), so what is
+ * selected and what the handles act on are both visible.
+ */
+export function drawGroupSelection(
+  ctx: CanvasRenderingContext2D,
+  box: Rect,
+  project: (x: number, y: number) => { x: number; y: number },
+): void {
+  const tl = project(box.x, box.y);
+  const br = project(box.x + box.w, box.y + box.h);
+  ctx.save();
+  strokeAnts(ctx, { x: tl.x, y: tl.y, w: br.x - tl.x, h: br.y - tl.y });
+  drawHandles(ctx, rectHandles(box), project);
+  ctx.restore();
+}
+
+// Handles: a white fill with a black ring is the same worst-case pairing as the
+// outline — whichever of the two the local background defeats, the other reads.
+function drawHandles(
+  ctx: CanvasRenderingContext2D,
+  handles: HandlePos[],
+  project: (x: number, y: number) => { x: number; y: number },
+): void {
   ctx.fillStyle = tokens.canvasMark;
   ctx.strokeStyle = '#000000';
   ctx.lineWidth = 1.5;
-  for (const h of getHandles(a)) {
+  for (const h of handles) {
     const p = project(h.x, h.y);
     ctx.fillRect(p.x - 4, p.y - 4, 8, 8);
     ctx.strokeRect(p.x - 4, p.y - 4, 8, 8);
   }
-  ctx.restore();
 }
 
 /**

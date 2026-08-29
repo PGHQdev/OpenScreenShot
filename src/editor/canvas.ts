@@ -5,6 +5,7 @@ import {
   createSpotlightLayerCache,
   drawAnnotation,
   drawCropPreview,
+  drawGroupSelection,
   drawMarquee,
   drawSelection,
   drawSpotlightLayer,
@@ -12,6 +13,7 @@ import {
   type Rect,
   type SpotlightAnnotation,
   type SpotlightLayerCache,
+  unionBBox,
 } from './annotations';
 import { centerView, clampZoom, fitZoom } from './viewport';
 import { clipToFrame, DEFAULT_FRAME, frameMetrics, paintFrame, type FrameOptions } from './frame';
@@ -323,12 +325,14 @@ export class CanvasController {
       ctx.strokeRect(this.view.panX + 0.5, this.view.panY + 0.5, sw - 1, sh - 1);
       ctx.restore();
     }
-    // Handles belong to a single selection only — see drawSelection.
-    const withHandles = this.selectedIds.length === 1;
-    for (const id of this.selectedIds) {
-      const sel = this.annotations.find((a) => a.id === id);
-      if (sel) drawSelection(ctx, sel, (x, y) => this.toScreen(x, y), withHandles);
-    }
+    // One selected layer carries its own handles; several share one set, on
+    // the box around all of them (drawGroupSelection).
+    const selected = this.selectedIds
+      .map((id) => this.annotations.find((a) => a.id === id))
+      .filter((a): a is Annotation => !!a);
+    const project = (x: number, y: number) => this.toScreen(x, y);
+    for (const sel of selected) drawSelection(ctx, sel, project, selected.length === 1);
+    if (selected.length > 1) drawGroupSelection(ctx, unionBBox(selected), project);
     if (this.marquee) drawMarquee(ctx, this.marquee, (x, y) => this.toScreen(x, y));
   }
 

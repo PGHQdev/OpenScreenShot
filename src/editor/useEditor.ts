@@ -20,12 +20,14 @@ import {
   bbox,
   DEFAULT_STYLE,
   handleAt,
+  handleAtRect,
   hasStroke,
   measureTextSize,
   normalizeRect,
   resizeRect,
   scaleAnnotation,
   translateAnnotation,
+  unionBBox,
   type AnnotationStyle,
   type BlurMode,
   type Handle,
@@ -60,6 +62,7 @@ import {
   PLACE_SIZE_PX,
   resizeAnnotationBy,
   resizeCropBy,
+  resizeSelectionBy,
   type CanvasMode,
   type Mutation,
 } from './keyboard';
@@ -82,6 +85,7 @@ import { COLOR_PALETTE, pushRecent } from './palette';
 import { draftFrame, DRAFT_DEBOUNCE_MS, makeDraft, parseDraft, type Draft } from './draft';
 import { canvasToDataUrl, downloadDataUrl, withExtension, type ImageFormat } from './export';
 import { historyStep, type HistoryEntry } from './history';
+import { agreed } from './stylebar';
 import { importSizeError, readImageFile, titleFromFilename } from './import-image';
 import { exportPdf as exportPdfFile, type PdfExportProgress, type PdfOptions } from './pdf';
 import { resampleToWidth } from './scale';
@@ -116,6 +120,15 @@ type Interaction =
       startPt: { x: number; y: number };
       /** The annotation at drag start, so scaling never compounds across moves. */
       startAnn: Annotation;
+    }
+  | {
+      kind: 'resize-group';
+      handle: Handle;
+      /** The box around the whole selection at drag start. */
+      startBBox: Rect;
+      startPt: { x: number; y: number };
+      /** Every selected annotation at drag start, for the same reason. */
+      startAnns: Annotation[];
     }
   | null;
 
@@ -698,20 +711,12 @@ export function useEditor() {
         fit();
         return;
       }
-      // Duplicate the selection.
-      //
-      // Two chords, because neither one is safe alone. Alt+D is the binding the
-      // shortcut sheet leads with, but Chrome on Windows and Linux gives Alt+D
-      // to the address bar, and an accelerator the browser claims may never
-      // reach this listener; Ctrl/Cmd+D is the duplicate chord editors use, and
-      // is a page-overridable one (Chrome's bookmark star yields to
-      // preventDefault). `e.code`, not `e.key`: macOS turns Option+D into "∂".
-      if (e.code === 'KeyD' && (e.altKey || isMod(e)) && !e.shiftKey) {
-        if (selectedIdsRef.current.length > 0) {
-          e.preventDefault();
-          duplicateSelection();
-          return;
-        }
+      // Duplicate the selection. `e.code`, not `e.key`: macOS turns Option+D
+      // into "∂", so the letter the chord produces is not the letter it names.
+      if (e.code === 'KeyD' && e.altKey && !isMod(e) && !e.shiftKey) {
+        e.preventDefault();
+        duplicateSelection();
+        return;
       }
       // Delete selected.
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIdsRef.current.length > 0) {
@@ -726,6 +731,7 @@ export function useEditor() {
           e.preventDefault();
         } else if (selectedIdsRef.current.length > 0) {
           selectAnnotations([]);
+          sayAboutSelection([]);
           e.preventDefault();
         }
         return;
@@ -773,6 +779,7 @@ export function useEditor() {
     setStyleColor,
     selectTool,
     selectAnnotations,
+    sayAboutSelection,
   ]);
 
   // --- Drag handlers (attached to window during a drag) ---
@@ -822,6 +829,22 @@ export function useEditor() {
         const ids = it.ids;
         applyAnnotations((prev) =>
           prev.map((a) => (ids.includes(a.id) ? translateAnnotation(a, dx, dy) : a)),
+        );
+        return;
+      }
+      if (it.kind === 'resize-group') {
+        if (!dragSnapshottedRef.current) {
+          snapshot();
+          dragSnapshottedRef.current = true;
+        }
+        const dx = p.x - it.startPt.x;
+        const dy = p.y - it.startPt.y;
+        const { startBBox, handle, startAnns } = it;
+        applyAnnotations((prev) =>
+          prev.map((a) => {
+            const start = startAnns.find((s) => s.id === a.id);
+            return start ? scaleAnnotation(start, startBBox, handle, dx, dy) : a;
+          }),
         );
         return;
       }
@@ -918,6 +941,9 @@ export function useEditor() {
       const resized = annotationsRef.current.find((a) => a.id === it.id);
       if (resized) say({ kind: 'resize', annotation: resized });
     }
+    if (dragged && it.kind === 'resize-group') {
+      say({ kind: 'resize-many', count: it.startAnns.length });
+    }
     if (it.kind === 'move') {
       if (dragged) {
         const moved = annotationsRef.current.filter((a) => it.ids.includes(a.id));
@@ -987,6 +1013,25 @@ export function useEditor() {
               startBBox: bbox(sel),
               startPt: p,
               startAnn: sel,
+            };
+            window.addEventListener('mousemove', onDragMove);
+            window.addEventListener('mouseup', onDragUp);
+            return;
+          }
+        }
+        // Several selected: one set of handles on the box around all of them,
+        // and a drag on one scales every member inside that box.
+        if (ids.length > 1) {
+          const sel = annotationsRef.current.filter((a) => ids.includes(a.id));
+          const startBBox = unionBBox(sel);
+          const h = handleAtRect(startBBox, (x, y) => c.toScreen(x, y), sx, sy);
+          if (h) {
+            interactionRef.current = {
+              kind: 'resize-group',
+              handle: h,
+              startBBox,
+              startPt: p,
+              startAnns: sel,
             };
             window.addEventListener('mousemove', onDragMove);
             window.addEventListener('mouseup', onDragUp);
@@ -1321,13 +1366,25 @@ export function useEditor() {
         snapshot();
         keyNudgeRef.current = true;
       }
-      // Every selected layer takes the same delta, so a nudge holds the
-      // selection's shape and a resize grows each layer by the same amount.
-      const apply = (a: Annotation) =>
-        intent.kind === 'move'
-          ? translateAnnotation(a, intent.dx, intent.dy)
-          : resizeAnnotationBy(a, intent.dx, intent.dy);
-      const next = list.map((x) => (ids.includes(x.id) ? apply(x) : x));
+      // A nudge gives every selected layer the same delta, so the selection
+      // holds its arrangement. A resize drives the bottom-right corner: of the
+      // one annotation when one is selected, and of the box around them all
+      // when several are — the same corner the pointer's group handle drags.
+      let next: Annotation[];
+      if (intent.kind === 'move') {
+        next = list.map((x) =>
+          ids.includes(x.id) ? translateAnnotation(x, intent.dx, intent.dy) : x,
+        );
+      } else if (touched.length === 1) {
+        next = list.map((x) =>
+          x.id === touched[0].id ? resizeAnnotationBy(x, intent.dx, intent.dy) : x,
+        );
+      } else {
+        const scaled = new Map(
+          resizeSelectionBy(touched, intent.dx, intent.dy).map((a) => [a.id, a]),
+        );
+        next = list.map((x) => scaled.get(x.id) ?? x);
+      }
       applyAnnotations(next);
       if (touched.length === 1) {
         const one = next.find((x) => x.id === touched[0].id)!;
@@ -1665,7 +1722,6 @@ export function useEditor() {
     undo,
     redo,
     deleteSelection,
-    duplicateSelection,
     exportImage,
     exportPdf,
     copyImage,
@@ -1683,23 +1739,6 @@ export function useEditor() {
     restoreDraft,
     discardDraft,
   };
-}
-
-/**
- * The one value a selection carries for a style field, or null when the layers
- * that carry the field disagree — the style bar's answer to "what colour is
- * this?" when there is more than one. Layers the field does not apply to (a
- * blur has no colour) read as undefined and are passed over.
- */
-function agreed<T>(sel: Annotation[], read: (a: Annotation) => T | undefined): T | null {
-  let seen: T | undefined;
-  for (const a of sel) {
-    const v = read(a);
-    if (v === undefined) continue;
-    if (seen === undefined) seen = v;
-    else if (seen !== v) return null;
-  }
-  return seen ?? null;
 }
 
 /** Hit-test annotations topmost-first in screen space; returns an id or null. */

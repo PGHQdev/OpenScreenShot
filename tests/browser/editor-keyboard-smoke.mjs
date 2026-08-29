@@ -1175,6 +1175,13 @@ async function testMultiSelection(browser, base) {
     page.evaluate(() => document.querySelector('.toolbar-count span')?.textContent ?? '0');
   const settle = (ms = 120) => new Promise((r) => setTimeout(r, ms));
   const focusCanvas = () => page.$eval('.stage-canvas', (el) => el.focus());
+  const drag = async (x1, y1, x2, y2) => {
+    await page.mouse.move(x1, y1);
+    await page.mouse.down();
+    await page.mouse.move(x2, y2, { steps: 8 });
+    await page.mouse.up();
+    await settle(80);
+  };
   async function chord(mods, key) {
     for (const m of mods) await page.keyboard.down(m);
     await page.keyboard.press(key);
@@ -1269,6 +1276,12 @@ async function testMultiSelection(browser, base) {
   await chord(['Shift'], ']');
   await settle();
   assert((await say()) === '2 of 2 annotations selected.', 'both layers selected again');
+  await chord(['Meta'], 'd');
+  await settle();
+  assert(
+    (await count()) === '2' && (await say()) === '2 of 2 annotations selected.',
+    'the mod chord is not bound: Cmd+D duplicated nothing and said nothing',
+  );
   await chord(['Alt'], 'd');
   await settle();
   assert((await say()) === '2 annotations duplicated.', `Alt+D announced: "${await say()}"`);
@@ -1304,7 +1317,7 @@ async function testMultiSelection(browser, base) {
     `both copies sit 16px down and right of their originals (${ax3},${ay3} -> ${cx},${cy}; ${bx3},${by3} -> ${dx},${dy})`,
   );
   assert(
-    ax3 === ax2 + 0 && bx3 === bx2,
+    ax3 === ax2 && bx3 === bx2,
     `negative control: duplicating did not move the originals (${ax2}->${ax3}, ${bx2}->${bx3})`,
   );
 
@@ -1316,13 +1329,6 @@ async function testMultiSelection(browser, base) {
     const r = el.getBoundingClientRect();
     return { x: r.x, y: r.y, w: r.width, h: r.height };
   });
-  const drag = async (x1, y1, x2, y2) => {
-    await page.mouse.move(x1, y1);
-    await page.mouse.down();
-    await page.mouse.move(x2, y2, { steps: 8 });
-    await page.mouse.up();
-    await settle(80);
-  };
   await drag(box.x + 4, box.y + 4, box.x + box.w - 4, box.y + box.h - 4);
   assert(
     (await say()) === '4 of 4 annotations selected.',
@@ -1365,16 +1371,16 @@ async function testMultiSelection(browser, base) {
     `a plain click drops back to one layer: "${await say()}"`,
   );
 
-  step('task 24: a multi-selection draws an outline per layer and no handles at all');
+  step('task 24: a multi-selection outlines every layer and moves the handles onto the group');
   // Two readings off the live canvas, neither of them a raw colour count: the
   // marching ants land on fractional screen coordinates and anti-alias, so
   // "how many pure black pixels" answers a question about rounding rather than
   // about what was drawn.
-  //   - `block`: is there a 5x5 patch of pure white anywhere? A handle is an
-  //     8x8 white fill; a dash is 1px. Only handles can produce one.
-  //   - `box`: the bounding box of every pixel that differs from the canvas
-  //     with nothing selected. One outline bounds one layer; a second outline
-  //     30 image px away widens it.
+  //   - `seeds`: the top-left corner of every 5x5 patch of pure white. A handle
+  //     is an 8x8 white fill; a dash is 1px, so only handles produce one. Eight
+  //     seeds is one set of handles, sixteen would be a set per layer.
+  //   - `diff` / `width`: the pixels that differ from the canvas with nothing
+  //     selected, and how wide that region is.
   const baseline = () =>
     page.evaluate(() => {
       const canvas = document.querySelector('.stage-canvas');
@@ -1391,10 +1397,17 @@ async function testMultiSelection(browser, base) {
       const base = globalThis.__base;
       const pure = (i) =>
         data[i + 3] === 255 && data[i] === 255 && data[i + 1] === 255 && data[i + 2] === 255;
+      const solid = (x, y) => {
+        if (x + 4 >= width || y + 4 >= height) return false;
+        for (let yy = y; yy <= y + 4; yy++) {
+          for (let xx = x; xx <= x + 4; xx++) if (!pure((yy * width + xx) * 4)) return false;
+        }
+        return true;
+      };
       let diff = 0;
-      let block = false;
       let x0 = Infinity;
       let x1 = -Infinity;
+      const seeds = [];
       for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
           const i = (y * width + x) * 4;
@@ -1408,33 +1421,34 @@ async function testMultiSelection(browser, base) {
             if (x < x0) x0 = x;
             if (x > x1) x1 = x;
           }
-          if (!block && pure(i) && x + 4 < width && y + 4 < height) {
-            block = true;
-            for (let yy = y; yy <= y + 4 && block; yy++) {
-              for (let xx = x; xx <= x + 4 && block; xx++) {
-                if (!pure((yy * width + xx) * 4)) block = false;
-              }
-            }
+          // One seed per white square: the pixel that starts it, with no pure
+          // white immediately above or to its left.
+          if (solid(x, y) && !pure((y * width + x - 1) * 4) && !pure(((y - 1) * width + x) * 4)) {
+            seeds.push({ x, y });
           }
         }
       }
-      return { diff, block, width: x1 >= x0 ? x1 - x0 + 1 : 0 };
+      return { diff, seeds, width: x1 >= x0 ? x1 - x0 + 1 : 0 };
     });
+  const seedSpan = (c) =>
+    c.seeds.length === 0
+      ? 0
+      : Math.max(...c.seeds.map((s) => s.x)) - Math.min(...c.seeds.map((s) => s.x));
   await focusCanvas();
   await page.keyboard.press('Escape');
   await settle(80);
   await baseline();
   const none = await chrome();
   assert(
-    none.diff === 0 && !none.block,
+    none.diff === 0 && none.seeds.length === 0,
     'nothing selected: no chrome on the canvas, and it matches its own baseline',
   );
   await page.keyboard.press(']');
   await settle(80);
   const one = await chrome();
   assert(
-    one.diff > 200 && one.block,
-    `a lone selection paints an outline and solid white handles (${one.diff} pixels changed, handle block found)`,
+    one.diff > 200 && one.seeds.length === 8,
+    `a lone selection paints an outline and its eight handles (${one.diff} pixels changed, ${one.seeds.length} handle squares)`,
   );
   await chord(['Shift'], ']');
   await settle(80);
@@ -1448,8 +1462,12 @@ async function testMultiSelection(browser, base) {
     `the second layer got its own outline: the changed region widened from ${one.width}px to ${two.width}px, the two layers being 30 image px apart`,
   );
   assert(
-    !two.block,
-    'and no handle block anywhere once a second layer joins — handles belong to a single selection, which is the only thing a drag can resize',
+    two.seeds.length === 8,
+    `still one set of eight handles, not one set per layer (${two.seeds.length} handle squares — 16 would mean each layer kept its own)`,
+  );
+  assert(
+    seedSpan(two) > seedSpan(one) + 20,
+    `and that set moved onto the box around both layers: the handles now span ${seedSpan(two)}px, against ${seedSpan(one)}px for the lone selection`,
   );
 
   step('task 24: none of that selection chrome reaches an exported image');
@@ -1489,6 +1507,201 @@ async function testMultiSelection(browser, base) {
     extremes === 0,
     `no near-black or near-white pixel anywhere in the export (${extremes} found), while the same selection puts ${two.diff} pixels of chrome on the live canvas`,
   );
+
+  step('task 24: Alt and an arrow resizes every selected layer, about the group box');
+  // A layer's size, read the way its position is read: select it alone, resize
+  // one pixel each way, and take the size the live region reads out.
+  const readNextLayerSize = async () => {
+    await page.keyboard.press(']');
+    await chord(['Alt'], 'ArrowRight');
+    await chord(['Alt'], 'ArrowLeft');
+    await settle(60);
+    const m = (await say()).match(/resized to (\d+) by (\d+)/);
+    if (!m) throw new Error(`expected a resize announcement, got "${await say()}"`);
+    return m.slice(1).map(Number);
+  };
+  await focusCanvas();
+  await page.keyboard.press('Escape');
+  const [w1, h1] = await readNextLayerSize();
+  const [w2] = await readNextLayerSize();
+  await chord(['Shift'], '[');
+  await settle(60);
+  assert((await say()) === '2 of 4 annotations selected.', 'the same two layers selected');
+  await chord(['Alt', 'Shift'], 'ArrowRight');
+  await settle(80);
+  assert(
+    (await say()) === '2 annotations resized.',
+    `the live region counted the layers the resize touched: "${await say()}"`,
+  );
+  await page.keyboard.press('Escape');
+  const [w1b, h1b] = await readNextLayerSize();
+  const [w2b] = await readNextLayerSize();
+  assert(
+    w1b > w1 && w2b > w2,
+    `both selected layers grew with the group box (${w1}->${w1b}, ${w2}->${w2b})`,
+  );
+  assert(
+    h1b === h1,
+    `and only on the axis the key named: the first layer's height held at ${h1b}px`,
+  );
+  // Negative control: one selected layer, the same chord — that layer grows and
+  // the other does not, so "both grew" above is the selection doing the work.
+  await page.keyboard.press('Escape');
+  await page.keyboard.press(']');
+  await chord(['Alt', 'Shift'], 'ArrowRight');
+  await settle(80);
+  await page.keyboard.press('Escape');
+  const [w1c] = await readNextLayerSize();
+  const [w2c] = await readNextLayerSize();
+  assert(
+    w1c > w1b && w2c === w2b,
+    `negative control: one selected layer grew and the other did not (${w1b}->${w1c}, ${w2b}->${w2c})`,
+  );
+
+  step('task 24: dragging a group handle scales every selected layer');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press(']');
+  await chord(['Shift'], ']');
+  await settle(80);
+  assert((await say()) === '2 of 4 annotations selected.', 'two layers selected for the drag');
+  await baseline();
+  const handles = await chrome();
+  assert(
+    handles.seeds.length === 8,
+    `the group carries eight handles to grab (${handles.seeds.length})`,
+  );
+  const dpr = await page.evaluate(() => window.devicePixelRatio || 1);
+  const rect = await page.$eval('.stage-canvas', (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.x, y: r.y };
+  });
+  // Row-major scan order, so the first seed is the top-left handle: dragging it
+  // up and to the left grows the box every selected layer sits in.
+  const nw = handles.seeds[0];
+  await drag(
+    rect.x + nw.x / dpr + 3,
+    rect.y + nw.y / dpr + 3,
+    rect.x + nw.x / dpr - 17,
+    rect.y + nw.y / dpr - 17,
+  );
+  assert(
+    (await say()) === '2 annotations resized.',
+    `the handle drag resized the whole selection: "${await say()}"`,
+  );
+  await page.keyboard.press('Escape');
+  const [w1d] = await readNextLayerSize();
+  const [w2d] = await readNextLayerSize();
+  assert(
+    w1d > w1c && w2d > w2c,
+    `both layers grew from one handle drag (${w1c}->${w1d}, ${w2c}->${w2d})`,
+  );
+
+  step(
+    'task 24: the style bar keeps its value when the selection disagrees, and adopts when it agrees',
+  );
+  const pressedSwatch = () =>
+    page.$$eval('.swatches .swatch[aria-pressed="true"]', (els) =>
+      els.map((e) => e.getAttribute('aria-label')),
+    );
+  await focusCanvas();
+  await page.keyboard.press('Escape');
+  // The Rectangle tool, so the bar renders its colour swatches: with the Select
+  // tool and nothing selected there are no fields at all (stylebar.ts).
+  await page.keyboard.press('r');
+  // A number key with nothing selected only sets what the next shape is drawn
+  // in; with a selection it would write that colour to it, which is the other
+  // half of this decision and not what is under test here.
+  await page.keyboard.press('1');
+  await settle(60);
+  const [colorA] = await pressedSwatch();
+  await page.keyboard.press('r');
+  await page.keyboard.press('Enter');
+  await settle(80);
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('r');
+  await page.keyboard.press('2');
+  await settle(60);
+  const [colorB] = await pressedSwatch();
+  assert(
+    !!colorA && !!colorB && colorA !== colorB,
+    `two different palette colours (${colorA}, ${colorB})`,
+  );
+  await page.keyboard.press('r');
+  await page.keyboard.press('Enter');
+  await settle(80);
+  assert(
+    (await pressedSwatch()).join() === colorB,
+    `the lone new layer's colour is what the bar shows: "${colorB}"`,
+  );
+  await chord(['Shift'], '[');
+  await settle(80);
+  assert(
+    /^2 of \d+ annotations selected\.$/.test(await say()),
+    `extended onto the layer drawn in the other colour: "${await say()}"`,
+  );
+  assert(
+    (await pressedSwatch()).join() === colorB,
+    `the bar held its value rather than adopt one member's: still "${colorB}", not "${colorA}"`,
+  );
+  await page.keyboard.press('v');
+  await settle(60);
+  const centre = await page.$eval('.stage-canvas', (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+  });
+  await page.keyboard.down('Shift');
+  await page.mouse.click(centre.x, centre.y);
+  await page.keyboard.up('Shift');
+  await settle(80);
+  assert(
+    /^Rectangle selected, layer \d+ of \d+\.$/.test(await say()),
+    `shift-click took the topmost layer back out, leaving one: "${await say()}"`,
+  );
+  assert(
+    (await pressedSwatch()).join() === colorA,
+    `and with the disagreement gone the bar adopted the remaining layer's colour: "${colorA}"`,
+  );
+  // The discriminating case for "held, not adopted": from this state, the
+  // newest member of the selection and its topmost member are both the other
+  // colour, so any rule that picked one of them would flip the bar. It does
+  // not — the disagreement leaves the bar where it was.
+  await focusCanvas();
+  await chord(['Shift'], ']');
+  await settle(80);
+  assert(
+    /^2 of \d+ annotations selected\.$/.test(await say()),
+    `extended back onto the other colour: "${await say()}"`,
+  );
+  assert(
+    (await pressedSwatch()).join() === colorA,
+    `the bar is still "${colorA}", though both the newest and the topmost selected layer are "${colorB}"`,
+  );
+
+  step('task 24: a nudge past the image edge is not clamped');
+  // Recording the behaviour as it stands. Nothing in the nudge path clamps to
+  // the image, and that was true of the single selection before this task —
+  // this is here so a future clamp is a deliberate change, not a surprise.
+  await focusCanvas();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press(']');
+  await chord(['Shift'], ']');
+  await settle(60);
+  assert(/^2 of \d+ annotations selected\.$/.test(await say()), 'two layers selected to push off');
+  for (let i = 0; i < 40; i++) {
+    await chord(['Shift'], 'ArrowLeft');
+  }
+  await settle(120);
+  await page.keyboard.press('Escape');
+  const [offX] = await readNextLayer();
+  assert(
+    offX < 0,
+    `400px of Shift-nudges walked the first layer off the left edge to x=${offX}, unclamped`,
+  );
+
+  step('task 24: Escape says the selection went, like every other way of losing it');
+  await page.keyboard.press('Escape');
+  await settle(60);
+  assert((await say()) === 'Selection cleared.', `Escape announced: "${await say()}"`);
 
   assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
   await page.close();

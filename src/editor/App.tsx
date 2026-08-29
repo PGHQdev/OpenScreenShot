@@ -366,9 +366,9 @@ export function App() {
               previous one. Hold Shift with either bracket to add that annotation to the selection
               instead of replacing it. Press Enter to place the tool you picked in the toolbar. Use
               the arrow keys to move the selection by one pixel, Shift and an arrow to move it by
-              ten, and Alt and an arrow to resize it. Press Alt and D, or Control and D, to
-              duplicate the selection. With a crop open, the arrow keys move it, Alt and an arrow
-              resize it, Enter applies it and Escape cancels it.
+              ten, and Alt and an arrow to resize it. Press Alt and D to duplicate the selection.
+              With a crop open, the arrow keys move it, Alt and an arrow resize it, Enter applies it
+              and Escape cancels it.
             </p>
           </canvas>
 

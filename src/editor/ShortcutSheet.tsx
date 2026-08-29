@@ -28,7 +28,7 @@ function buildCommands(isMac: boolean): { label: string; keys: string }[] {
     { label: 'Place the active tool', keys: 'Enter' },
     { label: 'Move selection 1px / 10px', keys: `Arrows / ${shift}Arrows` },
     { label: 'Resize selection', keys: isMac ? '⌥Arrows' : 'Alt+Arrows' },
-    { label: 'Duplicate selection', keys: isMac ? '⌥D / ⌘D' : 'Alt+D / Ctrl+D' },
+    { label: 'Duplicate selection', keys: isMac ? '⌥D' : 'Alt+D' },
     { label: 'Copy to clipboard', keys: `${mod}C` },
     { label: 'Export', keys: `${mod}S` },
     { label: 'Undo', keys: `${mod}Z` },

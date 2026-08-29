@@ -3,17 +3,20 @@ import {
   annotationsInRect,
   bbox,
   createBlurCache,
+  drawGroupSelection,
   drawMarquee,
   drawSelection,
   genId,
   getHandles,
   handleAt,
+  handleAtRect,
   hasStroke,
   normalizeRect,
   pruneBlurCache,
   resizeRect,
   scaleAnnotation,
   translateAnnotation,
+  unionBBox,
   type Annotation,
   type BlurCache,
 } from '../../src/editor/annotations';
@@ -365,7 +368,11 @@ describe('scaleAnnotation', () => {
     expect(out.type === 'step' && out.r).toBe(6);
   });
 
-  it('returns endpoint-handle and rect types unchanged', () => {
+  // These used to pass through untouched, because a lone rect or arrow resizes
+  // through its own path in useEditor and never reached here. A multi-selection
+  // scales every member inside one shared box, so they are covered now — the
+  // lone-annotation paths still short-circuit before this function.
+  it('scales a rect against the box it was handed', () => {
     const rect: Annotation = {
       id: 'r',
       type: 'rect',
@@ -377,7 +384,12 @@ describe('scaleAnnotation', () => {
       strokeWidth: 4,
       fill: null,
     };
-    expect(scaleAnnotation(rect, { x: 0, y: 0, w: 10, h: 10 }, 'se', 5, 5)).toBe(rect);
+    expect(scaleAnnotation(rect, { x: 0, y: 0, w: 10, h: 10 }, 'se', 5, 5)).toMatchObject({
+      x: 0,
+      y: 0,
+      w: 15,
+      h: 15,
+    });
   });
 });
 
@@ -626,5 +638,155 @@ describe('drawSelection and drawMarquee', () => {
     expect(outline[0].args).toEqual([60, 80, 40, 20]);
     expect(outline[0].dash).toEqual(outline[1].dash);
     expect(outline[0].dash!.length).toBeGreaterThan(0);
+  });
+});
+
+describe('unionBBox', () => {
+  const box = (id: string, x: number, y: number, w = 20, h = 20): Annotation => ({
+    id,
+    type: 'rect',
+    x,
+    y,
+    w,
+    h,
+    stroke: '#f00',
+    strokeWidth: 4,
+    fill: null,
+  });
+
+  it('is the annotation itself for one', () => {
+    expect(unionBBox([box('a', 10, 20)])).toEqual({ x: 10, y: 20, w: 20, h: 20 });
+  });
+
+  it('spans every member', () => {
+    expect(unionBBox([box('a', 0, 0), box('b', 100, 50)])).toEqual({
+      x: 0,
+      y: 0,
+      w: 120,
+      h: 70,
+    });
+  });
+
+  it('is unchanged by a member already inside it', () => {
+    const outer = box('a', 0, 0, 200, 200);
+    expect(unionBBox([outer, box('b', 50, 50)])).toEqual({ x: 0, y: 0, w: 200, h: 200 });
+  });
+
+  it('has no box for an empty selection', () => {
+    expect(unionBBox([])).toEqual({ x: 0, y: 0, w: 0, h: 0 });
+  });
+});
+
+describe('scaleAnnotation inside a group box', () => {
+  // The multi-selection case: the box being dragged is not the annotation's
+  // own, so position and size both scale inside it.
+  const group = { x: 0, y: 0, w: 100, h: 100 };
+  const rect: Annotation = {
+    id: 'r',
+    type: 'rect',
+    x: 50,
+    y: 50,
+    w: 20,
+    h: 20,
+    stroke: '#f00',
+    strokeWidth: 4,
+    fill: null,
+  };
+
+  it('moves and grows a rect member by the box it sits in', () => {
+    // The box doubles from the se handle: everything inside doubles with it.
+    const out = scaleAnnotation(rect, group, 'se', 100, 100);
+    expect(bbox(out)).toEqual({ x: 100, y: 100, w: 40, h: 40 });
+  });
+
+  it('keeps the corner the drag anchors on fixed', () => {
+    const atOrigin: Annotation = { ...rect, x: 0, y: 0 };
+    const out = scaleAnnotation(atOrigin, group, 'se', 100, 100);
+    expect(bbox(out)).toMatchObject({ x: 0, y: 0 });
+  });
+
+  it('scales one axis only from an edge handle', () => {
+    const out = scaleAnnotation(rect, group, 'e', 100, 0);
+    expect(bbox(out)).toEqual({ x: 100, y: 50, w: 40, h: 20 });
+  });
+
+  it('carries both endpoints of an arrow', () => {
+    const arrow: Annotation = {
+      id: 'a',
+      type: 'arrow',
+      x1: 0,
+      y1: 0,
+      x2: 50,
+      y2: 50,
+      stroke: '#f00',
+      strokeWidth: 4,
+    };
+    expect(scaleAnnotation(arrow, group, 'se', 100, 100)).toMatchObject({
+      x1: 0,
+      y1: 0,
+      x2: 100,
+      y2: 100,
+    });
+  });
+
+  it('normalizes a member drawn inside out before scaling it', () => {
+    const inverted: Annotation = { ...rect, x: 70, y: 70, w: -20, h: -20 };
+    expect(bbox(scaleAnnotation(inverted, group, 'se', 100, 100))).toEqual({
+      x: 100,
+      y: 100,
+      w: 40,
+      h: 40,
+    });
+  });
+});
+
+describe('drawGroupSelection', () => {
+  it('outlines the group box and draws its eight handles', () => {
+    const calls: { op: string; args: number[] }[] = [];
+    const ctx = {
+      strokeStyle: '',
+      fillStyle: '',
+      lineWidth: 0,
+      lineDashOffset: 0,
+      save() {},
+      restore() {},
+      setLineDash() {},
+      strokeRect(...args: number[]) {
+        calls.push({ op: 'strokeRect', args });
+      },
+      fillRect(...args: number[]) {
+        calls.push({ op: 'fillRect', args });
+      },
+    } as unknown as CanvasRenderingContext2D;
+    drawGroupSelection(ctx, { x: 0, y: 0, w: 100, h: 50 }, (x, y) => ({ x, y }));
+    // Eight handle fills, and eight rings plus the outline's two dashed passes.
+    expect(calls.filter((c) => c.op === 'fillRect')).toHaveLength(8);
+    expect(calls.filter((c) => c.op === 'strokeRect')).toHaveLength(10);
+    const fills = calls
+      .filter((c) => c.op === 'fillRect')
+      .map((c) => [c.args[0] + 4, c.args[1] + 4]);
+    expect(fills).toContainEqual([0, 0]);
+    expect(fills).toContainEqual([100, 50]);
+    expect(fills).toContainEqual([50, 0]);
+  });
+});
+
+describe('handleAtRect', () => {
+  const box = { x: 10, y: 10, w: 100, h: 100 };
+  const identity = (x: number, y: number) => ({ x, y });
+
+  it('finds the handle under the pointer', () => {
+    expect(handleAtRect(box, identity, 10, 10)).toBe('nw');
+    expect(handleAtRect(box, identity, 110, 110)).toBe('se');
+    expect(handleAtRect(box, identity, 60, 10)).toBe('n');
+  });
+
+  it('allows the same slack a lone annotation handle allows', () => {
+    expect(handleAtRect(box, identity, 20, 20)).toBe('nw');
+    expect(handleAtRect(box, identity, 25, 25)).toBeNull();
+  });
+
+  it('finds nothing in the middle of the box', () => {
+    expect(handleAtRect(box, identity, 60, 60)).toBeNull();
   });
 });

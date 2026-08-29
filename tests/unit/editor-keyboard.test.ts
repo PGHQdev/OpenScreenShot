@@ -9,10 +9,16 @@ import {
   placementRect,
   resizeAnnotationBy,
   resizeCropBy,
+  resizeSelectionBy,
   STEP_COARSE,
   STEP_FINE,
 } from '../../src/editor/keyboard';
-import { bbox, translateAnnotation, type Annotation } from '../../src/editor/annotations';
+import {
+  bbox,
+  translateAnnotation,
+  unionBBox,
+  type Annotation,
+} from '../../src/editor/annotations';
 
 const rect: Annotation = {
   id: 'r',
@@ -277,6 +283,51 @@ describe('resizeAnnotationBy', () => {
     for (let i = 0; i < 10; i++) fine = resizeAnnotationBy(fine, STEP_FINE, 0);
     const coarse = resizeAnnotationBy(rect, STEP_COARSE, 0);
     expect(bbox(fine)).toEqual(bbox(coarse));
+  });
+});
+
+describe('resizeSelectionBy', () => {
+  const box = (id: string, x: number): Annotation => ({ ...rect, id, x, y: 0, w: 100, h: 100 });
+  const pair = [box('a', 0), box('b', 200)];
+
+  it('drives the bottom-right corner of the box around the whole selection', () => {
+    const out = resizeSelectionBy(pair, STEP_COARSE, 0);
+    // The selection spans 300px; ten more makes it 310.
+    expect(unionBBox(out).w).toBe(300 + STEP_COARSE);
+    expect(unionBBox(out).h).toBe(100);
+  });
+
+  it('holds the corner opposite the one it drives', () => {
+    const out = resizeSelectionBy(pair, STEP_COARSE, STEP_COARSE);
+    expect(unionBBox(out)).toMatchObject({ x: 0, y: 0 });
+  });
+
+  it('scales every member, not only the one on the moving edge', () => {
+    const out = resizeSelectionBy(pair, 300, 0);
+    // The box doubles, so each member doubles in width and in its distance
+    // from the anchored corner — the arrangement is kept, not stretched apart.
+    expect(bbox(out[0])).toMatchObject({ x: 0, w: 200 });
+    expect(bbox(out[1])).toMatchObject({ x: 400, w: 200 });
+  });
+
+  it('leaves the axis the key did not name alone', () => {
+    const out = resizeSelectionBy(pair, 0, STEP_COARSE);
+    // A scale is a ratio, so these carry float noise the live region rounds
+    // away — the same allowance the text-resize case above makes.
+    expect(unionBBox(out).w).toBe(300);
+    expect(unionBBox(out).h).toBeCloseTo(100 + STEP_COARSE);
+  });
+
+  it('floors the shrink so the selection cannot fold inside out', () => {
+    const out = resizeSelectionBy(pair, -1000, -1000);
+    expect(unionBBox(out).w).toBe(MIN_SIZE);
+    expect(unionBBox(out).h).toBe(MIN_SIZE);
+  });
+
+  it('ten fine steps land where one coarse step does', () => {
+    let fine = pair;
+    for (let i = 0; i < 10; i++) fine = resizeSelectionBy(fine, STEP_FINE, 0);
+    expect(unionBBox(fine).w).toBeCloseTo(unionBBox(resizeSelectionBy(pair, STEP_COARSE, 0)).w);
   });
 });
 

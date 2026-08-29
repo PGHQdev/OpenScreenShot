@@ -20,6 +20,7 @@ import {
   normalizeRect,
   resizeRect,
   scaleAnnotation,
+  unionBBox,
   type Annotation,
   type AnnotationType,
   type Point,
@@ -146,6 +147,21 @@ export function resizeAnnotationBy(a: Annotation, dx: number, dy: number): Annot
     return { ...a, x: r.x, y: r.y, w: r.w, h: r.h };
   }
   return scaleAnnotation(a, start, 'se', cdx, cdy);
+}
+
+/**
+ * Grow or shrink a whole selection by a keyboard delta. The arrows drive the
+ * bottom-right corner of the box around the selection while the opposite
+ * corner stays put — the same gesture resizeAnnotationBy applies to one
+ * annotation, applied to the box the pointer's group handles drag. Every
+ * member is scaled inside that box, so the selection keeps its arrangement
+ * instead of each layer growing on its own and drifting apart.
+ */
+export function resizeSelectionBy(sel: Annotation[], dx: number, dy: number): Annotation[] {
+  const box = unionBBox(sel);
+  const cdx = dx === 0 ? 0 : Math.max(dx, MIN_SIZE - box.w);
+  const cdy = dy === 0 ? 0 : Math.max(dy, MIN_SIZE - box.h);
+  return sel.map((a) => scaleAnnotation(a, box, 'se', cdx, cdy));
 }
 
 function clamp(v: number, lo: number, hi: number): number {
