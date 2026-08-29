@@ -993,8 +993,18 @@ body {
   flex: 1 1 auto;
 }
 
+/*
+ * --text-3 alone used to separate this from the statusbar's own --text-2
+ * text; Task 45 raised --text-3 to clear 4.5:1, which compressed its own
+ * contrast against --text-2 to roughly 1.2-1.5:1 — still fine as body text
+ * (both clear 4.5:1 on --surface-1 independently), but too close to read as
+ * two tiers by colour alone anymore. font-size is the non-colour cue,
+ * matching --text-3's other tertiary-label pairing in this file
+ * (.toolbar-count).
+ */
 .status-hint {
   color: var(--text-3);
+  font-size: var(--fs-xs);
 }
 
 /* ---- Spinner (shared shape with popup) ---- */
