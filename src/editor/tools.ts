@@ -54,6 +54,15 @@ export const TOOL_LIST: ToolDef[] = [
   { id: 'crop', label: 'Crop', shortcut: 'C' },
 ];
 
+/**
+ * Tool rail dividers: rendered after the tool whose id is a member, splitting
+ * the twelve-tool column into Select / the drawing and glyph tools / the
+ * colour and redaction tools / Crop. Select and Crop bound the run because
+ * they are the two tools with no style-bar fields (see stylebar.ts) — every
+ * tool between them draws something onto the canvas.
+ */
+export const TOOL_DIVIDER_AFTER: ReadonlySet<Tool> = new Set(['select', 'step', 'eyedropper']);
+
 /** Per-tool options for {@link createShapeDraft} beyond the shared stroke style. */
 export interface ShapeDraftOptions {
   spotlightShape?: SpotlightShape;

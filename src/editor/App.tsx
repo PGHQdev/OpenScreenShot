@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { isTypingTarget, useEditor } from './useEditor';
-import { TOOL_LIST, type Tool } from './tools';
+import { TOOL_DIVIDER_AFTER, TOOL_LIST, type Tool } from './tools';
 import { IMAGE_FORMATS, type ImageFormat } from './export';
 import { clampPdfMargin, MAX_PDF_MARGIN_MM, MIN_PDF_MARGIN_MM, type PdfOptions } from './pdf';
 import { STROKE_WIDTHS, type BlurMode, type SpotlightShape } from './annotations';
@@ -226,15 +226,20 @@ export function App() {
           }
         >
           {TOOL_LIST.map((t) => (
-            <button
-              key={t.id}
-              class={`tool-btn${ed.tool === t.id ? ' is-active' : ''}`}
-              title={`${t.label} (${t.shortcut})`}
-              aria-pressed={ed.tool === t.id}
-              onClick={() => ed.setTool(t.id)}
-            >
-              <ToolIcon id={t.id} />
-            </button>
+            <>
+              <button
+                key={t.id}
+                class={`tool-btn${ed.tool === t.id ? ' is-active' : ''}`}
+                title={`${t.label} (${t.shortcut})`}
+                aria-pressed={ed.tool === t.id}
+                onClick={() => ed.setTool(t.id)}
+              >
+                <ToolIcon id={t.id} />
+              </button>
+              {TOOL_DIVIDER_AFTER.has(t.id) ? (
+                <div class="toolbar-divider" role="separator" aria-orientation="horizontal" />
+              ) : null}
+            </>
           ))}
 
           {ed.annotations.length > 0 ? (
