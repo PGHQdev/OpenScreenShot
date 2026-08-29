@@ -251,7 +251,19 @@ export async function restoreRecBadge(): Promise<void> {
     // badge lying in the one state where it is the user's only indicator. The
     // last answer this worker did get is better than either guess: it clears a
     // capture's leftover flash without touching a live REC.
-    if (lastKnownLive === false) await clearRecBadge();
+    if (lastKnownLive === false) {
+      await clearRecBadge();
+      return;
+    }
+    // Never had an answer — an MV3 worker that restarted. `getContexts` is a
+    // second authority on the same question and does not go through session
+    // storage; `handleQuery` already treats it as the arbiter of whether a
+    // recording is live. No offscreen document means nothing is recording, so
+    // a capture's leftover flash can go. A `getContexts` that also fails
+    // leaves the badge exactly as it is.
+    if (lastKnownLive === null && !(await hasOffscreenDocument().catch(() => true))) {
+      await clearRecBadge();
+    }
     return;
   }
   lastKnownLive = !!state;
@@ -793,14 +805,34 @@ async function handleOverlayHealed(sessionId: string): Promise<void> {
  * the same shape: learn something mid-recording, write it to state, re-heal to
  * push it into the bar.
  */
-async function handleEngineWriteFailed(sessionId: string, kind: 'media' | 'events'): Promise<void> {
+async function handleEngineWriteFailed(
+  sessionId: string,
+  kind: 'media' | 'events' | undefined,
+): Promise<void> {
   const state = await getRecState();
   if (state && state.sessionId !== sessionId) return;
-  if (kind === 'media' && state) {
-    await setRecState({ sessionId, writeFailed: true });
-    void healOverlay(state.tabId);
+  // Absent kind means an engine older than this message shape. Read it as
+  // media: reporting a lost recording as a lost cursor track is the one
+  // direction of that mistake that costs the user data.
+  const media = kind !== 'events';
+  if (media) {
+    if (state) {
+      await setRecState({ sessionId, writeFailed: true });
+      void healOverlay(state.tabId);
+    }
+    await reportFailure('chunk-write-failed');
+    return;
   }
-  await reportFailure(kind === 'media' ? 'chunk-write-failed' : 'events-write-failed');
+  // A broken store breaks both writers at once — media chunks land every
+  // TIMESLICE_MS and cursor batches every FLUSH_INTERVAL_MS, on independent
+  // phases — so both failures arrive inside the same second in arbitrary
+  // order. Last-writer-wins would leave "The video is fine" standing half the
+  // time, beside a control bar reading NOT SAVING. The graver sentence keeps
+  // the slot, the same rule `handleOverlayLost` uses below.
+  if (state?.writeFailed) return;
+  const parked = await pendingFailure().catch(() => null);
+  if (parked?.code === 'chunk-write-failed') return;
+  await reportFailure('events-write-failed');
 }
 
 async function handleEngineError(sessionId: string, message: string): Promise<void> {
@@ -956,8 +988,9 @@ chrome.permissions.onAdded.addListener((added) => {
 /**
  * The '!' badge belongs to a parked failure nobody has read. The surface that
  * reads one out removes the key, and the badge has to follow — the popup is
- * closing at that moment and cannot own a badge that outlives it, and a
- * recorder page never touched it in the first place.
+ * closing at that moment and cannot own a badge that outlives it, and the
+ * recorder page, which reads a parked chunk-write failure, has no badge of
+ * its own to put down.
  */
 chrome.storage.session.onChanged.addListener((changes) => {
   const change = changes[REC_FAILURE_KEY];

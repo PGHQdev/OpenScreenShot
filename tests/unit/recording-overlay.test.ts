@@ -18,7 +18,18 @@ describe('isNearBar', () => {
 });
 
 describe('shouldShowBar', () => {
-  const idle = { sinceMountMs: 60_000, sinceNearMs: 60_000, hovering: false, paused: false };
+  // Every field is required, so a policy input cannot be forgotten at a call
+  // site. The copy inside `mountRecordingOverlay` carries the same signature —
+  // it has to be duplicated (Chrome serializes that function via toString()
+  // and drops its closure), so the only thing keeping the two honest is that
+  // they are spelled identically.
+  const idle = {
+    sinceMountMs: 60_000,
+    sinceNearMs: 60_000,
+    hovering: false,
+    paused: false,
+    warning: false,
+  };
   it('hides when idle', () => expect(shouldShowBar(idle)).toBe(false));
   it('shows during the mount grace', () =>
     expect(shouldShowBar({ ...idle, sinceMountMs: 1000 })).toBe(true));
@@ -26,6 +37,12 @@ describe('shouldShowBar', () => {
     expect(shouldShowBar({ ...idle, sinceNearMs: 100 })).toBe(true));
   it('shows while hovered', () => expect(shouldShowBar({ ...idle, hovering: true })).toBe(true));
   it('shows while paused', () => expect(shouldShowBar({ ...idle, paused: true })).toBe(true));
+  // Chunks failing to reach storage is the one failure that loses the
+  // recording while it is being made, and a bar that hides three seconds
+  // later takes the only live warning with it.
+  it('shows while warning', () => expect(shouldShowBar({ ...idle, warning: true })).toBe(true));
+  it('keeps hiding once the warning is not set', () =>
+    expect(shouldShowBar({ ...idle, warning: false })).toBe(false));
   it('hides at exactly the grace boundary', () =>
     expect(shouldShowBar({ ...idle, sinceNearMs: 3000 })).toBe(false));
 });

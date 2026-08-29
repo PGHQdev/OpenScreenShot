@@ -43,7 +43,7 @@ export function shouldShowBar(args: {
   sinceNearMs: number;
   hovering: boolean;
   paused: boolean;
-  warning?: boolean;
+  warning: boolean;
 }): boolean {
   if (args.paused || args.hovering || args.warning) return true;
   return args.sinceMountMs < OVERLAY_GRACE_MS || args.sinceNearMs < OVERLAY_GRACE_MS;
@@ -204,12 +204,29 @@ export function mountRecordingOverlay(
       border-radius: 4px;
       background: rgba(255, 255, 255, .12);
     }
-    /* The bar is always dark, whatever the page behind it, so this is the one
-       place in the product a fixed pair is right. Amber ground with near-black
-       text reads as the danger accent and clears 4.5:1 without a token. */
+    /* The bar is always dark over whatever page it sits on, so this is the one
+       place in the product a fixed pair is right — a closed shadow root in a
+       serialized function cannot read a CSS variable. The pair is the dark
+       theme's --danger-ink on its --surface-1, kept in step by
+       tests/unit/overlay-warning-contrast.test.ts, which reads both values
+       from here and compares them to the generated tokens. 10.10:1. */
     .chip.warn {
-      background: #ffb340;
+      background: #ffbb4d;
       color: #1c1c1e;
+    }
+    /* Carries the warning to assistive tech exactly once, on the edge. The
+       visible chip cannot do it: renderChips replaces the row on every heal,
+       so an alert living there re-announces on each one, and on a fresh mount
+       it arrives inside a whole subtree, which most screen readers skip. This
+       node is in the document from mount with no text, so the one text change
+       is the one announcement. */
+    .announcer {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
     }
     button {
       all: unset;
@@ -252,7 +269,8 @@ export function mountRecordingOverlay(
   /**
    * Rebuild the chip row. The warning goes first: it is the only chip that
    * reports a problem rather than a track, and a row it can be scrolled off
-   * the end of is a row it can be missed in.
+   * the end of is a row it can be missed in. Purely visual — the announcing
+   * is the announcer's job, because this row is replaced on every heal.
    */
   function renderChips(
     next: { mic: boolean; tabAudio: boolean; webcam: boolean },
@@ -262,13 +280,23 @@ export function mountRecordingOverlay(
     if (warn) {
       const chip = makeChip(t('recOverlayNotSaving', 'NOT SAVING'));
       chip.className = 'chip warn';
-      chip.setAttribute('role', 'alert');
       chip.setAttribute('data-testid', 'rec-overlay-warning');
       chips.appendChild(chip);
     }
     if (next.mic) chips.appendChild(makeChip(t('recOverlayMic', 'MIC')));
     if (next.tabAudio) chips.appendChild(makeChip(t('recOverlayTabAudio', 'TAB')));
     if (next.webcam) chips.appendChild(makeChip(t('recOverlayWebcam', 'CAM')));
+  }
+
+  const announcer = document.createElement('div');
+  announcer.className = 'announcer';
+  announcer.setAttribute('role', 'alert');
+  announcer.setAttribute('data-testid', 'rec-overlay-announcer');
+  bar.appendChild(announcer);
+
+  /** Say it once. `warning` is one-way, so this runs at most once per run. */
+  function announceWarning(): void {
+    announcer.textContent = t('recOverlayNotSaving', 'NOT SAVING');
   }
 
   let warning = writeFailed;
@@ -288,6 +316,10 @@ export function mountRecordingOverlay(
 
   shadow.appendChild(bar);
   document.documentElement.appendChild(host);
+  // After the append, never before: a live region has to be in the document
+  // when its text changes, or the change is part of the insertion and is not
+  // announced. This is the fresh-mount half of the edge.
+  if (warning) announceWarning();
 
   // --- Webcam bubble / permission frame ------------------------------------
 
@@ -558,9 +590,14 @@ export function mountRecordingOverlay(
     timer.textContent = formatTimer(nowT());
 
     // One-way, like the tracks above: a run that has started losing chunks
-    // does not stop having lost them.
+    // does not stop having lost them, and a stale heal carrying `false`
+    // cannot take the warning back off.
+    const wasWarning = warning;
     warning = warning || nextWriteFailed;
     renderChips(nextTracks, warning);
+    // The sync half of the edge: only the false -> true transition speaks, so
+    // the heal on every popup open and every navigation stays silent.
+    if (warning && !wasWarning) announceWarning();
 
     // Drop the frame only when neither device is left. A camera that is gone
     // makes the bubble a preview of something nobody records, but the same

@@ -125,8 +125,14 @@ export type EngineMessage =
    * 'media' loses video or audio the user believes they are recording, and
    * 'events' loses only the cursor track, so zoom and click effects go missing
    * from an otherwise intact file. Sent once per kind per run.
+   *
+   * Optional for the same reason `tracks` above is: `isEngineMessage` is a
+   * prefix check, not a validator, so an engine older than this shape sends
+   * no kind at all. Absent reads as 'media' at the handler — the graver of
+   * the two, because reporting a lost recording as a lost cursor track is the
+   * one direction of that mistake that costs the user data.
    */
-  | { type: 'ENGINE_WRITE_FAILED'; sessionId: string; kind: 'media' | 'events' }
+  | { type: 'ENGINE_WRITE_FAILED'; sessionId: string; kind?: 'media' | 'events' }
   | { type: 'ENGINE_STOPPED'; sessionId: string; canceled: boolean }
   | { type: 'ENGINE_ERROR'; sessionId: string; message: string }
   | { type: 'OVERLAY_LOST'; sessionId: string }

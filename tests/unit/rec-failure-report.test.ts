@@ -462,6 +462,60 @@ describe('a write that never reached IndexedDB', () => {
     expect(state.writeFailed).toBe(false);
   });
 
+  /**
+   * A broken store breaks both writers inside the same second, on independent
+   * phases, so the arrival order is arbitrary. Last-writer-wins left "The
+   * video is fine" standing about half the time — next to a control bar
+   * reading NOT SAVING, and pointing at a page that shows nothing.
+   */
+  it('does not let a lost cursor track overwrite a lost recording', async () => {
+    session.set(REC_STATE_KEY, liveState());
+    await loadWorker();
+    void send({ type: 'ENGINE_WRITE_FAILED', sessionId: 'sess-1', kind: 'media' });
+    await settle();
+    void send({ type: 'ENGINE_WRITE_FAILED', sessionId: 'sess-1', kind: 'events' });
+    await settle();
+
+    expect(parked(), 'the graver sentence keeps the slot').toBe('chunk-write-failed');
+    expect(broadcasts(), 'and an open popup is not told the video is fine').toEqual([
+      'chunk-write-failed',
+    ]);
+  });
+
+  it('holds that precedence with the key already consumed', async () => {
+    session.set(REC_STATE_KEY, liveState());
+    await loadWorker();
+    void send({ type: 'ENGINE_WRITE_FAILED', sessionId: 'sess-1', kind: 'media' });
+    await settle();
+    // The popup read the message and removed the key; the run's own flag is
+    // what still knows the video is going.
+    await chrome.storage.session.remove(REC_FAILURE_KEY);
+    void send({ type: 'ENGINE_WRITE_FAILED', sessionId: 'sess-1', kind: 'events' });
+    await settle();
+    expect(parked()).toBe(null);
+  });
+
+  it('lets a lost recording overwrite a lost cursor track', async () => {
+    session.set(REC_STATE_KEY, liveState());
+    await loadWorker();
+    void send({ type: 'ENGINE_WRITE_FAILED', sessionId: 'sess-1', kind: 'events' });
+    await settle();
+    expect(parked()).toBe('events-write-failed');
+    void send({ type: 'ENGINE_WRITE_FAILED', sessionId: 'sess-1', kind: 'media' });
+    await settle();
+    expect(parked(), 'the graver sentence takes the slot').toBe('chunk-write-failed');
+  });
+
+  it('reads a kind-less message as the graver of the two', async () => {
+    session.set(REC_STATE_KEY, liveState());
+    await loadWorker();
+    // An engine older than the kind field. Falling to 'events' would report a
+    // lost recording as harmless.
+    void send({ type: 'ENGINE_WRITE_FAILED', sessionId: 'sess-1' });
+    await settle();
+    expect(parked()).toBe('chunk-write-failed');
+  });
+
   it('ignores a write failure from a session that already ended', async () => {
     session.set(REC_STATE_KEY, liveState('sess-2'));
     await loadWorker();
@@ -555,6 +609,12 @@ describe('a finished recording whose page will not open', () => {
 
 describe('a badge with nothing to restore it to', () => {
   it('leaves REC alone when the store that would answer has failed', async () => {
+    // A genuinely live recording has an offscreen document — `handleQuery`
+    // treats its absence as proof the run died, so the fake has to carry one
+    // for this to be the state it claims to be.
+    fakeChrome.runtime.getContexts = vi.fn(() =>
+      Promise.resolve([{ contextType: 'OFFSCREEN_DOCUMENT' }]),
+    ) as unknown as typeof fakeChrome.runtime.getContexts;
     session.set(REC_STATE_KEY, liveState());
     await loadWorker();
     badgeText.length = 0;
@@ -720,6 +780,27 @@ describe('the badge when the store cannot answer', () => {
     sessionThrows = true;
     await mod.restoreRecBadge();
     expect(badgeText.at(-1), 'the tick would otherwise stick').toBe('');
+  });
+
+  it('clears a flash after a worker restart with no recording behind it', async () => {
+    // lastKnownLive is null — this worker has never had an answer. getContexts
+    // is a second, independent authority, and it says nothing is recording.
+    const mod = await loadWorker();
+    await fakeChrome.action.setBadgeText({ text: '\u2713' });
+    sessionThrows = true;
+    await mod.restoreRecBadge();
+    expect(badgeText.at(-1)).toBe('');
+  });
+
+  it('leaves it alone after a restart with a recording still live', async () => {
+    fakeChrome.runtime.getContexts = vi.fn(() =>
+      Promise.resolve([{ contextType: 'OFFSCREEN_DOCUMENT' }]),
+    ) as unknown as typeof fakeChrome.runtime.getContexts;
+    const mod = await loadWorker();
+    badgeText.length = 0;
+    sessionThrows = true;
+    await mod.restoreRecBadge();
+    expect(badgeText).not.toContain('');
   });
 
   it('still leaves a live REC alone', async () => {

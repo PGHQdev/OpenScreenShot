@@ -578,17 +578,19 @@ async function main() {
     await page.goto(`${base}${PAGE}`, { waitUntil: 'load' });
     const dom = await page.createCDPSession();
 
-    /** The rendered warning chip, piercing the closed shadow root, or null. */
-    const warningChip = async () => {
+    /** A rendered node inside the closed shadow root, by testid, or null. */
+    const pierced = async (testid) => {
       const { root } = await dom.send('DOM.getDocument', { depth: -1, pierce: true });
       const stack = [root];
       while (stack.length > 0) {
         const node = stack.pop();
         const attrs = node.attributes ?? [];
         for (let i = 0; i < attrs.length; i += 2) {
-          if (attrs[i] === 'data-testid' && attrs[i + 1] === 'rec-overlay-warning') {
+          if (attrs[i] === 'data-testid' && attrs[i + 1] === testid) {
             const { outerHTML } = await dom.send('DOM.getOuterHTML', { nodeId: node.nodeId });
-            return outerHTML;
+            // backendNodeId is stable for the lifetime of a node, unlike
+            // nodeId, so it is what tells a replaced node from a kept one.
+            return { html: outerHTML, id: node.backendNodeId };
           }
         }
         for (const child of [
@@ -609,8 +611,19 @@ async function main() {
       // Mount clean, exactly as a healthy recording does.
       return mount('seg-1', 0, false, { mic: false, tabAudio: true, webcam: false }, false);
     }, overlayFile);
+    const warningChip = () => pierced('rec-overlay-warning');
+    const announcer = () => pierced('rec-overlay-announcer');
     assert(mounted === 'fresh', `the bar mounted (${mounted})`);
     assert((await warningChip()) === null, 'a healthy recording shows no warning chip');
+    // The live region is in the document from mount, empty: a text change in
+    // a region already there is what assistive tech announces, and an alert
+    // inserted as part of a subtree is what it mostly ignores.
+    const quiet = await announcer();
+    assert(
+      quiet?.html.includes('role="alert"') &&
+        !quiet.html.includes(messages.recOverlayNotSaving.message),
+      `the announcer is mounted and silent (${quiet?.html})`,
+    );
 
     // The worker re-heals with the flag set: the 'synced' branch, which is the
     // one production takes mid-recording (see handleEngineWriteFailed).
@@ -620,10 +633,36 @@ async function main() {
     assert(synced === 'synced', `the re-heal updated the live bar (${synced})`);
     const chipHtml = await warningChip();
     assert(
-      chipHtml?.includes(messages.recOverlayNotSaving.message),
-      `the warning is rendered in the bar (${chipHtml})`,
+      chipHtml?.html.includes(messages.recOverlayNotSaving.message),
+      `the warning is rendered in the bar (${chipHtml?.html})`,
     );
-    assert(chipHtml?.includes('role="alert"'), 'and announces itself');
+    const spoken = await announcer();
+    assert(
+      spoken?.html.includes(messages.recOverlayNotSaving.message),
+      `and the live region speaks it, on the edge (${spoken?.html})`,
+    );
+
+    // A second heal is what every popup open and every navigation does. It
+    // must not re-announce, and the only way to be sure is that the live
+    // region is the same node with the same text — a replaced alert node is
+    // a fresh announcement.
+    await page.evaluate(() =>
+      window.__mount('seg-1', 5000, false, { mic: false, tabAudio: true, webcam: false }, true),
+    );
+    const chipAgain = await warningChip();
+    const spokenAgain = await announcer();
+    assert(
+      chipAgain?.html.includes(messages.recOverlayNotSaving.message),
+      'a later heal keeps the chip',
+    );
+    assert(
+      chipAgain?.id !== chipHtml?.id,
+      `and rebuilds the chip row (${chipHtml?.id} -> ${chipAgain?.id}) — which is why the alert cannot live in it`,
+    );
+    assert(
+      spokenAgain?.id === spoken?.id && spokenAgain?.html === spoken?.html,
+      `while the live region is untouched, so it does not speak again (${spoken?.id})`,
+    );
 
     // Well past OVERLAY_GRACE_MS with the pointer nowhere near the bar: the
     // host is light DOM, so its computed opacity is readable directly.
