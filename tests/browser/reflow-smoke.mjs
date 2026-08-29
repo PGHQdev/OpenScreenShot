@@ -407,10 +407,8 @@ async function testEditor(browser, base, messages) {
 
 // ----------------------------------------------------------------- popup ---
 async function testPopup(browser, base, messages) {
-  step('POPUP — opening past onboarding (mode-card view)');
-  const { page, crashes } = await newPage(browser, messages, {
-    'openscreenshot:settings': { showOnboarding: false },
-  });
+  step('POPUP — opening (mode-card view)');
+  const { page, crashes } = await newPage(browser, messages, {});
   // The popup's width is fixed at 340px by design — it is a browser-drawn
   // menu, not a navigable page, and its width does not track the viewport
   // the way a tab's does. There is no width breakpoint for it; the check
@@ -528,40 +526,38 @@ async function testRecorder(browser, base, messages) {
 
 // ------------------------------------------------------------------ setup ---
 async function testSetup(browser, base, messages) {
-  step('SETUP — opening the install welcome view (feature grid)');
+  step('SETUP — opening the permission checklist');
   const { page, crashes } = await newPage(browser, messages, {});
   await page.setViewport({ width: 1280, height: 860 });
-  await page.goto(`${base}/src/setup/index.html?from=install`, { waitUntil: 'networkidle0' });
-  await page.waitForSelector('[data-testid="hero"]');
-  const wideColumns = await page.evaluate(
-    () =>
-      getComputedStyle(document.querySelector('.feature-grid')).gridTemplateColumns.split(' ')
-        .length,
+  await page.goto(`${base}/src/setup/index.html?from=record`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('[data-testid="row-tabcapture"]');
+  const wideRow = await page.evaluate(
+    () => getComputedStyle(document.querySelector('.row')).flexDirection,
   );
-  assert(wideColumns === 2, `feature grid has ${wideColumns} columns at 1280px`);
+  assert(wideRow === 'row', `a permission row lays out side-by-side (${wideRow}) at 1280px`);
 
-  step('SETUP — 320px width: feature grid stacks to one column, no horizontal overflow');
+  step('SETUP — 320px width: the checklist reflows without horizontal overflow');
   await page.setViewport({ width: 320, height: 800 });
   await new Promise((r) => setTimeout(r, 150));
   const overflow320 = await noHorizontalOverflow(page, 320);
   assert(overflow320.ok, `document.scrollWidth ${overflow320.scrollWidth} <= 320`);
-  const narrowColumns = await page.evaluate(
-    () =>
-      getComputedStyle(document.querySelector('.feature-grid')).gridTemplateColumns.split(' ')
-        .length,
-  );
-  assert(narrowColumns === 1, `feature grid stacks to ${narrowColumns} column below --bp-sm`);
+  const wrapped = await page.evaluate(() => {
+    const pills = [...document.querySelectorAll('[data-testid="trust-strip"] .trust-pill')];
+    return new Set(pills.map((el) => el.getBoundingClientRect().top)).size;
+  });
+  assert(wrapped > 1, `the trust strip wraps onto ${wrapped} lines rather than overflowing`);
 
-  step('SETUP — 200% zoom equivalent (640x400): the CTA reaches via document scroll');
+  step('SETUP — 200% zoom equivalent (640x400): the last row reaches via document scroll');
   await page.setViewport({ width: 640, height: 400 });
   await new Promise((r) => setTimeout(r, 150));
-  const ctaReachable = await page.evaluate(() => {
-    const cta = document.querySelector('.btn-hero');
-    cta.scrollIntoView();
-    const r = cta.getBoundingClientRect();
+  const lastReachable = await page.evaluate(() => {
+    const rows = document.querySelectorAll('.setup-rows .row');
+    const last = rows[rows.length - 1];
+    last.scrollIntoView();
+    const r = last.getBoundingClientRect();
     return r.top >= -1 && r.bottom <= window.innerHeight + 1;
   });
-  assert(ctaReachable, 'the welcome CTA scrolls into view at 640x400');
+  assert(lastReachable, 'the last permission row scrolls into view at 640x400');
 
   assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
   await page.close();

@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   classifyMediaError,
+  PENDING_RECORD_TTL_MS,
+  pendingRecordIsLive,
   popupWarnings,
   setupComplete,
   siteSettingsUrl,
+  type PendingRecord,
 } from '../../src/shared/permissions';
+import { DEFAULT_RECORDING_SETTINGS } from '../../src/shared/recording-types';
 
 function mediaError(name: string, message: string): DOMException {
   return new DOMException(message, name);
@@ -82,5 +86,50 @@ describe('popupWarnings', () => {
     expect(
       popupWarnings({ mic: true, webcam: true }, { camera: 'prompt', mic: 'granted' }),
     ).toEqual([]);
+  });
+});
+
+describe('pendingRecordIsLive', () => {
+  const NOW = 1_700_000_000_000;
+  const parked: PendingRecord = {
+    settings: DEFAULT_RECORDING_SETTINGS,
+    tabId: 42,
+    at: NOW - 5_000,
+  };
+
+  it('accepts a fresh click on the tab it was aimed at', () => {
+    expect(pendingRecordIsLive(parked, NOW, 42)).toBe(true);
+  });
+
+  it('accepts a click parked exactly at the TTL edge', () => {
+    expect(pendingRecordIsLive({ ...parked, at: NOW - PENDING_RECORD_TTL_MS }, NOW, 42)).toBe(true);
+  });
+
+  it('rejects a click one millisecond past the TTL', () => {
+    expect(pendingRecordIsLive({ ...parked, at: NOW - PENDING_RECORD_TTL_MS - 1 }, NOW, 42)).toBe(
+      false,
+    );
+  });
+
+  it('rejects a click aimed at a tab that is no longer in front', () => {
+    expect(pendingRecordIsLive(parked, NOW, 43)).toBe(false);
+  });
+
+  it('rejects a click when no tab is active at all', () => {
+    expect(pendingRecordIsLive(parked, NOW, null)).toBe(false);
+  });
+
+  it('rejects a click stamped in the future (a clock that moved back)', () => {
+    expect(pendingRecordIsLive({ ...parked, at: NOW + 1 }, NOW, 42)).toBe(false);
+  });
+
+  it('rejects anything that is not a parked click', () => {
+    expect(pendingRecordIsLive(undefined, NOW, 42)).toBe(false);
+    expect(pendingRecordIsLive(null, NOW, 42)).toBe(false);
+    expect(pendingRecordIsLive('record', NOW, 42)).toBe(false);
+    expect(pendingRecordIsLive({ tabId: 42, at: NOW }, NOW, 42)).toBe(false);
+    expect(pendingRecordIsLive({ settings: DEFAULT_RECORDING_SETTINGS, at: NOW }, NOW, 42)).toBe(
+      false,
+    );
   });
 });

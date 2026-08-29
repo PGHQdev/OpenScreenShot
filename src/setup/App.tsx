@@ -1,8 +1,10 @@
 /**
- * Recording setup walkthrough. One page, every permission row visible with a
- * live status; nothing here is a wizard step that can strand the user. All
- * grant state is queried fresh from the browser on every change signal —
- * never cached — so the page cannot disagree with reality.
+ * Recording permission recovery. Not onboarding: the Record click asks for
+ * tabCapture inline, and this page is where a refused prompt or a device
+ * Chrome has hard-blocked is put right. One page, every permission row
+ * visible with a live status; nothing here is a wizard step that can strand
+ * the user. All grant state is queried fresh from the browser on every change
+ * signal — never cached — so the page cannot disagree with reality.
  *
  * Camera and mic are probed on this page (extension origin) because it is the
  * same origin the webcam bubble iframe and the offscreen engine use: a grant
@@ -18,13 +20,10 @@ import {
   IconGift,
   IconGlobe,
   IconMic,
-  IconPage,
-  IconPencil,
   IconPinArrow,
   IconShield,
-  IconZoom,
 } from '../shared/icons';
-import { getSettings, setSettings } from '../shared/storage';
+import { getSettings } from '../shared/storage';
 import { applyTheme, watchSystemTheme } from '../shared/theme';
 import {
   classifyMediaError,
@@ -75,11 +74,7 @@ export function App() {
   const [cameraError, setCameraError] = useState<RowError>(null);
   const [micError, setMicError] = useState<RowError>(null);
   const [tabError, setTabError] = useState<RowError>(null);
-  const from = new URLSearchParams(location.search).get('from');
-  const fromRecord = from === 'record';
-  // A fresh install lands on the feature welcome first; every other route
-  // (Record click, settings, welcome card) goes straight to the checklist.
-  const [showHero, setShowHero] = useState(from === 'install');
+  const fromRecord = new URLSearchParams(location.search).get('from') === 'record';
 
   async function refresh() {
     setSnap(await readSnapshot());
@@ -95,9 +90,6 @@ export function App() {
 
   useEffect(() => {
     void refresh();
-    // This page IS the onboarding — once it has been seen, the popup's
-    // welcome card must not come back.
-    void setSettings({ showOnboarding: false }).catch(() => {});
     const onChange = () => void refresh();
     chrome.permissions.onAdded.addListener(onChange);
     chrome.permissions.onRemoved.addListener(onChange);
@@ -164,39 +156,6 @@ export function App() {
   }
 
   const ready = setupComplete(snap);
-
-  if (showHero) {
-    return (
-      <div class="setup hero" data-testid="hero">
-        <PinHint />
-        <div class="hero-mark">
-          <BrandMark size={64} />
-        </div>
-        <h1>{t('welcomeTitle')}</h1>
-        <p class="setup-intro">{t('setupHeroLede')}</p>
-        <div class="feature-grid">
-          <Feature icon="page" title={t('setupFeatCapture')} sub={t('setupFeatCaptureSub')} />
-          <Feature icon="display" title={t('setupFeatRecord')} sub={t('setupFeatRecordSub')} />
-          <Feature icon="zoom" title={t('setupFeatZoom')} sub={t('setupFeatZoomSub')} />
-          <Feature icon="pencil" title={t('setupFeatExport')} sub={t('setupFeatExportSub')} />
-        </div>
-        <div class="trust-strip">
-          <span class="trust-pill">
-            <SetupIcon id="code" /> {t('setupTrustOpenSource')}
-          </span>
-          <span class="trust-pill">
-            <SetupIcon id="shield" /> {t('setupTrustLocal')}
-          </span>
-          <span class="trust-pill">
-            <SetupIcon id="eye-off" /> {t('setupTrustNoTracking')}
-          </span>
-        </div>
-        <button class="btn-primary btn-hero" onClick={() => setShowHero(false)}>
-          {t('setupWelcomeCta')} →
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div class="setup">
@@ -319,18 +278,7 @@ function Tag({ kind }: { kind: 'granted' | 'required' | 'optional' | 'denied' })
   return <span class={`tag tag-${kind}`}>{label}</span>;
 }
 
-type IconId =
-  | 'display'
-  | 'camera'
-  | 'mic'
-  | 'globe'
-  | 'code'
-  | 'shield'
-  | 'eye-off'
-  | 'page'
-  | 'zoom'
-  | 'pencil'
-  | 'gift';
+type IconId = 'display' | 'camera' | 'mic' | 'globe' | 'code' | 'shield' | 'eye-off' | 'gift';
 
 /**
  * Floating top-right nudge to pin the extension, with an arrow at Chrome's
@@ -384,20 +332,6 @@ function PinHint() {
   );
 }
 
-function Feature(props: { icon: IconId; title: string; sub: string }) {
-  return (
-    <div class="feature">
-      <span class="row-icon">
-        <SetupIcon id={props.icon} />
-      </span>
-      <div>
-        <h2>{props.title}</h2>
-        <p>{props.sub}</p>
-      </div>
-    </div>
-  );
-}
-
 // Same icon set as the popup's ModeIcon.
 function SetupIcon({ id }: { id: IconId }) {
   switch (id) {
@@ -415,12 +349,6 @@ function SetupIcon({ id }: { id: IconId }) {
       return <IconShield />;
     case 'eye-off':
       return <IconEyeOff />;
-    case 'page':
-      return <IconPage />;
-    case 'zoom':
-      return <IconZoom />;
-    case 'pencil':
-      return <IconPencil />;
     case 'gift':
       return <IconGift />;
   }

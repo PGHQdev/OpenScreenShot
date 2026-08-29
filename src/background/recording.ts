@@ -29,6 +29,7 @@ import {
   type RecState,
   type SegmentViewport,
 } from '../shared/recording-types';
+import { PENDING_RECORD_KEY, pendingRecordIsLive, type PendingRecord } from '../shared/permissions';
 import { isProtectedUrl } from '../shared/utils';
 
 const REC_STATE_KEY = 'openscreenshot:rec-state';
@@ -661,6 +662,33 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
 
 chrome.commands.onCommand.addListener((command) => {
   if (command === 'stop-recording') void handleStop();
+});
+
+/**
+ * Finish a Record click that was waiting on the tabCapture grant.
+ *
+ * The popup asks for the permission from the click itself (a service worker
+ * has no user gesture, so the ask can never move here), and Chrome's dialog
+ * can tear that popup down before it hears the answer. The click is parked in
+ * session storage before the ask, so this listener is the one place a granted
+ * prompt turns into a recording — on both the survived and the killed popup,
+ * which is why the popup starts nothing itself.
+ *
+ * The parked click is consumed first, then vetted: a leftover must not sit
+ * there waiting to hijack an unrelated grant later.
+ */
+chrome.permissions.onAdded.addListener((added) => {
+  if (!added.permissions?.includes('tabCapture')) return;
+  void (async () => {
+    const stored = await chrome.storage.session.get(PENDING_RECORD_KEY);
+    const parked: unknown = stored[PENDING_RECORD_KEY];
+    if (parked === undefined) return;
+    await chrome.storage.session.remove(PENDING_RECORD_KEY);
+    const activeTabId = (await getActiveTab())?.id ?? null;
+    if (!pendingRecordIsLive(parked, Date.now(), activeTabId)) return;
+    const pending: PendingRecord = parked;
+    await handleStart(pending.settings, pending.continueSessionId);
+  })();
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {

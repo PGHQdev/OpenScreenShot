@@ -164,10 +164,12 @@ function serveDist() {
  * One `chrome` stub shared by all four pages, per reflow-smoke.mjs: the
  * storage/i18n shape from recorder-smoke.mjs and setup-smoke.mjs plus the
  * tabs/permissions/windows surface the popup and setup pages touch on mount.
- * `permissions.contains` always answers true so the setup page's checklist
- * renders already-granted (its "ready" state) without needing a click.
+ * `permissions.contains` answers from `grants` — true for everything by
+ * default, so the setup page's checklist renders already-granted (its "ready"
+ * state) without needing a click; a page that wants the popup's
+ * permission-ask surface passes the list it is missing instead.
  */
-function installChromeStub(messages, seed) {
+function installChromeStub(messages, seed, grants) {
   function getMessage(key, subs) {
     const entry = messages[key];
     if (!entry) return key;
@@ -238,7 +240,8 @@ function installChromeStub(messages, seed) {
     windows: { update: async () => ({}) },
     commands: { getAll: async () => [] },
     permissions: {
-      contains: async () => true,
+      contains: async (query) =>
+        grants == null || (query.permissions ?? []).every((p) => grants.includes(p)),
       request: async () => true,
       remove: async () => true,
       onAdded: { addListener: noop, removeListener: noop },
@@ -332,7 +335,7 @@ async function seedRecorderSession() {
   return sessionId;
 }
 
-async function newPage(browser, messages, seed) {
+async function newPage(browser, messages, seed, grants) {
   const page = await browser.newPage();
   // Forced once here so every scan below inherits a known state instead of
   // this machine's real OS accessibility setting — the four settle() waits
@@ -353,7 +356,7 @@ async function newPage(browser, messages, seed) {
   page.on('console', (msg) => {
     if (msg.type() === 'error') console.log(`    console.error: ${msg.text()}`);
   });
-  await page.evaluateOnNewDocument(installChromeStub, messages, seed);
+  await page.evaluateOnNewDocument(installChromeStub, messages, seed, grants);
   return { page, crashes };
 }
 
@@ -517,33 +520,32 @@ async function testEditor(browser, base, messages) {
 
 // ----------------------------------------------------------------- popup ---
 async function testPopup(browser, base, messages) {
-  await popupWelcome(browser, base, messages);
+  await popupFirstRun(browser, base, messages);
   await popupMain(browser, base, messages);
 }
 
 /**
- * The real default (`showOnboarding: true`) replaces the whole popup with
- * this welcome card. It is scanned too, not just the main surface it defers
- * to, since it is a genuine first-run state every install passes through.
+ * First run: `tabCapture` is not granted yet, so the Record card carries the
+ * trust strip that rides with the inline permission ask. That strip only
+ * exists in this state, so scanning the granted popup alone would never see
+ * its contrast.
  */
-async function popupWelcome(browser, base, messages) {
-  const { page, crashes } = await newPage(browser, messages, {});
+async function popupFirstRun(browser, base, messages) {
+  const { page, crashes } = await newPage(browser, messages, {}, []);
   await page.setViewport({ width: 340, height: 600 });
-  step('POPUP — welcome card (showOnboarding: true, the real default)');
+  step('POPUP — first run (Record carries the permission-ask trust strip)');
   await page.goto(`${base}/src/popup/index.html`, { waitUntil: 'networkidle0' });
-  await page.waitForSelector('.welcome');
-  await scan(page, 'popup welcome card');
+  await page.waitForSelector('[data-testid="rec-trust"]');
+  await scan(page, 'popup first run');
   assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
   await page.close();
 }
 
 async function popupMain(browser, base, messages) {
-  const { page, crashes } = await newPage(browser, messages, {
-    'openscreenshot:settings': { showOnboarding: false },
-  });
+  const { page, crashes } = await newPage(browser, messages, {});
   await page.setViewport({ width: 340, height: 600 });
 
-  step('POPUP — main surface (past onboarding, mode cards + record + options)');
+  step('POPUP — main surface (mode cards + record + options)');
   await page.goto(`${base}/src/popup/index.html`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.mode-card');
   await scan(page, 'popup main surface');
@@ -586,11 +588,6 @@ async function testRecorder(browser, base, messages) {
 async function testSetup(browser, base, messages) {
   const { page, crashes } = await newPage(browser, messages, {});
   await page.setViewport({ width: 1280, height: 860 });
-
-  step('SETUP — install welcome view (feature grid)');
-  await page.goto(`${base}/src/setup/index.html?from=install`, { waitUntil: 'networkidle0' });
-  await page.waitForSelector('[data-testid="hero"]');
-  await scan(page, 'setup welcome view');
 
   step('SETUP — permission checklist, all granted (ready banner)');
   await page.goto(`${base}/src/setup/index.html?from=record`, { waitUntil: 'networkidle0' });

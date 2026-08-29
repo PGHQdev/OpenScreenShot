@@ -12,12 +12,15 @@ import { onPopupMessage, sendToBackground } from '../shared/messaging';
 import { BrandMark } from '../shared/BrandMark';
 import {
   IconBack,
+  IconCode,
   IconCoffee,
+  IconEyeOff,
   IconGear,
   IconGift,
   IconPage,
   IconRecordDot,
   IconRegion,
+  IconShield,
   IconVisible,
 } from '../shared/icons';
 import { resolveModeKeys } from '../shared/shortcuts';
@@ -36,7 +39,12 @@ import {
   type RecordingSettings,
   type RecState,
 } from '../shared/recording-types';
-import { popupWarnings, type DevicePermission } from '../shared/permissions';
+import {
+  PENDING_RECORD_KEY,
+  popupWarnings,
+  type DevicePermission,
+  type PendingRecord,
+} from '../shared/permissions';
 import { applyTheme, watchSystemTheme } from '../shared/theme';
 
 // i18n helper
@@ -59,7 +67,9 @@ function openCoolStuff() {
 }
 
 /**
- * Open the recording setup walkthrough; the popup hands off and closes.
+ * Open the recording setup page; the popup hands off and closes. Reached only
+ * from a failure now — a refused tabCapture prompt, or a device Chrome has
+ * hard-blocked — because the grant a recording needs is asked for inline.
  * An already-open setup tab is focused, never duplicated — a stack of
  * identical setup tabs reads as "the close button does nothing".
  */
@@ -168,7 +178,6 @@ const MODES: ModeDef[] = [
 
 export function App() {
   const [settings, setSettingsState] = useState<Settings>(DEFAULT_SETTINGS);
-  const [showWelcome, setShowWelcome] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [busy, setBusy] = useState<CaptureMode | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
@@ -181,18 +190,21 @@ export function App() {
     DEFAULT_RECORDING_SETTINGS,
   );
   const [activeTabProtected, setActiveTabProtected] = useState(false);
+  const [activeTabId, setActiveTabId] = useState<number | null>(null);
   const [continueSessionId, setContinueSessionId] = useState<string | null>(null);
   const [displayMs, setDisplayMs] = useState(0);
   const [deviceStates, setDeviceStates] = useState<{
     camera: DevicePermission;
     mic: DevicePermission;
   }>({ camera: 'prompt', mic: 'prompt' });
+  // null until the first query answers — see onRecordClick.
+  const [hasTabCapture, setHasTabCapture] = useState<boolean | null>(null);
+  const [tabCaptureRefused, setTabCaptureRefused] = useState(false);
 
   // Load settings + apply theme on mount.
   useEffect(() => {
     void getSettings().then((s) => {
       setSettingsState(s);
-      setShowWelcome(s.showOnboarding);
       applyTheme(s.theme);
     });
     // Actual (possibly user-remapped) bindings, formatted per platform by Chrome.
@@ -212,8 +224,13 @@ export function App() {
   useEffect(() => {
     void getRecSettings().then(setRecSettingsState);
     void queryDeviceStates().then(setDeviceStates);
+    void chrome.permissions
+      .contains({ permissions: ['tabCapture'] })
+      .then(setHasTabCapture)
+      .catch(() => setHasTabCapture(null));
     void chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
       setActiveTabProtected(isProtectedUrl(tab?.url));
+      setActiveTabId(tab?.id ?? null);
     });
     void chrome.storage.session.get(CONTINUE_SESSION_KEY).then((stored) => {
       setContinueSessionId((stored[CONTINUE_SESSION_KEY] as string | undefined) ?? null);
@@ -236,14 +253,14 @@ export function App() {
 
   // 1/2/3 fire a capture while the mode list is showing.
   useEffect(() => {
-    if (showSettings || showWelcome) return;
+    if (showSettings) return;
     const onKey = (e: KeyboardEvent) => {
       const i = ['1', '2', '3'].indexOf(e.key);
       if (i !== -1) capture(MODES[i].id);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [showSettings, showWelcome, busy]);
+  }, [showSettings, busy]);
 
   // Listen for background progress / completion / errors.
   useEffect(() => {
@@ -310,12 +327,6 @@ export function App() {
     });
   }
 
-  async function dismissWelcome() {
-    setShowWelcome(false);
-    const next = await setSettings({ showOnboarding: false });
-    setSettingsState(next);
-  }
-
   async function updateRecSettings(patch: Partial<RecordingSettings>) {
     const next = { ...recSettings, ...patch };
     setRecSettingsState(next);
@@ -325,12 +336,14 @@ export function App() {
   // Recording needs the page, so the popup closes right after handing off —
   // same reasoning as region mode in capture().
   async function startRecording() {
-    // The setup walkthrough owns the grant. Anything missing routes there —
-    // an inline prompt here has no room for recovery when it goes wrong.
-    const granted = await chrome.permissions.contains({ permissions: ['tabCapture'] });
-    if (!granted) {
-      openSetupPage('record');
-      return;
+    // Only reachable before the mount query has answered (see onRecordClick);
+    // a grant that is genuinely missing goes to the setup page to be fixed.
+    if (hasTabCapture == null) {
+      const granted = await chrome.permissions.contains({ permissions: ['tabCapture'] });
+      if (!granted) {
+        openSetupPage('record');
+        return;
+      }
     }
     await chrome.storage.session.remove(CONTINUE_SESSION_KEY);
     void sendToBackground({
@@ -342,9 +355,53 @@ export function App() {
       .finally(() => window.close());
   }
 
+  /**
+   * Ask Chrome for tabCapture from the Record click itself. Two constraints
+   * shape this:
+   *
+   * - `chrome.permissions.request` is only granted a dialog on a user gesture,
+   *   so it is the first thing the click does — nothing is awaited before it,
+   *   and no part of the ask goes through the worker, which has no gesture.
+   * - The dialog can tear this popup down, which kills everything after the
+   *   await. So the click is parked in session storage first (fire-and-forget,
+   *   dispatched before the request) and `permissions.onAdded` in the worker
+   *   starts the recording. That path runs whether this popup lived or died,
+   *   which is also why nothing is started from here on success.
+   */
+  function requestTabCapture(tabId: number) {
+    const pending: PendingRecord = {
+      settings: recSettings,
+      continueSessionId: continueSessionId ?? undefined,
+      tabId,
+      at: Date.now(),
+    };
+    void chrome.storage.session.set({ [PENDING_RECORD_KEY]: pending });
+    chrome.permissions
+      .request({ permissions: ['tabCapture'] })
+      .then((granted) => {
+        if (granted) {
+          window.close();
+          return;
+        }
+        void chrome.storage.session.remove(PENDING_RECORD_KEY);
+        setTabCaptureRefused(true);
+      })
+      .catch(() => {
+        void chrome.storage.session.remove(PENDING_RECORD_KEY);
+        setTabCaptureRefused(true);
+      });
+  }
+
   function onRecordClick() {
     if (activeTabProtected) {
       pushToast(t('recProtected'), 'error');
+      return;
+    }
+    if (hasTabCapture === false) {
+      // With no tab id there is nothing to aim a parked click at, and the
+      // worker would refuse it; the setup page can still take the grant.
+      if (activeTabId == null) openSetupPage('record');
+      else requestTabCapture(activeTabId);
       return;
     }
     void startRecording();
@@ -424,8 +481,6 @@ export function App() {
 
       {showSettings ? (
         <SettingsView settings={settings} onChange={updateSettings} />
-      ) : showWelcome ? (
-        <Welcome onDone={dismissWelcome} />
       ) : (
         <>
           <span class="settings-section">{t('popupSectionScreenshot')}</span>
@@ -513,6 +568,45 @@ export function App() {
                 <span class="mode-title">{t(continueSessionId ? 'recContinue' : 'recTitle')}</span>
                 <span class="mode-sub">{t('recSub')}</span>
               </span>
+            </button>
+          )}
+
+          {/*
+            The Record click asks Chrome for tabCapture, and every surface
+            that asks for a permission carries the assurance with it. It sits
+            under Record while the grant is missing — the moment of the ask —
+            and leaves once there is nothing left to ask for.
+          */}
+          {!recState?.active && hasTabCapture === false && (
+            <div class="rec-trust" data-testid="rec-trust">
+              <div class="rec-trust-pills">
+                <a
+                  class="rec-trust-pill"
+                  href="https://github.com/pghqdev/OpenScreenShot"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <IconCode /> {t('setupTrustOpenSource')}
+                </a>
+                <span class="rec-trust-pill">
+                  <IconShield /> {t('setupTrustLocal')}
+                </span>
+                <span class="rec-trust-pill">
+                  <IconEyeOff /> {t('setupTrustNoTracking')}
+                </span>
+              </div>
+              <span class="rec-trust-hint">{t('setupTrustHint')}</span>
+            </div>
+          )}
+
+          {/* The prompt was refused: the setup page is where it is fixed. */}
+          {tabCaptureRefused && (
+            <button
+              class="perm-chip"
+              data-testid="rec-refused"
+              onClick={() => openSetupPage('record')}
+            >
+              {t('popupRecordRefused')}
             </button>
           )}
 
@@ -714,8 +808,7 @@ function SettingsView({
       return;
     }
     setConfirmReset(false);
-    // Keep showOnboarding as it is, so the welcome card does not come back.
-    onChange({ ...DEFAULT_SETTINGS, showOnboarding: settings.showOnboarding });
+    onChange({ ...DEFAULT_SETTINGS });
   }
 
   return (
@@ -828,36 +921,6 @@ function SettingsView({
         onClick={resetAll}
       >
         {confirmReset ? t('resetConfirm') : t('resetDefaults')}
-      </button>
-    </div>
-  );
-}
-
-function Welcome({ onDone }: { onDone: () => void }) {
-  return (
-    <div class="welcome">
-      <div class="welcome-mark" aria-hidden="true">
-        <BrandMark size={44} />
-      </div>
-      <h2 class="welcome-title">{t('welcomeTitle')}</h2>
-      <p class="welcome-lede">{t('welcomeLede')}</p>
-      <ul class="welcome-list">
-        <li>{t('welcomeList1')}</li>
-        <li>{t('welcomeList2')}</li>
-        <li>{t('welcomeList3')}</li>
-      </ul>
-      <p class="welcome-perm">{t('welcomePerm')}</p>
-      <button
-        class="btn-primary"
-        onClick={() => {
-          onDone();
-          openSetupPage();
-        }}
-      >
-        {t('welcomeCta')}
-      </button>
-      <button class="link-btn" onClick={onDone}>
-        {t('welcomeSkip')}
       </button>
     </div>
   );

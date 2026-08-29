@@ -72,6 +72,9 @@ function makeFakeChrome() {
       onClicked: { addListener: vi.fn() },
     },
     commands: { onCommand: { addListener: vi.fn() } },
+    // recording.ts registers this at module scope to finish a Record click
+    // that was parked waiting on the tabCapture grant.
+    permissions: { onAdded: { addListener: vi.fn() } },
     tabs: {
       onUpdated: { addListener: vi.fn() },
       query: vi.fn(() => Promise.resolve([])),

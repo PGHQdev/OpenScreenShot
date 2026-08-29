@@ -43,34 +43,6 @@
     "message": "Coming in a later milestone.",
     "description": "Placeholder message for features not yet implemented."
   },
-  "welcomeTitle": {
-    "message": "Welcome to OpenScreenShot!",
-    "description": "Onboarding welcome card title."
-  },
-  "welcomeLede": {
-    "message": "Capture full-length screenshots of any webpage — even long-scrolling pages — annotate them, and export as PNG or PDF.",
-    "description": "Welcome card description text."
-  },
-  "welcomeList1": {
-    "message": "📄 Full Page — Scroll & stitch the entire page, top to bottom",
-    "description": "Welcome card feature list item 1"
-  },
-  "welcomeList2": {
-    "message": "👁 Visible — Just what you see now",
-    "description": "Welcome card feature list item 2"
-  },
-  "welcomeList3": {
-    "message": "✂️ Region — Drag to select an area",
-    "description": "Welcome card feature list item 3"
-  },
-  "welcomePerm": {
-    "message": "🔒 We need permission to read page content for screenshots. Your data never leaves your device.",
-    "description": "Welcome card permission notice."
-  },
-  "welcomeCta": {
-    "message": "Got it, let’s go!",
-    "description": "Primary call-to-action on the welcome card."
-  },
   "customizeShortcuts": {
     "message": "Customize keyboard shortcuts",
     "description": "Link that opens Chrome's extension shortcut settings."
@@ -333,6 +305,10 @@
     "message": "Can’t record this protected page.",
     "description": "Popup: error toast shown when the active tab can't be recorded."
   },
+  "popupRecordRefused": {
+    "message": "Tab recording was not allowed — open setup",
+    "description": "Popup button shown after the user refuses the inline tabCapture prompt."
+  },
   "recRecover": {
     "message": "Recover last recording",
     "description": "Popup: link that reopens the editor for a crashed/unfinished recording session."
@@ -547,46 +523,6 @@
     "message": "One-time setup.",
     "description": "Setup page: intro line under the heading."
   },
-  "setupHeroLede": {
-    "message": "The open-source screen studio in your browser.",
-    "description": "Setup page welcome view: one-line lede under the title."
-  },
-  "setupFeatCapture": {
-    "message": "Full-page capture",
-    "description": "Setup welcome: feature tile title 1."
-  },
-  "setupFeatCaptureSub": {
-    "message": "Scroll & stitch any page",
-    "description": "Setup welcome: feature tile subtitle 1."
-  },
-  "setupFeatRecord": {
-    "message": "Tab recording",
-    "description": "Setup welcome: feature tile title 2."
-  },
-  "setupFeatRecordSub": {
-    "message": "Webcam bubble, mic & tab audio",
-    "description": "Setup welcome: feature tile subtitle 2."
-  },
-  "setupFeatZoom": {
-    "message": "Auto-zoom",
-    "description": "Setup welcome: feature tile title 3."
-  },
-  "setupFeatZoomSub": {
-    "message": "Your clicks become smooth zooms",
-    "description": "Setup welcome: feature tile subtitle 3."
-  },
-  "setupFeatExport": {
-    "message": "Annotate & export",
-    "description": "Setup welcome: feature tile title 4."
-  },
-  "setupFeatExportSub": {
-    "message": "PNG, PDF, WebM — saved locally",
-    "description": "Setup welcome: feature tile subtitle 4."
-  },
-  "setupWelcomeCta": {
-    "message": "Set up recording",
-    "description": "Setup welcome: button that advances to the permission checklist."
-  },
   "setupFinish": {
     "message": "All set — close this tab",
     "description": "Setup page: button on the ready banner that closes the tab."
@@ -724,9 +660,5 @@
   "popupSetupLink": {
     "message": "Recording permissions",
     "description": "Popup settings: row that opens the recording setup page."
-  },
-  "welcomeSkip": {
-    "message": "Skip for now",
-    "description": "Welcome card: secondary link that dismisses without opening setup."
   }
 }

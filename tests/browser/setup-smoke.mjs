@@ -1,6 +1,9 @@
-// Headless browser smoke for the recording setup page: serves the built
-// `dist/`, stubs `chrome` with a mutable permission store, and walks the page
-// through grant, revoke, and the ready banner.
+// Headless browser smoke for the recording permission flow, across both of
+// its surfaces: the popup, which asks for `tabCapture` inline from the Record
+// click, and the setup page, which is now only the recovery route for a
+// refused prompt or a blocked device. Serves the built `dist/` and stubs
+// `chrome` with a mutable permission store whose request outcome is set per
+// case — the refusal path is a real case here, not a stub that always grants.
 // Run with: npm run build && npm run smoke:setup
 import { createReadStream } from 'node:fs';
 import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
@@ -12,7 +15,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const DIST = join(ROOT, 'dist');
-const PAGE = '/src/setup/index.html';
+const SETUP_PAGE = '/src/setup/index.html';
+const POPUP_PAGE = '/src/popup/index.html';
+const PENDING_RECORD_KEY = 'openscreenshot:pending-record';
 const CHROME =
   process.env.CHROME_BIN ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
@@ -82,9 +87,12 @@ function serveDist() {
 /**
  * The page-side `chrome` stub: i18n from the built locales plus a mutable
  * permission store whose request/remove fire the onAdded/onRemoved events the
- * page listens to — that event path IS the live-status behavior under test.
+ * setup page listens to — that event path IS its live-status behavior under
+ * test. `opts.grants` seeds what is already granted and `opts.allowRequest`
+ * decides what Chrome's dialog answers, so a case can enter the refused path
+ * the recovery route exists for.
  */
-function installChromeStub(messages) {
+function installChromeStub(messages, opts) {
   function getMessage(key, subs) {
     const entry = messages[key];
     if (!entry) return key;
@@ -97,10 +105,10 @@ function installChromeStub(messages) {
     return text;
   }
 
-  const granted = { permissions: new Set(), origins: new Set() };
+  const granted = { permissions: new Set(opts.grants ?? []), origins: new Set() };
   const added = new Set();
   const removed = new Set();
-  const fire = (listeners) => listeners.forEach((fn) => fn());
+  const fire = (listeners, arg) => listeners.forEach((fn) => fn(arg));
   const matches = (query, presentOnly) => {
     const perms = query.permissions ?? [];
     const origins = query.origins ?? [];
@@ -111,24 +119,67 @@ function installChromeStub(messages) {
   };
 
   const store = new Map();
-  globalThis.__smoke = { created: [], removed: [], granted, store };
+  const session = new Map();
+  const area = (map) => ({
+    async get(keys) {
+      const out = {};
+      const list =
+        keys == null
+          ? [...map.keys()]
+          : typeof keys === 'string'
+            ? [keys]
+            : Array.isArray(keys)
+              ? keys
+              : Object.keys(keys);
+      for (const key of list) if (map.has(key)) out[key] = map.get(key);
+      return out;
+    },
+    async set(items) {
+      for (const [k, v] of Object.entries(items)) map.set(k, v);
+    },
+    async remove(keys) {
+      for (const key of Array.isArray(keys) ? keys : [keys]) map.delete(key);
+    },
+    async getBytesInUse(key) {
+      return map.has(key) ? JSON.stringify(map.get(key)).length : 0;
+    },
+  });
+
+  const noop = () => {};
+  globalThis.__smoke = { created: [], removed: [], sent: [], granted, store, session, closed: 0 };
+  // window.close() is a no-op on a tab the script did not open, so the popup's
+  // hand-off has to be observable some other way.
+  globalThis.close = () => {
+    globalThis.__smoke.closed += 1;
+  };
   globalThis.chrome = {
     i18n: { getMessage },
     storage: {
-      local: {
-        get: async (key) => (store.has(key) ? { [key]: store.get(key) } : {}),
-        set: async (items) => {
-          for (const [k, v] of Object.entries(items)) store.set(k, v);
-        },
-      },
-      onChanged: { addListener() {}, removeListener() {} },
+      local: area(store),
+      session: area(session),
+      onChanged: { addListener: noop, removeListener: noop },
     },
-    runtime: { id: 'smoke', getURL: (p) => '/' + String(p).replace(/^\//, '') },
+    runtime: {
+      id: 'smoke',
+      getURL: (p) => '/' + String(p).replace(/^\//, ''),
+      sendMessage: async (msg) => {
+        globalThis.__smoke.sent.push(msg);
+        return { active: false, paused: false };
+      },
+      onMessage: { addListener: noop, removeListener: noop },
+    },
+    action: { getUserSettings: async () => ({ isOnToolbar: true }) },
+    commands: { getAll: async () => [] },
+    windows: { update: async () => ({}) },
     tabs: {
-      create: async (opts) => {
-        globalThis.__smoke.created.push(opts.url);
+      create: async (o) => {
+        globalThis.__smoke.created.push(o.url);
         return { id: 1 };
       },
+      update: async () => ({}),
+      // A url-filtered query is the popup looking for an open setup tab;
+      // there is never one here, so the hand-off has to create it.
+      query: async (q) => (q?.url ? [] : [{ id: 5, url: 'https://example.com/' }]),
       getCurrent: (cb) => cb({ id: 7 }),
       remove: (id) => {
         globalThis.__smoke.removed.push(id);
@@ -137,15 +188,16 @@ function installChromeStub(messages) {
     permissions: {
       contains: async (query) => matches(query, true),
       request: async (query) => {
+        if (opts.allowRequest === false) return false;
         (query.permissions ?? []).forEach((p) => granted.permissions.add(p));
         (query.origins ?? []).forEach((o) => granted.origins.add(o));
-        fire(added);
+        fire(added, { permissions: [...(query.permissions ?? [])], origins: [] });
         return true;
       },
       remove: async (query) => {
         (query.permissions ?? []).forEach((p) => granted.permissions.delete(p));
         (query.origins ?? []).forEach((o) => granted.origins.delete(o));
-        fire(removed);
+        fire(removed, { permissions: [], origins: [] });
         return true;
       },
       onAdded: { addListener: (fn) => added.add(fn), removeListener: (fn) => added.delete(fn) },
@@ -159,12 +211,12 @@ function installChromeStub(messages) {
 
 async function main() {
   step('checking the build');
-  const built = await stat(join(DIST, PAGE.slice(1))).then(
+  const built = await stat(join(DIST, SETUP_PAGE.slice(1))).then(
     () => true,
     () => false,
   );
-  if (!built) throw new Error(`${DIST}${PAGE} is missing — run "npm run build" first`);
-  assert(built, `dist${PAGE} exists`);
+  if (!built) throw new Error(`${DIST}${SETUP_PAGE} is missing — run "npm run build" first`);
+  assert(built, `dist${SETUP_PAGE} exists`);
 
   const messages = JSON.parse(await readFile(join(DIST, '_locales/en/messages.json'), 'utf8'));
   const puppeteer = await loadPuppeteer();
@@ -174,6 +226,7 @@ async function main() {
   step(`serving dist/ on ${base}`);
 
   let browser = null;
+  const crashes = [];
   try {
     browser = await puppeteer.launch({
       executablePath: CHROME,
@@ -181,25 +234,130 @@ async function main() {
       userDataDir: join(work, 'profile'),
       args: ['--no-first-run', '--no-default-browser-check', '--disable-gpu'],
     });
-    const page = await browser.newPage();
-    const crashes = [];
-    page.on('pageerror', (err) => crashes.push(String(err)));
-    page.on('console', (msg) => {
-      if (msg.type() === 'error') console.log(`    console.error: ${msg.text()}`);
-    });
-    await page.evaluateOnNewDocument(installChromeStub, messages);
 
-    step('opening from install: the feature welcome shows first');
-    await page.goto(`${base}${PAGE}?from=install`, { waitUntil: 'networkidle0' });
-    await page.waitForSelector('[data-testid="hero"]');
-    const tiles = await page.$$eval('.feature', (els) => els.length);
-    assert(tiles === 4, `welcome view renders ${tiles} feature tiles`);
-    await page.click('.btn-hero');
+    /**
+     * Every page is pinned to `no-preference` so this machine's own
+     * accessibility setting cannot change what the smoke drives. Nothing here
+     * asserts motion; the pin is what keeps that true on a reduced-motion box
+     * as well as a plain one.
+     */
+    async function open(url, opts) {
+      const page = await browser.newPage();
+      const cdp = await page.createCDPSession();
+      await cdp.send('Emulation.setEmulatedMedia', {
+        features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
+      });
+      page.on('pageerror', (err) => crashes.push(String(err)));
+      page.on('console', (msg) => {
+        if (msg.type() === 'error') console.log(`    console.error: ${msg.text()}`);
+      });
+      await page.evaluateOnNewDocument(installChromeStub, messages, opts);
+      await page.setViewport({ width: opts.width ?? 360, height: 700 });
+      await page.goto(base + url, { waitUntil: 'networkidle0' });
+      return page;
+    }
+
+    // ---------------------------------------------------------------- popup ---
+    step('popup, tabCapture missing: the ask carries its assurance');
+    let page = await open(POPUP_PAGE, { grants: [] });
+    await page.waitForSelector('[data-testid="rec-trust"]');
+    const trust = await page.$eval('[data-testid="rec-trust"]', (el) => el.textContent);
+    for (const claim of [/open source/i, /100% local/i, /no tracking/i, /never leave/i]) {
+      assert(claim.test(trust), `the Record ask states ${claim}`);
+    }
+    assert(
+      !/audit/i.test(trust),
+      'the assurance claims nothing about an audit (there is no audit to cite)',
+    );
+    const repo = await page.$eval('[data-testid="rec-trust"] a', (el) => el.href);
+    assert(
+      /github\.com\/pghqdev\/OpenScreenShot/.test(repo),
+      `the open-source pill links to ${repo}`,
+    );
+
+    step('popup Record click: the permission is asked for inline, not in a setup tab');
+    await page.click('.mode-card[aria-disabled]');
+    await page.waitForFunction(() => globalThis.__smoke.granted.permissions.has('tabCapture'));
+    let state = await page.evaluate(
+      (key) => ({
+        parked: globalThis.__smoke.session.get(key),
+        created: globalThis.__smoke.created,
+        sent: globalThis.__smoke.sent.map((m) => m.type),
+        closed: globalThis.__smoke.closed,
+      }),
+      PENDING_RECORD_KEY,
+    );
+    assert(state.created.length === 0, 'the Record click opened no setup tab');
+    assert(
+      state.parked != null && state.parked.tabId === 5 && typeof state.parked.at === 'number',
+      `the click is parked for the worker (tab ${state.parked?.tabId})`,
+    );
+    assert(
+      state.parked.settings != null,
+      'the parked click carries the recording settings it was made with',
+    );
+    assert(
+      !state.sent.includes('REC_START'),
+      'the popup starts nothing itself — permissions.onAdded in the worker owns that',
+    );
+    await page.waitForFunction(() => globalThis.__smoke.closed > 0);
+    assert(true, 'the popup closes once the grant lands');
+    await page.close();
+
+    step('popup Record click, prompt refused: the parked click is dropped, recovery offered');
+    page = await open(POPUP_PAGE, { grants: [], allowRequest: false });
+    await page.waitForSelector('[data-testid="rec-trust"]');
+    await page.click('.mode-card[aria-disabled]');
+    await page.waitForSelector('[data-testid="rec-refused"]');
+    state = await page.evaluate(
+      (key) => ({
+        parked: globalThis.__smoke.session.get(key),
+        granted: [...globalThis.__smoke.granted.permissions],
+        closed: globalThis.__smoke.closed,
+        sent: globalThis.__smoke.sent.map((m) => m.type),
+      }),
+      PENDING_RECORD_KEY,
+    );
+    assert(state.granted.length === 0, 'nothing was granted');
+    assert(state.parked === undefined, 'the parked click is cleared, so no later grant hijacks it');
+    assert(!state.sent.includes('REC_START'), 'no recording is started on a refusal');
+    assert(state.closed === 0, 'the popup stays open to show the way out');
+    await page.click('[data-testid="rec-refused"]');
+    await page.waitForFunction(() => globalThis.__smoke.created.length > 0);
+    const routed = await page.evaluate(() => globalThis.__smoke.created[0]);
+    assert(/setup\/index\.html\?from=record/.test(routed), `refusal routes to ${routed}`);
+    await page.close();
+
+    step('popup with tabCapture already granted: no ask, no assurance to carry');
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'] });
+    await page.waitForSelector('.mode-card[aria-disabled]');
+    assert(
+      (await page.$('[data-testid="rec-trust"]')) === null,
+      'the trust strip is gone once there is nothing left to ask for',
+    );
+    await page.click('.mode-card[aria-disabled]');
+    await page.waitForFunction(() => globalThis.__smoke.sent.some((m) => m.type === 'REC_START'));
+    state = await page.evaluate(
+      (key) => ({
+        parked: globalThis.__smoke.session.get(key),
+        created: globalThis.__smoke.created,
+      }),
+      PENDING_RECORD_KEY,
+    );
+    assert(state.parked === undefined, 'a granted Record click parks nothing');
+    assert(state.created.length === 0, 'a granted Record click opens no tab');
+    await page.close();
+
+    // ---------------------------------------------------------------- setup ---
+    step('the setup page is a recovery surface, with no walkthrough in front of it');
+    page = await open(`${SETUP_PAGE}?from=install`, { grants: [], width: 1100 });
     await page.waitForSelector('[data-testid="row-tabcapture"]');
-    assert(true, 'welcome CTA advances to the permission checklist');
+    assert((await page.$('[data-testid="hero"]')) === null, 'no marketing hero on the way in');
+    assert((await page.$$('.feature')).length === 0, 'no feature grid to click through');
+    await page.close();
 
-    step('opening the setup page fresh (nothing granted)');
-    await page.goto(`${base}${PAGE}?from=record`, { waitUntil: 'networkidle0' });
+    step('opening the setup page from a failed record (nothing granted)');
+    page = await open(`${SETUP_PAGE}?from=record`, { grants: [], width: 1100 });
     await page.waitForSelector('[data-testid="row-tabcapture"]');
     const initial = await page.$eval('[data-testid="row-tabcapture"]', (el) => el.dataset.state);
     assert(initial === 'required', 'tab recording row starts as required');
@@ -209,10 +367,10 @@ async function main() {
     );
     const banner = await page.$eval('.banner-attention', (el) => el.textContent);
     assert(banner.length > 0, `?from=record shows the routed banner ("${banner.trim()}")`);
-    const trust = await page.$eval('[data-testid="trust-strip"]', (el) => el.textContent);
+    const strip = await page.$eval('[data-testid="trust-strip"]', (el) => el.textContent);
     assert(
-      /open source/i.test(trust) && /local/i.test(trust),
-      'trust strip renders with the open-source and local pills',
+      /open source/i.test(strip) && /local/i.test(strip) && !/audit/i.test(strip),
+      'trust strip renders with the open-source and local pills, and claims no audit',
     );
 
     step('clicking Enable on the tab recording row');
@@ -230,30 +388,22 @@ async function main() {
     await page.waitForSelector('[data-testid="row-allurls"][data-state="optional"]');
     assert(true, 'across-sites row returns to optional via the onRemoved event');
 
-    step('camera and mic rows are present and skippable');
+    step('camera and mic keep their own recovery rows');
     for (const row of ['row-camera', 'row-mic']) {
-      const state = await page.$eval(`[data-testid="${row}"]`, (el) => el.dataset.state);
-      assert(state === 'optional' || state === 'granted', `${row} renders as ${state}`);
+      const rowState = await page.$eval(`[data-testid="${row}"]`, (el) => el.dataset.state);
+      assert(rowState === 'optional' || rowState === 'granted', `${row} renders as ${rowState}`);
     }
-
-    step('the setup page marks onboarding as seen');
-    const settings = await page.evaluate(() =>
-      globalThis.__smoke.store.get('openscreenshot:settings'),
-    );
-    assert(
-      settings?.showOnboarding === false,
-      'showOnboarding is false after the setup page loads',
-    );
 
     step('finishing: the ready banner closes the tab');
     await page.waitForSelector('[data-testid="finish-btn"]');
     assert(true, 'finish button renders on the ready banner');
     await page.click('[data-testid="finish-btn"]');
     const closed = await page
-      .evaluate(() => globalThis.__smoke.removed.length)
+      .evaluate(() => globalThis.__smoke.removed.length + globalThis.__smoke.closed)
       .then((n) => n > 0)
       .catch(() => true); // window.close() beat the tabs fallback — also a close
     assert(closed, 'finish click closes the tab');
+    await page.close();
 
     assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
     console.log('\nSetup smoke passed.');
