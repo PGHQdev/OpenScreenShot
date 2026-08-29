@@ -143,16 +143,23 @@
   --bp-md: 768px;
 
   /*
-   * Canvas ink. Painted onto image pixels, so it never follows the UI theme.
-   * This group and the frame group below have no CSS callers by design: only
-   * canvas code reads them, through the generated module. They are live, not
-   * dead.
+   * Canvas ink. Painted onto image pixels (annotation marks, the JPEG export
+   * background, the beautify-frame shadow plate), so it never follows the UI
+   * theme. This group and the frame group below have no CSS callers by
+   * design: only canvas code reads them, through the generated module. They
+   * are live, not dead.
+   *
+   * The plate/checkerboard/hairline drawn around a frame-less preview and the
+   * selection outline are UI chrome, not ink: canvas.ts reads them straight
+   * off --surface-1/--surface-3/--rule (getComputedStyle, live per paint, so
+   * a theme flip repaints them) and annotations.ts's selection outline uses
+   * fixed max-contrast literals instead of a token, since it has to survive
+   * arbitrary image pixels rather than follow either theme. Neither reaches
+   * an exported image — see canvas.ts's render() vs composeFinal().
    */
   --canvas-paper: #ffffff;
-  --canvas-check: #e7e7ec;
   --canvas-mark: #ffffff;
   --canvas-mark-ink: #1d1d1f;
-  --canvas-select: #2f80ed;
   --canvas-redact: #111318;
 
   /*

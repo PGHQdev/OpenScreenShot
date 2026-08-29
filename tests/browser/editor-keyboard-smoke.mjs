@@ -102,7 +102,13 @@ function installChromeStub(seed) {
           globalThis.__smoke.failNextDownload = false;
           throw new Error('smoke-forced export failure');
         }
-        globalThis.__smoke.downloads.push({ filename: opts.filename, bytes: opts.url.length });
+        // `url` is kept (not just its length) for task 22's export-purity
+        // check, which decodes the exported PNG's real pixels.
+        globalThis.__smoke.downloads.push({
+          filename: opts.filename,
+          bytes: opts.url.length,
+          url: opts.url,
+        });
         return 1;
       },
     },
@@ -683,6 +689,265 @@ async function main() {
       const box = await boxOf(sel);
       await page.mouse.click(box.x, box.y);
     };
+
+    // --- Task 22: the canvas plate/checkerboard/hairline follow a live theme
+    // flip (not just a reload), and the selection outline is a real
+    // black+white two-tone rather than one flat colour. ---
+
+    step('task 22: the plate/checkerboard/hairline follow a live theme flip, not just reload');
+    const currentTheme = () =>
+      page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+    // No value baked in on purpose — headless Chrome's default colour scheme
+    // is an environment detail, not something this smoke should assume.
+    // Whichever theme the page loaded with is theme A; the flip below goes
+    // to whichever theme A is not.
+    const themeA = await currentTheme();
+    const themeB = themeA === 'dark' ? 'light' : 'dark';
+    const maxChannelDelta = (bandA, bandB) => {
+      let worst = 0;
+      for (let r = 0; r < Math.min(bandA.length, bandB.length); r++) {
+        for (let c = 0; c < 3; c++) worst = Math.max(worst, Math.abs(bandA[r][c] - bandB[r][c]));
+      }
+      return worst;
+    };
+    // The hairline is a 1px stroke laid over the image's own top edge, only
+    // painted with the beautify frame off (the state at this point — nothing
+    // before this step touches it). The drop shadow (canvas.ts's unthemed
+    // `rgba(0, 0, 0, 0.24)`, deliberately left alone by this task) blurs a
+    // soft, partially-transparent black halo above that same edge — so this
+    // scans for the first FULLY opaque row (alpha === 255), not merely
+    // alpha > 0, to land past the shadow's gradient and on the actual
+    // image/hairline content. A short band of rows, not just that one, then
+    // tolerates sub-pixel rounding in exactly where the stroke lands.
+    const hairlineBand = () =>
+      page.evaluate(() => {
+        const canvas = document.querySelector('.stage-canvas');
+        const ctx = canvas.getContext('2d');
+        const { width, height } = canvas;
+        const data = ctx.getImageData(0, 0, width, height).data;
+        const midX = Math.floor(width / 2);
+        let top = -1;
+        for (let y = 0; y < height; y++) {
+          if (data[(y * width + midX) * 4 + 3] === 255) {
+            top = y;
+            break;
+          }
+        }
+        if (top < 0) return null;
+        const rows = [];
+        for (let y = top; y < Math.min(top + 4, height); y++) {
+          const i = (y * width + midX) * 4;
+          rows.push([data[i], data[i + 1], data[i + 2]]);
+        }
+        return rows;
+      });
+    const hairlineA = await hairlineBand();
+    assert(hairlineA !== null, 'the image edge is visible on the canvas (frame off)');
+
+    // Checkerboard/plate: only visible with the frame on and its background
+    // set to Transparent — the image itself is opaque and otherwise fully
+    // covers the same-sized plate/checkerboard drawn underneath it, so the
+    // padding around a beautified, transparent-background image is the one
+    // place this paints. The scan below locates that padding band from the
+    // canvas's own alpha (outside the canvas content) and colour (inside the
+    // fixed-fill test image) rather than any assumed geometry.
+    await clickOpen(beautifyTrigger);
+    await settle();
+    await page.click('.swatch-transparent');
+    await settle();
+    const padBand = () =>
+      page.evaluate(() => {
+        const canvas = document.querySelector('.stage-canvas');
+        const ctx = canvas.getContext('2d');
+        const { width, height } = canvas;
+        const data = ctx.getImageData(0, 0, width, height).data;
+        const midY = Math.floor(height / 2);
+        const at = (x) => {
+          const i = (midY * width + x) * 4;
+          return [data[i], data[i + 1], data[i + 2], data[i + 3]];
+        };
+        let outer = -1;
+        for (let x = 0; x < width; x++) {
+          if (at(x)[3] > 0) {
+            outer = x;
+            break;
+          }
+        }
+        if (outer < 0) return null;
+        // The synthetic capture's fixed fill colour (makeCapture, top of file).
+        const isImageFill = (p) =>
+          Math.abs(p[0] - 60) < 12 && Math.abs(p[1] - 110) < 12 && Math.abs(p[2] - 190) < 12;
+        let inner = -1;
+        for (let x = outer; x < width; x++) {
+          if (isImageFill(at(x))) {
+            inner = x;
+            break;
+          }
+        }
+        if (inner < 0 || inner - outer < 4) return null;
+        return at(Math.floor((outer + inner) / 2)).slice(0, 3);
+      });
+    const padA = await padBand();
+    assert(padA !== null, 'a transparent-background padding band is visible around the image');
+
+    await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: themeB }]);
+    await settle(300);
+    assert(
+      (await currentTheme()) === themeB,
+      `an OS-level colour-scheme flip alone (no click) changed data-theme (${themeA} -> ${themeB})`,
+    );
+    const padB = await padBand();
+    assert(padB !== null, 'the padding band is still visible after the flip');
+    assert(
+      maxChannelDelta([padA], [padB]) > 20,
+      `the checkerboard/plate colour changed with the theme (${padA} -> ${padB})`,
+    );
+
+    // Back to frame-off to read the hairline under theme B too.
+    await page.click('.beautify-toggle input');
+    await settle();
+    const hairlineB = await hairlineBand();
+    assert(hairlineB !== null, 'the image edge is still visible with the frame off again');
+    assert(
+      maxChannelDelta(hairlineA, hairlineB) > 20,
+      `the hairline colour changed with the theme (row band ${JSON.stringify(hairlineA)} -> ${JSON.stringify(hairlineB)})`,
+    );
+
+    // Restore theme A so nothing later in this file inherits a flipped OS
+    // preference, and close the panel — the Beautify a11y steps right below
+    // this one assume it starts closed.
+    await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: themeA }]);
+    await settle(300);
+    assert(
+      (await currentTheme()) === themeA,
+      'the OS preference flip back restored the original theme',
+    );
+    await page.keyboard.press('Escape');
+    await settle();
+    assert(
+      (await page.$('.beautify-popover')) === null,
+      'closed the panel — back to the state the steps below expect',
+    );
+
+    step(
+      'task 22: the selection outline is a genuine black+white two-tone, present only when selected',
+    );
+    // Exact opaque black/white pixel counts: nothing else on this canvas
+    // paints pure (0,0,0) or pure (255,255,255) at full alpha in this
+    // frame-off, opaque-image, light-or-dark-plate state (the plate/
+    // checkerboard read --surface-1/--surface-3, and the image is fully
+    // opaque so they never show through it anyway) — so a jump in both
+    // counts specifically when something is selected isolates the
+    // selection chrome, not an incidental match elsewhere.
+    const opaqueColorCounts = () =>
+      page.evaluate(() => {
+        const canvas = document.querySelector('.stage-canvas');
+        const ctx = canvas.getContext('2d');
+        const { width, height } = canvas;
+        const data = ctx.getImageData(0, 0, width, height).data;
+        let black = 0;
+        let white = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          if (data[i + 3] !== 255) continue;
+          if (data[i] === 0 && data[i + 1] === 0 && data[i + 2] === 0) black++;
+          else if (data[i] === 255 && data[i + 1] === 255 && data[i + 2] === 255) white++;
+        }
+        return { black, white };
+      });
+    if (await page.$eval('[aria-label="Delete selected"]', (b) => b.disabled)) {
+      // Enter-to-place is bound to the canvas element itself, not window
+      // (useEditor.ts's onCanvasKeyDown docstring), so it needs the canvas to
+      // actually hold focus — no longer true after the Beautify popover's
+      // buttons above took it.
+      await page.$eval('.stage-canvas', (el) => el.focus());
+      await page.keyboard.press('r');
+      await page.keyboard.press('Enter');
+      await settle();
+    }
+    assert(
+      !(await page.$eval('[aria-label="Delete selected"]', (b) => b.disabled)),
+      'an annotation is selected going into the pixel check',
+    );
+    const selectedCounts = await opaqueColorCounts();
+    await page.keyboard.press('Escape');
+    await settle();
+    const deselectedCounts = await opaqueColorCounts();
+    assert(
+      selectedCounts.black > deselectedCounts.black + 20,
+      `selecting adds pure-black pixels (selected ${selectedCounts.black}, deselected ${deselectedCounts.black})`,
+    );
+    assert(
+      selectedCounts.white > deselectedCounts.white + 20,
+      `and pure-white pixels too — a genuine two-tone, not one flat colour (selected ${selectedCounts.white}, deselected ${deselectedCounts.white})`,
+    );
+
+    step('task 22: the selection chrome (marching ants, handles) never reaches an exported image');
+    // Same reason as above: Enter-to-place and the Alt+Arrow resize below are
+    // both bound to the canvas element, so it must hold focus first.
+    await page.$eval('.stage-canvas', (el) => el.focus());
+    await page.keyboard.press('r');
+    await page.keyboard.press('Enter');
+    await settle();
+    const placedAt = (await say())
+      .match(/at (-?\d+), (-?\d+)/)
+      .slice(1)
+      .map(Number);
+    await chord(['Alt'], 'ArrowRight');
+    await settle();
+    const [placedW] = await sizeOf();
+    await chord(['Alt'], 'ArrowLeft'); // net-zero: back to the placed size
+    await settle();
+    const [rx, ry] = placedAt;
+    const rw = placedW - 1;
+    await chord(['Meta'], 's');
+    await page.waitForSelector('.modal');
+    await page.waitForFunction(() =>
+      document.querySelector('.modal').contains(document.activeElement),
+    );
+    await page.$eval('.format-grid .format-card:first-child', (el) => el.focus());
+    await page.keyboard.press('Enter');
+    await settle();
+    await page.$eval('.modal .btn-primary', (el) => el.focus());
+    await page.keyboard.press('Enter');
+    await settle(800);
+    const exportedDownload = await page.evaluate(() => globalThis.__smoke.downloads.at(-1));
+    assert(exportedDownload.filename.endsWith('.png'), 'exported a PNG for the pixel check');
+    const sharp = createRequire(join(ROOT, 'package.json'))('sharp');
+    const exportedBase64 = exportedDownload.url.slice(exportedDownload.url.indexOf(',') + 1);
+    const { data: exportedData, info: exportedInfo } = await sharp(
+      Buffer.from(exportedBase64, 'base64'),
+    )
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    const exportedAt = (x, y) => {
+      const i = (y * exportedInfo.width + x) * exportedInfo.channels;
+      return [exportedData[i], exportedData[i + 1], exportedData[i + 2], exportedData[i + 3]];
+    };
+    // The frame is off (m.pad === 0), so export image coordinates equal
+    // annotation image coordinates directly. Sample a band around the
+    // annotation's top-edge handle position — where the preview draws an
+    // 8x8 white-fill/black-ring handle square that composeFinal() never
+    // draws — for the presence of near-black or near-white pixels.
+    const handleMidX = Math.round(rx + rw / 2);
+    let exportSawContent = false;
+    let exportClean = true;
+    for (let y = ry - 6; y <= ry + 6; y++) {
+      if (y < 0 || y >= exportedInfo.height) continue;
+      for (let x = handleMidX - 5; x <= handleMidX + 5; x++) {
+        if (x < 0 || x >= exportedInfo.width) continue;
+        const [er, eg, eb] = exportedAt(x, y);
+        const isBlack = er < 40 && eg < 40 && eb < 40;
+        const isWhite = er > 215 && eg > 215 && eb > 215;
+        if (isBlack || isWhite) exportClean = false;
+        else exportSawContent = true;
+      }
+    }
+    assert(exportSawContent, 'sampled real content around the selection handle (sanity check)');
+    assert(
+      exportClean,
+      'no near-black or near-white handle/marching-ants pixel in the export at the selection boundary',
+    );
 
     step('the Beautify popover is a non-modal dialog: no aria-modal, no trap, and initial focus');
     await page.$eval(beautifyTrigger, (el) => el.focus());

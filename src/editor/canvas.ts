@@ -15,7 +15,6 @@ import {
 import { centerView, clampZoom, fitZoom } from './viewport';
 import { clipToFrame, DEFAULT_FRAME, frameMetrics, paintFrame, type FrameOptions } from './frame';
 import { rgbToHex } from './eyedropper';
-import { tokens } from '../shared/design-tokens';
 
 /**
  * CanvasController — imperative owner of the editor's <canvas>.
@@ -64,6 +63,18 @@ export class CanvasController {
   private readonly spotlightLayer: SpotlightLayerCache = createSpotlightLayerCache();
 
   private readonly ro: ResizeObserver;
+  /**
+   * The stage chrome (plate/checkerboard/hairline) is UI, not ink: it must
+   * follow the editor's theme, including a live OS-level flip while the
+   * editor stays open (`applyTheme` sets `data-theme` on <html>; no click
+   * fires for that). These are cached rather than read every render() call —
+   * refreshed once at construction and again only when a theme flip is
+   * observed — because render() runs on every pointer move.
+   */
+  private stagePlate = '#ffffff';
+  private stageCheck = '#ebebed';
+  private stageRule = 'rgba(0, 0, 0, 0.28)';
+  private readonly themeObserver: MutationObserver;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -73,11 +84,34 @@ export class CanvasController {
     this.dpr = window.devicePixelRatio || 1;
     this.ro = new ResizeObserver(() => this.resize());
     this.ro.observe(canvas);
+    this.refreshThemeColors();
+    this.themeObserver = new MutationObserver(() => {
+      this.refreshThemeColors();
+      this.render();
+    });
+    this.themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
     this.resize();
+  }
+
+  /**
+   * Re-read the theme-following stage colours off the live cascade
+   * (getComputedStyle), not a module-scope constant — a constant captured
+   * once at import time would not see a later theme flip. Reading from the
+   * canvas itself picks up whatever [data-theme] currently governs it.
+   */
+  private refreshThemeColors(): void {
+    const cs = getComputedStyle(this.canvas);
+    this.stagePlate = cs.getPropertyValue('--surface-1').trim() || '#ffffff';
+    this.stageCheck = cs.getPropertyValue('--surface-3').trim() || '#ebebed';
+    this.stageRule = cs.getPropertyValue('--rule').trim() || 'rgba(0, 0, 0, 0.28)';
   }
 
   destroy(): void {
     this.ro.disconnect();
+    this.themeObserver.disconnect();
   }
 
   setImage(img: HTMLImageElement): void {
@@ -213,6 +247,8 @@ export class CanvasController {
           this.view.panY - m.pad * this.view.zoom,
           m.outerW * this.view.zoom,
           m.outerH * this.view.zoom,
+          this.stagePlate,
+          this.stageCheck,
         );
       }
       ctx.save();
@@ -230,10 +266,18 @@ export class CanvasController {
       ctx.shadowColor = 'rgba(0, 0, 0, 0.24)';
       ctx.shadowBlur = 18;
       ctx.shadowOffsetY = 4;
-      ctx.fillStyle = tokens.canvasPaper;
+      ctx.fillStyle = this.stagePlate;
       ctx.fillRect(this.view.panX, this.view.panY, sw, sh);
       ctx.restore();
-      drawCheckerboard(ctx, this.view.panX, this.view.panY, sw, sh);
+      drawCheckerboard(
+        ctx,
+        this.view.panX,
+        this.view.panY,
+        sw,
+        sh,
+        this.stagePlate,
+        this.stageCheck,
+      );
     }
 
     ctx.save();
@@ -266,7 +310,7 @@ export class CanvasController {
     // Hairline frame in screen space, drawn under the selection handles.
     if (!this.frame.enabled) {
       ctx.save();
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.28)';
+      ctx.strokeStyle = this.stageRule;
       ctx.lineWidth = 1;
       ctx.strokeRect(this.view.panX + 0.5, this.view.panY + 0.5, sw - 1, sh - 1);
       ctx.restore();
@@ -325,15 +369,17 @@ function drawCheckerboard(
   y: number,
   w: number,
   h: number,
+  plate: string,
+  check: string,
   size = 16,
 ): void {
   ctx.save();
   ctx.beginPath();
   ctx.rect(x, y, w, h);
   ctx.clip();
-  ctx.fillStyle = tokens.canvasPaper;
+  ctx.fillStyle = plate;
   ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = tokens.canvasCheck;
+  ctx.fillStyle = check;
   const startX = Math.floor(x / size) * size;
   const startY = Math.floor(y / size) * size;
   for (let yy = startY; yy < y + h; yy += size) {

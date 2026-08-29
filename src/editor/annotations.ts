@@ -767,6 +767,19 @@ export function scaleAnnotation(
   }
 }
 
+/**
+ * Marching-ants dash: the selection outline sits over an arbitrary
+ * screenshot, so no single flat colour (the old #2f80ed blue included) is
+ * guaranteed visible against it. Two passes of the same dash pattern, offset
+ * by one dash length, alternate opaque black and white along the line. Their
+ * contrast against a flat background is a mirror pair — black wins on light
+ * backgrounds, white wins on dark ones — that crosses at relative luminance
+ * ~0.18, where both still clear ~4.6:1, above the 3:1 UI-boundary floor,
+ * against any solid colour underneath. Deliberately not a design token: it
+ * has to survive arbitrary image content rather than follow either theme.
+ */
+const SELECTION_DASH = [4, 3];
+
 /** Draw the selection bbox + resize handles in screen space via project (toScreen). */
 export function drawSelection(
   ctx: CanvasRenderingContext2D,
@@ -777,13 +790,19 @@ export function drawSelection(
   const tl = project(b.x, b.y);
   const br = project(b.x + b.w, b.y + b.h);
   ctx.save();
-  ctx.setLineDash([4, 3]);
-  ctx.strokeStyle = tokens.canvasSelect;
+  ctx.setLineDash(SELECTION_DASH);
   ctx.lineWidth = 1;
+  ctx.strokeStyle = '#000000';
+  ctx.lineDashOffset = 0;
+  ctx.strokeRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineDashOffset = SELECTION_DASH[0];
   ctx.strokeRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
   ctx.setLineDash([]);
+  // Handles: a white fill with a black ring is the same worst-case pairing —
+  // whichever of the two the local background defeats, the other still reads.
   ctx.fillStyle = tokens.canvasMark;
-  ctx.strokeStyle = tokens.canvasSelect;
+  ctx.strokeStyle = '#000000';
   ctx.lineWidth = 1.5;
   for (const h of getHandles(a)) {
     const p = project(h.x, h.y);
