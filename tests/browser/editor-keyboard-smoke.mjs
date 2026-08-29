@@ -3404,12 +3404,12 @@ async function testBeautifyLooks(browser, base) {
       null,
   }));
   assert(
-    stored.draft?.look === 'poster' && stored.draft?.frame?.beautifyPadding === 33,
-    `the draft holds the look id beside the changed value (look=${stored.draft?.look}, padding=${stored.draft?.frame?.beautifyPadding})`,
+    stored.draft?.frame?.beautifyLook === 'poster' && stored.draft?.frame?.beautifyPadding === 33,
+    `the draft holds the look id beside the changed value (look=${stored.draft?.frame?.beautifyLook}, padding=${stored.draft?.frame?.beautifyPadding})`,
   );
   assert(
-    !('beautifyLook' in (stored.settings ?? {})) && stored.settings?.beautifyPadding === 33,
-    'settings hold the four values and no look id — the shared Settings shape is untouched',
+    stored.settings?.beautifyLook === 'poster' && stored.settings?.beautifyPadding === 33,
+    `and so do the settings, which is what carries the look across a restart (look=${stored.settings?.beautifyLook}, padding=${stored.settings?.beautifyPadding})`,
   );
   assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
   await page.close();
@@ -3458,6 +3458,37 @@ async function testBeautifyLooks(browser, base) {
 
   assert(backCrashes.length === 0, `no page errors (${backCrashes.join(' | ') || 'none'})`);
   await back.close();
+
+  step('task 26: and so does a plain restart, with no draft to restore');
+  // The settings path on its own: same stored settings, no draft at all, so
+  // nothing but `beautifyLook` can say this frame is Poster rather than a
+  // hand-dialled one. Deriving the look from the values cannot answer this.
+  // Opened last, and after every read from `back`: a new tab takes browser
+  // focus, and the popover on the old page closes on its own focusout.
+  const { page: fresh } = await newSmokePage(browser);
+  const freshCrashes = [];
+  fresh.on('pageerror', (err) => freshCrashes.push(String(err)));
+  await fresh.evaluateOnNewDocument(installChromeStub, {
+    ...seed,
+    'openscreenshot:settings': { ...stored.settings },
+  });
+  await fresh.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await fresh.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+  assert(
+    (await fresh.$('.draft-restore')) === null,
+    'no draft is offered on this page — the settings are carrying it alone',
+  );
+  await fresh.click('.beautify-menu > .btn-secondary');
+  await fresh.waitForSelector('.beautify-popover', { timeout: 5000 });
+  await settle();
+  const afterRestart = (await looks(fresh)).find((l) => l.label === 'Poster');
+  assert(
+    afterRestart.pressed && afterRestart.modified,
+    'Poster comes back chosen and modified from settings alone',
+  );
+  assert(freshCrashes.length === 0, `no page errors (${freshCrashes.join(' | ') || 'none'})`);
+  await fresh.close();
 }
 
 async function main() {

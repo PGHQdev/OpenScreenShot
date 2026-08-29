@@ -101,6 +101,9 @@ export interface LastCapture {
 /** Beautify frame background. `Settings` stores one; see src/editor/frame.ts. */
 export type PresetId = 'ink' | 'coral' | 'dusk' | 'mint' | 'sand' | 'sky';
 
+/** Beautify look — a named set of frame values. See src/editor/frame.ts. */
+export type LookId = 'clean' | 'airy' | 'snug' | 'flat' | 'poster' | 'cutout';
+
 export type FrameBackground =
   { kind: 'preset'; id: PresetId } | { kind: 'solid'; color: string } | { kind: 'transparent' };
 
@@ -139,6 +142,8 @@ export interface Settings {
   beautifyRadius: number;
   beautifyShadow: number;
   beautifyBackground: FrameBackground;
+  /** The named look those four came from, or null when they came from none. */
+  beautifyLook: LookId | null;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -163,4 +168,10 @@ export const DEFAULT_SETTINGS: Settings = {
   beautifyRadius: 30,
   beautifyShadow: 45,
   beautifyBackground: { kind: 'preset', id: 'ink' },
+  // Null, not 'clean', although the four values above are Clean's: this is
+  // also what an upgrading install reads for a key its stored settings do not
+  // have, and defaulting it to a look would claim the user chose one.
+  // frameFromSettings falls back to matching the values, which answers 'clean'
+  // here and answers honestly for a frame that was adjusted by hand.
+  beautifyLook: null,
 };

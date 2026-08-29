@@ -762,6 +762,18 @@ async function testEditor(browser, base, messages) {
     `an ordinary secondary button does not (${beautifyOff.backgroundColor}) — on and off stay distinguishable`,
   );
 
+  step('EDITOR — forced-colors: active — the chosen Beautify look');
+  // The look row's chosen state is colour-only too (--accent-subtle fill,
+  // --accent border), and forced colors maps author colours by element role,
+  // not by hue — six sibling buttons would otherwise flatten to one face.
+  const lookOn = await computedOf(page, ".look-btn[aria-pressed='true']", ['backgroundColor']);
+  const lookOff = await computedOf(page, ".look-btn[aria-pressed='false']", ['backgroundColor']);
+  assert(lookOn.backgroundColor === highlight, 'the chosen look resolves to Highlight');
+  assert(
+    lookOff.backgroundColor !== highlight,
+    `an unchosen look does not (${lookOff.backgroundColor}) — the row still says which one is on`,
+  );
+
   step('EDITOR — forced-colors: active — the shared .switch inside the Beautify popover');
   const switchOn = await computedOf(page, '.beautify-toggle .switch', ['backgroundColor']);
   const switchKnobOn = await computedOfPseudo(page, '.beautify-toggle .switch', '::before', [

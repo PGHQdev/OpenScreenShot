@@ -77,40 +77,54 @@ describe('looks through settings', () => {
     }
   });
 
-  it('does not write a look id — the four values are the whole record', () => {
-    // frameToSettings is typed as a Pick of Settings, so a look id could only
-    // reach storage by widening the shared Settings contract.
+  it('writes the look id alongside the four values', () => {
     const stored = frameToSettings({ ...DEFAULT_FRAME, ...applyLook('poster') });
     expect(Object.keys(stored).sort()).toEqual([
       'beautifyBackground',
       'beautifyEnabled',
+      'beautifyLook',
       'beautifyPadding',
       'beautifyRadius',
       'beautifyShadow',
     ]);
+    expect(stored.beautifyLook).toBe('poster');
   });
 
-  it('loses only the mark, never a value, when an adjusted look round-trips', () => {
-    // The disclosed limit of deriving the look from the values: after an
-    // editor restart with no draft to restore, a look that was adjusted comes
-    // back as no look selected. Every slider value is exact.
+  it('brings an adjusted look back as that look, values and all', () => {
+    // The case the values alone cannot spell out: padding 33 matches no look,
+    // so only the stored id says which one the user was adjusting.
     const adjusted: FrameOptions = { ...DEFAULT_FRAME, ...applyLook('poster'), padding: 33 };
     const back = frameFromSettings({ ...DEFAULT_SETTINGS, ...frameToSettings(adjusted) });
-    expect(back.look).toBeNull();
-    expect(back).toEqual({ ...adjusted, look: null });
+    expect(back).toEqual(adjusted);
+  });
+
+  it('reads a junk stored look id as none, falling back to the values', () => {
+    const stored = { ...DEFAULT_SETTINGS, beautifyLook: 'gorgeous' as unknown as null };
+    expect(frameFromSettings(stored).look).toBe('clean');
   });
 
   it('gives a settings blob written before looks existed the look it matches', () => {
-    // v1.3.0 stored these four keys and nothing else; the shipped defaults are
-    // the Clean look, so an untouched install opens with Clean selected.
-    const old = {
-      ...DEFAULT_SETTINGS,
+    // What every 1.3.0 install holds: the five beautify keys and no
+    // beautifyLook. getSettings spreads the stored object over
+    // DEFAULT_SETTINGS, so the missing key arrives as null and the look is
+    // read off the values instead.
+    const stored = {
       beautifyEnabled: true,
       beautifyPadding: 40,
       beautifyRadius: 30,
       beautifyShadow: 45,
       beautifyBackground: { kind: 'preset', id: 'ink' } as const,
     };
-    expect(frameFromSettings(old).look).toBe('clean');
+    expect('beautifyLook' in stored).toBe(false);
+    const merged = { ...DEFAULT_SETTINGS, ...stored };
+    expect(merged.beautifyLook).toBeNull();
+    expect(frameFromSettings(merged).look).toBe('clean');
+  });
+
+  it('leaves an upgrading install that had adjusted its frame on no look', () => {
+    // The other half of the upgrade: values nobody's look sets stay honest
+    // rather than being claimed by the default.
+    const merged = { ...DEFAULT_SETTINGS, beautifyPadding: 41 };
+    expect(frameFromSettings(merged).look).toBeNull();
   });
 });

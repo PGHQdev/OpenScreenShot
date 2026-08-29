@@ -165,6 +165,7 @@ describe('looks through the draft', () => {
     const adjusted: FrameOptions = { ...poster, padding: 33 };
     expect(lookIsModified(adjusted)).toBe(true);
     const d = parseDraft(JSON.parse(JSON.stringify(makeDraft(1, [rect], [], adjusted))));
+    expect(d?.frame.beautifyLook).toBe('poster');
     const back = draftFrame(d!);
     expect(back.look).toBe('poster');
     expect(back.padding).toBe(33);
@@ -203,14 +204,20 @@ describe('looks through the draft', () => {
     const parsed = parseDraft(old);
     expect(parsed).not.toBeNull();
     expect(parsed?.annotations).toEqual([rect]);
-    // Nothing stored, so the look comes from the values — which are Poster's.
-    expect(parsed?.look).toBeNull();
+    // No id was stored, so the look comes from the values — which are Poster's.
     expect(draftFrame(parsed!).look).toBe('poster');
   });
 
   it('reads a junk look id as no look rather than voiding the draft', () => {
-    const parsed = parseDraft({ sourceCapturedAt: 1, annotations: [rect], look: 'gorgeous' });
+    const parsed = parseDraft({
+      sourceCapturedAt: 1,
+      annotations: [rect],
+      frame: { beautifyLook: 'gorgeous' },
+    });
     expect(parsed).not.toBeNull();
-    expect(parsed?.look).toBeNull();
+    // The junk is dropped on the way through frameFromSettings, and the look
+    // falls back to the one the stored values match — here the defaults', Clean.
+    expect(parsed?.frame.beautifyLook).toBe('clean');
+    expect(draftFrame(parsed!).look).toBe('clean');
   });
 });

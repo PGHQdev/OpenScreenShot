@@ -10,13 +10,13 @@
  * side, so one stored value looks the same on a 480px region and a 3000px
  * full-page capture.
  */
-import type { FrameBackground, PresetId } from '../shared/types';
+import type { FrameBackground, LookId, PresetId } from '../shared/types';
 import { normalizeHex } from './palette';
 import type { Settings } from '../shared/types';
 import { MAX_CANVAS_HEIGHT_PX } from '../shared/geometry';
 import { tokens } from '../shared/design-tokens';
 
-export type { FrameBackground, PresetId };
+export type { FrameBackground, LookId, PresetId };
 
 export interface FrameOptions {
   enabled: boolean;
@@ -104,10 +104,9 @@ export const BACKGROUND_PRESETS: BackgroundPreset[] = [
  * Deliberately not called a preset: `BackgroundPreset` above already owns that
  * word for a gradient, and a look *contains* a background rather than being
  * one. Two things called "preset" in one file would have to be told apart by
- * context on every read.
+ * context on every read. `LookId` itself lives in shared/types.ts beside
+ * `PresetId`, for the same reason that one does: `Settings` stores it.
  */
-export type LookId = 'clean' | 'airy' | 'snug' | 'flat' | 'poster' | 'cutout';
-
 export interface FrameLook extends FrameValues {
   id: LookId;
   label: string;
@@ -410,14 +409,14 @@ function slider(value: unknown, fallback: number): number {
 }
 
 /**
- * `Settings` stores the four values but no look id, so the look is derived
- * from them on the way out: a look that was picked and left alone comes back
- * selected. One thing derivation cannot recover is a look the user then
- * adjusted — its values match no look, so it reads as none selected rather
- * than as that look, modified. The draft carries the id itself and does not
- * lose it (see `src/editor/draft.ts`), so this only shows after an editor
- * restart with no draft restored; the slider values themselves are exact
- * either way.
+ * The stored look id wins, so a look that was adjusted comes back as that
+ * look, modified — the one state its values alone cannot spell out.
+ *
+ * Matching the values is the fallback, for the settings blob every install
+ * upgrading from 1.3.0 holds: it has no `beautifyLook` key, `getSettings`
+ * fills the null default in, and the frame reads back as whichever look its
+ * values are. An untouched install lands on Clean that way; one whose sliders
+ * were moved by hand lands on no look, which is the truth about it.
  */
 export function frameFromSettings(s: Settings): FrameOptions {
   const values: FrameValues = {
@@ -426,14 +425,23 @@ export function frameFromSettings(s: Settings): FrameOptions {
     shadow: slider(s.beautifyShadow, DEFAULT_FRAME.shadow),
     background: normalizeBackground(s.beautifyBackground),
   };
-  return { enabled: s.beautifyEnabled === true, ...values, look: matchLook(values) };
+  return {
+    enabled: s.beautifyEnabled === true,
+    ...values,
+    look: normalizeLook(s.beautifyLook) ?? matchLook(values),
+  };
 }
 
 export function frameToSettings(
   f: FrameOptions,
 ): Pick<
   Settings,
-  'beautifyEnabled' | 'beautifyPadding' | 'beautifyRadius' | 'beautifyShadow' | 'beautifyBackground'
+  | 'beautifyEnabled'
+  | 'beautifyPadding'
+  | 'beautifyRadius'
+  | 'beautifyShadow'
+  | 'beautifyBackground'
+  | 'beautifyLook'
 > {
   return {
     beautifyEnabled: f.enabled,
@@ -441,5 +449,6 @@ export function frameToSettings(
     beautifyRadius: f.radius,
     beautifyShadow: f.shadow,
     beautifyBackground: f.background,
+    beautifyLook: f.look,
   };
 }
