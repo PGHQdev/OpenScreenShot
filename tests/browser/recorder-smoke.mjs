@@ -267,6 +267,46 @@ async function seedSession() {
   };
 }
 
+/**
+ * Append a segment row with no chunks to `sessionId`. A continue whose engine
+ * died after the row was written leaves exactly this: a segment whose blob is
+ * zero bytes, whose metadata never loads, and which the export has to skip
+ * rather than die on. Skipping it silently would hand the user a file shorter
+ * than the timeline they exported.
+ */
+async function seedEmptySegment(sessionId) {
+  const db = await new Promise((done, fail) => {
+    const req = indexedDB.open('openscreenshot-recordings', 1);
+    req.onsuccess = () => done(req.result);
+    req.onerror = () => fail(req.error);
+  });
+  const segmentId = crypto.randomUUID();
+  await new Promise((done, fail) => {
+    const tx = db.transaction(['sessions', 'segments'], 'readwrite');
+    const sessions = tx.objectStore('sessions');
+    const read = sessions.get(sessionId);
+    read.onsuccess = () => {
+      const row = read.result;
+      row.segmentIds = [...row.segmentIds, segmentId];
+      sessions.put(row);
+      tx.objectStore('segments').put({
+        id: segmentId,
+        sessionId,
+        index: 1,
+        startedAt: Date.now(),
+        duration: 0,
+        viewport: { w: 640, h: 360, dpr: 1 },
+        hasWebcam: false,
+      });
+    };
+    tx.oncomplete = () => done();
+    tx.onerror = () => fail(tx.error);
+    tx.onabort = () => fail(tx.error);
+  });
+  db.close();
+  return segmentId;
+}
+
 /** Share of the stage canvas that is painted, 0..1. */
 function stageOpacity() {
   const canvas = document.querySelector('.rec-canvas');
@@ -395,6 +435,35 @@ async function main() {
 
     const onDisk = await readdir(downloads).catch(() => []);
     console.log(`    download directory: ${onDisk.join(', ') || '(empty)'}`);
+
+    step('exporting a session that holds a segment the export cannot play');
+    await page.evaluate(seedEmptySegment, seeded.sessionId);
+    await page.goto(`${base}${PAGE}?session=${seeded.sessionId}`, { waitUntil: 'load' });
+    await page.waitForSelector('.rec-timeline.timeline', { timeout: 15_000 });
+    await page.evaluate(() => {
+      window.__smoke.toasts = [];
+      const seen = new Set();
+      new MutationObserver(() => {
+        for (const el of document.querySelectorAll('.toast-text')) {
+          const text = el.textContent ?? '';
+          if (text && !seen.has(text)) {
+            seen.add(text);
+            window.__smoke.toasts.push(text);
+          }
+        }
+      }).observe(document.body, { childList: true, subtree: true, characterData: true });
+    });
+    const retry = await page.waitForSelector('.rec-btn-primary', { timeout: 15_000 });
+    await retry.click();
+    // The file is still written; the toast slot goes to what it is missing.
+    await page.waitForSelector('.toast-error .toast-text', { timeout: 180_000 });
+    const asError = await page.$eval('.toast-error .toast-text', (el) => el.textContent?.trim());
+    assert(
+      asError === messages.recFailSegmentSkipped.message,
+      `the skipped segment is named as a failure, not just logged ("${asError}")`,
+    );
+    const second = await page.evaluate(() => window.__smoke.downloads.length);
+    assert(second === 1, `the export still produced a file (${second} download)`);
 
     assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
   } finally {

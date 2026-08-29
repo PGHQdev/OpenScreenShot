@@ -22,6 +22,7 @@ import {
 } from './render';
 import { exportGeometry, type ExportDraft } from './export-video';
 import { cursorAt, normalizeClicks, normalizeMoves } from './events-map';
+import { recFailureMessageKey } from '../shared/rec-failure';
 import { cameraAt, EASE_MS } from './zoom';
 
 // i18n helper
@@ -37,9 +38,19 @@ function sessionIdFromLocation(): string | null {
   return new URLSearchParams(window.location.search).get('session');
 }
 
+type ToastTone = 'info' | 'error';
+interface Toast {
+  message: string;
+  tone: ToastTone;
+}
+
 export function App() {
   const [sessionId, setSessionIdState] = useState<string | null>(sessionIdFromLocation);
-  const [hint, setHint] = useState<string | null>(null);
+  const [hint, setHint] = useState<Toast | null>(null);
+
+  function toast(message: string, tone: ToastTone = 'info') {
+    setHint({ message, tone });
+  }
 
   useEffect(() => {
     void getSettings().then((s) => applyTheme(s.theme));
@@ -48,8 +59,10 @@ export function App() {
   // Live-update a "system" theme setting when the OS preference flips.
   useEffect(() => watchSystemTheme(() => void getSettings().then((s) => applyTheme(s.theme))), []);
 
+  // A hint is transient; a failure is a state the user has to read, and it
+  // stays until it is dismissed — the same rule the popup's toasts follow.
   useEffect(() => {
-    if (!hint) return;
+    if (!hint || hint.tone === 'error') return;
     const id = setTimeout(() => setHint(null), 4000);
     return () => clearTimeout(id);
   }, [hint]);
@@ -65,7 +78,7 @@ export function App() {
   async function continueRecording() {
     if (!sessionId) return;
     await chrome.storage.session.set({ [CONTINUE_SESSION_KEY]: sessionId });
-    setHint(t('recContinueHint'));
+    toast(t('recContinueHint'));
   }
 
   return (
@@ -85,15 +98,25 @@ export function App() {
       </header>
 
       {hint ? (
-        <div class="toasts" aria-live="polite">
-          <div class="toast toast-info" role="status">
-            <span class="toast-text">{hint}</span>
+        <div class="toasts" aria-live={hint.tone === 'error' ? 'assertive' : 'polite'}>
+          <div class={`toast toast-${hint.tone}`} role="status">
+            <span class="toast-text">{hint.message}</span>
+            {hint.tone === 'error' ? (
+              <button
+                class="toast-dismiss"
+                aria-label={t('dismiss')}
+                title={t('dismiss')}
+                onClick={() => setHint(null)}
+              >
+                ×
+              </button>
+            ) : null}
           </div>
         </div>
       ) : null}
 
       {sessionId ? (
-        <SessionView sessionId={sessionId} onMissing={() => setSessionId(null)} onToast={setHint} />
+        <SessionView sessionId={sessionId} onMissing={() => setSessionId(null)} onToast={toast} />
       ) : (
         <SessionListView onOpen={setSessionId} />
       )}
@@ -166,12 +189,17 @@ function SessionListView({ onOpen }: { onOpen: (id: string) => void }) {
       ) : (
         rows.map(({ session, segmentCount, totalDurationMs }) => {
           const live = session.id === activeId;
+          // A retained failed start holds no segments — there is nothing to
+          // open, only the record that the attempt happened, and a Delete.
+          const failed = session.status === 'failed';
           return (
             <div class="rec-row" key={session.id}>
               <div class="rec-row-info">
                 <span class="rec-row-date">{new Date(session.createdAt).toLocaleString()}</span>
                 {live ? (
                   <span class="pill pill-live">{t('recorderRecordingNow')}</span>
+                ) : failed ? (
+                  <span class="pill pill-failed">{t('recorderFailed')}</span>
                 ) : session.status === 'recording' ? (
                   <span class="pill pill-recovered">{t('recorderRecovered')}</span>
                 ) : null}
@@ -182,9 +210,9 @@ function SessionListView({ onOpen }: { onOpen: (id: string) => void }) {
               <div class="rec-row-actions">
                 <button
                   class="link-btn"
-                  aria-disabled={live}
+                  aria-disabled={live || failed}
                   onClick={() => {
-                    if (!live) onOpen(session.id);
+                    if (!live && !failed) onOpen(session.id);
                   }}
                 >
                   {t('recorderOpen')}
@@ -217,14 +245,23 @@ function SessionView({
 }: {
   sessionId: string;
   onMissing: () => void;
-  onToast: (message: string) => void;
+  onToast: (message: string, tone?: 'info' | 'error') => void;
 }) {
   const sess = useRecorderSession(sessionId);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  // A session that will not load used to drop straight back to the list with
+  // nothing said: the hook set `error` and no one read it, so a recording the
+  // page could not read was indistinguishable from a stale link. 'not-found'
+  // stays silent — a deleted session is not a failure, and the list it lands
+  // on is already the answer.
   useEffect(() => {
-    if (!sess.loading && !sess.session) onMissing();
-  }, [sess.loading, sess.session]);
+    if (sess.loading || sess.session) return;
+    if (sess.error && sess.error !== 'not-found') {
+      onToast(t(recFailureMessageKey('session-load-failed')), 'error');
+    }
+    onMissing();
+  }, [sess.loading, sess.session, sess.error]);
 
   // The renderer takes a draft, not the hook: the preview and the export must
   // read the same fields, and the hook's own draft is a persistence detail.

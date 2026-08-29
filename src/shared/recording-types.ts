@@ -14,7 +14,13 @@ export const DEFAULT_RECORDING_SETTINGS: RecordingSettings = {
   ripple: true,
 };
 
-export type SessionStatus = 'recording' | 'complete';
+/**
+ * 'failed' is a start that never reached the engine: the row is kept, with no
+ * segments, so the Recorder page can show that the attempt happened rather
+ * than deleting every trace of it. `findRecoverableSessions` deliberately
+ * does not offer one — there is nothing in it to recover.
+ */
+export type SessionStatus = 'recording' | 'complete' | 'failed';
 
 export interface RecordingSession {
   id: string;

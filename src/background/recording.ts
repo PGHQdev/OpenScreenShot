@@ -17,6 +17,7 @@ import {
   deleteSession,
   findRecoverableSessions,
   getSession,
+  listSessions,
   updateSession,
 } from '../shared/recording-db';
 import {
@@ -30,6 +31,13 @@ import {
   type SegmentViewport,
 } from '../shared/recording-types';
 import { PENDING_RECORD_KEY, pendingRecordIsLive, type PendingRecord } from '../shared/permissions';
+import {
+  REC_FAILURE_KEY,
+  REC_FAILURE_MESSAGE,
+  isRecFailure,
+  type RecFailure,
+  type RecFailureCode,
+} from '../shared/rec-failure';
 import { isProtectedUrl } from '../shared/utils';
 
 const REC_STATE_KEY = 'openscreenshot:rec-state';
@@ -163,22 +171,63 @@ async function clearRecBadge(): Promise<void> {
 }
 
 /**
- * Put the badge back the way a live recording needs it. The action badge is
+ * The badge for a recording failure nobody has read yet. Coral and '!' is
+ * how `flashErrorBadge` in the capture worker already spells an error; this
+ * one persists instead of counting down, because it is the only surface left
+ * when a failure lands with no popup, recorder page or control bar open.
+ */
+async function showFailBadge(): Promise<void> {
+  await chrome.action.setBadgeBackgroundColor({ color: '#e8503a' });
+  await chrome.action.setBadgeTextColor({ color: '#ffffff' });
+  await chrome.action.setBadgeText({ text: '!' });
+}
+
+async function pendingFailure(): Promise<RecFailure | null> {
+  const stored = await chrome.storage.session.get(REC_FAILURE_KEY);
+  const value: unknown = stored[REC_FAILURE_KEY];
+  return isRecFailure(value) ? value : null;
+}
+
+/**
+ * Put the badge back the way current state needs it. The action badge is
  * one shared surface: a capture taken mid-recording runs its own countdown,
  * done or error flash and then clears the text, which used to wipe the REC
  * indicator for the rest of the recording. Capture calls this instead of
- * clearing, so the badge lands on REC while a recording runs and on empty
- * otherwise.
+ * clearing, so the badge lands on REC while a recording runs, on '!' while an
+ * unread recording failure is parked, and on empty otherwise.
  */
 export async function restoreRecBadge(): Promise<void> {
   let state: StoredRecState | null = null;
+  let failure: RecFailure | null = null;
   try {
     state = await getRecState();
+    failure = await pendingFailure();
   } catch {
     // Session storage unavailable — fall through and clear, as before.
   }
   if (state) await showRecBadge(state.overlayLost);
+  else if (failure) await showFailBadge();
   else await clearRecBadge();
+}
+
+// --- Failure reporting -------------------------------------------------------
+
+/**
+ * Surface a failure the worker has no caller to answer. Most of these land
+ * with nothing of ours on screen — the popup hands the click over and closes,
+ * and the control bar is either not up yet or is itself what failed — so this
+ * takes all three routes it can: it parks the failure for the next popup open,
+ * broadcasts it to any surface that happens to be listening right now, and
+ * puts '!' on the action badge, which needs nothing open at all.
+ *
+ * Best-effort throughout. A failure report that throws would replace the
+ * failure being reported with a less useful one.
+ */
+async function reportFailure(code: RecFailureCode): Promise<void> {
+  const failure: RecFailure = { code, at: Date.now() };
+  await chrome.storage.session.set({ [REC_FAILURE_KEY]: failure }).catch(() => {});
+  chrome.runtime.sendMessage({ type: REC_FAILURE_MESSAGE, failure }).catch(() => {});
+  await restoreRecBadge().catch(() => {});
 }
 
 // --- Overlay heal ------------------------------------------------------------
@@ -286,12 +335,14 @@ async function handleStart(settings: RecordingSettings, continueSessionId?: stri
   try {
     if (await getRecState()) {
       resolveStartPending(); // already recording — release the claim
+      await reportFailure('start-busy');
       return;
     }
 
     const tab = await getActiveTab();
     if (!tab || tab.id == null || isProtectedUrl(tab.url)) {
       resolveStartPending();
+      await reportFailure('start-blocked');
       return;
     }
     tabId = tab.id;
@@ -349,6 +400,9 @@ async function handleStart(settings: RecordingSettings, continueSessionId?: stri
     // `getUserMedia` runs in the offscreen document, which cannot prompt and
     // would just fail. `ENGINE_STARTED` re-anchors the clock afterwards.
     const mount = await healOverlay(tabId);
+    // A bar that never went up leaves the recording running with no in-page
+    // stop button; the popup is the remaining way to end it, so say so.
+    if (mount === 'failed') void reportFailure('overlay-blocked');
     if (mount === 'fresh' && (settings.webcam || settings.mic)) {
       await waitForFrameReady();
       armStartTimeout();
@@ -385,37 +439,65 @@ async function handleStart(settings: RecordingSettings, continueSessionId?: stri
     // The session row was already written when this threw (a navigating tab
     // fails `execInTab`, for one), and a row left at status 'recording' with
     // no engine behind it reads as a crash the user is offered to recover.
-    await discardStartedSession(session?.id, !!continueSessionId, segmentId);
+    const retained = await retainFailedSession(session?.id, !!continueSessionId, segmentId);
     await clearRecState();
     await clearRecBadge();
     await closeOffscreenSafe();
     resolveStartPending();
+    // Reported after the badge clear above, which would otherwise win. A
+    // cleanup that also failed is the message worth showing: it is the one
+    // that leaves a row behind for the user to deal with.
+    await reportFailure(retained ? 'start-failed' : 'cleanup-failed');
   }
 }
 
 /**
- * Undo the DB half of a start that never reached the engine. A brand-new
- * session is deleted outright; a continued one only loses the 'recording'
- * status it was just given, because its earlier segments are real recordings.
+ * Settle the DB half of a start that never reached the engine.
  *
- * The segment row created for this run goes either way. In the continued case
- * it has to go on its own: no chunk was ever written to it, so it would load
- * as a zero-byte source that the editor cannot play and that used to make
- * every later export of the session fail.
+ * A brand-new session used to be deleted outright, which is why a failed
+ * start was indistinguishable from a click that did nothing: the message,
+ * the state and the row all vanished together. The row is kept and marked
+ * 'failed' instead, so the Recorder page has something to show — when it was
+ * attempted, and which tracks were asked for. A continued session keeps its
+ * earlier segments and just loses the 'recording' status it was given, as
+ * before, because those segments are real recordings and the session as a
+ * whole is not a failure.
+ *
+ * The segment row created for this run goes either way. No chunk was ever
+ * written to it, so it would load as a zero-byte source that the editor
+ * cannot play and that used to make every later export of the session fail.
  */
-async function discardStartedSession(
+async function retainFailedSession(
   sessionId: string | undefined,
   continued: boolean,
   segmentId?: string,
-): Promise<void> {
-  if (!sessionId) return;
+): Promise<boolean> {
+  if (!sessionId) return true;
   try {
+    if (segmentId) await deleteSegment(segmentId);
     if (continued) {
-      if (segmentId) await deleteSegment(segmentId);
       await updateSession(sessionId, { status: 'complete' });
-    } else await deleteSession(sessionId);
+    } else {
+      await dropOlderFailedSessions(sessionId);
+      await updateSession(sessionId, { status: 'failed' });
+    }
+    return true;
   } catch (err) {
-    console.error('[OpenScreenShot] discarding the failed session failed', err);
+    console.error('[OpenScreenShot] retaining the failed session failed', err);
+    return false;
+  }
+}
+
+/**
+ * Keep exactly one failed session. A retained failure is there to be looked
+ * at once and deleted; without this, a start that fails the same way every
+ * time (a permanently blocked origin, say) would stack up an empty row per
+ * click and the Recorder page would fill with them.
+ */
+async function dropOlderFailedSessions(keepId: string): Promise<void> {
+  const sessions = await listSessions();
+  for (const session of sessions) {
+    if (session.status === 'failed' && session.id !== keepId) await deleteSession(session.id);
   }
 }
 
@@ -524,6 +606,9 @@ async function handleQuery(sendResponse: (state: RecState) => void): Promise<voi
     });
   } catch (err) {
     console.error('[OpenScreenShot] REC_QUERY failed', err);
+    // The reply below is a guess, not an answer: a live recording would be
+    // reported as idle. Whoever asked has to know the state is untrustworthy.
+    void reportFailure('query-failed');
     sendResponse({ active: false, paused: false });
   }
 }
@@ -559,6 +644,7 @@ async function handleOverlayLost(sessionId: string): Promise<void> {
   if (!state || state.sessionId !== sessionId) return;
   await setRecState({ sessionId, overlayLost: true });
   await showRecBadge(true);
+  await reportFailure('overlay-lost');
 }
 
 async function handleOverlayHealed(sessionId: string): Promise<void> {
@@ -566,6 +652,13 @@ async function handleOverlayHealed(sessionId: string): Promise<void> {
   if (!state || state.sessionId !== sessionId) return;
   await setRecState({ sessionId, overlayLost: false });
   await showRecBadge(false);
+  // The bar is back, so the parked "controls were lost" message is stale —
+  // a navigation that heals in a second must not leave the next popup open
+  // reporting a problem that has already fixed itself.
+  const parked = await pendingFailure().catch(() => null);
+  if (parked?.code === 'overlay-lost') {
+    await chrome.storage.session.remove(REC_FAILURE_KEY).catch(() => {});
+  }
 }
 
 async function handleEngineError(sessionId: string, message: string): Promise<void> {
@@ -576,16 +669,19 @@ async function handleEngineError(sessionId: string, message: string): Promise<vo
   // from a session that already ended would otherwise delete the recording
   // that replaced it, along with its state, badge and offscreen document.
   if (state && state.sessionId !== sessionId) return;
+  let retained = true;
   if (state) {
     await unmountOverlay(state.tabId);
     // The engine only reports this from its own start, before any recorder
-    // ran, so the session holds nothing. Left at 'recording' it would offer
-    // the user an empty recording to recover.
-    await discardStartedSession(state.sessionId, state.continued, state.segmentId);
+    // ran, so the session holds nothing recorded. Left at 'recording' it
+    // would offer the user an empty recording to recover; marked 'failed' it
+    // stays visible on the Recorder page as the attempt that did not work.
+    retained = await retainFailedSession(state.sessionId, state.continued, state.segmentId);
   }
   await clearRecState();
   await clearRecBadge();
   await closeOffscreenSafe();
+  await reportFailure(retained ? 'engine-failed' : 'cleanup-failed');
 }
 
 async function handleEngineStopped(sessionId: string, canceled: boolean): Promise<void> {
@@ -694,6 +790,18 @@ chrome.permissions.onAdded.addListener((added) => {
     if (pending.continueSessionId) await chrome.storage.session.remove(CONTINUE_SESSION_KEY);
     await handleStart(pending.settings, pending.continueSessionId);
   })();
+});
+
+/**
+ * The '!' badge belongs to a parked failure nobody has read. The surface that
+ * reads one out removes the key, and the badge has to follow — the popup is
+ * closing at that moment and cannot own a badge that outlives it, and a
+ * recorder page never touched it in the first place.
+ */
+chrome.storage.session.onChanged.addListener((changes) => {
+  const change = changes[REC_FAILURE_KEY];
+  if (!change || change.newValue !== undefined) return;
+  void restoreRecBadge();
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {

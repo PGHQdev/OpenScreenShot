@@ -94,6 +94,9 @@ function makeFakeChrome() {
         getBytesInUse: vi.fn(() => Promise.resolve(0)),
       },
       onChanged: { addListener: vi.fn() },
+      // recording.ts watches this at module scope: the surface that reads a
+      // parked failure removes the key, and the badge has to follow.
+      session: { onChanged: { addListener: vi.fn() } },
     },
     i18n: { getMessage: vi.fn((key: string) => key) },
     windows: { WINDOW_ID_CURRENT: -2 },

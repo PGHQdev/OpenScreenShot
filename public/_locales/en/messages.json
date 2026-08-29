@@ -309,6 +309,62 @@
     "message": "Tab recording was not allowed — open setup",
     "description": "Popup button shown after the user refuses the inline tabCapture prompt."
   },
+  "recFailStartUnreachable": {
+    "message": "Recording didn\u2019t start \u2014 the extension didn\u2019t answer. Try again.",
+    "description": "Popup: error toast when REC_START never reached the service worker."
+  },
+  "recFailStartBlocked": {
+    "message": "Recording didn\u2019t start \u2014 this page can\u2019t be recorded. Switch to a normal tab and try again.",
+    "description": "Popup: error toast when the start found no recordable tab (gone, or a protected URL)."
+  },
+  "recFailStartBusy": {
+    "message": "A recording is already running \u2014 stop it before starting another.",
+    "description": "Popup: error toast when a start arrives while a recording is live."
+  },
+  "recFailStartFailed": {
+    "message": "Recording didn\u2019t start \u2014 the tab couldn\u2019t be prepared. Reload the tab and try again.",
+    "description": "Popup: error toast when the worker's start threw before the engine was asked to capture."
+  },
+  "recFailCleanup": {
+    "message": "A failed recording is still stored \u2014 delete it on the Recorder page.",
+    "description": "Popup: error toast when a failed session could not be tidied up."
+  },
+  "recFailEngine": {
+    "message": "Recording stopped before it began \u2014 the tab couldn\u2019t be captured. Try again.",
+    "description": "Popup: error toast when the offscreen engine failed to open its streams."
+  },
+  "recFailQuery": {
+    "message": "Recording status is unavailable \u2014 open the Recorder page to check.",
+    "description": "Popup: error toast when REC_QUERY threw, so \"not recording\" cannot be trusted."
+  },
+  "recFailOverlayBlocked": {
+    "message": "The recording controls couldn\u2019t open on this page \u2014 stop the recording from here.",
+    "description": "Popup: error toast when the in-page control bar could not be injected."
+  },
+  "recFailOverlayLost": {
+    "message": "The recording controls were lost on this page \u2014 stop the recording from here.",
+    "description": "Popup: error toast when the in-page control bar stopped reporting mid-recording."
+  },
+  "recFailControlUnreachable": {
+    "message": "That didn\u2019t reach the recorder \u2014 the extension didn\u2019t answer. Try again.",
+    "description": "Popup: error toast when stop/cancel never reached the service worker."
+  },
+  "recFailSessionLoad": {
+    "message": "That recording couldn\u2019t be opened \u2014 it may be incomplete.",
+    "description": "Recorder page: error toast when a session could not be read out of IndexedDB."
+  },
+  "recFailSegmentSkipped": {
+    "message": "Part of this recording wouldn\u2019t play and was left out of the export.",
+    "description": "Recorder page: error toast when one or more segments were skipped during an export."
+  },
+  "recFailExport": {
+    "message": "Export failed \u2014 no file was saved. Try again.",
+    "description": "Recorder page: error toast when the export threw."
+  },
+  "recorderFailed": {
+    "message": "Failed",
+    "description": "Recorder page: pill on a session whose recording never started."
+  },
   "recRecover": {
     "message": "Recover last recording",
     "description": "Popup: link that reopens the editor for a crashed/unfinished recording session."
@@ -506,10 +562,6 @@
         "example": "12.4"
       }
     }
-  },
-  "recorderExportFailed": {
-    "message": "Export failed",
-    "description": "Recorder page: toast shown when an export could not be rendered."
   },
   "recorderDeleteAfter": {
     "message": "Delete recording after export",

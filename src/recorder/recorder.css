@@ -150,8 +150,46 @@ body {
   box-shadow: var(--sh-md);
 }
 
+.toast-text {
+  flex: 1 1 auto;
+}
+
 .toast-info {
   color: var(--text-2);
+}
+
+/* Same spelling as the popup's error toast: amber is this product's danger
+   accent, and a failure must not read as a neutral hint. */
+.toast-error {
+  background: color-mix(in srgb, var(--danger) 14%, var(--surface-1));
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+}
+
+.toast-dismiss {
+  flex: 0 0 auto;
+  padding: 0 var(--s-05);
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: var(--fs-base);
+  line-height: 1.2;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.toast-dismiss:hover {
+  opacity: 1;
+}
+
+.toast-dismiss:active {
+  transform: scale(0.98);
+}
+
+.toast-dismiss:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
 }
 
 /* ---- Session list ---- */
@@ -224,6 +262,13 @@ body {
 .pill-live {
   color: var(--accent-ink);
   background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+/* A start that never reached the engine. The row is kept so the attempt is
+   visible; there is nothing in it to open. */
+.pill-failed {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
 }
 
 .rec-row-actions {
@@ -849,7 +894,8 @@ body {
   /* Colour-only hover fade; nothing about it conveys progress. */
   .link-btn,
   .rec-bubble-corner,
-  .rec-seg-btn {
+  .rec-seg-btn,
+  .toast-dismiss {
     transition: none;
   }
 }

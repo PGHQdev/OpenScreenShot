@@ -18,6 +18,7 @@ const DIST = join(ROOT, 'dist');
 const SETUP_PAGE = '/src/setup/index.html';
 const POPUP_PAGE = '/src/popup/index.html';
 const PENDING_RECORD_KEY = 'openscreenshot:pending-record';
+const REC_FAILURE_KEY = 'openscreenshot:rec-failure';
 const CHROME =
   process.env.CHROME_BIN ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
@@ -544,6 +545,54 @@ async function main() {
     );
     assert(state.parked === undefined, 'a granted Record click parks nothing');
     assert(state.created.length === 0, 'a granted Record click opens no tab');
+    await page.close();
+
+    step('popup Record click the worker never received: the popup stays to say so');
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'] });
+    await page.waitForSelector('.mode-card[aria-disabled]');
+    // The worker is unreachable from here on. Every worker failure used to
+    // land on `.catch(() => {}).finally(() => window.close())`, so the popup
+    // went away whether the start happened or not.
+    await page.evaluate(() => {
+      chrome.runtime.sendMessage = async (msg) => {
+        globalThis.__smoke.sent.push(msg);
+        throw new Error('Could not establish connection. Receiving end does not exist.');
+      };
+    });
+    await page.click('.mode-card[aria-disabled]');
+    await page.waitForSelector('.toast-error .toast-text');
+    let failText = await page.$eval('.toast-error .toast-text', (el) => el.textContent.trim());
+    assert(
+      failText === messages.recFailStartUnreachable.message,
+      `the popup names the failure ("${failText}")`,
+    );
+    assert(
+      (await page.evaluate(() => globalThis.__smoke.closed)) === 0,
+      'and stays open, instead of closing over a start that never happened',
+    );
+    await page.close();
+
+    step('popup reopened after a failure the worker had nowhere to show');
+    // Every worker failure lands with the popup already gone, so the worker
+    // parks it and this is the read-out. Consumed on sight, so the open after
+    // this one is quiet.
+    page = await open(POPUP_PAGE, {
+      grants: ['tabCapture'],
+      session: { [REC_FAILURE_KEY]: { code: 'engine-failed', at: Date.now() } },
+    });
+    await page.waitForSelector('.toast-error .toast-text');
+    failText = await page.$eval('.toast-error .toast-text', (el) => el.textContent.trim());
+    assert(
+      failText === messages.recFailEngine.message,
+      `the parked failure is read out ("${failText}")`,
+    );
+    assert(
+      await page.evaluate(
+        (key) => globalThis.__smoke.sessionRemoved.includes(key),
+        REC_FAILURE_KEY,
+      ),
+      'and consumed, so it says its piece once rather than nagging every open',
+    );
     await page.close();
 
     // ---------------------------------------------------------------- setup ---

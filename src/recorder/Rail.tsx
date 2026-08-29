@@ -13,6 +13,7 @@ import { deleteSession } from '../shared/recording-db';
 import { getSettings } from '../shared/storage';
 import { formatFilename } from '../shared/utils';
 import { exportGeometry, exportVideo, type ExportDraft } from './export-video';
+import { recFailureMessageKey } from '../shared/rec-failure';
 import type { BubbleCorner } from './recorder-draft';
 import type { LoadedSession } from './session-load';
 
@@ -39,7 +40,7 @@ export interface RailProps {
   onFrame: (patch: Partial<FrameOptions>) => void;
   onAddZoom: () => void;
   onRegenerate: () => void;
-  onToast: (message: string) => void;
+  onToast: (message: string, tone?: 'info' | 'error') => void;
   /** The session was deleted after a successful export; leave the editor. */
   onDeleted: () => void;
 }
@@ -60,7 +61,7 @@ export function Rail(props: RailProps) {
     abortRef.current = controller;
     setProgress(0);
     try {
-      const blob = await exportVideo(
+      const { blob, skipped } = await exportVideo(
         props.loaded,
         props.draft,
         (p) => setProgress(p.fraction),
@@ -82,14 +83,18 @@ export function Rail(props: RailProps) {
       a.click();
       URL.revokeObjectURL(a.href);
 
-      props.onToast(t('recorderExported', [(blob.size / 1e6).toFixed(1)]));
+      // One toast slot, so a skip takes it: the file exists either way and
+      // the browser's own download shows that, but a file shorter or quieter
+      // than the timeline promised is the thing the user has to be told.
+      if (skipped > 0) props.onToast(t(recFailureMessageKey('segment-skipped')), 'error');
+      else props.onToast(t('recorderExported', [(blob.size / 1e6).toFixed(1)]));
       if (deleteAfter) {
         await deleteSession(props.loaded.session.id);
         props.onDeleted();
       }
     } catch (err) {
       console.error('[OpenScreenShot] export failed', err);
-      props.onToast(t('recorderExportFailed'));
+      props.onToast(t(recFailureMessageKey('export-failed')), 'error');
     } finally {
       abortRef.current = null;
       setProgress(null);

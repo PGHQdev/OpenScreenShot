@@ -45,6 +45,13 @@ import {
   type DevicePermission,
   type PendingRecord,
 } from '../shared/permissions';
+import {
+  REC_FAILURE_KEY,
+  REC_FAILURE_MESSAGE,
+  isRecFailure,
+  recFailureMessageKey,
+  type RecFailureCode,
+} from '../shared/rec-failure';
 import { applyTheme, watchSystemTheme } from '../shared/theme';
 
 // i18n helper
@@ -72,25 +79,34 @@ function openCoolStuff() {
  * hard-blocked — because the grant a recording needs is asked for inline.
  * An already-open setup tab is focused, never duplicated — a stack of
  * identical setup tabs reads as "the close button does nothing".
+ *
+ * Closes on a handoff that worked, and reports one that did not. It used to
+ * close in a `finally`, so a setup page that never opened looked exactly like
+ * one that did: the popup vanished either way and there was no surface left
+ * to say so on.
  */
-function openSetupPage(from?: 'record') {
+async function openSetupPage(from?: 'record'): Promise<boolean> {
   const base = chrome.runtime.getURL('src/setup/index.html');
   const url = base + (from ? `?from=${from}` : '');
-  void (async () => {
-    try {
-      const [tab] = await chrome.tabs.query({ url: base + '*' });
-      if (tab?.id != null) {
-        await chrome.tabs.update(tab.id, { active: true, url });
-        if (tab.windowId != null) await chrome.windows.update(tab.windowId, { focused: true });
-      } else {
-        await chrome.tabs.create({ url });
-      }
-    } catch {
-      await chrome.tabs.create({ url }).catch(() => {});
-    } finally {
-      window.close();
+  try {
+    const [tab] = await chrome.tabs.query({ url: base + '*' });
+    if (tab?.id != null) {
+      await chrome.tabs.update(tab.id, { active: true, url });
+      if (tab.windowId != null) await chrome.windows.update(tab.windowId, { focused: true });
+    } else {
+      await chrome.tabs.create({ url });
     }
-  })();
+  } catch {
+    // The focus path can lose its tab between the query and the update; a
+    // fresh tab is the fallback, and only its failure is a real dead end.
+    try {
+      await chrome.tabs.create({ url });
+    } catch {
+      return false;
+    }
+  }
+  window.close();
+  return true;
 }
 
 /** Camera/mic grant state for the warning chips; 'prompt' when unqueryable. */
@@ -130,9 +146,16 @@ function formatElapsed(ms: number): string {
 }
 
 // Reopen the stashed capture in the editor (the stash survives editor loads).
-function openEditor() {
-  void chrome.tabs.create({ url: chrome.runtime.getURL('src/editor/index.html') });
+// Closes only once the tab exists, so a create that failed leaves the popup
+// up rather than making a dead click look like a completed one.
+async function openEditor(): Promise<boolean> {
+  try {
+    await chrome.tabs.create({ url: chrome.runtime.getURL('src/editor/index.html') });
+  } catch {
+    return false;
+  }
   window.close();
+  return true;
 }
 
 type ToastTone = 'info' | 'success' | 'error';
@@ -278,6 +301,38 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [showSettings, busy]);
 
+  /**
+   * Read out a recording failure the worker had nowhere to show. Every worker
+   * failure lands with this popup already closed — it hands the click over
+   * and goes — so the worker parks the failure in session storage and this is
+   * where it surfaces. Consumed on sight, so it says its piece once; removing
+   * the key is also what tells the worker to drop the '!' badge.
+   */
+  useEffect(() => {
+    void (async () => {
+      const stored = await chrome.storage.session.get(REC_FAILURE_KEY).catch(() => ({}));
+      const failure: unknown = (stored as Record<string, unknown>)[REC_FAILURE_KEY];
+      if (!isRecFailure(failure)) return;
+      await chrome.storage.session.remove(REC_FAILURE_KEY).catch(() => {});
+      pushToast(t(recFailureMessageKey(failure.code)), 'error');
+    })();
+  }, []);
+
+  // A failure that lands while this popup is open reaches it directly; the
+  // parked copy is then redundant and is dropped so the next open is quiet.
+  useEffect(() => {
+    const listener = (message: unknown) => {
+      if (!message || typeof message !== 'object') return;
+      if ((message as { type?: unknown }).type !== REC_FAILURE_MESSAGE) return;
+      const failure: unknown = (message as { failure?: unknown }).failure;
+      if (!isRecFailure(failure)) return;
+      void chrome.storage.session.remove(REC_FAILURE_KEY).catch(() => {});
+      pushToast(t(recFailureMessageKey(failure.code)), 'error');
+    };
+    chrome.runtime.onMessage.addListener(listener);
+    return () => chrome.runtime.onMessage.removeListener(listener);
+  }, []);
+
   // Listen for background progress / completion / errors.
   useEffect(() => {
     const off = onPopupMessage((msg: PopupMessage) => {
@@ -309,6 +364,19 @@ export function App() {
     }
   }
 
+  /** Show one of the mapped recording failures on this popup. */
+  function pushFailure(code: RecFailureCode) {
+    pushToast(t(recFailureMessageKey(code)), 'error');
+  }
+
+  // The setup page is the only fix for a refused grant or a blocked device,
+  // so a handoff that does not happen has to be said out loud.
+  function goSetup(from?: 'record') {
+    void openSetupPage(from).then((ok) => {
+      if (!ok) pushToast(t('couldNotReach'), 'error');
+    });
+  }
+
   function dismissToast(id: number) {
     setToasts((t) => t.filter((x) => x.id !== id));
   }
@@ -330,9 +398,16 @@ export function App() {
       // Close only AFTER the request is delivered — closing first can drop the
       // message to a cold service worker, so region would silently no-op on the
       // first click and only work once the worker is warm.
-      void sendToBackground({ type: 'CAPTURE_REQUEST', mode, repeat })
-        .catch(() => {})
-        .finally(() => window.close());
+      void sendToBackground({ type: 'CAPTURE_REQUEST', mode, repeat }).then(
+        () => window.close(),
+        () => {
+          // The request never reached the worker, so nothing is about to take
+          // over the page — the popup stays up and says why, exactly as the
+          // non-closing branch below already does.
+          setBusy(null);
+          pushToast(t('couldNotReach'), 'error');
+        },
+      );
       return;
     }
     setProgress(0);
@@ -357,18 +432,24 @@ export function App() {
     if (hasTabCapture == null) {
       const granted = await chrome.permissions.contains({ permissions: ['tabCapture'] });
       if (!granted) {
-        openSetupPage('record');
+        goSetup('record');
         return;
       }
     }
-    await chrome.storage.session.remove(CONTINUE_SESSION_KEY);
     void sendToBackground({
       type: 'REC_START',
       settings: recSettings,
       continueSessionId: continueSessionId ?? undefined,
-    })
-      .catch(() => {})
-      .finally(() => window.close());
+    }).then(
+      async () => {
+        // Spent only once the worker has the click. Cleared ahead of the send
+        // as it used to be, a start that never landed would also silently
+        // lose the pending "Continue recording".
+        await chrome.storage.session.remove(CONTINUE_SESSION_KEY).catch(() => {});
+        window.close();
+      },
+      () => pushFailure('start-unreachable'),
+    );
   }
 
   /**
@@ -428,30 +509,42 @@ export function App() {
     if (hasTabCapture === false) {
       // With no tab id there is nothing to aim a parked click at, and the
       // worker would refuse it; the setup page can still take the grant.
-      if (activeTabId == null) openSetupPage('record');
+      if (activeTabId == null) goSetup('record');
       else void requestTabCapture(activeTabId);
       return;
     }
     void startRecording();
   }
 
+  /**
+   * Hand a stop or a cancel to the worker. Both used to close in a `finally`,
+   * so a gesture that never arrived left the recording running with the
+   * popup gone — the user's only evidence was the REC badge staying put.
+   */
+  function sendRecControl(type: 'REC_STOP' | 'REC_CANCEL') {
+    void sendToBackground({ type }).then(
+      () => window.close(),
+      () => pushFailure('control-unreachable'),
+    );
+  }
+
   function stopRecording() {
-    void sendToBackground({ type: 'REC_STOP' })
-      .catch(() => {})
-      .finally(() => window.close());
+    sendRecControl('REC_STOP');
   }
 
   function cancelRecording() {
-    void sendToBackground({ type: 'REC_CANCEL' })
-      .catch(() => {})
-      .finally(() => window.close());
+    sendRecControl('REC_CANCEL');
   }
 
   function recoverRecording(sessionId: string) {
-    void chrome.tabs.create({
-      url: chrome.runtime.getURL('src/recorder/index.html') + '?session=' + sessionId,
-    });
-    window.close();
+    void chrome.tabs
+      .create({
+        url: chrome.runtime.getURL('src/recorder/index.html') + '?session=' + sessionId,
+      })
+      .then(
+        () => window.close(),
+        () => pushToast(t('couldNotReach'), 'error'),
+      );
   }
 
   return (
@@ -508,7 +601,7 @@ export function App() {
       </div>
 
       {showSettings ? (
-        <SettingsView settings={settings} onChange={updateSettings} />
+        <SettingsView settings={settings} onChange={updateSettings} onSetup={() => goSetup()} />
       ) : (
         <>
           <PinHint />
@@ -606,11 +699,7 @@ export function App() {
 
           {/* The prompt was refused: the setup page is where it is fixed. */}
           {tabCaptureRefused && (
-            <button
-              class="perm-chip"
-              data-testid="rec-refused"
-              onClick={() => openSetupPage('record')}
-            >
+            <button class="perm-chip" data-testid="rec-refused" onClick={() => goSetup('record')}>
               {t('popupRecordRefused')}
             </button>
           )}
@@ -647,7 +736,7 @@ export function App() {
           {recState?.active
             ? null
             : popupWarnings(recSettings, deviceStates).map((device) => (
-                <button key={device} class="perm-chip" onClick={() => openSetupPage()}>
+                <button key={device} class="perm-chip" onClick={() => goSetup()}>
                   {chrome.i18n.getMessage(
                     'popupPermissionChip',
                     t(device === 'mic' ? 'recMic' : 'recWebcam'),
@@ -730,7 +819,11 @@ export function App() {
           <div class="footer-row">
             <button
               class="link-btn"
-              onClick={openEditor}
+              onClick={() => {
+                void openEditor().then((ok) => {
+                  if (!ok) pushToast(t('couldNotReach'), 'error');
+                });
+              }}
               disabled={!hasStash}
               title={hasStash ? t('reopenLast') : t('reopenLastDisabledTitle')}
             >
@@ -769,9 +862,12 @@ export function App() {
 function SettingsView({
   settings,
   onChange,
+  onSetup,
 }: {
   settings: Settings;
   onChange: (patch: Partial<Settings>) => void;
+  /** Owned by App, which has the toast surface a failed handoff needs. */
+  onSetup: () => void;
 }) {
   const filenameRef = useRef<HTMLInputElement>(null);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -893,7 +989,7 @@ function SettingsView({
 
       <div class="settings-row">
         <span class="settings-label">{t('popupSetupLink')}</span>
-        <button class="link-btn" onClick={() => openSetupPage()}>
+        <button class="link-btn" onClick={onSetup}>
           {t('setupTitle')}
         </button>
       </div>
