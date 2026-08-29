@@ -31,6 +31,7 @@
     "smoke:editor": "node tests/browser/editor-keyboard-smoke.mjs",
     "smoke:media": "node tests/browser/media-a11y-smoke.mjs",
     "smoke:recorder": "node tests/browser/recorder-smoke.mjs",
+    "smoke:region": "node tests/browser/region-select-smoke.mjs",
     "smoke:reflow": "node tests/browser/reflow-smoke.mjs",
     "smoke:setup": "node tests/browser/setup-smoke.mjs"
   },
