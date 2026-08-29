@@ -165,6 +165,11 @@ export function resizeAnnotationBy(a: Annotation, dx: number, dy: number): Annot
  * axis for everything else costs more than it saves: a near-vertical line's
  * bbox is a fraction of a pixel wide, and a selection holding one would never
  * narrow again.
+ *
+ * So the floor clamps the first crossing, and only that one: a member landing
+ * exactly on MIN_SIZE stops being counted, and the next press scales it under.
+ * The box itself is down at its own floor by then, and the alternative
+ * (counting members at the floor) is a shrink key that has gone inert.
  */
 function shrinkFloor(boxSize: number, sizes: number[]): number {
   const byBox = MIN_SIZE - boxSize;
@@ -215,6 +220,44 @@ export function resizeSelectionBy(
     annotations: sel.map((a) => scaleInBox(a, box, 'se', cdx, cdy)),
     box: resizeRect(box, 'se', cdx, cdy),
   };
+}
+
+/** A carried resize box, and the selection it was measured for. */
+export interface CarriedBox {
+  box: Rect;
+  ids: string[];
+}
+
+/**
+ * The carried box after a change of selection: kept while everything selected
+ * is one of the layers it was measured for, dropped as soon as anything else
+ * is. A change of selection moves nothing, so the box still describes those
+ * layers exactly, and "widen, click away, click back, narrow" cancels the way
+ * two consecutive presses do.
+ *
+ * Kept means kept whole, ids and all, so a selection on the way somewhere does
+ * not re-key it: clicking away empties the selection, and taking the same
+ * layers back one bracket press at a time goes through a subset of them.
+ * Anything that does move a member goes through applyAnnotations, which drops
+ * the box there rather than here.
+ */
+export function carryGroupBox(prev: CarriedBox | null, ids: string[]): CarriedBox | null {
+  if (!prev) return null;
+  const held = new Set(prev.ids);
+  return ids.every((id) => held.has(id)) ? prev : null;
+}
+
+/**
+ * The carried box for a selection, and null while it is a box for more layers
+ * than are selected — the state carryGroupBox leaves behind on the way back to
+ * the full set. A box measured around three layers is not the box to resize
+ * two in, nor the box to hang two layers' handles on.
+ *
+ * Everything selected is one of the ids the box was measured for (carryGroupBox
+ * drops it otherwise), so counting them is enough to compare the two sets.
+ */
+export function groupBoxFor(carried: CarriedBox | null, ids: string[]): Rect | null {
+  return carried && carried.ids.length === ids.length ? carried.box : null;
 }
 
 function clamp(v: number, lo: number, hi: number): number {

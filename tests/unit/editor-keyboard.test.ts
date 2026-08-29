@@ -3,7 +3,9 @@ import {
   announce,
   annotationLabel,
   canvasIntent,
+  carryGroupBox,
   cycleSelection,
+  groupBoxFor,
   MIN_SIZE,
   moveCropBy,
   placementRect,
@@ -12,12 +14,14 @@ import {
   resizeSelectionBy,
   STEP_COARSE,
   STEP_FINE,
+  type CarriedBox,
 } from '../../src/editor/keyboard';
 import {
   bbox,
   translateAnnotation,
   unionBBox,
   type Annotation,
+  type Rect,
 } from '../../src/editor/annotations';
 
 const rect: Annotation = {
@@ -340,7 +344,63 @@ describe('resizeSelectionBy', () => {
     for (let i = 0; i < 10; i++) {
       fine = resizeSelectionBy(fine.annotations, STEP_FINE, 0, fine.box);
     }
-    expect(fine.box.w).toBeCloseTo(resizeSelectionBy(pair, STEP_COARSE, 0).box.w);
+    const coarse = resizeSelectionBy(pair, STEP_COARSE, 0);
+    // Both halves: the frame the next gesture drags, and the members in it.
+    expect(fine.box.w).toBeCloseTo(coarse.box.w);
+    expect(unionBBox(anns(fine)).w).toBeCloseTo(unionBBox(anns(coarse)).w);
+  });
+});
+
+describe('carryGroupBox', () => {
+  const held: CarriedBox = { box: { x: 0, y: 0, w: 40, h: 40 }, ids: ['a', 'b'] };
+
+  it('keeps the box while the same layers are selected', () => {
+    expect(carryGroupBox(held, ['a', 'b'])).toBe(held);
+  });
+
+  it('keeps it however the selection got back to that set', () => {
+    // The list is ordered by when each layer joined, so taking the same two
+    // back the other way round is the same set and the same box.
+    expect(carryGroupBox(held, ['b', 'a'])).toBe(held);
+  });
+
+  it('keeps it whole across an empty selection and a subset', () => {
+    // Click away, then take them back one bracket press at a time. The parked
+    // box keeps its own ids, which is what lets the last step recognise them.
+    const away = carryGroupBox(held, []);
+    expect(away).toBe(held);
+    const partway = carryGroupBox(away, ['b']);
+    expect(partway).toBe(held);
+    expect(carryGroupBox(partway, ['b', 'a'])).toBe(held);
+  });
+
+  it('drops it as soon as a layer from outside the set is selected', () => {
+    expect(carryGroupBox(held, ['a', 'c'])).toBeNull();
+    expect(carryGroupBox(held, ['c'])).toBeNull();
+    expect(carryGroupBox(held, ['a', 'b', 'c'])).toBeNull();
+  });
+
+  it('has nothing to carry when nothing was carried', () => {
+    expect(carryGroupBox(null, ['a', 'b'])).toBeNull();
+  });
+});
+
+describe('groupBoxFor', () => {
+  const held: CarriedBox = { box: { x: 0, y: 0, w: 40, h: 40 }, ids: ['a', 'b'] };
+
+  it('gives the box back for the layers it was measured for', () => {
+    expect(groupBoxFor(held, ['b', 'a'])).toBe(held.box);
+  });
+
+  it('gives nothing back while only some of them are selected', () => {
+    // The box is still carried — this is the way back to it — but a box around
+    // two layers is not the box to resize one in, or to hang its handles on.
+    expect(groupBoxFor(carryGroupBox(held, ['a']), ['a'])).toBeNull();
+    expect(groupBoxFor(carryGroupBox(held, []), [])).toBeNull();
+  });
+
+  it('gives nothing back when nothing is carried', () => {
+    expect(groupBoxFor(null, ['a', 'b'])).toBeNull();
   });
 });
 
@@ -426,6 +486,64 @@ describe('resizeSelectionBy: a widen and a narrow cancel', () => {
     }
     expect(widthOf(cur.annotations, 't')).toBeCloseTo(40);
     expect(widthOf(cur.annotations, 'r')).toBeCloseTo(40);
+  });
+
+  // Three pairs of "narrow the group, click away, click back, widen it back".
+  // carryGroupBox is what hands the same box back across the deselect; the
+  // control below is the same loop with the box dropped, which is what every
+  // selection change used to do.
+  const away = (carried: CarriedBox | null) =>
+    // Escape, then the two bracket presses that take the same two layers back:
+    // nothing selected, the top one, then both — the path useEditor walks.
+    carryGroupBox(carryGroupBox(carryGroupBox(carried, []), ['r']), ['r', 't']);
+
+  it('cancels across a deselect and a reselect of the same layers', () => {
+    let cur = { annotations: sel, box: unionBBox(sel) };
+    let carried: CarriedBox | null = { box: cur.box, ids: ['t', 'r'] };
+    for (let i = 0; i < 3; i++) {
+      for (const step of [-STEP_COARSE, STEP_COARSE]) {
+        carried = away(carried);
+        cur = resizeSelectionBy(cur.annotations, step, 0, carried?.box);
+        carried = { box: cur.box, ids: ['t', 'r'] };
+      }
+    }
+    expect(widthOf(cur.annotations, 't')).toBeCloseTo(40);
+    expect(widthOf(cur.annotations, 'r')).toBeCloseTo(40);
+    expect(cur.box.w).toBeCloseTo(40);
+  });
+
+  it('control: a deselect that drops the box does not cancel', () => {
+    let cur = { annotations: sel, box: unionBBox(sel) };
+    for (let i = 0; i < 3; i++) {
+      for (const step of [-STEP_COARSE, STEP_COARSE]) {
+        cur = resizeSelectionBy(cur.annotations, step, 0, undefined);
+      }
+    }
+    // Measured: 37.9343 and 35.9753, against 40 each. Thirty pairs of the same
+    // reach 20.3961 and 3.2500 — the floor, and the whole defect back again.
+    expect(widthOf(cur.annotations, 't')).toBeLessThan(38.5);
+    expect(widthOf(cur.annotations, 'r')).toBeLessThan(36.5);
+  });
+
+  // A nudge is the other ordinary interruption, and the one edit that maps
+  // onto the box exactly: the members translate, the box translates with them,
+  // and the pair still cancels. useEditor does this in movedGroupBox.
+  it('cancels across a nudge of the whole selection', () => {
+    const nudge = (c: { annotations: Annotation[]; box: Rect }, dx: number) => ({
+      annotations: c.annotations.map((a) => translateAnnotation(a, dx, 0)),
+      box: { ...c.box, x: c.box.x + dx },
+    });
+    let cur = { annotations: sel, box: unionBBox(sel) };
+    for (let i = 0; i < 3; i++) {
+      for (const step of [-STEP_COARSE, STEP_COARSE]) {
+        cur = nudge(cur, 5);
+        cur = resizeSelectionBy(cur.annotations, step, 0, cur.box);
+      }
+    }
+    expect(widthOf(cur.annotations, 't')).toBeCloseTo(40);
+    expect(widthOf(cur.annotations, 'r')).toBeCloseTo(40);
+    expect(cur.box).toMatchObject({ x: 30, y: 0 });
+    expect(cur.box.w).toBeCloseTo(40);
   });
 
   // The control for the parameter: hand each call a union recomputed from the

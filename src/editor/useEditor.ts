@@ -57,7 +57,9 @@ import {
 import {
   announce,
   canvasIntent,
+  carryGroupBox,
   cycleSelection,
+  groupBoxFor,
   moveCropBy,
   placementRect,
   PLACE_SIZE_PX,
@@ -65,6 +67,7 @@ import {
   resizeCropBy,
   resizeSelectionBy,
   type CanvasMode,
+  type CarriedBox,
   type Mutation,
 } from './keyboard';
 import type { LastCapture, Settings } from '../shared/types';
@@ -223,17 +226,44 @@ export function useEditor() {
    * resizeSelectionBy). Null means "no box carried" — every reader falls back
    * to the union of what is selected, which is where a fresh gesture starts.
    *
-   * It lives exactly as long as the resizes are consecutive: any edit to the
-   * list drops it (applyAnnotations), and so does any change of selection,
-   * because both mean the members are no longer where the box says they are.
+   * It lives as long as the box still describes the members. The ids it was
+   * measured for travel with it, so clicking away and back keeps it
+   * (carryGroupBox) and selecting a layer from outside the set drops it. A
+   * geometry edit drops it too, in applyAnnotations, with one exception: a
+   * move translates it, because a translate maps onto the box exactly, and a
+   * nudge between two resizes is as ordinary as a deselect between them.
    */
-  const groupBoxRef = useRef<Rect | null>(null);
+  const groupBoxRef = useRef<CarriedBox | null>(null);
 
-  /** The one way that box changes: the ref and the controller, together. */
-  const setGroupBox = useCallback((r: Rect | null) => {
-    groupBoxRef.current = r;
-    controllerRef.current?.setGroupBox(r);
+  /**
+   * The one way that box changes: the ref and the controller, together.
+   * `repaint` is false when the caller already has a render coming (see
+   * Controller.setGroupBox).
+   */
+  const setGroupBox = useCallback((next: CarriedBox | null, repaint = true) => {
+    groupBoxRef.current = next;
+    controllerRef.current?.setGroupBox(groupBoxFor(next, selectedIdsRef.current), repaint);
   }, []);
+
+  /**
+   * The carried box, when it is the box for exactly what is selected. It
+   * outlives a selection narrowing to some of its layers (carryGroupBox), and
+   * a box measured around three of them is not the box to resize two in, nor
+   * the box to hang two layers' handles on.
+   */
+  const activeGroupBox = useCallback(
+    () => groupBoxFor(groupBoxRef.current, selectedIdsRef.current),
+    [],
+  );
+
+  /** That box after a translate of everything selected, which maps onto it. */
+  const movedGroupBox = useCallback(
+    (dx: number, dy: number): Rect | null => {
+      const box = activeGroupBox();
+      return box ? { ...box, x: box.x + dx, y: box.y + dy } : null;
+    },
+    [activeGroupBox],
+  );
 
   /**
    * The one way the selection changes. The pointer path has a hit-test to name
@@ -247,9 +277,10 @@ export function useEditor() {
    */
   const selectAnnotations = useCallback(
     (ids: string[]) => {
+      const carried = carryGroupBox(groupBoxRef.current, ids);
       selectedIdsRef.current = ids;
       setSelectedIds(ids);
-      setGroupBox(null);
+      setGroupBox(carried);
     },
     [setGroupBox],
   );
@@ -257,15 +288,23 @@ export function useEditor() {
   /**
    * The one way the annotation list changes. `groupBox` is the resize box that
    * goes with the new list, and defaulting it to null is what invalidates the
-   * carried one: every edit that is not a group resize moves the members out
-   * from under it, and only the two resize paths pass one.
+   * carried one: every edit that is not a group resize or a move of the whole
+   * selection leaves the members somewhere the box cannot describe, and only
+   * those paths pass one.
    */
   const applyAnnotations = useCallback(
     (next: Annotation[] | ((prev: Annotation[]) => Annotation[]), groupBox: Rect | null = null) => {
-      const list = typeof next === 'function' ? next(annotationsRef.current) : next;
+      const prev = annotationsRef.current;
+      const list = typeof next === 'function' ? next(prev) : next;
       annotationsRef.current = list;
       setAnnotations(list);
-      setGroupBox(groupBox);
+      // A new list repaints a frame later through the [annotations] effect, so
+      // the box rides that render instead of forcing one of its own. render()
+      // is a full repaint, and a group resize changes both every frame.
+      setGroupBox(
+        groupBox === null ? null : { box: groupBox, ids: selectedIdsRef.current },
+        list === prev,
+      );
     },
     [setGroupBox],
   );
@@ -857,8 +896,11 @@ export function useEditor() {
         it.lastX = p.x;
         it.lastY = p.y;
         const ids = it.ids;
-        applyAnnotations((prev) =>
-          prev.map((a) => (ids.includes(a.id) ? translateAnnotation(a, dx, dy) : a)),
+        // The whole selection moves rigidly, so the carried box moves with it
+        // rather than being dropped: it is the same box, one translate along.
+        applyAnnotations(
+          (prev) => prev.map((a) => (ids.includes(a.id) ? translateAnnotation(a, dx, dy) : a)),
+          movedGroupBox(dx, dy),
         );
         return;
       }
@@ -919,7 +961,7 @@ export function useEditor() {
       extendDraft(draft, p, e.shiftKey);
       c.setDraft(draft);
     },
-    [applyAnnotations, snapshot],
+    [applyAnnotations, movedGroupBox, snapshot],
   );
 
   const onDragUp = useCallback(() => {
@@ -1060,7 +1102,7 @@ export function useEditor() {
           const sel = annotationsRef.current.filter((a) => ids.includes(a.id));
           // The carried box when there is one, so a drag out and a drag back
           // cancel the same way two key presses do (see resizeSelectionBy).
-          const startBBox = groupBoxRef.current ?? unionBBox(sel);
+          const startBBox = activeGroupBox() ?? unionBBox(sel);
           const h = handleAtRect(startBBox, (x, y) => c.toScreen(x, y), sx, sy);
           if (h) {
             interactionRef.current = {
@@ -1149,6 +1191,7 @@ export function useEditor() {
       window.addEventListener('mouseup', onDragUp);
     },
     [
+      activeGroupBox,
       onDragMove,
       onDragUp,
       setStyleColor,
@@ -1413,7 +1456,7 @@ export function useEditor() {
         next = list.map((x) =>
           ids.includes(x.id) ? translateAnnotation(x, intent.dx, intent.dy) : x,
         );
-        box = null;
+        box = movedGroupBox(intent.dx, intent.dy);
       } else if (touched.length === 1) {
         next = list.map((x) =>
           x.id === touched[0].id ? resizeAnnotationBy(x, intent.dx, intent.dy) : x,
@@ -1424,14 +1467,15 @@ export function useEditor() {
           touched,
           intent.dx,
           intent.dy,
-          groupBoxRef.current ?? undefined,
+          activeGroupBox() ?? undefined,
         );
         const scaled = new Map(resized.annotations.map((a) => [a.id, a]));
         next = list.map((x) => scaled.get(x.id) ?? x);
         box = resized.box;
       }
       // `box` is the box the next press resizes and the box the handles are
-      // drawn on until then; null for a move or a lone resize, which carry none.
+      // drawn on until then: the resized one, the carried one translated by a
+      // move, and null for a lone resize, which carries none.
       applyAnnotations(next, box);
       if (touched.length === 1) {
         const one = next.find((x) => x.id === touched[0].id)!;
@@ -1449,8 +1493,10 @@ export function useEditor() {
       }
     },
     [
+      activeGroupBox,
       applyAnnotations,
       applyCrop,
+      movedGroupBox,
       placeWithKeyboard,
       sayAboutSelection,
       selectAnnotations,

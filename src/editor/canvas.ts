@@ -60,11 +60,14 @@ export class CanvasController {
   /** The Select tool's in-progress marquee, in image pixels. */
   marquee: Rect | null = null;
   /**
-   * The box a multi-selection is being resized by, when useEditor is carrying
-   * one. Null means "use the union of what is selected" — the box a fresh
-   * gesture would start from. It is not always the union: a glyph scales by one
-   * factor on both axes, so it can sit slightly outside the box it was scaled
-   * in, and the handles belong on the box the drag actually moves.
+   * The resize frame a multi-selection is being resized by, when useEditor is
+   * carrying one — the box the handles drag, not a bounding box of the
+   * members. Null means "use the union of what is selected", the box a fresh
+   * gesture starts from. The two differ once a glyph is in the selection: a
+   * glyph scales by one factor on both axes, so it can sit outside the frame
+   * it was scaled in, and the handles belong on the frame, which is what the
+   * next drag moves. A narrowed glyph overhanging its own handles is that
+   * trade being paid, not a stale box.
    */
   groupBox: Rect | null = null;
   /** Beautify frame. Document-level, so it lives beside the image, not the annotations. */
@@ -154,12 +157,18 @@ export class CanvasController {
     this.render();
   }
 
-  setGroupBox(r: Rect | null): void {
+  /**
+   * `repaint: false` is for a change that already has a render coming: an
+   * annotation edit repaints through setAnnotations, and a group resize moves
+   * the members and the frame in the same frame, so repainting here as well
+   * would be a second full repaint of the same frame.
+   */
+  setGroupBox(r: Rect | null, repaint = true): void {
     // Written on every annotation change, most of which carry no box at all,
     // so the common null-to-null case must not cost a render.
     if (this.groupBox === r) return;
     this.groupBox = r;
-    this.render();
+    if (repaint) this.render();
   }
 
   setCropRect(r: Rect | null): void {

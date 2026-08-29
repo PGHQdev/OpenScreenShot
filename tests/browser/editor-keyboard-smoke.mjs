@@ -1686,9 +1686,24 @@ async function testMultiSelection(browser, base) {
   // Three pairs, not one: the drift this covers is a few percent per pair, so
   // one pair can hide inside the whole-pixel rounding the live region reads
   // out. Three cannot.
+  //
+  // And every pair is interrupted: narrow, click away, click back on the same
+  // two layers, widen back. The box the widen resizes has to be the one the
+  // narrow produced, or the widen starts from a union a glyph has overhung and
+  // gets a smaller factor than the exact inverse. Escape and the two bracket
+  // presses go through nothing-selected and then one layer, so the box has to
+  // survive a subset of itself, not only the same set (carryGroupBox).
+  const reselect = async () => {
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('[');
+    await chord(['Shift'], '[');
+    await settle(60);
+  };
   for (let pair = 0; pair < 3; pair++) {
-    for (let i = 0; i < 10; i++) await chord(['Alt', 'Shift'], 'ArrowRight');
     for (let i = 0; i < 10; i++) await chord(['Alt', 'Shift'], 'ArrowLeft');
+    await reselect();
+    for (let i = 0; i < 10; i++) await chord(['Alt', 'Shift'], 'ArrowRight');
+    await reselect();
   }
   await settle(150);
   // The rectangle first: it is the member that did not set the box's edge, and
@@ -1703,7 +1718,7 @@ async function testMultiSelection(browser, base) {
   const [rw4] = await sizeOfSelected();
   assert(
     rw4 === rw3,
-    `three 100px-out-and-back pairs left the rectangle its exact width: ${rw3}px before, ${rw4}px after`,
+    `three interrupted 100px pairs left the rectangle its exact width: ${rw3}px before, ${rw4}px after`,
   );
   assert(rx4 === rx3 && ry4 === ry3, `and its exact origin (${rx3},${ry3} -> ${rx4},${ry4})`);
   await page.keyboard.press('Escape');
@@ -1721,6 +1736,49 @@ async function testMultiSelection(browser, base) {
   assert(
     tw4 - tw3 === 1,
     `and to its size: ${tw3}px before, ${tw4}px after, the 1px being this reading itself`,
+  );
+
+  step('task 24: a nudge between the two halves of a resize does not break the pair');
+  // The other ordinary interruption, and the one edit the box can follow: the
+  // members translate, the box translates with them. Every other list edit
+  // drops it, which is right — the members really have moved somewhere the box
+  // cannot describe. Three pairs again, and the nudges are all one direction,
+  // so a box that failed to follow shows up as a wrong x, not only a wrong
+  // size.
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('[');
+  await chord(['Shift'], '[');
+  await settle(60);
+  assert(
+    /^2 of \d+ annotations selected\.$/.test(await say()),
+    `both selected for the nudged round trip: "${await say()}"`,
+  );
+  for (let pair = 0; pair < 3; pair++) {
+    for (let i = 0; i < 10; i++) await chord(['Alt', 'Shift'], 'ArrowLeft');
+    for (let i = 0; i < 5; i++) await page.keyboard.press('ArrowLeft');
+    for (let i = 0; i < 10; i++) await chord(['Alt', 'Shift'], 'ArrowRight');
+    for (let i = 0; i < 5; i++) await page.keyboard.press('ArrowLeft');
+  }
+  await settle(150);
+  await page.keyboard.press('Escape');
+  const [rx5, ry5] = await readNextLayer('[');
+  assert(/^Rectangle moved to /.test(await say()), `measuring the rectangle: "${await say()}"`);
+  const [rw5] = await sizeOfSelected();
+  assert(
+    rw5 === rw4,
+    `the rectangle kept its exact width across three nudged pairs: ${rw4}px before, ${rw5}px after`,
+  );
+  assert(
+    rx5 === rx4 - 30 && ry5 === ry4,
+    `and moved by the 30px of nudges, no more (${rx4},${ry4} -> ${rx5},${ry5})`,
+  );
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('[');
+  const [tx5, ty5] = await readNextLayer('[');
+  assert(/^Text moved to /.test(await say()), `measuring the text layer: "${await say()}"`);
+  assert(
+    tx5 === tx4 - 30 && ty5 === ty4,
+    `the text moved by the same 30px and nothing else (${tx4},${ty4} -> ${tx5},${ty5})`,
   );
 
   step(
