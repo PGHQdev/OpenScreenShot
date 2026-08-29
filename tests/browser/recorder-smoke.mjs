@@ -518,6 +518,28 @@ async function main() {
       `an export that produced nothing says so ("${failedToast}")`,
     );
 
+    step('the recorder page repeats the warning the message sent the user here for');
+    // "Stop it and check what you have on the Recorder page" pointed at a page
+    // that said nothing. Seeded into the stub's session storage before the app
+    // boots, which is where the worker parks it.
+    // Keyed on the URL, because evaluateOnNewDocument re-runs on every later
+    // navigation and a seed that leaked would answer the next step's assertion.
+    await page.evaluateOnNewDocument(() => {
+      if (!location.search.includes('seedfail=1')) return;
+      void chrome.storage.session.set({
+        'openscreenshot:rec-failure': { code: 'chunk-write-failed', at: Date.now() },
+      });
+    });
+    await page.goto(`${base}${PAGE}?session=${seeded.sessionId}&seedfail=1`, {
+      waitUntil: 'load',
+    });
+    await page.waitForSelector('.toast-error .toast-text', { timeout: 15_000 });
+    const writeToast = await page.$eval('.toast-error .toast-text', (el) => el.textContent?.trim());
+    assert(
+      writeToast === messages.recFailChunkWrite.message,
+      `the page the message names repeats it ("${writeToast}")`,
+    );
+
     step('opening a session whose media the page cannot read');
     // The failure the hook was already computing into `error` and no one was
     // reading. Injected at the one place a load can realistically break after
@@ -542,6 +564,78 @@ async function main() {
     );
     await page.waitForSelector('.rec-list', { timeout: 15_000 });
     assert(true, 'and the page falls back to the session list rather than a blank stage');
+
+    step('the in-page control bar carries a chunk-write failure while it is happening');
+    // The bar is a content script with a CLOSED shadow root, so page script
+    // cannot reach into it — this reads the real rendered DOM through CDP with
+    // `pierce`, not a stub and not a reimplementation. The worker injects the
+    // same built function with `chrome.scripting.executeScript`; the dynamic
+    // import here stands in for that one API and nothing else.
+    const overlayFile = (await readdir(join(DIST, 'assets'))).find((name) =>
+      /^recording-overlay-.*\.js$/.test(name),
+    );
+    assert(!!overlayFile, `the built control bar module is ${overlayFile}`);
+    await page.goto(`${base}${PAGE}`, { waitUntil: 'load' });
+    const dom = await page.createCDPSession();
+
+    /** The rendered warning chip, piercing the closed shadow root, or null. */
+    const warningChip = async () => {
+      const { root } = await dom.send('DOM.getDocument', { depth: -1, pierce: true });
+      const stack = [root];
+      while (stack.length > 0) {
+        const node = stack.pop();
+        const attrs = node.attributes ?? [];
+        for (let i = 0; i < attrs.length; i += 2) {
+          if (attrs[i] === 'data-testid' && attrs[i + 1] === 'rec-overlay-warning') {
+            const { outerHTML } = await dom.send('DOM.getOuterHTML', { nodeId: node.nodeId });
+            return outerHTML;
+          }
+        }
+        for (const child of [
+          ...(node.children ?? []),
+          ...(node.shadowRoots ?? []),
+          ...(node.contentDocument ? [node.contentDocument] : []),
+        ]) {
+          stack.push(child);
+        }
+      }
+      return null;
+    };
+
+    const mounted = await page.evaluate(async (file) => {
+      const mod = await import(`/assets/${file}`);
+      const mount = Object.values(mod).find((v) => typeof v === 'function' && v.length >= 4);
+      window.__mount = mount;
+      // Mount clean, exactly as a healthy recording does.
+      return mount('seg-1', 0, false, { mic: false, tabAudio: true, webcam: false }, false);
+    }, overlayFile);
+    assert(mounted === 'fresh', `the bar mounted (${mounted})`);
+    assert((await warningChip()) === null, 'a healthy recording shows no warning chip');
+
+    // The worker re-heals with the flag set: the 'synced' branch, which is the
+    // one production takes mid-recording (see handleEngineWriteFailed).
+    const synced = await page.evaluate(() =>
+      window.__mount('seg-1', 4000, false, { mic: false, tabAudio: true, webcam: false }, true),
+    );
+    assert(synced === 'synced', `the re-heal updated the live bar (${synced})`);
+    const chipHtml = await warningChip();
+    assert(
+      chipHtml?.includes(messages.recOverlayNotSaving.message),
+      `the warning is rendered in the bar (${chipHtml})`,
+    );
+    assert(chipHtml?.includes('role="alert"'), 'and announces itself');
+
+    // Well past OVERLAY_GRACE_MS with the pointer nowhere near the bar: the
+    // host is light DOM, so its computed opacity is readable directly.
+    await new Promise((done) => setTimeout(done, 3400));
+    const opacity = await page.evaluate(() => {
+      const host = [...document.documentElement.children].at(-1);
+      const value = getComputedStyle(host).opacity;
+      window.__ossRecOverlay?.();
+      return value;
+    });
+    assert(opacity === '1', `and holds the bar open past its 3s idle hide (opacity ${opacity})`);
+    await dom.detach();
 
     assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
   } finally {

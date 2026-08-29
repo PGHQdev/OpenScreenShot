@@ -124,6 +124,8 @@ async function queryDeviceStates(): Promise<{ camera: DevicePermission; mic: Dev
 
 const REC_SETTINGS_KEY = 'openscreenshot:rec-settings';
 const CONTINUE_SESSION_KEY = 'openscreenshot:continue-session';
+/** Mirrors `src/background/recording.ts`: a finished session whose tab failed to open. */
+const UNOPENED_SESSION_KEY = 'openscreenshot:unopened-session';
 
 /** Load recorder toggles, merged over the defaults so new fields are always present. */
 async function getRecSettings(): Promise<RecordingSettings> {
@@ -538,6 +540,9 @@ export function App() {
   }
 
   function recoverRecording(sessionId: string) {
+    // Retires a "the recorder page would not open" offer: the user is opening
+    // it now, so it must not still be offered on every popup after this.
+    void chrome.storage.session.remove(UNOPENED_SESSION_KEY).catch(() => {});
     void chrome.tabs
       .create({
         url: chrome.runtime.getURL('src/recorder/index.html') + '?session=' + sessionId,

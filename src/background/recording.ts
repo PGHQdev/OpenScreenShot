@@ -77,6 +77,8 @@ interface StoredRecState {
    * anything. This is the flag the mount itself sets.
    */
   overlayMounted: boolean;
+  /** Media chunks are failing to reach IndexedDB; the control bar says so. */
+  writeFailed: boolean;
   /** True when this run appends to an existing session (Continue). */
   continued: boolean;
 }
@@ -88,17 +90,42 @@ async function getRecState(): Promise<StoredRecState | null> {
   return (stored[REC_STATE_KEY] as StoredRecState | undefined) ?? null;
 }
 
+/** Write the whole state. Only the start does this; everything else patches. */
+async function writeRecState(state: StoredRecState): Promise<void> {
+  lastKnownLive = true;
+  await chrome.storage.session.set({ [REC_STATE_KEY]: state });
+}
+
+/**
+ * Patch the live run's state. Does nothing when there is no live run, or when
+ * the run has moved on: every caller reaches here after an await, and a
+ * teardown inside that window used to be undone — `{...null, ...patch}` is a
+ * partial state object, which put REC back on the badge after the recording
+ * had ended and answered the next Record click with 'start-busy'.
+ */
 async function setRecState(
   patch: Partial<StoredRecState> & Pick<StoredRecState, 'sessionId'>,
 ): Promise<void> {
   const existing = await getRecState();
-  const next: StoredRecState = { ...(existing as StoredRecState), ...patch };
-  await chrome.storage.session.set({ [REC_STATE_KEY]: next });
+  if (!existing || existing.sessionId !== patch.sessionId) return;
+  await chrome.storage.session.set({ [REC_STATE_KEY]: { ...existing, ...patch } });
 }
 
 async function clearRecState(): Promise<void> {
+  lastKnownLive = false;
   await chrome.storage.session.remove(REC_STATE_KEY);
 }
+
+/**
+ * Whether a recording was live the last time the store answered, or null if
+ * this worker has never had an answer. `restoreRecBadge` falls back to it when
+ * the store cannot be read, so a capture's own badge flash — the caller sets
+ * a digit, '!' or a tick immediately before calling — is still cleared when we
+ * know there is nothing to keep. It is deliberately not consulted when null:
+ * an MV3 worker that has just restarted mid-recording would clear a REC it has
+ * simply not seen yet.
+ */
+let lastKnownLive: boolean | null = null;
 
 // --- Start-round-trip serialization -----------------------------------------
 
@@ -219,12 +246,15 @@ export async function restoreRecBadge(): Promise<void> {
     failure = await pendingFailure();
   } catch {
     // The store that says whether a recording is live is the store that just
-    // failed, so there is nothing to restore the badge *to*. Leaving it as it
-    // is keeps a live REC up; clearing here used to wipe it on the strength
-    // of a read that never answered — the badge lying in the one state where
-    // it is the user's only indicator.
+    // failed, so there is nothing to restore the badge *to*. Clearing here
+    // used to wipe REC on the strength of a read that never answered — the
+    // badge lying in the one state where it is the user's only indicator. The
+    // last answer this worker did get is better than either guess: it clears a
+    // capture's leftover flash without touching a live REC.
+    if (lastKnownLive === false) await clearRecBadge();
     return;
   }
+  lastKnownLive = !!state;
   if (state) await showRecBadge(state.overlayLost);
   else if (failure) await showFailBadge();
   else await clearRecBadge();
@@ -271,6 +301,7 @@ async function healOverlay(tabId: number): Promise<'fresh' | 'synced' | 'failed'
         elapsed,
         s.pausedAt !== 0,
         { mic: s.settings.mic, tabAudio: s.settings.tabAudio, webcam: s.settings.webcam },
+        s.writeFailed,
       ],
     });
     // The bar is on the page. If this run had reported that it could not get
@@ -409,7 +440,7 @@ async function handleStart(settings: RecordingSettings, continueSessionId?: stri
     segmentId = segment.id;
 
     const now = Date.now();
-    await setRecState({
+    await writeRecState({
       sessionId: session.id,
       segmentId: segment.id,
       tabId,
@@ -419,6 +450,7 @@ async function handleStart(settings: RecordingSettings, continueSessionId?: stri
       settings,
       overlayLost: false,
       overlayMounted: false,
+      writeFailed: false,
       continued: !!continueSessionId,
     });
 
@@ -751,14 +783,24 @@ async function handleOverlayHealed(sessionId: string): Promise<void> {
 }
 
 /**
- * A chunk write rejected mid-recording. Nothing is torn down: the chunks
- * already written are a real recording and the user may still want the rest
- * of it. The engine sends this once per run, so this cannot nag.
+ * A write rejected mid-recording. Nothing is torn down: what is already
+ * written is a real recording and the user may still want the rest of it. The
+ * engine sends this once per kind per run, so this cannot nag.
+ *
+ * A media failure also goes to the control bar, which is the only surface the
+ * user can see while it is happening — a parked message they find after
+ * stopping arrives after the data is already gone. `handleWebcamDenied` is
+ * the same shape: learn something mid-recording, write it to state, re-heal to
+ * push it into the bar.
  */
-async function handleEngineWriteFailed(sessionId: string): Promise<void> {
+async function handleEngineWriteFailed(sessionId: string, kind: 'media' | 'events'): Promise<void> {
   const state = await getRecState();
   if (state && state.sessionId !== sessionId) return;
-  await reportFailure('chunk-write-failed');
+  if (kind === 'media' && state) {
+    await setRecState({ sessionId, writeFailed: true });
+    void healOverlay(state.tabId);
+  }
+  await reportFailure(kind === 'media' ? 'chunk-write-failed' : 'events-write-failed');
 }
 
 async function handleEngineError(sessionId: string, message: string): Promise<void> {
@@ -799,6 +841,10 @@ async function handleEngineStopped(sessionId: string, canceled: boolean): Promis
   if (!canceled) {
     try {
       await chrome.tabs.create({ url: `${RECORDER_URL}?session=${sessionId}` });
+      // A page that opened retires any earlier one that did not: the offer is
+      // a shortcut to the recording the user has not seen, and they are
+      // looking at one now.
+      await chrome.storage.session.remove(UNOPENED_SESSION_KEY).catch(() => {});
     } catch {
       // The recording is safe in IndexedDB; only the page that shows it did
       // not open, and nothing else would ever mention that. Parked with the
@@ -856,7 +902,7 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
         void handleOverlayHealed(message.sessionId);
         break;
       case 'ENGINE_WRITE_FAILED':
-        void handleEngineWriteFailed(message.sessionId);
+        void handleEngineWriteFailed(message.sessionId, message.kind);
         break;
       case 'ENGINE_ERROR':
         void handleEngineError(message.sessionId, message.message);

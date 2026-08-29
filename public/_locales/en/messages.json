@@ -345,6 +345,14 @@
     "message": "Part of this recording isn\u2019t being saved. Stop it and check what you have on the Recorder page.",
     "description": "Popup: error toast when a chunk write to IndexedDB failed mid-recording, so the file is shorter than the clock says."
   },
+  "recFailEventsWrite": {
+    "message": "The cursor track isn\u2019t being saved. The video is fine; zoom and click effects will be missing.",
+    "description": "Popup: error toast when cursor-event writes to IndexedDB failed mid-recording, leaving the video intact."
+  },
+  "recOverlayNotSaving": {
+    "message": "NOT SAVING",
+    "description": "Recording control bar: warning chip shown when chunks are failing to reach storage. Keep it short; it sits in a row of three-letter track chips."
+  },
   "recFailRecorderOpen": {
     "message": "Your recording is saved \u2014 the Recorder page didn\u2019t open. Use Recover last recording below.",
     "description": "Popup: error toast when chrome.tabs.create for the recorder page failed after a recording finished."

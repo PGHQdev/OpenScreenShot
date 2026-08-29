@@ -22,7 +22,7 @@ import {
 } from './render';
 import { exportGeometry, type ExportDraft } from './export-video';
 import { cursorAt, normalizeClicks, normalizeMoves } from './events-map';
-import { recFailureMessageKey } from '../shared/rec-failure';
+import { REC_FAILURE_KEY, isRecFailure, recFailureMessageKey } from '../shared/rec-failure';
 import { cameraAt, EASE_MS } from './zoom';
 
 // i18n helper
@@ -54,6 +54,23 @@ export function App() {
 
   useEffect(() => {
     void getSettings().then((s) => applyTheme(s.theme));
+  }, []);
+
+  /**
+   * Read out a parked 'chunk-write-failed', and only that one. Its message
+   * sends the user here to check what they have, and until now this page did
+   * not repeat it: they arrived at a session that is short by an unknown
+   * amount with nothing on screen saying so. Every other failure belongs to
+   * the popup, which is where its recovery is.
+   */
+  useEffect(() => {
+    void (async () => {
+      const stored = await chrome.storage.session.get(REC_FAILURE_KEY).catch(() => ({}));
+      const failure: unknown = (stored as Record<string, unknown>)[REC_FAILURE_KEY];
+      if (!isRecFailure(failure) || failure.code !== 'chunk-write-failed') return;
+      await chrome.storage.session.remove(REC_FAILURE_KEY).catch(() => {});
+      toast(t(recFailureMessageKey(failure.code)), 'error');
+    })();
   }, []);
 
   // Live-update a "system" theme setting when the OS preference flips.

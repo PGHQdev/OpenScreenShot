@@ -31,14 +31,21 @@ export function isNearBar(x: number, y: number, winW: number, winH: number): boo
  * Visibility policy for the control bar. Paused and hovered always show —
  * a paused MediaRecorder writes no frames, so a visible bar costs nothing,
  * and a bar must never vanish under the pointer.
+ *
+ * `warning` joins them: it is set when chunks are failing to reach IndexedDB,
+ * which is the one failure that loses the user's recording while it is still
+ * being made. A message they can only find after stopping is a message that
+ * arrives after the data is gone, and the bar hides after three idle seconds,
+ * so the warning has to hold it open.
  */
 export function shouldShowBar(args: {
   sinceMountMs: number;
   sinceNearMs: number;
   hovering: boolean;
   paused: boolean;
+  warning?: boolean;
 }): boolean {
-  if (args.paused || args.hovering) return true;
+  if (args.paused || args.hovering || args.warning) return true;
   return args.sinceMountMs < OVERLAY_GRACE_MS || args.sinceNearMs < OVERLAY_GRACE_MS;
 }
 
@@ -68,15 +75,18 @@ export function mountRecordingOverlay(
   elapsedMs: number,
   paused: boolean,
   tracks: { mic: boolean; tabAudio: boolean; webcam: boolean },
+  /** Chunks are failing to reach IndexedDB; show it here and hold the bar open. */
+  writeFailed = false,
 ): 'fresh' | 'synced' {
   type SyncFn = (
     elapsedMs: number,
     paused: boolean,
     tracks: { mic: boolean; tabAudio: boolean; webcam: boolean },
+    writeFailed: boolean,
   ) => void;
   const win = window as unknown as { __ossRecOverlay?: () => void; __ossRecSync?: SyncFn };
   if (win.__ossRecOverlay) {
-    win.__ossRecSync?.(elapsedMs, paused, tracks);
+    win.__ossRecSync?.(elapsedMs, paused, tracks, writeFailed);
     return 'synced';
   }
 
@@ -99,8 +109,9 @@ export function mountRecordingOverlay(
     sinceNearMs: number;
     hovering: boolean;
     paused: boolean;
+    warning: boolean;
   }): boolean {
-    if (args.paused || args.hovering) return true;
+    if (args.paused || args.hovering || args.warning) return true;
     return args.sinceMountMs < OVERLAY_GRACE_MS || args.sinceNearMs < OVERLAY_GRACE_MS;
   }
 
@@ -193,6 +204,13 @@ export function mountRecordingOverlay(
       border-radius: 4px;
       background: rgba(255, 255, 255, .12);
     }
+    /* The bar is always dark, whatever the page behind it, so this is the one
+       place in the product a fixed pair is right. Amber ground with near-black
+       text reads as the danger accent and clears 4.5:1 without a token. */
+    .chip.warn {
+      background: #ffb340;
+      color: #1c1c1e;
+    }
     button {
       all: unset;
       cursor: pointer;
@@ -222,9 +240,6 @@ export function mountRecordingOverlay(
 
   const chips = document.createElement('div');
   chips.className = 'chips';
-  if (tracks.mic) chips.appendChild(makeChip(t('recOverlayMic', 'MIC')));
-  if (tracks.tabAudio) chips.appendChild(makeChip(t('recOverlayTabAudio', 'TAB')));
-  if (tracks.webcam) chips.appendChild(makeChip(t('recOverlayWebcam', 'CAM')));
   bar.appendChild(chips);
 
   function makeChip(label: string): HTMLSpanElement {
@@ -233,6 +248,31 @@ export function mountRecordingOverlay(
     chip.textContent = label;
     return chip;
   }
+
+  /**
+   * Rebuild the chip row. The warning goes first: it is the only chip that
+   * reports a problem rather than a track, and a row it can be scrolled off
+   * the end of is a row it can be missed in.
+   */
+  function renderChips(
+    next: { mic: boolean; tabAudio: boolean; webcam: boolean },
+    warn: boolean,
+  ): void {
+    chips.replaceChildren();
+    if (warn) {
+      const chip = makeChip(t('recOverlayNotSaving', 'NOT SAVING'));
+      chip.className = 'chip warn';
+      chip.setAttribute('role', 'alert');
+      chip.setAttribute('data-testid', 'rec-overlay-warning');
+      chips.appendChild(chip);
+    }
+    if (next.mic) chips.appendChild(makeChip(t('recOverlayMic', 'MIC')));
+    if (next.tabAudio) chips.appendChild(makeChip(t('recOverlayTabAudio', 'TAB')));
+    if (next.webcam) chips.appendChild(makeChip(t('recOverlayWebcam', 'CAM')));
+  }
+
+  let warning = writeFailed;
+  renderChips(tracks, warning);
 
   const pauseBtn = document.createElement('button');
   bar.appendChild(pauseBtn);
@@ -398,6 +438,7 @@ export function mountRecordingOverlay(
       sinceNearMs: now - lastNearAt,
       hovering: hoveringBar,
       paused: isPaused,
+      warning,
     });
     host.style.opacity = show ? '1' : '0';
     // Hidden means hidden to the page too, or it would still swallow clicks.
@@ -502,7 +543,7 @@ export function mountRecordingOverlay(
 
   // --- Re-sync ---------------------------------------------------------------
 
-  win.__ossRecSync = (nextElapsedMs, nextPaused, nextTracks) => {
+  win.__ossRecSync = (nextElapsedMs, nextPaused, nextTracks, nextWriteFailed) => {
     // Shift what is still buffered by the same amount the clock moves, so a
     // re-anchor cannot leave the last second of cursor events pointing at a
     // timestamp the video never had.
@@ -516,10 +557,10 @@ export function mountRecordingOverlay(
     renderPauseState();
     timer.textContent = formatTimer(nowT());
 
-    chips.replaceChildren();
-    if (nextTracks.mic) chips.appendChild(makeChip(t('recOverlayMic', 'MIC')));
-    if (nextTracks.tabAudio) chips.appendChild(makeChip(t('recOverlayTabAudio', 'TAB')));
-    if (nextTracks.webcam) chips.appendChild(makeChip(t('recOverlayWebcam', 'CAM')));
+    // One-way, like the tracks above: a run that has started losing chunks
+    // does not stop having lost them.
+    warning = warning || nextWriteFailed;
+    renderChips(nextTracks, warning);
 
     // Drop the frame only when neither device is left. A camera that is gone
     // makes the bubble a preview of something nobody records, but the same

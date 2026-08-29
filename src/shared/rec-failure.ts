@@ -65,11 +65,15 @@ export type RecFailureCode =
   /** The export itself threw; no file was written. */
   | 'export-failed'
   /**
-   * A chunk could not be written to IndexedDB while recording. The recording
-   * carries on and the file is silently shorter than the clock says, which is
-   * the only mode in the set that loses data the user believes they have.
+   * A media chunk could not be written to IndexedDB while recording. The
+   * recording carries on and the file is silently shorter than the clock says,
+   * which is the only mode in the set that loses data the user believes they
+   * have while they are still making it. It is also the only one the in-page
+   * control bar carries, for that reason.
    */
   | 'chunk-write-failed'
+  /** The cursor track could not be written; the video itself is intact. */
+  | 'events-write-failed'
   /** The recording finished, and the page that shows it would not open. */
   | 'recorder-open-failed';
 
@@ -101,6 +105,7 @@ const MESSAGE_KEYS: Record<RecFailureCode, string> = {
   'segment-skipped': 'recFailSegmentSkipped',
   'export-failed': 'recFailExport',
   'chunk-write-failed': 'recFailChunkWrite',
+  'events-write-failed': 'recFailEventsWrite',
   'recorder-open-failed': 'recFailRecorderOpen',
 };
 

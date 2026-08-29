@@ -110,8 +110,8 @@ function makeFakeChrome() {
 
 let fakeChrome: ReturnType<typeof makeFakeChrome>;
 
-async function loadWorker(): Promise<void> {
-  await import('../../src/background/recording.ts');
+async function loadWorker(): Promise<typeof import('../../src/background/recording.ts')> {
+  return import('../../src/background/recording.ts');
 }
 
 /**
@@ -166,6 +166,7 @@ function liveState(sessionId = 'sess-1', segmentId = 'seg-1', overlayMounted = t
     settings: DEFAULT_RECORDING_SETTINGS,
     overlayLost: false,
     overlayMounted,
+    writeFailed: false,
     continued: false,
   };
 }
@@ -411,11 +412,11 @@ describe('an engine that was never told to begin', () => {
   });
 });
 
-describe('a chunk that never reached IndexedDB', () => {
+describe('a write that never reached IndexedDB', () => {
   it('reports chunk-write-failed without stopping the recording', async () => {
     session.set(REC_STATE_KEY, liveState());
     await loadWorker();
-    void send({ type: 'ENGINE_WRITE_FAILED', sessionId: 'sess-1' });
+    void send({ type: 'ENGINE_WRITE_FAILED', sessionId: 'sess-1', kind: 'media' });
     await settle();
 
     expect(parked()).toBe('chunk-write-failed');
@@ -424,12 +425,86 @@ describe('a chunk that never reached IndexedDB', () => {
     expect(session.get(REC_STATE_KEY), 'the recording keeps running').toBeDefined();
   });
 
+  /**
+   * The point of this round: the popup is not a surface during a recording.
+   * The worker writes the flag and re-heals, and `mountRecordingOverlay`
+   * receives it as its fifth argument — the same route `handleWebcamDenied`
+   * uses to change the chips mid-run.
+   */
+  it('pushes a media failure into the live control bar', async () => {
+    const injected: unknown[][] = [];
+    fakeChrome.scripting.executeScript = vi.fn((arg: { args?: unknown[] }) => {
+      if (arg.args) injected.push(arg.args);
+      return Promise.resolve([{ result: 'synced' }]);
+    }) as unknown as typeof fakeChrome.scripting.executeScript;
+    session.set(REC_STATE_KEY, liveState());
+    await loadWorker();
+    void send({ type: 'ENGINE_WRITE_FAILED', sessionId: 'sess-1', kind: 'media' });
+    await settle();
+
+    const state = session.get(REC_STATE_KEY) as { writeFailed?: boolean };
+    expect(state.writeFailed, 'the flag the bar is rebuilt from').toBe(true);
+    const mount = injected.at(-1);
+    expect(mount, 'the bar was re-injected').toBeDefined();
+    expect(mount?.[4], 'and told chunks are failing').toBe(true);
+  });
+
+  it('tells a lost cursor track apart from lost video', async () => {
+    session.set(REC_STATE_KEY, liveState());
+    await loadWorker();
+    void send({ type: 'ENGINE_WRITE_FAILED', sessionId: 'sess-1', kind: 'events' });
+    await settle();
+
+    expect(parked()).toBe('events-write-failed');
+    // The video is intact, so the bar says nothing: it is reserved for the
+    // failure that loses the recording itself.
+    const state = session.get(REC_STATE_KEY) as { writeFailed?: boolean };
+    expect(state.writeFailed).toBe(false);
+  });
+
   it('ignores a write failure from a session that already ended', async () => {
     session.set(REC_STATE_KEY, liveState('sess-2'));
     await loadWorker();
-    void send({ type: 'ENGINE_WRITE_FAILED', sessionId: 'sess-1' });
+    void send({ type: 'ENGINE_WRITE_FAILED', sessionId: 'sess-1', kind: 'media' });
     await settle();
     expect(parked()).toBe(null);
+  });
+});
+
+describe('state that has been torn down stays torn down', () => {
+  /**
+   * `healOverlay` writes `overlayMounted` after an `executeScript` round trip.
+   * A teardown inside that window used to be undone: `{ ...null, ...patch }`
+   * is a partial state object, which put REC back on the badge after the
+   * recording ended and answered the next Record click with 'start-busy'.
+   */
+  it('does not let a late patch resurrect a cleared recording', async () => {
+    let release: (() => void) | null = null;
+    fakeChrome.scripting.executeScript = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          release = () => resolve([{ result: 'synced' }]);
+        }),
+    ) as unknown as typeof fakeChrome.scripting.executeScript;
+    session.set(REC_STATE_KEY, liveState('sess-1', 'seg-1', false));
+    await loadWorker();
+
+    // A navigation completing is the ordinary heal, and the one path that
+    // reaches `healOverlay` without clearing state on the way in.
+    const onUpdated = fakeChrome.tabs.onUpdated.addListener.mock.calls[0]?.[0] as (
+      tabId: number,
+      info: { status: string },
+    ) => void;
+    onUpdated(7, { status: 'complete' });
+    await settle(4);
+    expect(release, 'the heal is parked mid-injection').not.toBeNull();
+
+    // The recording ends underneath the in-flight injection.
+    await chrome.storage.session.remove(REC_STATE_KEY);
+    release?.();
+    await settle();
+
+    expect(session.get(REC_STATE_KEY), 'the run stays ended').toBeUndefined();
   });
 });
 
@@ -452,6 +527,20 @@ describe('a finished recording whose page will not open', () => {
     await chrome.storage.session.remove(REC_FAILURE_KEY);
     const state = (await send({ type: 'REC_QUERY' })) as { recoverableSessionId?: string };
     expect(state.recoverableSessionId).toBe(done.id);
+  });
+
+  it('stops offering it once a later recording opens its own page', async () => {
+    const done = await createSession(DEFAULT_RECORDING_SETTINGS);
+    session.set('openscreenshot:unopened-session', 'earlier-1');
+    session.set(REC_STATE_KEY, liveState(done.id));
+    await loadWorker();
+    void send({ type: 'ENGINE_STOPPED', sessionId: done.id, canceled: false });
+    await settle();
+
+    expect(fakeChrome.tabs.create).toHaveBeenCalled();
+    // The offer is a shortcut to a recording the user has not seen, and they
+    // are looking at one now.
+    expect(session.get('openscreenshot:unopened-session')).toBeUndefined();
   });
 
   it('stops offering a session the user has since deleted', async () => {
@@ -618,5 +707,28 @@ describe('a clean stop with a failure still owed', () => {
     await settle();
     // clearRecBadge() here used to wipe a message the user had not read.
     expect(badgeText.at(-1)).toBe('!');
+  });
+});
+
+describe('the badge when the store cannot answer', () => {
+  it('clears a capture flash it knows is not covering a recording', async () => {
+    const mod = await loadWorker();
+    // One answered read establishes that nothing is recording...
+    await mod.restoreRecBadge();
+    // ...and a capture sets its own flash immediately before calling again.
+    await fakeChrome.action.setBadgeText({ text: '\u2713' });
+    sessionThrows = true;
+    await mod.restoreRecBadge();
+    expect(badgeText.at(-1), 'the tick would otherwise stick').toBe('');
+  });
+
+  it('still leaves a live REC alone', async () => {
+    session.set(REC_STATE_KEY, liveState());
+    const mod = await loadWorker();
+    await mod.restoreRecBadge();
+    badgeText.length = 0;
+    sessionThrows = true;
+    await mod.restoreRecBadge();
+    expect(badgeText).not.toContain('');
   });
 });

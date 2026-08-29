@@ -48,8 +48,8 @@ interface EngineState {
   overlayLost: boolean;
   watchdog: ReturnType<typeof setInterval> | null;
   stopping: boolean;
-  /** A write has already been reported; the worker is told once, not per chunk. */
-  writeFailed: boolean;
+  /** Kinds already reported; the worker is told once per kind, not per write. */
+  writeFailed: { media: boolean; events: boolean };
   /**
    * In-flight `appendChunk`/`appendEvents` writes. `stop()` awaits these
    * after the recorders' `stop` events resolve and before finalizing —
@@ -89,16 +89,16 @@ function elapsed(): number {
  * recording is deliberately not stopped, because the chunks already written
  * are real and tearing down would throw them away.
  */
-function trackWrite(s: EngineState, write: Promise<void>): void {
+function trackWrite(s: EngineState, write: Promise<void>, kind: 'media' | 'events'): void {
   // Store the already-caught promise, not the raw one — `stop()` awaits
   // everything in `pendingWrites` via `Promise.all`, and an unswallowed
   // rejection there would throw out of `stop()` after `stopping = true` was
   // set, permanently wedging the engine (state never nulled, ENGINE_STOPPED
   // never sent).
   const settled = write.catch(() => {
-    if (s.writeFailed) return;
-    s.writeFailed = true;
-    send({ type: 'ENGINE_WRITE_FAILED', sessionId: s.sessionId });
+    if (s.writeFailed[kind]) return;
+    s.writeFailed[kind] = true;
+    send({ type: 'ENGINE_WRITE_FAILED', sessionId: s.sessionId, kind });
   });
   s.pendingWrites.add(settled);
   void settled.finally(() => s.pendingWrites.delete(settled));
@@ -205,19 +205,19 @@ async function start(msg: Extract<OffscreenMessage, { type: 'OFFSCREEN_START' }>
       overlayLost: false,
       watchdog: null,
       stopping: false,
-      writeFailed: false,
+      writeFailed: { media: false, events: false },
       pendingWrites: new Set(),
     };
 
     tabRecorder.ondataavailable = (e) => {
       if (e.data.size && state) {
-        trackWrite(state, appendChunk(segmentId, 'tab', state.seq.tab++, e.data));
+        trackWrite(state, appendChunk(segmentId, 'tab', state.seq.tab++, e.data), 'media');
       }
     };
     if (camRecorder) {
       camRecorder.ondataavailable = (e) => {
         if (e.data.size && state) {
-          trackWrite(state, appendChunk(segmentId, 'webcam', state.seq.webcam++, e.data));
+          trackWrite(state, appendChunk(segmentId, 'webcam', state.seq.webcam++, e.data), 'media');
         }
       };
     }
@@ -234,6 +234,7 @@ async function start(msg: Extract<OffscreenMessage, { type: 'OFFSCREEN_START' }>
         trackWrite(
           state,
           appendEvents(state.segmentId, state.eventSeq++, [{ kind: 'overlay-lost', t: elapsed() }]),
+          'events',
         );
         send({ type: 'OVERLAY_LOST', sessionId: state.sessionId });
       }
@@ -272,10 +273,11 @@ function handleCursorBatch(batch: CursorBatch): void {
     trackWrite(
       state,
       appendEvents(state.segmentId, state.eventSeq++, [{ kind: 'overlay-healed', t: elapsed() }]),
+      'events',
     );
     send({ type: 'OVERLAY_HEALED', sessionId: state.sessionId });
   }
-  trackWrite(state, appendEvents(state.segmentId, state.eventSeq++, batch.events));
+  trackWrite(state, appendEvents(state.segmentId, state.eventSeq++, batch.events), 'events');
 }
 
 function pause(): void {
