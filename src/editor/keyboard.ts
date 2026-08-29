@@ -238,8 +238,9 @@ export interface CarriedBox {
  * Kept means kept whole, ids and all, so a selection on the way somewhere does
  * not re-key it: clicking away empties the selection, and taking the same
  * layers back one bracket press at a time goes through a subset of them.
- * Anything that does move a member goes through applyAnnotations, which drops
- * the box there rather than here.
+ * What an edit to the list does to the box is decided in applyAnnotations, by
+ * keepBoxThroughEdit below and, for a move of the whole selection, by
+ * translating it; neither is decided here.
  */
 export function carryGroupBox(prev: CarriedBox | null, ids: string[]): CarriedBox | null {
   if (!prev) return null;
@@ -258,6 +259,45 @@ export function carryGroupBox(prev: CarriedBox | null, ids: string[]): CarriedBo
  */
 export function groupBoxFor(carried: CarriedBox | null, ids: string[]): Rect | null {
   return carried && carried.ids.length === ids.length ? carried.box : null;
+}
+
+/**
+ * The carried box after an edit to the annotation list: kept when every layer
+ * it was measured for still has the bbox it had, dropped otherwise.
+ *
+ * The rule is "keep unless the members moved", which is the inverse of what
+ * applyAnnotations used to assume, and it is deliberate. A colour, a stroke
+ * width, a blur mode, a spotlight shape and a layer added elsewhere all leave
+ * the frame describing its members exactly, and dropping the box for them cost
+ * a widen and a narrow their cancellation for no reason. A delete, a font size
+ * (which rewrites a glyph's width and height), the crop, a text re-edit and an
+ * undo across any of those change a bbox, and the next resize should start
+ * from a fresh union.
+ *
+ * Per member, not the union: two members can trade places under a union that
+ * did not move, and one pass costs the same either way.
+ *
+ * An edit that changes a member INSIDE its own bbox — one pen point moved,
+ * say — keeps the frame, and that is the intended reading. The frame is not a
+ * bounding box of the members: it is the box they are scaled in, and
+ * scaleInBox maps a member relative to it whatever shape the member has.
+ */
+export function keepBoxThroughEdit(
+  prev: CarriedBox | null,
+  prevAnns: Annotation[],
+  nextAnns: Annotation[],
+): CarriedBox | null {
+  if (!prev) return null;
+  for (const id of prev.ids) {
+    const before = prevAnns.find((a) => a.id === id);
+    const after = nextAnns.find((a) => a.id === id);
+    // A member the edit removed cannot be checked, and cannot be resized either.
+    if (!before || !after) return null;
+    const b = bbox(before);
+    const a = bbox(after);
+    if (b.x !== a.x || b.y !== a.y || b.w !== a.w || b.h !== a.h) return null;
+  }
+  return prev;
 }
 
 function clamp(v: number, lo: number, hi: number): number {

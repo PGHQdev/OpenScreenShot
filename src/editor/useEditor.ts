@@ -60,6 +60,7 @@ import {
   carryGroupBox,
   cycleSelection,
   groupBoxFor,
+  keepBoxThroughEdit,
   moveCropBy,
   placementRect,
   PLACE_SIZE_PX,
@@ -226,12 +227,13 @@ export function useEditor() {
    * resizeSelectionBy). Null means "no box carried" — every reader falls back
    * to the union of what is selected, which is where a fresh gesture starts.
    *
-   * It lives as long as the box still describes the members. The ids it was
-   * measured for travel with it, so clicking away and back keeps it
-   * (carryGroupBox) and selecting a layer from outside the set drops it. A
-   * geometry edit drops it too, in applyAnnotations, with one exception: a
-   * move translates it, because a translate maps onto the box exactly, and a
-   * nudge between two resizes is as ordinary as a deselect between them.
+   * It lives as long as the box still describes the members, and three rules
+   * say when that stops. The ids it was measured for travel with it, so
+   * clicking away and back keeps it and selecting a layer from outside the set
+   * drops it (carryGroupBox). A move of the whole selection translates it,
+   * because a translate maps onto the box exactly. Any other edit to the list
+   * keeps it only while every member still has the bbox it had
+   * (keepBoxThroughEdit), so a colour change carries and a delete does not.
    */
   const groupBoxRef = useRef<CarriedBox | null>(null);
 
@@ -287,10 +289,10 @@ export function useEditor() {
 
   /**
    * The one way the annotation list changes. `groupBox` is the resize box that
-   * goes with the new list, and defaulting it to null is what invalidates the
-   * carried one: every edit that is not a group resize or a move of the whole
-   * selection leaves the members somewhere the box cannot describe, and only
-   * those paths pass one.
+   * goes with the new list: the two resize paths pass the box they produced
+   * and the two move paths pass the carried one translated, and every other
+   * caller leaves it out and lets keepBoxThroughEdit rule on what its edit did
+   * to the members.
    */
   const applyAnnotations = useCallback(
     (next: Annotation[] | ((prev: Annotation[]) => Annotation[]), groupBox: Rect | null = null) => {
@@ -302,7 +304,9 @@ export function useEditor() {
       // the box rides that render instead of forcing one of its own. render()
       // is a full repaint, and a group resize changes both every frame.
       setGroupBox(
-        groupBox === null ? null : { box: groupBox, ids: selectedIdsRef.current },
+        groupBox === null
+          ? keepBoxThroughEdit(groupBoxRef.current, prev, list)
+          : { box: groupBox, ids: selectedIdsRef.current },
         list === prev,
       );
     },

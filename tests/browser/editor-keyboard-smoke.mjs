@@ -1658,10 +1658,9 @@ async function testMultiSelection(browser, base) {
   assert(tx1 > tx0, `and carried it across with the box (x ${tx0} -> ${tx1})`);
 
   // The round trip, measured from its own baseline. Reading a layer's position
-  // nudges it a pixel each way, which is an edit like any other and drops the
-  // carried box, so the widen and the narrow have to run back to back with no
-  // reading between them — the same reason a resize after a real edit starts
-  // from a fresh union.
+  // selects it alone and nudges it a pixel each way, and a move of one member
+  // of a carried box is not a move of the box, so the reading drops it. The
+  // pairs below therefore run with no reading inside them.
   await page.keyboard.press('Escape');
   // `[` from nothing selects the top layer, which is the rectangle; a second
   // one walks down to the text. Every reading below names the layer it read,
@@ -1779,6 +1778,46 @@ async function testMultiSelection(browser, base) {
   assert(
     tx5 === tx4 - 30 && ty5 === ty4,
     `the text moved by the same 30px and nothing else (${tx4},${ty4} -> ${tx5},${ty5})`,
+  );
+
+  step('task 24: a colour change between the two halves does not break the pair');
+  // The edit that moves nothing. A number key with a selection writes that
+  // colour to every member, through the same applyAnnotations every list edit
+  // goes through, and keepBoxThroughEdit is what reads the members and decides
+  // the frame still describes them.
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('[');
+  await chord(['Shift'], '[');
+  await settle(60);
+  assert(
+    /^2 of \d+ annotations selected\.$/.test(await say()),
+    `both selected for the recoloured round trip: "${await say()}"`,
+  );
+  for (let pair = 0; pair < 3; pair++) {
+    for (let i = 0; i < 10; i++) await chord(['Alt', 'Shift'], 'ArrowLeft');
+    await page.keyboard.press('1');
+    await settle(60);
+    for (let i = 0; i < 10; i++) await chord(['Alt', 'Shift'], 'ArrowRight');
+    await page.keyboard.press('2');
+    await settle(60);
+  }
+  await settle(150);
+  await page.keyboard.press('Escape');
+  const [rx6, ry6] = await readNextLayer('[');
+  assert(/^Rectangle moved to /.test(await say()), `measuring the rectangle: "${await say()}"`);
+  const [rw6] = await sizeOfSelected();
+  assert(
+    rw6 === rw5,
+    `the rectangle kept its exact width across three recoloured pairs: ${rw5}px before, ${rw6}px after`,
+  );
+  assert(rx6 === rx5 && ry6 === ry5, `and its exact origin (${rx5},${ry5} -> ${rx6},${ry6})`);
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('[');
+  const [tx6, ty6] = await readNextLayer('[');
+  assert(/^Text moved to /.test(await say()), `measuring the text layer: "${await say()}"`);
+  assert(
+    tx6 === tx5 && ty6 === ty5,
+    `and the text came back to its own origin (${tx5},${ty5} -> ${tx6},${ty6})`,
   );
 
   step(

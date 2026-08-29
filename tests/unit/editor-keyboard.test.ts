@@ -6,6 +6,7 @@ import {
   carryGroupBox,
   cycleSelection,
   groupBoxFor,
+  keepBoxThroughEdit,
   MIN_SIZE,
   moveCropBy,
   placementRect,
@@ -385,6 +386,50 @@ describe('carryGroupBox', () => {
   });
 });
 
+describe('keepBoxThroughEdit', () => {
+  const a: Annotation = { ...rect, id: 'a', x: 0, y: 0, w: 40, h: 40 };
+  const b: Annotation = { ...rect, id: 'b', x: 0, y: 50, w: 40, h: 40 };
+  const held: CarriedBox = { box: { x: 0, y: 0, w: 40, h: 90 }, ids: ['a', 'b'] };
+
+  it('keeps the box through an edit that moves no member', () => {
+    // A colour change: a field no bbox reads.
+    const next = [{ ...a, stroke: '#0a84ff' }, b];
+    expect(keepBoxThroughEdit(held, [a, b], next)).toBe(held);
+  });
+
+  it('keeps it when the edit is to a layer outside the box', () => {
+    const other: Annotation = { ...rect, id: 'c', x: 300, y: 0 };
+    expect(keepBoxThroughEdit(held, [a, b], [a, b, other])).toBe(held);
+  });
+
+  it('drops it when a member changes size', () => {
+    // A font size does this to a text member, through measureTextSize.
+    expect(keepBoxThroughEdit(held, [a, b], [{ ...a, w: 60 }, b])).toBeNull();
+  });
+
+  it('drops it when a member moves', () => {
+    expect(keepBoxThroughEdit(held, [a, b], [{ ...a, x: 5 }, b])).toBeNull();
+  });
+
+  it('drops it when a member is deleted', () => {
+    expect(keepBoxThroughEdit(held, [a, b], [a])).toBeNull();
+  });
+
+  it('reads every member, not the union of them', () => {
+    // The two swap places: the union is untouched and the box is not the box
+    // for this arrangement any more.
+    const swapped = [
+      { ...a, y: 50 },
+      { ...b, y: 0 },
+    ];
+    expect(keepBoxThroughEdit(held, [a, b], swapped)).toBeNull();
+  });
+
+  it('has nothing to keep when nothing was carried', () => {
+    expect(keepBoxThroughEdit(null, [a, b], [a, b])).toBeNull();
+  });
+});
+
 describe('groupBoxFor', () => {
   const held: CarriedBox = { box: { x: 0, y: 0, w: 40, h: 40 }, ids: ['a', 'b'] };
 
@@ -504,6 +549,25 @@ describe('resizeSelectionBy: a widen and a narrow cancel', () => {
       for (const step of [-STEP_COARSE, STEP_COARSE]) {
         carried = away(carried);
         cur = resizeSelectionBy(cur.annotations, step, 0, carried?.box);
+        carried = { box: cur.box, ids: ['t', 'r'] };
+      }
+    }
+    expect(widthOf(cur.annotations, 't')).toBeCloseTo(40);
+    expect(widthOf(cur.annotations, 'r')).toBeCloseTo(40);
+    expect(cur.box.w).toBeCloseTo(40);
+  });
+
+  it('cancels across a colour change between the two halves', () => {
+    // The edit that moves nothing. Before keepBoxThroughEdit this dropped the
+    // box like any other list edit, and the control below is where it landed.
+    const recolour = (list: Annotation[]) => list.map((x) => ({ ...x, stroke: '#0a84ff' }));
+    let cur = { annotations: sel, box: unionBBox(sel) };
+    let carried: CarriedBox | null = { box: cur.box, ids: ['t', 'r'] };
+    for (let i = 0; i < 3; i++) {
+      for (const step of [-STEP_COARSE, STEP_COARSE]) {
+        const next = recolour(cur.annotations);
+        carried = keepBoxThroughEdit(carried, cur.annotations, next);
+        cur = resizeSelectionBy(next, step, 0, carried?.box);
         carried = { box: cur.box, ids: ['t', 'r'] };
       }
     }
