@@ -912,6 +912,46 @@ async function testRecorder(browser, base, messages) {
   );
 
   step(
+    'RECORDER — the bubble-size slider: styled track and thumb in the coral tokens, no Chrome default blue',
+  );
+  // The rail always renders the beautify padding/corners/shadow sliders too,
+  // but frame.enabled defaults to false (recorder-draft.ts), which disables
+  // those three — the webcam-bubble-size slider is the only enabled .range
+  // at this point, and this fixture always seeds a webcam segment (above),
+  // so it is always present.
+  await page.waitForSelector('.rail-slider input.range:not([disabled])');
+  await page.evaluate(() => {
+    const el = document.querySelector('.rail-slider input.range:not([disabled])');
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+    setter.call(el, el.min);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await new Promise((r) => setTimeout(r, 60));
+  const recRangeBox = await page.evaluate(() =>
+    document
+      .querySelector('.rail-slider input.range:not([disabled])')
+      .getBoundingClientRect()
+      .toJSON(),
+  );
+  const recThumbPoint = {
+    x: Math.round(recRangeBox.left + 8),
+    y: Math.round(recRangeBox.top + recRangeBox.height / 2),
+  };
+  const recTrackPoint = { x: Math.round(recRangeBox.right - 4), y: recThumbPoint.y };
+  const recAccentHex = await rootVar(page, '--accent');
+  const recSurface3Hex = await rootVar(page, '--surface-3');
+  const recThumbPixel = await pixelAt(page, recThumbPoint.x, recThumbPoint.y);
+  const recTrackPixel = await pixelAt(page, recTrackPoint.x, recTrackPoint.y);
+  assert(
+    closeRGB(recThumbPixel, hexToRGB(recAccentHex)),
+    `bubble-size slider thumb pixel (${recThumbPixel}) renders --accent (${recAccentHex}), not Chrome's default blue thumb`,
+  );
+  assert(
+    closeRGB(recTrackPixel, hexToRGB(recSurface3Hex)),
+    `bubble-size slider track pixel (${recTrackPixel}) renders --surface-3 (${recSurface3Hex})`,
+  );
+
+  step(
     'RECORDER — forced-colors: active — the box-shadow ring goes invisible, an outline stands in',
   );
   await emulateMedia(cdp, [{ name: 'forced-colors', value: 'active' }]);
@@ -975,6 +1015,21 @@ async function testRecorder(browser, base, messages) {
   assert(
     pressedDot.backgroundColor !== highlight,
     `its ::after dot (${pressedDot.backgroundColor}) still contrasts with the Highlight fill, so the chosen corner is readable`,
+  );
+
+  step(
+    'RECORDER — forced-colors: active — the bubble-size slider keeps its thumb visible against its track',
+  );
+  await new Promise((r) => setTimeout(r, 60));
+  const recThumbPixelFC = await pixelAt(page, recThumbPoint.x, recThumbPoint.y);
+  const recTrackPixelFC = await pixelAt(page, recTrackPoint.x, recTrackPoint.y);
+  // Same verified-live finding as the editor (task-21-report.md, restated in
+  // shared/controls.css): Chromium repaints input[type='range']'s track and
+  // thumb under forced-colors on its own, so this checks the two stay
+  // distinct rather than asserting a colour this file does not control.
+  assert(
+    !closeRGB(recThumbPixelFC, recTrackPixelFC, 10),
+    `the bubble-size thumb (${recThumbPixelFC}) stays visually distinct from its track (${recTrackPixelFC}) under forced-colors`,
   );
 
   step('RECORDER — forced-colors: active — the shared .switch, checked vs unchecked');
@@ -1103,6 +1158,66 @@ async function testPopup(browser, base, messages) {
     `an unpressed chip does not (${idleChip.backgroundColor}) — the two are distinguishable`,
   );
   await emulateMedia(cdp, []);
+
+  step(
+    'POPUP — the quality slider: styled track and thumb in the coral tokens, no Chrome default blue',
+  );
+  // The quality slider only renders for a lossy default format (App.tsx
+  // showQuality) — Settings starts on PNG, so Settings is opened and JPEG
+  // (the seg-grid's 2nd of 4 format buttons) selected first.
+  await page.click('.icon-btn');
+  await page.waitForSelector('.seg-grid');
+  await page.click('.seg-grid .seg-btn:nth-child(2)');
+  await page.waitForSelector('.range');
+  await page.evaluate(() => {
+    const el = document.querySelector('.range');
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+    setter.call(el, el.min);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await new Promise((r) => setTimeout(r, 60));
+  const popupRangeBox = await page.evaluate(() =>
+    document.querySelector('.range').getBoundingClientRect().toJSON(),
+  );
+  const popupThumbPoint = {
+    x: Math.round(popupRangeBox.left + 8),
+    y: Math.round(popupRangeBox.top + popupRangeBox.height / 2),
+  };
+  const popupTrackPoint = { x: Math.round(popupRangeBox.right - 4), y: popupThumbPoint.y };
+  const popupAccentHex = await rootVar(page, '--accent');
+  const popupSurface3Hex = await rootVar(page, '--surface-3');
+  const popupThumbPixel = await pixelAt(page, popupThumbPoint.x, popupThumbPoint.y);
+  const popupTrackPixel = await pixelAt(page, popupTrackPoint.x, popupTrackPoint.y);
+  assert(
+    closeRGB(popupThumbPixel, hexToRGB(popupAccentHex)),
+    `quality slider thumb pixel (${popupThumbPixel}) renders --accent (${popupAccentHex}), not Chrome's default blue thumb`,
+  );
+  assert(
+    closeRGB(popupTrackPixel, hexToRGB(popupSurface3Hex)),
+    `quality slider track pixel (${popupTrackPixel}) renders --surface-3 (${popupSurface3Hex})`,
+  );
+
+  step(
+    'POPUP — forced-colors: active — the quality slider keeps its thumb visible against its track',
+  );
+  await emulateMedia(cdp, [{ name: 'forced-colors', value: 'active' }]);
+  await new Promise((r) => setTimeout(r, 60));
+  const popupThumbPixelFC = await pixelAt(page, popupThumbPoint.x, popupThumbPoint.y);
+  const popupTrackPixelFC = await pixelAt(page, popupTrackPoint.x, popupTrackPoint.y);
+  // Same verified-live finding as the editor (task-21-report.md, restated in
+  // shared/controls.css): Chromium repaints input[type='range']'s track and
+  // thumb under forced-colors on its own, so this checks the two stay
+  // distinct rather than asserting a colour this file does not control.
+  assert(
+    !closeRGB(popupThumbPixelFC, popupTrackPixelFC, 10),
+    `the quality slider thumb (${popupThumbPixelFC}) stays visually distinct from its track (${popupTrackPixelFC}) under forced-colors`,
+  );
+  await emulateMedia(cdp, []);
+  // Back to the main view, so the reduced-motion selectors below find their
+  // real elements (.mode-icon/.mode-title/.chip-toggle) again rather than
+  // falling back to a detached probe.
+  await page.click('.icon-btn');
+  await page.waitForSelector('.chip-row');
 
   step('POPUP — prefers-reduced-motion: reduce — the six previously-uncovered transitions');
   const SELECTORS = [
