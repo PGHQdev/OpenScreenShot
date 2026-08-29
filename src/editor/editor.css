@@ -96,10 +96,14 @@ body {
   cursor: pointer;
   transition:
     background var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out);
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 .width-btn:hover {
   background: var(--hover-overlay);
+}
+.width-btn:active {
+  transform: scale(0.98);
 }
 .width-btn[aria-pressed='true'] {
   background: var(--accent-subtle);
@@ -217,11 +221,17 @@ body {
   background: var(--surface-2);
   color: var(--text-1);
   cursor: pointer;
-  transition: background var(--dur-fast) var(--ease-out);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .zoom-trigger:hover:not(:disabled) {
   background: var(--surface-3);
+}
+
+.zoom-trigger:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .zoom-trigger:disabled {
@@ -271,10 +281,15 @@ body {
   color: var(--text-1);
   font-size: 13px;
   cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 
 .zoom-item:hover {
   background: var(--hover-overlay);
+}
+
+.zoom-item:active {
+  transform: scale(0.98);
 }
 
 .zoom-item:focus-visible {
@@ -312,11 +327,17 @@ body {
   color: var(--text-1);
   font-size: var(--fs-sm);
   cursor: pointer;
-  transition: background var(--dur-fast) var(--ease-out);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .text-btn:hover {
   background: var(--hover-overlay);
+}
+
+.text-btn:active {
+  transform: scale(0.98);
 }
 
 .text-btn:focus-visible,
@@ -337,7 +358,8 @@ body {
   cursor: pointer;
   transition:
     background var(--dur-fast) var(--ease-out),
-    opacity var(--dur-fast) var(--ease-out);
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -346,6 +368,7 @@ body {
 
 .btn-primary:active:not(:disabled) {
   background: var(--accent-ink-pressed);
+  transform: scale(0.98);
 }
 
 .btn-primary:disabled {
@@ -464,12 +487,17 @@ body {
   transition:
     background var(--dur-fast) var(--ease-out),
     color var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out);
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .tool-btn:hover {
   background: var(--hover-overlay);
   color: var(--text-1);
+}
+
+.tool-btn:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .tool-btn.is-active {
@@ -627,10 +655,14 @@ body {
   cursor: pointer;
   transition:
     border-color var(--dur-fast) var(--ease-out),
-    background var(--dur-fast) var(--ease-out);
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 .format-card:hover {
   border-color: var(--accent);
+}
+.format-card:active:not(.format-card-disabled) {
+  transform: scale(0.98);
 }
 .format-card.is-selected {
   border-color: var(--accent);
@@ -791,13 +823,17 @@ body {
   cursor: pointer;
   transition:
     background var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out);
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 .segmented-btn:last-child {
   border-right: none;
 }
 .segmented-btn:hover:not(:disabled) {
   background: var(--surface-2);
+}
+.segmented-btn:active:not(:disabled) {
+  transform: scale(0.98);
 }
 .segmented-btn.is-selected {
   background: var(--accent-subtle);
@@ -983,6 +1019,7 @@ body {
   }
   .width-btn,
   .zoom-trigger,
+  .zoom-item,
   .text-btn,
   .btn-primary,
   .tool-btn,

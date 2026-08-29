@@ -77,11 +77,17 @@ body {
   cursor: pointer;
   padding: var(--s-1) var(--s-2);
   border-radius: var(--r-sm);
-  transition: color var(--dur-mid) var(--ease-out);
+  transition:
+    color var(--dur-mid) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .link-btn:hover {
   color: var(--accent-ink);
+}
+
+.link-btn:active {
+  transform: scale(0.98);
 }
 
 .link-btn:focus-visible {
@@ -104,7 +110,7 @@ body {
   cursor: pointer;
   transition:
     background var(--dur-mid) var(--ease-out),
-    transform var(--dur-mid) var(--ease-out);
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .rec-icon-btn:hover {
@@ -112,7 +118,7 @@ body {
 }
 
 .rec-icon-btn:active {
-  transform: scale(0.96);
+  transform: scale(0.98);
 }
 
 .rec-icon-btn:focus-visible {
@@ -370,10 +376,15 @@ body {
   border-radius: var(--r-sm);
   background: var(--surface-2);
   cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 
 .rec-bubble-corner:hover {
   background: var(--surface-3);
+}
+
+.rec-bubble-corner:active {
+  transform: scale(0.98);
 }
 
 .rec-bubble-corner[aria-pressed='true'] {
@@ -766,6 +777,7 @@ body {
   color: var(--text-1);
   font-size: var(--fs-xs);
   cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 
 .rec-seg-btn:last-child {
@@ -774,6 +786,10 @@ body {
 
 .rec-seg-btn:hover {
   background: var(--surface-2);
+}
+
+.rec-seg-btn:active {
+  transform: scale(0.98);
 }
 
 .rec-seg-btn[aria-pressed='true'] {
@@ -836,7 +852,9 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .rec-icon-btn,
   /* Colour-only hover fade; nothing about it conveys progress. */
-  .link-btn {
+  .link-btn,
+  .rec-bubble-corner,
+  .rec-seg-btn {
     transition: none;
   }
 }

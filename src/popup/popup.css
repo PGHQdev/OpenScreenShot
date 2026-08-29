@@ -68,7 +68,8 @@ body {
   color: var(--text-2);
   transition:
     background var(--dur-mid) var(--ease-out),
-    color var(--dur-mid) var(--ease-out);
+    color var(--dur-mid) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .icon-btn:hover {
@@ -277,11 +278,16 @@ body {
   transition:
     background var(--dur-fast) var(--ease-out),
     border-color var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out);
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .chip-toggle:hover {
   background: var(--surface-2);
+}
+
+.chip-toggle:active {
+  transform: scale(0.98);
 }
 
 .chip-toggle[aria-pressed='true'] {
@@ -392,13 +398,17 @@ body {
   cursor: pointer;
   transition:
     background var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out);
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 .seg-btn:last-child {
   border-right: none;
 }
 .seg-btn:hover:not(:disabled) {
   background: var(--surface-2);
+}
+.seg-btn:active:not(:disabled) {
+  transform: scale(0.98);
 }
 .seg-btn[aria-pressed='true'] {
   background: var(--accent-subtle);
@@ -453,12 +463,17 @@ body {
   cursor: pointer;
   transition:
     border-color var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out);
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .token-chip:hover {
   border-color: var(--accent);
   color: var(--accent-ink);
+}
+
+.token-chip:active {
+  transform: scale(0.98);
 }
 
 .token-chip:focus-visible {
@@ -553,10 +568,15 @@ body {
   font-size: var(--fs-sm);
   font-weight: 600;
   cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 
 .perm-chip:hover {
   background: color-mix(in srgb, var(--warning) 32%, var(--surface-1));
+}
+
+.perm-chip:active {
+  transform: scale(0.98);
 }
 
 .link-btn {
@@ -569,12 +589,18 @@ body {
   cursor: pointer;
   padding: var(--s-05) var(--s-1);
   border-radius: var(--r-sm);
-  transition: color var(--dur-mid) var(--ease-out);
+  transition:
+    color var(--dur-mid) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .link-btn:hover {
   color: var(--accent-ink);
   text-decoration: underline;
+}
+
+.link-btn:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .link-btn:disabled {
@@ -709,10 +735,15 @@ body {
   line-height: 1.2;
   cursor: pointer;
   opacity: 0.7;
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 
 .toast-dismiss:hover {
   opacity: 1;
+}
+
+.toast-dismiss:active {
+  transform: scale(0.98);
 }
 
 .toast-dismiss:focus-visible {
@@ -767,7 +798,9 @@ body {
   .chip-toggle,
   .seg-btn,
   .token-chip,
-  .link-btn {
+  .link-btn,
+  .perm-chip,
+  .toast-dismiss {
     transition: none;
   }
   .spinner {

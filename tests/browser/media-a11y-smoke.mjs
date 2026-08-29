@@ -818,6 +818,14 @@ async function testEditor(browser, base, messages) {
   // forced explicitly for the "baseline" side of this check so it holds on
   // any machine, reduced-motion setting or not.
   await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'no-preference' }]);
+  // .width-btn is a style-bar control (Rectangle's Stroke group, already on
+  // screen) — the one this task's own trap calls out as the surface a
+  // pressed-state transform must not leave animating under reduced motion.
+  const baseWidthTransition = await computedOf(page, '.width-btn', ['transitionDuration']);
+  assert(
+    baseWidthTransition.transitionDuration !== '0s',
+    `.width-btn has a real transition under prefers-reduced-motion: no-preference (${baseWidthTransition.transitionDuration})`,
+  );
   // The header button, not ⌘S: the editor's shortcut listener is scoped away
   // from a focused control, and focus is still in the header after the
   // Beautify step above.
@@ -834,8 +842,13 @@ async function testEditor(browser, base, messages) {
     `.format-card has a real transition under prefers-reduced-motion: no-preference (${baseFormatTransition.transitionDuration})`,
   );
   await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+  const reducedWidth = await computedOf(page, '.width-btn', ['transitionDuration']);
   const reducedTool = await computedOf(page, '.tool-btn', ['transitionDuration']);
   const reducedFormat = await computedOf(page, '.format-card', ['transitionDuration']);
+  assert(
+    allZero(reducedWidth.transitionDuration),
+    `.width-btn transition-duration is ${reducedWidth.transitionDuration} under prefers-reduced-motion: reduce`,
+  );
   assert(
     allZero(reducedTool.transitionDuration),
     `.tool-btn transition-duration is ${reducedTool.transitionDuration} under prefers-reduced-motion: reduce`,
@@ -988,18 +1001,28 @@ async function testRecorder(browser, base, messages) {
   );
   await emulateMedia(cdp, []);
 
-  step('RECORDER — prefers-reduced-motion: reduce — .link-btn');
+  step('RECORDER — prefers-reduced-motion: reduce — .link-btn and .rec-bubble-corner');
   await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'no-preference' }]);
   const baseLink = await computedOf(page, '.rail .link-btn', ['transitionDuration']);
+  const baseCorner = await computedOf(page, '.rec-bubble-corner', ['transitionDuration']);
   assert(
     !allZero(baseLink.transitionDuration),
     `.link-btn has a real transition under no-preference (${baseLink.transitionDuration})`,
   );
+  assert(
+    !allZero(baseCorner.transitionDuration),
+    `.rec-bubble-corner has a real transition under no-preference (${baseCorner.transitionDuration})`,
+  );
   await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'reduce' }]);
   const reducedLink = await computedOf(page, '.rail .link-btn', ['transitionDuration']);
+  const reducedCorner = await computedOf(page, '.rec-bubble-corner', ['transitionDuration']);
   assert(
     allZero(reducedLink.transitionDuration),
     `.link-btn transition-duration is ${reducedLink.transitionDuration} under reduce`,
+  );
+  assert(
+    allZero(reducedCorner.transitionDuration),
+    `.rec-bubble-corner transition-duration is ${reducedCorner.transitionDuration} under reduce`,
   );
   await emulateMedia(cdp, []);
 

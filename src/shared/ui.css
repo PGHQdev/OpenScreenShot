@@ -26,11 +26,16 @@
   cursor: pointer;
   transition:
     background var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out);
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .icon-btn:hover {
   background: var(--hover-overlay);
+}
+
+.icon-btn:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .icon-btn:disabled {
@@ -58,11 +63,17 @@
   font-weight: 600;
   font-size: var(--fs-base);
   cursor: pointer;
-  transition: background var(--dur-fast) var(--ease-out);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .btn-secondary:hover:not(:disabled) {
   background: var(--surface-3);
+}
+
+.btn-secondary:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .btn-secondary:disabled {
@@ -118,6 +129,12 @@
 
 .swatch:hover {
   transform: scale(1.12);
+}
+
+/* Declared after :hover so a real click (hover + active at once) lands
+   here, not on the hover grow — pressed reads as a press, not a bigger hover. */
+.swatch:active {
+  transform: scale(0.98);
 }
 
 .swatch[aria-pressed='true'] {

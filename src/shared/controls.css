@@ -20,7 +20,8 @@ input[type='checkbox'].switch {
   cursor: pointer;
   transition:
     background var(--dur-mid) var(--ease-out),
-    border-color var(--dur-mid) var(--ease-out);
+    border-color var(--dur-mid) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 input[type='checkbox'].switch::before {
@@ -44,6 +45,10 @@ input[type='checkbox'].switch:checked {
 input[type='checkbox'].switch:checked::before {
   background: var(--on-accent);
   transform: translateX(14px);
+}
+
+input[type='checkbox'].switch:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 input[type='checkbox'].switch:disabled {

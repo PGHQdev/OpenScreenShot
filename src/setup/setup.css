@@ -318,10 +318,15 @@ a.trust-pill:hover {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 
 .btn-primary:hover {
   background: var(--accent-ink-hover);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
 }
 
 .btn-ghost {
@@ -332,10 +337,15 @@ a.trust-pill:hover {
   color: var(--text-1);
   font: inherit;
   cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 
 .btn-ghost:hover {
   background: var(--hover-overlay);
+}
+
+.btn-ghost:active {
+  transform: scale(0.98);
 }
 
 .switch-row {
@@ -343,4 +353,11 @@ a.trust-pill:hover {
   align-items: center;
   gap: var(--s-2);
   cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary,
+  .btn-ghost {
+    transition: none;
+  }
 }
