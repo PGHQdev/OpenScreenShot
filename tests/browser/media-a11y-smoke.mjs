@@ -845,6 +845,20 @@ async function testEditor(browser, base, messages) {
   // Beautify step above.
   await page.click('header .btn-secondary[title^="Export"]');
   await page.waitForSelector('.modal', { timeout: 5000 });
+  // waitForSelector resolves on insertion, before two things settle: the
+  // modal's own mount effect that moves focus onto its first control lands a
+  // render later (Preact flushes effects a frame after the commit — see
+  // editor-keyboard-smoke.mjs's own header comment), and its entrance
+  // `animation` is still mid-flight — a *running* CSS animation keeps the
+  // duration it started with in computedOf's own reading even after
+  // emulateMedia flips the reduced-motion rule live (Chromium does not
+  // retroactively reduce an in-flight animation's reported duration; the
+  // rule is real, this call just can't observe it until the animation that
+  // was already playing finishes). 220ms clears the 150ms entrance
+  // (--dur-mid) with margin, and gives focus a render to land. Without the
+  // first half, the Escape pressed below would reach whatever still had
+  // focus outside the modal instead of the modal's own onKeyDown.
+  await new Promise((r) => setTimeout(r, 220));
   const baseToolTransition = await computedOf(page, '.tool-btn', ['transitionDuration']);
   const baseFormatTransition = await computedOf(page, '.format-card', ['transitionDuration']);
   assert(
@@ -854,6 +868,25 @@ async function testEditor(browser, base, messages) {
   assert(
     baseFormatTransition.transitionDuration !== '0s',
     `.format-card has a real transition under prefers-reduced-motion: no-preference (${baseFormatTransition.transitionDuration})`,
+  );
+  // task 23: the modal's own entrance animation + exit transition (the same
+  // pair every surface built on transition.ts's useExitDelay carries).
+  const baseModal = await computedOf(page, '.modal', ['animationDuration', 'transitionDuration']);
+  const baseBackdrop = await computedOf(page, '.modal-backdrop', [
+    'animationDuration',
+    'transitionDuration',
+  ]);
+  assert(
+    baseModal.animationDuration !== '0s',
+    `.modal has a real entrance animation under prefers-reduced-motion: no-preference (${baseModal.animationDuration})`,
+  );
+  assert(
+    baseModal.transitionDuration !== '0s',
+    `.modal has a real exit transition under prefers-reduced-motion: no-preference (${baseModal.transitionDuration})`,
+  );
+  assert(
+    baseBackdrop.animationDuration !== '0s',
+    `.modal-backdrop has a real entrance animation under prefers-reduced-motion: no-preference (${baseBackdrop.animationDuration})`,
   );
   await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'reduce' }]);
   const reducedWidth = await computedOf(page, '.width-btn', ['transitionDuration']);
@@ -871,7 +904,111 @@ async function testEditor(browser, base, messages) {
     allZero(reducedFormat.transitionDuration),
     `.format-card transition-duration is ${reducedFormat.transitionDuration} under prefers-reduced-motion: reduce`,
   );
+  const reducedModal = await computedOf(page, '.modal', [
+    'animationDuration',
+    'transitionDuration',
+  ]);
+  const reducedBackdrop = await computedOf(page, '.modal-backdrop', [
+    'animationDuration',
+    'transitionDuration',
+  ]);
+  assert(
+    allZero(reducedModal.animationDuration) && allZero(reducedModal.transitionDuration),
+    `.modal animation/transition durations are ${reducedModal.animationDuration}/${reducedModal.transitionDuration} under prefers-reduced-motion: reduce`,
+  );
+  assert(
+    allZero(reducedBackdrop.animationDuration) && allZero(reducedBackdrop.transitionDuration),
+    `.modal-backdrop animation/transition durations are ${reducedBackdrop.animationDuration}/${reducedBackdrop.transitionDuration} under prefers-reduced-motion: reduce`,
+  );
   await page.keyboard.press('Escape');
+  // Still under reduce here, so useExitDelay's own reduced-motion check
+  // collapses its unmount wait to ~0ms (see transition.ts) — this is that
+  // hang-avoidance actually exercised, not just asserted about.
+  await page.waitForFunction(() => !document.querySelector('.modal'), { timeout: 2000 });
+
+  step('EDITOR — prefers-reduced-motion: reduce — zoom-popover and beautify-popover');
+  await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'no-preference' }]);
+  await page.click('.zoom-trigger');
+  await page.waitForSelector('.zoom-popover', { timeout: 5000 });
+  await new Promise((r) => setTimeout(r, 220)); // see the modal step above
+  const baseZoom = await computedOf(page, '.zoom-popover', [
+    'animationDuration',
+    'transitionDuration',
+  ]);
+  assert(
+    baseZoom.animationDuration !== '0s' && baseZoom.transitionDuration !== '0s',
+    `.zoom-popover has a real animation/transition under prefers-reduced-motion: no-preference (${baseZoom.animationDuration}/${baseZoom.transitionDuration})`,
+  );
+  await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+  const reducedZoom = await computedOf(page, '.zoom-popover', [
+    'animationDuration',
+    'transitionDuration',
+  ]);
+  assert(
+    allZero(reducedZoom.animationDuration) && allZero(reducedZoom.transitionDuration),
+    `.zoom-popover animation/transition durations are ${reducedZoom.animationDuration}/${reducedZoom.transitionDuration} under prefers-reduced-motion: reduce`,
+  );
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('.zoom-popover'), { timeout: 2000 });
+
+  await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'no-preference' }]);
+  await page.click('.beautify-menu > .btn-secondary');
+  await page.waitForSelector('.beautify-popover', { timeout: 5000 });
+  await new Promise((r) => setTimeout(r, 220)); // see the modal step above
+  const baseBeautify = await computedOf(page, '.beautify-popover', [
+    'animationDuration',
+    'transitionDuration',
+  ]);
+  assert(
+    baseBeautify.animationDuration !== '0s' && baseBeautify.transitionDuration !== '0s',
+    `.beautify-popover has a real animation/transition under prefers-reduced-motion: no-preference (${baseBeautify.animationDuration}/${baseBeautify.transitionDuration})`,
+  );
+  await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+  const reducedBeautify = await computedOf(page, '.beautify-popover', [
+    'animationDuration',
+    'transitionDuration',
+  ]);
+  assert(
+    allZero(reducedBeautify.animationDuration) && allZero(reducedBeautify.transitionDuration),
+    `.beautify-popover animation/transition durations are ${reducedBeautify.animationDuration}/${reducedBeautify.transitionDuration} under prefers-reduced-motion: reduce`,
+  );
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('.beautify-popover'), {
+    timeout: 2000,
+  });
+
+  step('EDITOR — prefers-reduced-motion: reduce — entrance-only .text-overlay');
+  await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'no-preference' }]);
+  await page.click('.stage-canvas');
+  await page.keyboard.press('t');
+  await page.keyboard.press('Enter');
+  await page.waitForSelector('textarea.text-overlay', { timeout: 5000 });
+  await new Promise((r) => setTimeout(r, 220)); // see the modal step above
+  const baseText = await computedOf(page, '.text-overlay', ['animationDuration']);
+  assert(
+    baseText.animationDuration !== '0s',
+    `.text-overlay has a real entrance animation under prefers-reduced-motion: no-preference (${baseText.animationDuration})`,
+  );
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('textarea.text-overlay'), {
+    timeout: 5000,
+  });
+  await page.click('.stage-canvas');
+  await page.keyboard.press('t');
+  await page.keyboard.press('Enter');
+  await page.waitForSelector('textarea.text-overlay', { timeout: 5000 });
+  await new Promise((r) => setTimeout(r, 220)); // see the modal step above
+  await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+  const reducedText = await computedOf(page, '.text-overlay', ['animationDuration']);
+  assert(
+    allZero(reducedText.animationDuration),
+    `.text-overlay animation-duration is ${reducedText.animationDuration} under prefers-reduced-motion: reduce`,
+  );
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('textarea.text-overlay'), {
+    timeout: 5000,
+  });
+  await page.keyboard.press('v'); // back to Select, so later steps don't inherit the Text tool
   await emulateMedia(cdp, []);
 
   assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { IconChevronDown } from '../shared/icons';
 import { arrowNav, getFocusable, syncRovingTabIndex } from './focus';
+import { DUR_MID, useExitDelay } from './transition';
 
 export interface ZoomMenuProps {
   zoomPct: number;
@@ -17,6 +18,7 @@ export interface ZoomMenuProps {
  */
 export function ZoomMenu(props: ZoomMenuProps) {
   const [open, setOpen] = useState(false);
+  const { mounted, closing } = useExitDelay(open, DUR_MID);
   const wrapRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -116,8 +118,13 @@ export function ZoomMenu(props: ZoomMenuProps) {
         </span>
         <IconChevronDown size={12} />
       </button>
-      {open ? (
-        <div class="zoom-popover" role="menu" aria-orientation="vertical" ref={popoverRef}>
+      {mounted ? (
+        <div
+          class={`zoom-popover${closing ? ' is-closing' : ''}`}
+          role="menu"
+          aria-orientation="vertical"
+          ref={popoverRef}
+        >
           <button
             class="zoom-item"
             role="menuitem"

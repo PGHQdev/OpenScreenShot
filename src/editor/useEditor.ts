@@ -80,7 +80,7 @@ import { draftFrame, DRAFT_DEBOUNCE_MS, makeDraft, parseDraft, type Draft } from
 import { canvasToDataUrl, downloadDataUrl, withExtension, type ImageFormat } from './export';
 import { historyStep } from './history';
 import { importSizeError, readImageFile, titleFromFilename } from './import-image';
-import { exportPdf as exportPdfFile, type PdfOptions } from './pdf';
+import { exportPdf as exportPdfFile, type PdfExportProgress, type PdfOptions } from './pdf';
 import { resampleToWidth } from './scale';
 
 export interface TextOverlayPos {
@@ -135,6 +135,9 @@ export function useEditor() {
   const [spaceHeld, setSpaceHeld] = useState(false);
   const [settings, setSettingsState] = useState<Settings | null>(null);
   const [exporting, setExporting] = useState(false);
+  // Only ever set during the multi-page PDF path (pdf.ts's own page loop is
+  // the sole real progress source in the export path — see task-23-report.md).
+  const [exportProgress, setExportProgress] = useState<PdfExportProgress | null>(null);
   const [style, setStyle] = useState<AnnotationStyle>(DEFAULT_STYLE);
   const [recentColors, setRecentColors] = useState<string[]>([]);
   const [spotlightShape, setSpotlightShapeState] = useState<SpotlightShape>('rect');
@@ -447,14 +450,24 @@ export function useEditor() {
     [applyStyleToSelected],
   );
 
-  // Create the controller + load the stashed capture on mount.
-  useEffect(() => {
-    const canvas = canvasRef.current!;
-    const c = new CanvasController(canvas);
-    c.onViewChange = () => setViewTick((t) => t + 1);
-    controllerRef.current = c;
-
-    void (async () => {
+  // Settings + the stashed capture, decoded onto the controller's canvas.
+  // Called once at mount and again from retryLoad (the stage error overlay's
+  // Retry button), so every await here is wrapped in one try/catch: an
+  // unhandled rejection from getSettings/getLastCapture used to leave
+  // `loading` stuck true forever (no code path ever set it false), which is
+  // exactly the hang the stage error overlay exists to replace. The two
+  // failure branches that can actually occur produce two different messages
+  // (R-23c) — anything more specific than "a storage read failed" vs "the
+  // image failed to decode" would be inventing detail neither the rejection
+  // nor img.onerror actually carries. A capture that simply isn't there
+  // (getLastCapture resolves to null) is not a failure — the empty state
+  // handles it, same as before.
+  const loadCapture = useCallback(async () => {
+    const c = controllerRef.current;
+    if (!c) return;
+    setLoading(true);
+    setError(null);
+    try {
       const s = await getSettings();
       setSettingsState(s);
       setRecentColors(s.recentColors);
@@ -480,23 +493,50 @@ export function useEditor() {
         void clearDraft();
         void clearDraftImage();
       }
-      const img = new Image();
-      img.onload = () => {
-        c.setImage(img);
-        setLoading(false);
-      };
-      img.onerror = () => {
-        setError('Could not load the screenshot.');
-        setLoading(false);
-      };
-      img.src = cap.dataUrl;
-    })();
+      await new Promise<void>((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          c.setImage(img);
+          resolve();
+        };
+        img.onerror = () => reject(new Error('decode'));
+        img.src = cap.dataUrl;
+      });
+      setLoading(false);
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message === 'decode'
+          ? 'Could not load the screenshot.'
+          : 'Could not load your settings or the saved screenshot.',
+      );
+      setLoading(false);
+    }
+  }, []);
+
+  // dismissError also clears capture/imageSize: img.onerror can fire after
+  // setCapture(cap) already ran above, so without this the topbar's
+  // !ed.capture checks would keep Copy/Export enabled for an image that
+  // never actually decoded onto the canvas.
+  const dismissError = useCallback(() => {
+    setError(null);
+    setCapture(null);
+    setImageSize(null);
+  }, []);
+
+  // Create the controller + load the stashed capture on mount.
+  useEffect(() => {
+    const canvas = canvasRef.current!;
+    const c = new CanvasController(canvas);
+    c.onViewChange = () => setViewTick((t) => t + 1);
+    controllerRef.current = c;
+
+    void loadCapture();
 
     return () => {
       c.destroy();
       controllerRef.current = null;
     };
-  }, []);
+  }, [loadCapture]);
 
   // Live-update a "system" theme setting when the OS preference flips.
   useEffect(() => watchSystemTheme(() => void getSettings().then((s) => applyTheme(s.theme))), []);
@@ -1340,11 +1380,18 @@ export function useEditor() {
     const c = controllerRef.current;
     if (!c || !c.image) return;
     setExporting(true);
+    setExportProgress(null);
     try {
       const canvas = c.composeFinal();
-      await exportPdfFile(canvas, opts, `${filenameBase}.pdf`);
+      // onProgress only ever fires from pdf.ts's multi-page loop — the one
+      // stage in the whole export path with real, per-page work to report
+      // (R-23a). Single-page/full-page PDFs and every image format stay
+      // null here, which is what tells the dialog to show the indeterminate
+      // spinner instead of a bar with nothing real to plot.
+      await exportPdfFile(canvas, opts, `${filenameBase}.pdf`, (p) => setExportProgress(p));
     } finally {
       setExporting(false);
+      setExportProgress(null);
     }
   }, []);
 
@@ -1383,6 +1430,8 @@ export function useEditor() {
     imageSize,
     loading,
     error,
+    retryLoad: loadCapture,
+    dismissError,
     textEdit,
     cropActive,
     cropDraft,
@@ -1425,6 +1474,7 @@ export function useEditor() {
     copyImage,
     defaultFilename,
     exporting,
+    exportProgress,
     settings,
     importFromFile,
     pendingImport,

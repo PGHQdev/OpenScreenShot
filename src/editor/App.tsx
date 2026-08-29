@@ -42,6 +42,7 @@ import {
   scaledHeight,
   SCALE_PRESETS,
 } from './scale';
+import { DUR_MID, useExitDelay, useFrozenWhileClosing } from './transition';
 
 type DialogFormat = ImageFormat | 'pdf';
 
@@ -52,6 +53,23 @@ export function App() {
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
   const [dragOver, setDragOver] = useState(false);
   const toolbarRef = useRef<HTMLElement>(null);
+
+  // Each modal/notice stays mounted for its own exit transition — see
+  // transition.ts. `active` mirrors the render condition each one used
+  // before this task (exportOpen also needed ed.capture; pendingImport and
+  // stageNotice are ed's own state, not local booleans).
+  const exportT = useExitDelay(exportOpen && !!ed.capture, DUR_MID);
+  const sheetT = useExitDelay(sheetOpen, DUR_MID);
+  const importT = useExitDelay(!!ed.pendingImport, DUR_MID);
+  const stageNoticeT = useExitDelay(!!ed.stageNotice && !ed.cropActive, DUR_MID);
+  // ed.pendingImport/ed.stageNotice null out the moment confirm/cancel/dismiss
+  // fires — the same tick the exit transition above starts — so the closing
+  // frame needs its own frozen copy of the text rather than reading ed live.
+  const stageNoticeText = useFrozenWhileClosing(ed.stageNotice, !!ed.stageNotice);
+  const pendingImportSnapshot = useFrozenWhileClosing(
+    ed.pendingImport ? { name: ed.pendingImport.name, count: ed.annotations.length } : null,
+    !!ed.pendingImport,
+  );
 
   // TOOL_LIST is fixed, so the tool rail's members never change: one sync at
   // mount is enough to seed the roving tabindex (member 0 starts as the tab
@@ -301,9 +319,9 @@ export function App() {
             </p>
           </canvas>
 
-          {ed.stageNotice && !ed.cropActive ? (
-            <div class="stage-notice" role="status">
-              <span>{ed.stageNotice}</span>
+          {stageNoticeT.mounted ? (
+            <div class={`stage-notice${stageNoticeT.closing ? ' is-closing' : ''}`} role="status">
+              <span>{stageNoticeText}</span>
               <button class="text-btn" onClick={ed.dismissStageNotice}>
                 Dismiss
               </button>
@@ -347,13 +365,21 @@ export function App() {
           ) : null}
           {!ed.loading && !ed.capture && !ed.error ? <EmptyState /> : null}
           {ed.error ? (
-            <div class="overlay-msg">
+            <div class="overlay-msg" role="alert">
               <div class="empty">
                 <div class="empty-icon empty-icon-error" aria-hidden="true">
                   <IconAlert size={40} />
                 </div>
                 <h2>Something went wrong</h2>
                 <p>{ed.error}</p>
+                <div class="empty-actions">
+                  <button class="btn-primary" onClick={ed.retryLoad}>
+                    Retry
+                  </button>
+                  <button class="text-btn" onClick={ed.dismissError}>
+                    Dismiss
+                  </button>
+                </div>
               </div>
             </div>
           ) : null}
@@ -375,11 +401,21 @@ export function App() {
         {ed.announcement}
       </div>
 
-      {exportOpen && ed.capture ? (
-        <ExportDialog ed={ed} onClose={() => setExportOpen(false)} />
+      {exportT.mounted ? (
+        <ExportDialog ed={ed} onClose={() => setExportOpen(false)} closing={exportT.closing} />
       ) : null}
-      {sheetOpen ? <ShortcutSheet onClose={() => setSheetOpen(false)} /> : null}
-      {ed.pendingImport ? <ImportConfirm ed={ed} /> : null}
+      {sheetT.mounted ? (
+        <ShortcutSheet onClose={() => setSheetOpen(false)} closing={sheetT.closing} />
+      ) : null}
+      {importT.mounted && pendingImportSnapshot ? (
+        <ImportConfirm
+          name={pendingImportSnapshot.name}
+          count={pendingImportSnapshot.count}
+          onConfirm={ed.confirmImport}
+          onCancel={ed.cancelImport}
+          closing={importT.closing}
+        />
+      ) : null}
     </div>
   );
 }
@@ -578,7 +614,15 @@ function isLight(hex: string): boolean {
   return 0.299 * r + 0.587 * g + 0.114 * b > 200;
 }
 
-function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClose: () => void }) {
+function ExportDialog({
+  ed,
+  onClose,
+  closing,
+}: {
+  ed: ReturnType<typeof useEditor>;
+  onClose: () => void;
+  closing: boolean;
+}) {
   const df = ed.settings?.defaultFormat ?? 'png';
   const initialFormat: DialogFormat =
     df === 'pdf' || df === 'png' || df === 'jpeg' || df === 'webp' ? df : 'png';
@@ -704,27 +748,38 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
   }
 
   const modalRef = useRef<HTMLDivElement>(null);
+  const prevFocusRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
-    // Focus the first control; restore focus to the opener (Export button) on close.
-    const prev = (document.activeElement as HTMLElement | null) ?? null;
+    // Focus the first control on mount.
+    prevFocusRef.current = (document.activeElement as HTMLElement | null) ?? null;
     const focusable = modalRef.current ? getFocusable(modalRef.current) : [];
     focusable[0]?.focus();
-    return () => {
-      prev?.focus?.();
-    };
   }, []);
 
+  useEffect(() => {
+    // The dialog stays mounted through its exit animation (useExitDelay), so
+    // unmount-time focus restoration would leave focus trapped inside a
+    // modal that is only still there to fade out — a shortcut typed right
+    // after Escape (⌘S closes, then ? for the shortcut sheet) would be
+    // swallowed by this modal's own onKeyDown below instead of reaching the
+    // window listener. Restoring the moment closing starts, not at unmount,
+    // is what keeps that keystroke free; onKeyDown stops trapping the same
+    // moment, for the same reason.
+    if (closing) prevFocusRef.current?.focus?.();
+  }, [closing]);
+
   return (
-    <div class="modal-backdrop" onMouseDown={onClose}>
+    <div class={`modal-backdrop${closing ? ' is-closing' : ''}`} onMouseDown={onClose}>
       <div
         ref={modalRef}
-        class="modal"
+        class={`modal${closing ? ' is-closing' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-label="Export screenshot"
         tabIndex={-1}
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
+          if (closing) return; // let keys bubble normally during the exit fade
           // A modal owns the keyboard while it is open — see ShortcutSheet's onKeyDown.
           e.stopPropagation();
           trapFocus(modalRef.current!, e);
@@ -976,6 +1031,34 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
           </p>
         ) : null}
 
+        {busy ? (
+          // Real per-page progress for the multi-page PDF path (pdf.ts's own
+          // page loop reports it — see useEditor's exportProgress); an
+          // honest indeterminate spinner everywhere else, since PNG/JPEG/WebP
+          // and the single-page/full PDF paths are one synchronous call with
+          // no stage to report — a bar animating through invented numbers
+          // there would be a lie told in CSS.
+          <div class="export-progress" role="status">
+            {ed.exportProgress ? (
+              <>
+                <progress
+                  class="export-progress-bar"
+                  value={ed.exportProgress.page}
+                  max={ed.exportProgress.total}
+                />
+                <span>
+                  Exporting page {ed.exportProgress.page} of {ed.exportProgress.total}…
+                </span>
+              </>
+            ) : (
+              <>
+                <span class="spinner" aria-hidden="true" />
+                <span>Exporting…</span>
+              </>
+            )}
+          </div>
+        ) : null}
+
         <div class="modal-actions">
           <label class="check-label">
             <input
@@ -990,7 +1073,11 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
           <button class="text-btn" onClick={onClose}>
             Cancel
           </button>
-          <button class="btn-primary" onClick={doExport} disabled={ed.exporting || busy}>
+          <button
+            class="btn-primary btn-fixed-export"
+            onClick={doExport}
+            disabled={ed.exporting || busy}
+          >
             {ed.exporting ? 'Exporting…' : 'Export'}
           </button>
         </div>
@@ -999,35 +1086,50 @@ function ExportDialog({ ed, onClose }: { ed: ReturnType<typeof useEditor>; onClo
   );
 }
 
-function ImportConfirm({ ed }: { ed: ReturnType<typeof useEditor> }) {
+function ImportConfirm({
+  name,
+  count,
+  onConfirm,
+  onCancel,
+  closing,
+}: {
+  name: string;
+  count: number;
+  onConfirm: () => void;
+  onCancel: () => void;
+  closing: boolean;
+}) {
   const modalRef = useRef<HTMLDivElement>(null);
-  const name = ed.pendingImport?.name ?? '';
-  const count = ed.annotations.length;
+  const prevFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    const prev = (document.activeElement as HTMLElement | null) ?? null;
+    prevFocusRef.current = (document.activeElement as HTMLElement | null) ?? null;
     const focusable = modalRef.current ? getFocusable(modalRef.current) : [];
     focusable[0]?.focus();
-    return () => {
-      prev?.focus?.();
-    };
   }, []);
 
+  useEffect(() => {
+    // See ExportDialog's own closing-focus effect for why this fires on
+    // closing, not on unmount.
+    if (closing) prevFocusRef.current?.focus?.();
+  }, [closing]);
+
   return (
-    <div class="modal-backdrop" onMouseDown={ed.cancelImport}>
+    <div class={`modal-backdrop${closing ? ' is-closing' : ''}`} onMouseDown={onCancel}>
       <div
         ref={modalRef}
-        class="modal"
+        class={`modal${closing ? ' is-closing' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-label="Replace the current image"
         tabIndex={-1}
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
+          if (closing) return; // let keys bubble normally during the exit fade
           // A modal owns the keyboard while it is open — see ShortcutSheet's onKeyDown.
           e.stopPropagation();
           trapFocus(modalRef.current!, e);
-          if (e.key === 'Escape') ed.cancelImport();
+          if (e.key === 'Escape') onCancel();
         }}
       >
         <h2 class="modal-title">Replace the current image?</h2>
@@ -1037,10 +1139,10 @@ function ImportConfirm({ ed }: { ed: ReturnType<typeof useEditor> }) {
         </p>
         <div class="modal-actions">
           <span class="modal-actions-spacer" />
-          <button class="text-btn" onClick={ed.cancelImport}>
+          <button class="text-btn" onClick={onCancel}>
             Cancel
           </button>
-          <button class="btn-primary" onClick={ed.confirmImport}>
+          <button class="btn-primary" onClick={onConfirm}>
             Replace
           </button>
         </div>

@@ -41,29 +41,36 @@ function buildCommands(isMac: boolean): { label: string; keys: string }[] {
   ];
 }
 
-export function ShortcutSheet({ onClose }: { onClose: () => void }) {
+export function ShortcutSheet({ onClose, closing }: { onClose: () => void; closing: boolean }) {
   const modalRef = useRef<HTMLDivElement>(null);
+  const prevFocusRef = useRef<HTMLElement | null>(null);
   const COMMANDS = buildCommands(isMacPlatform(navigator.platform));
 
   useEffect(() => {
-    const prev = (document.activeElement as HTMLElement | null) ?? null;
+    prevFocusRef.current = (document.activeElement as HTMLElement | null) ?? null;
     const focusable = modalRef.current ? getFocusable(modalRef.current) : [];
     focusable[0]?.focus();
-    return () => {
-      prev?.focus?.();
-    };
   }, []);
 
+  useEffect(() => {
+    // See ExportDialog's own closing-focus effect (App.tsx) for why this
+    // fires the moment `closing` starts, not at unmount — a shortcut typed
+    // right after this sheet closes must not be swallowed by a modal that
+    // is only still mounted to finish fading out.
+    if (closing) prevFocusRef.current?.focus?.();
+  }, [closing]);
+
   return (
-    <div class="modal-backdrop" onMouseDown={onClose}>
+    <div class={`modal-backdrop${closing ? ' is-closing' : ''}`} onMouseDown={onClose}>
       <div
         ref={modalRef}
-        class="modal sheet"
+        class={`modal sheet${closing ? ' is-closing' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-label="Keyboard shortcuts"
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
+          if (closing) return; // let keys bubble normally during the exit fade
           // A modal owns the keyboard while it is open. Without this, window-level
           // shortcuts (⌘S, ⌘C, tool letters) still fire behind it.
           e.stopPropagation();

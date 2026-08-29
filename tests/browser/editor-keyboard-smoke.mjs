@@ -102,6 +102,16 @@ function installChromeStub(seed) {
           globalThis.__smoke.failNextDownload = false;
           throw new Error('smoke-forced export failure');
         }
+        // task 23's width-floor check: holds the export "in flight" (the
+        // button showing "Exporting…") until the smoke explicitly releases
+        // it, so the button's geometry can be measured mid-export instead of
+        // guessing at timing.
+        if (globalThis.__smoke.holdNextDownload) {
+          globalThis.__smoke.holdNextDownload = false;
+          await new Promise((resolve) => {
+            globalThis.__smoke.releaseHold = resolve;
+          });
+        }
         // `url` is kept (not just its length) for task 22's export-purity
         // check, which decodes the exported PNG's real pixels.
         globalThis.__smoke.downloads.push({
@@ -158,6 +168,280 @@ async function makeCapture() {
   };
 }
 
+/** Tall enough that the default A4/portrait/8mm-margin PDF slices it into
+ * several pages (task 23's real per-page progress needs more than one page
+ * to prove anything). */
+async function makeTallCapture() {
+  const sharp = createRequire(join(ROOT, 'package.json'))('sharp');
+  const png = await sharp({
+    create: { width: 900, height: 6000, channels: 3, background: { r: 60, g: 110, b: 190 } },
+  })
+    .png()
+    .toBuffer();
+  return {
+    dataUrl: `data:image/png;base64,${png.toString('base64')}`,
+    width: 900,
+    height: 6000,
+    mode: 'full-page',
+    title: 'tall smoke',
+    capturedAt: Date.now(),
+  };
+}
+
+/** Syntactically a data: URL, but not real image bytes — getLastCapture()
+ * resolves it fine (it is just stored JSON), so the load only fails later,
+ * at img.onerror, the same way a genuinely corrupt stash would. */
+function makeBadCapture() {
+  return {
+    dataUrl: 'data:image/png;base64,bm90LWEtcG5n',
+    width: 800,
+    height: 600,
+    mode: 'visible',
+    title: 'bad smoke',
+    capturedAt: Date.now(),
+  };
+}
+
+/**
+ * task 23 — the export dialog's own Export button cycles Export / Exporting…
+ * and must not shift the modal-actions row when it does (the .btn-fixed
+ * technique the topbar Copy button already uses, applied here as its own
+ * class since "Exporting…" is wider than any of Copy's three words — see
+ * .btn-fixed-export in editor.css). holdNextDownload freezes the export
+ * mid-flight so the button's real geometry can be measured in both states,
+ * and the class is stripped live afterward as a negative control: proving
+ * the same DOM, same label, same font *would* have shifted without it.
+ */
+async function testExportButtonWidthFloor(browser, base) {
+  step('task 23: the export dialog Export button does not shift width when "Exporting…"');
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1280, height: 860 });
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': await makeCapture(),
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+
+  await page.click('header .btn-secondary[title^="Export"]');
+  await page.waitForSelector('.modal', { timeout: 5000 });
+
+  // Stable across the negative control below, which strips the very class
+  // a `.btn-fixed-export`-qualified selector would stop matching on.
+  const btn = '.modal-actions .btn-primary';
+  await page.waitForSelector(btn);
+  assert(
+    await page.$eval(btn, (el) => el.classList.contains('btn-fixed-export')),
+    'the button carries .btn-fixed-export to start with',
+  );
+  assert(
+    (await page.$eval(btn, (el) => el.textContent)) === 'Export',
+    'button reads "Export" before the click',
+  );
+  const widthExport = await page.$eval(btn, (el) => el.getBoundingClientRect().width);
+
+  await page.evaluate(() => {
+    globalThis.__smoke.holdNextDownload = true;
+  });
+  await page.click(btn);
+  await page.waitForFunction(
+    (sel) => document.querySelector(sel)?.textContent === 'Exporting…',
+    {},
+    btn,
+  );
+  const widthExporting = await page.$eval(btn, (el) => el.getBoundingClientRect().width);
+  assert(
+    widthExporting === widthExport,
+    `button width unchanged across the label swap: "Export" ${widthExport}px, "Exporting…" ${widthExporting}px`,
+  );
+
+  const widthWithoutFloor = await page.$eval(btn, (el) => {
+    el.classList.remove('btn-fixed-export');
+    return el.getBoundingClientRect().width;
+  });
+  assert(
+    widthWithoutFloor < widthExporting,
+    `negative control: stripping .btn-fixed-export narrows the same "Exporting…" button to ${widthWithoutFloor}px (from ${widthExporting}px) — the floor is doing real work, not a no-op`,
+  );
+  await page.$eval(btn, (el) => el.classList.add('btn-fixed-export'));
+
+  await page.evaluate(() => globalThis.__smoke.releaseHold?.());
+  await page.waitForFunction(() => !document.querySelector('.modal'), { timeout: 5000 });
+  const downloaded = await page.evaluate(() => globalThis.__smoke.downloads.at(-1));
+  assert(
+    !!downloaded?.filename?.endsWith('.png'),
+    'the held export still completed and downloaded once released',
+  );
+
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
+}
+
+/**
+ * task 23 — R-23a: only the multi-page PDF path has real, discrete stages to
+ * report, so this drives that one path and records every distinct progress
+ * reading the dialog renders across the export's whole lifetime (a
+ * MutationObserver, not a timed poll — a poll can miss a fast page and read
+ * as "only saw one value" for the wrong reason). A tall seeded capture forces
+ * several A4 pages at the default 8mm margin.
+ */
+async function testPdfRealProgress(browser, base) {
+  step('task 23: multi-page PDF export reports real, increasing per-page progress');
+  const page = await browser.newPage();
+  await page.setViewport({ width: 1280, height: 860 });
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': await makeTallCapture(),
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+
+  await page.click('header .btn-secondary[title^="Export"]');
+  await page.waitForSelector('.modal', { timeout: 5000 });
+  // PDF is the last format card — IMAGE_FORMATS.map(...) then one more
+  // explicit PDF button, all inside the same .format-grid (App.tsx).
+  await page.click('.format-grid .format-card:last-child');
+  await page.waitForSelector('.field-label');
+
+  await page.evaluate(() => {
+    globalThis.__progressLog = [];
+    const obs = new MutationObserver(() => {
+      const el = document.querySelector('.export-progress');
+      if (el) globalThis.__progressLog.push(el.textContent);
+    });
+    obs.observe(document.querySelector('.modal'), {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+    globalThis.__progressObs = obs;
+  });
+
+  await page.click('.modal-actions .btn-fixed-export');
+  await page.waitForFunction(() => !document.querySelector('.modal'), { timeout: 15000 });
+
+  const log = await page.evaluate(() => {
+    globalThis.__progressObs.disconnect();
+    return globalThis.__progressLog;
+  });
+  const pages = [
+    ...new Set(
+      log
+        .map((t) => /Exporting page (\d+) of (\d+)/.exec(t ?? ''))
+        .filter(Boolean)
+        .map((m) => `${m[1]}/${m[2]}`),
+    ),
+  ].map((s) => s.split('/').map(Number));
+  assert(
+    pages.length >= 3,
+    `saw ${pages.length} distinct "page N of M" readings (${JSON.stringify(pages)})`,
+  );
+  const nums = pages.map(([n]) => n);
+  assert(
+    nums.every((n, i) => i === 0 || n > nums[i - 1]),
+    `page numbers increased monotonically: ${nums.join(', ')}`,
+  );
+  const total = pages[0][1];
+  assert(
+    pages.every(([, t]) => t === total) && nums[nums.length - 1] === total,
+    `every reading agreed on the same total (${total}) and progress reached it`,
+  );
+
+  const downloaded = await page.evaluate(() => globalThis.__smoke.downloads.at(-1));
+  assert(
+    !!downloaded?.filename?.endsWith('.pdf'),
+    'the multi-page PDF export completed and downloaded',
+  );
+
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
+}
+
+/**
+ * task 23 — R-23b/R-23c: the stage error overlay reports the decode-failure
+ * message, Retry re-runs the real load (proven by swapping in a real capture
+ * behind the scenes and confirming it actually lands, not just that the
+ * message clears), and Dismiss clears capture/imageSize too, not just the
+ * message — confirmed by the topbar's Copy/Export buttons re-disabling.
+ */
+async function testStageErrorRetryAndDismiss(browser, base) {
+  step('task 23: stage error — Retry re-runs the real load; Dismiss clears the capture');
+  const crashes = [];
+
+  const page = await browser.newPage();
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': makeBadCapture(),
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForFunction(
+    () => document.querySelector('.overlay-msg h2')?.textContent === 'Something went wrong',
+    { timeout: 5000 },
+  );
+  const message = await page.$eval('.overlay-msg p', (p) => p.textContent);
+  assert(
+    message === 'Could not load the screenshot.',
+    `the decode-failure branch reports its own message ("${message}")`,
+  );
+  assert(
+    (await page.$('.overlay-msg[role="alert"]')) !== null,
+    'the error overlay carries role="alert"',
+  );
+
+  // Swap in a real capture behind the scenes first — the way a transient
+  // storage/network hiccup would resolve on its own — so Retry succeeding
+  // proves it re-ran getSettings/getLastCapture/decode for real, not that it
+  // just hid the message.
+  const goodCapture = await makeCapture();
+  await page.evaluate((cap) => {
+    globalThis.chrome.storage.local.set({ 'openscreenshot:last-capture': cap });
+  }, goodCapture);
+  await page.click('.overlay-msg .btn-primary'); // Retry
+  // imageSize (and so the canvas's aria-label) is set from the capture's own
+  // metadata before the image actually finishes decoding, so it alone is not
+  // proof the load is done — .overlay-msg (covers both the loading spinner
+  // and the error state) actually clearing is.
+  await page.waitForFunction(() => !document.querySelector('.overlay-msg'), { timeout: 5000 });
+  await page.waitForSelector('.stage-canvas[aria-label*="800 by 600"]', { timeout: 5000 });
+  assert(
+    (await page.$eval('header .btn-secondary[title^="Export"]', (el) => el.disabled)) === false,
+    'Export re-enables once a real capture is decoded onto the canvas',
+  );
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
+
+  // Dismiss, on its own fresh bad-capture page — independent of the retry
+  // path above (retry already replaced the seed, so a shared page would not
+  // exercise dismiss against a real failure).
+  const page2 = await browser.newPage();
+  page2.on('pageerror', (err) => crashes.push(String(err)));
+  await page2.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': makeBadCapture(),
+  });
+  await page2.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page2.waitForFunction(
+    () => document.querySelector('.overlay-msg h2')?.textContent === 'Something went wrong',
+    { timeout: 5000 },
+  );
+  await page2.click('.overlay-msg .text-btn'); // Dismiss
+  await page2.waitForSelector('.empty h2', { timeout: 5000 });
+  assert(
+    (await page2.$eval('.empty h2', (el) => el.textContent)) === 'Nothing to edit yet',
+    'Dismiss lands on the empty state, not a blank stage',
+  );
+  assert(
+    (await page2.$eval('header .btn-secondary[title^="Export"]', (el) => el.disabled)) === true,
+    'Export disables again — dismiss cleared capture, not just the message',
+  );
+  assert((await page2.$eval('.btn-fixed', (el) => el.disabled)) === true, 'Copy disables too');
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page2.close();
+}
+
 async function main() {
   const built = await stat(join(DIST, PAGE.slice(1))).then(
     () => true,
@@ -206,6 +490,19 @@ async function main() {
       page.evaluate(() => document.activeElement === document.querySelector('.stage-canvas'));
     const records = () => page.evaluate(() => globalThis.__live.records);
     const settle = (ms = 150) => new Promise((r) => setTimeout(r, ms));
+    // task-23: popovers/modals/notices now stay mounted through a DUR_MID
+    // (150ms) exit transition (transition.ts's useExitDelay) before actually
+    // leaving the DOM, so a bare `(await page.$(sel)) === null` right after a
+    // close action races that timer instead of proving anything — this polls
+    // until the node is genuinely gone (or the timeout below fails loudly).
+    const closed = async (selector, timeout = 2000) => {
+      try {
+        await page.waitForFunction((sel) => !document.querySelector(sel), { timeout }, selector);
+        return true;
+      } catch {
+        return false;
+      }
+    };
     async function chord(mods, key) {
       for (const m of mods) await page.keyboard.down(m);
       await page.keyboard.press(key);
@@ -825,7 +1122,7 @@ async function main() {
     await page.keyboard.press('Escape');
     await settle();
     assert(
-      (await page.$('.beautify-popover')) === null,
+      await closed('.beautify-popover'),
       'closed the panel — back to the state the steps below expect',
     );
 
@@ -972,7 +1269,7 @@ async function main() {
     step('Escape closes the Beautify popover and returns focus to the trigger');
     await page.keyboard.press('Escape');
     await settle();
-    assert((await page.$('.beautify-popover')) === null, 'Escape closed the panel');
+    assert(await closed('.beautify-popover'), 'Escape closed the panel');
     assert(await activeElementIs(beautifyTrigger), 'focus returned to the Beautify trigger');
 
     step('an outside pointer click closes the Beautify popover without stealing focus');
@@ -981,7 +1278,7 @@ async function main() {
     assert((await page.$('.beautify-popover')) !== null, 'reopened for the outside-click check');
     await outsideClick();
     await settle();
-    assert((await page.$('.beautify-popover')) === null, 'the outside click closed the panel');
+    assert(await closed('.beautify-popover'), 'the outside click closed the panel');
     assert(
       !(await activeElementIs(beautifyTrigger)),
       'the outside click did not pull focus back to the Beautify trigger',
@@ -997,7 +1294,7 @@ async function main() {
       tabs++;
     }
     assert(
-      (await page.$('.beautify-popover')) === null,
+      await closed('.beautify-popover'),
       `Tab walked off the panel and closed it (${tabs} presses)`,
     );
     assert(
@@ -1021,14 +1318,11 @@ async function main() {
     assert((await page.$('.beautify-popover')) !== null, 'reopened for the Shift+Tab check');
     await chord(['Shift'], 'Tab');
     await settle();
-    assert(
-      (await page.$('.beautify-popover')) === null,
-      'Shift+Tab off the first control closed the panel',
-    );
+    assert(await closed('.beautify-popover'), 'Shift+Tab off the first control closed the panel');
     await page.keyboard.press('Tab');
     await settle();
     assert(
-      (await page.$('.beautify-popover')) === null,
+      await closed('.beautify-popover'),
       'the panel did not reopen on the next Tab — no trigger <-> first-control cycle',
     );
 
@@ -1061,12 +1355,12 @@ async function main() {
     await chord(['Shift'], 'Tab');
     await settle();
     assert(
-      (await page.$('.beautify-popover')) === null,
+      await closed('.beautify-popover'),
       'Shift+Tab off the first control closed a panel that was opened by mouse',
     );
     await page.keyboard.press('Tab');
     await settle();
-    assert((await page.$('.beautify-popover')) === null, 'and it did not reopen on the next Tab');
+    assert(await closed('.beautify-popover'), 'and it did not reopen on the next Tab');
 
     step(
       'a mousedown on the trigger that never becomes a click (press, drag off, release elsewhere) does not strand the panel open',
@@ -1087,7 +1381,7 @@ async function main() {
     await page.mouse.up();
     await settle();
     assert(
-      (await page.$('.beautify-popover')) === null,
+      await closed('.beautify-popover'),
       'the abandoned drag still closed the panel instead of leaving it stuck open',
     );
 
@@ -1150,7 +1444,7 @@ async function main() {
     step('Escape closes the zoom menu and returns focus to the trigger');
     await page.keyboard.press('Escape');
     await settle();
-    assert((await page.$('.zoom-popover')) === null, 'Escape closed the menu');
+    assert(await closed('.zoom-popover'), 'Escape closed the menu');
     assert(await activeElementIs(zoomTrigger), 'focus returned to the Zoom trigger');
 
     step('Enter activates the focused item, runs it, and returns focus to the trigger');
@@ -1165,7 +1459,7 @@ async function main() {
       (await readout()) !== beforeEnter,
       `Enter on "Zoom in" ran the action (${beforeEnter} -> ${await readout()})`,
     );
-    assert((await page.$('.zoom-popover')) === null, 'the menu closed after activation');
+    assert(await closed('.zoom-popover'), 'the menu closed after activation');
     assert(await activeElementIs(zoomTrigger), 'focus returned to the trigger after activation');
 
     step('Space also activates the focused item (native button semantics)');
@@ -1184,7 +1478,7 @@ async function main() {
     await settle();
     await page.keyboard.press('Tab');
     await settle();
-    assert((await page.$('.zoom-popover')) === null, 'Tab closed the menu');
+    assert(await closed('.zoom-popover'), 'Tab closed the menu');
     assert(
       !(await activeElementIs(zoomTrigger)),
       'focus kept moving forward on Tab — it was not pulled back to the trigger',
@@ -1204,10 +1498,10 @@ async function main() {
     assert((await itemText()) === 'Actual size', 'opened on the last item, as ArrowUp promises');
     await page.keyboard.press('Tab');
     await settle();
-    assert((await page.$('.zoom-popover')) === null, 'Tab off the last item closed the menu');
+    assert(await closed('.zoom-popover'), 'Tab off the last item closed the menu');
     await page.keyboard.press('Tab');
     await settle();
-    assert((await page.$('.zoom-popover')) === null, 'and it did not reopen on a further Tab');
+    assert(await closed('.zoom-popover'), 'and it did not reopen on a further Tab');
 
     step('Shift+Tab off the first zoom item closes the menu too — symmetry with Beautify above');
     await page.$eval(zoomTrigger, (el) => el.focus());
@@ -1216,14 +1510,11 @@ async function main() {
     assert((await page.$('.zoom-popover')) !== null, 'reopened for the Shift+Tab check');
     await chord(['Shift'], 'Tab');
     await settle();
-    assert(
-      (await page.$('.zoom-popover')) === null,
-      'Shift+Tab off the first item closed the menu',
-    );
+    assert(await closed('.zoom-popover'), 'Shift+Tab off the first item closed the menu');
     await page.keyboard.press('Tab');
     await settle();
     assert(
-      (await page.$('.zoom-popover')) === null,
+      await closed('.zoom-popover'),
       'the menu did not reopen on the next Tab — no trigger <-> first-item cycle',
     );
 
@@ -1234,7 +1525,7 @@ async function main() {
     assert((await page.$('.zoom-popover')) !== null, 'reopened for the outside-click check');
     await outsideClick();
     await settle();
-    assert((await page.$('.zoom-popover')) === null, 'the outside click closed the menu');
+    assert(await closed('.zoom-popover'), 'the outside click closed the menu');
     assert(
       !(await activeElementIs(zoomTrigger)),
       'the outside click did not pull focus back to the Zoom trigger',
@@ -1254,6 +1545,13 @@ async function main() {
     assert(live.total >= 25, `${live.total} mutations in all`);
 
     assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+
+    // task 23 — each opens its own page/seed, independent of the state built
+    // up above.
+    await testExportButtonWidthFloor(browser, base);
+    await testPdfRealProgress(browser, base);
+    await testStageErrorRetryAndDismiss(browser, base);
+
     console.log('\nALL STEPS PASSED');
   } finally {
     if (browser) await browser.close();

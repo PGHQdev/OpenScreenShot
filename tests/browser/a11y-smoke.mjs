@@ -453,6 +453,12 @@ async function testEditor(browser, base, messages) {
   step('EDITOR — export dialog (Cmd+S)');
   await chord(page, ['Meta'], 's');
   await page.waitForSelector('.modal', { timeout: 5000 });
+  // waitForSelector resolves on insertion, mid-way through the modal's own
+  // entrance animation (task 23) — scanning before it settles reads faded,
+  // still-animating opacity as the element's colour, which axe's
+  // color-contrast rule can (and did, for the Beautify popover below) flag
+  // as a false failure. 220ms clears the animation's own 150ms with margin.
+  await settle(220);
   await scan(page, 'editor export dialog');
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.querySelector('.modal'), { timeout: 5000 });
@@ -460,6 +466,7 @@ async function testEditor(browser, base, messages) {
   step('EDITOR — Beautify popover');
   await page.click('.beautify-menu > .btn-secondary');
   await page.waitForSelector('.beautify-popover', { timeout: 5000 });
+  await settle(220); // see the export dialog step above
   await scan(page, 'editor Beautify popover');
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.querySelector('.beautify-popover'), {
@@ -477,6 +484,7 @@ async function testEditor(browser, base, messages) {
   // toward the popover items next, so hover the first one instead —
   // realistic, and it's what the scan should reflect.
   await page.hover('.zoom-item');
+  await settle(220); // see the export dialog step above
   await scan(page, 'editor ZoomMenu');
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => !document.querySelector('.zoom-popover'), { timeout: 5000 });
@@ -485,6 +493,7 @@ async function testEditor(browser, base, messages) {
   step('EDITOR — shortcut sheet (?)');
   await page.keyboard.type('?');
   await page.waitForSelector('.sheet', { timeout: 5000 });
+  await settle(220); // see the export dialog step above
   await scan(page, 'editor shortcut sheet');
   await page.keyboard.press('Escape');
 

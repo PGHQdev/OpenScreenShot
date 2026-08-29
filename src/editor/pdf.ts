@@ -44,10 +44,20 @@ const OVERLAP_MM = 5;
 
 const pt = (mm: number) => mm * MM_TO_PT;
 
+/** Reported once per page from the multi-page loop below — the only stage in
+ * this module with real, discrete work to report. `total` is the loop's own
+ * page-count estimate; the other two page-sizing strategies never call this
+ * (a single toDataURL-style pass has no stage in between to report). */
+export interface PdfExportProgress {
+  page: number;
+  total: number;
+}
+
 export async function exportPdf(
   canvas: HTMLCanvasElement,
   opts: PdfOptions,
   filename: string,
+  onProgress?: (progress: PdfExportProgress) => void,
 ): Promise<void> {
   const imgW = canvas.width;
   const imgH = canvas.height;
@@ -118,6 +128,13 @@ export async function exportPdf(
         hPt: pt(srcH * mmPerPx),
       },
     });
+    onProgress?.({ page: pages.length, total: pageCount });
+    // Slicing a tile is synchronous, so without a yield here the whole loop
+    // runs in one microtask burst and every onProgress call above lands
+    // between two paints — real numbers that never actually get drawn. One
+    // frame between tiles is enough for the dialog to paint the one that
+    // just landed.
+    await new Promise((resolve) => requestAnimationFrame(resolve));
   }
   await savePdf(pages, filename);
 }

@@ -8,6 +8,54 @@
   box-sizing: border-box;
 }
 
+/*
+ * Entrance keyframes for the editor's transient panels (popovers, modals,
+ * notices, the transient stage/overlay messages). Each surface below plays
+ * one of these once on mount via `animation` (which fires on insertion with
+ * no JS help, unlike `transition`); the matching `.is-closing` modifier that
+ * transition.ts's useExitDelay applies on the way out reverses the same
+ * opacity/transform via a plain `transition`, declared alongside each
+ * surface's own rule.
+ */
+@keyframes oss-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes oss-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes oss-notice-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+@keyframes oss-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 html,
 body {
   margin: 0;
@@ -266,6 +314,18 @@ body {
   border-radius: var(--r-md);
   background: var(--surface-1);
   box-shadow: var(--sh-md);
+  animation: oss-pop-in var(--dur-mid) var(--ease-out);
+  transition:
+    opacity var(--dur-mid) var(--ease-out),
+    transform var(--dur-mid) var(--ease-out);
+}
+
+/* Applied by transition.ts's useExitDelay while the popover plays its exit —
+   the element stays mounted for exactly this transition's duration first. */
+.zoom-popover.is-closing {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+  pointer-events: none;
 }
 
 .zoom-item {
@@ -379,6 +439,20 @@ body {
 /* The label cycles through three words; a floor stops the topbar shifting. */
 .btn-fixed {
   min-width: 92px;
+  text-align: center;
+}
+
+/*
+ * The export dialog's own Export button cycles Export / Exporting… — wider
+ * than Copy's three words, so it needs its own floor rather than reusing
+ * .btn-fixed's 92px (measured for Copy's own set; too narrow for
+ * "Exporting…" and there's no reason to widen Copy's button to cover a word
+ * it never shows). 148px is a measured floor (tests/browser/editor-
+ * keyboard-smoke.mjs asserts the button's own outerWidth is unchanged across
+ * both label states at the shipped font), not a guess.
+ */
+.btn-fixed-export {
+  min-width: 148px;
   text-align: center;
 }
 
@@ -598,6 +672,7 @@ body {
   white-space: pre;
   outline: none;
   z-index: 6;
+  animation: oss-fade-in var(--dur-fast) var(--ease-out);
 }
 
 /* ---- Export modal ---- */
@@ -609,6 +684,13 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 100;
+  animation: oss-fade-in var(--dur-mid) var(--ease-out);
+  transition: opacity var(--dur-mid) var(--ease-out);
+}
+/* Applied by transition.ts's useExitDelay — see .zoom-popover.is-closing. */
+.modal-backdrop.is-closing {
+  opacity: 0;
+  pointer-events: none;
 }
 .modal {
   width: 420px;
@@ -624,6 +706,14 @@ body {
   border-radius: var(--r-lg);
   box-shadow: var(--sh-lg);
   padding: var(--s-5);
+  animation: oss-modal-in var(--dur-mid) var(--ease-out);
+  transition:
+    opacity var(--dur-mid) var(--ease-out),
+    transform var(--dur-mid) var(--ease-out);
+}
+.modal.is-closing {
+  opacity: 0;
+  transform: scale(0.96);
 }
 .modal-title {
   margin: 0 0 var(--s-4);
@@ -818,6 +908,35 @@ body {
   font-size: var(--fs-sm);
   color: var(--danger);
   line-height: 1.45;
+  animation: oss-fade-in var(--dur-fast) var(--ease-out);
+}
+
+/* Real per-page progress for the multi-page PDF path (a native <progress>,
+   value/max set from pdf.ts's own page loop — see useEditor's exportProgress)
+   and an honest indeterminate spinner for every other format, which has no
+   stage to report (canvasToDataUrl is one synchronous call). Never both. */
+.export-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-3);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  animation: oss-fade-in var(--dur-fast) var(--ease-out);
+}
+.export-progress-bar {
+  width: 120px;
+  height: 6px;
+  border-radius: var(--r-full);
+  overflow: hidden;
+}
+.export-progress-bar::-webkit-progress-bar {
+  background: var(--surface-3);
+  border-radius: var(--r-full);
+}
+.export-progress-bar::-webkit-progress-value {
+  background: var(--accent-ink);
+  border-radius: var(--r-full);
 }
 
 /* ---- Scale row (export dialog) ---- */
@@ -841,6 +960,7 @@ body {
      floor (see tokens.css); --text-1 clears it in both themes. */
   color: var(--text-1);
   background: var(--stage-bg);
+  animation: oss-fade-in var(--dur-mid) var(--ease-out);
 }
 
 .empty {
@@ -877,6 +997,15 @@ body {
 }
 
 .empty-cta {
+  margin-top: var(--s-4);
+}
+
+/* The stage error's Retry/Dismiss pair — .empty-cta above stays scoped to
+   EmptyState's single "Capture a page" button. */
+.empty-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--s-2);
   margin-top: var(--s-4);
 }
 
@@ -938,22 +1067,6 @@ body {
 @keyframes oss-spin {
   to {
     transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .spinner {
-    animation-duration: 1.4s;
-  }
-  .width-btn,
-  .zoom-trigger,
-  .zoom-item,
-  .text-btn,
-  .btn-primary,
-  .tool-btn,
-  .format-card,
-  .segmented-btn {
-    transition: none;
   }
 }
 
@@ -1022,6 +1135,16 @@ body {
   border-radius: var(--r-md);
   background: var(--surface-1);
   box-shadow: var(--sh-md);
+  animation: oss-pop-in var(--dur-mid) var(--ease-out);
+  transition:
+    opacity var(--dur-mid) var(--ease-out),
+    transform var(--dur-mid) var(--ease-out);
+}
+/* Applied by transition.ts's useExitDelay — see .zoom-popover.is-closing. */
+.beautify-popover.is-closing {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+  pointer-events: none;
 }
 
 .beautify-toggle {
@@ -1069,6 +1192,19 @@ body {
   box-shadow: var(--sh-md);
   font-size: var(--fs-base);
   z-index: 7;
+  animation: oss-notice-in var(--dur-mid) var(--ease-out);
+  transition:
+    opacity var(--dur-mid) var(--ease-out),
+    transform var(--dur-mid) var(--ease-out);
+}
+/* Applied by transition.ts's useExitDelay — see .zoom-popover.is-closing.
+   translate(-50%, ...) keeps the notice's own horizontal centring, which its
+   base rule's transform sets and this rule replaces wholesale (not `y`
+   alone) since the two never compose. */
+.stage-notice.is-closing {
+  opacity: 0;
+  transform: translate(-50%, -6px);
+  pointer-events: none;
 }
 
 .modal-text {
@@ -1083,6 +1219,57 @@ body {
      here (it only clears --surface-1), and so does --text-2 (4.37:1 light). */
   color: var(--text-1);
   font-size: var(--fs-sm);
+}
+
+/*
+ * Same same-specificity-source-order rule the forced-colors comment below
+ * spells out: a media query adds no specificity, so between this block and
+ * an unconditional rule for the same selector, whichever is declared later
+ * in the file wins — regardless of which one's condition currently matches.
+ * This used to sit right after `.spinner`'s keyframes, well before
+ * `.beautify-popover` and `.stage-notice` are declared (Beautify panel /
+ * stage-notice sections, further down) — so their own unconditional
+ * `animation`/`transition` rules were silently winning the tie under
+ * reduced motion, full duration and all. The reduced-motion browser smoke
+ * caught it (a `.beautify-popover` still reporting 0.15s under
+ * prefers-reduced-motion: reduce). Placed here, after every surface it
+ * touches, for the same reason forced-colors sits last: keep new
+ * reduced-motion rules for *these* selectors above this block, not below it.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 1.4s;
+  }
+  .width-btn,
+  .zoom-trigger,
+  .zoom-item,
+  .text-btn,
+  .btn-primary,
+  .tool-btn,
+  .format-card,
+  .segmented-btn {
+    transition: none;
+  }
+  /* Every popover/modal/notice built on transition.ts's useExitDelay: both
+     the entrance `animation` and the `.is-closing` exit `transition` go off.
+     useExitDelay's own reduced-motion check (separate from this rule) is
+     what stops the *unmount* from waiting on a duration these declarations
+     no longer produce — see that hook's doc comment. */
+  .zoom-popover,
+  .beautify-popover,
+  .modal-backdrop,
+  .modal,
+  .stage-notice {
+    animation: none;
+    transition: none;
+  }
+  /* Entrance-only surfaces: no exit to suppress, just the mount fade. */
+  .overlay-msg,
+  .text-overlay,
+  .export-error,
+  .export-progress {
+    animation: none;
+  }
 }
 
 /*

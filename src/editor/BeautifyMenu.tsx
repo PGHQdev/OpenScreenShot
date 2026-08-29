@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { BACKGROUND_PRESETS, frameMetrics, type FrameBackground, type FrameOptions } from './frame';
 import { tokens } from '../shared/design-tokens';
 import { getFocusable } from './focus';
+import { DUR_MID, useExitDelay } from './transition';
 
 export interface BeautifyMenuProps {
   frame: FrameOptions;
@@ -16,6 +17,7 @@ export interface BeautifyMenuProps {
  */
 export function BeautifyMenu(props: BeautifyMenuProps) {
   const [open, setOpen] = useState(false);
+  const { mounted, closing } = useExitDelay(open, DUR_MID);
   const wrapRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -136,8 +138,13 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
       >
         Beautify
       </button>
-      {open ? (
-        <div class="beautify-popover" role="dialog" aria-label="Beautify" ref={popoverRef}>
+      {mounted ? (
+        <div
+          class={`beautify-popover${closing ? ' is-closing' : ''}`}
+          role="dialog"
+          aria-label="Beautify"
+          ref={popoverRef}
+        >
           <label class="beautify-toggle">
             <input
               type="checkbox"
