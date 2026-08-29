@@ -182,7 +182,7 @@ body {
 }
 
 .brand-name {
-  font-size: 15px;
+  font-size: var(--fs-base);
 }
 
 .brand-mode {
@@ -279,7 +279,7 @@ body {
   border-radius: var(--r-sm);
   background: transparent;
   color: var(--text-1);
-  font-size: 13px;
+  font-size: var(--fs-base);
   cursor: pointer;
   transition: transform var(--dur-fast) var(--ease-out);
 }
@@ -308,9 +308,9 @@ body {
   color: var(--text-2);
 }
 
-/* Sizes the glyph inside the button, not type, so it is off the scale. */
+/* The "?" glyph, not body type — var(--fs-lg) is the nearest rung (task-21). */
 .icon-btn {
-  font-size: 16px;
+  font-size: var(--fs-lg);
   line-height: 1;
 }
 
@@ -354,7 +354,7 @@ body {
   background: var(--accent-ink);
   color: var(--on-accent);
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--fs-base);
   cursor: pointer;
   transition:
     background var(--dur-fast) var(--ease-out),
@@ -560,7 +560,7 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--r-full);
   box-shadow: var(--sh-md);
-  font-size: 13px;
+  font-size: var(--fs-base);
   z-index: 5;
 }
 
@@ -578,7 +578,7 @@ body {
   border-radius: var(--r-full);
   background: var(--surface-1);
   box-shadow: var(--sh-md);
-  font-size: 13px;
+  font-size: var(--fs-base);
   z-index: 8;
 }
 
@@ -627,7 +627,7 @@ body {
 }
 .modal-title {
   margin: 0 0 var(--s-4);
-  font-size: 17px;
+  font-size: var(--fs-lg);
 }
 .field-label {
   display: block;
@@ -783,7 +783,7 @@ body {
   background: var(--surface-2);
   color: var(--text-1);
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--fs-sm);
 }
 .filename-input:focus {
   outline: 2px solid var(--border-focus);
@@ -791,7 +791,7 @@ body {
 }
 .filename-ext {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--fs-sm);
   color: var(--text-2);
 }
 .modal-actions {
@@ -819,7 +819,7 @@ body {
   border-right: 1px solid var(--border);
   background: var(--surface-1);
   color: var(--text-1);
-  font-size: 13px;
+  font-size: var(--fs-base);
   cursor: pointer;
   transition:
     background var(--dur-fast) var(--ease-out),
@@ -858,7 +858,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: var(--s-2);
-  font-size: 13px;
+  font-size: var(--fs-base);
   color: var(--text-1);
 }
 .num-input {
@@ -943,7 +943,7 @@ body {
 
 .empty h2 {
   margin: 0 0 var(--s-2);
-  font-size: 17px;
+  font-size: var(--fs-lg);
   color: var(--text-1);
 }
 
@@ -1067,7 +1067,7 @@ body {
   justify-content: space-between;
   gap: var(--s-3);
   padding: 3px 0;
-  font-size: 13px;
+  font-size: var(--fs-base);
 }
 
 .sheet-row kbd {
@@ -1151,14 +1151,14 @@ body {
   border-radius: var(--r-full);
   background: var(--surface-1);
   box-shadow: var(--sh-md);
-  font-size: 13px;
+  font-size: var(--fs-base);
   z-index: 7;
 }
 
 .modal-text {
   margin: 0 0 var(--s-4);
   color: var(--text-2);
-  font-size: 13px;
+  font-size: var(--fs-sm);
   line-height: 1.5;
 }
 

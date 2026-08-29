@@ -821,7 +821,7 @@ body {
   top: 0;
   padding-left: 4px;
   border-left: 1px solid var(--border);
-  font-size: 10px;
+  font-size: var(--fs-xs);
   line-height: 16px;
   color: var(--text-3);
   font-variant-numeric: tabular-nums;
