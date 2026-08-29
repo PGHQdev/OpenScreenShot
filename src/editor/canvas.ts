@@ -306,12 +306,48 @@ export class CanvasController {
     return { x: (sx - this.view.panX) / this.view.zoom, y: (sy - this.view.panY) / this.view.zoom };
   }
 
-  /** Convert source image (native px) to screen (CSS px) coordinates. */
+  /**
+   * Convert source image (native px) to screen (CSS px) coordinates, one row
+   * at a time through the cut map — the exact inverse of {@link toImage}.
+   *
+   * That makes it right for anything measured off the screen and kept in
+   * source coordinates, the marquee being the only one. It is NOT right for a
+   * point that belongs to an annotation: a mark is drawn rigidly, shifted by
+   * the cut above its own top edge (see {@link annotationOffset}), so a mark a
+   * band crosses is drawn taller than this map would put it. Project those
+   * through {@link projectAt} instead, or the outline, the handles and the hit
+   * box land somewhere the mark is not.
+   */
   toScreen(ix: number, iy: number): Point {
     return {
       x: ix * this.view.zoom + this.view.panX,
       y: toComposed(this.bands, iy) * this.view.zoom + this.view.panY,
     };
+  }
+
+  /**
+   * A projector for everything that hangs off one anchor row and moves with it
+   * rigidly: an annotation (anchored on its bbox top) and the box a
+   * multi-selection is resized in (anchored on its own top). Null when that
+   * row was cut away, which is the caller's cue to draw and hit-test nothing.
+   *
+   * This is the one rule the drawing, the selection chrome and the hit tests
+   * all follow, so a mark is grabbable exactly where it is painted. A group
+   * box whose members ended up at different offsets is anchored on the box,
+   * which is what the handles drag and what scaleInBox measures against.
+   */
+  projectAt(anchorY: number): ((x: number, y: number) => Point) | null {
+    if (inBand(this.bands, anchorY)) return null;
+    const dy = cutAbove(this.bands, anchorY);
+    return (x: number, y: number) => ({
+      x: x * this.view.zoom + this.view.panX,
+      y: (y - dy) * this.view.zoom + this.view.panY,
+    });
+  }
+
+  /** That projector for one annotation, anchored on its own top edge. */
+  projectFor(a: Annotation): ((x: number, y: number) => Point) | null {
+    return this.projectAt(bbox(a).y);
   }
 
   /**
@@ -424,10 +460,14 @@ export class CanvasController {
     const selected = this.selectedIds
       .map((id) => this.annotations.find((a) => a.id === id))
       .filter((a): a is Annotation => !!a);
-    const project = (x: number, y: number) => this.toScreen(x, y);
-    for (const sel of selected) drawSelection(ctx, sel, project, selected.length === 1);
+    for (const sel of selected) {
+      const project = this.projectFor(sel);
+      if (project) drawSelection(ctx, sel, project, selected.length === 1);
+    }
     if (selected.length > 1) {
-      drawGroupSelection(ctx, this.groupBox ?? unionBBox(selected), project);
+      const box = this.groupBox ?? unionBBox(selected);
+      const project = this.projectAt(box.y);
+      if (project) drawGroupSelection(ctx, box, project);
     }
     if (this.marquee) drawMarquee(ctx, this.marquee, (x, y) => this.toScreen(x, y));
   }
@@ -514,8 +554,11 @@ export class CanvasController {
    * a removed row is not drawn at all — it marks pixels that are not in the
    * picture — but it stays in the document, so deleting the band brings it
    * back with everything else.
+   *
+   * Public because it is not only a drawing detail: the hit test, the marquee
+   * and the bracket cycle all ask it whether a mark is in the picture at all.
    */
-  private annotationOffset(a: Annotation): number | null {
+  annotationOffset(a: Annotation): number | null {
     if (this.bands.length === 0) return 0;
     const top = bbox(a).y;
     return inBand(this.bands, top) ? null : cutAbove(this.bands, top);

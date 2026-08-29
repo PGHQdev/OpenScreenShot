@@ -34,10 +34,11 @@ function buildCommands(isMac: boolean): { label: string; keys: string }[] {
     { label: 'Undo', keys: `${mod}Z` },
     { label: 'Redo', keys: `${mod}${shift}Z` },
     { label: 'Delete selected', keys: '⌫' },
-    // The Cut tool's own two: Enter takes the placed band out of the picture,
-    // and with nothing selected ⌫ puts the nearest cut back.
-    { label: 'Take the placed cut out', keys: 'Enter' },
-    { label: 'Put back the nearest cut', keys: '⌫' },
+    // Both rows name the tool: the sheet is one flat list with no per-tool
+    // section, so a row reading "Enter" with nothing else on it would claim a
+    // key that does something different under every other tool.
+    { label: 'Cut tool: take the drafted band out', keys: 'Enter' },
+    { label: 'Cut tool: put back the nearest cut', keys: '⌫' },
     { label: 'Deselect / cancel crop or cut', keys: 'Esc' },
     { label: 'Zoom in', keys: `${mod}+` },
     { label: 'Zoom out', keys: `${mod}−` },

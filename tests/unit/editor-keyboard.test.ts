@@ -926,6 +926,17 @@ describe('announce', () => {
     );
     expect(announce({ kind: 'cut-cancelled' })).toBe('Cut cancelled.');
     expect(announce({ kind: 'cut-refused' })).toBe('A cut cannot take the whole picture.');
+    expect(announce({ kind: 'cut-none' })).toBe('Those rows are cut already.');
+  });
+
+  it('names the new height when a timeline step crossed a cut, and not when it did not', () => {
+    expect(announce({ kind: 'undo', total: 1 })).toBe('Undo. 1 annotation.');
+    expect(announce({ kind: 'undo', total: 1, imageHeight: 600 })).toBe(
+      'Undo. Image 600 pixels tall. 1 annotation.',
+    );
+    expect(announce({ kind: 'redo', total: 2, imageHeight: 400 })).toBe(
+      'Redo. Image 400 pixels tall. 2 annotations.',
+    );
   });
 
   it('rounds the fractional coordinates a scaled resize leaves behind', () => {

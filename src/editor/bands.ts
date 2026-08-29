@@ -109,8 +109,10 @@ export function toComposed(bands: Band[], y: number): number {
 }
 
 /**
- * A composed row's place in the source picture — the first source row that
- * maps to it, so a seam resolves to the row just under the cut.
+ * A composed row's place in the source picture: the first source row that was
+ * NOT cut away, so a seam resolves to the row just below the band rather than
+ * to the first of the removed rows. That is the row a pointer on the seam is
+ * actually looking at, which is what every caller wants.
  */
 export function toSource(bands: Band[], y: number): number {
   let out = y;
@@ -167,14 +169,15 @@ export function seamPositions(bands: Band[]): number[] {
 /**
  * The band whose seam is within `tol` composed pixels of `y`, or -1. Nearest
  * wins, so two seams closer together than the tolerance still resolve to the
- * one the pointer is actually on.
+ * one the pointer is actually on, and a dead-even tie goes to the upper of the
+ * two — the one the list reaches first.
  */
 export function bandAtSeam(bands: Band[], y: number, tol: number): number {
   let best = -1;
-  let bestDist = tol;
+  let bestDist = Infinity;
   seamPositions(bands).forEach((at, i) => {
     const d = Math.abs(at - y);
-    if (d <= bestDist) {
+    if (d <= tol && d < bestDist) {
       best = i;
       bestDist = d;
     }

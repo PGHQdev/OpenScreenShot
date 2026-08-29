@@ -372,6 +372,16 @@ export function useEditor() {
 
   /** The one way the active tool changes. */
   const selectTool = useCallback((t: Tool) => {
+    // A drafted cut goes with its tool. Without this the canvas stays in cut
+    // mode after `X Enter R`, and the next Enter takes the band out instead of
+    // placing a rectangle. Crop keeps its draft across a tool change because
+    // its confirm pill is on screen the whole time saying that it is open;
+    // a cut draft has only the dim strip, which the new tool's own preview
+    // would sit over.
+    if (t !== 'cut' && cutDraftRef.current) {
+      cutDraftRef.current = null;
+      controllerRef.current?.setCutDraft(null);
+    }
     toolRef.current = t;
     setTool(t);
   }, []);
@@ -547,27 +557,44 @@ export function useEditor() {
     [applyBands, applyHistory, entry],
   );
 
+  /**
+   * The picture height a timeline step lands on, and undefined when the step
+   * did not cross a cut — which is what keeps "Undo." from reciting a height
+   * that did not change.
+   *
+   * Identity is the test: a band list is replaced whole, never mutated, so an
+   * entry taken while the bands stood still holds the very array that is still
+   * current.
+   */
+  const stepHeight = useCallback((bands: Band[]): number | undefined => {
+    const img = controllerRef.current?.image;
+    if (!img || bands === bandsRef.current) return undefined;
+    return composedHeight(bands, img.naturalHeight);
+  }, []);
+
   const undo = useCallback(() => {
     const step = historyStep(pastRef.current, futureRef.current, entry(), -1);
     if (!step) return;
+    const imageHeight = stepHeight(step.entry.bands);
     applyHistory(step.past, step.future);
     applyAnnotations(step.entry.annotations);
     applyBands(step.entry.bands);
     // The three were captured together, so these ids name layers in the list
     // that just landed — the selection the undone edit was made against.
     selectAnnotations(step.entry.selectedIds);
-    say({ kind: 'undo', total: step.entry.annotations.length });
-  }, [applyAnnotations, applyBands, applyHistory, entry, selectAnnotations, say]);
+    say({ kind: 'undo', total: step.entry.annotations.length, imageHeight });
+  }, [applyAnnotations, applyBands, applyHistory, entry, selectAnnotations, say, stepHeight]);
 
   const redo = useCallback(() => {
     const step = historyStep(pastRef.current, futureRef.current, entry(), 1);
     if (!step) return;
+    const imageHeight = stepHeight(step.entry.bands);
     applyHistory(step.past, step.future);
     applyAnnotations(step.entry.annotations);
     applyBands(step.entry.bands);
     selectAnnotations(step.entry.selectedIds);
-    say({ kind: 'redo', total: step.entry.annotations.length });
-  }, [applyAnnotations, applyBands, applyHistory, entry, selectAnnotations, say]);
+    say({ kind: 'redo', total: step.entry.annotations.length, imageHeight });
+  }, [applyAnnotations, applyBands, applyHistory, entry, selectAnnotations, say, stepHeight]);
 
   const deleteSelection = useCallback(() => {
     const ids = selectedIdsRef.current;
@@ -874,7 +901,10 @@ export function useEditor() {
       // which a pointer user reaches by clicking it.
       if ((e.key === 'Delete' || e.key === 'Backspace') && toolRef.current === 'cut') {
         e.preventDefault();
-        removeNearestBand();
+        // A band on screen is the thing Delete is aimed at; only with none
+        // drafted does it reach for a cut already taken.
+        if (cutDraftRef.current) cancelCut();
+        else removeNearestBand();
         return;
       }
       // Escape: cancel a crop or a cut, else deselect.
@@ -939,6 +969,12 @@ export function useEditor() {
   ]);
 
   // --- Cut ---
+  /** The top edge of one annotation by id, or -1 when it is no longer there. */
+  const topEdgeOf = useCallback((id: string): number => {
+    const a = annotationsRef.current.find((x) => x.id === id);
+    return a ? bbox(a).y : -1;
+  }, []);
+
   /**
    * A cut is a band on a list the compose paths read, so the picture the
    * editor draws and the picture an export holds are the same picture with the
@@ -960,12 +996,25 @@ export function useEditor() {
       const next = addBand(cur, b, ih);
       const before = composedHeight(cur, ih);
       const after = composedHeight(next, ih);
+      // A band inside one already cut takes nothing. Committing it would put a
+      // step on the timeline that undoes to the same picture, and announce a
+      // cut of zero pixels.
+      if (after === before) {
+        say({ kind: 'cut-none' });
+        return;
+      }
       commitBands(next);
+      // A mark the cut hides cannot be dragged, nudged or seen, so it does not
+      // stay selected through the cut that hid it. The history entry pushed
+      // above still carries the selection as it was, so an undo brings it back
+      // with the strip.
+      const kept = selectedIdsRef.current.filter((id) => !inBand(next, topEdgeOf(id)));
+      if (kept.length !== selectedIdsRef.current.length) selectAnnotations(kept);
       // The height that actually went, not the height of the band: a band that
       // overlaps one already cut removes only the rows still there.
       say({ kind: 'cut-applied', band: { y: b.y, h: before - after }, imageHeight: after });
     },
-    [commitBands, say],
+    [topEdgeOf, commitBands, selectAnnotations, say],
   );
 
   /** Put one cut back, by its place in the band list. */
@@ -1184,7 +1233,9 @@ export function useEditor() {
       // A press-and-release with no drag pulls no rect at all, so there is
       // nothing to catch — the mousedown already cleared the selection.
       if (!r) return;
-      const caught = annotationsInRect(annotationsRef.current, r);
+      // In the picture only: a marquee dragged across a seam covers the source
+      // rows a cut took, and catching marks on them would select the invisible.
+      const caught = annotationsInRect(drawnAnnotations(c, annotationsRef.current), r);
       const next = [...it.base.filter((id) => !caught.includes(id)), ...caught];
       selectAnnotations(next);
       sayAboutSelection(next);
@@ -1270,7 +1321,8 @@ export function useEditor() {
           // handleAt yields null for the types that carry no handles, so the
           // annotation type needs no separate check here.
           const sel = annotationsRef.current.find((a) => a.id === ids[0]) ?? null;
-          const h = sel ? handleAt(sel, (x, y) => c.toScreen(x, y), sx, sy) : null;
+          const project = sel ? c.projectFor(sel) : null;
+          const h = sel && project ? handleAt(sel, project, sx, sy) : null;
           if (sel && h) {
             interactionRef.current = {
               kind: 'resize',
@@ -1292,7 +1344,8 @@ export function useEditor() {
           // The carried box when there is one, so a drag out and a drag back
           // cancel the same way two key presses do (see resizeSelectionBy).
           const startBBox = activeGroupBox() ?? unionBBox(sel);
-          const h = handleAtRect(startBBox, (x, y) => c.toScreen(x, y), sx, sy);
+          const boxProject = c.projectAt(startBBox.y);
+          const h = boxProject ? handleAtRect(startBBox, boxProject, sx, sy) : null;
           if (h) {
             interactionRef.current = {
               kind: 'resize-group',
@@ -1667,8 +1720,13 @@ export function useEditor() {
         return;
       }
       if (intent.kind === 'cycle') {
+        // The drawn layers only. A hidden mark named at coordinates no longer
+        // in the picture, with the arrows then moving it, is the keyboard's
+        // version of the invisible hit box. Its place in the paint order is
+        // still read out against the whole document (sayAboutSelection), which
+        // is where the layer actually sits.
         const next = cycleSelection(
-          annotationsRef.current,
+          drawnAnnotations(c, annotationsRef.current),
           selectedIdsRef.current,
           intent.dir,
           intent.extend,
@@ -2007,7 +2065,9 @@ export function useEditor() {
       if (!c) return null;
       const a = annotations.find((x) => x.id === id);
       if (!a || a.type !== 'text') return null;
-      const s = c.toScreen(a.x, a.y);
+      const project = c.projectFor(a);
+      if (!project) return null;
+      const s = project(a.x, a.y);
       return {
         x: s.x,
         y: s.y,
@@ -2112,7 +2172,14 @@ export function useEditor() {
  */
 const SEAM_HIT_PX = 6;
 
-/** Hit-test annotations topmost-first in screen space; returns an id or null. */
+/**
+ * Hit-test annotations topmost-first in screen space; returns an id or null.
+ *
+ * The box comes from the annotation's own projector, not from toScreen: a mark
+ * is drawn rigidly and a cut inside it would otherwise leave the box short and
+ * the drawn rows below it dead. A mark on rows a cut removed has no projector
+ * and is skipped — it is not in the picture, so a click cannot land on it.
+ */
 function hitTestAnnotation(
   c: CanvasController,
   anns: Annotation[],
@@ -2121,14 +2188,21 @@ function hitTestAnnotation(
 ): string | null {
   const tol = 6;
   for (let i = anns.length - 1; i >= 0; i--) {
+    const project = c.projectFor(anns[i]);
+    if (!project) continue;
     const b = bbox(anns[i]);
-    const tl = c.toScreen(b.x, b.y);
-    const br = c.toScreen(b.x + b.w, b.y + b.h);
+    const tl = project(b.x, b.y);
+    const br = project(b.x + b.w, b.y + b.h);
     if (sx >= tl.x - tol && sx <= br.x + tol && sy >= tl.y - tol && sy <= br.y + tol) {
       return anns[i].id;
     }
   }
   return null;
+}
+
+/** The marks that are actually in the picture — everything a cut did not take. */
+function drawnAnnotations(c: CanvasController, anns: Annotation[]): Annotation[] {
+  return anns.filter((a) => c.annotationOffset(a) !== null);
 }
 
 /** Hold a point inside the image bounds — used to keep crop drags out of the beautify padding. */

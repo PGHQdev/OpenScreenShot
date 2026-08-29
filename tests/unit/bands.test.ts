@@ -319,6 +319,15 @@ describe('seamPositions / bandAtSeam', () => {
     expect(bandAtSeam(close, 104, 6)).toBe(1);
   });
 
+  it('gives a dead-even tie to the upper seam', () => {
+    const pair: Band[] = [
+      { y: 100, h: 50 },
+      { y: 156, h: 50 },
+    ];
+    expect(seamPositions(pair)).toEqual([100, 106]);
+    expect(bandAtSeam(pair, 103, 6)).toBe(0);
+  });
+
   it('finds nothing in an empty list', () => {
     expect(bandAtSeam([], 100, 6)).toBe(-1);
   });

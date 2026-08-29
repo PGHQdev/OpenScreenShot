@@ -374,8 +374,12 @@ export type Mutation =
   | { kind: 'delete'; type: AnnotationType; remaining: number }
   | { kind: 'delete-many'; count: number; remaining: number }
   | { kind: 'duplicate'; count: number }
-  | { kind: 'undo'; total: number }
-  | { kind: 'redo'; total: number }
+  /**
+   * `imageHeight` is carried only when the step crossed a cut, so a step that
+   * put a strip back says so instead of naming the layer count alone.
+   */
+  | { kind: 'undo'; total: number; imageHeight?: number }
+  | { kind: 'redo'; total: number; imageHeight?: number }
   | { kind: 'crop'; rect: Rect }
   | { kind: 'crop-applied'; w: number; h: number }
   | { kind: 'crop-cancelled' }
@@ -383,10 +387,16 @@ export type Mutation =
   | { kind: 'cut-applied'; band: Band; imageHeight: number }
   | { kind: 'cut-removed'; band: Band; imageHeight: number }
   | { kind: 'cut-cancelled' }
-  | { kind: 'cut-refused' };
+  | { kind: 'cut-refused' }
+  | { kind: 'cut-none' };
 
 function count(n: number): string {
   return `${n} annotation${n === 1 ? '' : 's'}`;
+}
+
+/** The new picture height, for a timeline step that crossed a cut. */
+function cutSize(imageHeight: number | undefined): string {
+  return imageHeight === undefined ? '' : ` Image ${Math.round(imageHeight)} pixels tall.`;
 }
 
 /** What the live region says for one mutation. */
@@ -428,9 +438,9 @@ export function announce(m: Mutation): string {
     case 'duplicate':
       return `${count(m.count)} duplicated.`;
     case 'undo':
-      return `Undo. ${count(m.total)}.`;
+      return `Undo.${cutSize(m.imageHeight)} ${count(m.total)}.`;
     case 'redo':
-      return `Redo. ${count(m.total)}.`;
+      return `Redo.${cutSize(m.imageHeight)} ${count(m.total)}.`;
     case 'crop': {
       const n = normalizeRect(m.rect);
       const size = `${Math.round(n.w)} by ${Math.round(n.h)} pixels`;
@@ -450,5 +460,7 @@ export function announce(m: Mutation): string {
       return 'Cut cancelled.';
     case 'cut-refused':
       return 'A cut cannot take the whole picture.';
+    case 'cut-none':
+      return 'Those rows are cut already.';
   }
 }

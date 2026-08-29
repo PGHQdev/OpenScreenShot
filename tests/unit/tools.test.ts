@@ -254,13 +254,35 @@ describe('cut tool', () => {
    * looks at TOOL_LIST, and the first match wins, so a tool that took one of
    * those letters would simply never fire. The letters are read out of the
    * source rather than copied here, so a binding added later is checked too.
+   *
+   * All three spellings the file uses are collected — `toUpperCase() === 'F'`,
+   * the plain `e.key === 'z'`, and `e.code === 'KeyD'` — and one whose condition requires a
+   * modifier is passed over, because a chord cannot collide with a bare
+   * letter. Negations are stripped first: the fit binding reads
+   * `!isMod(e) && !e.altKey && ...`, which names the same modifiers it is
+   * refusing.
    */
   it('takes no letter the window keydown already claims before the tool rail', () => {
     const source = readFileSync(join(process.cwd(), 'src/editor/useEditor.ts'), 'utf8');
-    const claimed = [...source.matchAll(/toUpperCase\(\) === '([A-Z])'/g)].map((m) => m[1]);
+    const claimed: string[] = [];
+    for (const line of source.split('\n')) {
+      const letters = [
+        ...line.matchAll(
+          /(?:toUpperCase\(\) === '([A-Za-z])'|e\.key === '([A-Za-z])'|e\.code === 'Key([A-Za-z])')/g,
+        ),
+      ].map((m) => (m[1] ?? m[2] ?? m[3]).toUpperCase());
+      if (letters.length === 0) continue;
+      const required = line.replace(/![A-Za-z.()]+/g, '');
+      if (/isMod\(e\)|metaKey|ctrlKey|altKey/.test(required)) continue;
+      claimed.push(...letters);
+    }
     // F fits the view today. If this ever comes back empty the guard has
     // stopped guarding, so the count is asserted as well as the overlap.
-    expect(claimed.length).toBeGreaterThan(0);
+    expect(claimed).toContain('F');
+    // ...and the modifier filter really is filtering: ⌘Z and ⌥D are both in
+    // that file, in two of the three spellings.
+    expect(claimed).not.toContain('Z');
+    expect(claimed).not.toContain('D');
     const letters = new Set(TOOL_LIST.map((t) => t.shortcut));
     expect(claimed.filter((letter) => letters.has(letter))).toEqual([]);
   });

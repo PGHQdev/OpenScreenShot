@@ -2339,12 +2339,140 @@ async function testCutTool(browser, base) {
 
   await page.$eval('.stage-canvas', (el) => el.focus());
   await chord(['Meta'], 'z');
+  await settle();
+  assert(
+    (await say()) === 'Undo. Image 500 pixels tall. 1 annotation.',
+    `undoing a cut says the strip came back and how tall the picture is now ("${await say()}")`,
+  );
   await chord(['Meta'], 'z');
   await settle();
   const restored = await exportAs(0);
   assert(
     restored.info.height === 600 && firstMark(restored) === wholeTop,
     `undoing both cuts puts the picture and the mark back exactly (${restored.info.height} tall, mark at row ${firstMark(restored)})`,
+  );
+
+  step('task 25 fix: undo carries on past the cuts, into the stack they were made on');
+  await page.$eval('.stage-canvas', (el) => el.focus());
+  await chord(['Meta'], 'z');
+  await settle();
+  assert(
+    (await say()) === 'Undo. 0 annotations.',
+    `a third undo reached the edit the cuts were made on top of ("${await say()}")`,
+  );
+  assert(
+    (await page.$('.toolbar-count')) === null,
+    'the rectangle placed before the two cuts is gone, so the stack behind them survived them',
+  );
+  assert(
+    (await size()) === '800 × 600px',
+    `and that step named no height, because it crossed no cut (${await size()})`,
+  );
+  await chord(['Meta'], 'y');
+  await settle();
+  assert(
+    (await page.$eval('.toolbar-count span', (el) => el.textContent)) === '1',
+    'redo puts the rectangle back for the checks below',
+  );
+
+  step('task 25 fix: a mark a cut crosses stays grabbable everywhere it is drawn');
+  // The band starts inside the rectangle, below its top edge, so the mark is
+  // drawn its full height while the rows under the band close up beneath it.
+  await cutExactly(250, 80);
+  assert((await size()) === '800 × 520px', `the picture lost the 80 rows (${await size()})`);
+  const crossed = await geometry(520);
+  await page.keyboard.press('v');
+  // Composed row 340: inside the mark as drawn (230 to 370), and 50 rows below
+  // where a hit box built out of the piecewise row map would end.
+  await page.mouse.click(crossed.x, crossed.y(340));
+  await settle(150);
+  assert(
+    (await say()) === 'Rectangle selected, layer 1 of 1.',
+    `a click on the mark's drawn lower half selects it ("${await say()}")`,
+  );
+  await page.keyboard.press('Escape');
+  await chord(['Meta'], 'z');
+  await settle();
+
+  step('task 25 fix: a mark a cut hides takes no clicks and no bracket');
+  await page.keyboard.press(']');
+  await settle();
+  assert(
+    (await say()) === 'Rectangle selected, layer 1 of 1.',
+    `the mark is selected before the band that hides it ("${await say()}")`,
+  );
+  // The band covers the mark's top edge, so the mark leaves the picture.
+  await cutExactly(200, 60);
+  assert(
+    await page.$eval('[aria-label="Delete selected"]', (b) => b.disabled),
+    'the cut dropped the hidden mark from the selection — it cannot be dragged or nudged',
+  );
+  const hidden = await geometry(540);
+  await page.keyboard.press('v');
+  // Composed row 280: inside the box the piecewise row map would give the
+  // hidden mark (200 to 310), and over picture it does not paint.
+  await page.mouse.click(hidden.x, hidden.y(280));
+  await settle(150);
+  assert(
+    await page.$eval('[aria-label="Delete selected"]', (b) => b.disabled),
+    'a click where the hidden mark used to be selects nothing',
+  );
+  await page.$eval('.stage-canvas', (el) => el.focus());
+  await page.keyboard.press(']');
+  await settle();
+  assert(
+    (await say()) === 'Selection cleared.',
+    `and the brackets walk past it rather than name it ("${await say()}")`,
+  );
+  await chord(['Meta'], 'z');
+  await settle();
+
+  step('task 25 fix: a drafted cut does not outlive its tool, and Delete cancels it');
+  await page.$eval('.stage-canvas', (el) => el.focus());
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('x');
+  await page.keyboard.press('Enter');
+  await settle();
+  await page.keyboard.press('r');
+  await page.keyboard.press('Enter');
+  await settle();
+  assert(
+    /^Rectangle added at /.test(await say()),
+    `Enter after switching to Rectangle drew a rectangle, it did not take the band out ("${await say()}")`,
+  );
+  assert((await size()) === '800 × 600px', `and the picture is untouched (${await size()})`);
+  await chord(['Meta'], 'z');
+  await settle();
+  // A committed cut first, so Delete has something to reach for: with a band
+  // drafted it must cancel the draft rather than put that cut back.
+  await cutExactly(0, 40);
+  assert((await size()) === '800 × 560px', `one cut committed (${await size()})`);
+  await page.keyboard.press('x');
+  await page.keyboard.press('Enter');
+  await settle();
+  await page.keyboard.press('Delete');
+  await settle();
+  assert(
+    (await say()) === 'Cut cancelled.',
+    `Delete with a band drafted cancels the draft ("${await say()}")`,
+  );
+  assert(
+    (await size()) === '800 × 560px',
+    `and leaves the cut already taken alone (${await size()})`,
+  );
+
+  step('task 25 fix: a band inside one already cut takes nothing, and leaves no undo step');
+  await cutExactly(10, 20); // wholly inside the band taken above
+  assert(
+    (await say()) === 'Those rows are cut already.',
+    `it says so rather than announcing a cut of nothing ("${await say()}")`,
+  );
+  assert((await size()) === '800 × 560px', `and the picture is unchanged (${await size()})`);
+  await chord(['Meta'], 'z');
+  await settle();
+  assert(
+    (await size()) === '800 × 600px',
+    `one undo reached the real cut, so the no-op put nothing on the timeline (${await size()})`,
   );
 
   step('task 25: a crop bakes the cuts into the image it makes');
@@ -2372,6 +2500,101 @@ async function testCutTool(browser, base) {
   assert(
     cropped.info.height === 400 && greenInCrop === 0,
     `the cropped export is 400 rows with no cut stripe in it (${cropped.info.height} tall, ${greenInCrop} green pixels) — a crop that had rasterised the capture instead would be 600 and full of it`,
+  );
+
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
+}
+
+/**
+ * The PDF path, the one export the choke-point argument was left to carry.
+ * The picture is sliced into A4 pages, so cutting a third of a tall capture
+ * out has to cost whole pages — a page count read out of the PDF's own /Count
+ * entry, before and after the same cut.
+ */
+async function testCutInPdfExport(browser, base) {
+  step('task 25 fix: a cut reaches the PDF export — the page count drops with the picture');
+  const { page } = await newSmokePage(browser);
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': await makeTallCapture(),
+    'openscreenshot:settings': { theme: 'light' },
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+  const settle = (ms = 150) => new Promise((r) => setTimeout(r, ms));
+  const say = () =>
+    page.evaluate(() =>
+      document.querySelector('[aria-live="polite"][role="status"]').textContent.trim(),
+    );
+
+  /**
+   * Export a PDF and read the page count out of its own /Pages object. The PDF
+   * path hands chrome.downloads a blob: URL rather than a data: one, so the
+   * bytes are fetched back inside the page (pdf.ts keeps the blob alive for
+   * ten seconds) instead of being decoded from what the stub recorded.
+   */
+  const pdfPages = async () => {
+    await page.click('header .btn-secondary[title^="Export"]');
+    await page.waitForSelector('.modal', { timeout: 5000 });
+    await settle(220);
+    await page.click('.format-grid .format-card:last-child');
+    await page.waitForSelector('.field-label');
+    await page.click('.modal-actions .btn-primary');
+    await page.waitForFunction(() => !document.querySelector('.modal'), { timeout: 20000 });
+    const download = await page.evaluate(() => globalThis.__smoke.downloads.at(-1));
+    const read = await page.evaluate(async (url) => {
+      const bytes = new Uint8Array(await (await fetch(url)).arrayBuffer());
+      // The /Pages object is the second in the file, so the head holds it
+      // whatever the page count.
+      const head = String.fromCharCode(...bytes.slice(0, 4096));
+      const m = head.match(/\/Type \/Pages \/Kids \[[^\]]*\] \/Count (\d+)/);
+      return { pages: m ? Number(m[1]) : -1, bytes: bytes.length };
+    }, download.url);
+    if (read.pages < 0) throw new Error(`no /Pages /Count in ${download.filename}`);
+    return { pages: read.pages, bytes: read.bytes, filename: download.filename };
+  };
+
+  const before = await pdfPages();
+  assert(
+    before.filename.endsWith('.pdf') && before.pages > 2,
+    `the uncut 900x6000 capture makes ${before.pages} A4 pages (${before.filename})`,
+  );
+
+  // A third of the picture, taken with the keyboard: place, grow by 10px a
+  // press, take it out.
+  await page.$eval('.stage-canvas', (el) => el.focus());
+  await page.keyboard.press('x');
+  await page.keyboard.press('Enter');
+  await settle();
+  for (let i = 0; i < 200; i++) {
+    await page.keyboard.down('Shift');
+    await page.keyboard.down('Alt');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.up('Alt');
+    await page.keyboard.up('Shift');
+  }
+  await settle();
+  await page.keyboard.press('Enter');
+  await settle(300);
+  const cut = (await say()).match(/Cut (\d+) pixels\. Image (\d+) pixels tall\./);
+  assert(
+    cut !== null && Number(cut[1]) > 1500,
+    `a band of over 1500 rows came out ("${await say()}")`,
+  );
+
+  const after = await pdfPages();
+  const shrink = 1 - Number(cut[2]) / 6000;
+  assert(
+    after.pages < before.pages,
+    `the PDF lost pages with the picture: ${before.pages} -> ${after.pages}, the picture down ${Math.round(shrink * 100)}%`,
+  );
+  assert(
+    after.pages === Math.ceil(before.pages * (Number(cut[2]) / 6000)) ||
+      after.pages === Math.ceil(before.pages * (Number(cut[2]) / 6000)) + 1,
+    `and lost about the right number: ${after.pages} pages for ${cut[2]} of 6000 rows, against ${before.pages} for the whole`,
   );
 
   assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
@@ -3573,6 +3796,7 @@ async function main() {
     await testProgressBarColorScheme(browser, base);
     await testMultiSelection(browser, base);
     await testCutTool(browser, base);
+    await testCutInPdfExport(browser, base);
     await testCutDraftRestore(browser, base);
 
     console.log('\nALL STEPS PASSED');
