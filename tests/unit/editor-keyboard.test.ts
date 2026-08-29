@@ -289,21 +289,24 @@ describe('resizeAnnotationBy', () => {
 describe('resizeSelectionBy', () => {
   const box = (id: string, x: number): Annotation => ({ ...rect, id, x, y: 0, w: 100, h: 100 });
   const pair = [box('a', 0), box('b', 200)];
+  /** The members only; the box comes back beside them and is checked on its own. */
+  const anns = (r: { annotations: Annotation[] }) => r.annotations;
 
   it('drives the bottom-right corner of the box around the whole selection', () => {
     const out = resizeSelectionBy(pair, STEP_COARSE, 0);
     // The selection spans 300px; ten more makes it 310.
-    expect(unionBBox(out).w).toBe(300 + STEP_COARSE);
-    expect(unionBBox(out).h).toBe(100);
+    expect(unionBBox(anns(out)).w).toBe(300 + STEP_COARSE);
+    expect(unionBBox(anns(out)).h).toBe(100);
+    expect(out.box).toMatchObject({ x: 0, y: 0, w: 310, h: 100 });
   });
 
   it('holds the corner opposite the one it drives', () => {
     const out = resizeSelectionBy(pair, STEP_COARSE, STEP_COARSE);
-    expect(unionBBox(out)).toMatchObject({ x: 0, y: 0 });
+    expect(unionBBox(anns(out))).toMatchObject({ x: 0, y: 0 });
   });
 
   it('scales every member, not only the one on the moving edge', () => {
-    const out = resizeSelectionBy(pair, 300, 0);
+    const out = anns(resizeSelectionBy(pair, 300, 0));
     // The box doubles, so each member doubles in width and in its distance
     // from the anchored corner — the arrangement is kept, not stretched apart.
     expect(bbox(out[0])).toMatchObject({ x: 0, w: 200 });
@@ -311,7 +314,7 @@ describe('resizeSelectionBy', () => {
   });
 
   it('leaves the axis the key did not name alone', () => {
-    const out = resizeSelectionBy(pair, 0, STEP_COARSE);
+    const out = anns(resizeSelectionBy(pair, 0, STEP_COARSE));
     // A scale is a ratio, so these carry float noise the live region rounds
     // away — the same allowance the text-resize case above makes.
     expect(unionBBox(out).w).toBe(300);
@@ -319,7 +322,7 @@ describe('resizeSelectionBy', () => {
   });
 
   it('floors the shrink so the selection cannot fold inside out', () => {
-    const out = resizeSelectionBy(pair, -1000, -1000);
+    const out = anns(resizeSelectionBy(pair, -1000, -1000));
     // Both members are 100 tall, so the vertical floor binds on the box: it
     // stops at MIN_SIZE. Across, the box spans 300 for two 100-wide members,
     // so it stops at 6 — the width at which those members are MIN_SIZE
@@ -333,9 +336,111 @@ describe('resizeSelectionBy', () => {
   });
 
   it('ten fine steps land where one coarse step does', () => {
-    let fine = pair;
-    for (let i = 0; i < 10; i++) fine = resizeSelectionBy(fine, STEP_FINE, 0);
-    expect(unionBBox(fine).w).toBeCloseTo(unionBBox(resizeSelectionBy(pair, STEP_COARSE, 0)).w);
+    let fine = { annotations: pair, box: unionBBox(pair) };
+    for (let i = 0; i < 10; i++) {
+      fine = resizeSelectionBy(fine.annotations, STEP_FINE, 0, fine.box);
+    }
+    expect(fine.box.w).toBeCloseTo(resizeSelectionBy(pair, STEP_COARSE, 0).box.w);
+  });
+});
+
+describe('resizeSelectionBy: the shrink floor never grows the selection', () => {
+  const wide: Annotation = { ...rect, id: 'r', x: 0, y: 0, w: 200, h: 100 };
+  /** A near-vertical line: its bbox is half a pixel across, under MIN_SIZE. */
+  const hair: Annotation = {
+    id: 'l',
+    type: 'line',
+    x1: 0,
+    y1: 0,
+    x2: 0.5,
+    y2: 100,
+    stroke: '#ff3b30',
+    strokeWidth: 6,
+  };
+
+  it('shrinks a selection holding a member already under the floor', () => {
+    // The floor is a lower bound on a negative delta. Derived from a member
+    // that is already under MIN_SIZE it comes back positive, and one Math.max
+    // applies it in both directions: the shrink key used to take this
+    // selection from 200 wide to 800, and then go inert.
+    const out = resizeSelectionBy([wide, hair], -STEP_COARSE, 0);
+    expect(out.box.w).toBeCloseTo(190);
+  });
+
+  it('does the same with a member one pixel wide', () => {
+    const thin: Annotation = { ...rect, id: 't', x: 0, y: 0, w: 1, h: 100 };
+    const out = resizeSelectionBy([wide, thin], -STEP_COARSE, 0);
+    expect(out.box.w).toBeCloseTo(190);
+  });
+
+  it('still grows by exactly the delta it was given', () => {
+    const out = resizeSelectionBy([wide, hair], STEP_COARSE, 0);
+    expect(out.box.w).toBeCloseTo(210);
+  });
+
+  it('still holds a member that is above the floor to it', () => {
+    const small: Annotation = { ...rect, id: 's', x: 0, y: 0, w: 4, h: 100 };
+    const out = resizeSelectionBy([wide, small], -1000, 0);
+    expect(bbox(out.annotations.find((a) => a.id === 's')!).w).toBeCloseTo(MIN_SIZE);
+    expect(out.box.w).toBeCloseTo(100);
+  });
+});
+
+describe('resizeSelectionBy: a widen and a narrow cancel', () => {
+  // The shape matters: the glyph has to be the member that sets the union
+  // edge. A glyph tucked inside a wider rectangle never sets one, so the box
+  // the next call takes is unaffected by how the glyph scaled and the defect
+  // this covers cannot show at all.
+  const glyph: Annotation = {
+    id: 't',
+    type: 'text',
+    x: 0,
+    y: 0,
+    text: 'hi',
+    fontSize: 20,
+    color: '#1d1d1f',
+    width: 40,
+    height: 40,
+  };
+  const neighbour: Annotation = { ...rect, id: 'r', x: 0, y: 50, w: 40, h: 40 };
+  const sel = [glyph, neighbour];
+  const widthOf = (list: Annotation[], id: string) => bbox(list.find((a) => a.id === id)!).w;
+
+  it('returns the selection to its exact geometry, narrow first', () => {
+    let cur = { annotations: sel, box: unionBBox(sel) };
+    for (let i = 0; i < 30; i++) {
+      cur = resizeSelectionBy(cur.annotations, -STEP_COARSE, 0, cur.box);
+      cur = resizeSelectionBy(cur.annotations, STEP_COARSE, 0, cur.box);
+    }
+    expect(widthOf(cur.annotations, 't')).toBeCloseTo(40);
+    expect(widthOf(cur.annotations, 'r')).toBeCloseTo(40);
+    expect(cur.box).toMatchObject({ x: 0, y: 0 });
+    expect(cur.box.w).toBeCloseTo(40);
+  });
+
+  it('returns it widen first too', () => {
+    let cur = { annotations: sel, box: unionBBox(sel) };
+    for (let i = 0; i < 30; i++) {
+      cur = resizeSelectionBy(cur.annotations, STEP_COARSE, 0, cur.box);
+      cur = resizeSelectionBy(cur.annotations, -STEP_COARSE, 0, cur.box);
+    }
+    expect(widthOf(cur.annotations, 't')).toBeCloseTo(40);
+    expect(widthOf(cur.annotations, 'r')).toBeCloseTo(40);
+  });
+
+  // The control for the parameter: hand each call a union recomputed from the
+  // members instead of the box the last one produced, and the same pair walks
+  // the selection down. A glyph takes one factor for both axes, so after a
+  // one-axis resize its box is not the box the drag drew, and the union it
+  // sets is not the box the next call should resize.
+  it('control: recomputing the union each time does not cancel', () => {
+    let cur = sel;
+    for (let i = 0; i < 30; i++) {
+      cur = resizeSelectionBy(cur, -STEP_COARSE, 0).annotations;
+      cur = resizeSelectionBy(cur, STEP_COARSE, 0).annotations;
+    }
+    expect(widthOf(cur, 't')).toBeLessThan(35);
+    expect(widthOf(cur, 'r')).toBeLessThan(20);
   });
 });
 
@@ -366,7 +471,7 @@ describe('resizeSelectionBy: members that scale differently', () => {
     // and each repeat of the pair multiplied it again with no limit.
     const sel = [box('a', 0, 100), glyph];
     const wide = resizeSelectionBy(sel, 100, 0);
-    const back = resizeSelectionBy(wide, -100, 0);
+    const back = resizeSelectionBy(wide.annotations, -100, 0, wide.box).annotations;
     const t = back.find((a) => a.id === 't')!;
     expect(t.type === 'text' && t.fontSize).toBeCloseTo(20);
     expect(t.type === 'text' && t.width).toBeCloseTo(40);
@@ -376,7 +481,7 @@ describe('resizeSelectionBy: members that scale differently', () => {
 
   it('keeps every member inside the box it just resized', () => {
     const sel = [box('a', 0, 100), glyph];
-    const out = resizeSelectionBy(sel, 100, 0);
+    const out = resizeSelectionBy(sel, 100, 0).annotations;
     const group = unionBBox(out);
     for (const a of out) {
       const b = bbox(a);
@@ -389,7 +494,7 @@ describe('resizeSelectionBy: members that scale differently', () => {
     // Every member takes the same factor, so a box floor on its own would
     // scale a small member to a sliver long before the box got near its own.
     const sel = [box('big', 0, 300), box('small', 0, 4)];
-    const out = resizeSelectionBy(sel, -1000, 0);
+    const out = resizeSelectionBy(sel, -1000, 0).annotations;
     expect(bbox(out.find((a) => a.id === 'small')!).w).toBeCloseTo(MIN_SIZE);
     expect(unionBBox(out).w).toBeCloseTo(150);
   });
@@ -407,7 +512,7 @@ describe('resizeSelectionBy: members that scale differently', () => {
       stroke: '#ff3b30',
       strokeWidth: 6,
     };
-    const out = resizeSelectionBy([box('a', 0, 100), line], 0, -1000);
+    const out = resizeSelectionBy([box('a', 0, 100), line], 0, -1000).annotations;
     expect(unionBBox(out).h).toBeCloseTo(MIN_SIZE);
   });
 });

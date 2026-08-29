@@ -869,10 +869,16 @@ function uniformFactor(kx: number, ky: number, floor: number): number {
  * where it sat in the box and cannot be carried outside it. Rect, blur,
  * spotlight, arrow, line, pen and highlight take their size from the same two
  * factors. Text and step badges cannot be stretched on one axis, so their size
- * takes the uniform factor above; on the axis that scaled less they can overhang
- * the box by up to that factor minus one, times their own width or height. That
- * is bounded by the member's own size — unlike a position error, which grows
- * with the member's distance from the anchored corner.
+ * takes the uniform factor above, and on the axis that scaled less they overhang
+ * the slot the map gave them.
+ *
+ * That overhang is `own_size * (k - k_axis)` on the axis whose factor is
+ * `k_axis`, which is `own_size * k_axis * (sqrt(r) - 1)` for `r` the ratio
+ * between the two factors. It is proportional to the member's own size but the
+ * coefficient grows with `r` without bound: 0.41 of its own size for a 2:1
+ * stretch, 0.83 at kx=4/ky=2, and 2.16 for 10:1. It stays proportional to the
+ * member — unlike a position error, which grows with distance from the
+ * anchored corner and so has no bound at all in the size of the selection.
  */
 export function scaleInBox(
   a: Annotation,

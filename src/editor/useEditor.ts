@@ -217,6 +217,25 @@ export function useEditor() {
    */
 
   /**
+   * The box a multi-selection is resized by, and the box its handles are drawn
+   * on: carried from one resize to the next rather than recomputed from the
+   * members each time, so a widen and a narrow are exact inverses (see
+   * resizeSelectionBy). Null means "no box carried" — every reader falls back
+   * to the union of what is selected, which is where a fresh gesture starts.
+   *
+   * It lives exactly as long as the resizes are consecutive: any edit to the
+   * list drops it (applyAnnotations), and so does any change of selection,
+   * because both mean the members are no longer where the box says they are.
+   */
+  const groupBoxRef = useRef<Rect | null>(null);
+
+  /** The one way that box changes: the ref and the controller, together. */
+  const setGroupBox = useCallback((r: Rect | null) => {
+    groupBoxRef.current = r;
+    controllerRef.current?.setGroupBox(r);
+  }, []);
+
+  /**
    * The one way the selection changes. The pointer path has a hit-test to name
    * the annotations; the keyboard has only the layer order, so selection has to
    * be settable from ids alone. That is also what un-disables the topbar's
@@ -226,19 +245,29 @@ export function useEditor() {
    * The bracket keys walk on from that newest one, so extending the selection
    * and then carrying on in the same direction goes where the user is looking.
    */
-  const selectAnnotations = useCallback((ids: string[]) => {
-    selectedIdsRef.current = ids;
-    setSelectedIds(ids);
-  }, []);
+  const selectAnnotations = useCallback(
+    (ids: string[]) => {
+      selectedIdsRef.current = ids;
+      setSelectedIds(ids);
+      setGroupBox(null);
+    },
+    [setGroupBox],
+  );
 
-  /** The one way the annotation list changes. */
+  /**
+   * The one way the annotation list changes. `groupBox` is the resize box that
+   * goes with the new list, and defaulting it to null is what invalidates the
+   * carried one: every edit that is not a group resize moves the members out
+   * from under it, and only the two resize paths pass one.
+   */
   const applyAnnotations = useCallback(
-    (next: Annotation[] | ((prev: Annotation[]) => Annotation[])) => {
+    (next: Annotation[] | ((prev: Annotation[]) => Annotation[]), groupBox: Rect | null = null) => {
       const list = typeof next === 'function' ? next(annotationsRef.current) : next;
       annotationsRef.current = list;
       setAnnotations(list);
+      setGroupBox(groupBox);
     },
-    [],
+    [setGroupBox],
   );
 
   useEffect(() => {
@@ -841,11 +870,16 @@ export function useEditor() {
         const dx = p.x - it.startPt.x;
         const dy = p.y - it.startPt.y;
         const { startBBox, handle, startAnns } = it;
-        applyAnnotations((prev) =>
-          prev.map((a) => {
-            const start = startAnns.find((s) => s.id === a.id);
-            return start ? scaleInBox(start, startBBox, handle, dx, dy) : a;
-          }),
+        // Every frame scales from the frozen start box, so the handles follow
+        // the box that scaling produces rather than the union of the members,
+        // which a glyph can sit outside of.
+        applyAnnotations(
+          (prev) =>
+            prev.map((a) => {
+              const start = startAnns.find((s) => s.id === a.id);
+              return start ? scaleInBox(start, startBBox, handle, dx, dy) : a;
+            }),
+          resizeRect(startBBox, handle, dx, dy),
         );
         return;
       }
@@ -1024,7 +1058,9 @@ export function useEditor() {
         // and a drag on one scales every member inside that box.
         if (ids.length > 1) {
           const sel = annotationsRef.current.filter((a) => ids.includes(a.id));
-          const startBBox = unionBBox(sel);
+          // The carried box when there is one, so a drag out and a drag back
+          // cancel the same way two key presses do (see resizeSelectionBy).
+          const startBBox = groupBoxRef.current ?? unionBBox(sel);
           const h = handleAtRect(startBBox, (x, y) => c.toScreen(x, y), sx, sy);
           if (h) {
             interactionRef.current = {
@@ -1372,21 +1408,31 @@ export function useEditor() {
       // one annotation when one is selected, and of the box around them all
       // when several are — the same corner the pointer's group handle drags.
       let next: Annotation[];
+      let box: Rect | null;
       if (intent.kind === 'move') {
         next = list.map((x) =>
           ids.includes(x.id) ? translateAnnotation(x, intent.dx, intent.dy) : x,
         );
+        box = null;
       } else if (touched.length === 1) {
         next = list.map((x) =>
           x.id === touched[0].id ? resizeAnnotationBy(x, intent.dx, intent.dy) : x,
         );
+        box = null;
       } else {
-        const scaled = new Map(
-          resizeSelectionBy(touched, intent.dx, intent.dy).map((a) => [a.id, a]),
+        const resized = resizeSelectionBy(
+          touched,
+          intent.dx,
+          intent.dy,
+          groupBoxRef.current ?? undefined,
         );
+        const scaled = new Map(resized.annotations.map((a) => [a.id, a]));
         next = list.map((x) => scaled.get(x.id) ?? x);
+        box = resized.box;
       }
-      applyAnnotations(next);
+      // `box` is the box the next press resizes and the box the handles are
+      // drawn on until then; null for a move or a lone resize, which carry none.
+      applyAnnotations(next, box);
       if (touched.length === 1) {
         const one = next.find((x) => x.id === touched[0].id)!;
         say(

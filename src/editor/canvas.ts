@@ -59,6 +59,14 @@ export class CanvasController {
   cropRect: Rect | null = null;
   /** The Select tool's in-progress marquee, in image pixels. */
   marquee: Rect | null = null;
+  /**
+   * The box a multi-selection is being resized by, when useEditor is carrying
+   * one. Null means "use the union of what is selected" — the box a fresh
+   * gesture would start from. It is not always the union: a glyph scales by one
+   * factor on both axes, so it can sit slightly outside the box it was scaled
+   * in, and the handles belong on the box the drag actually moves.
+   */
+  groupBox: Rect | null = null;
   /** Beautify frame. Document-level, so it lives beside the image, not the annotations. */
   frame: FrameOptions = DEFAULT_FRAME;
   /** Called whenever the viewport changes (zoom/pan) — not on annotation edits. */
@@ -143,6 +151,14 @@ export class CanvasController {
 
   setMarquee(r: Rect | null): void {
     this.marquee = r;
+    this.render();
+  }
+
+  setGroupBox(r: Rect | null): void {
+    // Written on every annotation change, most of which carry no box at all,
+    // so the common null-to-null case must not cost a render.
+    if (this.groupBox === r) return;
+    this.groupBox = r;
     this.render();
   }
 
@@ -332,7 +348,9 @@ export class CanvasController {
       .filter((a): a is Annotation => !!a);
     const project = (x: number, y: number) => this.toScreen(x, y);
     for (const sel of selected) drawSelection(ctx, sel, project, selected.length === 1);
-    if (selected.length > 1) drawGroupSelection(ctx, unionBBox(selected), project);
+    if (selected.length > 1) {
+      drawGroupSelection(ctx, this.groupBox ?? unionBBox(selected), project);
+    }
     if (this.marquee) drawMarquee(ctx, this.marquee, (x, y) => this.toScreen(x, y));
   }
 

@@ -155,15 +155,29 @@ export function resizeAnnotationBy(a: Annotation, dx: number, dy: number): Annot
  * MIN_SIZE, and enough to keep its smallest member above it too. Every member
  * takes the same factor, so a box floor alone would let a small member inside a
  * large box be scaled to a sub-pixel sliver long before the box got near its
- * own floor. Members with no extent on the axis (a flat stroke, a horizontal
- * line) are passed over: nothing can keep them above a floor, and counting them
- * would freeze the axis for everything else.
+ * own floor.
+ *
+ * Only members already above the floor are counted, and that filter is what
+ * keeps the result negative — a shrink floor that came back positive would be
+ * applied to a grow as well (both go through one Math.max), and the shrink key
+ * would jump the selection outwards instead. A member at or under MIN_SIZE
+ * cannot be held above it by refusing to shrink, and letting one freeze the
+ * axis for everything else costs more than it saves: a near-vertical line's
+ * bbox is a fraction of a pixel wide, and a selection holding one would never
+ * narrow again.
  */
 function shrinkFloor(boxSize: number, sizes: number[]): number {
   const byBox = MIN_SIZE - boxSize;
-  const smallest = Math.min(...sizes.filter((s) => s > 0));
+  const smallest = Math.min(...sizes.filter((s) => s > MIN_SIZE));
   if (!Number.isFinite(smallest) || boxSize <= 0) return byBox;
+  // smallest > MIN_SIZE, so this ratio is below 1 and the delta is negative.
   return Math.max(byBox, (boxSize * MIN_SIZE) / smallest - boxSize);
+}
+
+/** A selection resized, and the box it was resized into. */
+export interface SelectionResize {
+  annotations: Annotation[];
+  box: Rect;
 }
 
 /**
@@ -173,15 +187,34 @@ function shrinkFloor(boxSize: number, sizes: number[]): number {
  * annotation, applied to the box the pointer's group handles drag. Every
  * member is scaled inside that box, so the selection keeps its arrangement
  * instead of each layer growing on its own and drifting apart.
+ *
+ * `from` is the box to resize, and the caller is expected to hand back the box
+ * this returns rather than let the next call take a fresh union. A glyph
+ * scales by one factor for both axes, so after a one-axis resize it no longer
+ * fills the box the way a rectangle does, and a union recomputed from the
+ * members would come back a little larger or smaller than the box the user
+ * actually dragged. Feeding that union into the next resize is a ratchet: a
+ * widen and a narrow would not cancel, and repeating the pair would walk the
+ * selection down (measured at ~1.7% a cycle on the glyph, ~3.3% on its
+ * neighbours). Carrying the box makes the two exact inverses, whatever the
+ * selection holds. With no box to carry, it starts from the union.
  */
-export function resizeSelectionBy(sel: Annotation[], dx: number, dy: number): Annotation[] {
-  const box = unionBBox(sel);
+export function resizeSelectionBy(
+  sel: Annotation[],
+  dx: number,
+  dy: number,
+  from?: Rect,
+): SelectionResize {
+  const box = from ?? unionBBox(sel);
   const boxes = sel.map((a) => bbox(a));
   const widths = boxes.map((b) => b.w);
   const heights = boxes.map((b) => b.h);
   const cdx = dx === 0 ? 0 : Math.max(dx, shrinkFloor(box.w, widths));
   const cdy = dy === 0 ? 0 : Math.max(dy, shrinkFloor(box.h, heights));
-  return sel.map((a) => scaleInBox(a, box, 'se', cdx, cdy));
+  return {
+    annotations: sel.map((a) => scaleInBox(a, box, 'se', cdx, cdy)),
+    box: resizeRect(box, 'se', cdx, cdy),
+  };
 }
 
 function clamp(v: number, lo: number, hi: number): number {

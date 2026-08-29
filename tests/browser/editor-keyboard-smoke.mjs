@@ -1624,15 +1624,17 @@ async function testMultiSelection(browser, base) {
   await page.keyboard.press('[');
   await settle(60);
   assert(/^Text selected/.test(await say()), `the text layer is on top: "${await say()}"`);
-  // Down and right, away from the box's top-left: a member sitting on the
-  // anchored corner cannot show a position error, because that corner is the
-  // fixed point of the map on both axes.
+  // Down and right, clear of the rectangle that follows: away from the box's
+  // top-left, because a member sitting on the anchored corner cannot show a
+  // position error, and out past the rectangle's right edge, because a glyph
+  // tucked inside a wider neighbour never sets the box's edge — and a glyph
+  // that does not set the edge cannot show the round trip failing either.
   for (let i = 0; i < 10; i++) await chord(['Shift'], 'ArrowDown');
-  for (let i = 0; i < 5; i++) await chord(['Shift'], 'ArrowRight');
+  for (let i = 0; i < 20; i++) await chord(['Shift'], 'ArrowRight');
   await settle(80);
   await page.keyboard.press('Escape');
   const [tx0, ty0] = await readNextLayer('[');
-  const [tw0] = await sizeOfSelected();
+  assert(/^Text moved to /.test(await say()), `the text layer, before the rectangle exists`);
   await page.keyboard.press('r');
   await page.keyboard.press('Enter');
   await settle(80);
@@ -1648,35 +1650,77 @@ async function testMultiSelection(browser, base) {
   await page.keyboard.press('Escape');
   await page.keyboard.press('[');
   const [tx1, ty1] = await readNextLayer('[');
+  assert(/^Text moved to /.test(await say()), `measuring the text after the widen`);
   assert(
     ty1 === ty0,
     `a width-only group resize left the text where it was on the other axis (y ${ty0} -> ${ty1})`,
   );
   assert(tx1 > tx0, `and carried it across with the box (x ${tx0} -> ${tx1})`);
+
+  // The round trip, measured from its own baseline. Reading a layer's position
+  // nudges it a pixel each way, which is an edit like any other and drops the
+  // carried box, so the widen and the narrow have to run back to back with no
+  // reading between them — the same reason a resize after a real edit starts
+  // from a fresh union.
+  await page.keyboard.press('Escape');
+  // `[` from nothing selects the top layer, which is the rectangle; a second
+  // one walks down to the text. Every reading below names the layer it read,
+  // so measuring the wrong one fails here rather than passing quietly. The
+  // rectangle is read first because it is the member the drift hit hardest.
+  const [rx3, ry3] = await readNextLayer('[');
+  assert(/^Rectangle moved to /.test(await say()), `measuring the rectangle: "${await say()}"`);
+  const [rw3] = await sizeOfSelected();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('[');
+  const [tx3, ty3] = await readNextLayer('[');
+  assert(/^Text moved to /.test(await say()), `measuring the text layer: "${await say()}"`);
+  const [tw3] = await sizeOfSelected();
   await page.keyboard.press('Escape');
   await page.keyboard.press('[');
   await chord(['Shift'], '[');
   await settle(60);
   assert(
     /^2 of \d+ annotations selected\.$/.test(await say()),
-    `both selected again for the drag back: "${await say()}"`,
+    `both selected for the round trip: "${await say()}"`,
   );
-  for (let i = 0; i < 10; i++) await chord(['Alt', 'Shift'], 'ArrowLeft');
-  await settle(120);
+  // Three pairs, not one: the drift this covers is a few percent per pair, so
+  // one pair can hide inside the whole-pixel rounding the live region reads
+  // out. Three cannot.
+  for (let pair = 0; pair < 3; pair++) {
+    for (let i = 0; i < 10; i++) await chord(['Alt', 'Shift'], 'ArrowRight');
+    for (let i = 0; i < 10; i++) await chord(['Alt', 'Shift'], 'ArrowLeft');
+  }
+  await settle(150);
+  // The rectangle first: it is the member that did not set the box's edge, and
+  // the one the drift hit hardest — ~3.3% a cycle when each resize recomputed
+  // the box from the members instead of carrying it.
+  await page.keyboard.press('Escape');
+  const [rx4, ry4] = await readNextLayer('[');
+  assert(
+    /^Rectangle moved to /.test(await say()),
+    `measuring the rectangle again: "${await say()}"`,
+  );
+  const [rw4] = await sizeOfSelected();
+  assert(
+    rw4 === rw3,
+    `three 100px-out-and-back pairs left the rectangle its exact width: ${rw3}px before, ${rw4}px after`,
+  );
+  assert(rx4 === rx3 && ry4 === ry3, `and its exact origin (${rx3},${ry3} -> ${rx4},${ry4})`);
   await page.keyboard.press('Escape');
   await page.keyboard.press('[');
-  const [tx2, ty2] = await readNextLayer('[');
+  const [tx4, ty4] = await readNextLayer('[');
+  assert(/^Text moved to /.test(await say()), `measuring the text layer again: "${await say()}"`);
+  const [tw4] = await sizeOfSelected();
   assert(
-    tx2 === tx0 && ty2 === ty0,
-    `the drag back returned the text to its exact origin (${tx0},${ty0} -> ${tx2},${ty2})`,
+    tx4 === tx3 && ty4 === ty3,
+    `the text came back to its own origin too (${tx3},${ty3} -> ${tx4},${ty4})`,
   );
-  const [tw2] = await sizeOfSelected();
   // Each size reading grows a lone text layer by one pixel and does not shrink
   // it back — the single-annotation rule, unchanged by this task and left
   // alone deliberately. So one pixel is the whole expected difference here.
   assert(
-    tw2 - tw0 === 1,
-    `and to its size: ${tw0}px before, ${tw2}px after, the 1px being this reading itself`,
+    tw4 - tw3 === 1,
+    `and to its size: ${tw3}px before, ${tw4}px after, the 1px being this reading itself`,
   );
 
   step(
