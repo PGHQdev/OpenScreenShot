@@ -1,8 +1,13 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { deleteCapture, listCaptureHistory } from '../shared/storage';
 import type { CaptureHistoryEntry } from '../shared/types';
-import { getFocusable, trapFocus } from './focus';
+import { arrowNav, getFocusable, syncRovingTabIndex, trapFocus } from './focus';
 import { labelForSource } from './capture-label';
+
+/** The date string shared by a row's own label and its Open/Delete names. */
+function capturedLabel(entry: CaptureHistoryEntry): string {
+  return new Date(entry.capturedAt).toLocaleString();
+}
 
 /**
  * The capture history shelf: last N captures instead of one (src/shared/
@@ -23,6 +28,7 @@ export function HistorySheet({
   const [entries, setEntries] = useState<CaptureHistoryEntry[] | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const prevFocusRef = useRef<HTMLElement | null>(null);
 
   async function refresh() {
@@ -46,6 +52,46 @@ export function HistorySheet({
     const focusable = modalRef.current ? getFocusable(modalRef.current) : [];
     focusable[0]?.focus();
   }, [closing]);
+
+  /**
+   * Review R-28a, Important #4: twelve rows x two buttons was 24 individual
+   * Tab stops inside a focus-*trapped* modal — a keyboard user could not
+   * Tab past the list, only through it. `.history-list`'s buttons now rove
+   * as one flat sequence, the same mechanical pattern `App.tsx`'s tool rail
+   * uses (`arrowNav`/`syncRovingTabIndex`, unmodified) — `getFocusable`
+   * (focus.ts) already excludes `tabindex="-1"` elements, so `trapFocus` and
+   * this sheet's own Tab cycle see exactly one stop for the whole list,
+   * for free, with no change to focus.ts itself.
+   *
+   * This is deliberately *not* the row as the atomic stop (arrow keys do
+   * not move row-to-row with a separate within-row step to reach Open vs.
+   * Delete). `arrowNav`/`syncRovingTabIndex` are single-level: one flat set
+   * of members, one axis. A true row-level scheme needs either a second
+   * navigation level (row, then across to its two actions — effectively an
+   * ARIA grid, `role="row"`/`"gridcell"`, matched children throughout) or
+   * an ad hoc secondary key to enter a row's actions — both meaningfully
+   * more machinery than these two generic helpers provide, and reusing
+   * `role="toolbar"` here would mislabel a list of history rows as a
+   * command bar. `role="group"` (the same role `App.tsx`'s
+   * `.topbar-actions` already uses for a plain button cluster) keeps the
+   * label honest — until axe's `aria-allowed-attr` rule pointed out that
+   * `aria-orientation` (needed for vertical Up/Down, since these rows stack
+   * vertically) is not a valid attribute on `role="group"` at all; the ARIA
+   * spec restricts it to a handful of roles, `toolbar` among them, which is
+   * also the one this codebase already uses for the exact same vertical
+   * roving-tabindex shape (`App.tsx`'s tool rail: `role="toolbar"
+   * aria-orientation="vertical"`). `role="toolbar"` is not a perfect label
+   * for a list of history rows, but it is a valid one — every member here
+   * genuinely is a command (Open, Delete) — and matching the codebase's own
+   * only precedent for this exact interaction model beats shipping a real
+   * ARIA-attribute violation to keep a marginally better-fitting label.
+   * Either way, the mechanics are what matters here: the container's Tab
+   * footprint drops from 24 stops to 1, and every Open and every Delete
+   * stays reachable, via arrow keys (Home/End included) instead of Tab.
+   */
+  useEffect(() => {
+    if (listRef.current) syncRovingTabIndex(listRef.current);
+  }, [entries]);
 
   // A deleted row's own Delete button was the focused element that
   // triggered this — removing it from the DOM drops focus to <body> (per
@@ -104,20 +150,32 @@ export function HistorySheet({
         {entries === null ? null : entries.length === 0 ? (
           <p class="modal-text">No captures yet.</p>
         ) : (
-          <div class="history-list">
+          <div
+            class="history-list"
+            ref={listRef}
+            role="toolbar"
+            aria-label="Captures"
+            aria-orientation="vertical"
+            onKeyDown={(e) => arrowNav(e.currentTarget as HTMLElement, e)}
+            onFocusIn={(e) =>
+              syncRovingTabIndex(e.currentTarget as HTMLElement, e.target as HTMLElement)
+            }
+          >
             {entries.map((entry) => (
               <div class="history-row" key={entry.id}>
                 <img class="history-thumb" src={entry.thumbnail} alt="" width={64} height={48} />
                 <div class="history-row-info">
-                  <span class="history-row-date">
-                    {new Date(entry.capturedAt).toLocaleString()}
-                  </span>
+                  <span class="history-row-date">{capturedLabel(entry)}</span>
                   <span class="history-row-meta">
                     {labelForSource(entry.mode)} &middot; {entry.width} &times; {entry.height}px
                   </span>
                 </div>
                 <div class="history-row-actions">
-                  <button class="text-btn" onClick={() => onOpen(entry)}>
+                  <button
+                    class="text-btn"
+                    onClick={() => onOpen(entry)}
+                    aria-label={`Open, captured ${capturedLabel(entry)}`}
+                  >
                     Open
                   </button>
                   <button
@@ -126,8 +184,8 @@ export function HistorySheet({
                     onClick={() => void handleDelete(entry.id)}
                     aria-label={
                       confirmDeleteId === entry.id
-                        ? `Confirm delete, captured ${new Date(entry.capturedAt).toLocaleString()}`
-                        : `Delete, captured ${new Date(entry.capturedAt).toLocaleString()}`
+                        ? `Confirm delete, captured ${capturedLabel(entry)}`
+                        : `Delete, captured ${capturedLabel(entry)}`
                     }
                   >
                     {confirmDeleteId === entry.id ? 'Confirm delete' : 'Delete'}

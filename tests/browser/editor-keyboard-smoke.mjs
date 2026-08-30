@@ -4015,6 +4015,64 @@ async function testCaptureHistoryShelf(browser, base) {
     'every row renders its own thumbnail as an <img>',
   );
 
+  step('task 28: Open carries a date-qualified name (R-28a Important #3), not a duplicate');
+  const openLabels = await page.$$eval('.history-row-actions button:first-child', (els) =>
+    els.map((el) => el.getAttribute('aria-label')),
+  );
+  assert(
+    openLabels.every((l) => /^Open, captured /.test(l ?? '')),
+    `every Open button carries a date-qualified name (${JSON.stringify(openLabels)})`,
+  );
+  assert(
+    new Set(openLabels).size === openLabels.length,
+    "the two rows' Open names are distinct, not identical duplicates",
+  );
+
+  step(
+    'task 28: the row list is one roving-tabindex stop (R-28a Important #4), not one per button',
+  );
+  const tabIndexes = () =>
+    page.$$eval('.history-list button', (els) => els.map((el) => el.tabIndex));
+  let idx = await tabIndexes();
+  assert(
+    idx.filter((t) => t === 0).length === 1 &&
+      idx.filter((t) => t === -1).length === idx.length - 1,
+    `exactly one button in the list is a tab stop, the rest are -1 (${JSON.stringify(idx)})`,
+  );
+  const focusedLabel = () =>
+    page.evaluate(() => document.activeElement?.getAttribute('aria-label') ?? null);
+  // :last-of-type is scoped per parent (each row's own actions div), not
+  // across the whole list — the last button in *document order* across all
+  // rows is what End should reach.
+  const lastButtonLabel = await page.$$eval('.history-list button', (els) =>
+    els[els.length - 1].getAttribute('aria-label'),
+  );
+  await page.$eval('.history-list button[tabindex="0"]', (el) => el.focus());
+  const firstLabel = await focusedLabel();
+  await page.keyboard.press('ArrowDown');
+  const secondLabel = await focusedLabel();
+  assert(
+    secondLabel !== firstLabel,
+    `ArrowDown moved real focus onto a different button (${firstLabel} -> ${secondLabel})`,
+  );
+  idx = await tabIndexes();
+  assert(
+    idx.filter((t) => t === 0).length === 1,
+    'the roving stop followed focus — still exactly one tabindex=0 after ArrowDown',
+  );
+  await page.keyboard.press('End');
+  const endLabel = await focusedLabel();
+  assert(endLabel === lastButtonLabel, `End jumps to the last button in the list (${endLabel})`);
+  await page.keyboard.press('Home');
+  const homeLabel = await focusedLabel();
+  assert(homeLabel === firstLabel, 'Home returns to the first button in the list');
+  // The list is one stop in the modal's own Tab cycle, not four (or, at
+  // real N=12, twenty-four) — Tab off the roving stop leaves the list in
+  // one press, landing on Close (the next focusable element in the modal).
+  await page.keyboard.press('Tab');
+  const offList = await page.evaluate(() => !document.activeElement?.closest('.history-list'));
+  assert(offList, 'Tab off the list stop leaves the list entirely, in one press');
+
   step('task 28: Open on the older entry swaps the canvas to its picture');
   // Row order follows the seeded array: index 0 = green (newest), index 1 =
   // blue (older) — nth-child is 1-based.
