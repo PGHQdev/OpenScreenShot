@@ -186,12 +186,13 @@ describe('REC_FAILURE_KEY', () => {
 describe('the enumerated modes', () => {
   /**
    * Pinning the count means adding a mode without a message — or dropping one
-   * — is a test failure rather than a silent regression. Eighteen, not the
-   * plan's estimated eleven: the enumeration reads the code (see
-   * task-32-report.md §1), review rounds 1-3 found four more, and task 33
-   * added the stalled engine a Stop cannot get an answer out of.
+   * — is a test failure rather than a silent regression. Twenty, not
+   * eighteen: task 37 (B4) split the old fire-and-forget save into
+   * `save-interrupted` and `save-unverified`, one failure code each, so a
+   * download that reaches the disk broken looks different from one that
+   * could never be confirmed either way.
    */
-  it('covers eighteen', () => {
+  it('covers twenty', () => {
     const codes: RecFailureCode[] = [
       'start-unreachable',
       'start-blocked',
@@ -211,6 +212,8 @@ describe('the enumerated modes', () => {
       'chunk-write-failed',
       'events-write-failed',
       'recorder-open-failed',
+      'save-interrupted',
+      'save-unverified',
     ];
     expect([...REC_FAILURE_CODES].sort()).toEqual([...codes].sort());
   });

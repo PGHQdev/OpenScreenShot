@@ -26,6 +26,7 @@ import {
   type ExportDraft,
   type ExportProgress,
 } from './export-video';
+import { saveExport } from './save-export';
 import { recFailureMessageKey } from '../shared/rec-failure';
 import type { BubbleCorner } from './recorder-draft';
 import type { LoadedSession } from './session-load';
@@ -133,18 +134,27 @@ export function Rail(props: RailProps) {
         width,
         height,
       });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `${base}.webm`;
-      a.click();
-      URL.revokeObjectURL(a.href);
+      const outcome = await saveExport(blob, `${base}.webm`);
 
-      // One toast slot, so a skip takes it: the file exists either way and
-      // the browser's own download shows that, but a file shorter or quieter
-      // than the timeline promised is the thing the user has to be told.
-      if (skippedParts > 0) props.onToast(t(recFailureMessageKey('segment-skipped')), 'error');
-      else props.onToast(t('recorderExported', [(blob.size / 1e6).toFixed(1)]));
-      if (deleteAfter) {
+      // One toast slot. What it shows depends on whether the file actually
+      // reached disk: a skip only matters once there is a file to be short —
+      // reporting it on a cancelled or interrupted save would bury the fact
+      // that nothing saved at all.
+      if (outcome.state === 'complete') {
+        if (skippedParts > 0) props.onToast(t(recFailureMessageKey('segment-skipped')), 'error');
+        else props.onToast(t('recorderExported', [(blob.size / 1e6).toFixed(1)]));
+      } else if (outcome.state === 'cancelled') {
+        props.onToast(t('recorderSaveCancelled'));
+      } else if (outcome.state === 'unverified') {
+        props.onToast(t(recFailureMessageKey('save-unverified')), 'error');
+      } else {
+        props.onToast(t(recFailureMessageKey('save-interrupted'), [outcome.error]), 'error');
+      }
+
+      // Deleting the session is only safe once the download is confirmed on
+      // disk — a cancelled, interrupted or unverified save must not be the
+      // thing that also destroys the only other copy.
+      if (deleteAfter && outcome.state === 'complete') {
         await deleteSession(props.loaded.session.id);
         props.onDeleted();
       }

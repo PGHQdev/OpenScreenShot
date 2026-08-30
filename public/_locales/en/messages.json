@@ -405,6 +405,24 @@
     "message": "Export failed \u2014 no file was saved. Try again.",
     "description": "Recorder page: error toast when the export threw."
   },
+  "recFailSaveInterrupted": {
+    "message": "Save failed: $ERROR$. The recording was kept.",
+    "description": "Recorder page: error toast when the Save dialog's download was interrupted for a reason other than the user cancelling it.",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "FILE_NO_SPACE"
+      }
+    }
+  },
+  "recFailSaveUnverified": {
+    "message": "Could not confirm the save finished. The recording was kept.",
+    "description": "Recorder page: error toast when the download never reported a terminal state within the bounded wait."
+  },
+  "recorderSaveCancelled": {
+    "message": "Save cancelled",
+    "description": "Recorder page: toast shown when the user dismisses the export's Save dialog."
+  },
   "recorderFailed": {
     "message": "Failed",
     "description": "Recorder page: pill on a session whose recording never started."

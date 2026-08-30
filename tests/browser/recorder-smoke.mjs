@@ -232,6 +232,61 @@ function installChromeStub(messages) {
       smoke.downloads.push({ name: this.download, bytes: sizes.get(this.href) ?? 0 });
     return anchorClick.call(this);
   };
+
+  // `chrome.downloads`: the export saves through this now (`save-export.ts`),
+  // not a bare anchor click. `download()` still triggers the same
+  // anchor-click patch above when `downloadMode` is 'real', so a real file
+  // lands in the CDP-managed downloads directory and the size/name capture
+  // above still fires — the harness bridges the real `Browser.downloadProgress`
+  // CDP event back into `onChanged` for that case (see the browser-level
+  // `session.on('Browser.downloadProgress', ...)` below). `downloadMode` set
+  // to 'stub' skips the real download entirely, so the harness can fire
+  // `onChanged` itself and drive the cancel/interrupted paths deterministically
+  // — with no real download in flight, there is nothing for that to race.
+  smoke.downloadMode = 'real';
+  smoke.lastDownloadId = null;
+  let nextDownloadId = 1;
+  const downloadListeners = [];
+  globalThis.chrome.downloads = {
+    async download(opts) {
+      const id = nextDownloadId++;
+      smoke.lastDownloadId = id;
+      if (smoke.downloadMode === 'real') {
+        const a = document.createElement('a');
+        a.href = opts.url;
+        a.download = opts.filename;
+        a.click();
+      }
+      return id;
+    },
+    onChanged: {
+      addListener: (fn) => downloadListeners.push(fn),
+      removeListener: (fn) => {
+        const i = downloadListeners.indexOf(fn);
+        if (i >= 0) downloadListeners.splice(i, 1);
+      },
+    },
+  };
+  smoke.fireDownloadChanged = (delta) => {
+    for (const fn of [...downloadListeners]) fn(delta);
+  };
+}
+
+/** Whether `sessionId` still has a row in the app's own IndexedDB store. */
+async function sessionExists(sessionId) {
+  const db = await new Promise((done, fail) => {
+    const req = indexedDB.open('openscreenshot-recordings', 1);
+    req.onsuccess = () => done(req.result);
+    req.onerror = () => fail(req.error);
+  });
+  const found = await new Promise((done, fail) => {
+    const tx = db.transaction(['sessions'], 'readonly');
+    const get = tx.objectStore('sessions').get(sessionId);
+    get.onsuccess = () => done(get.result !== undefined);
+    get.onerror = () => fail(get.error);
+  });
+  db.close();
+  return found;
 }
 
 /**
@@ -637,6 +692,22 @@ async function main() {
       if (res.status() >= 400)
         console.log(`    http ${res.status()} ${new URL(res.url()).pathname}`);
     });
+    // Bridges a real download's completion back into the page's fake
+    // `chrome.downloads.onChanged` — the only way `saveExport` (which now
+    // owns the save) ever resolves for `smoke.downloadMode === 'real'`. Only
+    // fires on `completed`; a 'canceled'/`interrupted` browser-level download
+    // is exercised via `downloadMode: 'stub'` instead (see installChromeStub).
+    session.on('Browser.downloadProgress', (evt) => {
+      if (evt.state !== 'completed') return;
+      page
+        .evaluate(() => {
+          const id = window.__smoke.lastDownloadId;
+          if (id === window.__smoke.__firedForId) return;
+          window.__smoke.__firedForId = id;
+          window.__smoke.fireDownloadChanged({ id, state: { current: 'complete' } });
+        })
+        .catch(() => {});
+    });
     await page.evaluateOnNewDocument(installChromeStub, messages);
     step('chrome stub installed');
 
@@ -882,6 +953,15 @@ async function main() {
 
     const onDisk = await readdir(downloads).catch(() => []);
     console.log(`    download directory: ${onDisk.join(', ') || '(empty)'}`);
+    // Not just clicked — actually on disk. This is what a real
+    // `Browser.downloadProgress` 'completed' event, bridged back into the
+    // page's `chrome.downloads.onChanged`, proves that the anchor click above
+    // does not: `saveExport` only resolves 'complete' (and only then does the
+    // toast above fire) once Chrome itself reports the file finished writing.
+    assert(
+      onDisk.length > 0,
+      `the real download landed in ${downloads} (${onDisk.length} file(s))`,
+    );
 
     step('cancel, confirmed, discards the render');
     const beforeCancel = await page.evaluate(() => window.__smoke.downloads.length);
@@ -896,6 +976,83 @@ async function main() {
     assert(
       afterCancel === beforeCancel,
       `a confirmed cancel produced no download (${beforeCancel} -> ${afterCancel})`,
+    );
+
+    step('delete after export only deletes once the download is confirmed complete');
+    const deleteReal = await page.evaluate(seedSession);
+    await page.goto(`${base}${PAGE}?session=${deleteReal.sessionId}`, { waitUntil: 'load' });
+    await page.waitForSelector('.rec-btn-primary', { timeout: 15_000 });
+    await page.click('.rail-check input[type="checkbox"]');
+    assert(
+      await page.evaluate(sessionExists, deleteReal.sessionId),
+      'the fresh session exists before its export',
+    );
+    await page.evaluate(() => {
+      window.__smoke.toasts = [];
+      const seen = new Set();
+      new MutationObserver(() => {
+        for (const el of document.querySelectorAll('.toast-text')) {
+          const text = el.textContent ?? '';
+          if (text && !seen.has(text)) {
+            seen.add(text);
+            window.__smoke.toasts.push(text);
+          }
+        }
+      }).observe(document.body, { childList: true, subtree: true, characterData: true });
+    });
+    await (await page.$('.rec-btn-primary')).click();
+    // `downloadMode` stays 'real' (the default after every fresh navigation),
+    // so this is the same live browser download + CDP bridge as above — a
+    // second, independent proof that "delete after export" is gated on the
+    // same real completion signal, not on `a.click()` having been called.
+    await page.waitForFunction(() => window.__smoke.toasts.length > 0, { timeout: 120_000 });
+    const deleteRealToast = await page.evaluate(() => window.__smoke.toasts[0]);
+    assert(pattern.test(deleteRealToast), `delete-after export toast reads "${deleteRealToast}"`);
+    assert(
+      !(await page.evaluate(sessionExists, deleteReal.sessionId)),
+      'a completed, verified save deletes the session when delete-after is checked',
+    );
+
+    step('a save the user cancels keeps delete-after from touching the session');
+    const deleteCancel = await page.evaluate(seedSession);
+    await page.goto(`${base}${PAGE}?session=${deleteCancel.sessionId}`, { waitUntil: 'load' });
+    await page.waitForSelector('.rec-btn-primary', { timeout: 15_000 });
+    await page.click('.rail-check input[type="checkbox"]');
+    await page.evaluate(() => {
+      window.__smoke.toasts = [];
+      // No real download in flight for this one — the harness fires
+      // `onChanged` itself below, deterministically, rather than racing a
+      // real Save-dialog dismissal it cannot drive headlessly.
+      window.__smoke.downloadMode = 'stub';
+      const seen = new Set();
+      new MutationObserver(() => {
+        for (const el of document.querySelectorAll('.toast-text')) {
+          const text = el.textContent ?? '';
+          if (text && !seen.has(text)) {
+            seen.add(text);
+            window.__smoke.toasts.push(text);
+          }
+        }
+      }).observe(document.body, { childList: true, subtree: true, characterData: true });
+    });
+    await (await page.$('.rec-btn-primary')).click();
+    await page.waitForFunction(() => window.__smoke.lastDownloadId !== null, { timeout: 15_000 });
+    await page.evaluate(() => {
+      window.__smoke.fireDownloadChanged({
+        id: window.__smoke.lastDownloadId,
+        state: { current: 'interrupted' },
+        error: { current: 'USER_CANCELED' },
+      });
+    });
+    await page.waitForFunction(() => window.__smoke.toasts.length > 0, { timeout: 15_000 });
+    const cancelToast = await page.evaluate(() => window.__smoke.toasts[0]);
+    assert(
+      cancelToast === messages.recorderSaveCancelled.message,
+      `a dismissed Save dialog's toast reads "${cancelToast}"`,
+    );
+    assert(
+      await page.evaluate(sessionExists, deleteCancel.sessionId),
+      'a cancelled save with delete-after checked keeps the session (defect 9)',
     );
 
     step('exporting a session that holds a segment the export cannot play');

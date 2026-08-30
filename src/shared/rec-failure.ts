@@ -76,6 +76,19 @@ export type RecFailureCode =
   /** The export itself threw; no file was written. */
   | 'export-failed'
   /**
+   * The Save dialog's download reached `interrupted` for a reason other than
+   * the user dismissing it (disk full, a blocked path, …). The rendered file
+   * exists in memory but is not confirmed on disk, so the session is kept.
+   */
+  | 'save-interrupted'
+  /**
+   * `chrome.downloads.onChanged` never reached a terminal state within the
+   * bounded wait `saveExport` gives it. Distinct from `save-interrupted`:
+   * nothing is known to have gone wrong, only that it could not be
+   * confirmed — so the session is kept here too.
+   */
+  | 'save-unverified'
+  /**
    * A media chunk could not be written to IndexedDB while recording. The
    * recording carries on and the file is silently shorter than the clock says,
    * which is the only mode in the set that loses data the user believes they
@@ -124,6 +137,8 @@ const MESSAGE_KEYS: Record<RecFailureCode, string> = {
   'session-load-failed': 'recFailSessionLoad',
   'segment-skipped': 'recFailSegmentSkipped',
   'export-failed': 'recFailExport',
+  'save-interrupted': 'recFailSaveInterrupted',
+  'save-unverified': 'recFailSaveUnverified',
   'chunk-write-failed': 'recFailChunkWrite',
   'events-write-failed': 'recFailEventsWrite',
   'recorder-open-failed': 'recFailRecorderOpen',
