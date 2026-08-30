@@ -784,6 +784,14 @@ export function App() {
                   {t('recWebcam')}
                 </button>
               </div>
+              {/* Task 40: the bubble only ever exists in the exported file —
+                  there is no live self-view while recording — so this has to
+                  be said before Record is pressed, not discovered after. */}
+              {recSettings.webcam && (
+                <span class="rec-trust-hint" data-testid="rec-webcam-hint">
+                  {t('recWebcamNoPreview')}
+                </span>
+              )}
             </div>
           )}
 

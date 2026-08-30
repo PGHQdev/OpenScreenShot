@@ -1712,11 +1712,19 @@ async function main() {
 
     const mounted = await page.evaluate(async (file) => {
       const mod = await import(`/assets/${file}`);
-      // 6 arity is unique to the mount; `isNearBar` also takes 4.
-      const mount = Object.values(mod).find((v) => typeof v === 'function' && v.length === 6);
+      // 7 arity is unique to the mount; `isNearBar` also takes 4.
+      const mount = Object.values(mod).find((v) => typeof v === 'function' && v.length === 7);
       window.__mount = mount;
       // Mount clean, exactly as a healthy recording does.
-      return mount('seg-1', 0, false, { mic: false, tabAudio: true, webcam: false }, false, true);
+      return mount(
+        'seg-1',
+        0,
+        false,
+        { mic: false, tabAudio: true, webcam: false },
+        false,
+        false,
+        true,
+      );
     }, overlayFile);
     const warningChip = () => pierced('rec-overlay-warning');
     const announcer = () => pierced('rec-overlay-announcer');
@@ -1741,6 +1749,7 @@ async function main() {
         false,
         { mic: false, tabAudio: true, webcam: false },
         true,
+        false,
         true,
       ),
     );
@@ -1767,6 +1776,7 @@ async function main() {
         false,
         { mic: false, tabAudio: true, webcam: false },
         true,
+        false,
         true,
       ),
     );
@@ -1795,6 +1805,47 @@ async function main() {
       return value;
     });
     assert(opacity === '1', `and holds the bar open past its 3s idle hide (opacity ${opacity})`);
+    await page.evaluate(() => window.__ossRecOverlay?.());
+
+    step(
+      'task 40: a declined camera warns on the bar, since the permission frame never shows anything',
+    );
+    // Important 1 (fix round 1): the permission frame is a permanently
+    // invisible 1x1 dot, so a denied camera has to reach the user some other
+    // way — the same warn-and-hold-open treatment chunk-loss already gets,
+    // with its own chip and its own announcement text.
+    const camMounted = await page.evaluate(() =>
+      window.__mount(
+        'seg-1',
+        0,
+        false,
+        { mic: false, tabAudio: false, webcam: false },
+        false,
+        true,
+        true,
+      ),
+    );
+    assert(camMounted === 'fresh', `mounted fresh with a declined camera (${camMounted})`);
+    const camChip = await pierced('rec-overlay-cam-warning');
+    assert(
+      camChip?.html.includes(messages.recOverlayCamDenied.message),
+      `the CAM DECLINED chip is rendered in the bar (${camChip?.html})`,
+    );
+    const camAnnounced = await announcer();
+    assert(
+      camAnnounced?.html.includes(messages.recWebcamDenied.message),
+      `and the live region speaks the denial (${camAnnounced?.html})`,
+    );
+    await new Promise((done) => setTimeout(done, 3400));
+    const camOpacity = await page.evaluate(() => {
+      const host = [...document.documentElement.children].at(-1);
+      return getComputedStyle(host).opacity;
+    });
+    assert(
+      camOpacity === '1',
+      `a declined camera holds the bar open past its 3s idle hide too (opacity ${camOpacity})`,
+    );
+    await page.evaluate(() => window.__ossRecOverlay?.());
 
     step("the bar's clock anchors once and never runs backwards");
     // Same built module, same closed shadow root, read through CDP. The bar
@@ -1813,6 +1864,7 @@ async function main() {
             false,
             { mic: false, tabAudio: true, webcam: false },
             false,
+            false,
             args[1],
           ),
         [elapsed, anchored],
@@ -1824,6 +1876,7 @@ async function main() {
         12_000,
         false,
         { mic: false, tabAudio: true, webcam: false },
+        false,
         false,
         false,
       ),
@@ -1879,6 +1932,7 @@ async function main() {
         0,
         false,
         { mic: false, tabAudio: false, webcam: false },
+        false,
         false,
         true,
       ),
@@ -2040,7 +2094,15 @@ async function main() {
 
     step('a real paused treatment, distinct from recording');
     await page.evaluate(() =>
-      window.__mount('seg-1', 0, true, { mic: false, tabAudio: false, webcam: false }, false, true),
+      window.__mount(
+        'seg-1',
+        0,
+        true,
+        { mic: false, tabAudio: false, webcam: false },
+        false,
+        false,
+        true,
+      ),
     );
     const pausedDot = await pierced('rec-overlay-dot');
     assert(
@@ -2065,7 +2127,15 @@ async function main() {
         return { w: r.width, h: r.height, opacity: style.opacity, pe: style.pointerEvents };
       });
     const freshWithWebcam = await page.evaluate(() =>
-      window.__mount('seg-1', 0, false, { mic: false, tabAudio: false, webcam: true }, false, true),
+      window.__mount(
+        'seg-1',
+        0,
+        false,
+        { mic: false, tabAudio: false, webcam: true },
+        false,
+        false,
+        true,
+      ),
     );
     assert(freshWithWebcam === 'fresh', `mounted fresh with webcam on (${freshWithWebcam})`);
     const geom = await camGeometry();
@@ -2114,6 +2184,119 @@ async function main() {
     );
     assert(popupCrashes.length === 0, `no uncaught popup page errors ${popupCrashes.join('; ')}`);
     await popupPage.close();
+
+    step(
+      'task 40: a declined camera makes the real permission frame report it, not just render it invisibly',
+    );
+    // Important 1 (fix round 1): webcam-frame.html itself, not the overlay's
+    // reaction to being told — this drives the real built page with a real
+    // stubbed getUserMedia rejection, the way a blocked camera actually
+    // reaches it.
+    const frameCrashes = [];
+    const framePage = await browser.newPage();
+    framePage.on('pageerror', (err) => frameCrashes.push(String(err)));
+    await framePage.evaluateOnNewDocument(() => {
+      window.__sent = [];
+      navigator.mediaDevices.getUserMedia = () => Promise.reject(new Error('Permission denied'));
+      window.chrome = {
+        runtime: {
+          sendMessage: (msg) => {
+            window.__sent.push(msg);
+            if (msg?.type === 'REC_QUERY') {
+              return Promise.resolve({
+                active: true,
+                settings: { webcam: true, mic: false, tabAudio: false },
+              });
+            }
+            return Promise.resolve({});
+          },
+        },
+      };
+    });
+    await framePage.goto(`${base}/src/recorder/webcam-frame.html?webcam=1&mic=0`, {
+      waitUntil: 'load',
+    });
+    await framePage.waitForFunction(
+      () => window.__sent.some((m) => m.type === 'REC_WEBCAM_DENIED'),
+      { timeout: 5000 },
+    );
+    const frameSent = await framePage.evaluate(() => window.__sent.map((m) => m.type));
+    assert(
+      frameSent.includes('REC_WEBCAM_DENIED'),
+      `a rejected getUserMedia makes the frame report the denial (${frameSent.join(', ')})`,
+    );
+    assert(
+      frameSent.includes('REC_FRAME_READY'),
+      `and it still reports ready, so a real start is not left waiting on it (${frameSent.join(', ')})`,
+    );
+    const frameChildren = await framePage.evaluate(() => document.body.children.length);
+    assert(
+      frameChildren === 0,
+      `the frame renders nothing on denial either — no visible notice left for nobody to read (${frameChildren} children)`,
+    );
+    assert(frameCrashes.length === 0, `no uncaught frame page errors ${frameCrashes.join('; ')}`);
+    await framePage.close();
+
+    step(
+      'task 40: once permission is granted, the frame drops its own camera track — nothing here needs to stay live',
+    );
+    // Important 3 (fix round 1): mirrors dropAudio's own reasoning, now for
+    // video too — the frame never shows a preview, and the engine opens its
+    // own separate capture, so holding this stream open would just be a
+    // second pointless capture.
+    const grantedCrashes = [];
+    const grantedPage = await browser.newPage();
+    grantedPage.on('pageerror', (err) => grantedCrashes.push(String(err)));
+    await grantedPage.evaluateOnNewDocument(() => {
+      window.__sent = [];
+      const canvas = document.createElement('canvas');
+      canvas.width = 4;
+      canvas.height = 4;
+      window.__fakeStream = canvas.captureStream(1);
+      // Captured before main() runs: dropTracks calls stream.removeTrack, so
+      // reading tracks back off the stream afterward would just see none —
+      // the track objects themselves, held separately, are what still carry
+      // a readyState once they are no longer members of anything.
+      window.__fakeTracks = window.__fakeStream.getTracks();
+      navigator.mediaDevices.getUserMedia = () => Promise.resolve(window.__fakeStream);
+      window.chrome = {
+        runtime: {
+          sendMessage: (msg) => {
+            window.__sent.push(msg);
+            if (msg?.type === 'REC_QUERY') {
+              return Promise.resolve({
+                active: true,
+                settings: { webcam: true, mic: false, tabAudio: false },
+              });
+            }
+            return Promise.resolve({});
+          },
+        },
+      };
+    });
+    await grantedPage.goto(`${base}/src/recorder/webcam-frame.html?webcam=1&mic=0`, {
+      waitUntil: 'load',
+    });
+    await grantedPage.waitForFunction(
+      () => window.__sent.some((m) => m.type === 'REC_FRAME_READY'),
+      { timeout: 5000 },
+    );
+    const trackStates = await grantedPage.evaluate(() =>
+      window.__fakeTracks.map((t) => t.readyState),
+    );
+    assert(
+      trackStates.length > 0 && trackStates.every((state) => state === 'ended'),
+      `granted tracks are stopped once permission is confirmed, not held open for a preview nobody sees (${trackStates.join(', ')})`,
+    );
+    assert(
+      (await grantedPage.evaluate(() => document.body.children.length)) === 0,
+      'a granted camera still renders nothing — this frame is permission-only',
+    );
+    assert(
+      grantedCrashes.length === 0,
+      `no uncaught frame page errors ${grantedCrashes.join('; ')}`,
+    );
+    await grantedPage.close();
 
     assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
   } finally {

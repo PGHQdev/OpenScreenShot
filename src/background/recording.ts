@@ -91,6 +91,13 @@ interface StoredRecState {
   /** Media chunks are failing to reach IndexedDB; the control bar says so. */
   writeFailed: boolean;
   /**
+   * A requested camera was declined (or unavailable). One-way, like
+   * `writeFailed` — set by `handleWebcamDenied`, never cleared within a run,
+   * and read back by `healOverlay` so the control bar's warning survives a
+   * heal the same way a chunk-write failure's does.
+   */
+  camDenied: boolean;
+  /**
    * Whether `ENGINE_STARTED` has arrived, i.e. whether `startedAt` is the
    * moment the recorders began rather than the moment the bar was mounted.
    * The clock has no zero until then, so no surface may show elapsed.
@@ -376,6 +383,10 @@ async function healOverlay(tabId: number): Promise<'fresh' | 'synced' | 'failed'
         s.pausedAt !== 0,
         { mic: s.settings.mic, tabAudio: s.settings.tabAudio, webcam: s.settings.webcam },
         s.writeFailed,
+        // A state written by a build that predates the field reads as
+        // false — no denial to report, same "absent means off" reading
+        // `writeFailed` already gets nowhere else in this call.
+        !!s.camDenied,
         // A state written by a build that predates the field would otherwise
         // read as unanchored and leave a live recording's bar on "Starting…".
         // Only an explicit false is unanchored.
@@ -546,6 +557,7 @@ async function handleStart(
       overlayLost: false,
       overlayMounted: false,
       writeFailed: false,
+      camDenied: false,
       anchored: false,
       continued: !!continueSessionId,
     });
@@ -930,10 +942,12 @@ async function handleCancel(): Promise<void> {
 }
 
 /**
- * The preview iframe failed to open the camera. The engine catches its own
+ * The permission frame failed to open the camera. The engine catches its own
  * `getUserMedia` failure independently, so nothing is forwarded to it — this
- * only keeps stored settings truthful, so a later overlay mount (or a popup
- * REC_QUERY) stops claiming a webcam track that is not being recorded.
+ * keeps stored settings truthful, so a later overlay mount (or a popup
+ * REC_QUERY) stops claiming a webcam track that is not being recorded, and
+ * it flags the denial so the control bar can say so (task 40: the permission
+ * frame itself never shows anything, now that it is a 1x1 dot).
  */
 async function handleWebcamDenied(): Promise<void> {
   const state = await getRecState();
@@ -941,9 +955,10 @@ async function handleWebcamDenied(): Promise<void> {
   await setRecState({
     sessionId: state.sessionId,
     settings: { ...state.settings, webcam: false },
+    camDenied: true,
   });
   // A mounted control bar keeps its CAM chip until it is told otherwise — the
-  // heal re-syncs it from the settings above.
+  // heal re-syncs it (and the new camDenied warning) from the state above.
   void healOverlay(state.tabId);
 }
 

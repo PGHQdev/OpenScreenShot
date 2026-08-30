@@ -309,9 +309,13 @@
     "message": "Webcam",
     "description": "Popup: toggle chip for the webcam track."
   },
+  "recWebcamNoPreview": {
+    "message": "Added to the export \u2014 no live preview while you record.",
+    "description": "Popup: one-line disclosure shown under the Webcam toggle once it is on, before Record is pressed (task 40: the recorded page never shows a live self-view)."
+  },
   "recWebcamDenied": {
     "message": "Camera declined — recording without it",
-    "description": "Webcam preview bubble: shown in place of the video when the camera prompt is declined or the camera is unavailable."
+    "description": "The permission frame's own denied-state text, and the control bar's screen-reader announcement when a requested camera is declined or unavailable (task 40: the frame itself is not visible, so the bar is what a sighted user reads)."
   },
   "recProtected": {
     "message": "Can’t record this protected page.",
@@ -372,6 +376,10 @@
   "recOverlayNotSaving": {
     "message": "NOT SAVING",
     "description": "Recording control bar: warning chip shown when chunks are failing to reach storage. Keep it short; it sits in a row of three-letter track chips."
+  },
+  "recOverlayCamDenied": {
+    "message": "CAM DECLINED",
+    "description": "Recording control bar: warning chip shown when a requested camera was declined or unavailable. Keep it short; it sits in a row of three-letter track chips."
   },
   "recFailRecorderOpen": {
     "message": "Your recording is saved \u2014 the Recorder page didn\u2019t open. Use Recover last recording below.",
@@ -792,7 +800,7 @@
     "description": "Setup page: row title for the camera permission."
   },
   "setupCameraDesc": {
-    "message": "Adds a webcam bubble.",
+    "message": "Adds a bubble to the export \u2014 no live preview while recording.",
     "description": "Setup page: row description for the camera permission."
   },
   "setupMic": {

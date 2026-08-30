@@ -171,6 +171,7 @@ function liveState(sessionId = 'sess-1', segmentId = 'seg-1', overlayMounted = t
     overlayLost: false,
     overlayMounted,
     writeFailed: false,
+    camDenied: false,
     anchored: true,
     continued: false,
   };
@@ -179,8 +180,8 @@ function liveState(sessionId = 'sess-1', segmentId = 'seg-1', overlayMounted = t
 /**
  * What the worker injected into the page, in order. The three injections are
  * told apart by their arguments, which is how they differ in production too:
- * the viewport read passes an empty array, the control-bar mount passes six,
- * and the unmount passes none at all.
+ * the viewport read passes an empty array, the control-bar mount passes
+ * seven, and the unmount passes none at all.
  */
 function injections(): string[] {
   const calls = fakeChrome.scripting.executeScript.mock.calls as [{ args?: unknown[] }][];
@@ -357,6 +358,72 @@ describe('the control bar', () => {
     void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS });
     await settle();
     expect(parked()).toBe('overlay-blocked');
+  });
+});
+
+describe('a declined camera', () => {
+  it('flags the state and re-heals, so the bar can say so', async () => {
+    workingTab();
+    session.set(REC_STATE_KEY, {
+      ...liveState(),
+      settings: { ...DEFAULT_RECORDING_SETTINGS, webcam: true },
+    });
+    await loadWorker();
+    void send({ type: 'REC_WEBCAM_DENIED' });
+    await settle();
+    const stored = session.get(REC_STATE_KEY) as {
+      camDenied?: boolean;
+      settings?: { webcam?: boolean };
+    };
+    expect(stored.camDenied).toBe(true);
+    expect(stored.settings?.webcam).toBe(false);
+  });
+
+  it("rides healOverlay's re-mount as the mount function's 6th argument", async () => {
+    workingTab();
+    session.set(REC_STATE_KEY, {
+      ...liveState(),
+      settings: { ...DEFAULT_RECORDING_SETTINGS, webcam: true },
+    });
+    await loadWorker();
+    void send({ type: 'REC_WEBCAM_DENIED' });
+    await settle();
+    const mounts = (fakeChrome.scripting.executeScript.mock.calls as [{ args?: unknown[] }][])
+      .map(([call]) => call.args)
+      .filter((args): args is unknown[] => (args?.length ?? 0) > 1);
+    expect(mounts.at(-1)?.[5]).toBe(true);
+  });
+
+  it('reads false off a state written before this field existed', async () => {
+    workingTab();
+    const legacy: Record<string, unknown> = {
+      ...liveState(),
+      settings: { ...DEFAULT_RECORDING_SETTINGS, webcam: true },
+    };
+    delete legacy.camDenied;
+    session.set(REC_STATE_KEY, legacy);
+    await loadWorker();
+    // Any gesture that heals the bar will do, but not REC_WEBCAM_DENIED
+    // itself — that write would set camDenied before healOverlay ever reads
+    // this "predates the field" state. REC_STOP heals unconditionally and
+    // touches nothing webcam-related.
+    void send({ type: 'REC_STOP' });
+    await settle();
+    const mounts = (fakeChrome.scripting.executeScript.mock.calls as [{ args?: unknown[] }][])
+      .map(([call]) => call.args)
+      .filter((args): args is unknown[] => (args?.length ?? 0) > 1);
+    expect(mounts.at(-1)?.[5]).toBe(false);
+  });
+
+  it('does nothing when the run has no webcam requested', async () => {
+    session.set(REC_STATE_KEY, liveState());
+    await loadWorker();
+    const before = fakeChrome.scripting.executeScript.mock.calls.length;
+    void send({ type: 'REC_WEBCAM_DENIED' });
+    await settle();
+    const stored = session.get(REC_STATE_KEY) as { camDenied?: boolean };
+    expect(stored.camDenied).toBeFalsy();
+    expect(fakeChrome.scripting.executeScript.mock.calls.length).toBe(before);
   });
 });
 
@@ -1249,12 +1316,12 @@ describe('the start window', () => {
     await loadWorker();
     void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
     await settle();
-    // args[5] is `anchored`; the mount is the injection that carries args.
+    // args[6] is `anchored`; the mount is the injection that carries args.
     const anchoredArgs = () =>
       (fakeChrome.scripting.executeScript.mock.calls as [{ args?: unknown[] }][])
         .map(([call]) => call.args)
         .filter((args): args is unknown[] => (args?.length ?? 0) > 1)
-        .map((args) => args[5]);
+        .map((args) => args[6]);
     expect(anchoredArgs()).toEqual([false]);
 
     const sessionId = (await listSessions())[0].id;
@@ -1494,6 +1561,6 @@ describe('recording state written before this build', () => {
     const mounts = (fakeChrome.scripting.executeScript.mock.calls as [{ args?: unknown[] }][])
       .map(([call]) => call.args)
       .filter((args): args is unknown[] => (args?.length ?? 0) > 1);
-    expect(mounts.at(-1)?.[5]).toBe(true);
+    expect(mounts.at(-1)?.[6]).toBe(true);
   });
 });

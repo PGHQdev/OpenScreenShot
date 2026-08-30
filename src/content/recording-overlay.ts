@@ -32,11 +32,13 @@ export function isNearBar(x: number, y: number, winW: number, winH: number): boo
  * a paused MediaRecorder writes no frames, so a visible bar costs nothing,
  * and a bar must never vanish under the pointer.
  *
- * `warning` joins them: it is set when chunks are failing to reach IndexedDB,
- * which is the one failure that loses the user's recording while it is still
- * being made. A message they can only find after stopping is a message that
- * arrives after the data is gone, and the bar hides after three idle seconds,
- * so the warning has to hold it open.
+ * `warning` joins them: true while chunks are failing to reach IndexedDB (the
+ * one failure that loses the user's recording while it is still being made)
+ * or while a requested camera has been declined (task 40: the permission
+ * frame never shows anything on its own, so this is the only way a denial
+ * ever reaches the user). Either message they can only find after stopping
+ * is a message that arrives too late, and the bar hides after three idle
+ * seconds, so a warning has to hold it open.
  */
 export function shouldShowBar(args: {
   sinceMountMs: number;
@@ -115,6 +117,14 @@ export function mountRecordingOverlay(
   /** Chunks are failing to reach IndexedDB; show it here and hold the bar open. */
   writeFailed: boolean,
   /**
+   * A requested camera was declined (or is unavailable). The permission
+   * frame itself never shows anything now that it is a 1x1 dot (task 40),
+   * so this is how a denial ever reaches the user — the same "warn and hold
+   * the bar open" treatment writeFailed gets, with its own chip and its own
+   * announcement text.
+   */
+  camDenied: boolean,
+  /**
    * Whether the engine has reported that the recorders began. Required, not
    * defaulted: a forgotten argument would put the bar back to counting from
    * its own mount, which is the bug this replaces. See `anchoredElapsed`.
@@ -126,6 +136,7 @@ export function mountRecordingOverlay(
     paused: boolean,
     tracks: { mic: boolean; tabAudio: boolean; webcam: boolean },
     writeFailed: boolean,
+    camDenied: boolean,
     anchored: boolean,
   ) => void;
   const win = window as unknown as {
@@ -134,7 +145,7 @@ export function mountRecordingOverlay(
     __ossRecReveal?: () => void;
   };
   if (win.__ossRecOverlay) {
-    win.__ossRecSync?.(elapsedMs, paused, tracks, writeFailed, anchored);
+    win.__ossRecSync?.(elapsedMs, paused, tracks, writeFailed, camDenied, anchored);
     return 'synced';
   }
 
@@ -367,20 +378,28 @@ export function mountRecordingOverlay(
   }
 
   /**
-   * Rebuild the chip row. The warning goes first: it is the only chip that
-   * reports a problem rather than a track, and a row it can be scrolled off
-   * the end of is a row it can be missed in. Purely visual — the announcing
-   * is the announcer's job, because this row is replaced on every heal.
+   * Rebuild the chip row. Warnings go first, chunk-loss before camera-denial
+   * — they are the only chips that report a problem rather than a track, and
+   * a row it can be scrolled off the end of is a row it can be missed in.
+   * Purely visual — the announcing is the announcer's job, because this row
+   * is replaced on every heal.
    */
   function renderChips(
     next: { mic: boolean; tabAudio: boolean; webcam: boolean },
-    warn: boolean,
+    chunkWarn: boolean,
+    camWarn: boolean,
   ): void {
     chips.replaceChildren();
-    if (warn) {
+    if (chunkWarn) {
       const chip = makeChip(t('recOverlayNotSaving', 'NOT SAVING'));
       chip.className = 'chip warn';
       chip.setAttribute('data-testid', 'rec-overlay-warning');
+      chips.appendChild(chip);
+    }
+    if (camWarn) {
+      const chip = makeChip(t('recOverlayCamDenied', 'CAM DECLINED'));
+      chip.className = 'chip warn';
+      chip.setAttribute('data-testid', 'rec-overlay-cam-warning');
       chips.appendChild(chip);
     }
     if (next.mic) chips.appendChild(makeChip(t('recOverlayMic', 'MIC')));
@@ -394,13 +413,16 @@ export function mountRecordingOverlay(
   announcer.setAttribute('data-testid', 'rec-overlay-announcer');
   bar.appendChild(announcer);
 
-  /** Say it once. `warning` is one-way, so this runs at most once per run. */
-  function announceWarning(): void {
-    announcer.textContent = t('recOverlayNotSaving', 'NOT SAVING');
+  /** Say it once per warning — each of the two is its own one-way ratchet,
+   *  so this runs at most once per warning per run. */
+  function announceWarning(text: string): void {
+    announcer.textContent = text;
   }
 
-  let warning = writeFailed;
-  renderChips(tracks, warning);
+  let chunkWarning = writeFailed;
+  let camWarning = camDenied;
+  let warning = chunkWarning || camWarning;
+  renderChips(tracks, chunkWarning, camWarning);
 
   const pauseBtn = document.createElement('button');
   bar.appendChild(pauseBtn);
@@ -418,8 +440,13 @@ export function mountRecordingOverlay(
   document.documentElement.appendChild(host);
   // After the append, never before: a live region has to be in the document
   // when its text changes, or the change is part of the insertion and is not
-  // announced. This is the fresh-mount half of the edge.
-  if (warning) announceWarning();
+  // announced. This is the fresh-mount half of the edge. Chunk-loss wins if
+  // both are somehow already true at mount (it never is in practice — a
+  // camera denial resolves before the first ENGINE_STARTED heal, and
+  // chunk-loss cannot happen before recording starts).
+  if (chunkWarning) announceWarning(t('recOverlayNotSaving', 'NOT SAVING'));
+  else if (camWarning)
+    announceWarning(t('recWebcamDenied', 'Camera declined — recording without it'));
 
   // --- Webcam/mic permission frame ------------------------------------------
 
@@ -742,7 +769,14 @@ export function mountRecordingOverlay(
 
   // --- Re-sync ---------------------------------------------------------------
 
-  win.__ossRecSync = (nextElapsedMs, nextPaused, nextTracks, nextWriteFailed, nextAnchored) => {
+  win.__ossRecSync = (
+    nextElapsedMs,
+    nextPaused,
+    nextTracks,
+    nextWriteFailed,
+    nextCamDenied,
+    nextAnchored,
+  ) => {
     // Shift what is still buffered by the same amount the clock moves, so a
     // re-anchor cannot leave the last second of cursor events pointing at a
     // timestamp the video never had.
@@ -762,21 +796,29 @@ export function mountRecordingOverlay(
     renderTimer();
 
     // One-way, like the tracks above: a run that has started losing chunks
-    // does not stop having lost them, and a stale heal carrying `false`
-    // cannot take the warning back off.
-    const wasWarning = warning;
-    warning = warning || nextWriteFailed;
-    renderChips(nextTracks, warning);
+    // does not stop having lost them (or having had a camera declined), and
+    // a stale heal carrying `false` cannot take either warning back off.
+    const wasChunkWarning = chunkWarning;
+    chunkWarning = chunkWarning || nextWriteFailed;
+    const wasCamWarning = camWarning;
+    camWarning = camWarning || nextCamDenied;
+    warning = chunkWarning || camWarning;
+    renderChips(nextTracks, chunkWarning, camWarning);
     // Before announceWarning, not after: `warning` is one of shouldShowBar's
     // own inputs, so this is what takes the host out of `inert` when a
-    // chunk-write failure arrives while the bar is hidden. An alert whose
-    // text changes inside an inert subtree is not announced — the same edge
-    // the fresh-mount comment above already names for insertion order, one
-    // property over for `inert` instead of the document.
+    // chunk-write failure or a camera denial arrives while the bar is
+    // hidden. An alert whose text changes inside an inert subtree is not
+    // announced — the same edge the fresh-mount comment above already names
+    // for insertion order, one property over for `inert` instead of the
+    // document.
     applyBarVisibility();
-    // The sync half of the edge: only the false -> true transition speaks, so
+    // The sync half of the edge: only a false -> true transition speaks, so
     // the heal on every popup open and every navigation stays silent.
-    if (warning && !wasWarning) announceWarning();
+    // Chunk-loss wins if both flip on the same tick — the more urgent of the
+    // two, and the same tie-break the fresh-mount path above uses.
+    if (chunkWarning && !wasChunkWarning) announceWarning(t('recOverlayNotSaving', 'NOT SAVING'));
+    else if (camWarning && !wasCamWarning)
+      announceWarning(t('recWebcamDenied', 'Camera declined — recording without it'));
 
     // Drop the frame only when neither device is left. A camera that is gone
     // makes the frame a permission surface for nothing, but the same element

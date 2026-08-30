@@ -603,6 +603,40 @@ async function main() {
     assert(state.created.length === 0, 'a granted Record click opens no tab');
     await page.close();
 
+    step('popup Webcam toggle: no self-view while recording is disclosed before Record is pressed');
+    // Important 2 (task 40, fix round 1): the bubble only ever exists in the
+    // exported file — there is no live preview while recording — so this has
+    // to be said before Record is pressed, not discovered after.
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'] });
+    await page.waitForSelector('.mode-card[aria-disabled]');
+    const findWebcamChip = () =>
+      page.evaluateHandle((label) => {
+        return [...document.querySelectorAll('.chip-toggle')].find(
+          (el) => el.textContent?.trim() === label,
+        );
+      }, messages.recWebcam.message);
+    assert(
+      (await page.$('[data-testid="rec-webcam-hint"]')) === null,
+      'no disclosure while Webcam is off — nothing to disclose yet',
+    );
+    let chip = await findWebcamChip();
+    await chip.asElement().click();
+    await page.waitForSelector('[data-testid="rec-webcam-hint"]');
+    const hintText = await page.$eval('[data-testid="rec-webcam-hint"]', (el) =>
+      el.textContent?.trim(),
+    );
+    assert(
+      hintText === messages.recWebcamNoPreview.message,
+      `turning Webcam on discloses no live preview ("${hintText}")`,
+    );
+    chip = await findWebcamChip();
+    await chip.asElement().click();
+    assert(
+      (await page.$('[data-testid="rec-webcam-hint"]')) === null,
+      'turning Webcam back off removes the disclosure with it',
+    );
+    await page.close();
+
     step('popup Record click the worker never received: the popup stays to say so');
     page = await open(POPUP_PAGE, { grants: ['tabCapture'] });
     await page.waitForSelector('.mode-card[aria-disabled]');

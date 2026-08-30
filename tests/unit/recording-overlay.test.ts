@@ -249,7 +249,9 @@ describe('the sync path un-inerts before it announces', () => {
     const syncBody = /win\.__ossRecSync = \([\s\S]*?\n {2}\};/.exec(SOURCE)?.[0];
     expect(syncBody, '__ossRecSync assignment not found').toBeTruthy();
     const applyIndex = syncBody!.indexOf('applyBarVisibility();');
-    const announceIndex = syncBody!.indexOf('announceWarning();');
+    // announceWarning now takes an argument (task 40: two warnings, two
+    // texts), so this looks for the call, not the exact no-args form.
+    const announceIndex = syncBody!.indexOf('announceWarning(');
     expect(applyIndex, 'applyBarVisibility() not called in the sync path').toBeGreaterThan(-1);
     expect(announceIndex, 'announceWarning() not called in the sync path').toBeGreaterThan(-1);
     expect(
