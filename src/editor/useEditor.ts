@@ -1828,6 +1828,18 @@ export function useEditor() {
       cancelCrop();
       return;
     }
+    // The controller only takes the new picture in `img.onload` below, so
+    // between an apply and its decode `imageRef.current` is already the new
+    // image while `c.image` is still the old one. Every other writer of
+    // `imageRef.current` sets both together, so this is that window and only
+    // that window. A second apply inside it would build its history entry
+    // against the new picture and then rasterise `c.composeImage()` from the
+    // old one — a crop of the wrong pixels, silently. The apply gives way
+    // instead; `cancelCrop` clears the draft and announces it.
+    if (imageRef.current !== c.image) {
+      cancelCrop();
+      return;
+    }
     const n = normalizeRect(r);
     if (n.w < 1 || n.h < 1) {
       cancelCrop();
@@ -1882,8 +1894,9 @@ export function useEditor() {
       c.setImage(img);
       setImageSize({ w: canvas.width, h: canvas.height });
     };
-    // Written before the decode lands, so a second crop in the same breath
-    // takes its entry against this picture rather than the one it replaced.
+    // Written before the decode lands, so the onload guard above can tell
+    // this crop's image from a later one's, and so the guard at the top of
+    // this function can see that the decode has not landed yet.
     imageRef.current = img;
     img.src = cropped;
     applyAnnotations(stepped.annotations);
