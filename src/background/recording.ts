@@ -662,16 +662,7 @@ async function discardPreparedRun(
   continued: boolean,
 ): Promise<void> {
   await unmountOverlay(tabId);
-  try {
-    if (continued) {
-      if (segmentId) await deleteSegment(segmentId);
-      await updateSession(sessionId, { status: 'complete' });
-    } else {
-      await deleteSession(sessionId);
-    }
-  } catch (err) {
-    console.error('[OpenScreenShot] discarding the abandoned start failed', err);
-  }
+  await discardRun(sessionId, continued, segmentId);
   await clearRecState();
   await closeOffscreenSafe();
   resolveStartPending();
@@ -700,26 +691,33 @@ async function abandonUnstartedRun(sessionId: string): Promise<void> {
 }
 
 /**
- * A Stop the engine never answered, on a run it never started. `handleStop`
- * arms this when it stops a run that is not yet anchored; by the time it runs
- * either `ENGINE_STOPPED` has cleared the state, or the anchor has arrived and
- * the recording is real, or neither — and neither is the hung engine.
+ * A Stop or a Cancel the engine never answered, on a run it never started.
+ * `handleStop` and `handleCancel` arm this on every gesture; by the time it
+ * runs either `ENGINE_STOPPED` has cleared the state, or the anchor has
+ * arrived and the recording is real, or neither — and neither is the hung
+ * engine.
  *
- * That last case has no other exit. `OFFSCREEN_STOP` to an engine whose own
- * `state` is null parks a pending stop and returns, so no `ENGINE_STOPPED`
- * comes back and nothing clears; `handleQuery`'s escape hatch checks for an
- * offscreen document, which exists and is merely hung. Without this the bar
- * stays up reading "Starting…" over dead buttons, with a REC badge that never
- * goes down, until the tab is closed.
+ * That last case has no other exit. `OFFSCREEN_STOP` (and `OFFSCREEN_CANCEL`)
+ * to an engine whose own `state` is null parks a pending stop and returns, so
+ * no `ENGINE_STOPPED` comes back and nothing clears; `handleQuery`'s escape
+ * hatch checks for an offscreen document, which exists and is merely hung.
+ * Without this the bar stays up reading "Starting…" over dead buttons, with a
+ * REC badge that never goes down, until the tab is closed.
+ *
+ * `code` carries which gesture is waiting: `engine-stalled` for a Stop, whose
+ * intent to record did fail, and null for a Cancel, which asked for nothing
+ * to be kept and gets the silent teardown `discardPreparedRun` gives the same
+ * gesture one tick earlier.
  */
-async function abandonStalledRun(sessionId: string): Promise<void> {
+async function abandonStalledRun(sessionId: string, code: RecFailureCode | null): Promise<void> {
   const state = await getRecState().catch(() => null);
   if (!state || state.sessionId !== sessionId || state.anchored) return;
-  await tearDownUnstartedRun(state, 'engine-stalled');
+  await tearDownUnstartedRun(state, code);
 }
 
 /**
- * Tear down a run the engine never took charge of, and say so.
+ * Tear down a run the engine never took charge of, and say so — or say
+ * nothing, when `code` is null because the user asked for the teardown.
  *
  * **The state goes first, and the bar goes after it.** The other order —
  * unmount, then several awaits of IndexedDB, then clear — leaves a window in
@@ -727,23 +725,34 @@ async function abandonStalledRun(sessionId: string): Promise<void> {
  * page. The state is then cleared under it and nothing will ever unmount that
  * bar again: it sits there reading "Starting…", with a live REC dot and a
  * webcam frame, over buttons whose messages all hit `if (!state) return`.
- * Clearing first shuts that window, because `healOverlay` re-reads the state
- * and returns 'failed' once there is none.
+ * Clearing first narrows that window to the microtask between `healOverlay`'s
+ * own re-read and the clear, because a heal that reads no state returns
+ * 'failed' instead of mounting.
+ *
+ * A null `code` takes the cancel's three differences with it, which are one
+ * rule stated three times: the run is discarded rather than kept as 'failed',
+ * the badge is restored rather than cleared so a '!' this start already
+ * parked survives, and nothing is reported.
  */
 async function tearDownUnstartedRun(
   state: StoredRecState | null,
-  code: RecFailureCode,
+  code: RecFailureCode | null,
 ): Promise<void> {
   await clearRecState();
   let retained = true;
   if (state) {
-    retained = await retainFailedSession(state.sessionId, state.continued, state.segmentId);
+    if (code) {
+      retained = await retainFailedSession(state.sessionId, state.continued, state.segmentId);
+    } else {
+      await discardRun(state.sessionId, state.continued, state.segmentId);
+    }
     await unmountOverlay(state.tabId);
   }
-  await clearRecBadge();
+  if (code) await clearRecBadge();
   await closeOffscreenSafe();
   resolveStartPending();
-  await reportFailure(retained ? code : 'cleanup-failed');
+  if (code) await reportFailure(retained ? code : 'cleanup-failed');
+  else await restoreRecBadge();
 }
 
 /**
@@ -797,6 +806,36 @@ async function dropOlderFailedSessions(keepId: string): Promise<void> {
 }
 
 /**
+ * Settle the DB half of a run the user asked to end before it began — the
+ * counterpart of `retainFailedSession`, for a gesture rather than a failure.
+ *
+ * Nothing recorded and nothing kept: a 'failed' row on the Recorder page
+ * would report a deliberate cancel as something that went wrong. A continued
+ * session keeps its earlier segments, which are real recordings, and only
+ * loses the 'recording' status this run gave it.
+ *
+ * A discard that throws stays quiet, unlike `retainFailedSession`'s
+ * 'cleanup-failed': the row it left behind is the one the user was dropping,
+ * and telling them their cancel half-worked is worse than the stray row.
+ */
+async function discardRun(
+  sessionId: string,
+  continued: boolean,
+  segmentId?: string,
+): Promise<void> {
+  try {
+    if (continued) {
+      if (segmentId) await deleteSegment(segmentId);
+      await updateSession(sessionId, { status: 'complete' });
+    } else {
+      await deleteSession(sessionId);
+    }
+  } catch (err) {
+    console.error('[OpenScreenShot] discarding the abandoned start failed', err);
+  }
+}
+
+/**
  * Inject a self-contained function into `tabId` and return its (awaited)
  * result. Deliberately not imported from `src/background/index.ts` — the
  * brief has this module own it independently to avoid coupling the capture
@@ -846,7 +885,10 @@ async function handleStop(): Promise<void> {
   // gesture: a Stop pressed on "Starting…" whose ENGINE_STARTED lands a beat
   // later is stopping a real recording, and only a check made at the deadline
   // can know that.
-  setTimeout(() => void abandonStalledRun(state.sessionId), STALLED_STOP_TIMEOUT_MS);
+  setTimeout(
+    () => void abandonStalledRun(state.sessionId, 'engine-stalled'),
+    STALLED_STOP_TIMEOUT_MS,
+  );
 }
 
 async function handlePause(): Promise<void> {
@@ -880,6 +922,11 @@ async function handleCancel(): Promise<void> {
   chrome.runtime
     .sendMessage({ type: 'OFFSCREEN_CANCEL', target: 'offscreen' })
     .catch(() => reportControlUnreachable());
+  // The same watchdog Stop arms, for the same hung engine: OFFSCREEN_CANCEL
+  // parks a pending cancel against a null engine state and nothing comes
+  // back. It tears down without a word — the user cancelled, and the bar
+  // going away is the whole answer.
+  setTimeout(() => void abandonStalledRun(state.sessionId, null), STALLED_STOP_TIMEOUT_MS);
 }
 
 /**

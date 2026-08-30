@@ -1354,6 +1354,66 @@ describe('a teardown a Stop can land inside', () => {
     }
   });
 
+  it('tears a stalled run down silently when its Cancel gets no answer', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      workingTab();
+      liveOffscreen();
+      await loadWorker();
+      void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+      await settle();
+      expect((await listSessions()).length).toBe(1);
+      // The same hung getUserMedia the Stop watchdog covers. OFFSCREEN_CANCEL
+      // reaches an engine whose own state is null, so it parks a pending
+      // cancel and no ENGINE_STOPPED ever comes back.
+      void send({ type: 'REC_CANCEL' });
+      await settle();
+      expect(session.get(REC_STATE_KEY)).toBeDefined();
+
+      await vi.advanceTimersByTimeAsync(3500);
+      await settle();
+      expect(session.get(REC_STATE_KEY)).toBeUndefined();
+      expect(injections()).toEqual(['viewport', 'mount', 'unmount']);
+      expect(fakeChrome.offscreen.closeDocument).toHaveBeenCalled();
+      // A cancel is the user's own gesture, so the teardown says nothing and
+      // keeps nothing: no code parked, no broadcast, no '!' badge, and no
+      // 'failed' row on the Recorder page for a run they asked to drop.
+      expect(parked()).toBeNull();
+      expect(broadcasts()).toEqual([]);
+      expect(badgeText.at(-1)).toBe('');
+      expect(await listSessions()).toEqual([]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('spares a run whose anchor arrived after the Cancel that was watching it', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      workingTab();
+      liveOffscreen();
+      await loadWorker();
+      void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+      await settle();
+      const sessionId = (await listSessions())[0].id;
+      void send({ type: 'REC_CANCEL' });
+      await settle();
+      void send({ type: 'ENGINE_STARTED', sessionId, tracks: { mic: true, webcam: false } });
+      await settle();
+
+      // The engine reported in a beat after the gesture, so the cancel it
+      // parked is a real one it will answer. Tearing the run down here would
+      // delete a session the engine is still holding.
+      await vi.advanceTimersByTimeAsync(3500);
+      await settle();
+      expect(session.get(REC_STATE_KEY)).toBeDefined();
+      expect((await listSessions()).length).toBe(1);
+      expect(parked()).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('reports a stop it could not place, when the store cannot say the run is gone', async () => {
     workingTab();
     liveOffscreen();
