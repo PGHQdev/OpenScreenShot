@@ -52,7 +52,13 @@ const STAT_SOURCES = {
 const STAT_SHAPE = /^\d[\d,.kKmM+]*$/;
 const VERSION_SHAPE = /^v?\d+(\.\d+)*$/;
 const STATS_TTL = 21600;
-const STATS_TIMEOUT_MS = 1500;
+/*
+ * The homepage's first byte waits on this: the two shield lookups run
+ * alongside the asset fetch, but the HTML cannot start streaming until the
+ * rewriter is attached. The markup's own 985 / 65 are current and correct, so
+ * giving up early costs freshness and nothing else.
+ */
+const STATS_TIMEOUT_MS = 500;
 
 async function shieldValue(url, shape) {
   const timeout = AbortSignal.timeout(STATS_TIMEOUT_MS);
@@ -92,8 +98,19 @@ class StatRewriter {
   }
 }
 
-async function withInjectedStats(response) {
-  const [users, stars] = await Promise.all([
+/*
+ * Takes the asset fetch as a promise, not an awaited Response, so the two
+ * shield lookups run alongside it rather than after it — awaiting the asset
+ * first put the whole shield round trip between the request and the first
+ * byte of HTML on an edge cache miss.
+ *
+ * The degrade contract is unchanged: a lookup that times out or answers
+ * badly yields null, null keeps the number the markup already carries, and
+ * both being null skips the rewriter entirely.
+ */
+async function withInjectedStats(assetPromise) {
+  const [response, users, stars] = await Promise.all([
+    assetPromise,
     shieldValue(STAT_SOURCES.users, STAT_SHAPE),
     shieldValue(STAT_SOURCES.stars, STAT_SHAPE),
   ]);
@@ -126,7 +143,7 @@ async function route(url, request, env) {
         headers: { 'content-type': 'text/markdown; charset=utf-8' },
       });
     }
-    return withInjectedStats(await env.ASSETS.fetch(request));
+    return withInjectedStats(env.ASSETS.fetch(request));
   }
 
   return env.ASSETS.fetch(request);
