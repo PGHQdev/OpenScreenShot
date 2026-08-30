@@ -797,6 +797,72 @@ async function main() {
     // A trusted CDP click: the export plays the segments, and a scripted
     // .click() carries no user activation for autoplay.
     await button.click();
+
+    // Mid-export UI, read out of the live DOM while the render is still
+    // running (the fixture's ~2.1s source, played at 1x) — not described.
+    // The remaining-time figure, the tab-visible warning, three of the
+    // draft-editing controls Task 36 locks, and the Cancel button's armed
+    // two-step (arm, then Escape disarms without aborting).
+    await page.waitForSelector('.rec-export-warning', { timeout: 5000 });
+    // The placeholder text ("0:00 remaining") is also what the element reads
+    // before the first real frame updates it, so waiting for it to move off
+    // that placeholder is what proves the figure is actually live — not
+    // stuck, not decorative.
+    const placeholder = messages.recorderExportRemaining.message.replace('$TIME$', '0:00');
+    await page.waitForFunction(
+      (ph) => document.querySelector('.rec-export-remaining')?.textContent !== ph,
+      { timeout: 1800 },
+      placeholder,
+    );
+    const mid = await page.evaluate(() => {
+      const inertOf = (el) => el?.closest('.rail-section')?.inert ?? null;
+      return {
+        remainingText: document.querySelector('.rec-export-remaining')?.textContent ?? null,
+        warningText: document.querySelector('.rec-export-warning')?.textContent ?? null,
+        cancelLabel: document.querySelector('.rec-cancel-btn')?.textContent?.trim() ?? null,
+        trimAriaDisabled: document.querySelector('.rec-tl-handle')?.getAttribute('aria-disabled'),
+        addZoomLocked: inertOf(document.querySelector('.rail-section .btn-secondary')),
+        rippleLocked: inertOf(document.querySelector('.rail-section input.switch')),
+        beautifyLocked: inertOf(document.querySelector('.swatches')),
+      };
+    });
+    assert(
+      /^\d+:\d{2} .+/.test(mid.remainingText ?? '') && mid.remainingText !== placeholder,
+      `remaining time reads "${mid.remainingText}"`,
+    );
+    assert(
+      mid.warningText === messages.recorderExportStayVisible.message,
+      `stay-visible warning reads "${mid.warningText}"`,
+    );
+    assert(
+      mid.cancelLabel === messages.recorderCancel.message,
+      `cancel button reads "${mid.cancelLabel}"`,
+    );
+    assert(mid.trimAriaDisabled === 'true', 'a trim handle is aria-disabled during export');
+    assert(mid.addZoomLocked === true, 'the Add Zoom / Regenerate section is locked (inert)');
+    assert(mid.rippleLocked === true, 'the ripple/pointer section is locked (inert)');
+    assert(mid.beautifyLocked === true, 'the beautify section is locked (inert)');
+
+    const cancelBtn = await page.$('.rec-cancel-btn');
+    await cancelBtn.click();
+    const armed = await page.$eval('.rec-cancel-btn', (el) => ({
+      armed: el.getAttribute('data-armed'),
+      label: el.textContent?.trim(),
+    }));
+    assert(armed.armed === 'true', 'a first click arms Cancel');
+    assert(
+      armed.label === messages.recorderCancelConfirm.message,
+      `armed cancel reads "${armed.label}"`,
+    );
+    await page.evaluate(() => {
+      document
+        .querySelector('.rec-cancel-btn')
+        .dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    });
+    const disarmed = await page.$eval('.rec-cancel-btn', (el) => el.getAttribute('data-armed'));
+    assert(disarmed === null, 'Escape disarms Cancel');
+    assert(!!(await page.$('.rec-progress')), 'the export is still running — Escape did not abort');
+
     await page.waitForFunction(() => window.__smoke.toasts.length > 0, { timeout: 120_000 });
 
     const result = await page.evaluate(() => window.__smoke);
@@ -816,6 +882,21 @@ async function main() {
 
     const onDisk = await readdir(downloads).catch(() => []);
     console.log(`    download directory: ${onDisk.join(', ') || '(empty)'}`);
+
+    step('cancel, confirmed, discards the render');
+    const beforeCancel = await page.evaluate(() => window.__smoke.downloads.length);
+    const exportAgain = await page.waitForSelector('.rec-btn-primary', { timeout: 15_000 });
+    await exportAgain.click();
+    const cancelBtn2 = await page.waitForSelector('.rec-cancel-btn', { timeout: 5000 });
+    // Two clicks: the first arms, the second — while still armed — confirms.
+    await cancelBtn2.click();
+    await cancelBtn2.click();
+    await page.waitForSelector('.rec-btn-primary', { timeout: 15_000 });
+    const afterCancel = await page.evaluate(() => window.__smoke.downloads.length);
+    assert(
+      afterCancel === beforeCancel,
+      `a confirmed cancel produced no download (${beforeCancel} -> ${afterCancel})`,
+    );
 
     step('exporting a session that holds a segment the export cannot play');
     await page.evaluate(seedEmptySegment, seeded.sessionId);

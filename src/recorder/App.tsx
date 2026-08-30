@@ -333,6 +333,12 @@ function SessionView({
 }) {
   const sess = useRecorderSession(sessionId);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // An export runs off its own copy of the draft (Rail owns the render), so
+  // this only gates the stage's and timeline's own draft-editing controls —
+  // dragging the bubble, the zoom target, a trim handle, or a zoom block —
+  // which would otherwise repaint the live preview into something the file
+  // being written no longer matches.
+  const [exporting, setExporting] = useState(false);
 
   // A session that will not load used to drop straight back to the list with
   // nothing said: the hook set `error` and no one read it, so a recording the
@@ -448,7 +454,13 @@ function SessionView({
     <div class="rec-session">
       <div class="rec-main">
         <div class="rec-stage">
-          <Stage sess={sess} loaded={loaded} draft={draft} selectedId={selectedId} />
+          <Stage
+            sess={sess}
+            loaded={loaded}
+            draft={draft}
+            selectedId={selectedId}
+            locked={exporting}
+          />
           {sess.segments.map((seg, i) => (
             <video
               key={seg.segment.id}
@@ -504,6 +516,7 @@ function SessionView({
           onSeek={sess.seek}
           onTrim={sess.setTrim}
           onBlocks={sess.setBlocks}
+          locked={exporting}
         />
       </div>
 
@@ -519,6 +532,7 @@ function SessionView({
         onRegenerate={regenerate}
         onToast={onToast}
         onDeleted={onMissing}
+        onExportingChange={setExporting}
       />
     </div>
   );
@@ -537,11 +551,16 @@ function Stage({
   loaded,
   draft,
   selectedId,
+  locked,
 }: {
   sess: UseRecorderSession;
   loaded: LoadedSession;
   draft: ExportDraft;
   selectedId: string | null;
+  /** An export is running off its own copy of the draft; dragging the
+   *  bubble or the zoom target here would only desync the live preview
+   *  from the file already being written. */
+  locked: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fitRef = useRef<FitRect>({ x: 0, y: 0, w: 0, h: 0 });
@@ -722,6 +741,7 @@ function Stage({
   // never reaches this handler — this only ever sees the rest of the canvas,
   // which is exactly "otherwise bubble hit-test".
   function startBubbleDrag(e: PointerEvent) {
+    if (locked) return;
     if (!hitsBubble(e.clientX, e.clientY)) return;
     e.preventDefault();
     const el = e.currentTarget as HTMLElement;
@@ -762,6 +782,7 @@ function Stage({
           style={targetStyle}
           aria-label={t('recorderZoomTarget')}
           title={t('recorderZoomTarget')}
+          disabled={locked}
           onPointerDown={startTargetDrag}
         />
       ) : null}

@@ -292,6 +292,12 @@ body {
   font-weight: 600;
 }
 
+/* Same armed-Cancel look as the session list's armed Delete above. */
+.rec-cancel-btn[data-armed='true'] {
+  color: var(--danger-ink);
+  font-weight: 600;
+}
+
 /* ---- Session view (stage + rail) ---- */
 .rec-session {
   display: flex;
@@ -367,6 +373,17 @@ body {
 
 .rail-section + .rail-section {
   border-top: 1px solid var(--border);
+}
+
+/* `inert` (App.tsx's dialogs already use it the same way) blocks interaction
+   and drops the subtree out of the accessibility tree on its own; this only
+   adds the visual signal, which `inert` does not supply by itself. Opacity,
+   not colour, so it needs no forced-colors override — same reasoning as the
+   .link-btn[aria-disabled] dimming above. */
+.rail-section[inert],
+.rec-zoom-tools[inert] {
+  opacity: 0.5;
+  transition: opacity var(--dur-fast) var(--ease-out);
 }
 
 .rail-link {
@@ -527,6 +544,18 @@ body {
   }
 }
 
+/* Same amber-on-tint caution look as .pill-recovered above; it is one
+   variant, not two colours compared against each other, so it needs no
+   forced-colors override for the same reason that pill does not. */
+.rec-export-warning {
+  margin: 0;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  color: var(--danger-ink);
+  background: color-mix(in srgb, var(--warning) 16%, transparent);
+}
+
 /* ---- Stage ---- */
 .rec-stage {
   flex: 1 1 auto;
@@ -590,6 +619,11 @@ body {
 .rec-reticle:focus-visible {
   outline: 2px solid var(--border-focus);
   outline-offset: 2px;
+}
+
+.rec-reticle:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .rec-transport {
@@ -707,6 +741,14 @@ body {
 
 .rec-tl-handle:focus-visible {
   outline: none;
+}
+
+.rec-tl-handle[aria-disabled='true'] {
+  cursor: default;
+}
+
+.rec-tl-handle[aria-disabled='true']::before {
+  opacity: 0.4;
 }
 
 .rec-tl-zooms {
@@ -912,7 +954,9 @@ body {
   .link-btn,
   .rec-bubble-corner,
   .rec-seg-btn,
-  .toast-dismiss {
+  .toast-dismiss,
+  .rail-section[inert],
+  .rec-zoom-tools[inert] {
     transition: none;
   }
 }

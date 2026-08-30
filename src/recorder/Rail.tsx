@@ -3,19 +3,35 @@
  * toggle, and the export section.
  *
  * Export runs on the wall clock (see `export-video.ts`), so the button turns
- * into a progress bar with a Cancel next to it for the whole render. Cancel
- * discards the partial file — an aborted export produces nothing, not a short
- * recording.
+ * into a progress bar with a Cancel next to it for the whole render, plus the
+ * remaining time and a warning to keep the tab visible (the render stalls
+ * otherwise — see that file's header comment). Cancel discards the partial
+ * file — an aborted export produces nothing, not a short recording — so it
+ * asks first, the same armed two-step the session list's Delete uses. Every
+ * control here that edits the draft is `inert` for the same span: it repaints
+ * the live preview, but the export is already running off a copy of the
+ * draft it started with, so an edit now would only make the preview lie
+ * about what the file will contain.
  */
 import { useRef, useState } from 'preact/hooks';
 import { BACKGROUND_PRESETS, type FrameOptions } from '../editor/frame';
+import { formatTimer } from '../content/recording-overlay';
 import { deleteSession } from '../shared/recording-db';
 import { getSettings } from '../shared/storage';
 import { formatFilename } from '../shared/utils';
-import { exportGeometry, exportVideo, type ExportDraft } from './export-video';
+import {
+  exportGeometry,
+  exportVideo,
+  nextCancelClick,
+  type ExportDraft,
+  type ExportProgress,
+} from './export-video';
 import { recFailureMessageKey } from '../shared/rec-failure';
 import type { BubbleCorner } from './recorder-draft';
 import type { LoadedSession } from './session-load';
+
+/** Same 3 s disarm as the session list's Delete confirm (App.tsx). */
+const CANCEL_DISARM_MS = 3000;
 
 const BUBBLE_CORNERS: readonly BubbleCorner[] = ['tl', 'tr', 'bl', 'br'];
 const BUBBLE_CORNER_LABEL: Record<BubbleCorner, string> = {
@@ -43,28 +59,68 @@ export interface RailProps {
   onToast: (message: string, tone?: 'info' | 'error') => void;
   /** The session was deleted after a successful export; leave the editor. */
   onDeleted: () => void;
+  /** Lets the stage and timeline lock their own draft-editing controls too. */
+  onExportingChange: (exporting: boolean) => void;
 }
 
 export function Rail(props: RailProps) {
-  const [progress, setProgress] = useState<number | null>(null);
+  const [progress, setProgress] = useState<ExportProgress | null>(null);
   const [deleteAfter, setDeleteAfter] = useState(false);
+  const [cancelArmed, setCancelArmed] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  const cancelDisarmRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The announced figure, not the raw one: `progress.remainingMs` updates on
+  // every driven frame, but the live region only needs to speak once a
+  // second — re-announcing 30x/s would bury a screen-reader user in noise.
+  const [announcedRemainingMs, setAnnouncedRemainingMs] = useState(0);
+  const lastAnnouncedSecRef = useRef(-1);
   const exporting = progress !== null;
   const { frame, metrics } = exportGeometry(props.loaded, props.draft);
   const isSolidBg = frame.background.kind === 'solid';
   const solidColor = isSolidBg ? (frame.background as { color: string }).color : '#1d1d1f';
   const px = (v: number) => ` · ${v}px`;
 
+  function clearCancelTimer() {
+    if (cancelDisarmRef.current) clearTimeout(cancelDisarmRef.current);
+    cancelDisarmRef.current = null;
+  }
+
+  function handleCancelClick() {
+    const next = nextCancelClick(cancelArmed);
+    clearCancelTimer();
+    setCancelArmed(next.armed);
+    if (next.armed) {
+      cancelDisarmRef.current = setTimeout(() => setCancelArmed(false), CANCEL_DISARM_MS);
+    }
+    if (next.confirmed) abortRef.current?.abort();
+  }
+
+  function handleCancelKeyDown(e: KeyboardEvent) {
+    if (e.key !== 'Escape' || !cancelArmed) return;
+    clearCancelTimer();
+    setCancelArmed(false);
+  }
+
   async function runExport() {
     if (exporting) return;
     const controller = new AbortController();
     abortRef.current = controller;
-    setProgress(0);
+    lastAnnouncedSecRef.current = -1;
+    setAnnouncedRemainingMs(0);
+    setProgress({ fraction: 0, remainingMs: 0 });
+    props.onExportingChange(true);
     try {
       const { blob, skippedParts } = await exportVideo(
         props.loaded,
         props.draft,
-        (p) => setProgress(p.fraction),
+        (p) => {
+          setProgress(p);
+          const sec = Math.floor(p.remainingMs / 1000);
+          if (sec !== lastAnnouncedSecRef.current) {
+            lastAnnouncedSecRef.current = sec;
+            setAnnouncedRemainingMs(p.remainingMs);
+          }
+        },
         controller.signal,
       );
       // null is a cancel, which the user already knows about.
@@ -97,13 +153,16 @@ export function Rail(props: RailProps) {
       props.onToast(t(recFailureMessageKey('export-failed')), 'error');
     } finally {
       abortRef.current = null;
+      clearCancelTimer();
+      setCancelArmed(false);
       setProgress(null);
+      props.onExportingChange(false);
     }
   }
 
   return (
     <aside class="rail">
-      <div class="rail-section">
+      <div class="rail-section" inert={exporting}>
         <button class="btn-secondary" onClick={props.onAddZoom}>
           {t('recorderAddZoom')}
         </button>
@@ -112,7 +171,7 @@ export function Rail(props: RailProps) {
         </button>
       </div>
 
-      <div class="rail-section">
+      <div class="rail-section" inert={exporting}>
         <label class="rail-row">
           <span class="rail-row-label">{t('recorderRipple')}</span>
           <input
@@ -134,7 +193,7 @@ export function Rail(props: RailProps) {
       </div>
 
       {props.loaded.segments.some((s) => s.webcamUrl !== null) ? (
-        <div class="rail-section">
+        <div class="rail-section" inert={exporting}>
           <span class="rail-row-label">{t('recorderBubble')}</span>
           <div class="rec-bubble-corners" role="group" aria-label={t('recorderBubble')}>
             {BUBBLE_CORNERS.map((corner) => (
@@ -223,7 +282,7 @@ export function Rail(props: RailProps) {
         </div>
       ) : null}
 
-      <div class="rail-section">
+      <div class="rail-section" inert={exporting}>
         <label class="rail-row">
           <span class="rail-row-label">{t('recorderBeautify')}</span>
           <input
@@ -351,13 +410,28 @@ export function Rail(props: RailProps) {
               aria-label={t('recorderExporting')}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-valuenow={Math.round((progress ?? 0) * 100)}
+              aria-valuenow={Math.round((progress?.fraction ?? 0) * 100)}
             >
-              <div class="rec-progress-fill" style={{ width: `${(progress ?? 0) * 100}%` }} />
+              <div
+                class="rec-progress-fill"
+                style={{ width: `${(progress?.fraction ?? 0) * 100}%` }}
+              />
             </div>
             <span class="rail-hint">{t('recorderExporting')}</span>
-            <button class="link-btn rail-link" onClick={() => abortRef.current?.abort()}>
-              {t('recorderCancel')}
+            {/* Throttled to whole seconds above; role="timer" plus an explicit
+                aria-live so a screen reader picks up each change without
+                re-announcing on every driven frame. */}
+            <span class="rail-hint rec-export-remaining" role="timer" aria-live="polite">
+              {t('recorderExportRemaining', [formatTimer(announcedRemainingMs)])}
+            </span>
+            <p class="rec-export-warning">{t('recorderExportStayVisible')}</p>
+            <button
+              class="link-btn rail-link rec-cancel-btn"
+              data-armed={cancelArmed ? 'true' : undefined}
+              onClick={handleCancelClick}
+              onKeyDown={handleCancelKeyDown}
+            >
+              {cancelArmed ? t('recorderCancelConfirm') : t('recorderCancel')}
             </button>
           </>
         ) : (

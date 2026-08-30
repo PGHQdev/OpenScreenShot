@@ -33,6 +33,32 @@ import { cameraAt } from './zoom';
 export interface ExportProgress {
   /** 0..1 by timeline position. */
   fraction: number;
+  /** Wall-clock ms left; see `remainingExportMs`. */
+  remainingMs: number;
+}
+
+/**
+ * Wall-clock time left in an export: the total timeline duration minus how
+ * far the driven video clock has reached. A pure function of its two
+ * inputs, so nothing here can keep it ticking down on its own — the export
+ * loop only calls this again once a new frame actually decodes and moves
+ * `timelineMs`, which is also why a hidden tab (`requestAnimationFrame`
+ * stalled, see this file's header comment) freezes the figure instead of
+ * racing ahead of what was actually rendered. Clamped to zero: a last frame
+ * can land a hair past `total` on a sub-frame rounding.
+ */
+export function remainingExportMs(total: number, timelineMs: number): number {
+  return Math.max(0, total - timelineMs);
+}
+
+/**
+ * Cancel's armed two-step, the same idiom the session list's Delete uses
+ * (`App.tsx`'s `handleDelete`): a first click arms it, a second click before
+ * the disarm timer — or Escape — fires confirms the abort. Pure; the caller
+ * owns the actual timer and the `AbortController`.
+ */
+export function nextCancelClick(armed: boolean): { armed: boolean; confirmed: boolean } {
+  return armed ? { armed: false, confirmed: true } : { armed: true, confirmed: false };
 }
 
 /**
@@ -298,7 +324,10 @@ export async function exportVideo(
       frame,
       frameMetrics: metrics,
     });
-    onProgress({ fraction: total > 0 ? Math.min(1, Math.max(0, timelineMs / total)) : 0 });
+    onProgress({
+      fraction: total > 0 ? Math.min(1, Math.max(0, timelineMs / total)) : 0,
+      remainingMs: remainingExportMs(total, timelineMs),
+    });
   }
 
   /** Parks a segment on its first visible frame and paints it. */
@@ -422,6 +451,6 @@ export async function exportVideo(
   if (signal.aborted) return { blob: null, skippedParts };
   if (chunks.length === 0) throw new Error('export produced no data');
 
-  onProgress({ fraction: 1 });
+  onProgress({ fraction: 1, remainingMs: 0 });
   return { blob: new Blob(chunks, { type: mime || 'video/webm' }), skippedParts };
 }

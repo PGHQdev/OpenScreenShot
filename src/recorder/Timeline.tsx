@@ -57,6 +57,14 @@ export interface TimelineProps {
   onSeek: (timelineMs: number) => void;
   onTrim: (segmentId: string, patch: { start?: number; end?: number }) => void;
   onBlocks: (blocks: ZoomBlock[]) => void;
+  /**
+   * An export is running off its own copy of the trims and zoom blocks, so
+   * editing either here would only desync the live preview from the file
+   * being written. Trim handles and block dragging lock; scrubbing the
+   * playhead and selecting a block do not — neither touches the draft, and
+   * browsing the recording while a render plays out is harmless.
+   */
+  locked: boolean;
 }
 
 export function Timeline(props: TimelineProps) {
@@ -111,6 +119,7 @@ export function Timeline(props: TimelineProps) {
    */
   function startTrim(e: PointerEvent, timing: SegmentTiming, edge: 'start' | 'end') {
     e.stopPropagation();
+    if (props.locked) return;
     const el = e.currentTarget as HTMLElement;
     el.setPointerCapture(e.pointerId);
     let lastX = e.clientX;
@@ -140,6 +149,7 @@ export function Timeline(props: TimelineProps) {
   function trimKeys(e: KeyboardEvent, timing: SegmentTiming, edge: 'start' | 'end') {
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
     e.preventDefault();
+    if (props.locked) return;
     const from = edge === 'start' ? timing.trimStart : timing.trimEnd;
     const delta = (e.key === 'ArrowRight' ? 1 : -1) * KEY_TRIM_MS;
     props.onTrim(timing.segmentId, trimPatch(edge, from, delta));
@@ -148,6 +158,7 @@ export function Timeline(props: TimelineProps) {
   function startBlockDrag(e: PointerEvent, block: ZoomBlock, mode: 'move' | 'start' | 'end') {
     e.stopPropagation();
     props.onSelect(block.id);
+    if (props.locked) return;
     const index = blocks.findIndex((b) => b.id === block.id);
     // Neighbours bound the drag, so a block can never swallow the one next to
     // it: normalizeBlocks resolves overlaps by cutting, which would delete a
@@ -227,6 +238,7 @@ export function Timeline(props: TimelineProps) {
                   aria-valuenow={Math.round(timing.trimStart)}
                   aria-valuemin={0}
                   aria-valuemax={Math.round(timing.sourceDuration)}
+                  aria-disabled={props.locked || undefined}
                   onPointerDown={(e) => startTrim(e, timing, 'start')}
                   onKeyDown={(e) => trimKeys(e, timing, 'start')}
                 />
@@ -238,6 +250,7 @@ export function Timeline(props: TimelineProps) {
                   aria-valuenow={Math.round(timing.trimEnd)}
                   aria-valuemin={0}
                   aria-valuemax={Math.round(timing.sourceDuration)}
+                  aria-disabled={props.locked || undefined}
                   onPointerDown={(e) => startTrim(e, timing, 'end')}
                   onKeyDown={(e) => trimKeys(e, timing, 'end')}
                 />
@@ -291,6 +304,7 @@ export function Timeline(props: TimelineProps) {
                 left: `clamp(120px, ${pct((selected.startMs + selected.endMs) / 2, totalMs)}, calc(100% - 120px))`,
               }}
               onPointerDown={(e) => e.stopPropagation()}
+              inert={props.locked}
             >
               <span class="rec-zoom-tools-label">{t('recorderZoomScale')}</span>
               <div class="rec-seg">

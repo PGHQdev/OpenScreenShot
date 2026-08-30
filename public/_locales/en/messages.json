@@ -619,6 +619,24 @@
     "message": "Cancel",
     "description": "Recorder page: button that stops an export in progress and discards it."
   },
+  "recorderCancelConfirm": {
+    "message": "Discard render?",
+    "description": "Recorder page: armed state of the export Cancel button, click again to confirm."
+  },
+  "recorderExportRemaining": {
+    "message": "$TIME$ remaining",
+    "description": "Recorder page: wall-clock time left in an export in progress, formatted m:ss (or h:mm:ss for a long recording).",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "1:23"
+      }
+    }
+  },
+  "recorderExportStayVisible": {
+    "message": "Keep this tab visible. The render pauses while it's hidden.",
+    "description": "Recorder page: warning shown for the whole export — a background tab throttles requestAnimationFrame and stalls the render."
+  },
   "recorderExported": {
     "message": "Saved $SIZE$ MB",
     "description": "Recorder page: toast shown after an export is downloaded.",
