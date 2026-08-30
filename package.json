@@ -33,7 +33,8 @@
     "smoke:recorder": "node tests/browser/recorder-smoke.mjs",
     "smoke:region": "node tests/browser/region-select-smoke.mjs",
     "smoke:reflow": "node tests/browser/reflow-smoke.mjs",
-    "smoke:setup": "node tests/browser/setup-smoke.mjs"
+    "smoke:setup": "node tests/browser/setup-smoke.mjs",
+    "smoke:worker": "node tests/browser/worker-thumbnail-smoke.mjs"
   },
   "dependencies": {
     "preact": "^10.29.4"
