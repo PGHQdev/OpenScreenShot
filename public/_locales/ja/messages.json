@@ -1,0 +1,2256 @@
+{
+  "extName": {
+    "message": "フルページ スクリーンショット＆注釈 - OpenScreenShot",
+    "description": "Extension name shown in Chrome UI."
+  },
+  "extDesc": {
+    "message": "ページ全体・選択範囲・表示領域のスクリーンショットと注釈エディタ。PNG、JPEG、WebP、PDF で書き出し。100% プライベート、オフライン、アップロードなし。",
+    "description": "Extension description shown in the Chrome Web Store and extensions page."
+  },
+  "modeFullPage": {
+    "message": "ページ全体",
+    "description": "Capture mode: capture the entire scrolling page."
+  },
+  "modeFullPageSub": {
+    "message": "スクロールするページ全体をキャプチャ",
+    "description": "Subtitle for the Full Page capture mode."
+  },
+  "modeVisible": {
+    "message": "表示領域",
+    "description": "Capture mode: capture what is currently visible."
+  },
+  "modeVisibleSub": {
+    "message": "今画面に見えている部分",
+    "description": "Subtitle for the Visible Area capture mode."
+  },
+  "modeRegion": {
+    "message": "選択範囲",
+    "description": "Capture mode: capture a user-dragged region."
+  },
+  "modeRegionSub": {
+    "message": "ドラッグして範囲を選択",
+    "description": "Subtitle for the Selected Region capture mode."
+  },
+  "capturing": {
+    "message": "キャプチャ中…",
+    "description": "Status shown while a capture is in progress."
+  },
+  "cannotCaptureProtected": {
+    "message": "この保護されたページはキャプチャできません。",
+    "description": "Error shown when the active page cannot be captured (e.g. chrome:// pages)."
+  },
+  "comingSoon": {
+    "message": "今後のバージョンで対応予定です。",
+    "description": "Placeholder message for features not yet implemented."
+  },
+  "customizeShortcuts": {
+    "message": "キーボード ショートカットをカスタマイズ",
+    "description": "Link that opens Chrome's extension shortcut settings."
+  },
+  "reopenLast": {
+    "message": "前回を開く",
+    "description": "Link in the popup that reopens the most recent capture in the editor."
+  },
+  "historyAria": {
+    "message": "履歴",
+    "description": "Header icon button in the popup that opens the editor's capture history shelf."
+  },
+  "recRecordings": {
+    "message": "録画一覧",
+    "description": "Link in the popup that opens the recorder page's session list."
+  },
+  "footerShortcuts": {
+    "message": "ショートカット",
+    "description": "Short footer label for the link that opens Chrome's shortcut settings."
+  },
+  "footerKofi": {
+    "message": "Ko-fi",
+    "description": "Short footer label for the Ko-fi donation link."
+  },
+  "supportKofiTitle": {
+    "message": "Ko-fi で開発者にコーヒーをおごる",
+    "description": "Tooltip for the Ko-fi donation footer link."
+  },
+  "footerCoolStuff": {
+    "message": "おすすめツール",
+    "description": "Accessible label for the gift icon footer link that opens the cool-stuff page."
+  },
+  "coolStuffTitle": {
+    "message": "おすすめツール：同じ作者の無料ツール",
+    "description": "Tooltip for the gift icon footer link."
+  },
+  "setupCoolStuff": {
+    "message": "おすすめツール",
+    "description": "Trust strip link on the setup page that opens the cool-stuff page."
+  },
+  "settingsTitle": {
+    "message": "設定",
+    "description": "Settings panel heading."
+  },
+  "settingsTheme": {
+    "message": "テーマ",
+    "description": "Theme setting label."
+  },
+  "themeLight": {
+    "message": "ライト",
+    "description": "Light theme option label."
+  },
+  "themeDark": {
+    "message": "ダーク",
+    "description": "Dark theme option label."
+  },
+  "themeSystem": {
+    "message": "システム",
+    "description": "System-follows theme option label."
+  },
+  "settingsDefaultFormat": {
+    "message": "形式",
+    "description": "Default export format setting label."
+  },
+  "formatPng": {
+    "message": "PNG",
+    "description": "PNG format option."
+  },
+  "formatJpeg": {
+    "message": "JPEG",
+    "description": "JPEG format option."
+  },
+  "formatWebp": {
+    "message": "WebP",
+    "description": "WebP format option."
+  },
+  "formatPdf": {
+    "message": "PDF",
+    "description": "PDF format option."
+  },
+  "settingsQuality": {
+    "message": "画質",
+    "description": "Export quality setting label."
+  },
+  "settingsFilename": {
+    "message": "ファイル名テンプレート",
+    "description": "Filename template setting label."
+  },
+  "filenameInsert": {
+    "message": "挿入",
+    "description": "Label above the clickable filename token chips."
+  },
+  "couldNotReach": {
+    "message": "バックグラウンド ワーカーに接続できませんでした。",
+    "description": "Error toast when the background service worker is unreachable."
+  },
+  "backAria": {
+    "message": "キャプチャ モードに戻る",
+    "description": "Accessible label for the back button in settings."
+  },
+  "captureModesAria": {
+    "message": "キャプチャ モード",
+    "description": "Accessible label for the capture mode buttons."
+  },
+  "dismiss": {
+    "message": "閉じる",
+    "description": "Accessible label for the button that closes an error message."
+  },
+  "resetDefaults": {
+    "message": "デフォルトに戻す",
+    "description": "Settings link that restores every default value."
+  },
+  "resetConfirm": {
+    "message": "もう一度クリックでリセット",
+    "description": "Second-click confirmation label for the reset link."
+  },
+  "delayLabel": {
+    "message": "遅延",
+    "description": "Label for the capture delay row in the popup."
+  },
+  "delayOff": {
+    "message": "オフ",
+    "description": "Delay option that captures immediately."
+  },
+  "repeatLastRegion": {
+    "message": "前回の範囲を再キャプチャ",
+    "description": "Footer link and context menu item that re-captures the previous region selection."
+  },
+  "popupSectionScreenshot": {
+    "message": "スクリーンショット",
+    "description": "Popup: section heading above the three capture mode cards."
+  },
+  "popupSectionRecord": {
+    "message": "録画",
+    "description": "Popup: section heading above the record card."
+  },
+  "recSourceLabel": {
+    "message": "録画ソース",
+    "description": "Popup: label above the mic / tab audio / webcam toggle chips."
+  },
+  "popupDigitHint": {
+    "message": "$DIGIT$ キーでも実行できます",
+    "description": "Popup: tooltip on a capture mode card naming its number-key shortcut.",
+    "placeholders": {
+      "digit": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "reopenLastDisabledTitle": {
+    "message": "開けるキャプチャはまだありません",
+    "description": "Popup: tooltip on the disabled reopen-last footer action."
+  },
+  "repeatRegionDisabledTitle": {
+    "message": "範囲のキャプチャはまだありません",
+    "description": "Popup: tooltip on the disabled repeat-region footer action."
+  },
+  "afterCaptureLabel": {
+    "message": "キャプチャ後",
+    "description": "Label for the row that picks what a finished capture does."
+  },
+  "actionEditor": {
+    "message": "エディタ",
+    "description": "Post-capture action that opens the annotation editor."
+  },
+  "actionClipboard": {
+    "message": "クリップボード",
+    "description": "Post-capture action that copies the screenshot and skips the editor."
+  },
+  "actionDownload": {
+    "message": "ダウンロード",
+    "description": "Post-capture action that saves the screenshot and skips the editor."
+  },
+  "actionHintPng": {
+    "message": "クイック保存は PNG で保存します。",
+    "description": "Hint shown under the after-capture row when Download is selected."
+  },
+  "expressLabel": {
+    "message": "アイコン クリックでキャプチャ",
+    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+  },
+  "expressHint": {
+    "message": "アイコンをクリックするとページ全体をキャプチャします。オフにするにはアイコンを右クリックしてください。",
+    "description": "Hint shown under the express row when express mode is on."
+  },
+  "recOverlayPause": {
+    "message": "一時停止",
+    "description": "Recording control bar: button that pauses the active recording."
+  },
+  "recOverlayResume": {
+    "message": "再開",
+    "description": "Recording control bar: button that resumes a paused recording."
+  },
+  "recOverlayStop": {
+    "message": "停止",
+    "description": "Recording control bar: button that stops and finalizes the recording."
+  },
+  "recOverlayCancel": {
+    "message": "キャンセル",
+    "description": "Recording control bar: button that cancels the recording and discards it."
+  },
+  "recOverlayReveal": {
+    "message": "録画コントロールを表示",
+    "description": "Recording control bar: accessible name of the small always-present control that reveals the hidden bar, by pointer, touch or keyboard focus."
+  },
+  "recOverlayMic": {
+    "message": "MIC",
+    "description": "Recording control bar: chip shown when the microphone track is enabled."
+  },
+  "recOverlayTabAudio": {
+    "message": "TAB",
+    "description": "Recording control bar: chip shown when tab audio is enabled."
+  },
+  "recOverlayWebcam": {
+    "message": "CAM",
+    "description": "Recording control bar: chip shown when the webcam track is enabled."
+  },
+  "recTitle": {
+    "message": "録画",
+    "description": "Popup: title of the record row when no session is pending."
+  },
+  "recSub": {
+    "message": "このタブを自動ズーム付きで録画",
+    "description": "Popup: subtitle of the record row."
+  },
+  "recStop": {
+    "message": "停止",
+    "description": "Popup: label for the button that stops the active recording."
+  },
+  "recCancel": {
+    "message": "キャンセル",
+    "description": "Popup: label for the button that cancels the active recording."
+  },
+  "recRecording": {
+    "message": "録画中…",
+    "description": "Popup: status label shown while a recording is in progress."
+  },
+  "recPaused": {
+    "message": "一時停止中",
+    "description": "Popup: status label shown while a recording is paused."
+  },
+  "recStarting": {
+    "message": "開始中…",
+    "description": "Popup: shown in place of the elapsed time while the recording is still opening its streams, before the clock has a zero."
+  },
+  "recMic": {
+    "message": "マイク",
+    "description": "Popup: toggle chip for the microphone track."
+  },
+  "recTabAudio": {
+    "message": "タブの音声",
+    "description": "Popup: toggle chip for the tab audio track."
+  },
+  "recWebcam": {
+    "message": "ウェブカメラ",
+    "description": "Popup: toggle chip for the webcam track."
+  },
+  "recWebcamNoPreview": {
+    "message": "書き出しに追加されます。録画中のプレビューはありません。",
+    "description": "Popup: one-line disclosure shown under the Webcam toggle once it is on, before Record is pressed (task 40: the recorded page never shows a live self-view)."
+  },
+  "recWebcamDenied": {
+    "message": "カメラが拒否されました。カメラなしで録画します。",
+    "description": "The permission frame's own denied-state text, and the control bar's screen-reader announcement when a requested camera is declined or unavailable (task 40: the frame itself is not visible, so the bar is what a sighted user reads)."
+  },
+  "recProtected": {
+    "message": "この保護されたページは録画できません。",
+    "description": "Popup: error toast shown when the active tab can't be recorded."
+  },
+  "popupRecordRefused": {
+    "message": "タブの録画が許可されていません。セットアップを開く",
+    "description": "Popup button shown after the user refuses the inline tabCapture prompt."
+  },
+  "recFailStartUnreachable": {
+    "message": "録画を開始できませんでした。拡張機能から応答がありません。もう一度お試しください。",
+    "description": "Popup: error toast when REC_START never reached the service worker."
+  },
+  "recFailStartBlocked": {
+    "message": "録画を開始できませんでした。このページは録画できません。通常のタブに切り替えて、もう一度お試しください。",
+    "description": "Popup: error toast when the start found no recordable tab (gone, or a protected URL)."
+  },
+  "recFailStartBusy": {
+    "message": "すでに録画中です。別の録画を始める前に停止してください。",
+    "description": "Popup: error toast when a start arrives while a recording is live."
+  },
+  "recFailStartFailed": {
+    "message": "録画を開始できませんでした。タブを準備できません。タブを再読み込みして、もう一度お試しください。",
+    "description": "Popup: error toast when the worker's start threw before the engine was asked to capture."
+  },
+  "recFailCleanup": {
+    "message": "失敗した録画が残っています。レコーダー ページで削除してください。",
+    "description": "Popup: error toast when a failed session could not be tidied up."
+  },
+  "recFailEngine": {
+    "message": "録画が開始前に停止しました。タブをキャプチャできません。もう一度お試しください。",
+    "description": "Popup: error toast when the offscreen engine failed to open its streams."
+  },
+  "recFailEngineUnreachable": {
+    "message": "何も録画されていません。レコーダーが起動しませんでした。停止して、もう一度お試しください。",
+    "description": "Popup: error toast when OFFSCREEN_START never reached the offscreen engine, so the badge and control bar claim a recording that is not happening."
+  },
+  "recFailEngineStalled": {
+    "message": "録画が開始されず、停止にも応答がありませんでした。何も保存されていません。もう一度お試しください。",
+    "description": "Popup: the user pressed Stop on a recording that had not begun, and the offscreen recorder never answered. The run was torn down."
+  },
+  "popupOpenFailed": {
+    "message": "ページを開けませんでした。もう一度お試しください。",
+    "description": "Popup: error toast when chrome.tabs.create fails for the setup page, the editor or the recorder."
+  },
+  "recFailChunkWrite": {
+    "message": "この録画の一部が保存されていません。停止して、レコーダー ページで内容を確認してください。",
+    "description": "Popup: error toast when a chunk write to IndexedDB failed mid-recording, so the file is shorter than the clock says."
+  },
+  "recFailEventsWrite": {
+    "message": "カーソル トラックが保存されていません。動画は問題ありませんが、ズームとクリックの効果は失われます。",
+    "description": "Popup: error toast when cursor-event writes to IndexedDB failed mid-recording, leaving the video intact."
+  },
+  "recOverlayStarting": {
+    "message": "開始中…",
+    "description": "Recording control bar: shown in place of the timer while the recording is still opening its streams. Keep it short; it replaces a 0:00 clock."
+  },
+  "recOverlayNotSaving": {
+    "message": "未保存",
+    "description": "Recording control bar: warning chip shown when chunks are failing to reach storage. Keep it short; it sits in a row of three-letter track chips."
+  },
+  "recOverlayCamDenied": {
+    "message": "カメラ拒否",
+    "description": "Recording control bar: warning chip shown when a requested camera was declined or unavailable. Keep it short; it sits in a row of three-letter track chips."
+  },
+  "recFailRecorderOpen": {
+    "message": "録画は保存されました。レコーダー ページを開けませんでした。下の「前回の録画を復元」を使用してください。",
+    "description": "Popup: error toast when chrome.tabs.create for the recorder page failed after a recording finished."
+  },
+  "recFailQuery": {
+    "message": "録画の状態を取得できません。レコーダー ページを開いて確認してください。",
+    "description": "Popup: error toast when REC_QUERY threw, so \"not recording\" cannot be trusted."
+  },
+  "recFailOverlayBlocked": {
+    "message": "このページでは録画コントロールを開けませんでした。録画はここから停止してください。",
+    "description": "Popup: error toast when the in-page control bar could not be injected."
+  },
+  "recFailOverlayLost": {
+    "message": "このページの録画コントロールが失われました。録画はここから停止してください。",
+    "description": "Popup: error toast when the in-page control bar stopped reporting mid-recording."
+  },
+  "recFailControlUnreachable": {
+    "message": "レコーダーに届きませんでした。拡張機能から応答がありません。もう一度お試しください。",
+    "description": "Popup: error toast when stop/cancel never reached the service worker."
+  },
+  "recFailSessionLoad": {
+    "message": "この録画を開けませんでした。不完全な可能性があります。",
+    "description": "Recorder page: error toast when a session could not be read out of IndexedDB."
+  },
+  "recFailSegmentSkipped": {
+    "message": "この録画の一部が再生できず、書き出しから除外されました。",
+    "description": "Recorder page: error toast when one or more segments were skipped during an export."
+  },
+  "recFailExport": {
+    "message": "書き出しに失敗しました。ファイルは保存されていません。もう一度お試しください。",
+    "description": "Recorder page: error toast when the export threw."
+  },
+  "recFailSaveInterrupted": {
+    "message": "保存に失敗しました：$ERROR$。録画は保持されています。",
+    "description": "Recorder page: error toast when the Save dialog's download was interrupted for a reason other than the user cancelling it.",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "FILE_NO_SPACE"
+      }
+    }
+  },
+  "recFailSaveUnverified": {
+    "message": "保存の完了を確認できませんでした。録画は保持されています。",
+    "description": "Recorder page: error toast when the download never reported a terminal state within the bounded wait."
+  },
+  "recorderSaveCancelled": {
+    "message": "保存をキャンセルしました",
+    "description": "Recorder page: toast shown when the user dismisses the export's Save dialog."
+  },
+  "recorderFailed": {
+    "message": "失敗",
+    "description": "Recorder page: pill on a session whose recording never started."
+  },
+  "recRecover": {
+    "message": "前回の録画を復元",
+    "description": "Popup: link that reopens the editor for a crashed/unfinished recording session."
+  },
+  "recContinue": {
+    "message": "録画を続行",
+    "description": "Popup: record row title when a continue-session is pending from the editor. Also the recorder page header button that starts a continue-session."
+  },
+  "recAcrossSites": {
+    "message": "サイトをまたいで録画",
+    "description": "Settings: label for the row that grants recording access to all sites."
+  },
+  "recAcrossSitesHint": {
+    "message": "タブが別のサイトに移動してもカーソル オーバーレイを維持します。すべてのサイトへのアクセスを許可します。",
+    "description": "Settings: hint shown under the record-across-sites row."
+  },
+  "recorderTitle": {
+    "message": "レコーダー",
+    "description": "Recorder page: header title."
+  },
+  "recorderSessions": {
+    "message": "録画一覧",
+    "description": "Recorder page: session list heading."
+  },
+  "recorderOpen": {
+    "message": "開く",
+    "description": "Recorder page: button that opens a session for playback."
+  },
+  "recorderDelete": {
+    "message": "削除",
+    "description": "Recorder page: button that deletes a session."
+  },
+  "recorderDeleteConfirm": {
+    "message": "本当に削除しますか？",
+    "description": "Recorder page: armed state of the delete button, click again to confirm."
+  },
+  "recorderEmpty": {
+    "message": "録画はまだありません。ポップアップからタブを録画してください。",
+    "description": "Recorder page: shown when the session list is empty."
+  },
+  "recorderLoadingList": {
+    "message": "録画一覧を読み込み中…",
+    "description": "Recorder page: shown in place of the session list while it loads."
+  },
+  "recorderSessionLoading": {
+    "message": "録画を読み込み中…",
+    "description": "Recorder page: label on the progress bar shown while a session's chunks load."
+  },
+  "recorderSourceTab": {
+    "message": "タブ",
+    "description": "Recorder page: session list row — capture source. Every recording is a tab capture; there is no window/screen source to distinguish yet."
+  },
+  "recorderTrackRequested": {
+    "message": "$TRACK$をリクエスト済み",
+    "description": "Recorder page: session list row — a mic/webcam track that was asked for and has some evidence (the combined recorder-#2 stream exists) but cannot be confirmed individually, since a mic-only and a webcam-only stream are indistinguishable from chunk presence alone.",
+    "placeholders": {
+      "track": {
+        "content": "$1",
+        "example": "Mic"
+      }
+    }
+  },
+  "recorderRecovered": {
+    "message": "復元済み",
+    "description": "Recorder page: pill on a session that was left mid-recording by a crash."
+  },
+  "recorderRecordingNow": {
+    "message": "録画中…",
+    "description": "Recorder page: pill on the session that is being recorded right now; its Open and Delete buttons are disabled."
+  },
+  "recContinueHint": {
+    "message": "録画を続けたいタブでポップアップを開いてください。",
+    "description": "Recorder page: info toast shown after Continue recording is clicked."
+  },
+  "recorderPlay": {
+    "message": "再生",
+    "description": "Recorder page: play button label/aria-label."
+  },
+  "recorderPause": {
+    "message": "一時停止",
+    "description": "Recorder page: pause button label/aria-label."
+  },
+  "recorderAddZoom": {
+    "message": "ズームを追加",
+    "description": "Recorder page: button that adds a zoom block at the playhead."
+  },
+  "recorderUndo": {
+    "message": "元に戻す",
+    "description": "Recorder page: transport button that takes back the last timeline edit."
+  },
+  "recorderRedo": {
+    "message": "やり直す",
+    "description": "Recorder page: transport button that puts back an edit undo took away."
+  },
+  "recorderUndoAnnounce": {
+    "message": "元に戻しました。$BLOCKS$。",
+    "description": "Recorder page: live-region announcement after an undo, naming what the timeline holds afterwards.",
+    "placeholders": {
+      "blocks": {
+        "content": "$1",
+        "example": "3 zoom blocks"
+      }
+    }
+  },
+  "recorderRedoAnnounce": {
+    "message": "やり直しました。$BLOCKS$。",
+    "description": "Recorder page: live-region announcement after a redo, naming what the timeline holds afterwards.",
+    "placeholders": {
+      "blocks": {
+        "content": "$1",
+        "example": "3 zoom blocks"
+      }
+    }
+  },
+  "recorderUndoPlain": {
+    "message": "元に戻しました。",
+    "description": "Recorder page: live-region announcement for an undo whose step names no single editor field."
+  },
+  "recorderRedoPlain": {
+    "message": "やり直しました。",
+    "description": "Recorder page: live-region announcement for a redo whose step names no single editor field."
+  },
+  "recorderTrim": {
+    "message": "トリミング",
+    "description": "Recorder page: the trim, named by an undo/redo announcement — the timeline has a start and an end handle per segment (recorderTrimStart/recorderTrimEnd), and the announcement names the pair."
+  },
+  "recorderZoomBlockOne": {
+    "message": "ズーム ブロック 1 個",
+    "description": "Recorder page: the zoom-block count an undo/redo announcement carries, when there is exactly one."
+  },
+  "recorderZoomBlockMany": {
+    "message": "ズーム ブロック $COUNT$ 個",
+    "description": "Recorder page: the zoom-block count an undo/redo announcement carries, for none or several.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "recorderDeleteZoom": {
+    "message": "ズームを削除",
+    "description": "Recorder page: button that removes the selected zoom block."
+  },
+  "recorderZoomBlock": {
+    "message": "ズーム ブロック",
+    "description": "Recorder page: aria-label prefix of a zoom block on the timeline, followed by its scale (e.g. \"Zoom block, 2×\")."
+  },
+  "recorderZoomScale": {
+    "message": "ズーム",
+    "description": "Recorder page: label of the zoom scale segmented control."
+  },
+  "recorderZoomTarget": {
+    "message": "ズームの中心",
+    "description": "Recorder page: aria-label of the draggable target reticle on the preview."
+  },
+  "recorderTrimStart": {
+    "message": "トリミング開始",
+    "description": "Recorder page: aria-label of a segment's leading trim handle."
+  },
+  "recorderTrimEnd": {
+    "message": "トリミング終了",
+    "description": "Recorder page: aria-label of a segment's trailing trim handle."
+  },
+  "recorderTimelineAria": {
+    "message": "タイムライン",
+    "description": "Recorder page: aria-label of the timeline region."
+  },
+  "recorderCursorMode": {
+    "message": "カーソル",
+    "description": "Recorder page: label of the segmented control that merges showing the recorded cursor and drawing a ripple at every recorded click."
+  },
+  "recorderCursorHidden": {
+    "message": "非表示",
+    "description": "Recorder page: state of the cursor control that draws neither the cursor nor a click ripple."
+  },
+  "recorderCursorShown": {
+    "message": "表示",
+    "description": "Recorder page: state of the cursor control that draws the recorded cursor path as a pointer, with no click ripple."
+  },
+  "recorderCursorRippleOnly": {
+    "message": "クリックのみ",
+    "description": "Recorder page: state of the cursor control that draws a ripple at every recorded click, with the cursor itself hidden."
+  },
+  "recorderCursorRipple": {
+    "message": "クリック効果",
+    "description": "Recorder page: state of the cursor control that draws the cursor and a ripple at every recorded click."
+  },
+  "recorderVolTab": {
+    "message": "タブの音量",
+    "description": "Recorder page: label of the tab-audio volume slider."
+  },
+  "recorderVolMic": {
+    "message": "マイクの音量",
+    "description": "Recorder page: label of the microphone volume slider."
+  },
+  "recorderBubble": {
+    "message": "ウェブカメラ バブル",
+    "description": "Recorder page: label of the webcam bubble settings section."
+  },
+  "recorderBubbleTL": {
+    "message": "左上",
+    "description": "Recorder page: aria-label of the webcam bubble's top-left corner preset button."
+  },
+  "recorderBubbleTR": {
+    "message": "右上",
+    "description": "Recorder page: aria-label of the webcam bubble's top-right corner preset button."
+  },
+  "recorderBubbleBL": {
+    "message": "左下",
+    "description": "Recorder page: aria-label of the webcam bubble's bottom-left corner preset button."
+  },
+  "recorderBubbleBR": {
+    "message": "右下",
+    "description": "Recorder page: aria-label of the webcam bubble's bottom-right corner preset button."
+  },
+  "recorderBubbleSize": {
+    "message": "サイズ",
+    "description": "Recorder page: label of the webcam bubble size slider."
+  },
+  "recorderBubbleHide": {
+    "message": "非表示",
+    "description": "Recorder page: label of the toggle that hides the webcam bubble."
+  },
+  "recorderBeautify": {
+    "message": "Beautify",
+    "description": "Recorder page: label of the toggle that frames the export in padding, corners, shadow, and a background."
+  },
+  "recorderBeautifyPadding": {
+    "message": "余白",
+    "description": "Recorder page: label of the beautify frame's padding slider."
+  },
+  "recorderBeautifyCorners": {
+    "message": "角丸",
+    "description": "Recorder page: label of the beautify frame's corner-radius slider."
+  },
+  "recorderBeautifyShadow": {
+    "message": "影",
+    "description": "Recorder page: label of the beautify frame's drop-shadow slider."
+  },
+  "recorderBeautifyBackground": {
+    "message": "背景",
+    "description": "Recorder page: label of the beautify frame's background swatches."
+  },
+  "recorderBeautifyTransparent": {
+    "message": "透明",
+    "description": "Recorder page: aria-label of the beautify frame's transparent-background swatch."
+  },
+  "recorderBeautifyCustom": {
+    "message": "単色",
+    "description": "Recorder page: aria-label of the beautify frame's custom solid-colour swatch."
+  },
+  "recorderExport": {
+    "message": "WebM を書き出し",
+    "description": "Recorder page: button that renders the edited recording to a WebM file."
+  },
+  "recorderExporting": {
+    "message": "レンダリング中…",
+    "description": "Recorder page: status shown while the export renders."
+  },
+  "recorderCancel": {
+    "message": "キャンセル",
+    "description": "Recorder page: button that stops an export in progress and discards it."
+  },
+  "recorderCancelConfirm": {
+    "message": "レンダリングを破棄しますか？",
+    "description": "Recorder page: armed state of the export Cancel button, click again to confirm."
+  },
+  "recorderExportRemaining": {
+    "message": "残り $TIME$",
+    "description": "Recorder page: wall-clock time left in an export in progress, formatted m:ss (or h:mm:ss for a long recording).",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "1:23"
+      }
+    }
+  },
+  "recorderExportStayVisible": {
+    "message": "このタブを表示したままにしてください。非表示の間はレンダリングが一時停止します。",
+    "description": "Recorder page: warning shown for the whole export — a background tab throttles requestAnimationFrame and stalls the render."
+  },
+  "recorderExported": {
+    "message": "$SIZE$ MB を保存しました",
+    "description": "Recorder page: toast shown after an export is downloaded.",
+    "placeholders": {
+      "size": {
+        "content": "$1",
+        "example": "12.4"
+      }
+    }
+  },
+  "recorderDeleteAfter": {
+    "message": "書き出し後に録画を削除",
+    "description": "Recorder page: checkbox that deletes the session once its export is saved."
+  },
+  "setupTitle": {
+    "message": "録画のセットアップ",
+    "description": "Setup page: heading."
+  },
+  "setupIntro": {
+    "message": "初回のみの設定です。",
+    "description": "Setup page: intro line under the heading."
+  },
+  "setupFinish": {
+    "message": "設定完了。このタブを閉じる",
+    "description": "Setup page: button on the ready banner that closes the tab."
+  },
+  "setupTrustOpenSource": {
+    "message": "オープンソース (MIT)",
+    "description": "Setup page: trust pill linking to the GitHub repo."
+  },
+  "setupTrustLocal": {
+    "message": "100% ローカル",
+    "description": "Setup page: trust pill — everything is processed on-device."
+  },
+  "setupTrustNoTracking": {
+    "message": "トラッキングなし",
+    "description": "Setup page: trust pill — no analytics, no accounts."
+  },
+  "setupTrustHint": {
+    "message": "録画がデバイスの外に出ることはありません。",
+    "description": "Setup page: one-line assurance under the trust pills."
+  },
+  "setupPinTitle": {
+    "message": "OpenScreenShot を固定",
+    "description": "Popup: nudge to pin the extension, shown while it is not on the toolbar."
+  },
+  "setupPinSub": {
+    "message": "上の 🧩 をクリックし、OpenScreenShot の横の 📌 をクリックします。",
+    "description": "Popup: how to pin — the puzzle menu sits directly above the popup."
+  },
+  "setupFromRecord": {
+    "message": "あと 1 ステップ：下でタブの録画を有効にしてください。",
+    "description": "Setup page: banner shown when the Record button routed here."
+  },
+  "setupReady": {
+    "message": "録画の準備ができました。",
+    "description": "Setup page: banner headline once tab recording is granted."
+  },
+  "setupReadyHint": {
+    "message": "ツールバーのアイコンをクリックして「録画」を押してください。",
+    "description": "Setup page: what to do after setup is complete."
+  },
+  "setupTabCapture": {
+    "message": "タブの録画",
+    "description": "Setup page: row title for the tabCapture permission."
+  },
+  "setupTabCaptureDesc": {
+    "message": "録画するタブをキャプチャします。",
+    "description": "Setup page: row description for the tabCapture permission."
+  },
+  "setupCamera": {
+    "message": "カメラ",
+    "description": "Setup page: row title for the camera permission."
+  },
+  "setupCameraDesc": {
+    "message": "書き出しにバブルを追加します。録画中のプレビューはありません。",
+    "description": "Setup page: row description for the camera permission."
+  },
+  "setupMic": {
+    "message": "マイク",
+    "description": "Setup page: row title for the microphone permission."
+  },
+  "setupMicDesc": {
+    "message": "音声を追加します。",
+    "description": "Setup page: row description for the microphone permission."
+  },
+  "setupAcrossSites": {
+    "message": "サイトをまたいで録画",
+    "description": "Setup page: row title for the all-urls host permission."
+  },
+  "setupAcrossSitesDesc": {
+    "message": "サイトを切り替えても録画を続けます。",
+    "description": "Setup page: row description for the all-urls host permission."
+  },
+  "setupAcrossSitesToggle": {
+    "message": "すべてのサイトで許可",
+    "description": "Setup page: label next to the all-urls toggle."
+  },
+  "setupEnable": {
+    "message": "有効にする",
+    "description": "Setup page: button that requests the tabCapture permission."
+  },
+  "setupAllow": {
+    "message": "許可",
+    "description": "Setup page: button that triggers a camera or mic prompt."
+  },
+  "setupGranted": {
+    "message": "許可済み",
+    "description": "Setup page: status tag for a granted permission."
+  },
+  "setupRequired": {
+    "message": "必須",
+    "description": "Setup page: status tag for the one required permission."
+  },
+  "setupOptional": {
+    "message": "任意",
+    "description": "Setup page: status tag for a skippable permission."
+  },
+  "setupDeniedTag": {
+    "message": "ブロック中",
+    "description": "Setup page: status tag for a denied permission."
+  },
+  "setupDismissed": {
+    "message": "プロンプトが閉じられました。準備ができたらもう一度クリックしてください。",
+    "description": "Setup page: hint after a permission prompt was closed without an answer."
+  },
+  "setupBlockedSite": {
+    "message": "Chrome でブロックされています。サイトの設定で許可してください。このページは自動的に更新されます。",
+    "description": "Setup page: recovery hint for a site-level denial."
+  },
+  "setupBlockedSystem": {
+    "message": "OS でブロックされています。macOS：システム設定 → プライバシーとセキュリティ → Chrome を許可。",
+    "description": "Setup page: recovery hint for an OS-level denial."
+  },
+  "setupNoDevice": {
+    "message": "デバイスが見つかりません。接続してから、もう一度お試しください。",
+    "description": "Setup page: hint when no camera or microphone exists."
+  },
+  "setupOpenSiteSettings": {
+    "message": "サイトの設定を開く",
+    "description": "Setup page: button that opens Chrome's per-site permission settings."
+  },
+  "popupPermissionChip": {
+    "message": "$DEVICE$がブロック中。セットアップで修正",
+    "description": "Popup: warning chip when a toggled-on device permission is denied.",
+    "placeholders": {
+      "device": {
+        "content": "$1",
+        "example": "Microphone"
+      }
+    }
+  },
+  "popupSetupLink": {
+    "message": "録画の権限",
+    "description": "Popup settings: row that opens the recording setup page."
+  },
+  "editorAnnotationCountOne": {
+    "message": "注釈 $COUNT$ 件",
+    "description": "Editor live region: one annotation, e.g. \"1 annotation\".",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "editorAnnotationCountOther": {
+    "message": "注釈 $COUNT$ 件",
+    "description": "Editor live region: several annotations, e.g. \"3 annotations\".",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "editorCutCountOne": {
+    "message": "カット $COUNT$ 件",
+    "description": "Editor draft-restore pill: one cut, e.g. \"1 cut\".",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "editorCutCountOther": {
+    "message": "カット $COUNT$ 件",
+    "description": "Editor draft-restore pill: several cuts, e.g. \"3 cuts\".",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "editorNoAnnotations": {
+    "message": "注釈なし",
+    "description": "Editor live region: fragment used mid-sentence when a delete leaves nothing selected, e.g. \"Rectangle deleted, no annotations left.\""
+  },
+  "editorAnnotationFallback": {
+    "message": "注釈",
+    "description": "Editor live region: generic name for an annotation type the tool list has no label for (should not normally happen)."
+  },
+  "editorAnnounceSelect": {
+    "message": "$LABEL$を選択しました。$TOTAL$ レイヤー中の $INDEX$ 番目です。",
+    "description": "Editor live region: one annotation was selected.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Rectangle"
+      },
+      "index": {
+        "content": "$2",
+        "example": "2"
+      },
+      "total": {
+        "content": "$3",
+        "example": "5"
+      }
+    }
+  },
+  "editorAnnounceSelectMany": {
+    "message": "$TOTAL$のうち $COUNT$ 件を選択しました。",
+    "description": "Editor live region: several annotations were selected, e.g. \"2 of 3 annotations selected.\"",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      },
+      "total": {
+        "content": "$2",
+        "example": "3 annotations"
+      }
+    }
+  },
+  "editorAnnounceDeselect": {
+    "message": "選択を解除しました。",
+    "description": "Editor live region: the selection was cleared."
+  },
+  "editorAnnounceAdd": {
+    "message": "$LABEL$を $X$, $Y$ に追加しました。",
+    "description": "Editor live region: a new annotation was drawn.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Rectangle"
+      },
+      "x": {
+        "content": "$2",
+        "example": "10"
+      },
+      "y": {
+        "content": "$3",
+        "example": "20"
+      }
+    }
+  },
+  "editorAnnounceMove": {
+    "message": "$LABEL$を $X$, $Y$ に移動しました。",
+    "description": "Editor live region: one annotation was moved.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Rectangle"
+      },
+      "x": {
+        "content": "$2",
+        "example": "15"
+      },
+      "y": {
+        "content": "$3",
+        "example": "15"
+      }
+    }
+  },
+  "editorAnnounceMoveMany": {
+    "message": "$COUNT$を移動しました。",
+    "description": "Editor live region: several annotations were moved, e.g. \"3 annotations moved.\"",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3 annotations"
+      }
+    }
+  },
+  "editorAnnounceResize": {
+    "message": "$LABEL$のサイズを $W$ × $H$ ピクセルに変更しました。",
+    "description": "Editor live region: one annotation was resized.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Rectangle"
+      },
+      "w": {
+        "content": "$2",
+        "example": "100"
+      },
+      "h": {
+        "content": "$3",
+        "example": "80"
+      }
+    }
+  },
+  "editorAnnounceResizeMany": {
+    "message": "$COUNT$のサイズを変更しました。",
+    "description": "Editor live region: several annotations were resized, e.g. \"3 annotations resized.\"",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3 annotations"
+      }
+    }
+  },
+  "editorAnnounceDelete": {
+    "message": "$LABEL$を削除しました。残り：$LEFT$。",
+    "description": "Editor live region: one annotation was deleted.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Rectangle"
+      },
+      "left": {
+        "content": "$2",
+        "example": "2 annotations"
+      }
+    }
+  },
+  "editorAnnounceDeleteMany": {
+    "message": "$COUNT$を削除しました。残り：$LEFT$。",
+    "description": "Editor live region: several annotations were deleted.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2 annotations"
+      },
+      "left": {
+        "content": "$2",
+        "example": "1 annotation"
+      }
+    }
+  },
+  "editorAnnounceDuplicate": {
+    "message": "$COUNT$を複製しました。",
+    "description": "Editor live region: the selection was duplicated, e.g. \"2 annotations duplicated.\"",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2 annotations"
+      }
+    }
+  },
+  "editorAnnounceUndo": {
+    "message": "元に戻しました。",
+    "description": "Editor live region: an undo step ran. Followed in code by an optional picture-size sentence and the current layer count."
+  },
+  "editorAnnounceRedo": {
+    "message": "やり直しました。",
+    "description": "Editor live region: a redo step ran. Followed in code by an optional picture-size sentence and the current layer count."
+  },
+  "editorStepImageSize": {
+    "message": "画像は $W$ × $H$ ピクセルです。",
+    "description": "Editor live region: the picture changed size on an undo/redo step that re-applied or reverted a crop.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "720"
+      },
+      "h": {
+        "content": "$2",
+        "example": "540"
+      }
+    }
+  },
+  "editorStepImageHeight": {
+    "message": "画像の高さは $H$ ピクセルです。",
+    "description": "Editor live region: the picture changed height on an undo/redo step that put back or took a cut.",
+    "placeholders": {
+      "h": {
+        "content": "$1",
+        "example": "540"
+      }
+    }
+  },
+  "editorHandleTopLeft": {
+    "message": "左上",
+    "description": "Editor live region: the crop handle at the top-left corner."
+  },
+  "editorHandleTop": {
+    "message": "上",
+    "description": "Editor live region: the crop handle at the top edge."
+  },
+  "editorHandleTopRight": {
+    "message": "右上",
+    "description": "Editor live region: the crop handle at the top-right corner."
+  },
+  "editorHandleRight": {
+    "message": "右",
+    "description": "Editor live region: the crop handle at the right edge."
+  },
+  "editorHandleBottomRight": {
+    "message": "右下",
+    "description": "Editor live region: the crop handle at the bottom-right corner."
+  },
+  "editorHandleBottom": {
+    "message": "下",
+    "description": "Editor live region: the crop handle at the bottom edge."
+  },
+  "editorHandleBottomLeft": {
+    "message": "左下",
+    "description": "Editor live region: the crop handle at the bottom-left corner."
+  },
+  "editorHandleLeft": {
+    "message": "左",
+    "description": "Editor live region: the crop handle at the left edge."
+  },
+  "editorHandleStart": {
+    "message": "開始",
+    "description": "Editor live region: the cut band's start handle."
+  },
+  "editorHandleEnd": {
+    "message": "終了",
+    "description": "Editor live region: the cut band's end handle."
+  },
+  "editorCropPhrase": {
+    "message": "切り抜き範囲は $W$ × $H$ ピクセル、位置は $X$, $Y$ です。",
+    "description": "Editor live region: the size and place of the crop rectangle.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "720"
+      },
+      "h": {
+        "content": "$2",
+        "example": "540"
+      },
+      "x": {
+        "content": "$3",
+        "example": "0"
+      },
+      "y": {
+        "content": "$4",
+        "example": "0"
+      }
+    }
+  },
+  "editorAnnounceCropHandle": {
+    "message": "$HANDLE$のハンドル。$PHRASE$",
+    "description": "Editor live region: a crop handle is now active, followed by the crop's size and place.",
+    "placeholders": {
+      "handle": {
+        "content": "$1",
+        "example": "Top left"
+      },
+      "phrase": {
+        "content": "$2",
+        "example": "Crop 720 by 540 pixels at 0, 0."
+      }
+    }
+  },
+  "editorAnnounceCropApplied": {
+    "message": "$W$ × $H$ ピクセルに切り抜きました。",
+    "description": "Editor live region: the crop was applied.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "720"
+      },
+      "h": {
+        "content": "$2",
+        "example": "540"
+      }
+    }
+  },
+  "editorAnnounceCropCancelled": {
+    "message": "切り抜きをキャンセルしました。",
+    "description": "Editor live region: the crop was cancelled."
+  },
+  "editorAnnounceCut": {
+    "message": "カット範囲は高さ $H$ ピクセル、位置は $Y$ です。",
+    "description": "Editor live region: a cut band is drafted.",
+    "placeholders": {
+      "h": {
+        "content": "$1",
+        "example": "40"
+      },
+      "y": {
+        "content": "$2",
+        "example": "100"
+      }
+    }
+  },
+  "editorAnnounceCutApplied": {
+    "message": "$H$ ピクセルをカットしました。画像の高さは $IMAGE_HEIGHT$ ピクセルです。",
+    "description": "Editor live region: a cut band was taken out of the picture.",
+    "placeholders": {
+      "h": {
+        "content": "$1",
+        "example": "40"
+      },
+      "image_height": {
+        "content": "$2",
+        "example": "560"
+      }
+    }
+  },
+  "editorAnnounceOutOfPicture": {
+    "message": "$COUNT$が画像の外に出ました。",
+    "description": "Editor live region: annotations that sat on cut rows left the picture with them.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2 annotations"
+      }
+    }
+  },
+  "editorAnnounceSelectedRemaining": {
+    "message": "$COUNT$を選択中です。",
+    "description": "Editor live region: what is still selected after a cut removed some annotations with it.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2 annotations"
+      }
+    }
+  },
+  "editorAnnounceCutRemoved": {
+    "message": "$H$ ピクセルを元に戻しました。画像の高さは $IMAGE_HEIGHT$ ピクセルです。",
+    "description": "Editor live region: a cut was put back into the picture.",
+    "placeholders": {
+      "h": {
+        "content": "$1",
+        "example": "40"
+      },
+      "image_height": {
+        "content": "$2",
+        "example": "600"
+      }
+    }
+  },
+  "editorAnnounceCutCancelled": {
+    "message": "カットをキャンセルしました。",
+    "description": "Editor live region: the drafted cut was cancelled."
+  },
+  "editorAnnounceCutRefused": {
+    "message": "画像全体をカットすることはできません。",
+    "description": "Editor live region: a cut band was refused because it covered the entire image."
+  },
+  "editorAnnounceCutNone": {
+    "message": "その範囲はすでにカットされています。",
+    "description": "Editor live region: Delete was pressed over rows that are already cut."
+  },
+  "editorToolSelect": {
+    "message": "選択",
+    "description": "Editor tool rail: the Select tool."
+  },
+  "editorToolRectangle": {
+    "message": "四角形",
+    "description": "Editor tool rail: the Rectangle tool. Also the Rectangle spotlight-shape option."
+  },
+  "editorToolArrow": {
+    "message": "矢印",
+    "description": "Editor tool rail: the Arrow tool."
+  },
+  "editorToolLine": {
+    "message": "直線",
+    "description": "Editor tool rail: the Line tool."
+  },
+  "editorToolPen": {
+    "message": "ペン",
+    "description": "Editor tool rail: the Pen (freehand) tool."
+  },
+  "editorToolHighlighter": {
+    "message": "蛍光ペン",
+    "description": "Editor tool rail: the Highlighter tool."
+  },
+  "editorToolText": {
+    "message": "テキスト",
+    "description": "Editor tool rail: the Text tool."
+  },
+  "editorToolStep": {
+    "message": "手順番号",
+    "description": "Editor tool rail: the numbered step-badge tool."
+  },
+  "editorToolBlur": {
+    "message": "ぼかし",
+    "description": "Editor tool rail: the Blur/redaction tool. Also the Blur redaction-mode option."
+  },
+  "editorToolSpotlight": {
+    "message": "Spotlight",
+    "description": "Editor tool rail: the Spotlight tool."
+  },
+  "editorToolEyedropper": {
+    "message": "スポイト",
+    "description": "Editor tool rail: the Eyedropper tool."
+  },
+  "editorToolCrop": {
+    "message": "切り抜き",
+    "description": "Editor tool rail: the Crop tool."
+  },
+  "editorToolCut": {
+    "message": "Cut",
+    "description": "Editor tool rail: the Cut tool."
+  },
+  "editorHintRect": {
+    "message": "ドラッグして四角形を描画 · Shift で正方形に固定",
+    "description": "Editor status bar hint for the Rectangle tool."
+  },
+  "editorHintArrow": {
+    "message": "ドラッグして矢印を描画 · Shift で 45° にスナップ",
+    "description": "Editor status bar hint for the Arrow tool."
+  },
+  "editorHintLine": {
+    "message": "ドラッグして直線を描画 · Shift で 45° にスナップ",
+    "description": "Editor status bar hint for the Line tool."
+  },
+  "editorHintPen": {
+    "message": "ドラッグしてフリーハンドで描画",
+    "description": "Editor status bar hint for the Pen tool."
+  },
+  "editorHintHighlight": {
+    "message": "ドラッグしてハイライト · マーカーは半透明のまま",
+    "description": "Editor status bar hint for the Highlighter tool."
+  },
+  "editorHintStep": {
+    "message": "クリックして番号バッジを配置 · 番号は順番を保持",
+    "description": "Editor status bar hint for the Step number tool."
+  },
+  "editorHintText": {
+    "message": "クリックしてテキストを配置し、入力",
+    "description": "Editor status bar hint for the Text tool."
+  },
+  "editorHintBlur": {
+    "message": "ドラッグして範囲を隠す · 上でぼかし、モザイク、塗りつぶしを選択",
+    "description": "Editor status bar hint for the Blur tool."
+  },
+  "editorHintSpotlight": {
+    "message": "ドラッグして範囲を明るく残す · 他は暗くなります · Shift で正方形に固定",
+    "description": "Editor status bar hint for the Spotlight tool."
+  },
+  "editorHintCrop": {
+    "message": "ドラッグして選択し、「適用」で切り抜き",
+    "description": "Editor status bar hint for the Crop tool."
+  },
+  "editorHintCut": {
+    "message": "ドラッグして帯状の範囲を取り除く · 継ぎ目をクリックで戻す · 元の画像は消えません",
+    "description": "Editor status bar hint for the Cut tool."
+  },
+  "editorHintEyedropper": {
+    "message": "ピクセルをクリックして色を取得 · 前のツールに戻ります",
+    "description": "Editor status bar hint for the Eyedropper tool."
+  },
+  "editorHintSelect": {
+    "message": "選択 · ドラッグで移動 · ハンドルでサイズ変更 · テキストはダブルクリック · ⌫ で削除",
+    "description": "Editor status bar hint for the Select tool."
+  },
+  "editorBlurModeBlurHint": {
+    "message": "やわらかいぼかし",
+    "description": "Editor style bar: tooltip for the Blur redaction mode."
+  },
+  "editorBlurModeMosaic": {
+    "message": "モザイク",
+    "description": "Editor style bar: the Mosaic redaction mode."
+  },
+  "editorBlurModeMosaicHint": {
+    "message": "粗いブロック。再圧縮しても残ります",
+    "description": "Editor style bar: tooltip for the Mosaic redaction mode."
+  },
+  "editorBlurModeSolid": {
+    "message": "塗りつぶし",
+    "description": "Editor style bar: the Solid redaction mode."
+  },
+  "editorBlurModeSolidHint": {
+    "message": "不透明な塗りつぶし。何も残りません",
+    "description": "Editor style bar: tooltip for the Solid redaction mode."
+  },
+  "editorShapeRounded": {
+    "message": "角丸",
+    "description": "Editor style bar: the Rounded spotlight shape."
+  },
+  "editorShapeEllipse": {
+    "message": "楕円",
+    "description": "Editor style bar: the Ellipse spotlight shape."
+  },
+  "editorStyleColor": {
+    "message": "色",
+    "description": "Editor style bar: the color field group label."
+  },
+  "editorStyleStroke": {
+    "message": "線幅",
+    "description": "Editor style bar: the stroke-width field group label."
+  },
+  "editorStyleShape": {
+    "message": "形状",
+    "description": "Editor style bar: the spotlight-shape field group label."
+  },
+  "editorStyleRedaction": {
+    "message": "マスク",
+    "description": "Editor style bar: the redaction-mode field group label."
+  },
+  "editorStyleStrength": {
+    "message": "強さ · $VALUE$",
+    "description": "Editor style bar: the blur-strength slider label, with its current value.",
+    "placeholders": {
+      "value": {
+        "content": "$1",
+        "example": "40"
+      }
+    }
+  },
+  "editorStyleSize": {
+    "message": "サイズ · $VALUE$px",
+    "description": "Editor style bar: the font-size slider label, with its current value.",
+    "placeholders": {
+      "value": {
+        "content": "$1",
+        "example": "24"
+      }
+    }
+  },
+  "editorAriaBlurStrength": {
+    "message": "ぼかしの強さ",
+    "description": "Editor style bar: accessible label for the blur-strength slider."
+  },
+  "editorAriaSize": {
+    "message": "サイズ",
+    "description": "Editor style bar: accessible label for the font-size slider."
+  },
+  "editorCustomColorLabel": {
+    "message": "カスタム カラー",
+    "description": "Editor style bar: title/accessible label for the custom-color swatch."
+  },
+  "editorPickScreenColor": {
+    "message": "画面上の任意の場所から色を取得",
+    "description": "Editor style bar: title/accessible label for the screen color-picker button."
+  },
+  "editorAriaAnnotationStyle": {
+    "message": "注釈のスタイル",
+    "description": "Editor: accessible label for the style bar toolbar."
+  },
+  "editorAriaAnnotationTools": {
+    "message": "注釈ツール",
+    "description": "Editor: accessible label for the tool rail."
+  },
+  "editorAriaDocumentActions": {
+    "message": "ドキュメント操作",
+    "description": "Editor: accessible label for the topbar’s undo/redo/delete button group."
+  },
+  "editorUndoTitle": {
+    "message": "元に戻す (⌘Z)",
+    "description": "Editor topbar: tooltip for the Undo button."
+  },
+  "editorUndoLabel": {
+    "message": "元に戻す",
+    "description": "Editor topbar: accessible label for the Undo button. Also its name in the shortcut sheet."
+  },
+  "editorRedoTitle": {
+    "message": "やり直す (⌘⇧Z)",
+    "description": "Editor topbar: tooltip for the Redo button."
+  },
+  "editorRedoLabel": {
+    "message": "やり直す",
+    "description": "Editor topbar: accessible label for the Redo button. Also its name in the shortcut sheet."
+  },
+  "editorDeleteSelectedTitle": {
+    "message": "選択項目を削除 (⌫)",
+    "description": "Editor topbar: tooltip for the delete-selection button."
+  },
+  "editorDeleteSelectedLabel": {
+    "message": "選択項目を削除",
+    "description": "Editor topbar: accessible label for the delete-selection button. Also its name in the shortcut sheet."
+  },
+  "editorCaptureHistory": {
+    "message": "キャプチャ履歴",
+    "description": "Editor: title/accessible label for the History button, and the history sheet’s dialog title."
+  },
+  "editorPinTitle": {
+    "message": "フローティング ウィンドウに固定 (Pin)。このタブを閉じると閉じます",
+    "description": "Editor topbar: tooltip for the Pin button."
+  },
+  "editorPinLabel": {
+    "message": "フローティング ウィンドウに固定 (Pin)",
+    "description": "Editor topbar: accessible label for the Pin button."
+  },
+  "editorShortcutsTitle": {
+    "message": "キーボード ショートカット (?)",
+    "description": "Editor topbar: tooltip for the shortcut-sheet button."
+  },
+  "editorShortcutsLabel": {
+    "message": "キーボード ショートカット",
+    "description": "Editor: accessible label for the shortcut-sheet button, and the sheet’s own dialog title."
+  },
+  "editorCopyIdle": {
+    "message": "コピー",
+    "description": "Editor topbar: the Copy button’s resting label."
+  },
+  "editorCopyDone": {
+    "message": "コピー済み",
+    "description": "Editor topbar: the Copy button’s label right after a successful copy."
+  },
+  "editorCopyFailed": {
+    "message": "失敗",
+    "description": "Editor topbar: the Copy button’s label after a failed copy."
+  },
+  "editorCopyTitle": {
+    "message": "PNG としてクリップボードにコピー (⌘C)",
+    "description": "Editor topbar: tooltip for the Copy button."
+  },
+  "editorExportTitle": {
+    "message": "書き出し (⌘S)",
+    "description": "Editor topbar: tooltip for the Export button."
+  },
+  "editorExport": {
+    "message": "書き出し",
+    "description": "Editor: the Export button/dialog title, and its name in the shortcut sheet."
+  },
+  "editorExporting": {
+    "message": "書き出し中…",
+    "description": "Editor export dialog: shown while an export with no per-page progress is running."
+  },
+  "editorRetry": {
+    "message": "再試行",
+    "description": "Editor: button that retries loading the screenshot after an error."
+  },
+  "editorSomethingWrong": {
+    "message": "問題が発生しました",
+    "description": "Editor: heading shown over the load-error overlay."
+  },
+  "editorLoading": {
+    "message": "読み込み中",
+    "description": "Editor: accessible label for the loading spinner."
+  },
+  "editorLoadingScreenshot": {
+    "message": "スクリーンショットを読み込み中…",
+    "description": "Editor: text shown next to the loading spinner."
+  },
+  "editorScreenshotCanvasSized": {
+    "message": "スクリーンショット キャンバス、$W$ × $H$ ピクセル",
+    "description": "Editor: accessible label for the canvas once an image is loaded.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "800"
+      },
+      "h": {
+        "content": "$2",
+        "example": "600"
+      }
+    }
+  },
+  "editorScreenshotCanvasEmpty": {
+    "message": "スクリーンショット キャンバス、空",
+    "description": "Editor: accessible label for the canvas with no image loaded."
+  },
+  "editorCanvasDescLoaded": {
+    "message": "キャプチャしたスクリーンショット、$W$ × $H$ ピクセル、$COUNT$が描かれています。",
+    "description": "Editor: the canvas’s long-form accessible description, image loaded.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "800"
+      },
+      "h": {
+        "content": "$2",
+        "example": "600"
+      },
+      "count": {
+        "content": "$3",
+        "example": "3 annotations"
+      }
+    }
+  },
+  "editorCanvasDescEmpty": {
+    "message": "スクリーンショットは開かれていません。",
+    "description": "Editor: the canvas’s long-form accessible description, nothing loaded."
+  },
+  "editorCanvasKeyboardHelp": {
+    "message": "右角かっこキーで次の注釈を、左角かっこキーで前の注釈を選択します。Shift キーを押しながらどちらかの角かっこキーを押すと、選択を置き換えずにその注釈を選択に追加します。Enter キーを押すと、ツールバーで選んだツールを配置します。矢印キーで選択を 1 ピクセル移動、Shift キーと矢印キーで 10 ピクセル移動、Alt キーと矢印キーでサイズを変更します。Alt キーと D キーで選択を複製します。切り抜き中は、矢印キーで移動、角かっこキーで 8 つのハンドルから 1 つを選択、Alt キーと矢印キーでそのハンドルからサイズ変更、Enter キーで適用、Esc キーでキャンセルします。Cut ツールでは、Enter キーで画像を横切る帯状の範囲を開始、上下の矢印キーで移動、Alt キーと矢印キーでサイズ変更、Enter キーで取り除き、Esc キーでキャンセルします。Cut ツールで Delete キーを押すと、最も近いカットを元に戻します。",
+    "description": "Editor: the canvas’s long-form accessible description, the fixed keyboard-model instructions appended after the load-state sentence."
+  },
+  "editorDraftRestoreText": {
+    "message": "前回のセッションの未保存の編集があります ($SUMMARY$)。",
+    "description": "Editor: the draft-restore pill’s text.",
+    "placeholders": {
+      "summary": {
+        "content": "$1",
+        "example": "3 annotations"
+      }
+    }
+  },
+  "editorRestore": {
+    "message": "復元",
+    "description": "Editor: button that restores a saved draft."
+  },
+  "editorDiscard": {
+    "message": "破棄",
+    "description": "Editor: button that discards a saved draft."
+  },
+  "editorCropToSelection": {
+    "message": "選択範囲に切り抜き",
+    "description": "Editor: the crop-confirm pill’s text."
+  },
+  "editorApply": {
+    "message": "適用",
+    "description": "Editor: button that applies the current crop."
+  },
+  "editorCancel": {
+    "message": "キャンセル",
+    "description": "Editor: Cancel button, used in the crop-confirm pill, the export dialog and the replace-image dialog."
+  },
+  "editorNothingToEdit": {
+    "message": "編集する項目はまだありません",
+    "description": "Editor: heading shown over the empty-state overlay."
+  },
+  "editorCaptureHint": {
+    "message": "OpenScreenShot でページをキャプチャすると、ここに開きます。",
+    "description": "Editor: empty-state body text."
+  },
+  "editorDropHint": {
+    "message": "または画像をここにドロップしてください。貼り付けも使えます。",
+    "description": "Editor: empty-state secondary hint."
+  },
+  "editorCapturePage": {
+    "message": "ページをキャプチャ",
+    "description": "Editor: empty-state button that opens the popup."
+  },
+  "editorOpenExtensionIcon": {
+    "message": "ツールバーの OpenScreenShot アイコンをクリックしてください。",
+    "description": "Editor: empty-state fallback text shown when openPopup() fails."
+  },
+  "editorReplaceImage": {
+    "message": "現在の画像を置き換え",
+    "description": "Editor: accessible label for the replace-image confirm dialog."
+  },
+  "editorReplaceImageTitle": {
+    "message": "現在の画像を置き換えますか？",
+    "description": "Editor: replace-image confirm dialog heading."
+  },
+  "editorReplaceImageBody": {
+    "message": "「$NAME$」がキャンバス上の画像の代わりに開きます。$COUNT$と元に戻す履歴も失われます。",
+    "description": "Editor: replace-image confirm dialog body text.",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "photo.png"
+      },
+      "count": {
+        "content": "$2",
+        "example": "3 annotations"
+      }
+    }
+  },
+  "editorReplace": {
+    "message": "置き換え",
+    "description": "Editor: button that confirms replacing the current image."
+  },
+  "editorTypePlaceholder": {
+    "message": "入力…",
+    "description": "Editor: placeholder text for the text-annotation editing overlay."
+  },
+  "editorClose": {
+    "message": "閉じる",
+    "description": "Editor: Close button, used in the shortcut sheet and the history sheet."
+  },
+  "editorFormat": {
+    "message": "形式",
+    "description": "Editor export dialog: the format field label."
+  },
+  "editorFormatPdfLabel": {
+    "message": "PDF",
+    "description": "Editor export dialog: the PDF format card’s name."
+  },
+  "editorFormatPdfHint": {
+    "message": "ドキュメント · 複数ページ",
+    "description": "Editor export dialog: the PDF format card’s hint."
+  },
+  "editorScale": {
+    "message": "倍率",
+    "description": "Editor export dialog: the scale field label."
+  },
+  "editorPctExceedsLimit": {
+    "message": "$PCT$% は書き出しサイズの上限を超えます",
+    "description": "Editor export dialog: tooltip on a scale preset that would exceed the export size limit.",
+    "placeholders": {
+      "pct": {
+        "content": "$1",
+        "example": "200"
+      }
+    }
+  },
+  "editorWidth": {
+    "message": "幅",
+    "description": "Editor export dialog: label before the width number field."
+  },
+  "editorWidthClamped": {
+    "message": "幅を $CLAMPED$px に制限しました (許容範囲 $FLOOR$～$CEILING$px)。",
+    "description": "Editor export dialog: notice shown when a typed width was clamped.",
+    "placeholders": {
+      "clamped": {
+        "content": "$1",
+        "example": "4000"
+      },
+      "floor": {
+        "content": "$2",
+        "example": "1"
+      },
+      "ceiling": {
+        "content": "$3",
+        "example": "4000"
+      }
+    }
+  },
+  "editorQuality": {
+    "message": "画質 · $PCT$%",
+    "description": "Editor export dialog: the quality slider label, with its current value.",
+    "placeholders": {
+      "pct": {
+        "content": "$1",
+        "example": "92"
+      }
+    }
+  },
+  "editorPageSize": {
+    "message": "ページ サイズ",
+    "description": "Editor export dialog: the PDF page-size field label."
+  },
+  "editorA4": {
+    "message": "A4",
+    "description": "Editor export dialog: the A4 PDF page size."
+  },
+  "editorLetter": {
+    "message": "Letter",
+    "description": "Editor export dialog: the Letter PDF page size."
+  },
+  "editorFull": {
+    "message": "全体",
+    "description": "Editor export dialog: the Full (image-sized) PDF page size."
+  },
+  "editorOrientation": {
+    "message": "向き",
+    "description": "Editor export dialog: the PDF orientation field label."
+  },
+  "editorPortrait": {
+    "message": "縦",
+    "description": "Editor export dialog: portrait PDF orientation."
+  },
+  "editorLandscape": {
+    "message": "横",
+    "description": "Editor export dialog: landscape PDF orientation."
+  },
+  "editorSplitPages": {
+    "message": "複数ページに分割",
+    "description": "Editor export dialog: checkbox label for multi-page PDF export."
+  },
+  "editorMargin": {
+    "message": "余白",
+    "description": "Editor export dialog: label before the PDF margin number field."
+  },
+  "editorMarginClamped": {
+    "message": "余白を $CLAMPED$mm に制限しました (許容範囲 $MIN$～$MAX$mm)。",
+    "description": "Editor export dialog: notice shown when a typed PDF margin was clamped.",
+    "placeholders": {
+      "clamped": {
+        "content": "$1",
+        "example": "8"
+      },
+      "min": {
+        "content": "$2",
+        "example": "0"
+      },
+      "max": {
+        "content": "$3",
+        "example": "25"
+      }
+    }
+  },
+  "editorFullPdfHint": {
+    "message": "「全体」は画像サイズの 1 ページを作成するため、向き、複数ページ、余白は適用されません。",
+    "description": "Editor export dialog: hint shown under the Full PDF page size option."
+  },
+  "editorFilename": {
+    "message": "ファイル名",
+    "description": "Editor export dialog: label for the filename field."
+  },
+  "editorExportError": {
+    "message": "画像を書き出せませんでした。倍率を下げるか、別の形式をお試しください。",
+    "description": "Editor export dialog: error shown when the export itself fails."
+  },
+  "editorExportingPage": {
+    "message": "ページ $PAGE$/$TOTAL$ を書き出し中…",
+    "description": "Editor export dialog: per-page progress text during a multi-page PDF export.",
+    "placeholders": {
+      "page": {
+        "content": "$1",
+        "example": "2"
+      },
+      "total": {
+        "content": "$2",
+        "example": "5"
+      }
+    }
+  },
+  "editorRememberSettings": {
+    "message": "この設定を記憶する",
+    "description": "Editor export dialog: checkbox label for persisting the chosen export settings."
+  },
+  "editorTools": {
+    "message": "ツール",
+    "description": "Editor shortcut sheet: the Tools column heading."
+  },
+  "editorCommands": {
+    "message": "コマンド",
+    "description": "Editor shortcut sheet: the Commands column heading."
+  },
+  "editorCmdSetColor": {
+    "message": "色を設定",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdPickColor": {
+    "message": "画面から色を取得",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdSquare45": {
+    "message": "正方形 / 45° に固定",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdEditText": {
+    "message": "テキスト レイヤーを編集",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdNextPrevLayer": {
+    "message": "次 / 前のレイヤー",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdAddLayer": {
+    "message": "レイヤーを選択に追加",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdSelectSeveral": {
+    "message": "マウスで複数選択",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdPlaceTool": {
+    "message": "現在のツールを配置",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdMoveSelection": {
+    "message": "選択を 1px / 10px 移動",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdResizeSelection": {
+    "message": "選択のサイズを変更",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdDuplicateSelection": {
+    "message": "選択を複製",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdCopyClipboard": {
+    "message": "クリップボードにコピー",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdCropNextHandle": {
+    "message": "切り抜き：次 / 前のハンドル",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdCropResizeHandle": {
+    "message": "切り抜き：そのハンドルからサイズ変更",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdCutTakeOut": {
+    "message": "Cut ツール：帯状の範囲を取り除く",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdCutPutBack": {
+    "message": "Cut ツール：最も近いカットを戻す",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdDeselectCancel": {
+    "message": "選択解除 / 切り抜きやカットをキャンセル",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorZoomIn": {
+    "message": "拡大",
+    "description": "Editor: Zoom in command, used in the zoom menu and the shortcut sheet."
+  },
+  "editorZoomOut": {
+    "message": "縮小",
+    "description": "Editor: Zoom out command, used in the zoom menu and the shortcut sheet."
+  },
+  "editorActualSize": {
+    "message": "実際のサイズ",
+    "description": "Editor: Actual size (100%) command, used in the zoom menu and the shortcut sheet."
+  },
+  "editorFitToScreen": {
+    "message": "画面に合わせる",
+    "description": "Editor: Fit to screen command, used in the zoom menu and the shortcut sheet."
+  },
+  "editorCmdPan": {
+    "message": "表示位置を移動",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdThisSheet": {
+    "message": "このシート",
+    "description": "Editor shortcut sheet: command row naming the shortcut sheet itself."
+  },
+  "editorZoomTitle": {
+    "message": "ズーム",
+    "description": "Editor topbar: tooltip for the zoom menu trigger."
+  },
+  "editorAriaCaptures": {
+    "message": "キャプチャ",
+    "description": "Editor history sheet: accessible label for the list of past captures."
+  },
+  "editorNoCapturesYet": {
+    "message": "キャプチャはまだありません。",
+    "description": "Editor history sheet: empty-state text."
+  },
+  "editorOpen": {
+    "message": "開く",
+    "description": "Editor history sheet: button that reopens a past capture."
+  },
+  "editorOpenAria": {
+    "message": "開く、$DATE$ にキャプチャ",
+    "description": "Editor history sheet: accessible label for a row’s Open button.",
+    "placeholders": {
+      "date": {
+        "content": "$1",
+        "example": "8/30/2026, 10:00 AM"
+      }
+    }
+  },
+  "editorDelete": {
+    "message": "削除",
+    "description": "Editor history sheet: button that deletes a past capture."
+  },
+  "editorDeleteAria": {
+    "message": "削除、$DATE$ にキャプチャ",
+    "description": "Editor history sheet: accessible label for a row’s Delete button.",
+    "placeholders": {
+      "date": {
+        "content": "$1",
+        "example": "8/30/2026, 10:00 AM"
+      }
+    }
+  },
+  "editorConfirmDelete": {
+    "message": "削除を確定",
+    "description": "Editor history sheet: Delete button’s label once armed by a first click."
+  },
+  "editorConfirmDeleteAria": {
+    "message": "削除を確定、$DATE$ にキャプチャ",
+    "description": "Editor history sheet: accessible label for a row’s Delete button once armed.",
+    "placeholders": {
+      "date": {
+        "content": "$1",
+        "example": "8/30/2026, 10:00 AM"
+      }
+    }
+  },
+  "editorPinUnavailable": {
+    "message": "Pin には、このブラウザにない機能 (Document Picture-in-Picture) が必要です。",
+    "description": "Editor: stage notice shown when the browser lacks the Pin feature."
+  },
+  "editorPinFailedRetry": {
+    "message": "固定ウィンドウを開けませんでした。もう一度 Pin をクリックしてください。",
+    "description": "Editor: stage notice shown when opening the pinned window was blocked (no user activation)."
+  },
+  "editorPinFailedDetail": {
+    "message": "固定ウィンドウを開けませんでした ($DETAIL$)。",
+    "description": "Editor: stage notice shown when opening the pinned window failed for another reason.",
+    "placeholders": {
+      "detail": {
+        "content": "$1",
+        "example": "no activation"
+      }
+    }
+  },
+  "editorPinWindowTitle": {
+    "message": "固定したキャプチャ (編集に合わせて更新) - OpenScreenShot",
+    "description": "Editor: the pinned floating window’s document title."
+  },
+  "editorPinnedCaptureAlt": {
+    "message": "固定したキャプチャ",
+    "description": "Editor: alt text for the image inside the pinned floating window."
+  },
+  "editorFormatPngLabel": {
+    "message": "PNG",
+    "description": "Editor export dialog: the PNG format card’s name."
+  },
+  "editorFormatPngHint": {
+    "message": "ロスレス · 透過対応",
+    "description": "Editor export dialog: the PNG format card’s hint."
+  },
+  "editorFormatJpegLabel": {
+    "message": "JPEG",
+    "description": "Editor export dialog: the JPEG format card’s name."
+  },
+  "editorFormatJpegHint": {
+    "message": "小サイズ · 透過なし",
+    "description": "Editor export dialog: the JPEG format card’s hint."
+  },
+  "editorFormatWebpLabel": {
+    "message": "WebP",
+    "description": "Editor export dialog: the WebP format card’s name."
+  },
+  "editorFormatWebpHint": {
+    "message": "最新 · 小サイズで高画質",
+    "description": "Editor export dialog: the WebP format card’s hint."
+  },
+  "editorBgInk": {
+    "message": "インク",
+    "description": "Editor beautify menu: the Ink background swatch."
+  },
+  "editorBgCoral": {
+    "message": "コーラル",
+    "description": "Editor beautify menu: the Coral background swatch."
+  },
+  "editorBgDusk": {
+    "message": "ダスク",
+    "description": "Editor beautify menu: the Dusk background swatch."
+  },
+  "editorBgMint": {
+    "message": "ミント",
+    "description": "Editor beautify menu: the Mint background swatch."
+  },
+  "editorBgSand": {
+    "message": "サンド",
+    "description": "Editor beautify menu: the Sand background swatch."
+  },
+  "editorBgSky": {
+    "message": "スカイ",
+    "description": "Editor beautify menu: the Sky background swatch."
+  },
+  "editorLookCleanLabel": {
+    "message": "クリーン",
+    "description": "Editor beautify menu: the Clean look."
+  },
+  "editorLookCleanHint": {
+    "message": "標準のスタイル：やわらかいダークのカード。",
+    "description": "Editor beautify menu: tooltip for the Clean look."
+  },
+  "editorLookAiryLabel": {
+    "message": "エアリー",
+    "description": "Editor beautify menu: the Airy look."
+  },
+  "editorLookAiryHint": {
+    "message": "小さな切り抜きに余白を与え、横長の枠に合わせます。",
+    "description": "Editor beautify menu: tooltip for the Airy look."
+  },
+  "editorLookSnugLabel": {
+    "message": "コンパクト",
+    "description": "Editor beautify menu: the Snug look."
+  },
+  "editorLookSnugHint": {
+    "message": "縦長のスクリーンショットを細い列に収めます。",
+    "description": "Editor beautify menu: tooltip for the Snug look."
+  },
+  "editorLookFlatLabel": {
+    "message": "フラット",
+    "description": "Editor beautify menu: the Flat look."
+  },
+  "editorLookFlatHint": {
+    "message": "角丸も影もなし。ドキュメントや印刷向け。",
+    "description": "Editor beautify menu: tooltip for the Flat look."
+  },
+  "editorLookPosterLabel": {
+    "message": "ポスター",
+    "description": "Editor beautify menu: the Poster look."
+  },
+  "editorLookPosterHint": {
+    "message": "ヒーロー画像向け：大きな角丸と強い影。",
+    "description": "Editor beautify menu: tooltip for the Poster look."
+  },
+  "editorLookCutoutLabel": {
+    "message": "カットアウト",
+    "description": "Editor beautify menu: the Cutout look."
+  },
+  "editorLookCutoutHint": {
+    "message": "透明背景に影のみ。どんなページにも配置できます。",
+    "description": "Editor beautify menu: tooltip for the Cutout look."
+  },
+  "editorBeautify": {
+    "message": "Beautify",
+    "description": "Editor: the Beautify menu’s trigger button, popover label, and on/off toggle text."
+  },
+  "editorBeautifyTitle": {
+    "message": "Beautify：余白、角丸、影、背景",
+    "description": "Editor: tooltip for the Beautify menu trigger."
+  },
+  "editorLook": {
+    "message": "スタイル",
+    "description": "Editor beautify menu: the Look field group label."
+  },
+  "editorLookModifiedSuffix": {
+    "message": "$LABEL$、変更済み",
+    "description": "Editor beautify menu: accessible label for a selected look whose values have since been changed.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Clean"
+      }
+    }
+  },
+  "editorPadding": {
+    "message": "余白",
+    "description": "Editor beautify menu: accessible label / field label for the padding slider."
+  },
+  "editorCorners": {
+    "message": "角丸",
+    "description": "Editor beautify menu: accessible label / field label for the corner-radius slider."
+  },
+  "editorShadow": {
+    "message": "影",
+    "description": "Editor beautify menu: accessible label / field label for the shadow slider."
+  },
+  "editorBackground": {
+    "message": "背景",
+    "description": "Editor beautify menu: the Background field group label."
+  },
+  "editorTransparent": {
+    "message": "透明",
+    "description": "Editor beautify menu: accessible label for the transparent-background swatch."
+  },
+  "editorSolidColorTitle": {
+    "message": "単色",
+    "description": "Editor beautify menu: tooltip for the custom solid-colour swatch."
+  },
+  "editorSolidBackgroundColorAria": {
+    "message": "単色の背景色",
+    "description": "Editor beautify menu: accessible label for the custom solid-colour swatch."
+  },
+  "editorColorRed": {
+    "message": "赤",
+    "description": "Editor style bar: the Red swatch name, read by assistive tech."
+  },
+  "editorColorOrange": {
+    "message": "オレンジ",
+    "description": "Editor style bar: the Orange swatch name, read by assistive tech."
+  },
+  "editorColorYellow": {
+    "message": "黄",
+    "description": "Editor style bar: the Yellow swatch name, read by assistive tech."
+  },
+  "editorColorGreen": {
+    "message": "緑",
+    "description": "Editor style bar: the Green swatch name, read by assistive tech."
+  },
+  "editorColorBlue": {
+    "message": "青",
+    "description": "Editor style bar: the Blue swatch name, read by assistive tech."
+  },
+  "editorColorPurple": {
+    "message": "紫",
+    "description": "Editor style bar: the Purple swatch name, read by assistive tech."
+  },
+  "editorColorWhite": {
+    "message": "白",
+    "description": "Editor style bar: the White swatch name, read by assistive tech."
+  },
+  "editorColorBlack": {
+    "message": "黒",
+    "description": "Editor style bar: the Black swatch name, read by assistive tech."
+  },
+  "editorCustomColorHex": {
+    "message": "カスタム カラー $HEX$",
+    "description": "Editor style bar: the swatch name read by assistive tech for a recent colour with no preset name.",
+    "placeholders": {
+      "hex": {
+        "content": "$1",
+        "example": "#123456"
+      }
+    }
+  },
+  "editorImportNotAnImage": {
+    "message": "このファイルはエディタで開ける画像ではありません。",
+    "description": "Editor: stage notice shown when a dropped/pasted file is not a decodable image."
+  },
+  "editorImportTooLarge": {
+    "message": "この画像は大きすぎて編集できません ($W$ × $H$px)。",
+    "description": "Editor: stage notice shown when an imported image exceeds the canvas size limits.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "9000"
+      },
+      "h": {
+        "content": "$2",
+        "example": "9000"
+      }
+    }
+  },
+  "editorSourceVisible": {
+    "message": "表示領域",
+    "description": "Editor: the brand-mode chip / history row label for a visible-area capture."
+  },
+  "editorSourceRegion": {
+    "message": "範囲",
+    "description": "Editor: the brand-mode chip / history row label for a region capture."
+  },
+  "editorSourceImported": {
+    "message": "読み込み",
+    "description": "Editor: the brand-mode chip / history row label for an imported image."
+  },
+  "editorLoadFailedDecode": {
+    "message": "スクリーンショットを読み込めませんでした。",
+    "description": "Editor: error overlay text when the saved screenshot fails to decode."
+  },
+  "editorLoadFailedGeneric": {
+    "message": "設定または保存済みのスクリーンショットを読み込めませんでした。",
+    "description": "Editor: error overlay text when loading the screenshot fails for any other reason."
+  },
+  "editorDraftRestoreFailed": {
+    "message": "保存済みの編集を復元できませんでした。",
+    "description": "Editor: stage notice shown when restoring a saved draft fails."
+  },
+  "editorImportReadFailed": {
+    "message": "この画像を読み取れませんでした。",
+    "description": "Editor: stage notice shown when a dropped/pasted file cannot be read."
+  },
+  "editorHistoryCaptureGone": {
+    "message": "このキャプチャはもう存在しません。",
+    "description": "Editor: stage notice shown when a capture history entry no longer exists in storage."
+  },
+  "editorHistoryCaptureLoadFailed": {
+    "message": "このキャプチャを読み込めませんでした。",
+    "description": "Editor: stage notice shown when a capture history entry fails to decode."
+  },
+  "editorExportDialogAria": {
+    "message": "スクリーンショットを書き出し",
+    "description": "Editor: accessible label for the export dialog."
+  },
+  "editorKeysStyleBar": {
+    "message": "スタイル バー",
+    "description": "Editor shortcut sheet: the \"keys\" column for a command with no key of its own, pointing at where to find it instead."
+  },
+  "popupTrustLine": {
+    "message": "デバイス内で処理 · オープンソース · トラッキングなし",
+    "description": "Popup: the one-line local-only assurance shown beside a permission ask."
+  },
+  "settingsSupport": {
+    "message": "サポート",
+    "description": "Popup settings: label for the row holding the Ko-fi and cool-stuff links."
+  }
+}

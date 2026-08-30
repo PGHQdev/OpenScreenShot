@@ -908,17 +908,25 @@ body {
 }
 
 .rec-seg {
-  display: inline-flex;
+  display: flex;
+  align-self: stretch;
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   overflow: hidden;
 }
 
+/* Four equal segments across the rail. A label longer than its quarter
+   (German "Mit Klickeffekt", Japanese "クリック効果") wraps inside the
+   segment instead of pushing the control past the rail's edge. */
 .rec-seg-btn {
-  height: 24px;
-  padding: 0 8px;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 24px;
+  padding: 2px 6px;
   border: none;
   border-right: 1px solid var(--border);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
   background: var(--surface-1);
   color: var(--text-1);
   font-size: var(--fs-xs);

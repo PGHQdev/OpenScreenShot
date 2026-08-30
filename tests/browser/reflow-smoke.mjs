@@ -6,6 +6,8 @@
 // keyboard focus trap while scrolled, and no surface that is meant to reflow
 // grows a horizontal scrollbar.
 // Run with: npm run build && npm run smoke:reflow
+// Set OSS_LOCALE=de (any folder under dist/_locales) to lay the surfaces out
+// in that catalog instead of English; translated strings run longer.
 import { readFileSync } from 'node:fs';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 
@@ -17,6 +19,7 @@ import { assertDistFresh, loadPuppeteer, serveDist } from './dist-server.mjs';
 
 const ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const DIST = join(ROOT, 'dist');
+const LOCALE = process.env.OSS_LOCALE || 'en';
 const CHROME =
   process.env.CHROME_BIN ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
@@ -222,7 +225,7 @@ async function testEditor(browser, base, messages) {
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900)); // controller's initial fit, see editor-keyboard-smoke
   // The Rectangle tool has a style bar (color, stroke, shape); Select does not.
-  await page.click('.tool-btn[title^="Rectangle"]');
+  await page.click(`.tool-btn[title^="${messages.editorToolRectangle.message}"]`);
   await page.waitForSelector('.stylebar');
 
   step(
@@ -399,9 +402,12 @@ async function testPopup(browser, base, messages) {
     };
   });
   assert(footerFit !== null && footerFit.count === 4, 'the footer row renders its four entries');
+  // One line is the English target. Other catalogs run longer, and the row
+  // wraps by design; two lines is the most the 600px cap below has room for.
+  const footerLines = LOCALE === 'en' ? 1 : 2;
   assert(
-    footerFit.lines === 1,
-    `all four share one line (${footerFit.minContent}px of entries in a ${footerFit.box}px box)`,
+    footerFit.lines <= footerLines,
+    `all four fit in ${footerLines} line(s) (${footerFit.minContent}px of entries in a ${footerFit.box}px box, ${footerFit.lines} lines)`,
   );
   assert(
     footerFit.overflow <= 1,
@@ -441,7 +447,7 @@ async function testPopup(browser, base, messages) {
   assert(footerReachable, 'the last footer control scrolls into view');
 
   step('POPUP — settings view scrolls at a short viewport too');
-  await page.click('.icon-btn[aria-label="Settings"]');
+  await page.click(`.icon-btn[aria-label="${messages.settingsTitle.message}"]`);
   await page.waitForSelector('.settings');
   const settingsRows = await page.$$eval('.settings-row', (els) => els.length);
   assert(settingsRows > 0, `settings view renders ${settingsRows} rows`);
@@ -614,12 +620,14 @@ async function main() {
     `dist/ is present and newer than all ${sourceCount} files under src/, public/ and manifest.json`,
   );
 
-  const messages = JSON.parse(await readFile(join(DIST, '_locales/en/messages.json'), 'utf8'));
+  const messages = JSON.parse(
+    await readFile(join(DIST, '_locales', LOCALE, 'messages.json'), 'utf8'),
+  );
   const puppeteer = await loadPuppeteer(ROOT);
   const work = await mkdtemp(join(tmpdir(), 'oss-reflow-smoke-'));
   const server = await serveDist(DIST);
   const base = `http://127.0.0.1:${server.address().port}`;
-  step(`serving dist/ on ${base}`);
+  step(`serving dist/ on ${base} (locale ${LOCALE})`);
 
   let browser = null;
   try {

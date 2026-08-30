@@ -1,0 +1,2256 @@
+{
+  "extName": {
+    "message": "전체 페이지 스크린샷 및 주석 - OpenScreenShot",
+    "description": "Extension name shown in Chrome UI."
+  },
+  "extDesc": {
+    "message": "전체 페이지, 선택 영역, 보이는 영역 스크린샷과 주석 편집기. PNG, JPEG, WebP, PDF 내보내기. 100% 비공개, 오프라인, 업로드 없음.",
+    "description": "Extension description shown in the Chrome Web Store and extensions page."
+  },
+  "modeFullPage": {
+    "message": "전체 페이지",
+    "description": "Capture mode: capture the entire scrolling page."
+  },
+  "modeFullPageSub": {
+    "message": "스크롤되는 페이지 전체 캡처",
+    "description": "Subtitle for the Full Page capture mode."
+  },
+  "modeVisible": {
+    "message": "보이는 영역",
+    "description": "Capture mode: capture what is currently visible."
+  },
+  "modeVisibleSub": {
+    "message": "지금 화면에 보이는 부분",
+    "description": "Subtitle for the Visible Area capture mode."
+  },
+  "modeRegion": {
+    "message": "선택 영역",
+    "description": "Capture mode: capture a user-dragged region."
+  },
+  "modeRegionSub": {
+    "message": "클릭하고 드래그해 선택",
+    "description": "Subtitle for the Selected Region capture mode."
+  },
+  "capturing": {
+    "message": "캡처 중…",
+    "description": "Status shown while a capture is in progress."
+  },
+  "cannotCaptureProtected": {
+    "message": "보호된 페이지라 스크린샷을 찍을 수 없어요.",
+    "description": "Error shown when the active page cannot be captured (e.g. chrome:// pages)."
+  },
+  "comingSoon": {
+    "message": "다음 마일스톤에서 제공될 예정이에요.",
+    "description": "Placeholder message for features not yet implemented."
+  },
+  "customizeShortcuts": {
+    "message": "키보드 단축키 설정",
+    "description": "Link that opens Chrome's extension shortcut settings."
+  },
+  "reopenLast": {
+    "message": "최근 캡처 열기",
+    "description": "Link in the popup that reopens the most recent capture in the editor."
+  },
+  "historyAria": {
+    "message": "기록",
+    "description": "Header icon button in the popup that opens the editor's capture history shelf."
+  },
+  "recRecordings": {
+    "message": "녹화 목록",
+    "description": "Link in the popup that opens the recorder page's session list."
+  },
+  "footerShortcuts": {
+    "message": "단축키",
+    "description": "Short footer label for the link that opens Chrome's shortcut settings."
+  },
+  "footerKofi": {
+    "message": "Ko-fi",
+    "description": "Short footer label for the Ko-fi donation link."
+  },
+  "supportKofiTitle": {
+    "message": "Ko-fi에서 개발자에게 커피 한 잔 사 주기",
+    "description": "Tooltip for the Ko-fi donation footer link."
+  },
+  "footerCoolStuff": {
+    "message": "더 많은 도구",
+    "description": "Accessible label for the gift icon footer link that opens the cool-stuff page."
+  },
+  "coolStuffTitle": {
+    "message": "더 많은 도구 — 같은 제작자의 다른 무료 도구",
+    "description": "Tooltip for the gift icon footer link."
+  },
+  "setupCoolStuff": {
+    "message": "더 많은 도구",
+    "description": "Trust strip link on the setup page that opens the cool-stuff page."
+  },
+  "settingsTitle": {
+    "message": "설정",
+    "description": "Settings panel heading."
+  },
+  "settingsTheme": {
+    "message": "테마",
+    "description": "Theme setting label."
+  },
+  "themeLight": {
+    "message": "라이트",
+    "description": "Light theme option label."
+  },
+  "themeDark": {
+    "message": "다크",
+    "description": "Dark theme option label."
+  },
+  "themeSystem": {
+    "message": "시스템",
+    "description": "System-follows theme option label."
+  },
+  "settingsDefaultFormat": {
+    "message": "형식",
+    "description": "Default export format setting label."
+  },
+  "formatPng": {
+    "message": "PNG",
+    "description": "PNG format option."
+  },
+  "formatJpeg": {
+    "message": "JPEG",
+    "description": "JPEG format option."
+  },
+  "formatWebp": {
+    "message": "WebP",
+    "description": "WebP format option."
+  },
+  "formatPdf": {
+    "message": "PDF",
+    "description": "PDF format option."
+  },
+  "settingsQuality": {
+    "message": "품질",
+    "description": "Export quality setting label."
+  },
+  "settingsFilename": {
+    "message": "파일 이름 템플릿",
+    "description": "Filename template setting label."
+  },
+  "filenameInsert": {
+    "message": "삽입",
+    "description": "Label above the clickable filename token chips."
+  },
+  "couldNotReach": {
+    "message": "백그라운드 워커에 연결할 수 없어요.",
+    "description": "Error toast when the background service worker is unreachable."
+  },
+  "backAria": {
+    "message": "캡처 모드로 돌아가기",
+    "description": "Accessible label for the back button in settings."
+  },
+  "captureModesAria": {
+    "message": "캡처 모드",
+    "description": "Accessible label for the capture mode buttons."
+  },
+  "dismiss": {
+    "message": "닫기",
+    "description": "Accessible label for the button that closes an error message."
+  },
+  "resetDefaults": {
+    "message": "기본값으로 재설정",
+    "description": "Settings link that restores every default value."
+  },
+  "resetConfirm": {
+    "message": "한 번 더 클릭하면 재설정돼요",
+    "description": "Second-click confirmation label for the reset link."
+  },
+  "delayLabel": {
+    "message": "지연",
+    "description": "Label for the capture delay row in the popup."
+  },
+  "delayOff": {
+    "message": "없음",
+    "description": "Delay option that captures immediately."
+  },
+  "repeatLastRegion": {
+    "message": "영역 반복",
+    "description": "Footer link and context menu item that re-captures the previous region selection."
+  },
+  "popupSectionScreenshot": {
+    "message": "스크린샷",
+    "description": "Popup: section heading above the three capture mode cards."
+  },
+  "popupSectionRecord": {
+    "message": "녹화",
+    "description": "Popup: section heading above the record card."
+  },
+  "recSourceLabel": {
+    "message": "녹화 소스",
+    "description": "Popup: label above the mic / tab audio / webcam toggle chips."
+  },
+  "popupDigitHint": {
+    "message": "또는 $DIGIT$ 키를 누르세요",
+    "description": "Popup: tooltip on a capture mode card naming its number-key shortcut.",
+    "placeholders": {
+      "digit": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "reopenLastDisabledTitle": {
+    "message": "아직 다시 열 캡처가 없어요",
+    "description": "Popup: tooltip on the disabled reopen-last footer action."
+  },
+  "repeatRegionDisabledTitle": {
+    "message": "아직 캡처한 영역이 없어요",
+    "description": "Popup: tooltip on the disabled repeat-region footer action."
+  },
+  "afterCaptureLabel": {
+    "message": "캡처 후",
+    "description": "Label for the row that picks what a finished capture does."
+  },
+  "actionEditor": {
+    "message": "편집기",
+    "description": "Post-capture action that opens the annotation editor."
+  },
+  "actionClipboard": {
+    "message": "클립보드",
+    "description": "Post-capture action that copies the screenshot and skips the editor."
+  },
+  "actionDownload": {
+    "message": "다운로드",
+    "description": "Post-capture action that saves the screenshot and skips the editor."
+  },
+  "actionHintPng": {
+    "message": "빠른 저장은 PNG로 저장돼요.",
+    "description": "Hint shown under the after-capture row when Download is selected."
+  },
+  "expressLabel": {
+    "message": "아이콘 클릭 시 캡처",
+    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+  },
+  "expressHint": {
+    "message": "이제 아이콘을 클릭하면 전체 페이지를 캡처해요. 끄려면 아이콘을 마우스 오른쪽 버튼으로 클릭하세요.",
+    "description": "Hint shown under the express row when express mode is on."
+  },
+  "recOverlayPause": {
+    "message": "일시중지",
+    "description": "Recording control bar: button that pauses the active recording."
+  },
+  "recOverlayResume": {
+    "message": "재개",
+    "description": "Recording control bar: button that resumes a paused recording."
+  },
+  "recOverlayStop": {
+    "message": "중지",
+    "description": "Recording control bar: button that stops and finalizes the recording."
+  },
+  "recOverlayCancel": {
+    "message": "취소",
+    "description": "Recording control bar: button that cancels the recording and discards it."
+  },
+  "recOverlayReveal": {
+    "message": "녹화 컨트롤 표시",
+    "description": "Recording control bar: accessible name of the small always-present control that reveals the hidden bar, by pointer, touch or keyboard focus."
+  },
+  "recOverlayMic": {
+    "message": "마이크",
+    "description": "Recording control bar: chip shown when the microphone track is enabled."
+  },
+  "recOverlayTabAudio": {
+    "message": "탭",
+    "description": "Recording control bar: chip shown when tab audio is enabled."
+  },
+  "recOverlayWebcam": {
+    "message": "캠",
+    "description": "Recording control bar: chip shown when the webcam track is enabled."
+  },
+  "recTitle": {
+    "message": "녹화",
+    "description": "Popup: title of the record row when no session is pending."
+  },
+  "recSub": {
+    "message": "자동 줌으로 이 탭 녹화",
+    "description": "Popup: subtitle of the record row."
+  },
+  "recStop": {
+    "message": "중지",
+    "description": "Popup: label for the button that stops the active recording."
+  },
+  "recCancel": {
+    "message": "취소",
+    "description": "Popup: label for the button that cancels the active recording."
+  },
+  "recRecording": {
+    "message": "녹화 중…",
+    "description": "Popup: status label shown while a recording is in progress."
+  },
+  "recPaused": {
+    "message": "일시중지됨",
+    "description": "Popup: status label shown while a recording is paused."
+  },
+  "recStarting": {
+    "message": "시작 중…",
+    "description": "Popup: shown in place of the elapsed time while the recording is still opening its streams, before the clock has a zero."
+  },
+  "recMic": {
+    "message": "마이크",
+    "description": "Popup: toggle chip for the microphone track."
+  },
+  "recTabAudio": {
+    "message": "탭 오디오",
+    "description": "Popup: toggle chip for the tab audio track."
+  },
+  "recWebcam": {
+    "message": "웹캠",
+    "description": "Popup: toggle chip for the webcam track."
+  },
+  "recWebcamNoPreview": {
+    "message": "내보내기에 추가돼요. 녹화 중에는 미리보기가 없어요.",
+    "description": "Popup: one-line disclosure shown under the Webcam toggle once it is on, before Record is pressed (task 40: the recorded page never shows a live self-view)."
+  },
+  "recWebcamDenied": {
+    "message": "카메라가 거부되어 카메라 없이 녹화해요.",
+    "description": "The permission frame's own denied-state text, and the control bar's screen-reader announcement when a requested camera is declined or unavailable (task 40: the frame itself is not visible, so the bar is what a sighted user reads)."
+  },
+  "recProtected": {
+    "message": "보호된 페이지라 녹화할 수 없어요.",
+    "description": "Popup: error toast shown when the active tab can't be recorded."
+  },
+  "popupRecordRefused": {
+    "message": "탭 녹화가 거부됐어요 — 녹화 설정 열기",
+    "description": "Popup button shown after the user refuses the inline tabCapture prompt."
+  },
+  "recFailStartUnreachable": {
+    "message": "녹화를 시작하지 못했어요. 확장 프로그램이 응답하지 않아요. 다시 시도하세요.",
+    "description": "Popup: error toast when REC_START never reached the service worker."
+  },
+  "recFailStartBlocked": {
+    "message": "녹화를 시작하지 못했어요. 이 페이지는 녹화할 수 없어요. 일반 탭으로 전환한 뒤 다시 시도하세요.",
+    "description": "Popup: error toast when the start found no recordable tab (gone, or a protected URL)."
+  },
+  "recFailStartBusy": {
+    "message": "이미 녹화가 진행 중이에요. 새 녹화를 시작하기 전에 먼저 중지하세요.",
+    "description": "Popup: error toast when a start arrives while a recording is live."
+  },
+  "recFailStartFailed": {
+    "message": "녹화를 시작하지 못했어요. 탭을 준비할 수 없었어요. 탭을 새로고침한 뒤 다시 시도하세요.",
+    "description": "Popup: error toast when the worker's start threw before the engine was asked to capture."
+  },
+  "recFailCleanup": {
+    "message": "실패한 녹화가 아직 저장되어 있어요. 레코더 페이지에서 삭제하세요.",
+    "description": "Popup: error toast when a failed session could not be tidied up."
+  },
+  "recFailEngine": {
+    "message": "녹화가 시작되기 전에 중지됐어요. 탭을 캡처할 수 없었어요. 다시 시도하세요.",
+    "description": "Popup: error toast when the offscreen engine failed to open its streams."
+  },
+  "recFailEngineUnreachable": {
+    "message": "아무것도 녹화되고 있지 않아요. 레코더가 시작되지 않았어요. 중지한 뒤 다시 시도하세요.",
+    "description": "Popup: error toast when OFFSCREEN_START never reached the offscreen engine, so the badge and control bar claim a recording that is not happening."
+  },
+  "recFailEngineStalled": {
+    "message": "녹화가 시작되지 않았고, 중지 요청에도 응답이 없었어요. 저장된 내용은 없어요. 다시 시도하세요.",
+    "description": "Popup: the user pressed Stop on a recording that had not begun, and the offscreen recorder never answered. The run was torn down."
+  },
+  "popupOpenFailed": {
+    "message": "페이지를 열 수 없었어요. 다시 시도하세요.",
+    "description": "Popup: error toast when chrome.tabs.create fails for the setup page, the editor or the recorder."
+  },
+  "recFailChunkWrite": {
+    "message": "이 녹화의 일부가 저장되지 않고 있어요. 녹화를 중지하고 레코더 페이지에서 저장된 내용을 확인하세요.",
+    "description": "Popup: error toast when a chunk write to IndexedDB failed mid-recording, so the file is shorter than the clock says."
+  },
+  "recFailEventsWrite": {
+    "message": "커서 트랙이 저장되지 않고 있어요. 영상은 괜찮지만 줌과 클릭 효과는 빠져요.",
+    "description": "Popup: error toast when cursor-event writes to IndexedDB failed mid-recording, leaving the video intact."
+  },
+  "recOverlayStarting": {
+    "message": "시작 중…",
+    "description": "Recording control bar: shown in place of the timer while the recording is still opening its streams. Keep it short; it replaces a 0:00 clock."
+  },
+  "recOverlayNotSaving": {
+    "message": "저장 안 됨",
+    "description": "Recording control bar: warning chip shown when chunks are failing to reach storage. Keep it short; it sits in a row of three-letter track chips."
+  },
+  "recOverlayCamDenied": {
+    "message": "캠 거부됨",
+    "description": "Recording control bar: warning chip shown when a requested camera was declined or unavailable. Keep it short; it sits in a row of three-letter track chips."
+  },
+  "recFailRecorderOpen": {
+    "message": "녹화는 저장됐지만 레코더 페이지가 열리지 않았어요. 아래의 ‘최근 녹화 복구’를 사용하세요.",
+    "description": "Popup: error toast when chrome.tabs.create for the recorder page failed after a recording finished."
+  },
+  "recFailQuery": {
+    "message": "녹화 상태를 확인할 수 없어요. 레코더 페이지를 열어 확인하세요.",
+    "description": "Popup: error toast when REC_QUERY threw, so \"not recording\" cannot be trusted."
+  },
+  "recFailOverlayBlocked": {
+    "message": "이 페이지에서는 녹화 컨트롤을 열 수 없었어요. 여기에서 녹화를 중지하세요.",
+    "description": "Popup: error toast when the in-page control bar could not be injected."
+  },
+  "recFailOverlayLost": {
+    "message": "이 페이지에서 녹화 컨트롤이 사라졌어요. 여기에서 녹화를 중지하세요.",
+    "description": "Popup: error toast when the in-page control bar stopped reporting mid-recording."
+  },
+  "recFailControlUnreachable": {
+    "message": "요청이 레코더에 전달되지 않았어요. 확장 프로그램이 응답하지 않아요. 다시 시도하세요.",
+    "description": "Popup: error toast when stop/cancel never reached the service worker."
+  },
+  "recFailSessionLoad": {
+    "message": "녹화를 열 수 없었어요. 불완전한 녹화일 수 있어요.",
+    "description": "Recorder page: error toast when a session could not be read out of IndexedDB."
+  },
+  "recFailSegmentSkipped": {
+    "message": "이 녹화의 일부가 재생되지 않아 내보내기에서 제외됐어요.",
+    "description": "Recorder page: error toast when one or more segments were skipped during an export."
+  },
+  "recFailExport": {
+    "message": "내보내기에 실패했어요. 저장된 파일은 없어요. 다시 시도하세요.",
+    "description": "Recorder page: error toast when the export threw."
+  },
+  "recFailSaveInterrupted": {
+    "message": "저장 실패: $ERROR$. 녹화는 그대로 보관돼요.",
+    "description": "Recorder page: error toast when the Save dialog's download was interrupted for a reason other than the user cancelling it.",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "FILE_NO_SPACE"
+      }
+    }
+  },
+  "recFailSaveUnverified": {
+    "message": "저장이 완료됐는지 확인할 수 없어요. 녹화는 그대로 보관돼요.",
+    "description": "Recorder page: error toast when the download never reported a terminal state within the bounded wait."
+  },
+  "recorderSaveCancelled": {
+    "message": "저장 취소됨",
+    "description": "Recorder page: toast shown when the user dismisses the export's Save dialog."
+  },
+  "recorderFailed": {
+    "message": "실패",
+    "description": "Recorder page: pill on a session whose recording never started."
+  },
+  "recRecover": {
+    "message": "최근 녹화 복구",
+    "description": "Popup: link that reopens the editor for a crashed/unfinished recording session."
+  },
+  "recContinue": {
+    "message": "녹화 계속하기",
+    "description": "Popup: record row title when a continue-session is pending from the editor. Also the recorder page header button that starts a continue-session."
+  },
+  "recAcrossSites": {
+    "message": "여러 사이트에서 녹화",
+    "description": "Settings: label for the row that grants recording access to all sites."
+  },
+  "recAcrossSitesHint": {
+    "message": "탭이 다른 사이트로 이동해도 커서 오버레이가 유지돼요. 모든 사이트에 대한 접근 권한을 부여해요.",
+    "description": "Settings: hint shown under the record-across-sites row."
+  },
+  "recorderTitle": {
+    "message": "레코더",
+    "description": "Recorder page: header title."
+  },
+  "recorderSessions": {
+    "message": "녹화 목록",
+    "description": "Recorder page: session list heading."
+  },
+  "recorderOpen": {
+    "message": "열기",
+    "description": "Recorder page: button that opens a session for playback."
+  },
+  "recorderDelete": {
+    "message": "삭제",
+    "description": "Recorder page: button that deletes a session."
+  },
+  "recorderDeleteConfirm": {
+    "message": "정말 삭제할까요?",
+    "description": "Recorder page: armed state of the delete button, click again to confirm."
+  },
+  "recorderEmpty": {
+    "message": "아직 녹화가 없어요. 팝업에서 탭을 녹화하세요.",
+    "description": "Recorder page: shown when the session list is empty."
+  },
+  "recorderLoadingList": {
+    "message": "녹화 목록 불러오는 중…",
+    "description": "Recorder page: shown in place of the session list while it loads."
+  },
+  "recorderSessionLoading": {
+    "message": "녹화 불러오는 중…",
+    "description": "Recorder page: label on the progress bar shown while a session's chunks load."
+  },
+  "recorderSourceTab": {
+    "message": "탭",
+    "description": "Recorder page: session list row — capture source. Every recording is a tab capture; there is no window/screen source to distinguish yet."
+  },
+  "recorderTrackRequested": {
+    "message": "$TRACK$ 요청됨",
+    "description": "Recorder page: session list row — a mic/webcam track that was asked for and has some evidence (the combined recorder-#2 stream exists) but cannot be confirmed individually, since a mic-only and a webcam-only stream are indistinguishable from chunk presence alone.",
+    "placeholders": {
+      "track": {
+        "content": "$1",
+        "example": "Mic"
+      }
+    }
+  },
+  "recorderRecovered": {
+    "message": "복구됨",
+    "description": "Recorder page: pill on a session that was left mid-recording by a crash."
+  },
+  "recorderRecordingNow": {
+    "message": "녹화 중…",
+    "description": "Recorder page: pill on the session that is being recorded right now; its Open and Delete buttons are disabled."
+  },
+  "recContinueHint": {
+    "message": "계속 녹화할 탭에서 팝업을 여세요.",
+    "description": "Recorder page: info toast shown after Continue recording is clicked."
+  },
+  "recorderPlay": {
+    "message": "재생",
+    "description": "Recorder page: play button label/aria-label."
+  },
+  "recorderPause": {
+    "message": "일시중지",
+    "description": "Recorder page: pause button label/aria-label."
+  },
+  "recorderAddZoom": {
+    "message": "줌 추가",
+    "description": "Recorder page: button that adds a zoom block at the playhead."
+  },
+  "recorderUndo": {
+    "message": "실행 취소",
+    "description": "Recorder page: transport button that takes back the last timeline edit."
+  },
+  "recorderRedo": {
+    "message": "다시 실행",
+    "description": "Recorder page: transport button that puts back an edit undo took away."
+  },
+  "recorderUndoAnnounce": {
+    "message": "실행 취소. $BLOCKS$.",
+    "description": "Recorder page: live-region announcement after an undo, naming what the timeline holds afterwards.",
+    "placeholders": {
+      "blocks": {
+        "content": "$1",
+        "example": "3 zoom blocks"
+      }
+    }
+  },
+  "recorderRedoAnnounce": {
+    "message": "다시 실행. $BLOCKS$.",
+    "description": "Recorder page: live-region announcement after a redo, naming what the timeline holds afterwards.",
+    "placeholders": {
+      "blocks": {
+        "content": "$1",
+        "example": "3 zoom blocks"
+      }
+    }
+  },
+  "recorderUndoPlain": {
+    "message": "실행 취소.",
+    "description": "Recorder page: live-region announcement for an undo whose step names no single editor field."
+  },
+  "recorderRedoPlain": {
+    "message": "다시 실행.",
+    "description": "Recorder page: live-region announcement for a redo whose step names no single editor field."
+  },
+  "recorderTrim": {
+    "message": "트리밍",
+    "description": "Recorder page: the trim, named by an undo/redo announcement — the timeline has a start and an end handle per segment (recorderTrimStart/recorderTrimEnd), and the announcement names the pair."
+  },
+  "recorderZoomBlockOne": {
+    "message": "줌 블록 1개",
+    "description": "Recorder page: the zoom-block count an undo/redo announcement carries, when there is exactly one."
+  },
+  "recorderZoomBlockMany": {
+    "message": "줌 블록 $COUNT$개",
+    "description": "Recorder page: the zoom-block count an undo/redo announcement carries, for none or several.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "recorderDeleteZoom": {
+    "message": "줌 삭제",
+    "description": "Recorder page: button that removes the selected zoom block."
+  },
+  "recorderZoomBlock": {
+    "message": "줌 블록",
+    "description": "Recorder page: aria-label prefix of a zoom block on the timeline, followed by its scale (e.g. \"Zoom block, 2×\")."
+  },
+  "recorderZoomScale": {
+    "message": "줌",
+    "description": "Recorder page: label of the zoom scale segmented control."
+  },
+  "recorderZoomTarget": {
+    "message": "줌 대상",
+    "description": "Recorder page: aria-label of the draggable target reticle on the preview."
+  },
+  "recorderTrimStart": {
+    "message": "시작 트리밍",
+    "description": "Recorder page: aria-label of a segment's leading trim handle."
+  },
+  "recorderTrimEnd": {
+    "message": "끝 트리밍",
+    "description": "Recorder page: aria-label of a segment's trailing trim handle."
+  },
+  "recorderTimelineAria": {
+    "message": "타임라인",
+    "description": "Recorder page: aria-label of the timeline region."
+  },
+  "recorderCursorMode": {
+    "message": "커서",
+    "description": "Recorder page: label of the segmented control that merges showing the recorded cursor and drawing a ripple at every recorded click."
+  },
+  "recorderCursorHidden": {
+    "message": "숨김",
+    "description": "Recorder page: state of the cursor control that draws neither the cursor nor a click ripple."
+  },
+  "recorderCursorShown": {
+    "message": "표시",
+    "description": "Recorder page: state of the cursor control that draws the recorded cursor path as a pointer, with no click ripple."
+  },
+  "recorderCursorRippleOnly": {
+    "message": "클릭만",
+    "description": "Recorder page: state of the cursor control that draws a ripple at every recorded click, with the cursor itself hidden."
+  },
+  "recorderCursorRipple": {
+    "message": "클릭 효과",
+    "description": "Recorder page: state of the cursor control that draws the cursor and a ripple at every recorded click."
+  },
+  "recorderVolTab": {
+    "message": "탭 볼륨",
+    "description": "Recorder page: label of the tab-audio volume slider."
+  },
+  "recorderVolMic": {
+    "message": "마이크 볼륨",
+    "description": "Recorder page: label of the microphone volume slider."
+  },
+  "recorderBubble": {
+    "message": "웹캠 버블",
+    "description": "Recorder page: label of the webcam bubble settings section."
+  },
+  "recorderBubbleTL": {
+    "message": "왼쪽 위",
+    "description": "Recorder page: aria-label of the webcam bubble's top-left corner preset button."
+  },
+  "recorderBubbleTR": {
+    "message": "오른쪽 위",
+    "description": "Recorder page: aria-label of the webcam bubble's top-right corner preset button."
+  },
+  "recorderBubbleBL": {
+    "message": "왼쪽 아래",
+    "description": "Recorder page: aria-label of the webcam bubble's bottom-left corner preset button."
+  },
+  "recorderBubbleBR": {
+    "message": "오른쪽 아래",
+    "description": "Recorder page: aria-label of the webcam bubble's bottom-right corner preset button."
+  },
+  "recorderBubbleSize": {
+    "message": "크기",
+    "description": "Recorder page: label of the webcam bubble size slider."
+  },
+  "recorderBubbleHide": {
+    "message": "숨기기",
+    "description": "Recorder page: label of the toggle that hides the webcam bubble."
+  },
+  "recorderBeautify": {
+    "message": "Beautify",
+    "description": "Recorder page: label of the toggle that frames the export in padding, corners, shadow, and a background."
+  },
+  "recorderBeautifyPadding": {
+    "message": "여백",
+    "description": "Recorder page: label of the beautify frame's padding slider."
+  },
+  "recorderBeautifyCorners": {
+    "message": "모서리",
+    "description": "Recorder page: label of the beautify frame's corner-radius slider."
+  },
+  "recorderBeautifyShadow": {
+    "message": "그림자",
+    "description": "Recorder page: label of the beautify frame's drop-shadow slider."
+  },
+  "recorderBeautifyBackground": {
+    "message": "배경",
+    "description": "Recorder page: label of the beautify frame's background swatches."
+  },
+  "recorderBeautifyTransparent": {
+    "message": "투명",
+    "description": "Recorder page: aria-label of the beautify frame's transparent-background swatch."
+  },
+  "recorderBeautifyCustom": {
+    "message": "단색",
+    "description": "Recorder page: aria-label of the beautify frame's custom solid-colour swatch."
+  },
+  "recorderExport": {
+    "message": "WebM 내보내기",
+    "description": "Recorder page: button that renders the edited recording to a WebM file."
+  },
+  "recorderExporting": {
+    "message": "렌더링 중…",
+    "description": "Recorder page: status shown while the export renders."
+  },
+  "recorderCancel": {
+    "message": "취소",
+    "description": "Recorder page: button that stops an export in progress and discards it."
+  },
+  "recorderCancelConfirm": {
+    "message": "렌더링을 취소할까요?",
+    "description": "Recorder page: armed state of the export Cancel button, click again to confirm."
+  },
+  "recorderExportRemaining": {
+    "message": "$TIME$ 남음",
+    "description": "Recorder page: wall-clock time left in an export in progress, formatted m:ss (or h:mm:ss for a long recording).",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "1:23"
+      }
+    }
+  },
+  "recorderExportStayVisible": {
+    "message": "이 탭을 화면에 계속 표시하세요. 탭이 숨겨지면 렌더링이 멈춰요.",
+    "description": "Recorder page: warning shown for the whole export — a background tab throttles requestAnimationFrame and stalls the render."
+  },
+  "recorderExported": {
+    "message": "$SIZE$ MB 저장됨",
+    "description": "Recorder page: toast shown after an export is downloaded.",
+    "placeholders": {
+      "size": {
+        "content": "$1",
+        "example": "12.4"
+      }
+    }
+  },
+  "recorderDeleteAfter": {
+    "message": "내보낸 후 녹화 삭제",
+    "description": "Recorder page: checkbox that deletes the session once its export is saved."
+  },
+  "setupTitle": {
+    "message": "녹화 설정",
+    "description": "Setup page: heading."
+  },
+  "setupIntro": {
+    "message": "한 번만 설정하면 돼요.",
+    "description": "Setup page: intro line under the heading."
+  },
+  "setupFinish": {
+    "message": "완료 — 이 탭 닫기",
+    "description": "Setup page: button on the ready banner that closes the tab."
+  },
+  "setupTrustOpenSource": {
+    "message": "오픈 소스(MIT)",
+    "description": "Setup page: trust pill linking to the GitHub repo."
+  },
+  "setupTrustLocal": {
+    "message": "100% 로컬",
+    "description": "Setup page: trust pill — everything is processed on-device."
+  },
+  "setupTrustNoTracking": {
+    "message": "추적 없음",
+    "description": "Setup page: trust pill — no analytics, no accounts."
+  },
+  "setupTrustHint": {
+    "message": "녹화는 절대 기기 밖으로 나가지 않아요.",
+    "description": "Setup page: one-line assurance under the trust pills."
+  },
+  "setupPinTitle": {
+    "message": "OpenScreenShot 고정",
+    "description": "Popup: nudge to pin the extension, shown while it is not on the toolbar."
+  },
+  "setupPinSub": {
+    "message": "위의 🧩를 클릭한 다음, OpenScreenShot 옆의 📌를 클릭하세요.",
+    "description": "Popup: how to pin — the puzzle menu sits directly above the popup."
+  },
+  "setupFromRecord": {
+    "message": "한 단계 남았어요. 아래에서 탭 녹화를 사용 설정하세요.",
+    "description": "Setup page: banner shown when the Record button routed here."
+  },
+  "setupReady": {
+    "message": "녹화 준비 완료.",
+    "description": "Setup page: banner headline once tab recording is granted."
+  },
+  "setupReadyHint": {
+    "message": "툴바 아이콘을 클릭하고 녹화를 누르세요.",
+    "description": "Setup page: what to do after setup is complete."
+  },
+  "setupTabCapture": {
+    "message": "탭 녹화",
+    "description": "Setup page: row title for the tabCapture permission."
+  },
+  "setupTabCaptureDesc": {
+    "message": "녹화하는 탭을 캡처해요.",
+    "description": "Setup page: row description for the tabCapture permission."
+  },
+  "setupCamera": {
+    "message": "카메라",
+    "description": "Setup page: row title for the camera permission."
+  },
+  "setupCameraDesc": {
+    "message": "내보내기에 버블을 추가해요. 녹화 중에는 미리보기가 없어요.",
+    "description": "Setup page: row description for the camera permission."
+  },
+  "setupMic": {
+    "message": "마이크",
+    "description": "Setup page: row title for the microphone permission."
+  },
+  "setupMicDesc": {
+    "message": "목소리를 추가해요.",
+    "description": "Setup page: row description for the microphone permission."
+  },
+  "setupAcrossSites": {
+    "message": "여러 사이트에서 녹화",
+    "description": "Setup page: row title for the all-urls host permission."
+  },
+  "setupAcrossSitesDesc": {
+    "message": "사이트를 이동해도 녹화가 계속돼요.",
+    "description": "Setup page: row description for the all-urls host permission."
+  },
+  "setupAcrossSitesToggle": {
+    "message": "모든 사이트에서 허용",
+    "description": "Setup page: label next to the all-urls toggle."
+  },
+  "setupEnable": {
+    "message": "사용 설정",
+    "description": "Setup page: button that requests the tabCapture permission."
+  },
+  "setupAllow": {
+    "message": "허용",
+    "description": "Setup page: button that triggers a camera or mic prompt."
+  },
+  "setupGranted": {
+    "message": "허용됨",
+    "description": "Setup page: status tag for a granted permission."
+  },
+  "setupRequired": {
+    "message": "필수",
+    "description": "Setup page: status tag for the one required permission."
+  },
+  "setupOptional": {
+    "message": "선택",
+    "description": "Setup page: status tag for a skippable permission."
+  },
+  "setupDeniedTag": {
+    "message": "차단됨",
+    "description": "Setup page: status tag for a denied permission."
+  },
+  "setupDismissed": {
+    "message": "권한 요청이 닫혔어요. 준비되면 다시 클릭하세요.",
+    "description": "Setup page: hint after a permission prompt was closed without an answer."
+  },
+  "setupBlockedSite": {
+    "message": "Chrome에서 차단됐어요. 사이트 설정에서 허용하면 이 페이지가 자동으로 업데이트돼요.",
+    "description": "Setup page: recovery hint for a site-level denial."
+  },
+  "setupBlockedSystem": {
+    "message": "운영체제에서 차단됐어요. macOS: 시스템 설정 → 개인정보 보호 및 보안 → Chrome 허용.",
+    "description": "Setup page: recovery hint for an OS-level denial."
+  },
+  "setupNoDevice": {
+    "message": "기기를 찾을 수 없어요. 기기를 연결한 뒤 다시 시도하세요.",
+    "description": "Setup page: hint when no camera or microphone exists."
+  },
+  "setupOpenSiteSettings": {
+    "message": "사이트 설정 열기",
+    "description": "Setup page: button that opens Chrome's per-site permission settings."
+  },
+  "popupPermissionChip": {
+    "message": "$DEVICE$ 차단됨 — 녹화 설정에서 해결",
+    "description": "Popup: warning chip when a toggled-on device permission is denied.",
+    "placeholders": {
+      "device": {
+        "content": "$1",
+        "example": "Microphone"
+      }
+    }
+  },
+  "popupSetupLink": {
+    "message": "녹화 권한",
+    "description": "Popup settings: row that opens the recording setup page."
+  },
+  "editorAnnotationCountOne": {
+    "message": "주석 $COUNT$개",
+    "description": "Editor live region: one annotation, e.g. \"1 annotation\".",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "editorAnnotationCountOther": {
+    "message": "주석 $COUNT$개",
+    "description": "Editor live region: several annotations, e.g. \"3 annotations\".",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "editorCutCountOne": {
+    "message": "잘라낸 구간 $COUNT$개",
+    "description": "Editor draft-restore pill: one cut, e.g. \"1 cut\".",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "editorCutCountOther": {
+    "message": "잘라낸 구간 $COUNT$개",
+    "description": "Editor draft-restore pill: several cuts, e.g. \"3 cuts\".",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "editorNoAnnotations": {
+    "message": "주석 없음",
+    "description": "Editor live region: fragment used mid-sentence when a delete leaves nothing selected, e.g. \"Rectangle deleted, no annotations left.\""
+  },
+  "editorAnnotationFallback": {
+    "message": "주석",
+    "description": "Editor live region: generic name for an annotation type the tool list has no label for (should not normally happen)."
+  },
+  "editorAnnounceSelect": {
+    "message": "$LABEL$ 선택됨, 레이어 $TOTAL$개 중 $INDEX$번째.",
+    "description": "Editor live region: one annotation was selected.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Rectangle"
+      },
+      "index": {
+        "content": "$2",
+        "example": "2"
+      },
+      "total": {
+        "content": "$3",
+        "example": "5"
+      }
+    }
+  },
+  "editorAnnounceSelectMany": {
+    "message": "$TOTAL$ 중 $COUNT$개 선택됨.",
+    "description": "Editor live region: several annotations were selected, e.g. \"2 of 3 annotations selected.\"",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      },
+      "total": {
+        "content": "$2",
+        "example": "3 annotations"
+      }
+    }
+  },
+  "editorAnnounceDeselect": {
+    "message": "선택이 해제됐어요.",
+    "description": "Editor live region: the selection was cleared."
+  },
+  "editorAnnounceAdd": {
+    "message": "$LABEL$ 추가됨, 위치 $X$, $Y$.",
+    "description": "Editor live region: a new annotation was drawn.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Rectangle"
+      },
+      "x": {
+        "content": "$2",
+        "example": "10"
+      },
+      "y": {
+        "content": "$3",
+        "example": "20"
+      }
+    }
+  },
+  "editorAnnounceMove": {
+    "message": "$LABEL$ 이동됨, 위치 $X$, $Y$.",
+    "description": "Editor live region: one annotation was moved.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Rectangle"
+      },
+      "x": {
+        "content": "$2",
+        "example": "15"
+      },
+      "y": {
+        "content": "$3",
+        "example": "15"
+      }
+    }
+  },
+  "editorAnnounceMoveMany": {
+    "message": "$COUNT$ 이동됨.",
+    "description": "Editor live region: several annotations were moved, e.g. \"3 annotations moved.\"",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3 annotations"
+      }
+    }
+  },
+  "editorAnnounceResize": {
+    "message": "$LABEL$ 크기 조정됨, $W$×$H$픽셀.",
+    "description": "Editor live region: one annotation was resized.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Rectangle"
+      },
+      "w": {
+        "content": "$2",
+        "example": "100"
+      },
+      "h": {
+        "content": "$3",
+        "example": "80"
+      }
+    }
+  },
+  "editorAnnounceResizeMany": {
+    "message": "$COUNT$ 크기 조정됨.",
+    "description": "Editor live region: several annotations were resized, e.g. \"3 annotations resized.\"",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3 annotations"
+      }
+    }
+  },
+  "editorAnnounceDelete": {
+    "message": "$LABEL$ 삭제됨. 남은 항목: $LEFT$.",
+    "description": "Editor live region: one annotation was deleted.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Rectangle"
+      },
+      "left": {
+        "content": "$2",
+        "example": "2 annotations"
+      }
+    }
+  },
+  "editorAnnounceDeleteMany": {
+    "message": "$COUNT$ 삭제됨. 남은 항목: $LEFT$.",
+    "description": "Editor live region: several annotations were deleted.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2 annotations"
+      },
+      "left": {
+        "content": "$2",
+        "example": "1 annotation"
+      }
+    }
+  },
+  "editorAnnounceDuplicate": {
+    "message": "$COUNT$ 복제됨.",
+    "description": "Editor live region: the selection was duplicated, e.g. \"2 annotations duplicated.\"",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2 annotations"
+      }
+    }
+  },
+  "editorAnnounceUndo": {
+    "message": "실행 취소.",
+    "description": "Editor live region: an undo step ran. Followed in code by an optional picture-size sentence and the current layer count."
+  },
+  "editorAnnounceRedo": {
+    "message": "다시 실행.",
+    "description": "Editor live region: a redo step ran. Followed in code by an optional picture-size sentence and the current layer count."
+  },
+  "editorStepImageSize": {
+    "message": "이미지 $W$×$H$픽셀.",
+    "description": "Editor live region: the picture changed size on an undo/redo step that re-applied or reverted a crop.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "720"
+      },
+      "h": {
+        "content": "$2",
+        "example": "540"
+      }
+    }
+  },
+  "editorStepImageHeight": {
+    "message": "이미지 높이 $H$픽셀.",
+    "description": "Editor live region: the picture changed height on an undo/redo step that put back or took a cut.",
+    "placeholders": {
+      "h": {
+        "content": "$1",
+        "example": "540"
+      }
+    }
+  },
+  "editorHandleTopLeft": {
+    "message": "왼쪽 위",
+    "description": "Editor live region: the crop handle at the top-left corner."
+  },
+  "editorHandleTop": {
+    "message": "위",
+    "description": "Editor live region: the crop handle at the top edge."
+  },
+  "editorHandleTopRight": {
+    "message": "오른쪽 위",
+    "description": "Editor live region: the crop handle at the top-right corner."
+  },
+  "editorHandleRight": {
+    "message": "오른쪽",
+    "description": "Editor live region: the crop handle at the right edge."
+  },
+  "editorHandleBottomRight": {
+    "message": "오른쪽 아래",
+    "description": "Editor live region: the crop handle at the bottom-right corner."
+  },
+  "editorHandleBottom": {
+    "message": "아래",
+    "description": "Editor live region: the crop handle at the bottom edge."
+  },
+  "editorHandleBottomLeft": {
+    "message": "왼쪽 아래",
+    "description": "Editor live region: the crop handle at the bottom-left corner."
+  },
+  "editorHandleLeft": {
+    "message": "왼쪽",
+    "description": "Editor live region: the crop handle at the left edge."
+  },
+  "editorHandleStart": {
+    "message": "시작",
+    "description": "Editor live region: the cut band's start handle."
+  },
+  "editorHandleEnd": {
+    "message": "끝",
+    "description": "Editor live region: the cut band's end handle."
+  },
+  "editorCropPhrase": {
+    "message": "자르기 영역 $W$×$H$픽셀, 위치 $X$, $Y$.",
+    "description": "Editor live region: the size and place of the crop rectangle.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "720"
+      },
+      "h": {
+        "content": "$2",
+        "example": "540"
+      },
+      "x": {
+        "content": "$3",
+        "example": "0"
+      },
+      "y": {
+        "content": "$4",
+        "example": "0"
+      }
+    }
+  },
+  "editorAnnounceCropHandle": {
+    "message": "$HANDLE$ 핸들. $PHRASE$",
+    "description": "Editor live region: a crop handle is now active, followed by the crop's size and place.",
+    "placeholders": {
+      "handle": {
+        "content": "$1",
+        "example": "Top left"
+      },
+      "phrase": {
+        "content": "$2",
+        "example": "Crop 720 by 540 pixels at 0, 0."
+      }
+    }
+  },
+  "editorAnnounceCropApplied": {
+    "message": "$W$×$H$픽셀로 잘랐어요.",
+    "description": "Editor live region: the crop was applied.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "720"
+      },
+      "h": {
+        "content": "$2",
+        "example": "540"
+      }
+    }
+  },
+  "editorAnnounceCropCancelled": {
+    "message": "자르기를 취소했어요.",
+    "description": "Editor live region: the crop was cancelled."
+  },
+  "editorAnnounceCut": {
+    "message": "잘라낼 구간: 위치 $Y$, 높이 $H$픽셀.",
+    "description": "Editor live region: a cut band is drafted.",
+    "placeholders": {
+      "h": {
+        "content": "$1",
+        "example": "40"
+      },
+      "y": {
+        "content": "$2",
+        "example": "100"
+      }
+    }
+  },
+  "editorAnnounceCutApplied": {
+    "message": "$H$픽셀을 잘라냈어요. 이미지 높이 $IMAGE_HEIGHT$픽셀.",
+    "description": "Editor live region: a cut band was taken out of the picture.",
+    "placeholders": {
+      "h": {
+        "content": "$1",
+        "example": "40"
+      },
+      "image_height": {
+        "content": "$2",
+        "example": "560"
+      }
+    }
+  },
+  "editorAnnounceOutOfPicture": {
+    "message": "$COUNT$ 이미지에서 제거됨.",
+    "description": "Editor live region: annotations that sat on cut rows left the picture with them.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2 annotations"
+      }
+    }
+  },
+  "editorAnnounceSelectedRemaining": {
+    "message": "$COUNT$ 선택됨.",
+    "description": "Editor live region: what is still selected after a cut removed some annotations with it.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2 annotations"
+      }
+    }
+  },
+  "editorAnnounceCutRemoved": {
+    "message": "$H$픽셀을 되돌렸어요. 이미지 높이 $IMAGE_HEIGHT$픽셀.",
+    "description": "Editor live region: a cut was put back into the picture.",
+    "placeholders": {
+      "h": {
+        "content": "$1",
+        "example": "40"
+      },
+      "image_height": {
+        "content": "$2",
+        "example": "600"
+      }
+    }
+  },
+  "editorAnnounceCutCancelled": {
+    "message": "구간 잘라내기를 취소했어요.",
+    "description": "Editor live region: the drafted cut was cancelled."
+  },
+  "editorAnnounceCutRefused": {
+    "message": "이미지 전체를 잘라낼 수는 없어요.",
+    "description": "Editor live region: a cut band was refused because it covered the entire image."
+  },
+  "editorAnnounceCutNone": {
+    "message": "이미 잘라낸 구간이에요.",
+    "description": "Editor live region: Delete was pressed over rows that are already cut."
+  },
+  "editorToolSelect": {
+    "message": "선택",
+    "description": "Editor tool rail: the Select tool."
+  },
+  "editorToolRectangle": {
+    "message": "사각형",
+    "description": "Editor tool rail: the Rectangle tool. Also the Rectangle spotlight-shape option."
+  },
+  "editorToolArrow": {
+    "message": "화살표",
+    "description": "Editor tool rail: the Arrow tool."
+  },
+  "editorToolLine": {
+    "message": "선",
+    "description": "Editor tool rail: the Line tool."
+  },
+  "editorToolPen": {
+    "message": "펜",
+    "description": "Editor tool rail: the Pen (freehand) tool."
+  },
+  "editorToolHighlighter": {
+    "message": "형광펜",
+    "description": "Editor tool rail: the Highlighter tool."
+  },
+  "editorToolText": {
+    "message": "텍스트",
+    "description": "Editor tool rail: the Text tool."
+  },
+  "editorToolStep": {
+    "message": "단계 번호",
+    "description": "Editor tool rail: the numbered step-badge tool."
+  },
+  "editorToolBlur": {
+    "message": "블러",
+    "description": "Editor tool rail: the Blur/redaction tool. Also the Blur redaction-mode option."
+  },
+  "editorToolSpotlight": {
+    "message": "Spotlight",
+    "description": "Editor tool rail: the Spotlight tool."
+  },
+  "editorToolEyedropper": {
+    "message": "스포이드",
+    "description": "Editor tool rail: the Eyedropper tool."
+  },
+  "editorToolCrop": {
+    "message": "자르기",
+    "description": "Editor tool rail: the Crop tool."
+  },
+  "editorToolCut": {
+    "message": "Cut",
+    "description": "Editor tool rail: the Cut tool."
+  },
+  "editorHintRect": {
+    "message": "드래그해 사각형 그리기 · Shift로 정사각형 유지",
+    "description": "Editor status bar hint for the Rectangle tool."
+  },
+  "editorHintArrow": {
+    "message": "드래그해 화살표 그리기 · Shift로 45° 스냅",
+    "description": "Editor status bar hint for the Arrow tool."
+  },
+  "editorHintLine": {
+    "message": "드래그해 선 그리기 · Shift로 45° 스냅",
+    "description": "Editor status bar hint for the Line tool."
+  },
+  "editorHintPen": {
+    "message": "드래그해 자유롭게 그리기",
+    "description": "Editor status bar hint for the Pen tool."
+  },
+  "editorHintHighlight": {
+    "message": "드래그해 강조 — 마커는 반투명으로 유지돼요",
+    "description": "Editor status bar hint for the Highlighter tool."
+  },
+  "editorHintStep": {
+    "message": "클릭해 번호 배지 놓기 · 번호는 순서대로 유지돼요",
+    "description": "Editor status bar hint for the Step number tool."
+  },
+  "editorHintText": {
+    "message": "클릭해 텍스트를 놓은 다음 입력하세요",
+    "description": "Editor status bar hint for the Text tool."
+  },
+  "editorHintBlur": {
+    "message": "드래그해 영역 가리기 · 위에서 블러, 모자이크, 단색 중 선택",
+    "description": "Editor status bar hint for the Blur tool."
+  },
+  "editorHintSpotlight": {
+    "message": "드래그해 밝게 남길 영역 지정 — 나머지는 어두워져요 · Shift로 정사각형 유지",
+    "description": "Editor status bar hint for the Spotlight tool."
+  },
+  "editorHintCrop": {
+    "message": "드래그해 선택한 다음 적용을 눌러 자르기",
+    "description": "Editor status bar hint for the Crop tool."
+  },
+  "editorHintCut": {
+    "message": "드래그해 구간 잘라내기 · 이음선을 클릭하면 되돌려요 · 지워지는 건 없어요",
+    "description": "Editor status bar hint for the Cut tool."
+  },
+  "editorHintEyedropper": {
+    "message": "픽셀을 클릭해 색상 추출 · 이전 도구로 돌아가요",
+    "description": "Editor status bar hint for the Eyedropper tool."
+  },
+  "editorHintSelect": {
+    "message": "선택 · 드래그로 이동 · 핸들로 크기 조정 · 텍스트 더블클릭 · ⌫ 삭제",
+    "description": "Editor status bar hint for the Select tool."
+  },
+  "editorBlurModeBlurHint": {
+    "message": "부드러운 픽셀화",
+    "description": "Editor style bar: tooltip for the Blur redaction mode."
+  },
+  "editorBlurModeMosaic": {
+    "message": "모자이크",
+    "description": "Editor style bar: the Mosaic redaction mode."
+  },
+  "editorBlurModeMosaicHint": {
+    "message": "굵은 블록 — 재압축에도 유지돼요",
+    "description": "Editor style bar: tooltip for the Mosaic redaction mode."
+  },
+  "editorBlurModeSolid": {
+    "message": "단색",
+    "description": "Editor style bar: the Solid redaction mode."
+  },
+  "editorBlurModeSolidHint": {
+    "message": "불투명 채우기 — 아무것도 남지 않아요",
+    "description": "Editor style bar: tooltip for the Solid redaction mode."
+  },
+  "editorShapeRounded": {
+    "message": "둥근 사각형",
+    "description": "Editor style bar: the Rounded spotlight shape."
+  },
+  "editorShapeEllipse": {
+    "message": "타원",
+    "description": "Editor style bar: the Ellipse spotlight shape."
+  },
+  "editorStyleColor": {
+    "message": "색상",
+    "description": "Editor style bar: the color field group label."
+  },
+  "editorStyleStroke": {
+    "message": "선 굵기",
+    "description": "Editor style bar: the stroke-width field group label."
+  },
+  "editorStyleShape": {
+    "message": "모양",
+    "description": "Editor style bar: the spotlight-shape field group label."
+  },
+  "editorStyleRedaction": {
+    "message": "가리기",
+    "description": "Editor style bar: the redaction-mode field group label."
+  },
+  "editorStyleStrength": {
+    "message": "강도 · $VALUE$",
+    "description": "Editor style bar: the blur-strength slider label, with its current value.",
+    "placeholders": {
+      "value": {
+        "content": "$1",
+        "example": "40"
+      }
+    }
+  },
+  "editorStyleSize": {
+    "message": "크기 · $VALUE$px",
+    "description": "Editor style bar: the font-size slider label, with its current value.",
+    "placeholders": {
+      "value": {
+        "content": "$1",
+        "example": "24"
+      }
+    }
+  },
+  "editorAriaBlurStrength": {
+    "message": "블러 강도",
+    "description": "Editor style bar: accessible label for the blur-strength slider."
+  },
+  "editorAriaSize": {
+    "message": "크기",
+    "description": "Editor style bar: accessible label for the font-size slider."
+  },
+  "editorCustomColorLabel": {
+    "message": "사용자 지정 색상",
+    "description": "Editor style bar: title/accessible label for the custom-color swatch."
+  },
+  "editorPickScreenColor": {
+    "message": "화면 어디서나 색상 선택",
+    "description": "Editor style bar: title/accessible label for the screen color-picker button."
+  },
+  "editorAriaAnnotationStyle": {
+    "message": "주석 스타일",
+    "description": "Editor: accessible label for the style bar toolbar."
+  },
+  "editorAriaAnnotationTools": {
+    "message": "주석 도구",
+    "description": "Editor: accessible label for the tool rail."
+  },
+  "editorAriaDocumentActions": {
+    "message": "문서 작업",
+    "description": "Editor: accessible label for the topbar’s undo/redo/delete button group."
+  },
+  "editorUndoTitle": {
+    "message": "실행 취소 (⌘Z)",
+    "description": "Editor topbar: tooltip for the Undo button."
+  },
+  "editorUndoLabel": {
+    "message": "실행 취소",
+    "description": "Editor topbar: accessible label for the Undo button. Also its name in the shortcut sheet."
+  },
+  "editorRedoTitle": {
+    "message": "다시 실행 (⌘⇧Z)",
+    "description": "Editor topbar: tooltip for the Redo button."
+  },
+  "editorRedoLabel": {
+    "message": "다시 실행",
+    "description": "Editor topbar: accessible label for the Redo button. Also its name in the shortcut sheet."
+  },
+  "editorDeleteSelectedTitle": {
+    "message": "선택 항목 삭제 (⌫)",
+    "description": "Editor topbar: tooltip for the delete-selection button."
+  },
+  "editorDeleteSelectedLabel": {
+    "message": "선택 항목 삭제",
+    "description": "Editor topbar: accessible label for the delete-selection button. Also its name in the shortcut sheet."
+  },
+  "editorCaptureHistory": {
+    "message": "캡처 기록",
+    "description": "Editor: title/accessible label for the History button, and the history sheet’s dialog title."
+  },
+  "editorPinTitle": {
+    "message": "Pin — 플로팅 창에 고정, 이 탭을 닫으면 함께 닫혀요",
+    "description": "Editor topbar: tooltip for the Pin button."
+  },
+  "editorPinLabel": {
+    "message": "플로팅 창에 고정 (Pin)",
+    "description": "Editor topbar: accessible label for the Pin button."
+  },
+  "editorShortcutsTitle": {
+    "message": "키보드 단축키 (?)",
+    "description": "Editor topbar: tooltip for the shortcut-sheet button."
+  },
+  "editorShortcutsLabel": {
+    "message": "키보드 단축키",
+    "description": "Editor: accessible label for the shortcut-sheet button, and the sheet’s own dialog title."
+  },
+  "editorCopyIdle": {
+    "message": "복사",
+    "description": "Editor topbar: the Copy button’s resting label."
+  },
+  "editorCopyDone": {
+    "message": "복사됨",
+    "description": "Editor topbar: the Copy button’s label right after a successful copy."
+  },
+  "editorCopyFailed": {
+    "message": "실패",
+    "description": "Editor topbar: the Copy button’s label after a failed copy."
+  },
+  "editorCopyTitle": {
+    "message": "PNG로 클립보드에 복사 (⌘C)",
+    "description": "Editor topbar: tooltip for the Copy button."
+  },
+  "editorExportTitle": {
+    "message": "내보내기 (⌘S)",
+    "description": "Editor topbar: tooltip for the Export button."
+  },
+  "editorExport": {
+    "message": "내보내기",
+    "description": "Editor: the Export button/dialog title, and its name in the shortcut sheet."
+  },
+  "editorExporting": {
+    "message": "내보내는 중…",
+    "description": "Editor export dialog: shown while an export with no per-page progress is running."
+  },
+  "editorRetry": {
+    "message": "다시 시도",
+    "description": "Editor: button that retries loading the screenshot after an error."
+  },
+  "editorSomethingWrong": {
+    "message": "문제가 발생했어요",
+    "description": "Editor: heading shown over the load-error overlay."
+  },
+  "editorLoading": {
+    "message": "불러오는 중",
+    "description": "Editor: accessible label for the loading spinner."
+  },
+  "editorLoadingScreenshot": {
+    "message": "스크린샷 불러오는 중…",
+    "description": "Editor: text shown next to the loading spinner."
+  },
+  "editorScreenshotCanvasSized": {
+    "message": "스크린샷 캔버스, $W$×$H$픽셀",
+    "description": "Editor: accessible label for the canvas once an image is loaded.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "800"
+      },
+      "h": {
+        "content": "$2",
+        "example": "600"
+      }
+    }
+  },
+  "editorScreenshotCanvasEmpty": {
+    "message": "스크린샷 캔버스, 비어 있음",
+    "description": "Editor: accessible label for the canvas with no image loaded."
+  },
+  "editorCanvasDescLoaded": {
+    "message": "캡처한 스크린샷, $W$×$H$픽셀, $COUNT$ 그려져 있음.",
+    "description": "Editor: the canvas’s long-form accessible description, image loaded.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "800"
+      },
+      "h": {
+        "content": "$2",
+        "example": "600"
+      },
+      "count": {
+        "content": "$3",
+        "example": "3 annotations"
+      }
+    }
+  },
+  "editorCanvasDescEmpty": {
+    "message": "열려 있는 스크린샷이 없어요.",
+    "description": "Editor: the canvas’s long-form accessible description, nothing loaded."
+  },
+  "editorCanvasKeyboardHelp": {
+    "message": "오른쪽 대괄호를 누르면 다음 주석을, 왼쪽 대괄호를 누르면 이전 주석을 선택해요. 대괄호와 함께 Shift를 누르면 선택을 바꾸는 대신 그 주석을 선택에 추가해요. Enter를 누르면 툴바에서 고른 도구를 놓아요. 화살표 키로 선택 항목을 1픽셀씩 옮기고, Shift와 화살표로 10픽셀씩 옮기고, Alt와 화살표로 크기를 조정해요. Alt와 D를 누르면 선택 항목을 복제해요. 자르기가 열려 있으면 화살표 키로 옮기고, 대괄호로 여덟 개의 핸들 중 하나를 고르고, Alt와 화살표로 그 핸들에서 크기를 조정하고, Enter로 적용하고 Escape로 취소해요. Cut 도구에서는 Enter로 이미지를 가로지르는 구간을 시작하고, 위아래 화살표로 옮기고, Alt와 화살표로 크기를 조정하고, Enter로 잘라내고 Escape로 취소해요. Cut 도구에서 Delete를 누르면 가장 가까운 잘라낸 구간을 되돌려요.",
+    "description": "Editor: the canvas’s long-form accessible description, the fixed keyboard-model instructions appended after the load-state sentence."
+  },
+  "editorDraftRestoreText": {
+    "message": "지난 세션에서 저장하지 않은 편집 내용이 있어요 ($SUMMARY$).",
+    "description": "Editor: the draft-restore pill’s text.",
+    "placeholders": {
+      "summary": {
+        "content": "$1",
+        "example": "3 annotations"
+      }
+    }
+  },
+  "editorRestore": {
+    "message": "복원",
+    "description": "Editor: button that restores a saved draft."
+  },
+  "editorDiscard": {
+    "message": "버리기",
+    "description": "Editor: button that discards a saved draft."
+  },
+  "editorCropToSelection": {
+    "message": "선택 영역으로 자르기",
+    "description": "Editor: the crop-confirm pill’s text."
+  },
+  "editorApply": {
+    "message": "적용",
+    "description": "Editor: button that applies the current crop."
+  },
+  "editorCancel": {
+    "message": "취소",
+    "description": "Editor: Cancel button, used in the crop-confirm pill, the export dialog and the replace-image dialog."
+  },
+  "editorNothingToEdit": {
+    "message": "아직 편집할 항목이 없어요",
+    "description": "Editor: heading shown over the empty-state overlay."
+  },
+  "editorCaptureHint": {
+    "message": "OpenScreenShot으로 페이지를 캡처하면 여기에 열려요.",
+    "description": "Editor: empty-state body text."
+  },
+  "editorDropHint": {
+    "message": "또는 여기에 이미지를 끌어다 놓으세요 — 붙여넣기도 돼요.",
+    "description": "Editor: empty-state secondary hint."
+  },
+  "editorCapturePage": {
+    "message": "페이지 캡처",
+    "description": "Editor: empty-state button that opens the popup."
+  },
+  "editorOpenExtensionIcon": {
+    "message": "툴바에서 OpenScreenShot 아이콘을 클릭하세요.",
+    "description": "Editor: empty-state fallback text shown when openPopup() fails."
+  },
+  "editorReplaceImage": {
+    "message": "현재 이미지 바꾸기",
+    "description": "Editor: accessible label for the replace-image confirm dialog."
+  },
+  "editorReplaceImageTitle": {
+    "message": "현재 이미지를 바꿀까요?",
+    "description": "Editor: replace-image confirm dialog heading."
+  },
+  "editorReplaceImageBody": {
+    "message": "“$NAME$” 파일이 캔버스의 현재 내용을 대신해요. $COUNT$ 및 실행 취소 기록도 함께 사라져요.",
+    "description": "Editor: replace-image confirm dialog body text.",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "photo.png"
+      },
+      "count": {
+        "content": "$2",
+        "example": "3 annotations"
+      }
+    }
+  },
+  "editorReplace": {
+    "message": "바꾸기",
+    "description": "Editor: button that confirms replacing the current image."
+  },
+  "editorTypePlaceholder": {
+    "message": "입력…",
+    "description": "Editor: placeholder text for the text-annotation editing overlay."
+  },
+  "editorClose": {
+    "message": "닫기",
+    "description": "Editor: Close button, used in the shortcut sheet and the history sheet."
+  },
+  "editorFormat": {
+    "message": "형식",
+    "description": "Editor export dialog: the format field label."
+  },
+  "editorFormatPdfLabel": {
+    "message": "PDF",
+    "description": "Editor export dialog: the PDF format card’s name."
+  },
+  "editorFormatPdfHint": {
+    "message": "문서 · 여러 페이지",
+    "description": "Editor export dialog: the PDF format card’s hint."
+  },
+  "editorScale": {
+    "message": "배율",
+    "description": "Editor export dialog: the scale field label."
+  },
+  "editorPctExceedsLimit": {
+    "message": "$PCT$%는 내보내기 크기 한도를 초과해요",
+    "description": "Editor export dialog: tooltip on a scale preset that would exceed the export size limit.",
+    "placeholders": {
+      "pct": {
+        "content": "$1",
+        "example": "200"
+      }
+    }
+  },
+  "editorWidth": {
+    "message": "너비",
+    "description": "Editor export dialog: label before the width number field."
+  },
+  "editorWidthClamped": {
+    "message": "너비가 $CLAMPED$px로 조정됐어요 (허용 범위 $FLOOR$–$CEILING$px).",
+    "description": "Editor export dialog: notice shown when a typed width was clamped.",
+    "placeholders": {
+      "clamped": {
+        "content": "$1",
+        "example": "4000"
+      },
+      "floor": {
+        "content": "$2",
+        "example": "1"
+      },
+      "ceiling": {
+        "content": "$3",
+        "example": "4000"
+      }
+    }
+  },
+  "editorQuality": {
+    "message": "품질 · $PCT$%",
+    "description": "Editor export dialog: the quality slider label, with its current value.",
+    "placeholders": {
+      "pct": {
+        "content": "$1",
+        "example": "92"
+      }
+    }
+  },
+  "editorPageSize": {
+    "message": "페이지 크기",
+    "description": "Editor export dialog: the PDF page-size field label."
+  },
+  "editorA4": {
+    "message": "A4",
+    "description": "Editor export dialog: the A4 PDF page size."
+  },
+  "editorLetter": {
+    "message": "Letter",
+    "description": "Editor export dialog: the Letter PDF page size."
+  },
+  "editorFull": {
+    "message": "전체",
+    "description": "Editor export dialog: the Full (image-sized) PDF page size."
+  },
+  "editorOrientation": {
+    "message": "방향",
+    "description": "Editor export dialog: the PDF orientation field label."
+  },
+  "editorPortrait": {
+    "message": "세로",
+    "description": "Editor export dialog: portrait PDF orientation."
+  },
+  "editorLandscape": {
+    "message": "가로",
+    "description": "Editor export dialog: landscape PDF orientation."
+  },
+  "editorSplitPages": {
+    "message": "여러 페이지로 나누기",
+    "description": "Editor export dialog: checkbox label for multi-page PDF export."
+  },
+  "editorMargin": {
+    "message": "여백",
+    "description": "Editor export dialog: label before the PDF margin number field."
+  },
+  "editorMarginClamped": {
+    "message": "여백이 $CLAMPED$mm로 조정됐어요 (허용 범위 $MIN$–$MAX$mm).",
+    "description": "Editor export dialog: notice shown when a typed PDF margin was clamped.",
+    "placeholders": {
+      "clamped": {
+        "content": "$1",
+        "example": "8"
+      },
+      "min": {
+        "content": "$2",
+        "example": "0"
+      },
+      "max": {
+        "content": "$3",
+        "example": "25"
+      }
+    }
+  },
+  "editorFullPdfHint": {
+    "message": "‘전체’는 이미지 크기에 맞춘 한 페이지를 만들기 때문에 방향, 여러 페이지, 여백 설정이 적용되지 않아요.",
+    "description": "Editor export dialog: hint shown under the Full PDF page size option."
+  },
+  "editorFilename": {
+    "message": "파일 이름",
+    "description": "Editor export dialog: label for the filename field."
+  },
+  "editorExportError": {
+    "message": "이미지를 내보낼 수 없어요. 배율을 줄이거나 다른 형식을 사용해 보세요.",
+    "description": "Editor export dialog: error shown when the export itself fails."
+  },
+  "editorExportingPage": {
+    "message": "$TOTAL$페이지 중 $PAGE$페이지 내보내는 중…",
+    "description": "Editor export dialog: per-page progress text during a multi-page PDF export.",
+    "placeholders": {
+      "page": {
+        "content": "$1",
+        "example": "2"
+      },
+      "total": {
+        "content": "$2",
+        "example": "5"
+      }
+    }
+  },
+  "editorRememberSettings": {
+    "message": "이 설정 기억하기",
+    "description": "Editor export dialog: checkbox label for persisting the chosen export settings."
+  },
+  "editorTools": {
+    "message": "도구",
+    "description": "Editor shortcut sheet: the Tools column heading."
+  },
+  "editorCommands": {
+    "message": "명령",
+    "description": "Editor shortcut sheet: the Commands column heading."
+  },
+  "editorCmdSetColor": {
+    "message": "색상 설정",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdPickColor": {
+    "message": "화면에서 색상 선택",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdSquare45": {
+    "message": "정사각형 / 45° 제한",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdEditText": {
+    "message": "텍스트 레이어 편집",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdNextPrevLayer": {
+    "message": "다음 / 이전 레이어",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdAddLayer": {
+    "message": "선택에 레이어 추가",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdSelectSeveral": {
+    "message": "마우스로 여러 개 선택",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdPlaceTool": {
+    "message": "현재 도구 놓기",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdMoveSelection": {
+    "message": "선택 항목 1px / 10px 이동",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdResizeSelection": {
+    "message": "선택 항목 크기 조정",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdDuplicateSelection": {
+    "message": "선택 항목 복제",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdCopyClipboard": {
+    "message": "클립보드에 복사",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdCropNextHandle": {
+    "message": "자르기: 다음 / 이전 핸들",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdCropResizeHandle": {
+    "message": "자르기: 해당 핸들에서 크기 조정",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdCutTakeOut": {
+    "message": "Cut 도구: 지정한 구간 잘라내기",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdCutPutBack": {
+    "message": "Cut 도구: 가장 가까운 구간 되돌리기",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdDeselectCancel": {
+    "message": "선택 해제 / 자르기 또는 Cut 취소",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorZoomIn": {
+    "message": "확대",
+    "description": "Editor: Zoom in command, used in the zoom menu and the shortcut sheet."
+  },
+  "editorZoomOut": {
+    "message": "축소",
+    "description": "Editor: Zoom out command, used in the zoom menu and the shortcut sheet."
+  },
+  "editorActualSize": {
+    "message": "실제 크기",
+    "description": "Editor: Actual size (100%) command, used in the zoom menu and the shortcut sheet."
+  },
+  "editorFitToScreen": {
+    "message": "화면에 맞추기",
+    "description": "Editor: Fit to screen command, used in the zoom menu and the shortcut sheet."
+  },
+  "editorCmdPan": {
+    "message": "화면 이동",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdThisSheet": {
+    "message": "이 시트",
+    "description": "Editor shortcut sheet: command row naming the shortcut sheet itself."
+  },
+  "editorZoomTitle": {
+    "message": "확대/축소",
+    "description": "Editor topbar: tooltip for the zoom menu trigger."
+  },
+  "editorAriaCaptures": {
+    "message": "캡처",
+    "description": "Editor history sheet: accessible label for the list of past captures."
+  },
+  "editorNoCapturesYet": {
+    "message": "아직 캡처가 없어요.",
+    "description": "Editor history sheet: empty-state text."
+  },
+  "editorOpen": {
+    "message": "열기",
+    "description": "Editor history sheet: button that reopens a past capture."
+  },
+  "editorOpenAria": {
+    "message": "열기, $DATE$에 캡처",
+    "description": "Editor history sheet: accessible label for a row’s Open button.",
+    "placeholders": {
+      "date": {
+        "content": "$1",
+        "example": "8/30/2026, 10:00 AM"
+      }
+    }
+  },
+  "editorDelete": {
+    "message": "삭제",
+    "description": "Editor history sheet: button that deletes a past capture."
+  },
+  "editorDeleteAria": {
+    "message": "삭제, $DATE$에 캡처",
+    "description": "Editor history sheet: accessible label for a row’s Delete button.",
+    "placeholders": {
+      "date": {
+        "content": "$1",
+        "example": "8/30/2026, 10:00 AM"
+      }
+    }
+  },
+  "editorConfirmDelete": {
+    "message": "삭제 확인",
+    "description": "Editor history sheet: Delete button’s label once armed by a first click."
+  },
+  "editorConfirmDeleteAria": {
+    "message": "삭제 확인, $DATE$에 캡처",
+    "description": "Editor history sheet: accessible label for a row’s Delete button once armed.",
+    "placeholders": {
+      "date": {
+        "content": "$1",
+        "example": "8/30/2026, 10:00 AM"
+      }
+    }
+  },
+  "editorPinUnavailable": {
+    "message": "Pin 기능에는 이 브라우저에 없는 기능(Document Picture-in-Picture)이 필요해요.",
+    "description": "Editor: stage notice shown when the browser lacks the Pin feature."
+  },
+  "editorPinFailedRetry": {
+    "message": "고정 창을 열 수 없었어요. Pin을 다시 클릭해 보세요.",
+    "description": "Editor: stage notice shown when opening the pinned window was blocked (no user activation)."
+  },
+  "editorPinFailedDetail": {
+    "message": "고정 창을 열 수 없었어요 ($DETAIL$).",
+    "description": "Editor: stage notice shown when opening the pinned window failed for another reason.",
+    "placeholders": {
+      "detail": {
+        "content": "$1",
+        "example": "no activation"
+      }
+    }
+  },
+  "editorPinWindowTitle": {
+    "message": "고정된 캡처 (편집하는 대로 업데이트) — OpenScreenShot",
+    "description": "Editor: the pinned floating window’s document title."
+  },
+  "editorPinnedCaptureAlt": {
+    "message": "고정된 캡처",
+    "description": "Editor: alt text for the image inside the pinned floating window."
+  },
+  "editorFormatPngLabel": {
+    "message": "PNG",
+    "description": "Editor export dialog: the PNG format card’s name."
+  },
+  "editorFormatPngHint": {
+    "message": "무손실 · 투명도 지원",
+    "description": "Editor export dialog: the PNG format card’s hint."
+  },
+  "editorFormatJpegLabel": {
+    "message": "JPEG",
+    "description": "Editor export dialog: the JPEG format card’s name."
+  },
+  "editorFormatJpegHint": {
+    "message": "더 작음 · 투명도 없음",
+    "description": "Editor export dialog: the JPEG format card’s hint."
+  },
+  "editorFormatWebpLabel": {
+    "message": "WebP",
+    "description": "Editor export dialog: the WebP format card’s name."
+  },
+  "editorFormatWebpHint": {
+    "message": "최신 형식 · 작고 선명함",
+    "description": "Editor export dialog: the WebP format card’s hint."
+  },
+  "editorBgInk": {
+    "message": "잉크",
+    "description": "Editor beautify menu: the Ink background swatch."
+  },
+  "editorBgCoral": {
+    "message": "코럴",
+    "description": "Editor beautify menu: the Coral background swatch."
+  },
+  "editorBgDusk": {
+    "message": "황혼",
+    "description": "Editor beautify menu: the Dusk background swatch."
+  },
+  "editorBgMint": {
+    "message": "민트",
+    "description": "Editor beautify menu: the Mint background swatch."
+  },
+  "editorBgSand": {
+    "message": "샌드",
+    "description": "Editor beautify menu: the Sand background swatch."
+  },
+  "editorBgSky": {
+    "message": "스카이",
+    "description": "Editor beautify menu: the Sky background swatch."
+  },
+  "editorLookCleanLabel": {
+    "message": "클린",
+    "description": "Editor beautify menu: the Clean look."
+  },
+  "editorLookCleanHint": {
+    "message": "기본 스타일: 부드러운 어두운 카드.",
+    "description": "Editor beautify menu: tooltip for the Clean look."
+  },
+  "editorLookAiryLabel": {
+    "message": "에어리",
+    "description": "Editor beautify menu: the Airy look."
+  },
+  "editorLookAiryHint": {
+    "message": "작은 이미지를 넓은 자리에 여유 있게 채워요.",
+    "description": "Editor beautify menu: tooltip for the Airy look."
+  },
+  "editorLookSnugLabel": {
+    "message": "스너그",
+    "description": "Editor beautify menu: the Snug look."
+  },
+  "editorLookSnugHint": {
+    "message": "좁은 칸에 긴 스크린샷을 넣어요.",
+    "description": "Editor beautify menu: tooltip for the Snug look."
+  },
+  "editorLookFlatLabel": {
+    "message": "플랫",
+    "description": "Editor beautify menu: the Flat look."
+  },
+  "editorLookFlatHint": {
+    "message": "각지고 그림자 없이, 문서와 인쇄용.",
+    "description": "Editor beautify menu: tooltip for the Flat look."
+  },
+  "editorLookPosterLabel": {
+    "message": "포스터",
+    "description": "Editor beautify menu: the Poster look."
+  },
+  "editorLookPosterHint": {
+    "message": "대표 이미지용: 깊은 모서리, 강한 입체감.",
+    "description": "Editor beautify menu: tooltip for the Poster look."
+  },
+  "editorLookCutoutLabel": {
+    "message": "컷아웃",
+    "description": "Editor beautify menu: the Cutout look."
+  },
+  "editorLookCutoutHint": {
+    "message": "투명 배경 위 그림자, 어떤 페이지에든 올릴 수 있어요.",
+    "description": "Editor beautify menu: tooltip for the Cutout look."
+  },
+  "editorBeautify": {
+    "message": "Beautify",
+    "description": "Editor: the Beautify menu’s trigger button, popover label, and on/off toggle text."
+  },
+  "editorBeautifyTitle": {
+    "message": "Beautify: 여백, 모서리, 그림자, 배경",
+    "description": "Editor: tooltip for the Beautify menu trigger."
+  },
+  "editorLook": {
+    "message": "스타일",
+    "description": "Editor beautify menu: the Look field group label."
+  },
+  "editorLookModifiedSuffix": {
+    "message": "$LABEL$, 수정됨",
+    "description": "Editor beautify menu: accessible label for a selected look whose values have since been changed.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Clean"
+      }
+    }
+  },
+  "editorPadding": {
+    "message": "여백",
+    "description": "Editor beautify menu: accessible label / field label for the padding slider."
+  },
+  "editorCorners": {
+    "message": "모서리",
+    "description": "Editor beautify menu: accessible label / field label for the corner-radius slider."
+  },
+  "editorShadow": {
+    "message": "그림자",
+    "description": "Editor beautify menu: accessible label / field label for the shadow slider."
+  },
+  "editorBackground": {
+    "message": "배경",
+    "description": "Editor beautify menu: the Background field group label."
+  },
+  "editorTransparent": {
+    "message": "투명",
+    "description": "Editor beautify menu: accessible label for the transparent-background swatch."
+  },
+  "editorSolidColorTitle": {
+    "message": "단색",
+    "description": "Editor beautify menu: tooltip for the custom solid-colour swatch."
+  },
+  "editorSolidBackgroundColorAria": {
+    "message": "단색 배경",
+    "description": "Editor beautify menu: accessible label for the custom solid-colour swatch."
+  },
+  "editorColorRed": {
+    "message": "빨강",
+    "description": "Editor style bar: the Red swatch name, read by assistive tech."
+  },
+  "editorColorOrange": {
+    "message": "주황",
+    "description": "Editor style bar: the Orange swatch name, read by assistive tech."
+  },
+  "editorColorYellow": {
+    "message": "노랑",
+    "description": "Editor style bar: the Yellow swatch name, read by assistive tech."
+  },
+  "editorColorGreen": {
+    "message": "초록",
+    "description": "Editor style bar: the Green swatch name, read by assistive tech."
+  },
+  "editorColorBlue": {
+    "message": "파랑",
+    "description": "Editor style bar: the Blue swatch name, read by assistive tech."
+  },
+  "editorColorPurple": {
+    "message": "보라",
+    "description": "Editor style bar: the Purple swatch name, read by assistive tech."
+  },
+  "editorColorWhite": {
+    "message": "흰색",
+    "description": "Editor style bar: the White swatch name, read by assistive tech."
+  },
+  "editorColorBlack": {
+    "message": "검정",
+    "description": "Editor style bar: the Black swatch name, read by assistive tech."
+  },
+  "editorCustomColorHex": {
+    "message": "사용자 지정 색상 $HEX$",
+    "description": "Editor style bar: the swatch name read by assistive tech for a recent colour with no preset name.",
+    "placeholders": {
+      "hex": {
+        "content": "$1",
+        "example": "#123456"
+      }
+    }
+  },
+  "editorImportNotAnImage": {
+    "message": "편집기에서 열 수 있는 이미지 파일이 아니에요.",
+    "description": "Editor: stage notice shown when a dropped/pasted file is not a decodable image."
+  },
+  "editorImportTooLarge": {
+    "message": "이미지가 너무 커서 편집할 수 없어요 ($W$ × $H$px).",
+    "description": "Editor: stage notice shown when an imported image exceeds the canvas size limits.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "9000"
+      },
+      "h": {
+        "content": "$2",
+        "example": "9000"
+      }
+    }
+  },
+  "editorSourceVisible": {
+    "message": "보이는 영역",
+    "description": "Editor: the brand-mode chip / history row label for a visible-area capture."
+  },
+  "editorSourceRegion": {
+    "message": "선택 영역",
+    "description": "Editor: the brand-mode chip / history row label for a region capture."
+  },
+  "editorSourceImported": {
+    "message": "가져옴",
+    "description": "Editor: the brand-mode chip / history row label for an imported image."
+  },
+  "editorLoadFailedDecode": {
+    "message": "스크린샷을 불러올 수 없었어요.",
+    "description": "Editor: error overlay text when the saved screenshot fails to decode."
+  },
+  "editorLoadFailedGeneric": {
+    "message": "설정 또는 저장된 스크린샷을 불러올 수 없었어요.",
+    "description": "Editor: error overlay text when loading the screenshot fails for any other reason."
+  },
+  "editorDraftRestoreFailed": {
+    "message": "저장된 편집 내용을 복원할 수 없었어요.",
+    "description": "Editor: stage notice shown when restoring a saved draft fails."
+  },
+  "editorImportReadFailed": {
+    "message": "이미지를 읽을 수 없었어요.",
+    "description": "Editor: stage notice shown when a dropped/pasted file cannot be read."
+  },
+  "editorHistoryCaptureGone": {
+    "message": "그 캡처는 더 이상 없어요.",
+    "description": "Editor: stage notice shown when a capture history entry no longer exists in storage."
+  },
+  "editorHistoryCaptureLoadFailed": {
+    "message": "그 캡처를 불러올 수 없었어요.",
+    "description": "Editor: stage notice shown when a capture history entry fails to decode."
+  },
+  "editorExportDialogAria": {
+    "message": "스크린샷 내보내기",
+    "description": "Editor: accessible label for the export dialog."
+  },
+  "editorKeysStyleBar": {
+    "message": "스타일 바",
+    "description": "Editor shortcut sheet: the \"keys\" column for a command with no key of its own, pointing at where to find it instead."
+  },
+  "popupTrustLine": {
+    "message": "내 기기에서만 · 오픈 소스 · 추적 없음",
+    "description": "Popup: the one-line local-only assurance shown beside a permission ask."
+  },
+  "settingsSupport": {
+    "message": "후원",
+    "description": "Popup settings: label for the row holding the Ko-fi and cool-stuff links."
+  }
+}

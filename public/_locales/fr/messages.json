@@ -1,0 +1,2256 @@
+{
+  "extName": {
+    "message": "Capture d’écran pleine page et annotations - OpenScreenShot",
+    "description": "Extension name shown in Chrome UI."
+  },
+  "extDesc": {
+    "message": "Captures pleine page, zone ou visible + éditeur d’annotations. Export PNG, JPEG, WebP, PDF. 100 % privé, hors ligne, sans envoi.",
+    "description": "Extension description shown in the Chrome Web Store and extensions page."
+  },
+  "modeFullPage": {
+    "message": "Page entière",
+    "description": "Capture mode: capture the entire scrolling page."
+  },
+  "modeFullPageSub": {
+    "message": "Toute la page, défilement compris",
+    "description": "Subtitle for the Full Page capture mode."
+  },
+  "modeVisible": {
+    "message": "Zone visible",
+    "description": "Capture mode: capture what is currently visible."
+  },
+  "modeVisibleSub": {
+    "message": "Ce que vous voyez à l’écran",
+    "description": "Subtitle for the Visible Area capture mode."
+  },
+  "modeRegion": {
+    "message": "Zone sélectionnée",
+    "description": "Capture mode: capture a user-dragged region."
+  },
+  "modeRegionSub": {
+    "message": "Cliquez-glissez pour sélectionner",
+    "description": "Subtitle for the Selected Region capture mode."
+  },
+  "capturing": {
+    "message": "Capture…",
+    "description": "Status shown while a capture is in progress."
+  },
+  "cannotCaptureProtected": {
+    "message": "Page protégée : capture impossible.",
+    "description": "Error shown when the active page cannot be captured (e.g. chrome:// pages)."
+  },
+  "comingSoon": {
+    "message": "Disponible dans une prochaine version.",
+    "description": "Placeholder message for features not yet implemented."
+  },
+  "customizeShortcuts": {
+    "message": "Personnaliser les raccourcis",
+    "description": "Link that opens Chrome's extension shortcut settings."
+  },
+  "reopenLast": {
+    "message": "Rouvrir",
+    "description": "Link in the popup that reopens the most recent capture in the editor."
+  },
+  "historyAria": {
+    "message": "Historique",
+    "description": "Header icon button in the popup that opens the editor's capture history shelf."
+  },
+  "recRecordings": {
+    "message": "Enregistrements",
+    "description": "Link in the popup that opens the recorder page's session list."
+  },
+  "footerShortcuts": {
+    "message": "Raccourcis",
+    "description": "Short footer label for the link that opens Chrome's shortcut settings."
+  },
+  "footerKofi": {
+    "message": "Ko-fi",
+    "description": "Short footer label for the Ko-fi donation link."
+  },
+  "supportKofiTitle": {
+    "message": "Offrir un café au développeur sur Ko-fi",
+    "description": "Tooltip for the Ko-fi donation footer link."
+  },
+  "footerCoolStuff": {
+    "message": "Autres outils",
+    "description": "Accessible label for the gift icon footer link that opens the cool-stuff page."
+  },
+  "coolStuffTitle": {
+    "message": "Autres outils gratuits du même auteur",
+    "description": "Tooltip for the gift icon footer link."
+  },
+  "setupCoolStuff": {
+    "message": "Autres outils",
+    "description": "Trust strip link on the setup page that opens the cool-stuff page."
+  },
+  "settingsTitle": {
+    "message": "Paramètres",
+    "description": "Settings panel heading."
+  },
+  "settingsTheme": {
+    "message": "Thème",
+    "description": "Theme setting label."
+  },
+  "themeLight": {
+    "message": "Clair",
+    "description": "Light theme option label."
+  },
+  "themeDark": {
+    "message": "Sombre",
+    "description": "Dark theme option label."
+  },
+  "themeSystem": {
+    "message": "Système",
+    "description": "System-follows theme option label."
+  },
+  "settingsDefaultFormat": {
+    "message": "Format",
+    "description": "Default export format setting label."
+  },
+  "formatPng": {
+    "message": "PNG",
+    "description": "PNG format option."
+  },
+  "formatJpeg": {
+    "message": "JPEG",
+    "description": "JPEG format option."
+  },
+  "formatWebp": {
+    "message": "WebP",
+    "description": "WebP format option."
+  },
+  "formatPdf": {
+    "message": "PDF",
+    "description": "PDF format option."
+  },
+  "settingsQuality": {
+    "message": "Qualité",
+    "description": "Export quality setting label."
+  },
+  "settingsFilename": {
+    "message": "Nom de fichier",
+    "description": "Filename template setting label."
+  },
+  "filenameInsert": {
+    "message": "Insérer",
+    "description": "Label above the clickable filename token chips."
+  },
+  "couldNotReach": {
+    "message": "Le service d’arrière-plan ne répond pas.",
+    "description": "Error toast when the background service worker is unreachable."
+  },
+  "backAria": {
+    "message": "Retour aux modes de capture",
+    "description": "Accessible label for the back button in settings."
+  },
+  "captureModesAria": {
+    "message": "Modes de capture",
+    "description": "Accessible label for the capture mode buttons."
+  },
+  "dismiss": {
+    "message": "Fermer",
+    "description": "Accessible label for the button that closes an error message."
+  },
+  "resetDefaults": {
+    "message": "Réinitialiser",
+    "description": "Settings link that restores every default value."
+  },
+  "resetConfirm": {
+    "message": "Cliquez encore pour confirmer",
+    "description": "Second-click confirmation label for the reset link."
+  },
+  "delayLabel": {
+    "message": "Délai",
+    "description": "Label for the capture delay row in the popup."
+  },
+  "delayOff": {
+    "message": "Aucun",
+    "description": "Delay option that captures immediately."
+  },
+  "repeatLastRegion": {
+    "message": "Répéter la zone",
+    "description": "Footer link and context menu item that re-captures the previous region selection."
+  },
+  "popupSectionScreenshot": {
+    "message": "Capture",
+    "description": "Popup: section heading above the three capture mode cards."
+  },
+  "popupSectionRecord": {
+    "message": "Vidéo",
+    "description": "Popup: section heading above the record card."
+  },
+  "recSourceLabel": {
+    "message": "Sources",
+    "description": "Popup: label above the mic / tab audio / webcam toggle chips."
+  },
+  "popupDigitHint": {
+    "message": "Ou appuyez sur $DIGIT$",
+    "description": "Popup: tooltip on a capture mode card naming its number-key shortcut.",
+    "placeholders": {
+      "digit": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "reopenLastDisabledTitle": {
+    "message": "Aucune capture à rouvrir",
+    "description": "Popup: tooltip on the disabled reopen-last footer action."
+  },
+  "repeatRegionDisabledTitle": {
+    "message": "Aucune zone capturée",
+    "description": "Popup: tooltip on the disabled repeat-region footer action."
+  },
+  "afterCaptureLabel": {
+    "message": "Après capture",
+    "description": "Label for the row that picks what a finished capture does."
+  },
+  "actionEditor": {
+    "message": "Éditeur",
+    "description": "Post-capture action that opens the annotation editor."
+  },
+  "actionClipboard": {
+    "message": "Presse-papiers",
+    "description": "Post-capture action that copies the screenshot and skips the editor."
+  },
+  "actionDownload": {
+    "message": "Télécharger",
+    "description": "Post-capture action that saves the screenshot and skips the editor."
+  },
+  "actionHintPng": {
+    "message": "Sauvegarde rapide en PNG.",
+    "description": "Hint shown under the after-capture row when Download is selected."
+  },
+  "expressLabel": {
+    "message": "Capture au clic sur l’icône",
+    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+  },
+  "expressHint": {
+    "message": "L’icône capture désormais la page entière. Clic droit sur l’icône pour désactiver.",
+    "description": "Hint shown under the express row when express mode is on."
+  },
+  "recOverlayPause": {
+    "message": "Pause",
+    "description": "Recording control bar: button that pauses the active recording."
+  },
+  "recOverlayResume": {
+    "message": "Reprendre",
+    "description": "Recording control bar: button that resumes a paused recording."
+  },
+  "recOverlayStop": {
+    "message": "Arrêter",
+    "description": "Recording control bar: button that stops and finalizes the recording."
+  },
+  "recOverlayCancel": {
+    "message": "Annuler",
+    "description": "Recording control bar: button that cancels the recording and discards it."
+  },
+  "recOverlayReveal": {
+    "message": "Afficher les commandes d’enregistrement",
+    "description": "Recording control bar: accessible name of the small always-present control that reveals the hidden bar, by pointer, touch or keyboard focus."
+  },
+  "recOverlayMic": {
+    "message": "MIC",
+    "description": "Recording control bar: chip shown when the microphone track is enabled."
+  },
+  "recOverlayTabAudio": {
+    "message": "SON",
+    "description": "Recording control bar: chip shown when tab audio is enabled."
+  },
+  "recOverlayWebcam": {
+    "message": "CAM",
+    "description": "Recording control bar: chip shown when the webcam track is enabled."
+  },
+  "recTitle": {
+    "message": "Enregistrer",
+    "description": "Popup: title of the record row when no session is pending."
+  },
+  "recSub": {
+    "message": "Enregistrer cet onglet avec zoom auto",
+    "description": "Popup: subtitle of the record row."
+  },
+  "recStop": {
+    "message": "Arrêter",
+    "description": "Popup: label for the button that stops the active recording."
+  },
+  "recCancel": {
+    "message": "Annuler",
+    "description": "Popup: label for the button that cancels the active recording."
+  },
+  "recRecording": {
+    "message": "Enregistrement…",
+    "description": "Popup: status label shown while a recording is in progress."
+  },
+  "recPaused": {
+    "message": "En pause",
+    "description": "Popup: status label shown while a recording is paused."
+  },
+  "recStarting": {
+    "message": "Démarrage…",
+    "description": "Popup: shown in place of the elapsed time while the recording is still opening its streams, before the clock has a zero."
+  },
+  "recMic": {
+    "message": "Micro",
+    "description": "Popup: toggle chip for the microphone track."
+  },
+  "recTabAudio": {
+    "message": "Audio onglet",
+    "description": "Popup: toggle chip for the tab audio track."
+  },
+  "recWebcam": {
+    "message": "Webcam",
+    "description": "Popup: toggle chip for the webcam track."
+  },
+  "recWebcamNoPreview": {
+    "message": "Ajoutée à l’export, sans aperçu pendant l’enregistrement.",
+    "description": "Popup: one-line disclosure shown under the Webcam toggle once it is on, before Record is pressed (task 40: the recorded page never shows a live self-view)."
+  },
+  "recWebcamDenied": {
+    "message": "Caméra refusée. L’enregistrement continue sans elle.",
+    "description": "The permission frame's own denied-state text, and the control bar's screen-reader announcement when a requested camera is declined or unavailable (task 40: the frame itself is not visible, so the bar is what a sighted user reads)."
+  },
+  "recProtected": {
+    "message": "Page protégée : enregistrement impossible.",
+    "description": "Popup: error toast shown when the active tab can't be recorded."
+  },
+  "popupRecordRefused": {
+    "message": "Enregistrement refusé : ouvrir la configuration",
+    "description": "Popup button shown after the user refuses the inline tabCapture prompt."
+  },
+  "recFailStartUnreachable": {
+    "message": "L’enregistrement n’a pas démarré : l’extension ne répond pas. Réessayez.",
+    "description": "Popup: error toast when REC_START never reached the service worker."
+  },
+  "recFailStartBlocked": {
+    "message": "L’enregistrement n’a pas démarré : cette page ne peut pas être enregistrée. Passez sur un onglet normal et réessayez.",
+    "description": "Popup: error toast when the start found no recordable tab (gone, or a protected URL)."
+  },
+  "recFailStartBusy": {
+    "message": "Un enregistrement est déjà en cours : arrêtez-le avant d’en lancer un autre.",
+    "description": "Popup: error toast when a start arrives while a recording is live."
+  },
+  "recFailStartFailed": {
+    "message": "L’enregistrement n’a pas démarré : l’onglet n’a pas pu être préparé. Rechargez l’onglet et réessayez.",
+    "description": "Popup: error toast when the worker's start threw before the engine was asked to capture."
+  },
+  "recFailCleanup": {
+    "message": "Un enregistrement en échec est toujours stocké : supprimez-le sur la page Enregistreur.",
+    "description": "Popup: error toast when a failed session could not be tidied up."
+  },
+  "recFailEngine": {
+    "message": "L’enregistrement s’est arrêté avant de commencer : l’onglet n’a pas pu être capturé. Réessayez.",
+    "description": "Popup: error toast when the offscreen engine failed to open its streams."
+  },
+  "recFailEngineUnreachable": {
+    "message": "Rien n’est enregistré : l’enregistreur n’a jamais démarré. Arrêtez et réessayez.",
+    "description": "Popup: error toast when OFFSCREEN_START never reached the offscreen engine, so the badge and control bar claim a recording that is not happening."
+  },
+  "recFailEngineStalled": {
+    "message": "L’enregistrement n’a pas démarré et l’arrêt est resté sans réponse. Rien n’a été sauvegardé : réessayez.",
+    "description": "Popup: the user pressed Stop on a recording that had not begun, and the offscreen recorder never answered. The run was torn down."
+  },
+  "popupOpenFailed": {
+    "message": "Impossible d’ouvrir cette page. Réessayez.",
+    "description": "Popup: error toast when chrome.tabs.create fails for the setup page, the editor or the recorder."
+  },
+  "recFailChunkWrite": {
+    "message": "Une partie de cet enregistrement n’est pas sauvegardée. Arrêtez-le et vérifiez ce qui reste sur la page Enregistreur.",
+    "description": "Popup: error toast when a chunk write to IndexedDB failed mid-recording, so the file is shorter than the clock says."
+  },
+  "recFailEventsWrite": {
+    "message": "La piste du curseur n’est pas sauvegardée. La vidéo est intacte ; les effets de zoom et de clic manqueront.",
+    "description": "Popup: error toast when cursor-event writes to IndexedDB failed mid-recording, leaving the video intact."
+  },
+  "recOverlayStarting": {
+    "message": "Démarrage…",
+    "description": "Recording control bar: shown in place of the timer while the recording is still opening its streams. Keep it short; it replaces a 0:00 clock."
+  },
+  "recOverlayNotSaving": {
+    "message": "NON SAUVÉ",
+    "description": "Recording control bar: warning chip shown when chunks are failing to reach storage. Keep it short; it sits in a row of three-letter track chips."
+  },
+  "recOverlayCamDenied": {
+    "message": "CAM REFUSÉE",
+    "description": "Recording control bar: warning chip shown when a requested camera was declined or unavailable. Keep it short; it sits in a row of three-letter track chips."
+  },
+  "recFailRecorderOpen": {
+    "message": "Votre enregistrement est sauvegardé, mais la page Enregistreur ne s’est pas ouverte. Utilisez « Récupérer l’enregistrement » ci-dessous.",
+    "description": "Popup: error toast when chrome.tabs.create for the recorder page failed after a recording finished."
+  },
+  "recFailQuery": {
+    "message": "État de l’enregistrement indisponible : vérifiez sur la page Enregistreur.",
+    "description": "Popup: error toast when REC_QUERY threw, so \"not recording\" cannot be trusted."
+  },
+  "recFailOverlayBlocked": {
+    "message": "Les commandes d’enregistrement n’ont pas pu s’ouvrir sur cette page : arrêtez l’enregistrement d’ici.",
+    "description": "Popup: error toast when the in-page control bar could not be injected."
+  },
+  "recFailOverlayLost": {
+    "message": "Les commandes d’enregistrement ont été perdues sur cette page : arrêtez l’enregistrement d’ici.",
+    "description": "Popup: error toast when the in-page control bar stopped reporting mid-recording."
+  },
+  "recFailControlUnreachable": {
+    "message": "La commande n’a pas atteint l’enregistreur : l’extension ne répond pas. Réessayez.",
+    "description": "Popup: error toast when stop/cancel never reached the service worker."
+  },
+  "recFailSessionLoad": {
+    "message": "Impossible d’ouvrir cet enregistrement : il est peut-être incomplet.",
+    "description": "Recorder page: error toast when a session could not be read out of IndexedDB."
+  },
+  "recFailSegmentSkipped": {
+    "message": "Une partie de cet enregistrement ne pouvait pas être lue et a été exclue de l’export.",
+    "description": "Recorder page: error toast when one or more segments were skipped during an export."
+  },
+  "recFailExport": {
+    "message": "Échec de l’export : aucun fichier n’a été enregistré. Réessayez.",
+    "description": "Recorder page: error toast when the export threw."
+  },
+  "recFailSaveInterrupted": {
+    "message": "Échec de la sauvegarde : $ERROR$. L’enregistrement a été conservé.",
+    "description": "Recorder page: error toast when the Save dialog's download was interrupted for a reason other than the user cancelling it.",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "FILE_NO_SPACE"
+      }
+    }
+  },
+  "recFailSaveUnverified": {
+    "message": "Impossible de confirmer la fin de la sauvegarde. L’enregistrement a été conservé.",
+    "description": "Recorder page: error toast when the download never reported a terminal state within the bounded wait."
+  },
+  "recorderSaveCancelled": {
+    "message": "Sauvegarde annulée",
+    "description": "Recorder page: toast shown when the user dismisses the export's Save dialog."
+  },
+  "recorderFailed": {
+    "message": "Échec",
+    "description": "Recorder page: pill on a session whose recording never started."
+  },
+  "recRecover": {
+    "message": "Récupérer l’enregistrement",
+    "description": "Popup: link that reopens the editor for a crashed/unfinished recording session."
+  },
+  "recContinue": {
+    "message": "Reprendre l’enregistrement",
+    "description": "Popup: record row title when a continue-session is pending from the editor. Also the recorder page header button that starts a continue-session."
+  },
+  "recAcrossSites": {
+    "message": "Enregistrer partout",
+    "description": "Settings: label for the row that grants recording access to all sites."
+  },
+  "recAcrossSitesHint": {
+    "message": "Maintient le curseur affiché quand l’onglet change de site. Donne accès à tous les sites.",
+    "description": "Settings: hint shown under the record-across-sites row."
+  },
+  "recorderTitle": {
+    "message": "Enregistreur",
+    "description": "Recorder page: header title."
+  },
+  "recorderSessions": {
+    "message": "Enregistrements",
+    "description": "Recorder page: session list heading."
+  },
+  "recorderOpen": {
+    "message": "Ouvrir",
+    "description": "Recorder page: button that opens a session for playback."
+  },
+  "recorderDelete": {
+    "message": "Supprimer",
+    "description": "Recorder page: button that deletes a session."
+  },
+  "recorderDeleteConfirm": {
+    "message": "Vraiment supprimer ?",
+    "description": "Recorder page: armed state of the delete button, click again to confirm."
+  },
+  "recorderEmpty": {
+    "message": "Aucun enregistrement pour l’instant. Enregistrez un onglet depuis l’icône de l’extension.",
+    "description": "Recorder page: shown when the session list is empty."
+  },
+  "recorderLoadingList": {
+    "message": "Chargement des enregistrements…",
+    "description": "Recorder page: shown in place of the session list while it loads."
+  },
+  "recorderSessionLoading": {
+    "message": "Chargement de l’enregistrement…",
+    "description": "Recorder page: label on the progress bar shown while a session's chunks load."
+  },
+  "recorderSourceTab": {
+    "message": "Onglet",
+    "description": "Recorder page: session list row — capture source. Every recording is a tab capture; there is no window/screen source to distinguish yet."
+  },
+  "recorderTrackRequested": {
+    "message": "Piste $TRACK$ demandée",
+    "description": "Recorder page: session list row — a mic/webcam track that was asked for and has some evidence (the combined recorder-#2 stream exists) but cannot be confirmed individually, since a mic-only and a webcam-only stream are indistinguishable from chunk presence alone.",
+    "placeholders": {
+      "track": {
+        "content": "$1",
+        "example": "Mic"
+      }
+    }
+  },
+  "recorderRecovered": {
+    "message": "Récupéré",
+    "description": "Recorder page: pill on a session that was left mid-recording by a crash."
+  },
+  "recorderRecordingNow": {
+    "message": "Enregistrement…",
+    "description": "Recorder page: pill on the session that is being recorded right now; its Open and Delete buttons are disabled."
+  },
+  "recContinueHint": {
+    "message": "Ouvrez l’extension sur l’onglet où reprendre l’enregistrement.",
+    "description": "Recorder page: info toast shown after Continue recording is clicked."
+  },
+  "recorderPlay": {
+    "message": "Lecture",
+    "description": "Recorder page: play button label/aria-label."
+  },
+  "recorderPause": {
+    "message": "Pause",
+    "description": "Recorder page: pause button label/aria-label."
+  },
+  "recorderAddZoom": {
+    "message": "Ajouter un zoom",
+    "description": "Recorder page: button that adds a zoom block at the playhead."
+  },
+  "recorderUndo": {
+    "message": "Annuler",
+    "description": "Recorder page: transport button that takes back the last timeline edit."
+  },
+  "recorderRedo": {
+    "message": "Rétablir",
+    "description": "Recorder page: transport button that puts back an edit undo took away."
+  },
+  "recorderUndoAnnounce": {
+    "message": "Annulé. $BLOCKS$.",
+    "description": "Recorder page: live-region announcement after an undo, naming what the timeline holds afterwards.",
+    "placeholders": {
+      "blocks": {
+        "content": "$1",
+        "example": "3 zoom blocks"
+      }
+    }
+  },
+  "recorderRedoAnnounce": {
+    "message": "Rétabli. $BLOCKS$.",
+    "description": "Recorder page: live-region announcement after a redo, naming what the timeline holds afterwards.",
+    "placeholders": {
+      "blocks": {
+        "content": "$1",
+        "example": "3 zoom blocks"
+      }
+    }
+  },
+  "recorderUndoPlain": {
+    "message": "Annulé.",
+    "description": "Recorder page: live-region announcement for an undo whose step names no single editor field."
+  },
+  "recorderRedoPlain": {
+    "message": "Rétabli.",
+    "description": "Recorder page: live-region announcement for a redo whose step names no single editor field."
+  },
+  "recorderTrim": {
+    "message": "Rognage",
+    "description": "Recorder page: the trim, named by an undo/redo announcement — the timeline has a start and an end handle per segment (recorderTrimStart/recorderTrimEnd), and the announcement names the pair."
+  },
+  "recorderZoomBlockOne": {
+    "message": "1 bloc de zoom",
+    "description": "Recorder page: the zoom-block count an undo/redo announcement carries, when there is exactly one."
+  },
+  "recorderZoomBlockMany": {
+    "message": "$COUNT$ blocs de zoom",
+    "description": "Recorder page: the zoom-block count an undo/redo announcement carries, for none or several.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "recorderDeleteZoom": {
+    "message": "Supprimer le zoom",
+    "description": "Recorder page: button that removes the selected zoom block."
+  },
+  "recorderZoomBlock": {
+    "message": "Bloc de zoom",
+    "description": "Recorder page: aria-label prefix of a zoom block on the timeline, followed by its scale (e.g. \"Zoom block, 2×\")."
+  },
+  "recorderZoomScale": {
+    "message": "Zoom",
+    "description": "Recorder page: label of the zoom scale segmented control."
+  },
+  "recorderZoomTarget": {
+    "message": "Cible du zoom",
+    "description": "Recorder page: aria-label of the draggable target reticle on the preview."
+  },
+  "recorderTrimStart": {
+    "message": "Début du rognage",
+    "description": "Recorder page: aria-label of a segment's leading trim handle."
+  },
+  "recorderTrimEnd": {
+    "message": "Fin du rognage",
+    "description": "Recorder page: aria-label of a segment's trailing trim handle."
+  },
+  "recorderTimelineAria": {
+    "message": "Chronologie",
+    "description": "Recorder page: aria-label of the timeline region."
+  },
+  "recorderCursorMode": {
+    "message": "Curseur",
+    "description": "Recorder page: label of the segmented control that merges showing the recorded cursor and drawing a ripple at every recorded click."
+  },
+  "recorderCursorHidden": {
+    "message": "Masqué",
+    "description": "Recorder page: state of the cursor control that draws neither the cursor nor a click ripple."
+  },
+  "recorderCursorShown": {
+    "message": "Affiché",
+    "description": "Recorder page: state of the cursor control that draws the recorded cursor path as a pointer, with no click ripple."
+  },
+  "recorderCursorRippleOnly": {
+    "message": "Clics seuls",
+    "description": "Recorder page: state of the cursor control that draws a ripple at every recorded click, with the cursor itself hidden."
+  },
+  "recorderCursorRipple": {
+    "message": "Curseur et clics",
+    "description": "Recorder page: state of the cursor control that draws the cursor and a ripple at every recorded click."
+  },
+  "recorderVolTab": {
+    "message": "Volume de l’onglet",
+    "description": "Recorder page: label of the tab-audio volume slider."
+  },
+  "recorderVolMic": {
+    "message": "Volume du micro",
+    "description": "Recorder page: label of the microphone volume slider."
+  },
+  "recorderBubble": {
+    "message": "Bulle webcam",
+    "description": "Recorder page: label of the webcam bubble settings section."
+  },
+  "recorderBubbleTL": {
+    "message": "En haut à gauche",
+    "description": "Recorder page: aria-label of the webcam bubble's top-left corner preset button."
+  },
+  "recorderBubbleTR": {
+    "message": "En haut à droite",
+    "description": "Recorder page: aria-label of the webcam bubble's top-right corner preset button."
+  },
+  "recorderBubbleBL": {
+    "message": "En bas à gauche",
+    "description": "Recorder page: aria-label of the webcam bubble's bottom-left corner preset button."
+  },
+  "recorderBubbleBR": {
+    "message": "En bas à droite",
+    "description": "Recorder page: aria-label of the webcam bubble's bottom-right corner preset button."
+  },
+  "recorderBubbleSize": {
+    "message": "Taille",
+    "description": "Recorder page: label of the webcam bubble size slider."
+  },
+  "recorderBubbleHide": {
+    "message": "Masquer",
+    "description": "Recorder page: label of the toggle that hides the webcam bubble."
+  },
+  "recorderBeautify": {
+    "message": "Beautify",
+    "description": "Recorder page: label of the toggle that frames the export in padding, corners, shadow, and a background."
+  },
+  "recorderBeautifyPadding": {
+    "message": "Marges",
+    "description": "Recorder page: label of the beautify frame's padding slider."
+  },
+  "recorderBeautifyCorners": {
+    "message": "Coins",
+    "description": "Recorder page: label of the beautify frame's corner-radius slider."
+  },
+  "recorderBeautifyShadow": {
+    "message": "Ombre",
+    "description": "Recorder page: label of the beautify frame's drop-shadow slider."
+  },
+  "recorderBeautifyBackground": {
+    "message": "Fond",
+    "description": "Recorder page: label of the beautify frame's background swatches."
+  },
+  "recorderBeautifyTransparent": {
+    "message": "Transparent",
+    "description": "Recorder page: aria-label of the beautify frame's transparent-background swatch."
+  },
+  "recorderBeautifyCustom": {
+    "message": "Couleur unie",
+    "description": "Recorder page: aria-label of the beautify frame's custom solid-colour swatch."
+  },
+  "recorderExport": {
+    "message": "Exporter en WebM",
+    "description": "Recorder page: button that renders the edited recording to a WebM file."
+  },
+  "recorderExporting": {
+    "message": "Rendu en cours…",
+    "description": "Recorder page: status shown while the export renders."
+  },
+  "recorderCancel": {
+    "message": "Annuler",
+    "description": "Recorder page: button that stops an export in progress and discards it."
+  },
+  "recorderCancelConfirm": {
+    "message": "Abandonner le rendu ?",
+    "description": "Recorder page: armed state of the export Cancel button, click again to confirm."
+  },
+  "recorderExportRemaining": {
+    "message": "Il reste $TIME$",
+    "description": "Recorder page: wall-clock time left in an export in progress, formatted m:ss (or h:mm:ss for a long recording).",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "1:23"
+      }
+    }
+  },
+  "recorderExportStayVisible": {
+    "message": "Gardez cet onglet visible. Le rendu se met en pause s’il est masqué.",
+    "description": "Recorder page: warning shown for the whole export — a background tab throttles requestAnimationFrame and stalls the render."
+  },
+  "recorderExported": {
+    "message": "Enregistré : $SIZE$ MB",
+    "description": "Recorder page: toast shown after an export is downloaded.",
+    "placeholders": {
+      "size": {
+        "content": "$1",
+        "example": "12.4"
+      }
+    }
+  },
+  "recorderDeleteAfter": {
+    "message": "Supprimer l’enregistrement après l’export",
+    "description": "Recorder page: checkbox that deletes the session once its export is saved."
+  },
+  "setupTitle": {
+    "message": "Configurer l’enregistrement",
+    "description": "Setup page: heading."
+  },
+  "setupIntro": {
+    "message": "À faire une seule fois.",
+    "description": "Setup page: intro line under the heading."
+  },
+  "setupFinish": {
+    "message": "Tout est prêt : fermer cet onglet",
+    "description": "Setup page: button on the ready banner that closes the tab."
+  },
+  "setupTrustOpenSource": {
+    "message": "Open source (MIT)",
+    "description": "Setup page: trust pill linking to the GitHub repo."
+  },
+  "setupTrustLocal": {
+    "message": "100 % local",
+    "description": "Setup page: trust pill — everything is processed on-device."
+  },
+  "setupTrustNoTracking": {
+    "message": "Aucun suivi",
+    "description": "Setup page: trust pill — no analytics, no accounts."
+  },
+  "setupTrustHint": {
+    "message": "Vos enregistrements ne quittent jamais votre appareil.",
+    "description": "Setup page: one-line assurance under the trust pills."
+  },
+  "setupPinTitle": {
+    "message": "Épingler OpenScreenShot",
+    "description": "Popup: nudge to pin the extension, shown while it is not on the toolbar."
+  },
+  "setupPinSub": {
+    "message": "Cliquez sur 🧩 ci-dessus, puis sur 📌 à côté d’OpenScreenShot.",
+    "description": "Popup: how to pin — the puzzle menu sits directly above the popup."
+  },
+  "setupFromRecord": {
+    "message": "Une dernière étape : activez l’enregistrement d’onglet ci-dessous.",
+    "description": "Setup page: banner shown when the Record button routed here."
+  },
+  "setupReady": {
+    "message": "Prêt à enregistrer.",
+    "description": "Setup page: banner headline once tab recording is granted."
+  },
+  "setupReadyHint": {
+    "message": "Cliquez sur l’icône de la barre d’outils, puis sur Enregistrer.",
+    "description": "Setup page: what to do after setup is complete."
+  },
+  "setupTabCapture": {
+    "message": "Enregistrement d’onglet",
+    "description": "Setup page: row title for the tabCapture permission."
+  },
+  "setupTabCaptureDesc": {
+    "message": "Capture l’onglet que vous enregistrez.",
+    "description": "Setup page: row description for the tabCapture permission."
+  },
+  "setupCamera": {
+    "message": "Caméra",
+    "description": "Setup page: row title for the camera permission."
+  },
+  "setupCameraDesc": {
+    "message": "Ajoute une bulle à l’export, sans aperçu pendant l’enregistrement.",
+    "description": "Setup page: row description for the camera permission."
+  },
+  "setupMic": {
+    "message": "Micro",
+    "description": "Setup page: row title for the microphone permission."
+  },
+  "setupMicDesc": {
+    "message": "Ajoute votre voix.",
+    "description": "Setup page: row description for the microphone permission."
+  },
+  "setupAcrossSites": {
+    "message": "Enregistrer sur tous les sites",
+    "description": "Setup page: row title for the all-urls host permission."
+  },
+  "setupAcrossSitesDesc": {
+    "message": "Continue d’enregistrer quand vous changez de site.",
+    "description": "Setup page: row description for the all-urls host permission."
+  },
+  "setupAcrossSitesToggle": {
+    "message": "Autoriser sur tous les sites",
+    "description": "Setup page: label next to the all-urls toggle."
+  },
+  "setupEnable": {
+    "message": "Activer",
+    "description": "Setup page: button that requests the tabCapture permission."
+  },
+  "setupAllow": {
+    "message": "Autoriser",
+    "description": "Setup page: button that triggers a camera or mic prompt."
+  },
+  "setupGranted": {
+    "message": "Autorisé",
+    "description": "Setup page: status tag for a granted permission."
+  },
+  "setupRequired": {
+    "message": "Requis",
+    "description": "Setup page: status tag for the one required permission."
+  },
+  "setupOptional": {
+    "message": "Facultatif",
+    "description": "Setup page: status tag for a skippable permission."
+  },
+  "setupDeniedTag": {
+    "message": "Bloqué",
+    "description": "Setup page: status tag for a denied permission."
+  },
+  "setupDismissed": {
+    "message": "Invite fermée : cliquez à nouveau quand vous êtes prêt.",
+    "description": "Setup page: hint after a permission prompt was closed without an answer."
+  },
+  "setupBlockedSite": {
+    "message": "Bloqué dans Chrome. Autorisez-le dans les paramètres du site : cette page se met à jour toute seule.",
+    "description": "Setup page: recovery hint for a site-level denial."
+  },
+  "setupBlockedSystem": {
+    "message": "Bloqué par votre système. macOS : Réglages Système → Confidentialité et sécurité → autoriser Chrome.",
+    "description": "Setup page: recovery hint for an OS-level denial."
+  },
+  "setupNoDevice": {
+    "message": "Aucun appareil détecté. Branchez-en un, puis réessayez.",
+    "description": "Setup page: hint when no camera or microphone exists."
+  },
+  "setupOpenSiteSettings": {
+    "message": "Ouvrir les paramètres du site",
+    "description": "Setup page: button that opens Chrome's per-site permission settings."
+  },
+  "popupPermissionChip": {
+    "message": "$DEVICE$ : bloqué, voir la configuration",
+    "description": "Popup: warning chip when a toggled-on device permission is denied.",
+    "placeholders": {
+      "device": {
+        "content": "$1",
+        "example": "Microphone"
+      }
+    }
+  },
+  "popupSetupLink": {
+    "message": "Autorisations",
+    "description": "Popup settings: row that opens the recording setup page."
+  },
+  "editorAnnotationCountOne": {
+    "message": "$COUNT$ annotation",
+    "description": "Editor live region: one annotation, e.g. \"1 annotation\".",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "editorAnnotationCountOther": {
+    "message": "$COUNT$ annotations",
+    "description": "Editor live region: several annotations, e.g. \"3 annotations\".",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "editorCutCountOne": {
+    "message": "$COUNT$ coupe",
+    "description": "Editor draft-restore pill: one cut, e.g. \"1 cut\".",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "1"
+      }
+    }
+  },
+  "editorCutCountOther": {
+    "message": "$COUNT$ coupes",
+    "description": "Editor draft-restore pill: several cuts, e.g. \"3 cuts\".",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "editorNoAnnotations": {
+    "message": "aucune annotation",
+    "description": "Editor live region: fragment used mid-sentence when a delete leaves nothing selected, e.g. \"Rectangle deleted, no annotations left.\""
+  },
+  "editorAnnotationFallback": {
+    "message": "Annotation",
+    "description": "Editor live region: generic name for an annotation type the tool list has no label for (should not normally happen)."
+  },
+  "editorAnnounceSelect": {
+    "message": "Sélection : $LABEL$, calque $INDEX$ sur $TOTAL$.",
+    "description": "Editor live region: one annotation was selected.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Rectangle"
+      },
+      "index": {
+        "content": "$2",
+        "example": "2"
+      },
+      "total": {
+        "content": "$3",
+        "example": "5"
+      }
+    }
+  },
+  "editorAnnounceSelectMany": {
+    "message": "Sélection : $COUNT$ sur $TOTAL$.",
+    "description": "Editor live region: several annotations were selected, e.g. \"2 of 3 annotations selected.\"",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      },
+      "total": {
+        "content": "$2",
+        "example": "3 annotations"
+      }
+    }
+  },
+  "editorAnnounceDeselect": {
+    "message": "Sélection annulée.",
+    "description": "Editor live region: the selection was cleared."
+  },
+  "editorAnnounceAdd": {
+    "message": "Ajout : $LABEL$ en $X$, $Y$.",
+    "description": "Editor live region: a new annotation was drawn.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Rectangle"
+      },
+      "x": {
+        "content": "$2",
+        "example": "10"
+      },
+      "y": {
+        "content": "$3",
+        "example": "20"
+      }
+    }
+  },
+  "editorAnnounceMove": {
+    "message": "Déplacement : $LABEL$ en $X$, $Y$.",
+    "description": "Editor live region: one annotation was moved.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Rectangle"
+      },
+      "x": {
+        "content": "$2",
+        "example": "15"
+      },
+      "y": {
+        "content": "$3",
+        "example": "15"
+      }
+    }
+  },
+  "editorAnnounceMoveMany": {
+    "message": "$COUNT$ déplacées.",
+    "description": "Editor live region: several annotations were moved, e.g. \"3 annotations moved.\"",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3 annotations"
+      }
+    }
+  },
+  "editorAnnounceResize": {
+    "message": "Redimensionnement : $LABEL$, $W$ sur $H$ pixels.",
+    "description": "Editor live region: one annotation was resized.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Rectangle"
+      },
+      "w": {
+        "content": "$2",
+        "example": "100"
+      },
+      "h": {
+        "content": "$3",
+        "example": "80"
+      }
+    }
+  },
+  "editorAnnounceResizeMany": {
+    "message": "$COUNT$ redimensionnées.",
+    "description": "Editor live region: several annotations were resized, e.g. \"3 annotations resized.\"",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3 annotations"
+      }
+    }
+  },
+  "editorAnnounceDelete": {
+    "message": "Suppression : $LABEL$. Restant : $LEFT$.",
+    "description": "Editor live region: one annotation was deleted.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Rectangle"
+      },
+      "left": {
+        "content": "$2",
+        "example": "2 annotations"
+      }
+    }
+  },
+  "editorAnnounceDeleteMany": {
+    "message": "$COUNT$ supprimées. Restant : $LEFT$.",
+    "description": "Editor live region: several annotations were deleted.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2 annotations"
+      },
+      "left": {
+        "content": "$2",
+        "example": "1 annotation"
+      }
+    }
+  },
+  "editorAnnounceDuplicate": {
+    "message": "$COUNT$ dupliquées.",
+    "description": "Editor live region: the selection was duplicated, e.g. \"2 annotations duplicated.\"",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2 annotations"
+      }
+    }
+  },
+  "editorAnnounceUndo": {
+    "message": "Annulé.",
+    "description": "Editor live region: an undo step ran. Followed in code by an optional picture-size sentence and the current layer count."
+  },
+  "editorAnnounceRedo": {
+    "message": "Rétabli.",
+    "description": "Editor live region: a redo step ran. Followed in code by an optional picture-size sentence and the current layer count."
+  },
+  "editorStepImageSize": {
+    "message": "Image de $W$ sur $H$ pixels.",
+    "description": "Editor live region: the picture changed size on an undo/redo step that re-applied or reverted a crop.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "720"
+      },
+      "h": {
+        "content": "$2",
+        "example": "540"
+      }
+    }
+  },
+  "editorStepImageHeight": {
+    "message": "Image de $H$ pixels de haut.",
+    "description": "Editor live region: the picture changed height on an undo/redo step that put back or took a cut.",
+    "placeholders": {
+      "h": {
+        "content": "$1",
+        "example": "540"
+      }
+    }
+  },
+  "editorHandleTopLeft": {
+    "message": "En haut à gauche",
+    "description": "Editor live region: the crop handle at the top-left corner."
+  },
+  "editorHandleTop": {
+    "message": "Haut",
+    "description": "Editor live region: the crop handle at the top edge."
+  },
+  "editorHandleTopRight": {
+    "message": "En haut à droite",
+    "description": "Editor live region: the crop handle at the top-right corner."
+  },
+  "editorHandleRight": {
+    "message": "Droite",
+    "description": "Editor live region: the crop handle at the right edge."
+  },
+  "editorHandleBottomRight": {
+    "message": "En bas à droite",
+    "description": "Editor live region: the crop handle at the bottom-right corner."
+  },
+  "editorHandleBottom": {
+    "message": "Bas",
+    "description": "Editor live region: the crop handle at the bottom edge."
+  },
+  "editorHandleBottomLeft": {
+    "message": "En bas à gauche",
+    "description": "Editor live region: the crop handle at the bottom-left corner."
+  },
+  "editorHandleLeft": {
+    "message": "Gauche",
+    "description": "Editor live region: the crop handle at the left edge."
+  },
+  "editorHandleStart": {
+    "message": "Début",
+    "description": "Editor live region: the cut band's start handle."
+  },
+  "editorHandleEnd": {
+    "message": "Fin",
+    "description": "Editor live region: the cut band's end handle."
+  },
+  "editorCropPhrase": {
+    "message": "Recadrage de $W$ sur $H$ pixels en $X$, $Y$.",
+    "description": "Editor live region: the size and place of the crop rectangle.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "720"
+      },
+      "h": {
+        "content": "$2",
+        "example": "540"
+      },
+      "x": {
+        "content": "$3",
+        "example": "0"
+      },
+      "y": {
+        "content": "$4",
+        "example": "0"
+      }
+    }
+  },
+  "editorAnnounceCropHandle": {
+    "message": "Poignée : $HANDLE$. $PHRASE$",
+    "description": "Editor live region: a crop handle is now active, followed by the crop's size and place.",
+    "placeholders": {
+      "handle": {
+        "content": "$1",
+        "example": "Top left"
+      },
+      "phrase": {
+        "content": "$2",
+        "example": "Crop 720 by 540 pixels at 0, 0."
+      }
+    }
+  },
+  "editorAnnounceCropApplied": {
+    "message": "Recadré à $W$ sur $H$ pixels.",
+    "description": "Editor live region: the crop was applied.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "720"
+      },
+      "h": {
+        "content": "$2",
+        "example": "540"
+      }
+    }
+  },
+  "editorAnnounceCropCancelled": {
+    "message": "Recadrage annulé.",
+    "description": "Editor live region: the crop was cancelled."
+  },
+  "editorAnnounceCut": {
+    "message": "Bande de coupe de $H$ pixels de haut en $Y$.",
+    "description": "Editor live region: a cut band is drafted.",
+    "placeholders": {
+      "h": {
+        "content": "$1",
+        "example": "40"
+      },
+      "y": {
+        "content": "$2",
+        "example": "100"
+      }
+    }
+  },
+  "editorAnnounceCutApplied": {
+    "message": "$H$ pixels coupés. Image de $IMAGE_HEIGHT$ pixels de haut.",
+    "description": "Editor live region: a cut band was taken out of the picture.",
+    "placeholders": {
+      "h": {
+        "content": "$1",
+        "example": "40"
+      },
+      "image_height": {
+        "content": "$2",
+        "example": "560"
+      }
+    }
+  },
+  "editorAnnounceOutOfPicture": {
+    "message": "$COUNT$ hors de l’image.",
+    "description": "Editor live region: annotations that sat on cut rows left the picture with them.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2 annotations"
+      }
+    }
+  },
+  "editorAnnounceSelectedRemaining": {
+    "message": "$COUNT$ sélectionnées.",
+    "description": "Editor live region: what is still selected after a cut removed some annotations with it.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2 annotations"
+      }
+    }
+  },
+  "editorAnnounceCutRemoved": {
+    "message": "$H$ pixels remis. Image de $IMAGE_HEIGHT$ pixels de haut.",
+    "description": "Editor live region: a cut was put back into the picture.",
+    "placeholders": {
+      "h": {
+        "content": "$1",
+        "example": "40"
+      },
+      "image_height": {
+        "content": "$2",
+        "example": "600"
+      }
+    }
+  },
+  "editorAnnounceCutCancelled": {
+    "message": "Coupe annulée.",
+    "description": "Editor live region: the drafted cut was cancelled."
+  },
+  "editorAnnounceCutRefused": {
+    "message": "Une coupe ne peut pas prendre toute l’image.",
+    "description": "Editor live region: a cut band was refused because it covered the entire image."
+  },
+  "editorAnnounceCutNone": {
+    "message": "Ces lignes sont déjà coupées.",
+    "description": "Editor live region: Delete was pressed over rows that are already cut."
+  },
+  "editorToolSelect": {
+    "message": "Sélection",
+    "description": "Editor tool rail: the Select tool."
+  },
+  "editorToolRectangle": {
+    "message": "Rectangle",
+    "description": "Editor tool rail: the Rectangle tool. Also the Rectangle spotlight-shape option."
+  },
+  "editorToolArrow": {
+    "message": "Flèche",
+    "description": "Editor tool rail: the Arrow tool."
+  },
+  "editorToolLine": {
+    "message": "Ligne",
+    "description": "Editor tool rail: the Line tool."
+  },
+  "editorToolPen": {
+    "message": "Crayon",
+    "description": "Editor tool rail: the Pen (freehand) tool."
+  },
+  "editorToolHighlighter": {
+    "message": "Surligneur",
+    "description": "Editor tool rail: the Highlighter tool."
+  },
+  "editorToolText": {
+    "message": "Texte",
+    "description": "Editor tool rail: the Text tool."
+  },
+  "editorToolStep": {
+    "message": "Numéro d’étape",
+    "description": "Editor tool rail: the numbered step-badge tool."
+  },
+  "editorToolBlur": {
+    "message": "Flou",
+    "description": "Editor tool rail: the Blur/redaction tool. Also the Blur redaction-mode option."
+  },
+  "editorToolSpotlight": {
+    "message": "Spotlight",
+    "description": "Editor tool rail: the Spotlight tool."
+  },
+  "editorToolEyedropper": {
+    "message": "Pipette",
+    "description": "Editor tool rail: the Eyedropper tool."
+  },
+  "editorToolCrop": {
+    "message": "Recadrer",
+    "description": "Editor tool rail: the Crop tool."
+  },
+  "editorToolCut": {
+    "message": "Cut",
+    "description": "Editor tool rail: the Cut tool."
+  },
+  "editorHintRect": {
+    "message": "Glissez pour tracer un rectangle · Shift le garde carré",
+    "description": "Editor status bar hint for the Rectangle tool."
+  },
+  "editorHintArrow": {
+    "message": "Glissez pour tracer une flèche · Shift aligne à 45°",
+    "description": "Editor status bar hint for the Arrow tool."
+  },
+  "editorHintLine": {
+    "message": "Glissez pour tracer une ligne · Shift aligne à 45°",
+    "description": "Editor status bar hint for the Line tool."
+  },
+  "editorHintPen": {
+    "message": "Glissez pour dessiner à main levée",
+    "description": "Editor status bar hint for the Pen tool."
+  },
+  "editorHintHighlight": {
+    "message": "Glissez pour surligner : le marqueur reste translucide",
+    "description": "Editor status bar hint for the Highlighter tool."
+  },
+  "editorHintStep": {
+    "message": "Cliquez pour placer un badge numéroté · les numéros restent dans l’ordre",
+    "description": "Editor status bar hint for the Step number tool."
+  },
+  "editorHintText": {
+    "message": "Cliquez pour placer le texte, puis saisissez",
+    "description": "Editor status bar hint for the Text tool."
+  },
+  "editorHintBlur": {
+    "message": "Glissez sur une zone pour la masquer · choisissez Flou, Mosaïque ou Uni ci-dessus",
+    "description": "Editor status bar hint for the Blur tool."
+  },
+  "editorHintSpotlight": {
+    "message": "Glissez pour garder une zone éclairée, le reste s’assombrit · Shift le garde carré",
+    "description": "Editor status bar hint for the Spotlight tool."
+  },
+  "editorHintCrop": {
+    "message": "Glissez pour sélectionner, puis Appliquer pour recadrer",
+    "description": "Editor status bar hint for the Crop tool."
+  },
+  "editorHintCut": {
+    "message": "Glissez sur une bande pour la retirer · cliquez sur une jointure pour la remettre · rien n’est effacé",
+    "description": "Editor status bar hint for the Cut tool."
+  },
+  "editorHintEyedropper": {
+    "message": "Cliquez sur un pixel pour prendre sa couleur · l’outil précédent revient",
+    "description": "Editor status bar hint for the Eyedropper tool."
+  },
+  "editorHintSelect": {
+    "message": "Sélection · glissez pour déplacer · poignées pour redimensionner · double-clic sur le texte · ⌫ supprimer",
+    "description": "Editor status bar hint for the Select tool."
+  },
+  "editorBlurModeBlurHint": {
+    "message": "Pixellisation douce",
+    "description": "Editor style bar: tooltip for the Blur redaction mode."
+  },
+  "editorBlurModeMosaic": {
+    "message": "Mosaïque",
+    "description": "Editor style bar: the Mosaic redaction mode."
+  },
+  "editorBlurModeMosaicHint": {
+    "message": "Gros blocs : résiste à la recompression",
+    "description": "Editor style bar: tooltip for the Mosaic redaction mode."
+  },
+  "editorBlurModeSolid": {
+    "message": "Uni",
+    "description": "Editor style bar: the Solid redaction mode."
+  },
+  "editorBlurModeSolidHint": {
+    "message": "Aplat opaque : rien ne subsiste",
+    "description": "Editor style bar: tooltip for the Solid redaction mode."
+  },
+  "editorShapeRounded": {
+    "message": "Arrondi",
+    "description": "Editor style bar: the Rounded spotlight shape."
+  },
+  "editorShapeEllipse": {
+    "message": "Ellipse",
+    "description": "Editor style bar: the Ellipse spotlight shape."
+  },
+  "editorStyleColor": {
+    "message": "Couleur",
+    "description": "Editor style bar: the color field group label."
+  },
+  "editorStyleStroke": {
+    "message": "Trait",
+    "description": "Editor style bar: the stroke-width field group label."
+  },
+  "editorStyleShape": {
+    "message": "Forme",
+    "description": "Editor style bar: the spotlight-shape field group label."
+  },
+  "editorStyleRedaction": {
+    "message": "Masquage",
+    "description": "Editor style bar: the redaction-mode field group label."
+  },
+  "editorStyleStrength": {
+    "message": "Intensité · $VALUE$",
+    "description": "Editor style bar: the blur-strength slider label, with its current value.",
+    "placeholders": {
+      "value": {
+        "content": "$1",
+        "example": "40"
+      }
+    }
+  },
+  "editorStyleSize": {
+    "message": "Taille · $VALUE$px",
+    "description": "Editor style bar: the font-size slider label, with its current value.",
+    "placeholders": {
+      "value": {
+        "content": "$1",
+        "example": "24"
+      }
+    }
+  },
+  "editorAriaBlurStrength": {
+    "message": "Intensité du flou",
+    "description": "Editor style bar: accessible label for the blur-strength slider."
+  },
+  "editorAriaSize": {
+    "message": "Taille",
+    "description": "Editor style bar: accessible label for the font-size slider."
+  },
+  "editorCustomColorLabel": {
+    "message": "Couleur personnalisée",
+    "description": "Editor style bar: title/accessible label for the custom-color swatch."
+  },
+  "editorPickScreenColor": {
+    "message": "Prélever une couleur n’importe où à l’écran",
+    "description": "Editor style bar: title/accessible label for the screen color-picker button."
+  },
+  "editorAriaAnnotationStyle": {
+    "message": "Style d’annotation",
+    "description": "Editor: accessible label for the style bar toolbar."
+  },
+  "editorAriaAnnotationTools": {
+    "message": "Outils d’annotation",
+    "description": "Editor: accessible label for the tool rail."
+  },
+  "editorAriaDocumentActions": {
+    "message": "Actions sur le document",
+    "description": "Editor: accessible label for the topbar’s undo/redo/delete button group."
+  },
+  "editorUndoTitle": {
+    "message": "Annuler (⌘Z)",
+    "description": "Editor topbar: tooltip for the Undo button."
+  },
+  "editorUndoLabel": {
+    "message": "Annuler",
+    "description": "Editor topbar: accessible label for the Undo button. Also its name in the shortcut sheet."
+  },
+  "editorRedoTitle": {
+    "message": "Rétablir (⌘⇧Z)",
+    "description": "Editor topbar: tooltip for the Redo button."
+  },
+  "editorRedoLabel": {
+    "message": "Rétablir",
+    "description": "Editor topbar: accessible label for the Redo button. Also its name in the shortcut sheet."
+  },
+  "editorDeleteSelectedTitle": {
+    "message": "Supprimer la sélection (⌫)",
+    "description": "Editor topbar: tooltip for the delete-selection button."
+  },
+  "editorDeleteSelectedLabel": {
+    "message": "Supprimer la sélection",
+    "description": "Editor topbar: accessible label for the delete-selection button. Also its name in the shortcut sheet."
+  },
+  "editorCaptureHistory": {
+    "message": "Historique des captures",
+    "description": "Editor: title/accessible label for the History button, and the history sheet’s dialog title."
+  },
+  "editorPinTitle": {
+    "message": "Épingler dans une fenêtre flottante : se ferme avec cet onglet",
+    "description": "Editor topbar: tooltip for the Pin button."
+  },
+  "editorPinLabel": {
+    "message": "Épingler dans une fenêtre flottante",
+    "description": "Editor topbar: accessible label for the Pin button."
+  },
+  "editorShortcutsTitle": {
+    "message": "Raccourcis clavier (?)",
+    "description": "Editor topbar: tooltip for the shortcut-sheet button."
+  },
+  "editorShortcutsLabel": {
+    "message": "Raccourcis clavier",
+    "description": "Editor: accessible label for the shortcut-sheet button, and the sheet’s own dialog title."
+  },
+  "editorCopyIdle": {
+    "message": "Copier",
+    "description": "Editor topbar: the Copy button’s resting label."
+  },
+  "editorCopyDone": {
+    "message": "Copié",
+    "description": "Editor topbar: the Copy button’s label right after a successful copy."
+  },
+  "editorCopyFailed": {
+    "message": "Échec",
+    "description": "Editor topbar: the Copy button’s label after a failed copy."
+  },
+  "editorCopyTitle": {
+    "message": "Copier dans le presse-papiers en PNG (⌘C)",
+    "description": "Editor topbar: tooltip for the Copy button."
+  },
+  "editorExportTitle": {
+    "message": "Exporter (⌘S)",
+    "description": "Editor topbar: tooltip for the Export button."
+  },
+  "editorExport": {
+    "message": "Exporter",
+    "description": "Editor: the Export button/dialog title, and its name in the shortcut sheet."
+  },
+  "editorExporting": {
+    "message": "Export en cours…",
+    "description": "Editor export dialog: shown while an export with no per-page progress is running."
+  },
+  "editorRetry": {
+    "message": "Réessayer",
+    "description": "Editor: button that retries loading the screenshot after an error."
+  },
+  "editorSomethingWrong": {
+    "message": "Un problème est survenu",
+    "description": "Editor: heading shown over the load-error overlay."
+  },
+  "editorLoading": {
+    "message": "Chargement",
+    "description": "Editor: accessible label for the loading spinner."
+  },
+  "editorLoadingScreenshot": {
+    "message": "Chargement de la capture…",
+    "description": "Editor: text shown next to the loading spinner."
+  },
+  "editorScreenshotCanvasSized": {
+    "message": "Zone de capture, $W$ sur $H$ pixels",
+    "description": "Editor: accessible label for the canvas once an image is loaded.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "800"
+      },
+      "h": {
+        "content": "$2",
+        "example": "600"
+      }
+    }
+  },
+  "editorScreenshotCanvasEmpty": {
+    "message": "Zone de capture, vide",
+    "description": "Editor: accessible label for the canvas with no image loaded."
+  },
+  "editorCanvasDescLoaded": {
+    "message": "La capture d’écran, $W$ sur $H$ pixels, avec $COUNT$ dessinées dessus.",
+    "description": "Editor: the canvas’s long-form accessible description, image loaded.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "800"
+      },
+      "h": {
+        "content": "$2",
+        "example": "600"
+      },
+      "count": {
+        "content": "$3",
+        "example": "3 annotations"
+      }
+    }
+  },
+  "editorCanvasDescEmpty": {
+    "message": "Aucune capture ouverte.",
+    "description": "Editor: the canvas’s long-form accessible description, nothing loaded."
+  },
+  "editorCanvasKeyboardHelp": {
+    "message": "Appuyez sur le crochet fermant pour sélectionner l’annotation suivante et sur le crochet ouvrant pour la précédente. Maintenez Shift avec l’un des crochets pour ajouter cette annotation à la sélection au lieu de la remplacer. Appuyez sur Enter pour placer l’outil choisi dans la barre d’outils. Utilisez les flèches pour déplacer la sélection d’un pixel, Shift et une flèche pour la déplacer de dix, et Alt et une flèche pour la redimensionner. Appuyez sur Alt et D pour dupliquer la sélection. Avec un recadrage ouvert, les flèches le déplacent, les crochets choisissent l’une de ses huit poignées, Alt et une flèche le redimensionnent depuis cette poignée, Enter l’applique et Escape l’annule. Avec l’outil Cut, Enter démarre une bande sur l’image, les flèches haut et bas la déplacent, Alt et une flèche la redimensionnent, Enter la retire et Escape l’annule. Appuyez sur Delete avec l’outil Cut pour remettre la coupe la plus proche.",
+    "description": "Editor: the canvas’s long-form accessible description, the fixed keyboard-model instructions appended after the load-state sentence."
+  },
+  "editorDraftRestoreText": {
+    "message": "Modifications non sauvegardées de votre dernière session ($SUMMARY$).",
+    "description": "Editor: the draft-restore pill’s text.",
+    "placeholders": {
+      "summary": {
+        "content": "$1",
+        "example": "3 annotations"
+      }
+    }
+  },
+  "editorRestore": {
+    "message": "Restaurer",
+    "description": "Editor: button that restores a saved draft."
+  },
+  "editorDiscard": {
+    "message": "Ignorer",
+    "description": "Editor: button that discards a saved draft."
+  },
+  "editorCropToSelection": {
+    "message": "Recadrer sur la sélection",
+    "description": "Editor: the crop-confirm pill’s text."
+  },
+  "editorApply": {
+    "message": "Appliquer",
+    "description": "Editor: button that applies the current crop."
+  },
+  "editorCancel": {
+    "message": "Annuler",
+    "description": "Editor: Cancel button, used in the crop-confirm pill, the export dialog and the replace-image dialog."
+  },
+  "editorNothingToEdit": {
+    "message": "Rien à modifier pour l’instant",
+    "description": "Editor: heading shown over the empty-state overlay."
+  },
+  "editorCaptureHint": {
+    "message": "Capturez une page avec OpenScreenShot : elle s’ouvre ici.",
+    "description": "Editor: empty-state body text."
+  },
+  "editorDropHint": {
+    "message": "Ou déposez une image ici. Le collage fonctionne aussi.",
+    "description": "Editor: empty-state secondary hint."
+  },
+  "editorCapturePage": {
+    "message": "Capturer une page",
+    "description": "Editor: empty-state button that opens the popup."
+  },
+  "editorOpenExtensionIcon": {
+    "message": "Cliquez sur l’icône OpenScreenShot dans la barre d’outils.",
+    "description": "Editor: empty-state fallback text shown when openPopup() fails."
+  },
+  "editorReplaceImage": {
+    "message": "Remplacer l’image actuelle",
+    "description": "Editor: accessible label for the replace-image confirm dialog."
+  },
+  "editorReplaceImageTitle": {
+    "message": "Remplacer l’image actuelle ?",
+    "description": "Editor: replace-image confirm dialog heading."
+  },
+  "editorReplaceImageBody": {
+    "message": "« $NAME$ » s’ouvre à la place de l’image actuelle. $COUNT$ et l’historique d’annulation disparaissent avec elle.",
+    "description": "Editor: replace-image confirm dialog body text.",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "photo.png"
+      },
+      "count": {
+        "content": "$2",
+        "example": "3 annotations"
+      }
+    }
+  },
+  "editorReplace": {
+    "message": "Remplacer",
+    "description": "Editor: button that confirms replacing the current image."
+  },
+  "editorTypePlaceholder": {
+    "message": "Saisissez…",
+    "description": "Editor: placeholder text for the text-annotation editing overlay."
+  },
+  "editorClose": {
+    "message": "Fermer",
+    "description": "Editor: Close button, used in the shortcut sheet and the history sheet."
+  },
+  "editorFormat": {
+    "message": "Format",
+    "description": "Editor export dialog: the format field label."
+  },
+  "editorFormatPdfLabel": {
+    "message": "PDF",
+    "description": "Editor export dialog: the PDF format card’s name."
+  },
+  "editorFormatPdfHint": {
+    "message": "Document · multipage",
+    "description": "Editor export dialog: the PDF format card’s hint."
+  },
+  "editorScale": {
+    "message": "Échelle",
+    "description": "Editor export dialog: the scale field label."
+  },
+  "editorPctExceedsLimit": {
+    "message": "$PCT$ % dépasserait la taille d’export maximale",
+    "description": "Editor export dialog: tooltip on a scale preset that would exceed the export size limit.",
+    "placeholders": {
+      "pct": {
+        "content": "$1",
+        "example": "200"
+      }
+    }
+  },
+  "editorWidth": {
+    "message": "Largeur",
+    "description": "Editor export dialog: label before the width number field."
+  },
+  "editorWidthClamped": {
+    "message": "Largeur ramenée à $CLAMPED$px (plage autorisée : $FLOOR$–$CEILING$px).",
+    "description": "Editor export dialog: notice shown when a typed width was clamped.",
+    "placeholders": {
+      "clamped": {
+        "content": "$1",
+        "example": "4000"
+      },
+      "floor": {
+        "content": "$2",
+        "example": "1"
+      },
+      "ceiling": {
+        "content": "$3",
+        "example": "4000"
+      }
+    }
+  },
+  "editorQuality": {
+    "message": "Qualité · $PCT$ %",
+    "description": "Editor export dialog: the quality slider label, with its current value.",
+    "placeholders": {
+      "pct": {
+        "content": "$1",
+        "example": "92"
+      }
+    }
+  },
+  "editorPageSize": {
+    "message": "Taille de page",
+    "description": "Editor export dialog: the PDF page-size field label."
+  },
+  "editorA4": {
+    "message": "A4",
+    "description": "Editor export dialog: the A4 PDF page size."
+  },
+  "editorLetter": {
+    "message": "Letter",
+    "description": "Editor export dialog: the Letter PDF page size."
+  },
+  "editorFull": {
+    "message": "Entière",
+    "description": "Editor export dialog: the Full (image-sized) PDF page size."
+  },
+  "editorOrientation": {
+    "message": "Orientation",
+    "description": "Editor export dialog: the PDF orientation field label."
+  },
+  "editorPortrait": {
+    "message": "Portrait",
+    "description": "Editor export dialog: portrait PDF orientation."
+  },
+  "editorLandscape": {
+    "message": "Paysage",
+    "description": "Editor export dialog: landscape PDF orientation."
+  },
+  "editorSplitPages": {
+    "message": "Répartir sur plusieurs pages",
+    "description": "Editor export dialog: checkbox label for multi-page PDF export."
+  },
+  "editorMargin": {
+    "message": "Marge",
+    "description": "Editor export dialog: label before the PDF margin number field."
+  },
+  "editorMarginClamped": {
+    "message": "Marge ramenée à $CLAMPED$mm (plage autorisée : $MIN$–$MAX$mm).",
+    "description": "Editor export dialog: notice shown when a typed PDF margin was clamped.",
+    "placeholders": {
+      "clamped": {
+        "content": "$1",
+        "example": "8"
+      },
+      "min": {
+        "content": "$2",
+        "example": "0"
+      },
+      "max": {
+        "content": "$3",
+        "example": "25"
+      }
+    }
+  },
+  "editorFullPdfHint": {
+    "message": "« Entière » crée une seule page à la taille de l’image ; orientation, multipage et marge ne s’appliquent pas.",
+    "description": "Editor export dialog: hint shown under the Full PDF page size option."
+  },
+  "editorFilename": {
+    "message": "Nom de fichier",
+    "description": "Editor export dialog: label for the filename field."
+  },
+  "editorExportError": {
+    "message": "Impossible d’exporter l’image. Essayez une échelle plus petite ou un autre format.",
+    "description": "Editor export dialog: error shown when the export itself fails."
+  },
+  "editorExportingPage": {
+    "message": "Export de la page $PAGE$ sur $TOTAL$…",
+    "description": "Editor export dialog: per-page progress text during a multi-page PDF export.",
+    "placeholders": {
+      "page": {
+        "content": "$1",
+        "example": "2"
+      },
+      "total": {
+        "content": "$2",
+        "example": "5"
+      }
+    }
+  },
+  "editorRememberSettings": {
+    "message": "Mémoriser ces paramètres",
+    "description": "Editor export dialog: checkbox label for persisting the chosen export settings."
+  },
+  "editorTools": {
+    "message": "Outils",
+    "description": "Editor shortcut sheet: the Tools column heading."
+  },
+  "editorCommands": {
+    "message": "Commandes",
+    "description": "Editor shortcut sheet: the Commands column heading."
+  },
+  "editorCmdSetColor": {
+    "message": "Définir la couleur",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdPickColor": {
+    "message": "Prélever une couleur à l’écran",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdSquare45": {
+    "message": "Contrainte carré / 45°",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdEditText": {
+    "message": "Modifier un calque de texte",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdNextPrevLayer": {
+    "message": "Calque suivant / précédent",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdAddLayer": {
+    "message": "Ajouter un calque à la sélection",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdSelectSeveral": {
+    "message": "Sélectionner plusieurs calques à la souris",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdPlaceTool": {
+    "message": "Placer l’outil actif",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdMoveSelection": {
+    "message": "Déplacer la sélection de 1px / 10px",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdResizeSelection": {
+    "message": "Redimensionner la sélection",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdDuplicateSelection": {
+    "message": "Dupliquer la sélection",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdCopyClipboard": {
+    "message": "Copier dans le presse-papiers",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdCropNextHandle": {
+    "message": "Recadrage : poignée suivante / précédente",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdCropResizeHandle": {
+    "message": "Recadrage : redimensionner depuis cette poignée",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdCutTakeOut": {
+    "message": "Outil Cut : retirer la bande tracée",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdCutPutBack": {
+    "message": "Outil Cut : remettre la coupe la plus proche",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdDeselectCancel": {
+    "message": "Désélectionner / annuler le recadrage ou la coupe",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorZoomIn": {
+    "message": "Zoom avant",
+    "description": "Editor: Zoom in command, used in the zoom menu and the shortcut sheet."
+  },
+  "editorZoomOut": {
+    "message": "Zoom arrière",
+    "description": "Editor: Zoom out command, used in the zoom menu and the shortcut sheet."
+  },
+  "editorActualSize": {
+    "message": "Taille réelle",
+    "description": "Editor: Actual size (100%) command, used in the zoom menu and the shortcut sheet."
+  },
+  "editorFitToScreen": {
+    "message": "Ajuster à l’écran",
+    "description": "Editor: Fit to screen command, used in the zoom menu and the shortcut sheet."
+  },
+  "editorCmdPan": {
+    "message": "Déplacer la vue",
+    "description": "Editor shortcut sheet: command row."
+  },
+  "editorCmdThisSheet": {
+    "message": "Cette fiche",
+    "description": "Editor shortcut sheet: command row naming the shortcut sheet itself."
+  },
+  "editorZoomTitle": {
+    "message": "Zoom",
+    "description": "Editor topbar: tooltip for the zoom menu trigger."
+  },
+  "editorAriaCaptures": {
+    "message": "Captures",
+    "description": "Editor history sheet: accessible label for the list of past captures."
+  },
+  "editorNoCapturesYet": {
+    "message": "Aucune capture pour l’instant.",
+    "description": "Editor history sheet: empty-state text."
+  },
+  "editorOpen": {
+    "message": "Ouvrir",
+    "description": "Editor history sheet: button that reopens a past capture."
+  },
+  "editorOpenAria": {
+    "message": "Ouvrir, capturée le $DATE$",
+    "description": "Editor history sheet: accessible label for a row’s Open button.",
+    "placeholders": {
+      "date": {
+        "content": "$1",
+        "example": "8/30/2026, 10:00 AM"
+      }
+    }
+  },
+  "editorDelete": {
+    "message": "Supprimer",
+    "description": "Editor history sheet: button that deletes a past capture."
+  },
+  "editorDeleteAria": {
+    "message": "Supprimer, capturée le $DATE$",
+    "description": "Editor history sheet: accessible label for a row’s Delete button.",
+    "placeholders": {
+      "date": {
+        "content": "$1",
+        "example": "8/30/2026, 10:00 AM"
+      }
+    }
+  },
+  "editorConfirmDelete": {
+    "message": "Confirmer la suppression",
+    "description": "Editor history sheet: Delete button’s label once armed by a first click."
+  },
+  "editorConfirmDeleteAria": {
+    "message": "Confirmer la suppression, capturée le $DATE$",
+    "description": "Editor history sheet: accessible label for a row’s Delete button once armed.",
+    "placeholders": {
+      "date": {
+        "content": "$1",
+        "example": "8/30/2026, 10:00 AM"
+      }
+    }
+  },
+  "editorPinUnavailable": {
+    "message": "L’épinglage nécessite une fonction du navigateur (Document Picture-in-Picture) que ce navigateur n’a pas.",
+    "description": "Editor: stage notice shown when the browser lacks the Pin feature."
+  },
+  "editorPinFailedRetry": {
+    "message": "Impossible d’ouvrir la fenêtre épinglée : cliquez à nouveau sur Pin.",
+    "description": "Editor: stage notice shown when opening the pinned window was blocked (no user activation)."
+  },
+  "editorPinFailedDetail": {
+    "message": "Impossible d’ouvrir la fenêtre épinglée ($DETAIL$).",
+    "description": "Editor: stage notice shown when opening the pinned window failed for another reason.",
+    "placeholders": {
+      "detail": {
+        "content": "$1",
+        "example": "no activation"
+      }
+    }
+  },
+  "editorPinWindowTitle": {
+    "message": "Capture épinglée (mise à jour pendant l’édition) — OpenScreenShot",
+    "description": "Editor: the pinned floating window’s document title."
+  },
+  "editorPinnedCaptureAlt": {
+    "message": "Capture épinglée",
+    "description": "Editor: alt text for the image inside the pinned floating window."
+  },
+  "editorFormatPngLabel": {
+    "message": "PNG",
+    "description": "Editor export dialog: the PNG format card’s name."
+  },
+  "editorFormatPngHint": {
+    "message": "Sans perte · transparence",
+    "description": "Editor export dialog: the PNG format card’s hint."
+  },
+  "editorFormatJpegLabel": {
+    "message": "JPEG",
+    "description": "Editor export dialog: the JPEG format card’s name."
+  },
+  "editorFormatJpegHint": {
+    "message": "Plus léger · sans transparence",
+    "description": "Editor export dialog: the JPEG format card’s hint."
+  },
+  "editorFormatWebpLabel": {
+    "message": "WebP",
+    "description": "Editor export dialog: the WebP format card’s name."
+  },
+  "editorFormatWebpHint": {
+    "message": "Moderne · léger + qualité",
+    "description": "Editor export dialog: the WebP format card’s hint."
+  },
+  "editorBgInk": {
+    "message": "Encre",
+    "description": "Editor beautify menu: the Ink background swatch."
+  },
+  "editorBgCoral": {
+    "message": "Corail",
+    "description": "Editor beautify menu: the Coral background swatch."
+  },
+  "editorBgDusk": {
+    "message": "Crépuscule",
+    "description": "Editor beautify menu: the Dusk background swatch."
+  },
+  "editorBgMint": {
+    "message": "Menthe",
+    "description": "Editor beautify menu: the Mint background swatch."
+  },
+  "editorBgSand": {
+    "message": "Sable",
+    "description": "Editor beautify menu: the Sand background swatch."
+  },
+  "editorBgSky": {
+    "message": "Ciel",
+    "description": "Editor beautify menu: the Sky background swatch."
+  },
+  "editorLookCleanLabel": {
+    "message": "Épuré",
+    "description": "Editor beautify menu: the Clean look."
+  },
+  "editorLookCleanHint": {
+    "message": "Le réglage d’origine : une carte sombre et douce.",
+    "description": "Editor beautify menu: tooltip for the Clean look."
+  },
+  "editorLookAiryLabel": {
+    "message": "Aéré",
+    "description": "Editor beautify menu: the Airy look."
+  },
+  "editorLookAiryHint": {
+    "message": "Un petit recadrage avec de l’espace pour remplir un emplacement large.",
+    "description": "Editor beautify menu: tooltip for the Airy look."
+  },
+  "editorLookSnugLabel": {
+    "message": "Serré",
+    "description": "Editor beautify menu: the Snug look."
+  },
+  "editorLookSnugHint": {
+    "message": "Une capture haute dans une colonne étroite.",
+    "description": "Editor beautify menu: tooltip for the Snug look."
+  },
+  "editorLookFlatLabel": {
+    "message": "Plat",
+    "description": "Editor beautify menu: the Flat look."
+  },
+  "editorLookFlatHint": {
+    "message": "Carré et sans ombre, pour les documents et l’impression.",
+    "description": "Editor beautify menu: tooltip for the Flat look."
+  },
+  "editorLookPosterLabel": {
+    "message": "Affiche",
+    "description": "Editor beautify menu: the Poster look."
+  },
+  "editorLookPosterHint": {
+    "message": "Un visuel phare : coins profonds, relief marqué.",
+    "description": "Editor beautify menu: tooltip for the Poster look."
+  },
+  "editorLookCutoutLabel": {
+    "message": "Détouré",
+    "description": "Editor beautify menu: the Cutout look."
+  },
+  "editorLookCutoutHint": {
+    "message": "Ombre sur fond transparent, à poser sur n’importe quelle page.",
+    "description": "Editor beautify menu: tooltip for the Cutout look."
+  },
+  "editorBeautify": {
+    "message": "Beautify",
+    "description": "Editor: the Beautify menu’s trigger button, popover label, and on/off toggle text."
+  },
+  "editorBeautifyTitle": {
+    "message": "Beautify : marges, coins, ombre, fond",
+    "description": "Editor: tooltip for the Beautify menu trigger."
+  },
+  "editorLook": {
+    "message": "Apparence",
+    "description": "Editor beautify menu: the Look field group label."
+  },
+  "editorLookModifiedSuffix": {
+    "message": "$LABEL$, modifié",
+    "description": "Editor beautify menu: accessible label for a selected look whose values have since been changed.",
+    "placeholders": {
+      "label": {
+        "content": "$1",
+        "example": "Clean"
+      }
+    }
+  },
+  "editorPadding": {
+    "message": "Marges",
+    "description": "Editor beautify menu: accessible label / field label for the padding slider."
+  },
+  "editorCorners": {
+    "message": "Coins",
+    "description": "Editor beautify menu: accessible label / field label for the corner-radius slider."
+  },
+  "editorShadow": {
+    "message": "Ombre",
+    "description": "Editor beautify menu: accessible label / field label for the shadow slider."
+  },
+  "editorBackground": {
+    "message": "Fond",
+    "description": "Editor beautify menu: the Background field group label."
+  },
+  "editorTransparent": {
+    "message": "Transparent",
+    "description": "Editor beautify menu: accessible label for the transparent-background swatch."
+  },
+  "editorSolidColorTitle": {
+    "message": "Couleur unie",
+    "description": "Editor beautify menu: tooltip for the custom solid-colour swatch."
+  },
+  "editorSolidBackgroundColorAria": {
+    "message": "Couleur de fond unie",
+    "description": "Editor beautify menu: accessible label for the custom solid-colour swatch."
+  },
+  "editorColorRed": {
+    "message": "Rouge",
+    "description": "Editor style bar: the Red swatch name, read by assistive tech."
+  },
+  "editorColorOrange": {
+    "message": "Orange",
+    "description": "Editor style bar: the Orange swatch name, read by assistive tech."
+  },
+  "editorColorYellow": {
+    "message": "Jaune",
+    "description": "Editor style bar: the Yellow swatch name, read by assistive tech."
+  },
+  "editorColorGreen": {
+    "message": "Vert",
+    "description": "Editor style bar: the Green swatch name, read by assistive tech."
+  },
+  "editorColorBlue": {
+    "message": "Bleu",
+    "description": "Editor style bar: the Blue swatch name, read by assistive tech."
+  },
+  "editorColorPurple": {
+    "message": "Violet",
+    "description": "Editor style bar: the Purple swatch name, read by assistive tech."
+  },
+  "editorColorWhite": {
+    "message": "Blanc",
+    "description": "Editor style bar: the White swatch name, read by assistive tech."
+  },
+  "editorColorBlack": {
+    "message": "Noir",
+    "description": "Editor style bar: the Black swatch name, read by assistive tech."
+  },
+  "editorCustomColorHex": {
+    "message": "Couleur personnalisée $HEX$",
+    "description": "Editor style bar: the swatch name read by assistive tech for a recent colour with no preset name.",
+    "placeholders": {
+      "hex": {
+        "content": "$1",
+        "example": "#123456"
+      }
+    }
+  },
+  "editorImportNotAnImage": {
+    "message": "Ce fichier n’est pas une image que l’éditeur peut ouvrir.",
+    "description": "Editor: stage notice shown when a dropped/pasted file is not a decodable image."
+  },
+  "editorImportTooLarge": {
+    "message": "Cette image est trop grande pour être modifiée ($W$ × $H$px).",
+    "description": "Editor: stage notice shown when an imported image exceeds the canvas size limits.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "9000"
+      },
+      "h": {
+        "content": "$2",
+        "example": "9000"
+      }
+    }
+  },
+  "editorSourceVisible": {
+    "message": "Visible",
+    "description": "Editor: the brand-mode chip / history row label for a visible-area capture."
+  },
+  "editorSourceRegion": {
+    "message": "Zone",
+    "description": "Editor: the brand-mode chip / history row label for a region capture."
+  },
+  "editorSourceImported": {
+    "message": "Importée",
+    "description": "Editor: the brand-mode chip / history row label for an imported image."
+  },
+  "editorLoadFailedDecode": {
+    "message": "Impossible de charger la capture.",
+    "description": "Editor: error overlay text when the saved screenshot fails to decode."
+  },
+  "editorLoadFailedGeneric": {
+    "message": "Impossible de charger vos paramètres ou la capture enregistrée.",
+    "description": "Editor: error overlay text when loading the screenshot fails for any other reason."
+  },
+  "editorDraftRestoreFailed": {
+    "message": "Vos modifications enregistrées n’ont pas pu être restaurées.",
+    "description": "Editor: stage notice shown when restoring a saved draft fails."
+  },
+  "editorImportReadFailed": {
+    "message": "Impossible de lire cette image.",
+    "description": "Editor: stage notice shown when a dropped/pasted file cannot be read."
+  },
+  "editorHistoryCaptureGone": {
+    "message": "Cette capture n’existe plus.",
+    "description": "Editor: stage notice shown when a capture history entry no longer exists in storage."
+  },
+  "editorHistoryCaptureLoadFailed": {
+    "message": "Impossible de charger cette capture.",
+    "description": "Editor: stage notice shown when a capture history entry fails to decode."
+  },
+  "editorExportDialogAria": {
+    "message": "Exporter la capture",
+    "description": "Editor: accessible label for the export dialog."
+  },
+  "editorKeysStyleBar": {
+    "message": "Barre de style",
+    "description": "Editor shortcut sheet: the \"keys\" column for a command with no key of its own, pointing at where to find it instead."
+  },
+  "popupTrustLine": {
+    "message": "Sur votre appareil · Open source · Aucun suivi",
+    "description": "Popup: the one-line local-only assurance shown beside a permission ask."
+  },
+  "settingsSupport": {
+    "message": "Soutenir",
+    "description": "Popup settings: label for the row holding the Ko-fi and cool-stuff links."
+  }
+}

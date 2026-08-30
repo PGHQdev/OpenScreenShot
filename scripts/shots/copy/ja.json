@@ -1,0 +1,12 @@
+{
+  "marqueeTitle": "ページ全体をスクリーンショット。",
+  "marqueeTitleMuted": "データは端末の外に出ません。",
+  "marqueeSub": "ページ全体をキャプチャして書き込み、PNG、JPEG、WebP、PDF で書き出し。静止画で足りないときはタブを録画。",
+  "chipFree": "無料",
+  "chipOpenSource": "オープンソース",
+  "chipNoAccount": "アカウント不要",
+  "chipNoUpload": "アップロードなし",
+  "promoTitle": "ページ全体をスクリーンショット。",
+  "promoTitleMuted": "端末の中だけで完結。",
+  "promoSub": "無料でオープンソース。キャプチャ、注釈、書き出し、録画をアップロードなしで。"
+}

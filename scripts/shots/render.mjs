@@ -28,7 +28,7 @@
 // Run with: npm run build && npm run shots
 import sharp from 'sharp';
 import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -51,7 +51,15 @@ const CAPTURES_DIR = join(SHOTS_DIR, 'captures');
 const OUT_DIR = join(ROOT, 'site/src/assets');
 // The Chrome Web Store accepts screenshots at exactly 1280x800 or 640x400, as
 // JPEG or 24-bit PNG with no alpha.
-const STORE_DIR = join(ROOT, 'media/store');
+// OSS_LOCALE picks the catalog every surface is driven with and, for any
+// locale but `en`, the store directory the six store images land in. The
+// site is English only, so a non-en run skips the site posters and the
+// README hero.
+const LOCALE = process.env.OSS_LOCALE || 'en';
+const STORE_DIR = join(ROOT, 'media/store', LOCALE === 'en' ? '' : LOCALE);
+// Poster marketing copy, one file per locale, filled into the `{{key}}`
+// slots of marquee.html and promo-tile.html before they are screenshotted.
+const COPY_DIR = join(SHOTS_DIR, 'copy');
 const STORE_SIZE = { w: 1280, h: 800 };
 // Every capture is taken at 2x so the posters, which render at 2x themselves,
 // and the store shots, which downscale from it, both get crisp pixels.
@@ -65,6 +73,36 @@ const SEED_SEGMENT_ID = 'shots-segment-0001';
 
 /** `path`, relative to the repo root, for a shorter log line. */
 const rel = (path) => relative(ROOT, path);
+
+/**
+ * The editor's crop announcement (`editorCropPhrase`, "Crop $W$ by $H$
+ * pixels at $X$, $Y$." in English) in the catalog the run is driven with:
+ * `fill` writes it out for given numbers, `read` parses the numbers back
+ * out of a live-region string, or returns null when the string is not it.
+ */
+function cropPhrase(messages) {
+  const { message } = messages.editorCropPhrase;
+  const parts = message.split(/\$(\w+)\$/);
+  const names = [];
+  let source = '^';
+  for (let i = 0; i < parts.length; i += 1) {
+    if (i % 2 === 0) source += parts[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    else {
+      names.push(parts[i].toLowerCase());
+      source += '(\\d+)';
+    }
+  }
+  const regex = new RegExp(`${source}$`);
+  return {
+    fill: (values) =>
+      message.replace(/\$(\w+)\$/g, (_, name) => String(values[name.toLowerCase()])),
+    read: (text) => {
+      const match = text.match(regex);
+      if (!match) return null;
+      return Object.fromEntries(names.map((name, i) => [name, Number(match[i + 1])]));
+    },
+  };
+}
 
 /* -------------------------------------------------------------------------
  * Real UI captures. Each `install*ChromeStub` below follows the pattern in
@@ -464,20 +502,21 @@ async function renderRealCaptures(browser, base, messages) {
 
     await page.click('.beautify-menu > .btn-secondary');
     await page.waitForSelector('.beautify-popover');
-    const lookFound = await page.evaluate(() => {
+    const posterLabel = messages.editorLookPosterLabel.message;
+    const lookFound = await page.evaluate((label) => {
       const btn = [...document.querySelectorAll('.look-btn')].find(
-        (b) => b.textContent.trim() === 'Poster',
+        (b) => b.textContent.trim() === label,
       );
       btn?.click();
       return !!btn;
-    });
+    }, posterLabel);
     if (!lookFound)
       throw new Error('editor capture: no "Poster" .look-btn in the beautify popover');
     await settle(300);
     const pressed = await page.evaluate(
       () => document.querySelector('.look-btn[aria-pressed="true"]')?.textContent.trim() ?? null,
     );
-    if (pressed !== 'Poster') {
+    if (pressed !== posterLabel) {
       throw new Error(`editor capture: the Poster look did not take (pressed look: ${pressed})`);
     }
     await page.keyboard.press('Escape');
@@ -488,13 +527,13 @@ async function renderRealCaptures(browser, base, messages) {
     // ---- the same editor, with the export dialog open ----
     // Taken from the same page, so the annotations and the Poster look are
     // behind the dialog: shot-4 is shot-3 one click later.
-    const exportOpened = await page.evaluate(() => {
+    const exportOpened = await page.evaluate((label) => {
       const btn = [...document.querySelectorAll('header button')].find(
-        (b) => b.textContent.trim() === 'Export',
+        (b) => b.textContent.trim() === label,
       );
       btn?.click();
       return !!btn;
-    });
+    }, messages.editorExport.message);
     if (!exportOpened) throw new Error('editor-export capture: no "Export" button in the header');
     await page.waitForSelector('.modal[role="dialog"]');
     // The dialog fades in over --dur-mid; wait it out so the capture is not
@@ -524,8 +563,9 @@ async function renderRealCaptures(browser, base, messages) {
     await settle(80);
     await page.keyboard.press('Enter');
     await settle(150);
+    const crop = cropPhrase(messages);
     const opened = await say(page);
-    if (opened !== `Crop ${capture.width} by ${capture.height} pixels at 0, 0.`) {
+    if (opened !== crop.fill({ w: capture.width, h: capture.height, x: 0, y: 0 })) {
       throw new Error(`editor-crop capture: Enter did not open a whole-picture crop ("${opened}")`);
     }
 
@@ -574,9 +614,13 @@ async function renderRealCaptures(browser, base, messages) {
     await page.mouse.move(corner.x + 96, corner.y + 72, { steps: 8 });
     await page.mouse.up();
     await settle(200);
-    const after = (await say(page)).match(/^Crop (\d+) by (\d+) pixels at (\d+), (\d+)\.$/);
-    const [w, h, x, y] = after ? after.slice(1).map(Number) : [];
-    const inset = after && x > 0 && y > 0 && x + w === capture.width && y + h === capture.height;
+    const after = crop.read(await say(page));
+    const inset =
+      after &&
+      after.x > 0 &&
+      after.y > 0 &&
+      after.x + after.w === capture.width &&
+      after.y + after.h === capture.height;
     if (!inset) {
       throw new Error(
         `editor-crop capture: the NW handle drag did not inset the crop ("${await say(page)}")`,
@@ -602,12 +646,12 @@ async function renderRealCaptures(browser, base, messages) {
     await page.goto(`${base}/src/popup/index.html`, { waitUntil: 'networkidle0' });
     await page.waitForSelector('.app');
     await settle(300);
-    const reopen = await page.evaluate(() => {
+    const reopen = await page.evaluate((label) => {
       const btn = [...document.querySelectorAll('button')].find(
-        (b) => b.textContent.trim() === 'Reopen last',
+        (b) => b.textContent.trim() === label,
       );
       return btn ? { disabled: btn.disabled } : null;
-    });
+    }, messages.reopenLast.message);
     if (!reopen || reopen.disabled) {
       throw new Error('popup capture: the seeded last capture did not enable "Reopen last"');
     }
@@ -710,8 +754,31 @@ const SHOTS = [
 const README_HERO = join(ROOT, 'media/hero.jpg');
 const README_HERO_WIDTH = 1600;
 
-async function screenshotPoster(name, w, h, work) {
+/**
+ * The poster template with its `{{key}}` slots filled from copy/<locale>.json,
+ * written beside the template as `<name>.<locale>.html` so poster.css,
+ * brand-mark.svg, captures/ and sample-page.html keep resolving. A template
+ * with no slots is used as it is. The caller removes the filled file.
+ */
+async function localizePoster(name) {
   const src = resolve(SHOTS_DIR, `${name}.html`);
+  const html = await readFile(src, 'utf8');
+  if (!html.includes('{{')) return { src, cleanup: async () => {} };
+  const copy = JSON.parse(await readFile(join(COPY_DIR, `${LOCALE}.json`), 'utf8'));
+  const escape = (text) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const filled = html.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+    if (typeof copy[key] !== 'string') {
+      throw new Error(`${name}.html: copy/${LOCALE}.json has no "${key}"`);
+    }
+    return escape(copy[key]);
+  });
+  const out = resolve(SHOTS_DIR, `${name}.${LOCALE}.html`);
+  await writeFile(out, filled);
+  return { src: out, cleanup: () => rm(out, { force: true }) };
+}
+
+async function screenshotPoster(name, w, h, work) {
+  const { src, cleanup } = await localizePoster(name);
   const png = join(work, `${name}.png`);
   await execFileP(
     CHROME,
@@ -728,7 +795,7 @@ async function screenshotPoster(name, w, h, work) {
       `file://${src}`,
     ],
     { timeout: 30_000 },
-  );
+  ).finally(cleanup);
   return png;
 }
 
@@ -745,7 +812,7 @@ async function screenshotPoster(name, w, h, work) {
  * promo-tile.jpg and cws-3.jpg.
  */
 async function assertPosterImagesLoad(browser, name) {
-  const src = resolve(SHOTS_DIR, `${name}.html`);
+  const { src, cleanup } = await localizePoster(name);
   const page = await browser.newPage();
   try {
     await page.goto(`file://${src}`, { waitUntil: 'networkidle0' });
@@ -759,13 +826,14 @@ async function assertPosterImagesLoad(browser, name) {
     }
   } finally {
     await page.close();
+    await cleanup();
   }
 }
 
 async function renderPosters(browser) {
   const work = await mkdtemp(join(tmpdir(), 'oss-shots-'));
   try {
-    for (const { name, w, h } of SHOTS) {
+    for (const { name, w, h } of LOCALE === 'en' ? SHOTS : []) {
       await assertPosterImagesLoad(browser, name);
       const png = await screenshotPoster(name, w, h, work);
       if (PAGE_SHOTS.has(name)) {
@@ -786,7 +854,7 @@ async function renderPosters(browser) {
     // og:image URLs, so this one file stays outside the AVIF+WebP policy
     // that governs every on-page <img>: it never touches the Lighthouse
     // transfer-weight budget because it is never rendered inside the page.
-    {
+    if (LOCALE === 'en') {
       const w = 1200;
       const h = 630;
       await assertPosterImagesLoad(browser, 'og-card');
@@ -836,7 +904,9 @@ async function main() {
   await mkdir(OUT_DIR, { recursive: true });
   await mkdir(STORE_DIR, { recursive: true });
 
-  const messages = JSON.parse(await readFile(join(DIST, '_locales/en/messages.json'), 'utf8'));
+  const messages = JSON.parse(
+    await readFile(join(DIST, '_locales', LOCALE, 'messages.json'), 'utf8'),
+  );
   const puppeteer = await loadPuppeteer(ROOT);
   const work = await mkdtemp(join(tmpdir(), 'oss-shots-captures-'));
   const server = await serveDist(DIST);
@@ -861,7 +931,7 @@ async function main() {
     await rm(work, { recursive: true, force: true });
   }
 
-  console.log('Shots rendered.');
+  console.log(`Shots rendered (locale ${LOCALE}).`);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
