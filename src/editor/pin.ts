@@ -11,6 +11,7 @@
  * so it is declared here.
  */
 
+import { theme as designTheme } from '../shared/design-tokens';
 import { t } from './i18n';
 
 export interface DocumentPictureInPictureOptions {
@@ -80,16 +81,14 @@ export type PinTheme = 'light' | 'dark';
 
 /**
  * Inline stylesheet for the pinned window: fits the image with no
- * scrollbars, and matches the editor's current theme. Literal colours, not
- * var(--stage-bg)/var(--text-1): the pinned window is a separate document
- * with its own CSSOM, so it cannot see tokens.css's custom properties. Kept
- * in sync with tokens.css's light/dark --stage-bg and --text-1 by hand —
- * the same duplication shared/theme.ts documents for THEME_MIRROR_KEY, for
- * the same reason (the reader here is outside the module graph tokens.css's
- * generator watches).
+ * scrollbars, and matches the editor's current theme. A literal colour, not
+ * var(--stage-bg): the pinned window is a separate document with its own
+ * CSSOM, so it cannot see tokens.css's custom properties. It comes from the
+ * generated token module rather than a hand-copied hex, so a --stage-bg
+ * change in tokens.css reaches the pinned window too.
  */
 export function pinWindowStyle(theme: PinTheme): string {
-  const bg = theme === 'dark' ? '#161618' : '#e4e4e9';
+  const bg = designTheme[theme].stageBg;
   return `html,body{margin:0;height:100%;background:${bg};overflow:hidden}
 body{display:flex;align-items:center;justify-content:center}
 img{max-width:100%;max-height:100%;object-fit:contain}`;

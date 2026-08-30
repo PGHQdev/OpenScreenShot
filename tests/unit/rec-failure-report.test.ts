@@ -10,6 +10,7 @@ import {
 } from '../../src/shared/recording-db';
 import { DEFAULT_RECORDING_SETTINGS } from '../../src/shared/recording-types';
 import { REC_FAILURE_KEY, REC_FAILURE_MESSAGE, isRecFailure } from '../../src/shared/rec-failure';
+import { theme as designTheme } from '../../src/shared/design-tokens';
 
 /**
  * The worker half of "surface every failure", driven through the listener
@@ -297,6 +298,17 @@ describe('the badge, which is the only surface with nothing open', () => {
     await fakeChrome.storage.session.remove(REC_FAILURE_KEY);
     await settle();
     expect(badgeText.at(-1)).toBe('');
+  });
+
+  // The badge is browser chrome and pins the light values on purpose, but it
+  // reads them from the generated token module — a copied hex here would
+  // drift the moment tokens.css moves.
+  it('paints the failure badge in the accent token', async () => {
+    await loadWorker();
+    void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS });
+    await settle();
+    const colors = fakeChrome.action.setBadgeBackgroundColor.mock.calls as [{ color: string }][];
+    expect(colors.at(-1)?.[0].color).toBe(designTheme.light.accent);
   });
 });
 

@@ -40,6 +40,7 @@ import {
   type RecFailure,
   type RecFailureCode,
 } from '../shared/rec-failure';
+import { theme as designTheme } from '../shared/design-tokens';
 import { isProtectedUrl } from '../shared/utils';
 
 const REC_STATE_KEY = 'openscreenshot:rec-state';
@@ -271,9 +272,21 @@ function handleFrameReady(): void {
 
 // --- Badge -------------------------------------------------------------------
 
+/*
+ * Badge colours come from the generated token module rather than a copied
+ * hex, so --accent and --warning cannot drift here. The light values are the
+ * deliberate choice for both themes: the badge is browser chrome, drawn on
+ * the toolbar, and it never sees the extension's own theme. The white text is
+ * a literal for the same reason — it is what reads on both of these grounds,
+ * and no single token spells that.
+ */
+const BADGE_TEXT_COLOR = '#ffffff';
+
 async function showRecBadge(lost: boolean): Promise<void> {
-  await chrome.action.setBadgeBackgroundColor({ color: lost ? '#ff9500' : '#e8503a' });
-  await chrome.action.setBadgeTextColor({ color: '#ffffff' });
+  await chrome.action.setBadgeBackgroundColor({
+    color: lost ? designTheme.light.warning : designTheme.light.accent,
+  });
+  await chrome.action.setBadgeTextColor({ color: BADGE_TEXT_COLOR });
   await chrome.action.setBadgeText({ text: 'REC' });
 }
 
@@ -288,8 +301,8 @@ async function clearRecBadge(): Promise<void> {
  * when a failure lands with no popup, recorder page or control bar open.
  */
 async function showFailBadge(): Promise<void> {
-  await chrome.action.setBadgeBackgroundColor({ color: '#e8503a' });
-  await chrome.action.setBadgeTextColor({ color: '#ffffff' });
+  await chrome.action.setBadgeBackgroundColor({ color: designTheme.light.accent });
+  await chrome.action.setBadgeTextColor({ color: BADGE_TEXT_COLOR });
   await chrome.action.setBadgeText({ text: '!' });
 }
 

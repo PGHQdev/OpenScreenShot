@@ -9,6 +9,7 @@ import {
   PIN_UNAVAILABLE_REASON,
   type PinWindowScope,
 } from '../../src/editor/pin';
+import { theme as designTheme } from '../../src/shared/design-tokens';
 
 /** A stand-in for window.documentPictureInPicture that resolves with a fixed window. */
 function scopeThatOpens(win: unknown): PinWindowScope {
@@ -90,11 +91,18 @@ describe('pinWindowStyle', () => {
     const css = pinWindowStyle('light');
     expect(css).toContain('overflow:hidden');
     expect(css).toContain('object-fit:contain');
-    expect(css).toContain('#e4e4e9');
+    expect(css).toContain(designTheme.light.stageBg);
   });
 
   it('uses the dark background in dark theme', () => {
-    expect(pinWindowStyle('dark')).toContain('#161618');
+    expect(pinWindowStyle('dark')).toContain(designTheme.dark.stageBg);
+  });
+
+  // Reading the token rather than a copied hex is the point of the change;
+  // this keeps the two themes from resolving to the same one.
+  it('takes each background from its own theme', () => {
+    expect(pinWindowStyle('light')).not.toContain(designTheme.dark.stageBg);
+    expect(pinWindowStyle('dark')).not.toContain(designTheme.light.stageBg);
   });
 });
 
