@@ -14,6 +14,17 @@
 // `dist/`. That coupling is accepted; it is what keeps these images from
 // silently drifting out of date with the real UI the way the old replicas did.
 //
+// The real captures are not byte-reproducible run to run. Every id and
+// timestamp the seeds carry is fixed (SEED_TIME, SEED_SESSION_ID below), and
+// the recorder's scene is painted by frame count, but the recorder session's
+// video is a live MediaRecorder encode of a canvas stream, and an encoder
+// paced by wall-clock never emits the same bytes twice. recorder.png (and so
+// cws-4.jpg) differs on every run. The editor and popup captures, and every
+// poster downstream of them, reproduced byte for byte across consecutive runs
+// on one machine; a Chrome upgrade or a font change moves them. Expect `git
+// status` to show cws-4.jpg touched after a run whose inputs did not change;
+// a run's output is checked by looking at it, not by diffing it.
+//
 // Run with: npm run build && npm run shots
 import sharp from 'sharp';
 import { execFile } from 'node:child_process';
@@ -42,6 +53,15 @@ const OUT_DIR = join(ROOT, 'site/src/assets');
 // JPEG or 24-bit PNG with no alpha.
 const STORE_DIR = join(ROOT, 'media/store');
 const STORE_SIZE = { w: 1280, h: 800 };
+// Every capture is taken at 2x so the posters, which render at 2x themselves,
+// and the store shots, which downscale from it, both get crisp pixels.
+const CAPTURE_DPR = 2;
+// Fixed seed values: the editor's capture timestamp and the recorder session's
+// ids and clock. Fixed so a run's inputs never differ from the last run's —
+// see the module doc for what still does.
+const SEED_TIME = Date.UTC(2026, 7, 30, 9, 0, 0);
+const SEED_SESSION_ID = 'shots-session-0001';
+const SEED_SEGMENT_ID = 'shots-segment-0001';
 
 /** `path`, relative to the repo root, for a shorter log line. */
 const rel = (path) => relative(ROOT, path);
@@ -56,16 +76,21 @@ const rel = (path) => relative(ROOT, path);
  * Decides whether `dist/` is fit to render from, given nothing but file
  * lists and mtimes — no I/O, so a test can hand it fixtures directly.
  * `sourceFiles` is every file under src/, public/ and manifest.json;
- * `distNewestMtimeMs` is the newest mtime anywhere under dist/ (or -Infinity
- * if dist/ has no files at all). Missing takes priority over stale: an absent
- * manifest means there is nothing to compare mtimes against in the first
- * place.
+ * `distOldestMtimeMs` is the *oldest* mtime anywhere under dist/ (Infinity if
+ * dist/ has no files at all). The oldest, not the newest: a build writes
+ * every file in dist/ (vite empties it first), so a source file newer than
+ * the oldest output is newer than the build. A build that wrote some outputs
+ * and then failed leaves the untouched rest carrying the previous build's
+ * mtime, and it is that older mtime the source has to be compared against —
+ * against the newest output such a half-written dist/ would read as fresh.
+ * Missing takes priority over stale: an absent manifest means there is
+ * nothing to compare mtimes against in the first place.
  */
-export function checkDistFreshness({ manifestExists, sourceFiles, distNewestMtimeMs }) {
+export function checkDistFreshness({ manifestExists, sourceFiles, distOldestMtimeMs }) {
   if (!manifestExists) return { fresh: false, reason: 'missing' };
   let newest = null;
   for (const file of sourceFiles) {
-    if (file.mtimeMs > distNewestMtimeMs && (!newest || file.mtimeMs > newest.mtimeMs)) {
+    if (file.mtimeMs > distOldestMtimeMs && (!newest || file.mtimeMs > newest.mtimeMs)) {
       newest = file;
     }
   }
@@ -97,10 +122,10 @@ async function assertDistFresh() {
     () => false,
   );
   const distFiles = await listFiles(DIST);
-  let distNewestMtimeMs = -Infinity;
+  let distOldestMtimeMs = Infinity;
   for (const file of distFiles) {
     const info = await stat(file);
-    if (info.mtimeMs > distNewestMtimeMs) distNewestMtimeMs = info.mtimeMs;
+    if (info.mtimeMs < distOldestMtimeMs) distOldestMtimeMs = info.mtimeMs;
   }
 
   const sourcePaths = [
@@ -114,7 +139,7 @@ async function assertDistFresh() {
     if (info) sourceFiles.push({ path, mtimeMs: info.mtimeMs });
   }
 
-  const result = checkDistFreshness({ manifestExists, sourceFiles, distNewestMtimeMs });
+  const result = checkDistFreshness({ manifestExists, sourceFiles, distOldestMtimeMs });
   if (result.fresh) return;
   if (result.reason === 'missing') {
     console.error('dist/manifest.json is missing. Run `npm run build` first.');
@@ -312,8 +337,16 @@ function installRecorderChromeStub(messages) {
  * imported here because it hardcodes a one-cluster fixture this pipeline
  * does not want (see the module doc for why the stub functions above are
  * likewise pattern-followed, not shared).
+ *
+ * The scene is painted by frame count, not by the clock: FRAMES paints at
+ * FPS, each advancing the scene one step, so the last frame always shows the
+ * same picture. The encode of that stream is still wall-clock paced inside
+ * MediaRecorder (module doc), which is why the WebM itself is not reproducible.
  */
-async function seedRecorderSession() {
+async function seedRecorderSession({ sessionId, segmentId, seedTime }) {
+  const FPS = 30;
+  const FRAMES = 156;
+  const durationMs = Math.round((FRAMES * 1000) / FPS);
   const canvas = document.createElement('canvas');
   canvas.width = 960;
   canvas.height = 600;
@@ -331,21 +364,23 @@ async function seedRecorderSession() {
   const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
     ? 'video/webm;codecs=vp9'
     : 'video/webm';
-  const recorder = new MediaRecorder(canvas.captureStream(30), { mimeType: mime });
+  const recorder = new MediaRecorder(canvas.captureStream(FPS), { mimeType: mime });
   const blobs = [];
   recorder.ondataavailable = (e) => {
     if (e.data.size > 0) blobs.push(e.data);
   };
   paint();
   recorder.start(1000);
-  const painter = setInterval(paint, 1000 / 30);
-  const durationMs = 5200;
   await new Promise((done) => {
-    setTimeout(() => {
+    const painter = setInterval(() => {
+      if (frame < FRAMES) {
+        paint();
+        return;
+      }
       clearInterval(painter);
       recorder.onstop = done;
       recorder.stop();
-    }, durationMs);
+    }, 1000 / FPS);
   });
 
   const db = await new Promise((done, fail) => {
@@ -353,13 +388,11 @@ async function seedRecorderSession() {
     req.onsuccess = () => done(req.result);
     req.onerror = () => fail(req.error);
   });
-  const sessionId = crypto.randomUUID();
-  const segmentId = crypto.randomUUID();
   await new Promise((done, fail) => {
     const tx = db.transaction(['sessions', 'segments', 'chunks', 'events'], 'readwrite');
     tx.objectStore('sessions').put({
       id: sessionId,
-      createdAt: Date.now(),
+      createdAt: seedTime,
       status: 'complete',
       settings: { mic: false, tabAudio: true, webcam: false, ripple: true },
       segmentIds: [segmentId],
@@ -368,7 +401,7 @@ async function seedRecorderSession() {
       id: segmentId,
       sessionId,
       index: 0,
-      startedAt: Date.now(),
+      startedAt: seedTime,
       duration: durationMs,
       viewport: { w: 960, h: 600, dpr: 1 },
       hasWebcam: false,
@@ -398,6 +431,8 @@ async function seedRecorderSession() {
 
 /** A settle delay after an interaction whose effect is not itself awaited. */
 const settle = (ms) => new Promise((r) => setTimeout(r, ms));
+/** `{ w, h }` as puppeteer's `{ width, height }`. */
+const viewport = ({ w, h }) => ({ width: w, height: h });
 
 /**
  * Screenshots the four real surfaces this pipeline needs, into CAPTURES_DIR:
@@ -409,7 +444,8 @@ const settle = (ms) => new Promise((r) => setTimeout(r, ms));
  *  - recorder.png: the recorder editor open on a session with two auto-zoom
  *    blocks in its timeline.
  * All four also double as source material for the poster HTML rendered
- * afterwards (hero, shot-1..5, marquee, og-card embed editor.png/popup.png).
+ * afterwards (hero, shot-3, marquee, og-card and store-popup embed
+ * editor.png/popup.png), and all are taken at CAPTURE_DPR.
  */
 async function renderRealCaptures(browser, base, messages) {
   await rm(CAPTURES_DIR, { recursive: true, force: true });
@@ -445,17 +481,26 @@ async function renderRealCaptures(browser, base, messages) {
     mode: 'full-page',
     title: 'The Coastal Almanac',
     url: 'https://thecoastalalmanac.com/',
-    capturedAt: Date.now(),
+    capturedAt: SEED_TIME,
   };
   const editorSeed = {
     'openscreenshot:last-capture': capture,
     'openscreenshot:settings': { theme: 'light' },
   };
 
+  // Every interaction below checks that it did what it was for, and throws
+  // when it did not. A seeded click whose target has moved must not degrade
+  // into a shot with the feature quietly missing and a ✓ in the log — that
+  // silent drift is what this pipeline replaced the replicas to be rid of.
+  const say = (page) =>
+    page.$eval('[aria-live="polite"][role="status"]', (el) => el.textContent.trim());
+  const annotationCount = (page) =>
+    page.$eval('.toolbar-count span', (el) => Number(el.textContent)).catch(() => 0);
+
   // ---- editor: rect + arrow annotations, Poster beautify look ----
   {
     const page = await browser.newPage();
-    await page.setViewport({ width: STORE_SIZE.w, height: STORE_SIZE.h });
+    await page.setViewport({ ...viewport(STORE_SIZE), deviceScaleFactor: CAPTURE_DPR });
     await page.evaluateOnNewDocument(installEditorChromeStub, messages, editorSeed);
     await page.goto(`${base}/src/editor/index.html`, { waitUntil: 'networkidle0' });
     await page.waitForSelector('.stage-canvas');
@@ -476,15 +521,31 @@ async function renderRealCaptures(browser, base, messages) {
     await page.mouse.move(box.x + box.width * 0.82, box.y + box.height * 0.45, { steps: 10 });
     await page.mouse.up();
     await settle(120);
+    const drawn = await annotationCount(page);
+    if (drawn !== 2) {
+      throw new Error(
+        `editor capture: expected 2 annotations after the rect and arrow drags, found ${drawn}`,
+      );
+    }
 
     await page.click('.beautify-menu > .btn-secondary');
     await page.waitForSelector('.beautify-popover');
-    await page.evaluate(() => {
-      [...document.querySelectorAll('.look-btn')]
-        .find((b) => b.textContent.trim() === 'Poster')
-        ?.click();
+    const lookFound = await page.evaluate(() => {
+      const btn = [...document.querySelectorAll('.look-btn')].find(
+        (b) => b.textContent.trim() === 'Poster',
+      );
+      btn?.click();
+      return !!btn;
     });
+    if (!lookFound)
+      throw new Error('editor capture: no "Poster" .look-btn in the beautify popover');
     await settle(300);
+    const pressed = await page.evaluate(
+      () => document.querySelector('.look-btn[aria-pressed="true"]')?.textContent.trim() ?? null,
+    );
+    if (pressed !== 'Poster') {
+      throw new Error(`editor capture: the Poster look did not take (pressed look: ${pressed})`);
+    }
     await page.keyboard.press('Escape');
     await settle(200);
 
@@ -495,7 +556,7 @@ async function renderRealCaptures(browser, base, messages) {
   // ---- editor: an open crop draft, inset from the full picture ----
   {
     const page = await browser.newPage();
-    await page.setViewport({ width: STORE_SIZE.w, height: STORE_SIZE.h });
+    await page.setViewport({ ...viewport(STORE_SIZE), deviceScaleFactor: CAPTURE_DPR });
     await page.evaluateOnNewDocument(installEditorChromeStub, messages, editorSeed);
     await page.goto(`${base}/src/editor/index.html`, { waitUntil: 'networkidle0' });
     await page.waitForSelector('.stage-canvas');
@@ -506,13 +567,69 @@ async function renderRealCaptures(browser, base, messages) {
     await settle(80);
     await page.keyboard.press('Enter');
     await settle(150);
-    const box = await page.$eval('.stage-canvas', (el) => el.getBoundingClientRect().toJSON());
-    await page.mouse.move(box.x + 20, box.y + 20);
+    const opened = await say(page);
+    if (opened !== `Crop ${capture.width} by ${capture.height} pixels at 0, 0.`) {
+      throw new Error(`editor-crop capture: Enter did not open a whole-picture crop ("${opened}")`);
+    }
+
+    // The NW handle sits on the picture's own corner, and the picture is
+    // centred in the stage with a margin on every side — so the corner is
+    // read off the canvas rather than assumed: the first pixel along a row
+    // and a column well inside the picture that differs from the stage's
+    // background. Row and column are kept off the picture's midlines, where
+    // the N/S and E/W handles would be the first thing hit instead.
+    const corner = await page.$eval('.stage-canvas', (el) => {
+      const ctx = el.getContext('2d');
+      const row = Math.round(el.height * 0.3);
+      const col = Math.round(el.width * 0.4);
+      const differs = (data, i, bg) =>
+        data[i] !== bg[0] || data[i + 1] !== bg[1] || data[i + 2] !== bg[2];
+      const rowData = ctx.getImageData(0, row, el.width, 1).data;
+      const colData = ctx.getImageData(col, 0, 1, el.height).data;
+      const bg = [rowData[0], rowData[1], rowData[2]];
+      let left = -1;
+      for (let x = 0; x < el.width; x += 1) {
+        if (differs(rowData, x * 4, bg)) {
+          left = x;
+          break;
+        }
+      }
+      let top = -1;
+      for (let y = 0; y < el.height; y += 1) {
+        if (differs(colData, y * 4, bg)) {
+          top = y;
+          break;
+        }
+      }
+      const r = el.getBoundingClientRect();
+      return {
+        x: r.x + (left * r.width) / el.width,
+        y: r.y + (top * r.height) / el.height,
+        left,
+        top,
+      };
+    });
+    if (corner.left < 0 || corner.top < 0) {
+      throw new Error('editor-crop capture: could not find the picture on the stage canvas');
+    }
+    await page.mouse.move(corner.x + 2, corner.y + 2);
     await page.mouse.down();
-    await page.mouse.move(box.x + box.width * 0.18, box.y + box.height * 0.18, { steps: 8 });
+    await page.mouse.move(corner.x + 96, corner.y + 72, { steps: 8 });
     await page.mouse.up();
     await settle(200);
+    const after = (await say(page)).match(/^Crop (\d+) by (\d+) pixels at (\d+), (\d+)\.$/);
+    const [w, h, x, y] = after ? after.slice(1).map(Number) : [];
+    const inset = after && x > 0 && y > 0 && x + w === capture.width && y + h === capture.height;
+    if (!inset) {
+      throw new Error(
+        `editor-crop capture: the NW handle drag did not inset the crop ("${await say(page)}")`,
+      );
+    }
 
+    // The keyboard route in left a focus ring on the stage; a pointer user
+    // never sees one, and the crop draft outlives the blur.
+    await page.evaluate(() => document.activeElement?.blur());
+    await settle(120);
     await page.screenshot({ path: join(CAPTURES_DIR, 'editor-crop.png') });
     await page.close();
   }
@@ -520,7 +637,7 @@ async function renderRealCaptures(browser, base, messages) {
   // ---- popup, at its natural size ----
   {
     const page = await browser.newPage();
-    await page.setViewport({ width: 340, height: 900 });
+    await page.setViewport({ width: 340, height: 900, deviceScaleFactor: CAPTURE_DPR });
     await page.evaluateOnNewDocument(installPopupChromeStub, messages, {
       'openscreenshot:last-capture': capture,
       'openscreenshot:settings': { theme: 'light' },
@@ -528,21 +645,56 @@ async function renderRealCaptures(browser, base, messages) {
     await page.goto(`${base}/src/popup/index.html`, { waitUntil: 'networkidle0' });
     await page.waitForSelector('.app');
     await settle(300);
-    await page.screenshot({ path: join(CAPTURES_DIR, 'popup.png'), fullPage: true });
+    const reopen = await page.evaluate(() => {
+      const btn = [...document.querySelectorAll('button')].find(
+        (b) => b.textContent.trim() === 'Reopen last',
+      );
+      return btn ? { disabled: btn.disabled } : null;
+    });
+    if (!reopen || reopen.disabled) {
+      throw new Error('popup capture: the seeded last capture did not enable "Reopen last"');
+    }
+    // Clipped to the popup's own box: the page is as tall as the viewport,
+    // and everything below `.app` is empty body. Width is the document's,
+    // which is what a real popup window sizes itself to.
+    const clip = await page.evaluate(() => {
+      const app = document.querySelector('.app').getBoundingClientRect();
+      return {
+        x: 0,
+        y: 0,
+        width: document.documentElement.scrollWidth,
+        height: Math.ceil(app.bottom),
+      };
+    });
+    await page.screenshot({ path: join(CAPTURES_DIR, 'popup.png'), clip });
     await page.close();
   }
 
   // ---- recorder editor, on a session with two auto-zoom blocks ----
   {
     const page = await browser.newPage();
-    await page.setViewport({ width: STORE_SIZE.w, height: STORE_SIZE.h });
+    await page.setViewport({ ...viewport(STORE_SIZE), deviceScaleFactor: CAPTURE_DPR });
     await page.evaluateOnNewDocument(installRecorderChromeStub, messages);
     await page.goto(`${base}/src/recorder/index.html`, { waitUntil: 'load' });
-    const sessionId = await page.evaluate(seedRecorderSession);
-    await page.goto(`${base}/src/recorder/index.html?session=${sessionId}`, {
+    await page.evaluate(seedRecorderSession, {
+      sessionId: SEED_SESSION_ID,
+      segmentId: SEED_SEGMENT_ID,
+      seedTime: SEED_TIME,
+    });
+    await page.goto(`${base}/src/recorder/index.html?session=${SEED_SESSION_ID}`, {
       waitUntil: 'load',
     });
     await page.waitForSelector('.rec-canvas', { timeout: 15_000 });
+    await page
+      .waitForFunction(() => document.querySelectorAll('.rec-tl-zoom').length === 2, {
+        timeout: 5_000,
+      })
+      .catch(async () => {
+        const n = await page.$$eval('.rec-tl-zoom', (els) => els.length);
+        throw new Error(
+          `recorder capture: expected 2 auto-zoom blocks on the timeline, found ${n}`,
+        );
+      });
     await settle(600);
     await page.screenshot({ path: join(CAPTURES_DIR, 'recorder.png') });
     await page.close();
@@ -550,8 +702,11 @@ async function renderRealCaptures(browser, base, messages) {
 }
 
 /* -------------------------------------------------------------------------
- * Chrome Web Store screenshots: the four real captures above, exactly
- * 1280x800, JPEG.
+ * Chrome Web Store screenshots: three of the real captures above straight
+ * off the 2x capture, exactly 1280x800, JPEG. The fourth, the popup, is far
+ * smaller than the store frame at its natural size, so it is rendered in
+ * place over the sample page by store-popup.html (with the other posters,
+ * below) instead of being stretched or floated on a blank canvas.
  * ---------------------------------------------------------------------- */
 
 async function renderStoreShots() {
@@ -569,29 +724,6 @@ async function renderStoreShots() {
       .toFile(out);
     console.log(`✓ ${rel(out)} (${STORE_SIZE.w}x${STORE_SIZE.h})`);
   }
-
-  // The popup is far smaller than the store's frame at its natural size, so
-  // it is composited onto a branded canvas instead of stretched to fill one.
-  const popupPath = join(CAPTURES_DIR, 'popup.png');
-  const popupMeta = await sharp(popupPath).metadata();
-  const targetH = Math.round(STORE_SIZE.h * 0.82);
-  const scale = targetH / popupMeta.height;
-  const popupResized = await sharp(popupPath)
-    .resize(Math.round(popupMeta.width * scale), targetH)
-    .toBuffer();
-  const popupOut = join(STORE_DIR, 'cws-3.jpg');
-  await sharp({
-    create: {
-      width: STORE_SIZE.w,
-      height: STORE_SIZE.h,
-      channels: 3,
-      background: '#f2f0ea',
-    },
-  })
-    .composite([{ input: popupResized, gravity: 'center' }])
-    .jpeg({ quality: 90 })
-    .toFile(popupOut);
-  console.log(`✓ ${rel(popupOut)} (${STORE_SIZE.w}x${STORE_SIZE.h})`);
 }
 
 /* -------------------------------------------------------------------------
@@ -672,14 +804,16 @@ async function renderPosters() {
       console.log(`✓ ${rel(out)} (${w}x${h})`);
     }
 
-    // Store promo images: exact sizes, JPEG. Rendered at 2x like the shots,
-    // then downscaled straight into the store directory.
-    for (const { name, w, h } of [
+    // Store promo images and the popup store screenshot: exact sizes, JPEG.
+    // Rendered at 2x like the shots, then downscaled straight into the store
+    // directory.
+    for (const { name, out: outName = name, w, h } of [
       { name: 'promo-tile', w: 440, h: 280 },
       { name: 'marquee', w: 1400, h: 560 },
+      { name: 'store-popup', out: 'cws-3', w: STORE_SIZE.w, h: STORE_SIZE.h },
     ]) {
       const png = await screenshotPoster(name, w, h, work);
-      const out = join(STORE_DIR, `${name}.jpg`);
+      const out = join(STORE_DIR, `${outName}.jpg`);
       await sharp(png)
         .resize(w, h, { fit: 'cover' })
         .flatten({ background: '#f2f0ea' })
