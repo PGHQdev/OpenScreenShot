@@ -7,6 +7,7 @@
  * what a screen reader reads, and what a custom colour is measured against.
  */
 import { tokens } from '../shared/design-tokens';
+import { t } from './i18n';
 
 export interface Swatch {
   hex: string;
@@ -16,14 +17,14 @@ export interface Swatch {
 
 /** The style bar's swatches, in the order they are drawn and keyed 1..8. */
 export const SWATCHES: readonly Swatch[] = [
-  { hex: tokens.swatchRed, name: 'Red' },
-  { hex: tokens.swatchOrange, name: 'Orange' },
-  { hex: tokens.swatchYellow, name: 'Yellow' },
-  { hex: tokens.swatchGreen, name: 'Green' },
-  { hex: tokens.swatchBlue, name: 'Blue' },
-  { hex: tokens.swatchPurple, name: 'Purple' },
-  { hex: tokens.swatchWhite, name: 'White' },
-  { hex: tokens.swatchBlack, name: 'Black' },
+  { hex: tokens.swatchRed, name: t('editorColorRed') },
+  { hex: tokens.swatchOrange, name: t('editorColorOrange') },
+  { hex: tokens.swatchYellow, name: t('editorColorYellow') },
+  { hex: tokens.swatchGreen, name: t('editorColorGreen') },
+  { hex: tokens.swatchBlue, name: t('editorColorBlue') },
+  { hex: tokens.swatchPurple, name: t('editorColorPurple') },
+  { hex: tokens.swatchWhite, name: t('editorColorWhite') },
+  { hex: tokens.swatchBlack, name: t('editorColorBlack') },
 ];
 
 export const COLOR_PALETTE: string[] = SWATCHES.map((s) => s.hex);
@@ -44,7 +45,7 @@ export function normalizeHex(value: string): string | null {
 export function colorName(hex: string): string {
   const norm = normalizeHex(hex);
   if (!norm) return hex;
-  return COLOR_NAMES[norm] ?? `Custom color ${norm}`;
+  return COLOR_NAMES[norm] ?? t('editorCustomColorHex', [norm]);
 }
 
 /**

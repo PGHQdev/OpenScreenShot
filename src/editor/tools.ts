@@ -17,6 +17,7 @@ import {
   type StepAnnotation,
   type TextAnnotation,
 } from './annotations';
+import { t } from './i18n';
 
 export type Tool =
   | 'select'
@@ -42,19 +43,19 @@ export interface ToolDef {
 }
 
 export const TOOL_LIST: ToolDef[] = [
-  { id: 'select', label: 'Select', shortcut: 'V' },
-  { id: 'rect', label: 'Rectangle', shortcut: 'R' },
-  { id: 'arrow', label: 'Arrow', shortcut: 'A' },
-  { id: 'line', label: 'Line', shortcut: 'L' },
-  { id: 'pen', label: 'Pen', shortcut: 'P' },
-  { id: 'highlight', label: 'Highlighter', shortcut: 'H' },
-  { id: 'text', label: 'Text', shortcut: 'T' },
-  { id: 'step', label: 'Step number', shortcut: 'S' },
-  { id: 'blur', label: 'Blur', shortcut: 'B' },
-  { id: 'spotlight', label: 'Spotlight', shortcut: 'O' },
-  { id: 'eyedropper', label: 'Eyedropper', shortcut: 'I' },
-  { id: 'crop', label: 'Crop', shortcut: 'C' },
-  { id: 'cut', label: 'Cut', shortcut: 'X' },
+  { id: 'select', label: t('editorToolSelect'), shortcut: 'V' },
+  { id: 'rect', label: t('editorToolRectangle'), shortcut: 'R' },
+  { id: 'arrow', label: t('editorToolArrow'), shortcut: 'A' },
+  { id: 'line', label: t('editorToolLine'), shortcut: 'L' },
+  { id: 'pen', label: t('editorToolPen'), shortcut: 'P' },
+  { id: 'highlight', label: t('editorToolHighlighter'), shortcut: 'H' },
+  { id: 'text', label: t('editorToolText'), shortcut: 'T' },
+  { id: 'step', label: t('editorToolStep'), shortcut: 'S' },
+  { id: 'blur', label: t('editorToolBlur'), shortcut: 'B' },
+  { id: 'spotlight', label: t('editorToolSpotlight'), shortcut: 'O' },
+  { id: 'eyedropper', label: t('editorToolEyedropper'), shortcut: 'I' },
+  { id: 'crop', label: t('editorToolCrop'), shortcut: 'C' },
+  { id: 'cut', label: t('editorToolCut'), shortcut: 'X' },
 ];
 
 /**
