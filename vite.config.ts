@@ -53,5 +53,6 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     include: ['tests/**/*.test.ts'],
+    setupFiles: ['tests/unit/i18n-stub-setup.ts'],
   },
 });

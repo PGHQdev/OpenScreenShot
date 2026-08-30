@@ -732,5 +732,9 @@
   "welcomeSkip": {
     "message": "Skip for now",
     "description": "Welcome card: secondary link that dismisses without opening setup."
+  },
+  "editorUndoLabel": {
+    "message": "Undo",
+    "description": "Editor topbar: accessible label for the Undo button. Also its name in the shortcut sheet."
   }
 }

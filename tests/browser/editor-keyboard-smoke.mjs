@@ -125,11 +125,31 @@ async function newSmokePage(browser, { width = 1280, height = 860 } = {}) {
   return { page, cdp };
 }
 
-/** storage.local seeded with one capture, plus a downloads sink for the export. */
-function installChromeStub(seed) {
+/**
+ * storage.local seeded with one capture, plus a downloads sink for the export.
+ * `messages` is `dist/_locales/en/messages.json`, read once in main() and
+ * threaded through so `chrome.i18n.getMessage` resolves real strings instead
+ * of echoing the key back — an editor assertion on English text must fail
+ * for the right reason, not pass because the stub made every key its own
+ * translation.
+ */
+function installChromeStub(messages, seed) {
+  function getMessage(key, subs) {
+    const entry = messages[key];
+    if (!entry) return key;
+    const list = Array.isArray(subs) ? subs : subs == null ? [] : [subs];
+    let text = entry.message;
+    for (const [name, placeholder] of Object.entries(entry.placeholders ?? {})) {
+      const index = Number(String(placeholder.content).replace('$', '')) - 1;
+      text = text.replace(new RegExp(`\\$${name}\\$`, 'gi'), list[index] ?? '');
+    }
+    return text;
+  }
+
   const store = new Map(Object.entries(seed));
   globalThis.__smoke = { downloads: [] };
   globalThis.chrome = {
+    i18n: { getMessage },
     runtime: { id: 'smoke', getURL: (p) => '/' + String(p).replace(/^\//, '') },
     action: { setBadgeText() {}, setBadgeBackgroundColor() {} },
     downloads: {
@@ -350,12 +370,12 @@ async function makeCheckerCapture() {
  * and the class is stripped live afterward as a negative control: proving
  * the same DOM, same label, same font *would* have shifted without it.
  */
-async function testExportButtonWidthFloor(browser, base) {
+async function testExportButtonWidthFloor(browser, base, messages) {
   step('task 23: the export dialog Export button does not shift width when "Exporting…"');
   const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': await makeCapture(),
   });
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
@@ -432,12 +452,12 @@ async function testExportButtonWidthFloor(browser, base) {
  * as "only saw one value" for the wrong reason). A tall seeded capture forces
  * several A4 pages at the default 8mm margin.
  */
-async function testPdfRealProgress(browser, base) {
+async function testPdfRealProgress(browser, base, messages) {
   step('task 23: multi-page PDF export reports real, increasing per-page progress');
   const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': await makeTallCapture(),
   });
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
@@ -612,7 +632,7 @@ async function testPdfRealProgress(browser, base) {
  * that. Proven by polling for the two pills ever being mounted at once, not
  * by reasoning about the gate.
  */
-async function testDraftRestoreFailureNoOverlap(browser, base) {
+async function testDraftRestoreFailureNoOverlap(browser, base, messages) {
   step(
     'fix round 2: a failed draft restore never shows the stage notice pill while draft-restore is still exiting',
   );
@@ -620,7 +640,7 @@ async function testDraftRestoreFailureNoOverlap(browser, base) {
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
   const capture = await makeCapture();
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': capture,
     'openscreenshot:draft': {
       sourceCapturedAt: capture.capturedAt,
@@ -682,7 +702,7 @@ async function testDraftRestoreFailureNoOverlap(browser, base) {
  *    now state updated from an effect, which guarantees the follow-up
  *    render happens on its own.
  */
-async function testStageNoticeDraftPromptPriority(browser, base) {
+async function testStageNoticeDraftPromptPriority(browser, base, messages) {
   step(
     'fix round 3: an import failure interrupts a pending draft prompt instead of queuing behind it',
   );
@@ -690,7 +710,7 @@ async function testStageNoticeDraftPromptPriority(browser, base) {
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
   const capture = await makeCapture();
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': capture,
     'openscreenshot:draft': {
       sourceCapturedAt: capture.capturedAt,
@@ -758,13 +778,13 @@ async function testStageNoticeDraftPromptPriority(browser, base) {
   await page.close();
 }
 
-async function testStageErrorRetryAndDismiss(browser, base) {
+async function testStageErrorRetryAndDismiss(browser, base, messages) {
   step('task 23: stage error — Retry re-runs the real load; Dismiss clears the capture');
   const crashes = [];
 
   const { page } = await newSmokePage(browser);
   page.on('pageerror', (err) => crashes.push(String(err)));
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': makeBadCapture(),
   });
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
@@ -838,7 +858,7 @@ async function testStageErrorRetryAndDismiss(browser, base) {
   // exercise dismiss against a real failure).
   const { page: page2 } = await newSmokePage(browser);
   page2.on('pageerror', (err) => crashes.push(String(err)));
-  await page2.evaluateOnNewDocument(installChromeStub, {
+  await page2.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': makeBadCapture(),
   });
   await page2.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
@@ -866,7 +886,7 @@ async function testStageErrorRetryAndDismiss(browser, base) {
   // throw once, so the load never even reaches getLastCapture.
   const { page: page3 } = await newSmokePage(browser);
   page3.on('pageerror', (err) => crashes.push(String(err)));
-  await page3.evaluateOnNewDocument(installChromeStub, {
+  await page3.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': await makeCapture(),
   });
   await page3.evaluateOnNewDocument(() => {
@@ -905,7 +925,7 @@ async function testStageErrorRetryAndDismiss(browser, base) {
  * moment Tab was pressed" assertion is what proves the window was real,
  * not a race that happened to run after the exit already finished.
  */
-async function testPopoverTabDuringExit(browser, base) {
+async function testPopoverTabDuringExit(browser, base, messages) {
   step('task 23 fix: Tab pressed during a popover exit does not land inside it');
   // newSmokePage forces prefers-reduced-motion: no-preference by default —
   // load-bearing here specifically, since this test exists to probe a real,
@@ -914,7 +934,7 @@ async function testPopoverTabDuringExit(browser, base) {
   const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': await makeCapture(),
   });
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
@@ -1010,7 +1030,7 @@ async function testPopoverTabDuringExit(browser, base) {
  * what fixes that. Proven by actually reopening fast and reading where
  * focus landed, not by reasoning about the effect dependency array.
  */
-async function testModalFastReopen(browser, base) {
+async function testModalFastReopen(browser, base, messages) {
   step('task 23 fix: a fast reopen before the exit timer fires still refocuses into the dialog');
   // newSmokePage forces prefers-reduced-motion: no-preference by default —
   // see testPopoverTabDuringExit's own comment: without it, this machine's
@@ -1019,7 +1039,7 @@ async function testModalFastReopen(browser, base) {
   const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': await makeCapture(),
   });
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
@@ -1097,12 +1117,12 @@ async function testModalFastReopen(browser, base) {
  * front, pushes it into the background the same way alt-tabbing would — and
  * confirming the download still lands while it stays hidden the whole time.
  */
-async function testPdfExportInBackgroundTab(browser, base) {
+async function testPdfExportInBackgroundTab(browser, base, messages) {
   step('task 23 fix: a multi-page PDF export still completes while its tab is backgrounded');
   const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': await makeTallCapture(),
   });
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
@@ -1174,7 +1194,7 @@ async function testPdfExportInBackgroundTab(browser, base) {
  * value/max and a screenshot actually landing), so this checks the
  * property the fix actually sets instead of trying to outrun that race.
  */
-async function testProgressBarColorScheme(browser, base) {
+async function testProgressBarColorScheme(browser, base, messages) {
   step('fix round 2: the export progress bar tracks the app theme, not just the OS one');
   const { page, cdp } = await newSmokePage(browser);
   const crashes = [];
@@ -1202,7 +1222,7 @@ async function testProgressBarColorScheme(browser, base) {
       { name: 'prefers-reduced-motion', value: 'no-preference' },
     ],
   });
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': await makeCapture(),
     'openscreenshot:settings': { theme: 'dark' },
   });
@@ -1235,7 +1255,7 @@ async function testProgressBarColorScheme(browser, base) {
       { name: 'prefers-reduced-motion', value: 'no-preference' },
     ],
   });
-  await page2.evaluateOnNewDocument(installChromeStub, {
+  await page2.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': await makeCapture(),
     'openscreenshot:settings': { theme: 'light' },
   });
@@ -1275,12 +1295,12 @@ async function testProgressBarColorScheme(browser, base) {
  * is read back out of the live region — the only place the annotation
  * geometry is observable without a DOM node per layer.
  */
-async function testMultiSelection(browser, base) {
+async function testMultiSelection(browser, base, messages) {
   step('task 24: multi-selection by keyboard, marquee and shift-click');
   const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': await makeCapture(),
   });
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
@@ -2152,7 +2172,7 @@ async function pictureGeometry(page, composedH) {
  * storage. The capture is three flat stripes, so "the middle stripe is gone
  * and the rows closed up" is a pixel fact, not a judgement.
  */
-async function testCutTool(browser, base) {
+async function testCutTool(browser, base, messages) {
   step('task 25: a cut removes a band from the live canvas and from every export');
   const { page } = await newSmokePage(browser);
   const crashes = [];
@@ -2162,7 +2182,7 @@ async function testCutTool(browser, base) {
   // reads the whole canvas, and the stage plate behind the picture is
   // near-black in the dark theme — which is exactly the bucket the seam
   // marker's own hairline is counted in.
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': capture,
     'openscreenshot:settings': { theme: 'light' },
   });
@@ -2643,12 +2663,12 @@ async function testCutTool(browser, base) {
  * grabbed, caught and moved — goes through the same offset. These are the
  * places where it did not.
  */
-async function testCutSelectionRules(browser, base) {
+async function testCutSelectionRules(browser, base, messages) {
   step('task 25 fix 2: a marquee catches what it visibly crosses, cuts and all');
   const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': await makeStripedCapture(),
     'openscreenshot:settings': { theme: 'light' },
   });
@@ -2824,12 +2844,12 @@ async function testCutSelectionRules(browser, base) {
  * axes (uniformFactor), so growing the frame vertically leaves both badges'
  * top edges strictly below the frame's own.
  */
-async function testCutGroupFrame(browser, base) {
+async function testCutGroupFrame(browser, base, messages) {
   step('task 25 fix 2: a group frame whose anchor row is cut falls back to one that is drawn');
   const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': await makeStripedCapture(),
     'openscreenshot:settings': { theme: 'light' },
   });
@@ -2999,12 +3019,12 @@ async function testCutGroupFrame(browser, base) {
  * one. Nothing in this suite grabbed a group handle with a pointer before, and
  * that is why it survived two rounds.
  */
-async function testCutMixedSelectionGrab(browser, base) {
+async function testCutMixedSelectionGrab(browser, base, messages) {
   step('task 25 fix 3: a group handle is grabbable exactly where it is painted');
   const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': await makeStripedCapture(),
     'openscreenshot:settings': { theme: 'light' },
   });
@@ -3139,12 +3159,12 @@ async function testCutMixedSelectionGrab(browser, base) {
  * out has to cost whole pages — a page count read out of the PDF's own /Count
  * entry, before and after the same cut.
  */
-async function testCutInPdfExport(browser, base) {
+async function testCutInPdfExport(browser, base, messages) {
   step('task 25 fix: a cut reaches the PDF export — the page count drops with the picture');
   const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': await makeTallCapture(),
     'openscreenshot:settings': { theme: 'light' },
   });
@@ -3232,7 +3252,7 @@ async function testCutInPdfExport(browser, base) {
  * A cut in a stored draft comes back with the picture, and a draft written
  * before the Cut tool existed — no `bands` key at all — still restores.
  */
-async function testCutDraftRestore(browser, base) {
+async function testCutDraftRestore(browser, base, messages) {
   step('task 25: a stored draft restores its cuts, and a pre-Cut draft still restores');
   const capture = await makeStripedCapture();
   const settle = (ms = 200) => new Promise((r) => setTimeout(r, ms));
@@ -3241,7 +3261,7 @@ async function testCutDraftRestore(browser, base) {
     const { page } = await newSmokePage(browser);
     const crashes = [];
     page.on('pageerror', (err) => crashes.push(String(err)));
-    await page.evaluateOnNewDocument(installChromeStub, {
+    await page.evaluateOnNewDocument(installChromeStub, messages, {
       'openscreenshot:last-capture': capture,
       'openscreenshot:draft': draft,
     });
@@ -3296,7 +3316,7 @@ async function testCutDraftRestore(browser, base) {
   await legacy.page.close();
 }
 
-async function testBeautifyLooks(browser, base) {
+async function testBeautifyLooks(browser, base, messages) {
   step('task 26: a named look sets every frame value at once, and says when it has been changed');
   // The theme is pinned for the same reason testCutTool pins it: the census
   // below reads the whole canvas, and the stage plate behind the picture is
@@ -3309,7 +3329,7 @@ async function testBeautifyLooks(browser, base) {
   const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
-  await page.evaluateOnNewDocument(installChromeStub, seed);
+  await page.evaluateOnNewDocument(installChromeStub, messages, seed);
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
@@ -3500,7 +3520,7 @@ async function testBeautifyLooks(browser, base) {
   const { page: back, cdp: backCdp } = await newSmokePage(browser);
   const backCrashes = [];
   back.on('pageerror', (err) => backCrashes.push(String(err)));
-  await back.evaluateOnNewDocument(installChromeStub, {
+  await back.evaluateOnNewDocument(installChromeStub, messages, {
     ...seed,
     'openscreenshot:settings': { ...stored.settings },
     'openscreenshot:draft': stored.draft,
@@ -3550,7 +3570,7 @@ async function testBeautifyLooks(browser, base) {
   const { page: fresh } = await newSmokePage(browser);
   const freshCrashes = [];
   fresh.on('pageerror', (err) => freshCrashes.push(String(err)));
-  await fresh.evaluateOnNewDocument(installChromeStub, {
+  await fresh.evaluateOnNewDocument(installChromeStub, messages, {
     ...seed,
     'openscreenshot:settings': { ...stored.settings },
   });
@@ -3583,12 +3603,12 @@ async function testBeautifyLooks(browser, base) {
  * pushes a timeline entry holding the pre-crop picture, and only the real app
  * can show that Ctrl+Z puts that picture, its rows and its layers back.
  */
-async function testCropHandlesAndUndo(browser, base) {
+async function testCropHandlesAndUndo(browser, base, messages) {
   step('task 27: a crop draft carries eight handles, and a small rect only its corners');
   const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': await makeStripedCapture(),
   });
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
@@ -4017,7 +4037,7 @@ async function testCropHandlesAndUndo(browser, base) {
  * the real makeThumbnail encoder on first read; task-28-report.md has that
  * regression run).
  */
-async function testCaptureHistoryShelf(browser, base) {
+async function testCaptureHistoryShelf(browser, base, messages) {
   step('task 28: the capture history shelf lists, opens and deletes shelf entries');
   const { page } = await newSmokePage(browser);
   const crashes = [];
@@ -4029,7 +4049,7 @@ async function testCaptureHistoryShelf(browser, base) {
   const idGreen = 'hist-green';
   const tinyThumb =
     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:captures': [
       {
         id: idGreen,
@@ -4203,7 +4223,7 @@ async function testCaptureHistoryShelf(browser, base) {
  *     documentPictureInPicture instead, the same shape
  *     tests/unit/pin.test.ts stubs for the same branch.
  */
-async function testPinToFloatingWindow(browser, base) {
+async function testPinToFloatingWindow(browser, base, messages) {
   const pinBtn = 'button[aria-label="Pin in a floating window"]';
 
   step('task 29: the Pin button is absent when Document Picture-in-Picture is unavailable');
@@ -4217,7 +4237,7 @@ async function testPinToFloatingWindow(browser, base) {
         configurable: true,
       });
     });
-    await page.evaluateOnNewDocument(installChromeStub, {
+    await page.evaluateOnNewDocument(installChromeStub, messages, {
       'openscreenshot:last-capture': await makeCapture(),
     });
     await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
@@ -4239,7 +4259,7 @@ async function testPinToFloatingWindow(browser, base) {
   const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': await makeCapture(),
   });
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
@@ -4332,7 +4352,7 @@ async function testPinToFloatingWindow(browser, base) {
       }),
     });
   });
-  await page3.evaluateOnNewDocument(installChromeStub, {
+  await page3.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': await makeCapture(),
   });
   await page3.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
@@ -4356,12 +4376,12 @@ async function testPinToFloatingWindow(browser, base) {
  * and — the thing none of that proves by itself — actually changes what the
  * redaction paints into an export.
  */
-async function testBlurStrength(browser, base) {
+async function testBlurStrength(browser, base, messages) {
   step('task 30: the strength slider opens at the fixed default, with a range and a value text');
   const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': await makeCheckerCapture(),
   });
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
@@ -4502,12 +4522,12 @@ async function testBlurStrength(browser, base) {
  * the same as composeFinal always has, so this pins the preview side down:
  * a rect nudged out past the picture's right edge leaves no ink beyond it.
  */
-async function testAnnotationClipMatchesExport(browser, base) {
+async function testAnnotationClipMatchesExport(browser, base, messages) {
   step('task 41: an annotation dragged past the image edge is clipped in the preview too');
   const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': await makeCapture(), // 800x600, solid rgb(60,110,190)
   });
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
@@ -4609,12 +4629,12 @@ async function testAnnotationClipMatchesExport(browser, base) {
  * strokeBarHeight unit tests cover the exact px values; this proves the CSS
  * custom property actually reaches the DOM).
  */
-async function testStrokeWidthPreviewDistinct(browser, base) {
+async function testStrokeWidthPreviewDistinct(browser, base, messages) {
   step('task 41: the stroke-width preview bars are clearly stepped, not clamped alike');
   const { page } = await newSmokePage(browser);
   const crashes = [];
   page.on('pageerror', (err) => crashes.push(String(err)));
-  await page.evaluateOnNewDocument(installChromeStub, {
+  await page.evaluateOnNewDocument(installChromeStub, messages, {
     'openscreenshot:last-capture': await makeCapture(),
   });
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
@@ -4652,6 +4672,7 @@ async function main() {
   );
   if (!built) throw new Error(`${DIST}${PAGE} is missing — run "npm run build" first`);
 
+  const messages = JSON.parse(await readFile(join(DIST, '_locales/en/messages.json'), 'utf8'));
   const puppeteer = await loadPuppeteer();
   const work = await mkdtemp(join(tmpdir(), 'oss-editor-smoke-'));
   const server = await serveDist();
@@ -4672,10 +4693,22 @@ async function main() {
     page.on('console', (msg) => {
       if (msg.type() === 'error') console.log(`    console.error: ${msg.text()}`);
     });
-    await page.evaluateOnNewDocument(installChromeStub, {
+    await page.evaluateOnNewDocument(installChromeStub, messages, {
       'openscreenshot:last-capture': await makeCapture(),
     });
     await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+
+    // Proves the stub above actually resolves from messages.json instead of
+    // echoing the key back — every English assertion below (and every editor
+    // string an English-locale user reads) is only checking the right thing
+    // because this is true. `editorUndoLabel` is real dist/_locales content,
+    // not something this file invents.
+    step('the chrome.i18n stub resolves a real string, not the key');
+    assert(
+      (await page.evaluate(() => chrome.i18n.getMessage('editorUndoLabel'))) === 'Undo',
+      'chrome.i18n.getMessage("editorUndoLabel") resolves to "Undo", not the key itself',
+    );
+
     await page.waitForSelector('.stage-canvas');
     // The controller fits the image on load; interactions dispatched sooner
     // are dropped (see the editor smoke notes).
@@ -5761,29 +5794,29 @@ async function main() {
 
     // task 23 — each opens its own page/seed, independent of the state built
     // up above.
-    await testExportButtonWidthFloor(browser, base);
-    await testPdfRealProgress(browser, base);
-    await testStageErrorRetryAndDismiss(browser, base);
-    await testDraftRestoreFailureNoOverlap(browser, base);
-    await testStageNoticeDraftPromptPriority(browser, base);
-    await testPopoverTabDuringExit(browser, base);
-    await testModalFastReopen(browser, base);
-    await testPdfExportInBackgroundTab(browser, base);
-    await testProgressBarColorScheme(browser, base);
-    await testMultiSelection(browser, base);
-    await testCutTool(browser, base);
-    await testCutSelectionRules(browser, base);
-    await testCutGroupFrame(browser, base);
-    await testCutMixedSelectionGrab(browser, base);
-    await testCutInPdfExport(browser, base);
-    await testCutDraftRestore(browser, base);
-    await testBeautifyLooks(browser, base);
-    await testCropHandlesAndUndo(browser, base);
-    await testCaptureHistoryShelf(browser, base);
-    await testPinToFloatingWindow(browser, base);
-    await testBlurStrength(browser, base);
-    await testAnnotationClipMatchesExport(browser, base);
-    await testStrokeWidthPreviewDistinct(browser, base);
+    await testExportButtonWidthFloor(browser, base, messages);
+    await testPdfRealProgress(browser, base, messages);
+    await testStageErrorRetryAndDismiss(browser, base, messages);
+    await testDraftRestoreFailureNoOverlap(browser, base, messages);
+    await testStageNoticeDraftPromptPriority(browser, base, messages);
+    await testPopoverTabDuringExit(browser, base, messages);
+    await testModalFastReopen(browser, base, messages);
+    await testPdfExportInBackgroundTab(browser, base, messages);
+    await testProgressBarColorScheme(browser, base, messages);
+    await testMultiSelection(browser, base, messages);
+    await testCutTool(browser, base, messages);
+    await testCutSelectionRules(browser, base, messages);
+    await testCutGroupFrame(browser, base, messages);
+    await testCutMixedSelectionGrab(browser, base, messages);
+    await testCutInPdfExport(browser, base, messages);
+    await testCutDraftRestore(browser, base, messages);
+    await testBeautifyLooks(browser, base, messages);
+    await testCropHandlesAndUndo(browser, base, messages);
+    await testCaptureHistoryShelf(browser, base, messages);
+    await testPinToFloatingWindow(browser, base, messages);
+    await testBlurStrength(browser, base, messages);
+    await testAnnotationClipMatchesExport(browser, base, messages);
+    await testStrokeWidthPreviewDistinct(browser, base, messages);
 
     console.log('\nALL STEPS PASSED');
   } finally {
