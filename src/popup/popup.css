@@ -519,12 +519,19 @@ body {
 }
 
 /* ---- Footer / Ko-fi ---- */
+/*
+ * Six entries with `white-space: nowrap` measure ~387px; the popup's content
+ * box is 308px (340 − 2 × --s-4). Nothing shrinks below min-content, so a
+ * nowrap row put the last entry through the panel edge — visible in the
+ * shipped store screenshot. The row wraps instead: the count grows with the
+ * feature set and every locale spells these longer than English does.
+ */
 .footer-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--s-2);
-  flex-wrap: nowrap;
+  justify-content: flex-start;
+  gap: var(--s-1) var(--s-2);
+  flex-wrap: wrap;
 }
 
 .kofi-link {

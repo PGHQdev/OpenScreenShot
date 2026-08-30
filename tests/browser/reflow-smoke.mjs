@@ -431,6 +431,28 @@ async function testPopup(browser, base, messages) {
     `    note: popup content is ${width340}px wide at a 340px viewport (fixed by design)`,
   );
 
+  step('POPUP — the footer row fits inside the 340px panel');
+  // The footer's six entries measure ~395px of min-content; the panel's
+  // content box is 308px. They used to sit in a `flex-wrap: nowrap` row, so
+  // the last one ran through the panel edge — and shipped that way in the
+  // store screenshot. Nothing shrinks below min-content, so the only thing
+  // that can hold this is the wrap.
+  const footerFit = await page.evaluate(() => {
+    const row = document.querySelector('.footer-row');
+    if (!row) return null;
+    const right = row.getBoundingClientRect().right;
+    const kids = [...row.children].map((c) => c.getBoundingClientRect());
+    return {
+      count: kids.length,
+      overflow: Math.round(Math.max(...kids.map((r) => r.right)) - right),
+    };
+  });
+  assert(footerFit !== null && footerFit.count >= 5, 'the footer row renders its entries');
+  assert(
+    footerFit.overflow <= 1,
+    `no footer entry passes the panel edge (${footerFit.count} entries, rightmost overflows by ${footerFit.overflow}px)`,
+  );
+
   step('POPUP — 200% zoom equivalent (340x260): every mode card and the footer reach via scroll');
   const bodyScrolls = await page.evaluate(
     () => document.documentElement.scrollHeight > window.innerHeight,
