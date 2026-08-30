@@ -575,6 +575,12 @@ async function testSetup(browser, base, messages) {
   await new Promise((r) => setTimeout(r, 150));
   const overflow320 = await noHorizontalOverflow(page, 320);
   assert(overflow320.ok, `document.scrollWidth ${overflow320.scrollWidth} <= 320`);
+  // Below --bp-sm the 40px icon, the heading, the state tag and the row's
+  // button have too little width side by side, so the row stacks.
+  const narrowRow = await page.evaluate(
+    () => getComputedStyle(document.querySelector('.row')).flexDirection,
+  );
+  assert(narrowRow === 'column', `a permission row stacks (${narrowRow}) at 320px`);
   const wrapped = await page.evaluate(() => {
     const pills = [...document.querySelectorAll('[data-testid="trust-strip"] .trust-pill')];
     return new Set(pills.map((el) => el.getBoundingClientRect().top)).size;

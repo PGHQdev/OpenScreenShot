@@ -1501,6 +1501,48 @@ async function testSetup(browser, base, messages) {
   }
   await emulateMedia(cdp, []);
 
+  step('SETUP — forced-colors: active — the state tags and the banners keep a visible edge');
+  // .tag-granted/-required/-optional/-denied and .banner-attention/-ready are
+  // separated from the page by background alone, and forced colors discards
+  // every author background — so all six flatten to the page's own surface.
+  // Each one spells its state in text, so the rule under test restores the
+  // boundary rather than re-encoding the colour. Same detached-probe fallback
+  // as the transition check above: which tag renders depends on the grant
+  // state this stub happens to answer.
+  const EDGES = ['.tag', '.banner'];
+  const readBorders = () =>
+    page.evaluate((sels) => {
+      const out = {};
+      for (const sel of sels) {
+        const real = document.querySelector(sel);
+        const el = real ?? document.createElement('div');
+        if (!real) {
+          el.className = sel.slice(1);
+          document.body.appendChild(el);
+        }
+        const cs = getComputedStyle(el);
+        out[sel] = { width: cs.borderTopWidth, style: cs.borderTopStyle, real: Boolean(real) };
+        if (!real) el.remove();
+      }
+      return out;
+    }, EDGES);
+  const edgesBaseline = await readBorders();
+  for (const sel of EDGES) {
+    assert(
+      edgesBaseline[sel].style === 'none' || edgesBaseline[sel].width === '0px',
+      `${sel} draws no border in ordinary rendering (${edgesBaseline[sel].width} ${edgesBaseline[sel].style}) — the forced-colors rule is not leaking`,
+    );
+  }
+  await emulateMedia(cdp, [{ name: 'forced-colors', value: 'active' }]);
+  const edgesForced = await readBorders();
+  for (const sel of EDGES) {
+    assert(
+      edgesForced[sel].style === 'solid' && edgesForced[sel].width !== '0px',
+      `${sel} takes a ${edgesForced[sel].width} ${edgesForced[sel].style} border under forced-colors${edgesForced[sel].real ? '' : ' (via a probe — not rendered on this view)'}`,
+    );
+  }
+  await emulateMedia(cdp, []);
+
   assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
   await page.close();
 }

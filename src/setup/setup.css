@@ -254,3 +254,31 @@ a.trust-pill:hover {
     transition: none;
   }
 }
+
+/* Below --bp-sm (tokens.css — a var() cannot appear in this condition, so
+   480px is that token's value spelled out; tests/unit/breakpoint-guard.test.ts
+   checks the two stay equal) the 40px icon, the heading, the state tag and the
+   row's button share too little width side by side; stack the row instead. */
+@media (max-width: 480px) {
+  .row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/*
+ * Forced colors discards every author background, and .tag-granted /
+ * -required / -optional / -denied and .banner-attention / -ready are
+ * distinguished by background alone — so all four tags and both banners
+ * flatten to the page's own surface and stop reading as chips at all.
+ * Which state each one is stays legible without this block: every tag and
+ * banner spells its state in text (setupGranted, setupDeniedTag, ...), so
+ * the job here is the boundary, not re-encoding the colour. A system-palette
+ * border restores it.
+ */
+@media (forced-colors: active) {
+  .tag,
+  .banner {
+    border: 1px solid CanvasText;
+  }
+}
