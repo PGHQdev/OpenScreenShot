@@ -504,7 +504,14 @@ export class CanvasController {
     ctx.save();
     ctx.translate(this.view.panX, this.view.panY);
     ctx.scale(this.view.zoom, this.view.zoom);
-    if (this.frame.enabled) clipToFrame(ctx, m);
+    // Unconditional, matching composeFinal(): the picture is a fixed
+    // rectangle regardless of whether the beautify frame is on. Gating this
+    // on frame.enabled used to let an annotation dragged past the image's
+    // edge show in the preview (the on-screen canvas is bigger than the
+    // picture) and then vanish at export (composeFinal always clips) —
+    // whichever behaviour a user saw depended on which surface they looked
+    // at, and only one of the two could be right.
+    clipToFrame(ctx, m);
     ctx.imageSmoothingEnabled = this.view.zoom <= 1;
     this.paintPicture(ctx, img, this.draft);
     if (this.cropRect) {

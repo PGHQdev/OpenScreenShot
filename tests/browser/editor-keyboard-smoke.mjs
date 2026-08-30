@@ -4465,6 +4465,112 @@ async function testBlurStrength(browser, base) {
   await page.close();
 }
 
+/**
+ * task 41, defect 1 — an annotation dragged past the image's edge used to
+ * render in the live preview (the on-screen canvas is bigger than the
+ * picture) and vanish at export (composeFinal always clips) — whichever a
+ * user looked at told a different story. render() now clips unconditionally,
+ * the same as composeFinal always has, so this pins the preview side down:
+ * a rect nudged out past the picture's right edge leaves no ink beyond it.
+ */
+async function testAnnotationClipMatchesExport(browser, base) {
+  step('task 41: an annotation dragged past the image edge is clipped in the preview too');
+  const { page } = await newSmokePage(browser);
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': await makeCapture(), // 800x600, solid rgb(60,110,190)
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+
+  const snap = () =>
+    page.evaluate(() => {
+      const canvas = document.querySelector('.stage-canvas');
+      const { width, height } = canvas;
+      return {
+        width,
+        height,
+        data: Array.from(canvas.getContext('2d').getImageData(0, 0, width, height).data),
+      };
+    });
+  /** The rectangle of (x,y) positions `accepts` picks out, or null for none. */
+  const scanBox = (width, height, accepts) => {
+    let x0 = Infinity;
+    let x1 = -Infinity;
+    let y0 = Infinity;
+    let y1 = -Infinity;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (accepts(x, y, (y * width + x) * 4)) {
+          if (x < x0) x0 = x;
+          if (x > x1) x1 = x;
+          if (y < y0) y0 = y;
+          if (y > y1) y1 = y;
+        }
+      }
+    }
+    return x1 >= x0 ? { x0, x1, y0, y1 } : null;
+  };
+  const matchBox = (snap, matches) =>
+    scanBox(snap.width, snap.height, (x, y, i) =>
+      matches(snap.data[i], snap.data[i + 1], snap.data[i + 2], snap.data[i + 3]),
+    );
+  /** Where `b` disagrees with `a` — what a change against `a` painted. */
+  const diffBox = (a, b) =>
+    scanBox(
+      a.width,
+      a.height,
+      (x, y, i) =>
+        a.data[i] !== b.data[i] ||
+        a.data[i + 1] !== b.data[i + 1] ||
+        a.data[i + 2] !== b.data[i + 2] ||
+        a.data[i + 3] !== b.data[i + 3],
+    );
+
+  const before = await snap();
+  const image = matchBox(before, (r, g, b) => r === 60 && g === 110 && b === 190);
+  assert(image, 'found the solid-colour image footprint in the preview');
+
+  const focusCanvas = () => page.$eval('.stage-canvas', (el) => el.focus());
+  await focusCanvas();
+  await page.keyboard.press('r'); // Rect tool
+  await page.keyboard.press('Enter'); // places a default rect, selected, ~140 screen px square
+  await new Promise((r) => setTimeout(r, 150)); // the state update that repaints the canvas lands async
+
+  const afterPlace = await snap();
+  const rectBoxAfterPlace = diffBox(before, afterPlace);
+  assert(rectBoxAfterPlace, 'placing the rect changed pixels on the preview');
+
+  // The image's on-screen width tells the current zoom (PLACE_SIZE_PX is
+  // screen-space-constant by construction, but STEP_COARSE is image pixels).
+  const zoom = (image.x1 - image.x0 + 1) / 800;
+  const margin = 24; // comfortably past the edge, on screen
+  const target = image.x1 + margin;
+  const stepPx = 10 * zoom; // STEP_COARSE, keyboard.ts
+  const nudges = Math.max(0, Math.ceil((target - rectBoxAfterPlace.x1) / stepPx));
+  for (let i = 0; i < nudges; i++) {
+    await page.keyboard.down('Shift');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.up('Shift');
+  }
+  await new Promise((r) => setTimeout(r, 150));
+  await page.keyboard.press('Escape'); // deselect: drop the (deliberately unclipped) handle chrome
+  await new Promise((r) => setTimeout(r, 150));
+
+  const afterNudge = await snap();
+  const inkBox = diffBox(before, afterNudge);
+  assert(inkBox, 'the moved rect still left some ink on the preview');
+  assert(
+    inkBox.x1 <= image.x1,
+    `the rect's ink stops at the image's right edge (ink to ${inkBox.x1}, image edge ${image.x1}) — it does not bleed into the checkerboard the way it used to`,
+  );
+
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
+}
+
 async function main() {
   const built = await stat(join(DIST, PAGE.slice(1))).then(
     () => true,
@@ -5602,6 +5708,7 @@ async function main() {
     await testCaptureHistoryShelf(browser, base);
     await testPinToFloatingWindow(browser, base);
     await testBlurStrength(browser, base);
+    await testAnnotationClipMatchesExport(browser, base);
 
     console.log('\nALL STEPS PASSED');
   } finally {
