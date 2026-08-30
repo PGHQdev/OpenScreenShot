@@ -4089,8 +4089,15 @@ async function testCaptureHistoryShelf(browser, base, messages) {
   idx = await tabIndexes();
   assert(
     idx.filter((t) => t === 0).length === 1,
-    'the roving stop followed focus — still exactly one tabindex=0 after ArrowDown',
+    `still exactly one tabindex=0 after ArrowDown (${JSON.stringify(idx)})`,
   );
+  // The count alone holds even when the stop never moves, so it cannot tell a
+  // working focusin from a dead one. The stop has to be the button that now
+  // has focus.
+  const stopFollowed = await page.evaluate(
+    () => document.querySelector('.history-list button[tabindex="0"]') === document.activeElement,
+  );
+  assert(stopFollowed, 'the roving stop followed focus onto the button ArrowDown moved to');
   await page.keyboard.press('End');
   const endLabel = await focusedLabel();
   assert(endLabel === lastButtonLabel, `End jumps to the last button in the list (${endLabel})`);
@@ -4777,6 +4784,51 @@ async function main() {
       canvasV2.top === canvasV1.top && canvasV2.height === canvasV1.height,
       `V -> R -> V moves the canvas by 0px (top delta ${canvasV2.top - canvasV1.top}, height delta ${canvasV2.height - canvasV1.height})`,
     );
+
+    step('each toolbar is one roving tab stop, and the stop follows the arrow keys');
+    // B1's stated defect: the tool rail was 12 consecutive tab stops and the
+    // style bar added up to 16 more. Both are role="toolbar" with arrowNav +
+    // syncRovingTabIndex (focus.ts), so exactly one member of each is
+    // tabbable. Nothing asserted the count, so a revert to one stop per
+    // button passed the whole suite. The style bar's fields depend on the
+    // tool, so this runs with Rectangle active — the widest set.
+    await page.keyboard.press('R');
+    await settle(60);
+    const stops = (sel) =>
+      page.evaluate((s) => {
+        const bar = document.querySelector(s);
+        return {
+          tabbable: bar.querySelectorAll('[tabindex="0"]').length,
+          members: bar.querySelectorAll('button, input, [tabindex]').length,
+          onFocused: bar.querySelector('[tabindex="0"]') === document.activeElement,
+        };
+      }, sel);
+    for (const [sel, arrow] of [
+      ['.toolbar', 'ArrowDown'],
+      ['.stylebar', 'ArrowRight'],
+    ]) {
+      const before = await stops(sel);
+      assert(
+        before.tabbable === 1,
+        `${sel} is one tab stop, not ${before.members} (${before.tabbable} tabindex="0" among ${before.members} members)`,
+      );
+      await page.$eval(`${sel} [tabindex="0"]`, (el) => el.focus());
+      await page.keyboard.press(arrow);
+      await settle(60);
+      const after = await stops(sel);
+      assert(
+        after.tabbable === 1,
+        `${sel} still has exactly 1 tab stop after ${arrow} (${after.tabbable})`,
+      );
+      // Counting alone would hold even if the stop never moved. The stop has
+      // to be the element that now has focus, which is the half syncRoving-
+      // TabIndex does through focusin.
+      assert(
+        after.onFocused,
+        `${sel}'s tab stop is the element ${arrow} focused — the stop followed, it did not just stay put`,
+      );
+    }
+    await page.$eval('.stage-canvas', (el) => el.focus());
 
     step('a tool letter followed straight by Enter places a layer');
     // No round-trip between the two: this is the pairing of `tool` with toolRef,
