@@ -101,7 +101,10 @@
         right: 26px;
         top: 72px;
         width: 340px;
-        height: 356px;
+        /* Cuts through the recording-source chips on purpose: a crop that
+           lands on a card's bottom edge reads as the whole popup, and this
+           one is a third of it. The Record card ends at 354px. */
+        height: 400px;
         border-radius: 16px;
         overflow: hidden;
         background: #fff;
