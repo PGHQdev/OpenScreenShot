@@ -42,10 +42,16 @@ export function shouldShowBar(args: {
   sinceMountMs: number;
   sinceNearMs: number;
   hovering: boolean;
+  /** Focus is inside the bar — set by focusin/focusout on the host, not by
+   *  a pointer event. A bar must never vanish under the keyboard for the
+   *  same reason it must never vanish under the pointer: `host.inert`
+   *  toggling `true` under live focus blurs the user to `<body>`, and
+   *  `inert` is exactly what deliverable 2 put back in the tab order's way. */
+  focused: boolean;
   paused: boolean;
   warning: boolean;
 }): boolean {
-  if (args.paused || args.hovering || args.warning) return true;
+  if (args.paused || args.hovering || args.focused || args.warning) return true;
   return args.sinceMountMs < OVERLAY_GRACE_MS || args.sinceNearMs < OVERLAY_GRACE_MS;
 }
 
@@ -179,10 +185,11 @@ export function mountRecordingOverlay(
     sinceMountMs: number;
     sinceNearMs: number;
     hovering: boolean;
+    focused: boolean;
     paused: boolean;
     warning: boolean;
   }): boolean {
-    if (args.paused || args.hovering || args.warning) return true;
+    if (args.paused || args.hovering || args.focused || args.warning) return true;
     return args.sinceMountMs < OVERLAY_GRACE_MS || args.sinceNearMs < OVERLAY_GRACE_MS;
   }
 
@@ -620,6 +627,7 @@ export function mountRecordingOverlay(
   const mountedAt = Date.now();
   let lastNearAt = mountedAt;
   let hoveringBar = false;
+  let focusedBar = false;
 
   function applyBarVisibility(): void {
     const now = Date.now();
@@ -627,6 +635,7 @@ export function mountRecordingOverlay(
       sinceMountMs: now - mountedAt,
       sinceNearMs: now - lastNearAt,
       hovering: hoveringBar,
+      focused: focusedBar,
       paused: isPaused,
       warning,
     });
@@ -638,7 +647,11 @@ export function mountRecordingOverlay(
     // keyboard or screen-reader user could land a live Stop button they
     // cannot see. `inert` removes the whole subtree from both the tab order
     // and the accessibility tree in one property, and reverses the moment
-    // the bar is shown again, so nothing per-button has to track it.
+    // the bar is shown again, so nothing per-button has to track it. It is
+    // exactly why `focused` above has to gate `show` first: without it, a
+    // keyboard user who Tabs onto Stop and holds still past the grace
+    // window would have `inert` flip to `true` under their own focus,
+    // which blurs them out to <body> with no way to Tab back in.
     host.inert = !show;
   }
 
@@ -648,6 +661,18 @@ export function mountRecordingOverlay(
   });
   host.addEventListener('mouseleave', () => {
     hoveringBar = false;
+    applyBarVisibility();
+  });
+  // Keyboard counterpart to the mouseenter/mouseleave pair above — a bar
+  // must never vanish under the keyboard for the same reason it must never
+  // vanish under the pointer. Both events bubble, so this fires once per
+  // focus entering or leaving the whole subtree, not once per control.
+  host.addEventListener('focusin', () => {
+    focusedBar = true;
+    applyBarVisibility();
+  });
+  host.addEventListener('focusout', () => {
+    focusedBar = false;
     applyBarVisibility();
   });
 
@@ -668,41 +693,75 @@ export function mountRecordingOverlay(
   // target size, not the full 400x120 zone above) to keep that patch small.
   // It stays mounted whether the bar itself is shown or hidden, because the
   // dead zone can be hovered at either moment.
+  //
+  // It is a real `<button>` with an accessible name, not a decorative,
+  // aria-hidden div: `host.inert` takes Stop/Cancel/Pause out of the tab
+  // order while hidden (see `applyBarVisibility`), and the unbound
+  // `reveal-recording-bar` command only helps a user who has bound it — so
+  // this button is the keyboard route every install gets for free, with no
+  // manifest change and no manual binding. It is inserted *before* `host`
+  // in document order (not appended after, like `camHost`), which is what
+  // makes forward-Tab land here first while the bar is hidden and then
+  // continue straight into the now-revealed Stop/Cancel/Pause on the very
+  // next Tab, rather than tabbing past them. It stays reachable while the
+  // bar is hidden because it is `host`'s sibling, not its descendant —
+  // `inert` does not travel sideways.
   const CATCHER_WIDTH_PX = 64;
   const CATCHER_HEIGHT_PX = 24;
   const catcherHost = document.createElement('div');
   catcherHost.setAttribute('data-testid', 'rec-overlay-catcher');
-  catcherHost.setAttribute('aria-hidden', 'true');
   catcherHost.style.cssText =
     'all:initial;position:fixed;left:50%;bottom:0;' +
     `width:${CATCHER_WIDTH_PX}px;height:${CATCHER_HEIGHT_PX}px;` +
     // One below the bar's own z-index, so the real bar always wins the few
     // pixels where the two could visually meet; still far above any
-    // ordinary page content, iframe included.
+    // ordinary page content, iframe included — except a page element that
+    // also claims the maximum 2147483647, which is the one value that can
+    // bury it; no tree-order tiebreak saves it against that specific case.
     'transform:translateX(-50%);z-index:2147483646;';
   const catcherShadow = catcherHost.attachShadow({ mode: 'closed' });
   const catcherStyle = document.createElement('style');
   catcherStyle.textContent = `
     .grip {
+      all: unset;
+      display: block;
+      box-sizing: border-box;
       width: 100%;
       height: 100%;
       border-radius: 6px 6px 0 0;
-      background: rgba(20, 20, 22, .35);
+      /* Transparent by default: painted only on hover/focus, so nothing
+         from this element is burned into the recorded video, which the
+         bar's own auto-hide policy exists to avoid in the first place. */
+      background: transparent;
+      cursor: pointer;
       transition: background .15s;
     }
-    .grip:hover { background: rgba(20, 20, 22, .6); }
+    .grip:hover,
+    .grip:focus-visible {
+      background: rgba(20, 20, 22, .6);
+    }
+    /* Inset, not outset like the bar's buttons: this control sits flush
+       against the bottom of the viewport, and an outward ring there would
+       be clipped by the edge of the screen rather than the page. */
+    .grip:focus-visible {
+      outline: 2px solid #f26b57;
+      outline-offset: -3px;
+    }
     @media (prefers-reduced-motion: reduce) {
       .grip { transition: none; }
     }
   `;
   catcherShadow.appendChild(catcherStyle);
-  const grip = document.createElement('div');
+  const grip = document.createElement('button');
+  grip.type = 'button';
   grip.className = 'grip';
+  grip.setAttribute('aria-label', t('recOverlayReveal', 'Show recording controls'));
+  grip.setAttribute('data-testid', 'rec-overlay-catcher-grip');
   catcherShadow.appendChild(grip);
-  document.documentElement.appendChild(catcherHost);
+  document.documentElement.insertBefore(catcherHost, host);
 
-  /** Refresh the reveal clock. Pointer hover on the catcher, and the
-   *  keyboard command below, both just do this — same as a `mousemove`
+  /** Refresh the reveal clock. Pointer hover, keyboard focus and the
+   *  keyboard command below all just do this — same as a `mousemove`
    *  landing inside the ordinary reveal zone. */
   function revealNow(): void {
     lastNearAt = Date.now();
@@ -711,12 +770,17 @@ export function mountRecordingOverlay(
   catcherHost.addEventListener('pointerenter', revealNow);
   catcherHost.addEventListener('pointermove', revealNow);
   catcherHost.addEventListener('pointerdown', revealNow);
+  // Composed, so this fires from a focus landing on the button inside the
+  // closed shadow root, the same way host's own focusin listener does.
+  catcherHost.addEventListener('focusin', revealNow);
 
-  // The keyboard route: `chrome.commands` fires this at the browser level,
-  // before any keystroke reaches page or iframe script, so the worker can
-  // call this from a tab whose focus is anywhere at all — including inside a
-  // cross-origin iframe, which no in-page key listener could say. See
-  // `handleRevealBar` in src/background/recording.ts.
+  // The keyboard command is a supplement, not the primary route: it is what
+  // still works when focus is parked inside a cross-origin iframe, where
+  // Tab cannot reach this button at all (the iframe owns Tab traversal
+  // inside itself). `chrome.commands` fires at the browser level, before
+  // any keystroke reaches page or iframe script, so the worker can call
+  // this from a tab whose focus is anywhere at all. See `handleRevealBar`
+  // in src/background/recording.ts.
   win.__ossRecReveal = revealNow;
 
   pauseBtn.addEventListener('click', () => {
@@ -840,6 +904,13 @@ export function mountRecordingOverlay(
     const wasWarning = warning;
     warning = warning || nextWriteFailed;
     renderChips(nextTracks, warning);
+    // Before announceWarning, not after: `warning` is one of shouldShowBar's
+    // own inputs, so this is what takes the host out of `inert` when a
+    // chunk-write failure arrives while the bar is hidden. An alert whose
+    // text changes inside an inert subtree is not announced — the same edge
+    // the fresh-mount comment above already names for insertion order, one
+    // property over for `inert` instead of the document.
+    applyBarVisibility();
     // The sync half of the edge: only the false -> true transition speaks, so
     // the heal on every popup open and every navigation stays silent.
     if (warning && !wasWarning) announceWarning();
@@ -853,7 +924,6 @@ export function mountRecordingOverlay(
       camHost = null;
       clampBubble = null;
     }
-    applyBarVisibility();
   };
 
   // --- Teardown -------------------------------------------------------------

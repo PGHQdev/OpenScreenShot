@@ -249,6 +249,10 @@
     "message": "Cancel",
     "description": "Recording control bar: button that cancels the recording and discards it."
   },
+  "recOverlayReveal": {
+    "message": "Show recording controls",
+    "description": "Recording control bar: accessible name of the small always-present control that reveals the hidden bar, by pointer, touch or keyboard focus."
+  },
   "recOverlayMic": {
     "message": "MIC",
     "description": "Recording control bar: chip shown when the microphone track is enabled."

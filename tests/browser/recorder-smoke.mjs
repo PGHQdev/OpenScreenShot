@@ -631,6 +631,21 @@ async function main() {
       return null;
     };
 
+    /** Live computed `background-color` of a shadow-internal node, by
+     *  testid — what the paused-dot/grip source-literal tests above cannot
+     *  give us: the value the browser actually painted, not the rule text. */
+    const computedBackground = async (testid) => {
+      const found = await pierced(testid);
+      if (!found) return null;
+      const { object } = await dom.send('DOM.resolveNode', { backendNodeId: found.id });
+      const { result } = await dom.send('Runtime.callFunctionOn', {
+        objectId: object.objectId,
+        functionDeclaration: 'function() { return getComputedStyle(this).backgroundColor; }',
+        returnByValue: true,
+      });
+      return result.value;
+    };
+
     const mounted = await page.evaluate(async (file) => {
       const mod = await import(`/assets/${file}`);
       // 6 arity is unique to the mount; `isNearBar` also takes 4.
@@ -866,6 +881,23 @@ async function main() {
     );
     await page.evaluate(() => document.querySelector('#oss-smoke-cross-origin')?.remove());
 
+    step('the catcher paints nothing while idle, so it is not burned into every recorded frame');
+    // Away from the catcher and blurred — the previous step's last click
+    // landed a real button focus, and Chromium does not always resolve
+    // :focus-visible away from a stale mouse-click focus without an actual
+    // blur, so this clears both inputs the rule reacts to before reading it.
+    await page.mouse.move(50, 50);
+    await page.evaluate(() => document.activeElement?.blur?.());
+    const idleBg = await computedBackground('rec-overlay-catcher-grip');
+    assert(
+      idleBg === 'rgba(0, 0, 0, 0)',
+      `the catcher is transparent at rest, before any hover or focus (${idleBg})`,
+    );
+    await page.mouse.move(catcherRect.x, catcherRect.y, { steps: 5 });
+    const hoveredBg = await computedBackground('rec-overlay-catcher-grip');
+    assert(hoveredBg !== 'rgba(0, 0, 0, 0)', `and paints only once hovered (${hoveredBg})`);
+    await page.mouse.move(50, 50);
+
     step('the keyboard command reveals the bar without depending on pointer position');
     await letBarHide();
     assert((await hostOpacity()) === '0', 'bar hidden before the command');
@@ -876,26 +908,71 @@ async function main() {
     await page.evaluate(() => window.__ossRecReveal?.());
     assert((await hostOpacity()) === '1', 'the command reveals the bar');
 
-    step('hidden removes Stop, Cancel and Pause from the tab order, not just from view');
+    step(
+      'hidden removes Stop, Cancel and Pause from the tab order, and the catcher is the way back in',
+    );
     await letBarHide();
     assert((await hostInert()) === true, 'the hidden host is inert');
     await page.evaluate(() => document.body.focus());
-    const landsOnHost = async (rounds) => {
+
+    /** Which of our own testid'd elements currently has focus, retargeted
+     *  the way `document.activeElement` retargets across a shadow boundary
+     *  (both `host` and `catcherHost` are shadow hosts; this is what makes
+     *  a focus landing on a button *inside* either one visible from here). */
+    const focusedTestid = () =>
+      page.evaluate(() => document.activeElement?.getAttribute?.('data-testid') ?? null);
+    const tabUntil = async (testid, rounds) => {
       for (let i = 0; i < rounds; i++) {
         await page.keyboard.press('Tab');
-        const onHost = await page.evaluate(
-          () =>
-            document.activeElement === document.querySelector('[data-testid="rec-overlay-host"]'),
-        );
-        if (onHost) return true;
+        if ((await focusedTestid()) === testid) return true;
       }
       return false;
     };
-    assert(!(await landsOnHost(40)), 'Tab never lands on the bar while it is hidden');
 
-    await page.evaluate(() => window.__ossRecReveal?.());
-    assert((await hostInert()) === false, 'the revealed host is not inert');
-    assert(await landsOnHost(40), 'and Tab can reach it once revealed');
+    // Bounded well short of the catcher: the hidden host must not be a Tab
+    // stop at all, not even reachable in a longer walk that happens to pass
+    // it — this is deliberately checked before the catcher is ever reached.
+    assert(
+      !(await tabUntil('rec-overlay-host', 6)),
+      'Tab does not land directly on the hidden host',
+    );
+    assert(await tabUntil('rec-overlay-catcher', 60), 'and instead reaches the focusable catcher');
+    assert(
+      (await hostInert()) === false,
+      'focusing the catcher reveals the bar — no separate reveal call, no pointer involved',
+    );
+    assert(
+      await tabUntil('rec-overlay-host', 3),
+      'and the very next stops land inside the now-revealed bar',
+    );
+
+    step(
+      'focus on Stop survives the grace timer — a keyboard user is never blurred out mid-interaction',
+    );
+    // One placeholder mount produced by test 20 has kept the previous bar's
+    // clock 1:04-ish; this is a fresh scenario, so start clean.
+    await page.mouse.move(50, 50); // away from both the classic zone and the catcher — no hover to lean on
+    // pauseBtn is the first control after the catcher (mountRecordingOverlay
+    // appends pause, then stop, then cancel); one more Tab reaches Stop. The
+    // closed shadow root means this is inferred from the append order, not
+    // read back directly — see the paused-dot tests' own note on that limit.
+    await page.keyboard.press('Tab');
+    assert((await focusedTestid()) === 'rec-overlay-host', 'landed inside the bar (on Pause)');
+    await page.keyboard.press('Tab'); // -> Stop
+    assert((await focusedTestid()) === 'rec-overlay-host', 'and again (on Stop)');
+    await new Promise((done) => setTimeout(done, 3400)); // past OVERLAY_GRACE_MS, no hover, focus held only
+    assert(
+      (await hostOpacity()) === '1',
+      'the bar is still shown past the grace window with focus inside it',
+    );
+    assert(
+      (await hostInert()) === false,
+      'and the host never went inert under its own focused control',
+    );
+    assert(
+      (await focusedTestid()) === 'rec-overlay-host',
+      'focus is still on Stop, not blurred out to <body> by inert flipping underneath it',
+    );
 
     step('a real paused treatment, distinct from recording');
     await page.evaluate(() =>

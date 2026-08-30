@@ -9,6 +9,15 @@ import {
   shouldShowBar,
 } from '../../src/content/recording-overlay';
 
+/**
+ * The mounted bar is a closed shadow root injected into an arbitrary page —
+ * no stylesheet, no rendering to inspect from a headless test with no
+ * screen reader attached. Several checks below read the shipped source's
+ * own text instead, the way `overlay-warning-contrast.test.ts` already
+ * does for the warning chip's literal colours.
+ */
+const SOURCE = readFileSync(join(__dirname, '../../src/content/recording-overlay.ts'), 'utf8');
+
 describe('formatTimer', () => {
   it('formats seconds', () => expect(formatTimer(7_000)).toBe('0:07'));
   it('formats minutes', () => expect(formatTimer(83_000)).toBe('1:23'));
@@ -35,6 +44,7 @@ describe('shouldShowBar', () => {
     sinceMountMs: 60_000,
     sinceNearMs: 60_000,
     hovering: false,
+    focused: false,
     paused: false,
     warning: false,
   };
@@ -44,6 +54,12 @@ describe('shouldShowBar', () => {
   it('shows after a recent reveal', () =>
     expect(shouldShowBar({ ...idle, sinceNearMs: 100 })).toBe(true));
   it('shows while hovered', () => expect(shouldShowBar({ ...idle, hovering: true })).toBe(true));
+  // A bar must never vanish under the keyboard for the same reason it must
+  // never vanish under the pointer: focus landing on Stop mid-Tab, past the
+  // grace window, is exactly when host.inert would otherwise blur the user
+  // to <body> with no way to Tab back — see mountRecordingOverlay's focusin
+  // listener.
+  it('shows while focused', () => expect(shouldShowBar({ ...idle, focused: true })).toBe(true));
   it('shows while paused', () => expect(shouldShowBar({ ...idle, paused: true })).toBe(true));
   // Chunks failing to reach storage is the one failure that loses the
   // recording while it is being made, and a bar that hides three seconds
@@ -180,8 +196,6 @@ describe('clampBubblePosition', () => {
  * colour from the recording dot's red, and enough contrast to actually read.
  */
 describe('the control bar paused dot', () => {
-  const SOURCE = readFileSync(join(__dirname, '../../src/content/recording-overlay.ts'), 'utf8');
-
   function relativeLuminance(hex: string): number {
     const n = Number.parseInt(hex.replace('#', ''), 16);
     const channel = (c: number) => {
@@ -227,5 +241,61 @@ describe('the control bar paused dot', () => {
     )?.[1];
     const ratio = contrastRatio(pausedBg!, barBg);
     expect(ratio, `${pausedBg} on ${barBg} is ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(3);
+  });
+});
+
+/**
+ * `mountRecordingOverlay`'s re-sync path (`win.__ossRecSync`) sets
+ * `host.inert` (via `applyBarVisibility`) and mutates the live `role="alert"`
+ * region's text (via `announceWarning`) in the same synchronous call. Which
+ * runs first matters for assistive tech even though the *final* DOM state is
+ * identical either way: a mutation to a node's accessible text while that
+ * node is excluded from the accessibility tree (`inert`) is never announced,
+ * and there is no replay once the node re-enters the tree a statement later.
+ * That is not observable through a closed shadow root in a headless browser
+ * — there is no screen reader in this harness to ask — so, like the other
+ * literal checks in this block, it is read out of the source instead: the
+ * two calls' order in the sync path, by their position in the file.
+ */
+describe('the sync path un-inerts before it announces', () => {
+  it('calls applyBarVisibility before announceWarning inside __ossRecSync', () => {
+    const syncBody = /win\.__ossRecSync = \([\s\S]*?\n {2}\};/.exec(SOURCE)?.[0];
+    expect(syncBody, '__ossRecSync assignment not found').toBeTruthy();
+    const applyIndex = syncBody!.indexOf('applyBarVisibility();');
+    const announceIndex = syncBody!.indexOf('announceWarning();');
+    expect(applyIndex, 'applyBarVisibility() not called in the sync path').toBeGreaterThan(-1);
+    expect(announceIndex, 'announceWarning() not called in the sync path').toBeGreaterThan(-1);
+    expect(
+      applyIndex,
+      'applyBarVisibility() must run before announceWarning(), so a hidden host is ' +
+        'un-inerted before the alert text changes inside it',
+    ).toBeLessThan(announceIndex);
+  });
+});
+
+/**
+ * The catcher has to stay mounted for the whole life of a recording (see
+ * mountRecordingOverlay's own comment on why), which means whatever it
+ * paints is burned into every frame — the same "no frames costs nothing"
+ * reasoning `shouldShowBar`'s own docblock gives for the bar itself applies
+ * here with the opposite conclusion, since this element is never actually
+ * hidden. Read out of source for the same closed-shadow reason as the
+ * paused dot above.
+ */
+describe('the reveal catcher paints nothing by default', () => {
+  function gripRule(selector: string): string {
+    const re = new RegExp(`\\.grip${selector}\\s*\\{([^}]*)\\}`);
+    const block = re.exec(SOURCE)?.[1];
+    if (!block) throw new Error(`no .grip${selector} rule in recording-overlay.ts`);
+    return block;
+  }
+
+  it('is transparent at rest, so nothing from it is burned into the recording', () => {
+    expect(gripRule('')).toMatch(/background:\s*transparent/);
+  });
+
+  it('only paints on hover or keyboard focus', () => {
+    const active = gripRule(':hover,\\s*\\n\\s*\\.grip:focus-visible');
+    expect(active).toMatch(/background:\s*rgba\(/);
   });
 });
