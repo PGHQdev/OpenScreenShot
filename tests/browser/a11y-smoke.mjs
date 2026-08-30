@@ -477,6 +477,22 @@ async function testEditor(browser, base, messages) {
   await page.waitForSelector('.stylebar');
   await scan(page, 'editor main surface');
 
+  step('EDITOR — the only live region is the status region, outside every control');
+  // A live region inside a control's own accessible name announces the
+  // change and renames the focused control with it. `.zoom-readout` sat
+  // inside `.zoom-trigger` and did exactly that on every zoom step; the
+  // announcement belongs to the permanently mounted status region.
+  const live = await page.evaluate(() =>
+    [...document.querySelectorAll('[aria-live]')].map((el) => ({
+      selector: el.className || el.tagName,
+      role: el.getAttribute('role'),
+      inControl: !!el.closest('button, a, [role="button"], [role="menuitem"]'),
+    })),
+  );
+  assert(live.length === 1, `the editor mounts exactly 1 live region (found ${live.length})`);
+  assert(live[0].role === 'status', `the live region is role=status (got ${live[0].role})`);
+  assert(!live[0].inControl, "the live region is not inside a control's accessible name");
+
   step('EDITOR — export dialog (Cmd+S)');
   await chord(page, ['Meta'], 's');
   await page.waitForSelector('.modal', { timeout: 5000 });

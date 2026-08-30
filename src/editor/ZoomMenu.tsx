@@ -114,9 +114,13 @@ export function ZoomMenu(props: ZoomMenuProps) {
           }
         }}
       >
-        <span class="zoom-readout" aria-live="polite">
-          {props.zoomPct}%
-        </span>
+        {/*
+          No aria-live here: this span is part of the trigger's own accessible
+          name, so announcing it renamed the button under the user's focus on
+          every zoom step. The editor's real live region (App.tsx) announces
+          the change.
+        */}
+        <span class="zoom-readout">{props.zoomPct}%</span>
         <IconChevronDown size={12} />
       </button>
       {mounted ? (
