@@ -60,16 +60,6 @@ const groups: { id: string; heading: string; items: Item[] }[] = [
         status: 'Exploring',
         note: 'Text recognition in WASM, loaded on first use and run on your device. The engine and one language file weigh 10–15 MB, many times the whole extension, so size decides it.',
       },
-      {
-        name: 'Recent captures shelf',
-        status: 'Exploring',
-        note: 'Your last few captures kept locally and reopenable in the editor, with a clear-all control.',
-      },
-      {
-        name: 'Pin a capture in a floating window',
-        status: 'Exploring',
-        note: 'Document Picture-in-Picture is the only always-on-top surface Chrome offers, and it closes with the tab that opened it.',
-      },
     ],
   },
   {
@@ -102,11 +92,27 @@ const groups: { id: string; heading: string; items: Item[] }[] = [
 ];
 
 // The release log, newest first. Items are HTML fragments: they carry <strong>
-// and <code>. Nothing below v1.3.0 changes; v1.3.0 is the current release.
+// and <code>. Nothing below v1.3.0 changes; v1.5.0 is the current release.
 const shipped: { version: string; current?: boolean; items: string[] }[] = [
   {
-    version: 'v1.3.0',
+    version: 'v1.5.0',
     current: true,
+    items: [
+      '<strong>Full keyboard operation and screen reader support</strong> — a focusable canvas with keyboard layer cycling, placement, move, resize, and crop; live-region announcements for every mutation; roving tabindex on both toolbars; visible focus rings and 24×24 minimum target sizes; <code>forced-colors</code> and <code>prefers-contrast</code> support; and the editor’s UI strings moved behind <code>chrome.i18n</code>.',
+      '<strong>Cut tool</strong> — mark one or more horizontal bands on a full-page capture and remove them with a live preview. Cuts are non-destructive and undo like every other edit.',
+      '<strong>Named Beautify presets</strong> — one-click looks that set padding, corner radius, shadow, and background together, over the existing Beautify sliders.',
+      '<strong>Adjustable crop handles, with undo</strong> — eight resize handles on the crop rectangle, and applying a crop no longer clears the undo/redo stack.',
+      '<strong>Multi-select, duplicate, and arrow-key nudge</strong> — shift-click to select more than one annotation, <code>Alt+D</code> to duplicate, and arrow keys to nudge the selection.',
+      '<strong>Capture history shelf</strong> — the last twelve captures instead of one, reopenable from the editor.',
+      '<strong>Pin a capture in a floating window</strong> — via Document Picture-in-Picture, the only always-on-top surface Chrome offers.',
+      '<strong>Per-layer blur strength control</strong> — a slider on the blur tool instead of one fixed strength.',
+      '<strong>Two-click recording setup</strong> — <code>tabCapture</code> is requested inline from the Record button on its first click.',
+      '<strong>Recorder undo, and a simplified rail</strong> — undo/redo for the recording editor, Beautify collapsed behind one popover, and “Add zoom” moved onto the timeline.',
+      '<strong>Redesigned editor chrome</strong> — a stable style bar, a coral-themed range slider and canvas stage that adapt to light and dark, a consistent pressed state, and real loading and error states on export.',
+    ],
+  },
+  {
+    version: 'v1.3.0',
     items: [
       '<strong>Auto-hiding control bar</strong> — the recording control bar hides itself about three seconds after your pointer leaves it, so it stays out of the video. Move your cursor to the bottom center of the page to bring it back. It stays visible while you hover it, and while the recording is paused.',
       '<strong>Synthetic cursor overlay</strong> — a “Show cursor” toggle in the editor’s settings rail, on by default, draws a smooth pointer from the recorded cursor path in both the preview and the WebM export, since <code>tabCapture</code> never records the OS cursor.',
@@ -186,7 +192,7 @@ const shipped: { version: string; current?: boolean; items: string[] }[] = [
   <p class="doc-callout">
     <strong>The promise:</strong> everything on this page stays 100% local. No servers, no accounts, no
     new data collection — ever. Roadmap items carry no dates. Feedback and pull requests shape what
-    ships. Current release: <strong>v1.3.0</strong>.
+    ships. Current release: <strong>v1.5.0</strong>.
   </p>
 
   <p class="legend">
