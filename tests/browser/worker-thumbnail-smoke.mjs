@@ -12,29 +12,126 @@
 //
 // R-28a re-review 1, finding 2: the goal needs only a worker target and one
 // Worker.evaluate — no activeTab, no toolbar gesture, no real
-// captureVisibleTab. Getting the extension to load at all needed two fixes
-// together, not one:
+// captureVisibleTab. Getting the extension to load at all needs two flag
+// fixes on top of the obvious one:
 //   - Chrome M137+ disables the --load-extension switch outright for
 //     non-enterprise launches unless the DisableLoadExtensionCommandLineSwitch
 //     feature is explicitly turned back off.
 //   - Puppeteer's own default launch args separately pass a blanket
 //     --disable-extensions, which --disable-extensions-except does not
-//     override on its own — confirmed by reading the *actual* command line
-//     Chrome reports at chrome://version with only the feature flag applied
-//     (a --disable-extensions --disable-extensions-except=... pair, extension
-//     still not installed) and again with both fixes applied. See
-//     task-28-report.md's Fix round 2 for the exact command lines observed.
+//     override on its own.
+// Round 2 applied both of those against *branded* Google Chrome and still
+// found zero extension targets — the actual, round-3 cause: branded Chrome
+// itself, 137 and later, ignores --load-extension unconditionally, and no
+// --disable-features override brings it back (that override disables a
+// *different* mechanism — the command-line-switch gate — which is not what
+// branded Chrome enforces here; branded Chrome's own release notes describe
+// unpacked/CLI extension loading as removed for the stable channel, not
+// feature-flagged). This is exactly what the project's own recorded probe
+// method (memory: "Recorder live probe method", 2026-08-21) already says:
+// drive a packed extension in *Chrome for Testing*, never branded Chrome.
+// See task-28-report.md's Fix round 3 for the evidence (the same host,
+// same flags, branded Chrome vs. Chrome for Testing).
 // Run with: npm run build && npm run smoke:worker
-import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { mkdtemp, readdir, readFile, rm, stat } from 'node:fs/promises';
 import { createRequire } from 'node:module';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const DIST = join(ROOT, 'dist');
-const CHROME =
-  process.env.CHROME_BIN ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+
+/**
+ * Chrome for Testing only — never branded Google Chrome. Branded Chrome
+ * 137+ ignores --load-extension unconditionally (confirmed live: round 2's
+ * --disable-features override against branded Chrome 152 still found zero
+ * extension targets); Chrome for Testing is built without that restriction
+ * specifically so tooling like this can load unpacked/packed extensions.
+ * Falling back to branded Chrome here would silently reproduce round 2's
+ * failure with a misleading "environment limit" diagnosis all over again.
+ *
+ * Resolution order: CHROME_BIN if set (the same env var every other browser
+ * smoke in this repo honours, so `CHROME_BIN=<path> npm run smoke:worker`
+ * still works) — otherwise the newest "Google Chrome for Testing" binary
+ * found under the puppeteer and Playwright browser caches, compared by
+ * their own --version output (a cache's directory-name revision number
+ * does not reliably encode the Chrome version, e.g. Playwright's
+ * "chromium-1234"). No binary found in either place: fail immediately
+ * rather than silently drifting onto whatever `PATH` happens to resolve.
+ */
+async function findChromeForTestingBinaries(root, ...archDirs) {
+  const found = [];
+  let entries;
+  try {
+    entries = await readdir(root, { withFileTypes: true });
+  } catch {
+    return found;
+  }
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    for (const arch of archDirs) {
+      const bin = join(
+        root,
+        entry.name,
+        arch,
+        'Google Chrome for Testing.app',
+        'Contents',
+        'MacOS',
+        'Google Chrome for Testing',
+      );
+      if (existsSync(bin)) found.push(bin);
+    }
+  }
+  return found;
+}
+
+function versionOf(bin) {
+  // "Google Chrome for Testing 151.0.7922.34" -> [151, 0, 7922, 34]
+  const out = execFileSync(bin, ['--version'], { encoding: 'utf8' });
+  const match = out.match(/(\d+)\.(\d+)\.(\d+)\.(\d+)/);
+  return match ? match.slice(1).map(Number) : [0, 0, 0, 0];
+}
+
+function newerVersion(a, b) {
+  for (let i = 0; i < 4; i++) {
+    if (a[i] !== b[i]) return a[i] > b[i] ? a : b;
+  }
+  return a;
+}
+
+async function resolveChrome() {
+  if (process.env.CHROME_BIN) return process.env.CHROME_BIN;
+
+  const archDirs = ['chrome-mac-arm64', 'chrome-mac-x64'];
+  const candidates = [
+    ...(await findChromeForTestingBinaries(
+      join(homedir(), '.cache', 'puppeteer', 'chrome'),
+      ...archDirs,
+    )),
+    ...(await findChromeForTestingBinaries(
+      join(homedir(), 'Library', 'Caches', 'ms-playwright'),
+      ...archDirs,
+    )),
+  ];
+  if (candidates.length === 0) {
+    throw new Error(
+      'no Chrome for Testing found; run: npx @puppeteer/browsers install chrome@stable',
+    );
+  }
+  let best = candidates[0];
+  let bestVersion = versionOf(best);
+  for (const bin of candidates.slice(1)) {
+    const version = versionOf(bin);
+    if (newerVersion(version, bestVersion) === version && version !== bestVersion) {
+      best = bin;
+      bestVersion = version;
+    }
+  }
+  return best;
+}
 
 let stepNo = 0;
 function step(message) {
@@ -66,10 +163,24 @@ async function loadPuppeteer() {
   return (await import(pathToFileURL(require.resolve('puppeteer-core')).href)).default;
 }
 
-/** A tiny solid PNG — real image bytes, small enough that decoding and
- * re-encoding it is trivial to check by dimensions and MIME type alone. */
-const TINY_PNG_DATA_URL =
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAIAAAA1PPfIAAAAEUlEQVR4nGP8z8DAwMDAAAAKBAIAiK/7iQAAAABJRU5ErkJggg==';
+/**
+ * A tiny solid PNG, generated for real via `sharp` rather than a
+ * hand-transcribed base64 literal — the first version of this file used a
+ * literal that turned out not to be a valid PNG at all (confirmed: it also
+ * failed InvalidStateError in an ordinary window, not just the worker),
+ * which is exactly the class of bug generating the bytes avoids. Same
+ * approach `editor-keyboard-smoke.mjs`'s `makeCapture()` uses.
+ */
+async function makeTinyPngDataUrl() {
+  const require = createRequire(import.meta.url);
+  const sharp = require('sharp');
+  const png = await sharp({
+    create: { width: 8, height: 6, channels: 3, background: { r: 200, g: 60, b: 60 } },
+  })
+    .png()
+    .toBuffer();
+  return `data:image/png;base64,${png.toString('base64')}`;
+}
 
 /**
  * The exact chain from src/shared/thumbnail.ts's makeThumbnail, inlined for
@@ -132,13 +243,14 @@ async function main() {
   );
   if (!built) throw new Error(`${DIST}/manifest.json is missing — run "npm run build" first`);
 
+  const chrome = await resolveChrome();
   const puppeteer = await loadPuppeteer();
   const work = await mkdtemp(join(tmpdir(), 'oss-worker-smoke-'));
   let browser = null;
   try {
-    step('launching the built extension for real, packed (not served over HTTP)');
+    step(`launching the built extension for real, packed, on Chrome for Testing (${chrome})`);
     browser = await puppeteer.launch({
-      executablePath: CHROME,
+      executablePath: chrome,
       headless: true,
       userDataDir: join(work, 'profile'),
       // Puppeteer's own default args include a blanket --disable-extensions,
@@ -166,7 +278,8 @@ async function main() {
     const worker = await sw.worker();
 
     step("makeThumbnail's real chain runs inside the extension's own ServiceWorkerGlobalScope");
-    const result = await worker.evaluate(evalThumbnailChain, TINY_PNG_DATA_URL, 240, false);
+    const tinyPng = await makeTinyPngDataUrl();
+    const result = await worker.evaluate(evalThumbnailChain, tinyPng, 240, false);
     assert(
       result.env.offscreenCanvas === 'function',
       `OffscreenCanvas is a constructor in this worker (${result.env.offscreenCanvas})`,
@@ -189,7 +302,7 @@ async function main() {
     );
 
     step('negative control: an unsupported convertToBlob type produces a measurably wrong result');
-    const corrupted = await worker.evaluate(evalThumbnailChain, TINY_PNG_DATA_URL, 240, true);
+    const corrupted = await worker.evaluate(evalThumbnailChain, tinyPng, 240, true);
     assert(
       corrupted.dataUrl.startsWith('data:image/png'),
       `requesting 'image/bmp' silently falls back to PNG, not the JPEG the real path asserts (${corrupted.dataUrl.slice(0, 24)}...)`,
@@ -205,10 +318,12 @@ async function main() {
 main().catch((err) => {
   console.error(`\nWorker thumbnail smoke FAILED: ${err.message}`);
   console.error(
-    'If this is a "waiting for target" timeout: the extension did not load as a real ' +
-      'packed extension in this Chrome/sandbox despite both fixes above being applied. ' +
-      'See task-28-report.md Fix round 2 for the exact command lines and evidence that ' +
-      'this is an environment limit, not a flag mistake.',
+    'If this is a "no Chrome for Testing found" error: install one, e.g. ' +
+      'npx @puppeteer/browsers install chrome@stable — see resolveChrome() above for why ' +
+      'branded Chrome is never used as a fallback.\n' +
+      'If this is a "waiting for target" timeout on a real Chrome for Testing binary: the ' +
+      "next suspect is dist/manifest.json's commands — more than four suggested_key " +
+      'entries is known to fail extension load (see task-28-report.md Fix round 3).',
   );
   process.exitCode = 1;
 });
