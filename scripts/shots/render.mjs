@@ -259,7 +259,7 @@ function installRecorderChromeStub(messages) {
  * same picture. The encode of that stream is still wall-clock paced inside
  * MediaRecorder (module doc), which is why the WebM itself is not reproducible.
  */
-async function seedRecorderSession({ sessionId, segmentId, seedTime }) {
+async function seedRecorderSession({ sessionId, segmentId, seedTime, pageDataUrl }) {
   const FPS = 30;
   const FRAMES = 156;
   const durationMs = Math.round((FRAMES * 1000) / FPS);
@@ -267,14 +267,31 @@ async function seedRecorderSession({ sessionId, segmentId, seedTime }) {
   canvas.width = 960;
   canvas.height = 600;
   const ctx = canvas.getContext('2d');
+
+  // What gets recorded is the same sample page the editor and popup shots
+  // show, scrolling past — cws-4's whole job is to sell tab recording, and
+  // the flat rectangles this used to paint sold an abstraction. A data: URL
+  // is same-origin, so the canvas stays untainted and captureStream works.
+  // A decode failure throws: a frame with nothing in it is the outcome this
+  // replaced, and it must not reach the store silently.
+  const shot = await new Promise((done, fail) => {
+    const img = new Image();
+    img.onload = () => done(img);
+    img.onerror = () => fail(new Error('the sample-page capture did not decode'));
+    img.src = pageDataUrl;
+  });
+  const scale = canvas.width / shot.naturalWidth;
+  const drawnHeight = shot.naturalHeight * scale;
+  const travel = Math.max(0, drawnHeight - canvas.height);
+
   let frame = 0;
   const paint = () => {
-    ctx.fillStyle = '#152643';
-    ctx.fillRect(0, 0, 960, 600);
-    ctx.fillStyle = '#e8503a';
-    ctx.fillRect((frame * 5) % 820, 220, 120, 160);
-    ctx.fillStyle = '#f2f0ea';
-    ctx.fillRect(48, 44, 260, 60);
+    // Panned by frame, like everything else here, so the last frame is
+    // always the same picture.
+    const top = -travel * (frame / Math.max(1, FRAMES - 1));
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(shot, 0, top, canvas.width, drawnHeight);
     frame += 1;
   };
   const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
@@ -596,6 +613,7 @@ async function renderRealCaptures(browser, base, messages) {
       sessionId: SEED_SESSION_ID,
       segmentId: SEED_SEGMENT_ID,
       seedTime: SEED_TIME,
+      pageDataUrl: captureDataUrl,
     });
     await page.goto(`${base}/src/recorder/index.html?session=${SEED_SESSION_ID}`, {
       waitUntil: 'load',
@@ -687,10 +705,41 @@ async function screenshotPoster(name, w, h, work) {
   return png;
 }
 
-async function renderPosters() {
+/**
+ * Every `<img>` in a poster really has pixels, checked in the page before it
+ * is screenshotted.
+ *
+ * `chrome --screenshot` exits 0 for a page with a broken `<img>`, so a
+ * renamed capture, a changed clip or a zero-byte file used to emit a poster
+ * with a hole in it and a `✓` in the log — the same silent-degradation class
+ * the dist/ freshness guard closed on the other half of this pipeline. Five
+ * posters embed a real capture (hero, marquee, og-card, shot-3, store-popup)
+ * and those five feed hero.webp, marquee.jpg, og-card.png, shot-3.webp and
+ * cws-3.jpg, all of them shipped.
+ */
+async function assertPosterImagesLoad(browser, name) {
+  const src = resolve(SHOTS_DIR, `${name}.html`);
+  const page = await browser.newPage();
+  try {
+    await page.goto(`file://${src}`, { waitUntil: 'networkidle0' });
+    const broken = await page.evaluate(() =>
+      [...document.images]
+        .filter((img) => !img.complete || img.naturalWidth === 0)
+        .map((img) => img.getAttribute('src') ?? '(no src)'),
+    );
+    if (broken.length > 0) {
+      throw new Error(`${name}.html: ${broken.length} image(s) did not load: ${broken.join(', ')}`);
+    }
+  } finally {
+    await page.close();
+  }
+}
+
+async function renderPosters(browser) {
   const work = await mkdtemp(join(tmpdir(), 'oss-shots-'));
   try {
     for (const { name, w, h } of SHOTS) {
+      await assertPosterImagesLoad(browser, name);
       const png = await screenshotPoster(name, w, h, work);
       if (PAGE_SHOTS.has(name)) {
         const out = join(OUT_DIR, `${name}.webp`);
@@ -707,6 +756,7 @@ async function renderPosters() {
     {
       const w = 1200;
       const h = 630;
+      await assertPosterImagesLoad(browser, 'og-card');
       const png = await screenshotPoster('og-card', w, h, work);
       const out = join(OUT_DIR, 'og-card.png');
       // `palette: true` quantizes to an indexed palette (libimagequant,
@@ -728,6 +778,7 @@ async function renderPosters() {
       { name: 'marquee', w: 1400, h: 560 },
       { name: 'store-popup', out: 'cws-3', w: STORE_SIZE.w, h: STORE_SIZE.h },
     ]) {
+      await assertPosterImagesLoad(browser, name);
       const png = await screenshotPoster(name, w, h, work);
       const out = join(STORE_DIR, `${outName}.jpg`);
       await sharp(png)
@@ -767,14 +818,16 @@ async function main() {
       args: ['--no-first-run', '--no-default-browser-check', '--disable-gpu', '--hide-scrollbars'],
     });
     await renderRealCaptures(browser, base, messages);
+    await renderStoreShots();
+    // Inside the same browser lifetime: renderPosters checks each poster's
+    // embedded captures in a real page before it screenshots the poster.
+    await renderPosters(browser);
   } finally {
     await browser?.close();
     server.close();
     await rm(work, { recursive: true, force: true });
   }
 
-  await renderStoreShots();
-  await renderPosters();
   console.log('Shots rendered.');
 }
 
