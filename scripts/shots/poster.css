@@ -1,4 +1,10 @@
-/* Shared poster styles for the marketing shots (900x563). */
+/* Shared poster styles for the marketing shots.
+ *
+ * One art direction for the whole set: a warm paper ground with a coral and
+ * amber wash and a fine grain, and one browser window that sits low in the
+ * frame and runs off its bottom edge. The captures inside the window are real
+ * screenshots of dist/ (see render.mjs); everything in this file is the
+ * chrome around them. */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -11,29 +17,124 @@ body {
 }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  background: #f2f0ea;
+  background: #f4f1ea;
   color: #1b1a17;
   position: relative;
 }
-/* faint capture-bracket motif echoing the icon */
-.bracket-motif {
+
+/* ---- Ground ---- */
+.ground {
   position: absolute;
-  pointer-events: none;
-  opacity: 0.08;
+  inset: 0;
+  background:
+    radial-gradient(110% 80% at 0% 0%, rgba(232, 80, 58, 0.22), rgba(232, 80, 58, 0) 60%),
+    radial-gradient(90% 80% at 100% 100%, rgba(245, 166, 35, 0.26), rgba(245, 166, 35, 0) 60%),
+    linear-gradient(160deg, #f9f6f0 0%, #f1ece2 100%);
 }
-.poster {
+.ground.mirror {
+  background:
+    radial-gradient(110% 80% at 100% 0%, rgba(232, 80, 58, 0.22), rgba(232, 80, 58, 0) 60%),
+    radial-gradient(90% 80% at 0% 100%, rgba(245, 166, 35, 0.26), rgba(245, 166, 35, 0) 60%),
+    linear-gradient(200deg, #f9f6f0 0%, #f1ece2 100%);
+}
+/* film grain, so the wash never reads as a flat vector fill */
+.ground::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+/* ---- Browser window ---- */
+.window {
+  position: absolute;
+  background: #fffdf8;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(27, 26, 23, 0.1),
+    0 1px 2px rgba(27, 26, 23, 0.06),
+    0 24px 48px -20px rgba(27, 26, 23, 0.32),
+    0 60px 100px -40px rgba(120, 40, 20, 0.22);
+}
+.window-top {
   display: flex;
-  width: 100%;
-  height: 100%;
+  align-items: center;
+  gap: 12px;
+  height: 42px;
+  padding: 0 14px;
+  background: #f5f2ec;
+  border-bottom: 1px solid #e3ded4;
+}
+.lights {
+  display: flex;
+  gap: 6px;
+}
+.lights i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d3cec3;
+}
+.urlbar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #e3ded4;
+  font-size: 12px;
+  color: #6d685e;
+  white-space: nowrap;
+}
+/* the extension's toolbar icon, which the popup hangs from */
+.ext-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #e9e6df;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.window-body {
   position: relative;
+  overflow: hidden;
 }
-.panel {
-  width: 312px;
-  flex: 0 0 auto;
-  padding: 34px 30px;
-  display: flex;
-  flex-direction: column;
+.window-body > iframe,
+.window-body > img {
+  display: block;
+  border: 0;
+  transform-origin: top left;
 }
+
+/* ---- The popup, at its natural 340px ---- */
+.popup {
+  position: absolute;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgba(27, 26, 23, 0.12),
+    0 2px 6px rgba(27, 26, 23, 0.08),
+    0 32px 64px -20px rgba(27, 26, 23, 0.45);
+}
+.popup img {
+  display: block;
+  border: 0;
+  /* The capture is 2x of a 340 CSS px popup; shown at 340 it is exactly the
+     size Chrome draws it. */
+  width: 340px;
+  height: auto;
+}
+
+/* ---- Copy, for the posters that stand alone (store promo, social card) ---- */
 .wordmark {
   display: flex;
   align-items: center;
@@ -41,75 +142,25 @@ body {
   font-weight: 700;
   font-size: 15px;
   letter-spacing: -0.01em;
-  margin-bottom: 26px;
 }
 h1 {
   font-size: 35px;
   line-height: 1.08;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.025em;
-  margin-bottom: 14px;
 }
-h1 .coral {
-  color: #d43f29;
-}
-h1 .amber {
-  color: #b06f00;
+h1 .muted {
+  color: #7a7468;
 }
 .sub {
-  font-size: 13.5px;
+  font-size: 14px;
   line-height: 1.55;
-  color: #6d685e;
-  margin-bottom: 22px;
-}
-.features {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.feat {
-  display: flex;
-  gap: 11px;
-  align-items: flex-start;
-  background: #fafaf7;
-  border: 1px solid #e2ded4;
-  border-radius: 12px;
-  padding: 11px 13px;
-}
-.feat .fi {
-  flex: 0 0 auto;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  background: #e8503a;
-  color: #fff;
-}
-.feat .fi.amber {
-  background: #f5a623;
-  color: #1b1a17;
-}
-.feat .fi.ink {
-  background: #1b1a17;
-  color: #fafaf7;
-}
-.feat b {
-  display: block;
-  font-size: 13px;
-  letter-spacing: -0.01em;
-}
-.feat span {
-  font-size: 11.5px;
-  line-height: 1.45;
-  color: #6d685e;
+  color: #55503f;
 }
 .chips {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: auto;
-  padding-top: 18px;
 }
 .chip {
   display: inline-flex;
@@ -117,9 +168,9 @@ h1 .amber {
   gap: 6px;
   font-size: 11px;
   font-weight: 600;
-  color: #55503f;
-  background: #fafaf7;
-  border: 1px solid #e2ded4;
+  color: #3f3a30;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(27, 26, 23, 0.12);
   border-radius: 999px;
   padding: 5px 11px;
 }
@@ -128,77 +179,4 @@ h1 .amber {
   height: 6px;
   border-radius: 50%;
   background: #e8503a;
-}
-.stage-area {
-  flex: 1 1 auto;
-  position: relative;
-  overflow: hidden;
-}
-.ui-frame {
-  position: absolute;
-  border: 1px solid #dcd7cb;
-  border-radius: 14px;
-  overflow: hidden;
-  background: #fff;
-  box-shadow:
-    0 2px 6px rgba(27, 26, 23, 0.06),
-    0 24px 48px -18px rgba(27, 26, 23, 0.28);
-}
-.ui-frame iframe,
-.ui-frame img {
-  border: 0;
-  display: block;
-  transform-origin: top left;
-}
-/* flat browser chrome for page mocks */
-.browser-top {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 40px;
-  padding: 0 14px;
-  background: #f4f2ec;
-  border-bottom: 1px solid #e2ded4;
-}
-.browser-top .dots {
-  display: flex;
-  gap: 6px;
-}
-.browser-top .dots i {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #d8d3c8;
-}
-.urlbar {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  height: 26px;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: #fff;
-  border: 1px solid #e2ded4;
-  font-size: 11.5px;
-  color: #6d685e;
-}
-.badge-note {
-  position: absolute;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: #1b1a17;
-  color: #fafaf7;
-  font-size: 11.5px;
-  font-weight: 600;
-  border-radius: 999px;
-  padding: 7px 13px;
-  box-shadow: 0 10px 24px -8px rgba(27, 26, 23, 0.4);
-}
-.badge-note .dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #f5a623;
 }

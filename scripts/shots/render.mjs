@@ -368,17 +368,18 @@ const settle = (ms) => new Promise((r) => setTimeout(r, ms));
 const viewport = ({ w, h }) => ({ width: w, height: h });
 
 /**
- * Screenshots the four real surfaces this pipeline needs, into CAPTURES_DIR:
+ * Screenshots the five real surfaces this pipeline needs, into CAPTURES_DIR:
  *  - editor.png: the editor with a rect + arrow annotation and the Poster
  *    beautify look applied.
+ *  - editor-export.png: the same editor with its export dialog open.
  *  - editor-crop.png: the editor with an open crop draft, its eight handles
  *    visible.
  *  - popup.png: the popup at its natural size.
  *  - recorder.png: the recorder editor open on a session with two auto-zoom
  *    blocks in its timeline.
- * All four also double as source material for the poster HTML rendered
- * afterwards (hero, shot-3, marquee, og-card and store-popup embed
- * editor.png/popup.png), and all are taken at CAPTURE_DPR.
+ * All five also double as source material for the poster HTML rendered
+ * afterwards (every poster but shot-2 embeds one of them), and all are taken
+ * at CAPTURE_DPR.
  */
 async function renderRealCaptures(browser, base, messages) {
   await rm(CAPTURES_DIR, { recursive: true, force: true });
@@ -483,6 +484,29 @@ async function renderRealCaptures(browser, base, messages) {
     await settle(200);
 
     await page.screenshot({ path: join(CAPTURES_DIR, 'editor.png') });
+
+    // ---- the same editor, with the export dialog open ----
+    // Taken from the same page, so the annotations and the Poster look are
+    // behind the dialog: shot-4 is shot-3 one click later.
+    const exportOpened = await page.evaluate(() => {
+      const btn = [...document.querySelectorAll('header button')].find(
+        (b) => b.textContent.trim() === 'Export',
+      );
+      btn?.click();
+      return !!btn;
+    });
+    if (!exportOpened) throw new Error('editor-export capture: no "Export" button in the header');
+    await page.waitForSelector('.modal[role="dialog"]');
+    // The dialog fades in over --dur-mid; wait it out so the capture is not
+    // mid-animation.
+    await settle(500);
+    const formats = await page.$$eval('.format-card', (els) => els.length);
+    if (formats !== 4) {
+      throw new Error(
+        `editor-export capture: expected 4 format cards in the dialog, found ${formats}`,
+      );
+    }
+    await page.screenshot({ path: join(CAPTURES_DIR, 'editor-export.png') });
     await page.close();
   }
 
@@ -667,21 +691,24 @@ async function renderStoreShots() {
  * used for these — nothing here reads from dist/.
  * ---------------------------------------------------------------------- */
 
-// shot-2..5 are the homepage's four FRAME product shots (Capture, Annotate,
-// Export, Record) and hero is the homepage's top shot — every one of those
-// five is used on the page. There is no shot-1 or step-1..3 entry: shot-1
-// only ever fed the store screenshots (now rendered directly from the real
-// captures above, see renderStoreShots), and the old three-step "how it
-// works" section was folded into the FRAME sections — nothing on the site
-// references either any more.
+// shot-2..5 are the homepage's four gallery shots (region capture, the
+// editor, the export dialog, the recorder) and hero is the homepage's top
+// shot — every one of those five is used on the page. The hero is also
+// written as media/hero.jpg for the README, which GitHub renders from the
+// repo. There is no shot-1 or step-1..3 entry: shot-1 only ever fed the
+// store screenshots (now rendered directly from the real captures above,
+// see renderStoreShots), and the old three-step "how it works" section is
+// gone — nothing on the site references either any more.
 const PAGE_SHOTS = new Set(['shot-2', 'shot-3', 'shot-4', 'shot-5', 'hero']);
 const SHOTS = [
   { name: 'shot-2', w: 900, h: 563 },
   { name: 'shot-3', w: 900, h: 563 },
   { name: 'shot-4', w: 900, h: 563 },
   { name: 'shot-5', w: 900, h: 563 },
-  { name: 'hero', w: 1160, h: 680 },
+  { name: 'hero', w: 1200, h: 720 },
 ];
+const README_HERO = join(ROOT, 'media/hero.jpg');
+const README_HERO_WIDTH = 1600;
 
 async function screenshotPoster(name, w, h, work) {
   const src = resolve(SHOTS_DIR, `${name}.html`);
@@ -712,10 +739,10 @@ async function screenshotPoster(name, w, h, work) {
  * `chrome --screenshot` exits 0 for a page with a broken `<img>`, so a
  * renamed capture, a changed clip or a zero-byte file used to emit a poster
  * with a hole in it and a `✓` in the log — the same silent-degradation class
- * the dist/ freshness guard closed on the other half of this pipeline. Five
- * posters embed a real capture (hero, marquee, og-card, shot-3, store-popup)
- * and those five feed hero.webp, marquee.jpg, og-card.png, shot-3.webp and
- * cws-3.jpg, all of them shipped.
+ * the dist/ freshness guard closed on the other half of this pipeline. Every
+ * poster but shot-2 embeds a real capture, and all of them ship: hero.webp
+ * and media/hero.jpg, shot-3..5.webp, og-card.png, marquee.jpg,
+ * promo-tile.jpg and cws-3.jpg.
  */
 async function assertPosterImagesLoad(browser, name) {
   const src = resolve(SHOTS_DIR, `${name}.html`);
@@ -745,6 +772,12 @@ async function renderPosters(browser) {
         const out = join(OUT_DIR, `${name}.webp`);
         await sharp(png).webp({ quality: 84 }).toFile(out);
         console.log(`✓ ${rel(out)}`);
+      }
+      if (name === 'hero') {
+        // JPEG, because GitHub's README renderer is the consumer and a
+        // 1600px JPEG is a third of the 2x WebP's weight at that width.
+        await sharp(png).resize(README_HERO_WIDTH).jpeg({ quality: 86 }).toFile(README_HERO);
+        console.log(`✓ ${rel(README_HERO)} (${README_HERO_WIDTH}w)`);
       }
     }
 

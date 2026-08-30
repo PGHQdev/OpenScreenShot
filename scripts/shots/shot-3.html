@@ -2,104 +2,34 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>shot 3 — editor</title>
+    <title>shot 3 — the editor</title>
     <link rel="stylesheet" href="poster.css" />
     <style>
-      /* Full-bleed editor close-up with callouts pointing at the tools. */
-      .full {
-        position: absolute;
-        inset: 0;
+      /* The real editor capture (1280x800 at 2x) in the window, scaled to the
+         window's width; the bottom of the editor runs off the frame. */
+      .window {
+        left: 60px;
+        right: 60px;
+        top: 56px;
+        height: 560px;
       }
-      .full img {
-        border: 0;
-        display: block;
+      .window-body img {
         width: 1280px;
         height: 800px;
-        transform: scale(0.7031);
-        transform-origin: top left;
-      }
-      .callout {
-        position: absolute;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        /* narrow enough to sit in the stage's grey margins beside the
-           picture, which the real editor centres at its fit zoom */
-        max-width: 230px;
-        line-height: 1.3;
-        background: #fafaf7;
-        border: 1px solid #e2ded4;
-        border-radius: 10px;
-        padding: 9px 13px;
-        font-size: 12.5px;
-        font-weight: 600;
-        color: #1b1a17;
-        box-shadow:
-          0 2px 6px rgba(27, 26, 23, 0.08),
-          0 16px 32px -14px rgba(27, 26, 23, 0.35);
-      }
-      .callout .dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #d43f29;
-        flex: 0 0 auto;
-      }
-      .callout.amber .dot {
-        background: #f5a623;
-      }
-      .line {
-        position: absolute;
-        background: #d43f29;
-        opacity: 0.85;
-      }
-      .line.amber {
-        background: #f5a623;
-      }
-      .wordmark-chip {
-        position: absolute;
-        left: 74px;
-        bottom: 20px;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: #1b1a17;
-        color: #fafaf7;
-        font-weight: 700;
-        font-size: 12.5px;
-        border-radius: 999px;
-        padding: 8px 15px 8px 10px;
-        box-shadow: 0 10px 24px -8px rgba(27, 26, 23, 0.4);
+        transform: scale(0.609375);
       }
     </style>
   </head>
   <body>
-    <div class="poster" style="display: block">
-      <div class="full">
+    <div class="ground mirror"></div>
+    <div class="window">
+      <div class="window-top">
+        <span class="lights"><i></i><i></i><i></i></span>
+        <span class="urlbar">OpenScreenShot — Editor</span>
+        <span class="ext-icon"><img src="brand-mark.svg" width="20" height="20" alt="" /></span>
+      </div>
+      <div class="window-body">
         <img src="captures/editor.png" alt="" />
-      </div>
-
-      <!-- left toolbar: the callout sits in the grey margin beside the picture -->
-      <div class="line" style="left: 36px; top: 330px; width: 22px; height: 2px"></div>
-      <div class="callout" style="left: 58px; top: 306px">
-        <span class="dot"></span> Shapes, arrows, text, blur &amp; step numbers
-      </div>
-
-      <!-- stylebar: the leader drops from the colour swatches -->
-      <div class="line amber" style="left: 108px; top: 66px; width: 2px; height: 26px"></div>
-      <div class="callout amber" style="left: 58px; top: 92px">
-        <span class="dot"></span> Color, stroke &amp; size for every tool
-      </div>
-
-      <!-- export / copy: the leader drops from the Export button -->
-      <div class="line" style="right: 36px; top: 32px; width: 2px; height: 40px"></div>
-      <div class="callout" style="right: 30px; top: 72px">
-        <span class="dot"></span> Copy or export — nothing uploads
-      </div>
-
-      <div class="wordmark-chip">
-        <img src="brand-mark.svg" width="22" height="22" alt="" />
-        OpenScreenShot — built-in annotation editor
       </div>
     </div>
   </body>

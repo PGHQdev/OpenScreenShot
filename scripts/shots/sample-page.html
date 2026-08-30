@@ -58,12 +58,65 @@
         line-height: 1.5;
         color: #55503f;
         font-style: italic;
-        margin: 0 0 34px;
+        margin: 0 0 26px;
       }
       p {
         font-size: 17.5px;
         line-height: 1.68;
         margin: 0 0 22px;
+      }
+      figure {
+        margin: 0 0 34px;
+      }
+      /* a dusk shoreline, drawn rather than photographed, so the sample page
+         carries no third-party image */
+      .photo {
+        height: 300px;
+        border-radius: 6px;
+        background:
+          radial-gradient(70% 60% at 50% 100%, rgba(255, 235, 200, 0.55), transparent 70%),
+          linear-gradient(
+            180deg,
+            #f6dcc6 0%,
+            #e9a986 32%,
+            #c96f55 52%,
+            #6b4a3f 62%,
+            #3f3230 63%,
+            #2c2422 100%
+          );
+        position: relative;
+        overflow: hidden;
+      }
+      .photo::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 62%;
+        height: 38%;
+        background: repeating-linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.07) 0 2px,
+          transparent 2px 9px
+        );
+        opacity: 0.6;
+      }
+      .photo::after {
+        content: '';
+        position: absolute;
+        left: 58%;
+        top: 34%;
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        background: #fff3df;
+        box-shadow: 0 0 40px 18px rgba(255, 220, 170, 0.55);
+      }
+      figcaption {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 12.5px;
+        color: #8a8375;
+        margin-top: 10px;
       }
       blockquote {
         margin: 34px 0;
@@ -78,7 +131,7 @@
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         font-size: 13px;
         color: #8a8375;
-        margin-bottom: 40px;
+        margin-bottom: 30px;
       }
     </style>
   </head>
@@ -95,6 +148,10 @@
         and busier than it looks.
       </p>
       <p class="byline">By M. Okabe · 9 min read</p>
+      <figure>
+        <div class="photo"></div>
+        <figcaption>Low tide at Pelican Point, 6:40 in the morning.</figcaption>
+      </figure>
       <p>
         A tide pool is an exercise in staying. The anemones fold in on themselves and wait. The
         hermit crabs carry their borrowed rooms from shadow to shadow. Everything that remains has

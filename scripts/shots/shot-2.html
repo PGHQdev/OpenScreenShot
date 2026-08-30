@@ -2,101 +2,108 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>shot 2 — full page</title>
+    <title>shot 2 — region capture</title>
     <link rel="stylesheet" href="poster.css" />
     <style>
-      /* Tall stitched-page strip on the left, text and result on the right. */
-      .strip {
-        position: absolute;
-        left: 36px;
-        top: -24px;
-        width: 232px;
-        height: 620px;
+      /* A region selection in progress. The overlay mirrors what
+         src/content/region-select.ts draws: a 40% mask, a dashed black
+         border with a white halo, four round corner handles, the live W×H
+         readout, and the Capture / Cancel bar. */
+      .window {
+        left: 60px;
+        right: 60px;
+        top: 56px;
+        height: 560px;
       }
-      .strip .ui-frame {
-        inset: 0;
-        border-radius: 10px;
+      .window-body {
+        height: 518px;
       }
-      .seam {
-        position: absolute;
-        left: -8px;
-        right: -8px;
-        border-top: 2px dashed #d43f29;
-        opacity: 0.75;
+      .window-body iframe {
+        width: 780px;
+        height: 900px;
       }
-      .seam .tag {
+      .sel {
         position: absolute;
-        right: 16px;
-        top: -11px;
-        background: #d43f29;
+        left: 132px;
+        top: 96px;
+        width: 516px;
+        height: 300px;
+        border: 2px dashed #000;
+        outline: 1px solid #fff;
+        outline-offset: 1px;
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4);
+      }
+      .sel .h {
+        position: absolute;
+        width: 13px;
+        height: 13px;
+        background: #fff;
+        border: 2px solid #000;
+        border-radius: 50%;
+      }
+      .sel .readout {
+        position: absolute;
+        left: 0;
+        top: -30px;
+        background: rgba(17, 17, 17, 0.85);
         color: #fff;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-        font-size: 10.5px;
-        font-weight: 700;
-        border-radius: 999px;
-        padding: 3px 9px;
+        font:
+          600 12px/1.4 system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        padding: 3px 7px;
+        border-radius: 5px;
+        white-space: nowrap;
       }
-      .copy {
+      .sel .bar {
         position: absolute;
-        left: 330px;
-        top: 44px;
-        width: 380px;
+        right: 0;
+        bottom: -46px;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        background: rgba(17, 17, 17, 0.92);
+        padding: 5px;
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+        font:
+          600 12px/1 system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
       }
-      .copy h1 {
-        font-size: 33px;
+      .sel .bar b {
+        border-radius: 5px;
+        padding: 6px 12px;
+        background: #f8846f;
+        color: #1c1c1e;
       }
-      .result {
-        position: absolute;
-        left: 330px;
-        right: 26px;
-        top: 268px;
-        height: 262px;
-      }
-      .result .ui-frame {
-        inset: 0;
+      .sel .bar span {
+        padding: 6px 10px;
+        color: #cfcfcf;
       }
     </style>
   </head>
   <body>
-    <div class="poster" style="display: block">
-      <div class="strip">
-        <div class="ui-frame">
-          <iframe
-            src="sample-page.html"
-            scrolling="no"
-            style="width: 520px; height: 1460px; transform: scale(0.4462); margin-top: -34px"
-          ></iframe>
-        </div>
-        <div class="seam" style="top: 208px"><span class="tag">stitch</span></div>
-        <div class="seam" style="top: 412px"><span class="tag">stitch</span></div>
+    <div class="ground"></div>
+    <div class="window">
+      <div class="window-top">
+        <span class="lights"><i></i><i></i><i></i></span>
+        <span class="urlbar">thecoastalalmanac.com/field-notes/42</span>
+        <span class="ext-icon"><img src="brand-mark.svg" width="20" height="20" alt="" /></span>
       </div>
-
-      <div class="copy">
-        <div class="wordmark">
-          <img src="brand-mark.svg" width="26" height="26" alt="" />
-          OpenScreenShot
-        </div>
-        <h1>Capture the <span class="coral">whole page</span>. Not just the viewport.</h1>
-        <p class="sub">
-          Full-page, visible-area, and region screenshots from one popup — one click, or one
-          shortcut. Long pages scroll &amp; stitch automatically.
-        </p>
-      </div>
-
-      <div class="result">
-        <div class="ui-frame">
-          <div class="browser-top">
-            <span class="dots"><i></i><i></i><i></i></span>
-            <span class="urlbar">thecoastalalmanac.com</span>
-          </div>
-          <iframe
-            src="sample-page.html"
-            scrolling="no"
-            style="width: 860px; height: 780px; transform: scale(0.63)"
-          ></iframe>
-        </div>
-        <div class="badge-note" style="right: 14px; bottom: -14px">
-          <span class="dot"></span> One click · entire scrolling page
+      <div class="window-body">
+        <iframe src="sample-page.html" scrolling="no"></iframe>
+        <div class="sel">
+          <span class="h" style="left: -7px; top: -7px"></span>
+          <span class="h" style="right: -7px; top: -7px"></span>
+          <span class="h" style="left: -7px; bottom: -7px"></span>
+          <span class="h" style="right: -7px; bottom: -7px"></span>
+          <span class="readout">516 × 300</span>
+          <span class="bar"><b>Capture</b><span>Cancel</span></span>
         </div>
       </div>
     </div>

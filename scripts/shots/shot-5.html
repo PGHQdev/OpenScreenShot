@@ -2,117 +2,35 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>shot 5 — record</title>
+    <title>shot 5 — the recorder</title>
     <link rel="stylesheet" href="poster.css" />
     <style>
-      /* Centered, symmetric: same family as shot 4, different cards. */
-      .center {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
+      /* The real recorder editor (recorder.png), timeline and all: the
+         capture is 1280x800 and the window shows it whole, so the
+         auto-zoom blocks at the bottom stay in the picture. */
+      .window {
+        left: 60px;
+        right: 60px;
+        top: 34px;
+        height: 560px;
       }
-      .center .wordmark {
-        margin-bottom: 20px;
-      }
-      .center h1 {
-        font-size: 34px;
-        margin-bottom: 10px;
-      }
-      .center .sub {
-        max-width: 560px;
-        margin-bottom: 30px;
-      }
-      .cards {
-        display: flex;
-        gap: 16px;
-        margin-bottom: 30px;
-      }
-      .card {
-        width: 176px;
-        background: #fafaf7;
-        border: 1px solid #e2ded4;
-        border-radius: 14px;
-        padding: 20px 16px 18px;
-        box-shadow: 0 14px 30px -18px rgba(27, 26, 23, 0.25);
-      }
-      .card .ext {
-        display: inline-grid;
-        place-items: center;
-        height: 34px;
-        min-width: 62px;
-        padding: 0 12px;
-        border-radius: 9px;
-        background: #e8503a;
-        color: #fff;
-        font-weight: 800;
-        font-size: 14px;
-        letter-spacing: 0.02em;
-        margin-bottom: 12px;
-      }
-      .card.ink .ext {
-        background: #1b1a17;
-        color: #fafaf7;
-      }
-      .card.amber .ext {
-        background: #f5a623;
-        color: #1b1a17;
-      }
-      .card b {
-        display: block;
-        font-size: 13.5px;
-        letter-spacing: -0.01em;
-        margin-bottom: 4px;
-      }
-      .card span {
-        font-size: 11.5px;
-        line-height: 1.45;
-        color: #6d685e;
+      .window-body img {
+        width: 1280px;
+        height: 800px;
+        transform: scale(0.609375);
       }
     </style>
   </head>
   <body>
-    <div class="poster" style="display: block">
-      <div class="center">
-        <div class="wordmark">
-          <img src="brand-mark.svg" width="26" height="26" alt="" />
-          OpenScreenShot
-        </div>
-        <h1>Record <span class="coral">the tab, too.</span></h1>
-        <p class="sub">
-          One click starts a tab recording, with your mic, the tab’s audio, and a draggable webcam
-          bubble if you want them — then a timeline editor to trim it.
-        </p>
-        <div class="cards">
-          <div class="card">
-            <span class="ext">REC</span>
-            <b>One click</b>
-            <span>Starts from the popup or a shortcut, stops from anywhere</span>
-          </div>
-          <div class="card ink">
-            <span class="ext">CAM</span>
-            <b>Webcam bubble</b>
-            <span>Draggable, resizable, optional</span>
-          </div>
-          <div class="card amber">
-            <span class="ext">EDIT</span>
-            <b>Timeline editor</b>
-            <span>Zooms to every click, trims the take</span>
-          </div>
-          <div class="card">
-            <span class="ext">WEBM</span>
-            <b>One file</b>
-            <span>Written as you record, so a crash keeps the take</span>
-          </div>
-        </div>
-        <div class="chips" style="margin-top: 0; padding-top: 0">
-          <span class="chip"><span class="dot"></span>Mic &amp; tab audio</span>
-          <span class="chip"><span class="dot"></span>tabCapture, asked once</span>
-          <span class="chip"><span class="dot"></span>No upload</span>
-        </div>
+    <div class="ground mirror"></div>
+    <div class="window">
+      <div class="window-top">
+        <span class="lights"><i></i><i></i><i></i></span>
+        <span class="urlbar">OpenScreenShot — Recorder</span>
+        <span class="ext-icon"><img src="brand-mark.svg" width="20" height="20" alt="" /></span>
+      </div>
+      <div class="window-body">
+        <img src="captures/recorder.png" alt="" />
       </div>
     </div>
   </body>

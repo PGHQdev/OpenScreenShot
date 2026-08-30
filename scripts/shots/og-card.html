@@ -10,107 +10,72 @@
         width: 1200px;
         height: 630px;
       }
-      .og {
-        position: absolute;
-        inset: 0;
-      }
       .copy {
         position: absolute;
-        left: 64px;
+        left: 72px;
         top: 50%;
         transform: translateY(-50%);
-        width: 420px;
+        width: 470px;
       }
       .copy .wordmark {
         font-size: 18px;
-        margin-bottom: 26px;
+        margin-bottom: 30px;
       }
       .copy h1 {
-        font-size: 46px;
-        margin-bottom: 16px;
+        font-size: 52px;
+        margin-bottom: 18px;
       }
       .copy .sub {
-        font-size: 16px;
-        margin-bottom: 24px;
-        max-width: 400px;
+        font-size: 17px;
+        margin-bottom: 26px;
+        max-width: 430px;
       }
-      .copy .chips {
-        margin-top: 0;
-        padding-top: 0;
+      .copy .chip {
+        font-size: 13px;
+        padding: 6px 13px;
       }
-      .stage {
-        position: absolute;
-        left: 520px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 608px;
-        height: 380px;
+      /* the editor, running off the right and bottom edges */
+      .window {
+        left: 600px;
+        top: 96px;
+        width: 720px;
+        height: 600px;
       }
-      .stage .ui-frame {
-        inset: 0;
-        border-radius: 16px;
-      }
-      .stage img {
-        border: 0;
-        display: block;
+      .window-body img {
         width: 1280px;
         height: 800px;
-        transform: scale(0.475);
-        transform-origin: top left;
-      }
-      /* capture-bracket corners echoing the icon */
-      .corner {
-        position: absolute;
-        width: 44px;
-        height: 44px;
-        border: 5px solid #d43f29;
-        opacity: 0.9;
-      }
-      .corner.tl {
-        top: 36px;
-        left: 36px;
-        border-right: 0;
-        border-bottom: 0;
-        border-radius: 8px 0 0 0;
-      }
-      .corner.bl {
-        bottom: 36px;
-        left: 36px;
-        border-right: 0;
-        border-top: 0;
-        border-radius: 0 0 0 8px;
-        border-color: #f5a623;
+        transform: scale(0.5625);
       }
     </style>
   </head>
   <body>
-    <div class="og">
-      <span class="corner tl"></span>
-      <span class="corner bl"></span>
-      <div class="copy">
-        <div class="wordmark">
-          <img src="brand-mark.svg" width="30" height="30" alt="" />
-          OpenScreenShot
-        </div>
-        <h1>
-          <span class="coral">Full page</span> screenshot &amp;
-          <span class="amber">annotate</span>
-        </h1>
-        <p class="sub">
-          Capture the entire scrolling page, mark it up, and export as PNG, JPEG, WebP, or PDF — all
-          on your device.
-        </p>
-        <div class="chips">
-          <span class="chip"><span class="dot"></span>Free</span>
-          <span class="chip"><span class="dot"></span>Open source</span>
-          <span class="chip"><span class="dot"></span>100% private</span>
-        </div>
+    <div class="ground"></div>
+    <div class="copy">
+      <div class="wordmark">
+        <img src="brand-mark.svg" width="30" height="30" alt="" />
+        OpenScreenShot
       </div>
-
-      <div class="stage">
-        <div class="ui-frame">
-          <img src="captures/editor.png" alt="" />
-        </div>
+      <h1>
+        Full page screenshots for Chrome. <span class="muted">Nothing leaves your machine.</span>
+      </h1>
+      <p class="sub">
+        Capture the whole page, draw on it, and export PNG, JPEG, WebP or PDF. Record the tab when a
+        still image is not enough.
+      </p>
+      <div class="chips">
+        <span class="chip"><span class="dot"></span>Free</span>
+        <span class="chip"><span class="dot"></span>Open source</span>
+        <span class="chip"><span class="dot"></span>No account</span>
+        <span class="chip"><span class="dot"></span>No upload</span>
+      </div>
+    </div>
+    <div class="window">
+      <div class="window-top">
+        <span class="lights"><i></i><i></i><i></i></span>
+        <span class="urlbar">OpenScreenShot — Editor</span>
+      </div>
+      <div class="window-body">
+        <img src="captures/editor.png" alt="" />
       </div>
     </div>
   </body>

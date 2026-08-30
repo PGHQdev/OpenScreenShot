@@ -10,63 +10,52 @@
         width: 440px;
         height: 280px;
       }
-      .tile {
+      .copy {
         position: absolute;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        padding: 0 36px;
+        left: 30px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 250px;
       }
-      .tile .wordmark {
-        margin-bottom: 18px;
-      }
-      .tile h1 {
-        font-size: 31px;
-        margin-bottom: 12px;
-      }
-      .tile .sub {
+      .copy .wordmark {
         font-size: 13px;
-        margin-bottom: 0;
-        max-width: 330px;
+        margin-bottom: 14px;
       }
-      /* capture-bracket corners echoing the icon */
-      .corner {
-        position: absolute;
-        width: 34px;
-        height: 34px;
-        border: 4px solid #d43f29;
-        opacity: 0.9;
+      .copy .wordmark img {
+        width: 22px;
+        height: 22px;
       }
-      .corner.tr {
-        top: 22px;
-        right: 22px;
-        border-left: 0;
-        border-bottom: 0;
-        border-radius: 0 8px 0 0;
+      .copy h1 {
+        font-size: 26px;
+        margin-bottom: 10px;
       }
-      .corner.br {
-        bottom: 22px;
-        right: 22px;
-        border-left: 0;
-        border-top: 0;
-        border-radius: 0 0 8px 0;
-        border-color: #f5a623;
+      .copy .sub {
+        font-size: 12px;
+        max-width: 230px;
+      }
+      /* the popup, cut mid-card by the tile's edge */
+      .popup {
+        left: 300px;
+        top: 34px;
+        border-radius: 12px;
+      }
+      .popup img {
+        width: 260px;
       }
     </style>
   </head>
   <body>
-    <div class="tile">
+    <div class="ground"></div>
+    <div class="copy">
       <div class="wordmark">
-        <img src="brand-mark.svg" width="26" height="26" alt="" />
+        <img src="brand-mark.svg" width="22" height="22" alt="" />
         OpenScreenShot
       </div>
-      <h1>
-        <span class="coral">Full page</span> screenshot &amp; <span class="amber">annotate</span>
-      </h1>
-      <p class="sub">Free, open source, 100% private — capture, edit, and export on your device.</p>
-      <span class="corner tr"></span>
-      <span class="corner br"></span>
+      <h1>Full page screenshots. <span class="muted">Kept on your machine.</span></h1>
+      <p class="sub">Free, open source. Capture, annotate, export and record, with no upload.</p>
+    </div>
+    <div class="popup">
+      <img src="captures/popup.png" alt="" />
     </div>
   </body>
 </html>
