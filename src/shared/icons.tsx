@@ -226,6 +226,16 @@ export function IconHistory(props: IconProps) {
   );
 }
 
+/** Outer frame with a small window in the corner — pin in a floating window. */
+export function IconPictureInPicture(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <rect x="12" y="12" width="7" height="5" rx="1" />
+    </StrokeIcon>
+  );
+}
+
 export function IconChevronDown(props: IconProps) {
   return (
     <StrokeIcon {...props}>

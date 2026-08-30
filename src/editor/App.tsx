@@ -22,6 +22,7 @@ import {
   IconLayers,
   IconLine,
   IconPen,
+  IconPictureInPicture,
   IconRectangle,
   IconRedo,
   IconSelect,
@@ -39,6 +40,7 @@ import { stylebarFields } from './stylebar';
 import { ShortcutSheet } from './ShortcutSheet';
 import { HistorySheet } from './HistorySheet';
 import { hasScreenPicker, openScreenPicker } from './eyedropper';
+import { hasPinWindow } from './pin';
 import {
   clampTargetWidth,
   exportWidthCeiling,
@@ -61,6 +63,12 @@ export function App() {
     new URLSearchParams(window.location.search).has('history'),
   );
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
+  // Document Picture-in-Picture is absent on some browsers — checked once at
+  // mount (it doesn't change mid-session), same as canPickScreen below for
+  // the eyedropper. Absent means the Pin button is hidden outright rather
+  // than shown disabled: matches this file's only existing precedent for a
+  // missing browser API.
+  const [canPin] = useState(() => hasPinWindow(window));
   const [dragOver, setDragOver] = useState(false);
   const toolbarRef = useRef<HTMLElement>(null);
   // Echoes stageNoticeT.mounted for draftPromptT to gate on, one render
@@ -260,6 +268,17 @@ export function App() {
           >
             <IconHistory size={16} />
           </button>
+          {canPin ? (
+            <button
+              class="icon-btn"
+              title="Pin in a floating window — closes with this tab"
+              aria-label="Pin in a floating window"
+              disabled={!ed.capture}
+              onClick={ed.pinCapture}
+            >
+              <IconPictureInPicture size={16} />
+            </button>
+          ) : null}
           <button
             class="icon-btn"
             title="Keyboard shortcuts (?)"

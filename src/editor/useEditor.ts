@@ -123,6 +123,15 @@ import {
 } from './draft';
 import { canvasToDataUrl, downloadDataUrl, withExtension, type ImageFormat } from './export';
 import {
+  hasPinWindow,
+  pinFailureReason,
+  PIN_UNAVAILABLE_REASON,
+  pinWindowSize,
+  renderPinWindow,
+  requestPinWindow,
+  updatePinWindowImage,
+} from './pin';
+import {
   historyStep,
   HISTORY_IMAGE_BUDGET_PX,
   trimHistoryImages,
@@ -263,6 +272,13 @@ export function useEditor() {
    * than being rewritten.
    */
   const baseImageRef = useRef<HTMLImageElement | null>(null);
+  /**
+   * The Document Picture-in-Picture window opened by pinCapture, or null
+   * before Pin is clicked and after the window closes. Ref-only: nothing in
+   * this component's own DOM renders from it, and re-checking `.closed`
+   * before every write is cheaper than tracking its lifetime in state.
+   */
+  const pinWindowRef = useRef<Window | null>(null);
   /**
    * A cut band being drafted. Ref-only: nothing in the DOM renders from it —
    * the preview is on the canvas and the wording is in the live region — and a
@@ -2366,6 +2382,49 @@ export function useEditor() {
     await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
   }, []);
 
+  // Pin the composed image (with annotations, crop and beautify frame — the
+  // same picture Copy/Export would produce) in a floating always-on-top
+  // window. Chosen over a pin-time snapshot: the point of a floating pin is
+  // to keep matching what the editor holds while the user keeps editing, so
+  // the refresh effect below re-composes on every change that would also
+  // change what Copy/Export produce. hasPinWindow gates App.tsx's own button
+  // too (the button is hidden rather than disabled when it's false, same as
+  // eyedropper.ts's canPickScreen), so this repeats the check only because a
+  // keyboard shortcut or a stale render could still reach here.
+  const pinCapture = useCallback(async () => {
+    const c = controllerRef.current;
+    if (!c || !c.image) return;
+    if (!hasPinWindow(window)) {
+      setStageNotice(PIN_UNAVAILABLE_REASON);
+      return;
+    }
+    const composed = c.composeFinal();
+    const dataUrl = canvasToDataUrl(composed, 'png', 1);
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    try {
+      const pipWindow = await requestPinWindow(
+        window,
+        pinWindowSize(composed.width, composed.height),
+      );
+      renderPinWindow(pipWindow, dataUrl, theme);
+      pinWindowRef.current = pipWindow;
+    } catch (err) {
+      setStageNotice(pinFailureReason(err));
+    }
+  }, []);
+
+  // Keep a pinned window showing what Copy/Export would produce right now —
+  // the same dependency list composedSize (below) already uses, since a pin
+  // needs to redraw for exactly the changes that would change that size or
+  // its pixels: annotations, the beautify frame, cut bands and (via
+  // imageSize, set on decode) a crop.
+  useEffect(() => {
+    const win = pinWindowRef.current;
+    const c = controllerRef.current;
+    if (!win || win.closed || !c || !c.image) return;
+    updatePinWindowImage(win, canvasToDataUrl(c.composeFinal(), 'png', 1));
+  }, [annotations, frame, bands, imageSize]);
+
   const exportPdf = useCallback(async (opts: PdfOptions, filenameBase: string) => {
     const c = controllerRef.current;
     if (!c || !c.image) return;
@@ -2476,6 +2535,7 @@ export function useEditor() {
     exportImage,
     exportPdf,
     copyImage,
+    pinCapture,
     defaultFilename,
     exporting,
     exportProgress,

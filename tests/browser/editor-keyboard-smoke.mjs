@@ -4113,6 +4113,181 @@ async function testCaptureHistoryShelf(browser, base) {
   await page.close();
 }
 
+/**
+ * task 29: Pin a capture via Document Picture-in-Picture.
+ *
+ * This headless Chrome turns out to genuinely implement
+ * documentPictureInPicture on a real http(s) page (confirmed separately:
+ * `typeof window.documentPictureInPicture` reads "undefined" only on
+ * about:blank, an opaque-origin quirk — on the dist server's own origin it
+ * is a real object with a real requestWindow). So the open path is driven
+ * for real below: a trusted click (page.click(), CDP Input events — see
+ * testPdfExportInBackgroundTab's module comment for why that counts as
+ * real, not synthetic, input) opens a genuine Document Picture-in-Picture
+ * window, which Puppeteer attaches to as its own page (found by diffing
+ * browser.targets() around the click) and every assertion below reads back
+ * from that real window: its title, its stylesheet, its <img>, and — after
+ * an edit on the opener — its redrawn picture.
+ *
+ * Two things this Chrome build cannot be made to do stand in for
+ * themselves instead:
+ *   - The absent-API case: since the real API is present here, it is forced
+ *     absent (a getter override before the app's own scripts run) rather
+ *     than found missing on its own.
+ *   - The rejected-request case: this build does not enforce user
+ *     activation on requestWindow() at all (confirmed separately: even a
+ *     call with no click anywhere resolves), so a real NotAllowedError
+ *     cannot be produced here. That branch runs against a stubbed
+ *     documentPictureInPicture instead, the same shape
+ *     tests/unit/pin.test.ts stubs for the same branch.
+ */
+async function testPinToFloatingWindow(browser, base) {
+  const pinBtn = 'button[aria-label="Pin in a floating window"]';
+
+  step('task 29: the Pin button is absent when Document Picture-in-Picture is unavailable');
+  {
+    const { page } = await newSmokePage(browser);
+    const crashes = [];
+    page.on('pageerror', (err) => crashes.push(String(err)));
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(window, 'documentPictureInPicture', {
+        get: () => undefined,
+        configurable: true,
+      });
+    });
+    await page.evaluateOnNewDocument(installChromeStub, {
+      'openscreenshot:last-capture': await makeCapture(),
+    });
+    await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+    await page.waitForSelector('.stage-canvas');
+    await new Promise((r) => setTimeout(r, 900));
+    assert(
+      (await page.evaluate(() => window.documentPictureInPicture)) === undefined,
+      'the override really reads as undefined, the way a browser without the API would',
+    );
+    assert(
+      (await page.$(pinBtn)) === null,
+      'the Pin button does not render — never a disabled no-op, just absent',
+    );
+    assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+    await page.close();
+  }
+
+  step('task 29: with the API present, Pin opens a real Document Picture-in-Picture window');
+  const { page } = await newSmokePage(browser);
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': await makeCapture(),
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+
+  await page.waitForSelector(pinBtn, { timeout: 5000 });
+  const pinTitle = await page.$eval(pinBtn, (el) => el.getAttribute('title'));
+  assert(
+    /closes with this tab/.test(pinTitle ?? ''),
+    `the button's own tooltip says the window closes with the tab (${pinTitle})`,
+  );
+
+  const knownTargets = new Set(browser.targets());
+  await page.click(pinBtn); // trusted click, dispatched via CDP Input events
+
+  let pipTarget = null;
+  for (let i = 0; i < 25 && !pipTarget; i++) {
+    pipTarget = browser
+      .targets()
+      .find((t) => t.type() === 'page' && t.url() === 'about:blank' && !knownTargets.has(t));
+    if (!pipTarget) await new Promise((r) => setTimeout(r, 200));
+  }
+  assert(pipTarget !== null, 'a real Document Picture-in-Picture window opened');
+  const pipPage = await pipTarget.page();
+
+  const pipTitle = await pipPage.title();
+  assert(
+    pipTitle.startsWith('Pinned capture') && pipTitle.includes('updates as you edit'),
+    `the window's title says what it shows and that it stays live (${pipTitle})`,
+  );
+  const styleText = await pipPage.$eval('style', (el) => el.textContent);
+  assert(
+    styleText.includes('object-fit:contain') && styleText.includes('overflow:hidden'),
+    'the pinned window carries its own stylesheet: the picture fitted, no scrollbars',
+  );
+  const firstSrc = await pipPage.$eval('img', (el) => el.src);
+  assert(
+    firstSrc.startsWith('data:image/png;base64,'),
+    'the composed picture landed as a PNG <img>, same encoding Copy/Export use',
+  );
+
+  step('task 29: the pinned window redraws live as the capture is edited');
+  await page.click('button[title^="Rectangle"]');
+  const box = await page.$eval('.stage-canvas', (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.x, y: r.y, w: r.width, h: r.height };
+  });
+  await page.mouse.move(box.x + box.w * 0.3, box.y + box.h * 0.3);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.w * 0.6, box.y + box.h * 0.6, { steps: 8 });
+  await page.mouse.up();
+  await pipPage.waitForFunction(
+    (before) => document.querySelector('img').src !== before,
+    { timeout: 5000 },
+    firstSrc,
+  );
+  const secondSrc = await pipPage.$eval('img', (el) => el.src);
+  assert(
+    secondSrc !== firstSrc,
+    'drawing an annotation re-composed the pinned image — not a snapshot from when Pin was clicked',
+  );
+
+  step('task 29: the pinned window closes with the tab that opened it');
+  let pipClosed = false;
+  const onDestroyed = (t) => {
+    if (t === pipTarget) pipClosed = true;
+  };
+  browser.on('targetdestroyed', onDestroyed);
+  await page.close();
+  for (let i = 0; i < 15 && !pipClosed; i++) await new Promise((r) => setTimeout(r, 200));
+  browser.off('targetdestroyed', onDestroyed);
+  assert(pipClosed, 'closing the tab that opened it closes the pinned window too');
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+
+  step('task 29: a rejected request surfaces its reason in the stage-notice pill');
+  // Stubbed, per the module comment above: this build does not enforce user
+  // activation, so a real rejection cannot be produced against it.
+  const { page: page3 } = await newSmokePage(browser);
+  const crashes3 = [];
+  page3.on('pageerror', (err) => crashes3.push(String(err)));
+  // A plain assignment silently no-ops here: the real API (confirmed present
+  // on this origin) sits behind a getter-only accessor, so overriding it
+  // needs defineProperty, the same way the absent-API case above does.
+  await page3.evaluateOnNewDocument(() => {
+    Object.defineProperty(window, 'documentPictureInPicture', {
+      configurable: true,
+      get: () => ({
+        requestWindow: () => Promise.reject(new DOMException('blocked', 'NotAllowedError')),
+      }),
+    });
+  });
+  await page3.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': await makeCapture(),
+  });
+  await page3.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page3.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+  await page3.waitForSelector(pinBtn, { timeout: 5000 });
+  await page3.click(pinBtn);
+  await page3.waitForSelector('.stage-notice', { timeout: 5000 });
+  const noticeText = await page3.$eval('.stage-notice span', (el) => el.textContent);
+  assert(
+    noticeText === 'Could not open the pinned window — try clicking Pin again.',
+    `the pill names the rejection (${noticeText})`,
+  );
+  assert(crashes3.length === 0, `no page errors (${crashes3.join(' | ') || 'none'})`);
+  await page3.close();
+}
+
 async function main() {
   const built = await stat(join(DIST, PAGE.slice(1))).then(
     () => true,
@@ -5248,6 +5423,7 @@ async function main() {
     await testBeautifyLooks(browser, base);
     await testCropHandlesAndUndo(browser, base);
     await testCaptureHistoryShelf(browser, base);
+    await testPinToFloatingWindow(browser, base);
 
     console.log('\nALL STEPS PASSED');
   } finally {
