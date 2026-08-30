@@ -549,6 +549,18 @@
       }
     }
   },
+  "recorderUndoPlain": {
+    "message": "Undo.",
+    "description": "Recorder page: live-region announcement for an undo whose step names no single editor field."
+  },
+  "recorderRedoPlain": {
+    "message": "Redo.",
+    "description": "Recorder page: live-region announcement for a redo whose step names no single editor field."
+  },
+  "recorderTrim": {
+    "message": "Trim",
+    "description": "Recorder page: the trim, named by an undo/redo announcement — the timeline has a start and an end handle per segment (recorderTrimStart/recorderTrimEnd), and the announcement names the pair."
+  },
   "recorderZoomBlockOne": {
     "message": "1 zoom block",
     "description": "Recorder page: the zoom-block count an undo/redo announcement carries, when there is exactly one."

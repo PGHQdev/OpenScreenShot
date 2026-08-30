@@ -48,6 +48,74 @@ export interface RecorderHistoryStep {
   history: RecorderHistory;
 }
 
+/**
+ * What one step moved, for the live region to name. `zoomBlocks` carries the
+ * count the step lands on, the way the image editor announces a layer total;
+ * `field` carries the i18n key of the rail control the user recognises;
+ * `none` is a step that moved nothing this module can name.
+ */
+export type StepDifference =
+  { kind: 'zoomBlocks'; total: number } | { kind: 'field'; labelKey: string } | { kind: 'none' };
+
+/**
+ * The fields a step can name, in the order one is picked when several moved.
+ *
+ * Trims come before the zoom blocks on purpose: `setTrim` always rebuilds the
+ * blocks through `clampBlocksTo`, so every trim step moves two fields, and the
+ * trim is the one the user dragged. Each key is the label of the control that
+ * makes the edit, so the region names what the user reaches for — not a second
+ * vocabulary invented for the announcement.
+ *
+ * `autoZoomDone` is deliberately absent: only the auto zoom's seeding run
+ * writes it, and that is not a step.
+ */
+const NAMED_FIELDS: readonly { of: (e: RecorderEdit) => unknown; labelKey: string }[] = [
+  { of: (e) => e.trims, labelKey: 'recorderTrim' },
+  { of: (e) => e.volumes.tab, labelKey: 'recorderVolTab' },
+  { of: (e) => e.volumes.mic, labelKey: 'recorderVolMic' },
+  { of: (e) => e.bubble, labelKey: 'recorderBubble' },
+  { of: (e) => e.frame, labelKey: 'recorderBeautify' },
+  { of: (e) => e.ripple, labelKey: 'recorderRipple' },
+  { of: (e) => e.pointer, labelKey: 'recorderPointer' },
+];
+
+/**
+ * Deep equality over the draft's own value shapes. Every editor field is
+ * JSON-serialisable by construction — it goes into IndexedDB as it stands —
+ * so one comparison covers all of them, and it has to be by value rather than
+ * by reference: a mutator that rebuilds an array or an object without changing
+ * a number in it has not made a step.
+ */
+function sameValue(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  const aKeys = Object.keys(a as Record<string, unknown>);
+  const bKeys = Object.keys(b as Record<string, unknown>);
+  if (aKeys.length !== bKeys.length) return false;
+  return aKeys.every(
+    (key) =>
+      key in (b as Record<string, unknown>) &&
+      sameValue((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key]),
+  );
+}
+
+/**
+ * What moved between two editor states. `none` means they carry the same
+ * edit — which is also how a mutator tells that it has nothing to bank.
+ */
+export function stepDifference(from: RecorderEdit, to: RecorderEdit): StepDifference {
+  for (const field of NAMED_FIELDS) {
+    if (!sameValue(field.of(from), field.of(to))) {
+      return { kind: 'field', labelKey: field.labelKey };
+    }
+  }
+  if (!sameValue(from.zoomBlocks, to.zoomBlocks)) {
+    return { kind: 'zoomBlocks', total: to.zoomBlocks.length };
+  }
+  return { kind: 'none' };
+}
+
 export function emptyHistory(): RecorderHistory {
   return { past: [], future: [] };
 }

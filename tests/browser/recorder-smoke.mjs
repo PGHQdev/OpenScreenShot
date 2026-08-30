@@ -895,6 +895,8 @@ async function main() {
         ? messages.recorderZoomBlockOne.message
         : messages.recorderZoomBlockMany.message.replace(/\$COUNT\$/i, String(n));
     const announcementFor = (key, n) => messages[key].message.replace(/\$BLOCKS\$/i, zoomPhrase(n));
+    const announcementNaming = (key, labelKey) =>
+      messages[key].message.replace(/\$BLOCKS\$/i, messages[labelKey].message);
 
     const fresh = await historyState();
     assert(
@@ -902,10 +904,42 @@ async function main() {
       'undo and redo start disabled — the auto zoom is not a step the user took',
     );
 
-    // Deleting the only zoom block is the edit the removed `Regenerate auto
-    // zoom` button used to be the sole (dishonest) escape from.
+    // Seven of the eight editable fields are not zoom blocks, and an undo of
+    // one has to say so: the live region is the only feedback a screen-reader
+    // user gets for a step. The ripple switch is the cheapest of the seven to
+    // drive, and it leaves the draft where it found it.
+    await page.click('.rail-section input.switch');
+    await page.waitForFunction(
+      () => document.querySelector('.rail-section input.switch')?.checked === false,
+      { timeout: 5000 },
+    );
+    await chord(false);
+    await page.waitForFunction(
+      () => document.querySelector('.rail-section input.switch')?.checked === true,
+      { timeout: 5000 },
+    );
+    const afterSwitchUndo = await historyState();
+    assert(true, 'Ctrl+Z puts the click-ripple switch back');
+    assert(
+      afterSwitchUndo.announced === announcementNaming('recorderUndoAnnounce', 'recorderRipple'),
+      `a non-zoom undo names the control it took back ("${afterSwitchUndo.announced}")`,
+    );
+
     await page.click('.rec-tl-zoom');
     await page.waitForSelector('.rec-zoom-delete', { timeout: 5000 });
+
+    // Re-picking the scale already in force rebuilds the block without moving
+    // a value in it. That is not a step, so the redo the switch's undo armed
+    // must still be there — a banked step would have dropped it.
+    await page.click('.rec-seg-btn[aria-pressed="true"]');
+    const afterNoOp = await historyState();
+    assert(
+      afterNoOp.redoDisabled === false,
+      're-picking the zoom scale already in force banked no step, so its redo survived',
+    );
+
+    // Deleting the only zoom block is the edit the removed `Regenerate auto
+    // zoom` button used to be the sole (dishonest) escape from.
     await page.click('.rec-zoom-delete');
     await waitForBlocks(0);
     assert(true, 'deleting the selected zoom block empties the zoom track');

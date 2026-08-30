@@ -4,6 +4,7 @@ import {
   historyStep,
   HISTORY_DEPTH,
   pushHistory,
+  stepDifference,
   type RecorderHistory,
 } from '../../src/recorder/recorder-history';
 import {
@@ -127,5 +128,91 @@ describe('the stack riding the draft', () => {
     expect(parsed?.history.past[0]).toEqual(edit(4));
     expect(parsed?.history.future).toHaveLength(HISTORY_DEPTH);
     expect(parsed?.history.future[0]).toEqual(edit(0));
+  });
+});
+
+describe('stepDifference', () => {
+  const base = edit(1);
+
+  it('names nothing when the two states carry the same edit', () => {
+    expect(stepDifference(base, { ...base })).toEqual({ kind: 'none' });
+  });
+
+  it('names nothing when a fresh array or object holds the same values', () => {
+    // Re-selecting an already-active scale, corner or swatch rebuilds the
+    // value without changing it: not a step, and nothing to announce.
+    const rebuilt = {
+      ...base,
+      zoomBlocks: base.zoomBlocks.map((b) => ({ ...b })),
+      bubble: { ...base.bubble },
+      frame: { ...base.frame },
+    };
+    expect(stepDifference(base, rebuilt)).toEqual({ kind: 'none' });
+  });
+
+  it('names the zoom blocks, with the count the step lands on', () => {
+    expect(stepDifference(base, { ...base, zoomBlocks: [] })).toEqual({
+      kind: 'zoomBlocks',
+      total: 0,
+    });
+    expect(stepDifference({ ...base, zoomBlocks: [] }, base)).toEqual({
+      kind: 'zoomBlocks',
+      total: 1,
+    });
+  });
+
+  it('names a trim', () => {
+    const trimmed = { ...base, trims: { seg1: { start: 250, end: 0 } } };
+    expect(stepDifference(base, trimmed)).toEqual({ kind: 'field', labelKey: 'recorderTrim' });
+  });
+
+  it('names the trim, not the blocks, when a trim clamped them too', () => {
+    // setTrim always rebuilds zoomBlocks through clampBlocksTo, so a trim step
+    // moves two fields. The trim is the one the user dragged.
+    const trimmed = { ...base, trims: { seg1: { start: 250, end: 0 } }, zoomBlocks: [] };
+    expect(stepDifference(base, trimmed)).toEqual({ kind: 'field', labelKey: 'recorderTrim' });
+  });
+
+  it('names each volume slider apart', () => {
+    expect(stepDifference(base, { ...base, volumes: { tab: 0.4, mic: 1 } })).toEqual({
+      kind: 'field',
+      labelKey: 'recorderVolTab',
+    });
+    expect(stepDifference(base, { ...base, volumes: { tab: 1, mic: 0.4 } })).toEqual({
+      kind: 'field',
+      labelKey: 'recorderVolMic',
+    });
+  });
+
+  it('names the bubble', () => {
+    const moved = { ...base, bubble: { ...base.bubble, corner: 'tl' as const, x: 0.1 } };
+    expect(stepDifference(base, moved)).toEqual({ kind: 'field', labelKey: 'recorderBubble' });
+  });
+
+  it('names beautify, down to a nested background', () => {
+    const padded = { ...base, frame: { ...base.frame, beautifyPadding: 12 } };
+    expect(stepDifference(base, padded)).toEqual({ kind: 'field', labelKey: 'recorderBeautify' });
+    const swatched = {
+      ...base,
+      frame: { ...base.frame, beautifyBackground: { kind: 'transparent' as const } },
+    };
+    expect(stepDifference(base, swatched)).toEqual({ kind: 'field', labelKey: 'recorderBeautify' });
+  });
+
+  it('names the ripple and the cursor apart', () => {
+    expect(stepDifference(base, { ...base, ripple: !base.ripple })).toEqual({
+      kind: 'field',
+      labelKey: 'recorderRipple',
+    });
+    expect(stepDifference(base, { ...base, pointer: !base.pointer })).toEqual({
+      kind: 'field',
+      labelKey: 'recorderPointer',
+    });
+  });
+
+  it('says nothing about the auto-zoom flag, which no step ever moves', () => {
+    expect(stepDifference(base, { ...base, autoZoomDone: !base.autoZoomDone })).toEqual({
+      kind: 'none',
+    });
   });
 });

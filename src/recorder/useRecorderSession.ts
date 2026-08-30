@@ -57,7 +57,14 @@ import {
   type RecorderDraft,
   type RecorderEdit,
 } from './recorder-draft';
-import { emptyHistory, historyStep, pushHistory, type RecorderHistory } from './recorder-history';
+import {
+  emptyHistory,
+  historyStep,
+  pushHistory,
+  stepDifference,
+  type RecorderHistory,
+  type StepDifference,
+} from './recorder-history';
 import {
   autoZoomBlocks,
   EASE_MS,
@@ -76,9 +83,24 @@ function t(id: string, subs?: string[]): string {
   return chrome.i18n.getMessage(id, subs) ?? id;
 }
 
-/** "1 zoom block" / "4 zoom blocks" — what an undo announcement counts. */
+/** "1 zoom block" / "4 zoom blocks" — what a zoom step's announcement counts. */
 function zoomBlockCount(total: number): string {
   return total === 1 ? t('recorderZoomBlockOne') : t('recorderZoomBlockMany', [String(total)]);
+}
+
+/**
+ * What the live region says about one step. Naming the field the step moved is
+ * the whole point: for a screen-reader user this sentence is the only feedback
+ * an undo gives, and seven of the eight editable fields are not zoom blocks —
+ * a bare block count would be true of the timeline and silent about what was
+ * taken back, identically for all seven.
+ */
+function stepAnnouncement(dir: -1 | 1, diff: StepDifference): string {
+  if (diff.kind === 'none') {
+    return t(dir === -1 ? 'recorderUndoPlain' : 'recorderRedoPlain');
+  }
+  const what = diff.kind === 'zoomBlocks' ? zoomBlockCount(diff.total) : t(diff.labelKey);
+  return t(dir === -1 ? 'recorderUndoAnnounce' : 'recorderRedoAnnounce', [what]);
 }
 
 function editorFromDraft(draft: RecorderDraft): EditorState {
@@ -275,9 +297,12 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
     (update: (prev: EditorState) => EditorState) => {
       const prev = editorRef.current;
       const next = update(prev);
-      // An edit that changed nothing is not a step: a trim already at the end
-      // of its travel would otherwise fill the stack with identical entries.
-      if (next === prev) return;
+      // An edit that changed nothing is not a step. The reference check is the
+      // fast path a mutator's own early return takes; the value check catches
+      // the rest — re-picking the scale, corner or swatch already in force
+      // rebuilds an array or an object without moving a number in it, and a
+      // step the user cannot see undone is worse than no step at all.
+      if (next === prev || stepDifference(prev, next).kind === 'none') return;
       const gesture = gestureRef.current;
       applyHistory(pushHistory(historyRef.current, prev, gesture.open && gesture.pushed));
       gesture.pushed = true;
@@ -640,15 +665,14 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
     (dir: -1 | 1) => {
       const step = historyStep(historyRef.current, editorRef.current, dir);
       if (!step) return;
+      const diff = stepDifference(editorRef.current, step.entry);
       applyHistory(step.history);
       applyEditor(step.entry);
       // The alternating trailing space is load-bearing, the same as the image
       // editor's: two undos in a row can produce the same sentence, and an
       // identical string is not a state change, so the region would say
       // nothing the second time.
-      const text = t(dir === -1 ? 'recorderUndoAnnounce' : 'recorderRedoAnnounce', [
-        zoomBlockCount(step.entry.zoomBlocks.length),
-      ]);
+      const text = stepAnnouncement(dir, diff);
       setAnnouncement((prev) => (prev === text ? `${text} ` : text));
     },
     [applyEditor, applyHistory],
