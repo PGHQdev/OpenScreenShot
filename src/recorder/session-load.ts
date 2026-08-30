@@ -12,7 +12,12 @@ import {
   readEvents,
   updateSession,
 } from '../shared/recording-db';
-import type { CursorEvent, RecordingSegment, RecordingSession } from '../shared/recording-types';
+import type {
+  CursorEvent,
+  RecordingSegment,
+  RecordingSession,
+  RecordingSettings,
+} from '../shared/recording-types';
 
 export interface LoadedSegment {
   segment: RecordingSegment;
@@ -34,6 +39,39 @@ export interface LoadedSession {
    * segment's `webcamUrl` null.
    */
   hasAudio: { tab: boolean; mic: boolean };
+}
+
+/**
+ * A track this session's settings asked for, judged against what the
+ * combined chunk stream can actually prove:
+ *  - 'off': never requested, or requested but the evidence rules it out —
+ *    the session has zero `'webcam'`-kind chunks in any segment, which is
+ *    only possible if neither the mic nor the webcam ever recorded (see
+ *    `offscreen/engine.ts`'s recorder-#2, which carries both tracks in one
+ *    stream and drops silently on a declined device).
+ *  - 'confirmed': asserted as fact. Only tab audio qualifies — its capture
+ *    has no silent-decline path (a failure there fails the whole start), so
+ *    `settings.tabAudio` is trustworthy on its own.
+ *  - 'requested': the combined stream has *some* evidence (chunks exist),
+ *    but a mic-only stream and a webcam-only stream are indistinguishable
+ *    from chunk presence alone, so neither can be asserted individually —
+ *    this says "asked for," not "recorded."
+ */
+export type TrackStatus = 'off' | 'confirmed' | 'requested';
+
+export function trackStatuses(
+  settings: RecordingSettings,
+  hasCamStream: boolean,
+): { mic: TrackStatus; tabAudio: TrackStatus; webcam: TrackStatus } {
+  const camTrack = (requested: boolean): TrackStatus => {
+    if (!requested) return 'off';
+    return hasCamStream ? 'requested' : 'off';
+  };
+  return {
+    mic: camTrack(settings.mic),
+    tabAudio: settings.tabAudio ? 'confirmed' : 'off',
+    webcam: camTrack(settings.webcam),
+  };
 }
 
 /** MediaRecorder writes one WebM chunk per second, so this is a rough stand-in

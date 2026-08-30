@@ -405,13 +405,17 @@ async function seedEmptySession() {
 
 /**
  * A session with real-sized (but content-empty) chunks across two segments,
- * mic and tab audio on and webcam off — a stand-in for the "multi-hundred-MB
- * recording" the loading states exist for. The real fixture (`seedSession`)
- * is a real 2 s WebM and loads before a poll can ever catch it mid-flight;
- * this fixture's chunks are large enough that reading them back out of
- * IndexedDB is itself real, observable work, which is what actually stretches
- * the window — CPU throttling alone does not, since a chunk read is mostly
- * IPC/storage-service latency, not renderer JS time.
+ * mic, tab audio and webcam all requested — a stand-in for the "multi-hundred-
+ * MB recording" the loading states exist for, and for a row whose mic/webcam
+ * tracks can only be hedged as "requested" (the combined recorder-#2 stream
+ * has evidence — some 'webcam'-kind chunks — but that evidence cannot say
+ * which of the two tracks it actually is; see `trackStatuses` in
+ * session-load.ts). The real fixture (`seedSession`) is a real 2 s WebM and
+ * loads before a poll can ever catch it mid-flight; this fixture's chunks are
+ * large enough that reading them back out of IndexedDB is itself real,
+ * observable work, which is what actually stretches the window — CPU
+ * throttling alone does not, since a chunk read is mostly IPC/storage-service
+ * latency, not renderer JS time.
  */
 async function seedManyChunksSession() {
   const db = await new Promise((done, fail) => {
@@ -422,8 +426,11 @@ async function seedManyChunksSession() {
   const sessionId = crypto.randomUUID();
   const CHUNK_BYTES = 100_000;
   const segments = [
-    { id: crypto.randomUUID(), index: 0, duration: 90_000, chunkCount: 150 },
-    { id: crypto.randomUUID(), index: 1, duration: 45_000, chunkCount: 150 },
+    // webcamChunkCount > 0 on this one segment is the only chunk-level
+    // evidence a row gets that the combined mic/webcam stream exists at
+    // all — it cannot say which of the two tracks it actually is.
+    { id: crypto.randomUUID(), index: 0, duration: 90_000, chunkCount: 150, webcamChunkCount: 20 },
+    { id: crypto.randomUUID(), index: 1, duration: 45_000, chunkCount: 150, webcamChunkCount: 0 },
   ];
   await new Promise((done, fail) => {
     const tx = db.transaction(['sessions', 'segments', 'chunks'], 'readwrite');
@@ -431,7 +438,7 @@ async function seedManyChunksSession() {
       id: sessionId,
       createdAt: Date.now(),
       status: 'complete',
-      settings: { mic: true, tabAudio: true, webcam: false, ripple: true },
+      settings: { mic: true, tabAudio: true, webcam: true, ripple: true },
       segmentIds: segments.map((s) => s.id),
     });
     const segStore = tx.objectStore('segments');
@@ -444,12 +451,20 @@ async function seedManyChunksSession() {
         startedAt: Date.now(),
         duration: seg.duration,
         viewport: { w: 640, h: 360, dpr: 1 },
-        hasWebcam: false,
+        hasWebcam: seg.webcamChunkCount > 0,
       });
       for (let seq = 0; seq < seg.chunkCount; seq++) {
         chunkStore.put({
           segmentId: seg.id,
           kind: 'tab',
+          seq,
+          blob: new Blob([new Uint8Array(CHUNK_BYTES)]),
+        });
+      }
+      for (let seq = 0; seq < seg.webcamChunkCount; seq++) {
+        chunkStore.put({
+          segmentId: seg.id,
+          kind: 'webcam',
           seq,
           blob: new Blob([new Uint8Array(CHUNK_BYTES)]),
         });
@@ -460,7 +475,7 @@ async function seedManyChunksSession() {
     tx.onabort = () => fail(tx.error);
   });
   db.close();
-  const chunks = segments.reduce((sum, s) => sum + s.chunkCount, 0);
+  const chunks = segments.reduce((sum, s) => sum + s.chunkCount + s.webcamChunkCount, 0);
   return {
     sessionId,
     chunks,
@@ -636,7 +651,7 @@ async function main() {
     // throttled — this fixture exists only to give that window something
     // real to measure.
     const many = await page.evaluate(seedManyChunksSession);
-    assert(many.chunks === 300, `fixture has ${many.chunks} chunks across two segments`);
+    assert(many.chunks === 320, `fixture has ${many.chunks} chunks across two segments`);
     await pageCdp.send('Emulation.setCPUThrottlingRate', { rate: 20 });
     await page.goto(`${base}${PAGE}?session=${many.sessionId}`, { waitUntil: 'load' });
     const editorReadings = await pollUntilGone(
@@ -715,16 +730,26 @@ async function main() {
       (el) => el.textContent?.trim(),
     );
     const middot = '·';
+    // Both mic and webcam were requested and the combined stream has
+    // evidence (segment 0's 20 'webcam'-kind chunks), which can only be
+    // hedged as "requested" — it cannot say which of the two tracks that
+    // evidence actually is (trackStatuses, session-load.ts). Tab audio has
+    // no such ambiguity and renders plain.
+    const hedge = (label) => messages.recorderTrackRequested.message.replace('$TRACK$', label);
     const expectedMeta = [
       '2',
       '2:15', // 90_000 + 45_000 ms, formatTimer
       formatBytesForTest(many.bytes),
       messages.recorderSourceTab.message,
-      `${messages.recMic.message}, ${messages.recTabAudio.message}`,
+      [
+        hedge(messages.recMic.message),
+        messages.recTabAudio.message,
+        hedge(messages.recWebcam.message),
+      ].join(', '),
     ].join(` ${middot} `);
     assert(
       rowMeta === expectedMeta,
-      `row shows duration units, size, source and tracks ("${rowMeta}")`,
+      `row hedges mic/webcam as requested rather than asserting them ("${rowMeta}")`,
     );
 
     step('seeding a fixture session into IndexedDB');

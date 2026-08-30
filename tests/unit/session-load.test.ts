@@ -12,7 +12,12 @@ import {
   __closeForTests,
 } from '../../src/shared/recording-db';
 import { DEFAULT_RECORDING_SETTINGS } from '../../src/shared/recording-types';
-import { assembleBlob, estimateDuration, loadSession } from '../../src/recorder/session-load';
+import {
+  assembleBlob,
+  estimateDuration,
+  loadSession,
+  trackStatuses,
+} from '../../src/recorder/session-load';
 
 beforeEach(() => {
   __closeForTests();
@@ -140,5 +145,42 @@ describe('loadSession progress', () => {
     await loadSession(session.id, (p) => steps.push({ ...p }));
 
     expect(steps).toEqual([{ loaded: 0, total: 0 }]);
+  });
+});
+
+describe('trackStatuses', () => {
+  it('shows nothing for a track that was never requested', () => {
+    expect(trackStatuses(DEFAULT_RECORDING_SETTINGS, true)).toEqual({
+      mic: 'off',
+      tabAudio: DEFAULT_RECORDING_SETTINGS.tabAudio ? 'confirmed' : 'off',
+      webcam: 'off',
+    });
+  });
+
+  it('confirms tab audio from settings alone — the start fails outright rather than degrading it', () => {
+    expect(trackStatuses({ ...DEFAULT_RECORDING_SETTINGS, tabAudio: true }, false).tabAudio).toBe(
+      'confirmed',
+    );
+    expect(trackStatuses({ ...DEFAULT_RECORDING_SETTINGS, tabAudio: false }, true).tabAudio).toBe(
+      'off',
+    );
+  });
+
+  it('rules out a requested mic/webcam that left no evidence of the combined stream', () => {
+    const settings = { ...DEFAULT_RECORDING_SETTINGS, tabAudio: false, mic: true, webcam: true };
+    expect(trackStatuses(settings, false)).toEqual({
+      mic: 'off',
+      tabAudio: 'off',
+      webcam: 'off',
+    });
+  });
+
+  it('hedges a requested mic/webcam that has evidence, since the two share one chunk kind', () => {
+    const settings = { ...DEFAULT_RECORDING_SETTINGS, tabAudio: false, mic: true, webcam: true };
+    expect(trackStatuses(settings, true)).toEqual({
+      mic: 'requested',
+      tabAudio: 'off',
+      webcam: 'requested',
+    });
   });
 });

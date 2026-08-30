@@ -8,7 +8,7 @@ import { applyTheme, watchSystemTheme } from '../shared/theme';
 import { chunkBytes, deleteSession, getSegments, listSessions } from '../shared/recording-db';
 import type { RecordingSession, RecState } from '../shared/recording-types';
 import { formatTimer } from '../content/recording-overlay';
-import { fixDuration, type LoadedSession } from './session-load';
+import { fixDuration, trackStatuses, type LoadedSession } from './session-load';
 import { useRecorderSession, type UseRecorderSession } from './useRecorderSession';
 import { Timeline } from './Timeline';
 import { Rail } from './Rail';
@@ -179,6 +179,10 @@ interface SessionRow {
   segmentCount: number;
   totalDurationMs: number;
   totalBytes: number;
+  /** Whether any segment has evidence of the combined mic/webcam stream —
+   *  see `trackStatuses` in `session-load.ts` for why this is the ceiling
+   *  of what a list row can honestly claim about those two tracks. */
+  hasCamStream: boolean;
 }
 
 function SessionListView({ onOpen }: { onOpen: (id: string) => void }) {
@@ -203,6 +207,7 @@ function SessionListView({ onOpen }: { onOpen: (id: string) => void }) {
           segmentCount: segments.length,
           totalDurationMs: segments.reduce((sum, s) => sum + s.duration, 0),
           totalBytes: sizes.reduce((sum, [tab, webcam]) => sum + tab + webcam, 0),
+          hasCamStream: sizes.some(([, webcam]) => webcam > 0),
         };
       }),
     );
@@ -244,20 +249,30 @@ function SessionListView({ onOpen }: { onOpen: (id: string) => void }) {
       {rows.length === 0 ? (
         <p class="rec-empty">{t('recorderEmpty')}</p>
       ) : (
-        rows.map(({ session, segmentCount, totalDurationMs, totalBytes }) => {
+        rows.map(({ session, segmentCount, totalDurationMs, totalBytes, hasCamStream }) => {
           const live = session.id === activeId;
           // A retained failed start holds no segments — there is nothing to
           // open, only the record that the attempt happened, and a Delete.
           const failed = session.status === 'failed';
-          // The stored settings are what was asked for, not what recorded —
-          // a declined mic/webcam degrades silently (see engine.ts) and that
-          // correction lives only in the live control bar, never written
-          // back to the session. Good enough for a list row; a session that
-          // needs the real answer already gets it from hasAudio on open.
+          // Requested settings are not recorded fact — a declined mic/webcam
+          // degrades silently (engine.ts) and that correction never reaches
+          // the stored session. `trackStatuses` draws the line at what the
+          // chunk evidence can actually prove: 'off' is dropped, 'confirmed'
+          // shows plain, 'requested' is hedged rather than asserted.
+          const statuses = trackStatuses(session.settings, hasCamStream);
+          const hedge = (label: string) => chrome.i18n.getMessage('recorderTrackRequested', label);
           const tracks = [
-            session.settings.mic ? t('recMic') : null,
-            session.settings.tabAudio ? t('recTabAudio') : null,
-            session.settings.webcam ? t('recWebcam') : null,
+            statuses.mic === 'confirmed'
+              ? t('recMic')
+              : statuses.mic === 'requested'
+                ? hedge(t('recMic'))
+                : null,
+            statuses.tabAudio === 'confirmed' ? t('recTabAudio') : null,
+            statuses.webcam === 'confirmed'
+              ? t('recWebcam')
+              : statuses.webcam === 'requested'
+                ? hedge(t('recWebcam'))
+                : null,
           ].filter((label): label is string => label !== null);
           return (
             <div class="rec-row" key={session.id} data-session-id={session.id}>

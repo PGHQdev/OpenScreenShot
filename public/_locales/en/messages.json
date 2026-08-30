@@ -469,6 +469,16 @@
     "message": "Tab",
     "description": "Recorder page: session list row — capture source. Every recording is a tab capture; there is no window/screen source to distinguish yet."
   },
+  "recorderTrackRequested": {
+    "message": "$TRACK$ requested",
+    "description": "Recorder page: session list row — a mic/webcam track that was asked for and has some evidence (the combined recorder-#2 stream exists) but cannot be confirmed individually, since a mic-only and a webcam-only stream are indistinguishable from chunk presence alone.",
+    "placeholders": {
+      "track": {
+        "content": "$1",
+        "example": "Mic"
+      }
+    }
+  },
   "recorderRecovered": {
     "message": "Recovered",
     "description": "Recorder page: pill on a session that was left mid-recording by a crash."
