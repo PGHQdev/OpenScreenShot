@@ -4600,6 +4600,51 @@ async function testAnnotationClipMatchesExport(browser, base) {
   await page.close();
 }
 
+/**
+ * task 41, defect 5 — the style bar's stroke-width preview bars used to draw
+ * at `Math.min(w, 8)px` (App.tsx), so the 6px and 12px buttons rendered 6px
+ * and 8px tall: two pixels apart, hard to tell apart at a glance. This reads
+ * the three `.width-bar` heights the built page actually lays out and checks
+ * they are clearly stepped, not just non-equal (annotations.test.ts's
+ * strokeBarHeight unit tests cover the exact px values; this proves the CSS
+ * custom property actually reaches the DOM).
+ */
+async function testStrokeWidthPreviewDistinct(browser, base) {
+  step('task 41: the stroke-width preview bars are clearly stepped, not clamped alike');
+  const { page } = await newSmokePage(browser);
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': await makeCapture(),
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+
+  await page.$eval('.stage-canvas', (el) => el.focus());
+  await page.keyboard.press('r'); // Rect tool — brings up the Stroke group
+  await page.waitForSelector('.stylebar .width-bar');
+
+  const heights = await page.$$eval('.width-btn .width-bar', (els) =>
+    els.map((el) => Math.round(el.getBoundingClientRect().height)),
+  );
+  assert(heights.length === 3, `three stroke-width presets rendered (${heights.length})`);
+  const sorted = [...heights].sort((a, b) => a - b);
+  assert(
+    JSON.stringify(sorted) === JSON.stringify(heights),
+    `the presets render smallest-to-largest, left to right (${heights.join(', ')})`,
+  );
+  for (let i = 1; i < sorted.length; i++) {
+    assert(
+      sorted[i] - sorted[i - 1] >= 4,
+      `adjacent presets are clearly stepped (${sorted[i - 1]}px vs ${sorted[i]}px)`,
+    );
+  }
+
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
+}
+
 async function main() {
   const built = await stat(join(DIST, PAGE.slice(1))).then(
     () => true,
@@ -5738,6 +5783,7 @@ async function main() {
     await testPinToFloatingWindow(browser, base);
     await testBlurStrength(browser, base);
     await testAnnotationClipMatchesExport(browser, base);
+    await testStrokeWidthPreviewDistinct(browser, base);
 
     console.log('\nALL STEPS PASSED');
   } finally {

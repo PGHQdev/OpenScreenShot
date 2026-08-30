@@ -8,6 +8,7 @@ import {
   BLUR_STRENGTH_MIN,
   BLUR_STRENGTH_STEP,
   STROKE_WIDTHS,
+  strokeBarHeight,
   type BlurMode,
   type SpotlightShape,
 } from './annotations';
@@ -657,7 +658,7 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
                 aria-pressed={ed.style.strokeWidth === w}
                 onClick={() => ed.setStyleStrokeWidth(w)}
               >
-                <span class="width-bar" style={{ height: `${Math.min(w, 8)}px` }} />
+                <span class="width-bar" style={{ height: `${strokeBarHeight(w)}px` }} />
               </button>
             ))}
           </div>

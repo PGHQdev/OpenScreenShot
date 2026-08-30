@@ -184,6 +184,25 @@ export const DEFAULT_STYLE: AnnotationStyle = {
 /** Stroke-width presets for the style bar. */
 export const STROKE_WIDTHS: number[] = [3, 6, 12];
 
+/**
+ * Tallest the style bar's width-preview bar (.width-bar) is allowed to draw,
+ * in px — comfortably inside the 26px .width-btn target's content box
+ * (editor.css) without touching its border. The target itself never resizes;
+ * only the ink inside it scales.
+ */
+const STROKE_BAR_MAX_PX = 20;
+
+/**
+ * On-screen height for a stroke-width preset's swatch bar, proportional to
+ * the widest preset rather than clamped to a flat ceiling — the old
+ * `Math.min(w, 8)` (App.tsx) made the 6px and 12px buttons draw at 6 and 8,
+ * two pixels apart and hard to tell apart at a glance.
+ */
+export function strokeBarHeight(w: number): number {
+  const max = Math.max(...STROKE_WIDTHS);
+  return Math.round((w / max) * STROKE_BAR_MAX_PX);
+}
+
 const FONT_STACK = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif";
 
 /** Generate a unique annotation id. */

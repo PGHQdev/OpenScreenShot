@@ -17,6 +17,8 @@ import {
   resizeRect,
   scaleAnnotation,
   scaleInBox,
+  STROKE_WIDTHS,
+  strokeBarHeight,
   translateAnnotation,
   unionBBox,
   type Annotation,
@@ -285,6 +287,29 @@ describe('drawAnnotation — rect', () => {
     expect(calls.filter((c) => c.op === 'strokeRect')).toEqual([
       { op: 'strokeRect', args: [10, 20, 100, 50] },
     ]);
+  });
+});
+
+describe('strokeBarHeight', () => {
+  it('spaces adjacent presets at least 4px apart — the old Math.min(w, 8) clamp put 6px and 12px only 2px apart (6 vs 8)', () => {
+    const heights = [...STROKE_WIDTHS].sort((a, b) => a - b).map(strokeBarHeight);
+    for (let i = 1; i < heights.length; i++) {
+      expect(heights[i] - heights[i - 1]).toBeGreaterThanOrEqual(4);
+    }
+  });
+
+  it('scales the widest preset to the bar’s own maximum, not past it', () => {
+    expect(strokeBarHeight(Math.max(...STROKE_WIDTHS))).toBe(20);
+  });
+
+  it('keeps every preset in the same order as the raw widths', () => {
+    const heights = STROKE_WIDTHS.map(strokeBarHeight);
+    const sortedByWidth = [...STROKE_WIDTHS].sort((a, b) => a - b);
+    const sortedByHeight = [...STROKE_WIDTHS].sort(
+      (a, b) => strokeBarHeight(a) - strokeBarHeight(b),
+    );
+    expect(sortedByHeight).toEqual(sortedByWidth);
+    expect(heights.every((h) => h > 0)).toBe(true);
   });
 });
 
