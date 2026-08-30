@@ -4201,7 +4201,7 @@ async function testPinToFloatingWindow(browser, base) {
       .find((t) => t.type() === 'page' && t.url() === 'about:blank' && !knownTargets.has(t));
     if (!pipTarget) await new Promise((r) => setTimeout(r, 200));
   }
-  assert(pipTarget !== null, 'a real Document Picture-in-Picture window opened');
+  assert(pipTarget != null, 'a real Document Picture-in-Picture window opened');
   const pipPage = await pipTarget.page();
 
   const pipTitle = await pipPage.title();

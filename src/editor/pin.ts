@@ -120,3 +120,40 @@ export function updatePinWindowImage(pipWindow: Window, dataUrl: string): void {
   const img = pipWindow.document.querySelector('img');
   if (img) img.src = dataUrl;
 }
+
+/**
+ * Coalesces many synchronous triggers (an annotation drag fires
+ * applyAnnotations on every native mousemove, unthrottled) into at most one
+ * repaint per animation frame — R-29a Important 2: an uncoalesced
+ * composeFinal() + toDataURL() on every mousemove visibly stutters the very
+ * drag it is reacting to. `run` always reads whatever state is current when
+ * the frame actually fires (the caller closes over live refs, not a
+ * snapshot), so coalescing many triggers into one run never drops the
+ * latest edit — it only skips the ones in between. A trigger that arrives
+ * after a run has already fired schedules a fresh frame, so a change is
+ * never silently missed just because it landed after the previous frame.
+ * schedule/cancel default to requestAnimationFrame/cancelAnimationFrame and
+ * are parameters only so a unit test can drive them without a browser.
+ */
+export function coalesceUpdates(
+  run: () => void,
+  schedule: (cb: () => void) => number = (cb) => requestAnimationFrame(cb),
+  cancel: (id: number) => void = (id) => cancelAnimationFrame(id),
+): { trigger: () => void; cancel: () => void } {
+  let handle: number | null = null;
+  return {
+    trigger() {
+      if (handle !== null) return;
+      handle = schedule(() => {
+        handle = null;
+        run();
+      });
+    },
+    cancel() {
+      if (handle !== null) {
+        cancel(handle);
+        handle = null;
+      }
+    },
+  };
+}

@@ -123,6 +123,7 @@ import {
 } from './draft';
 import { canvasToDataUrl, downloadDataUrl, withExtension, type ImageFormat } from './export';
 import {
+  coalesceUpdates,
   hasPinWindow,
   pinFailureReason,
   PIN_UNAVAILABLE_REASON,
@@ -2413,17 +2414,34 @@ export function useEditor() {
     }
   }, []);
 
+  // R-29a Important 2: a drag's move/resize path (onDragMove below) calls
+  // applyAnnotations on every native mousemove, unthrottled — composing and
+  // PNG-encoding synchronously on each of those, whenever a pin window is
+  // open, visibly stutters the very drag it is reacting to. coalesceUpdates
+  // collapses however many triggers land in one frame into a single repaint,
+  // reading whatever state is current when that frame actually fires — so
+  // the drag stays smooth and the pinned window still always lands on the
+  // latest annotations, not a stale mid-drag frame.
+  const pinRepaint = useMemo(
+    () =>
+      coalesceUpdates(() => {
+        const win = pinWindowRef.current;
+        const c = controllerRef.current;
+        if (!win || win.closed || !c || !c.image) return;
+        updatePinWindowImage(win, canvasToDataUrl(c.composeFinal(), 'png', 1));
+      }),
+    [],
+  );
+  useEffect(() => pinRepaint.cancel, [pinRepaint]);
+
   // Keep a pinned window showing what Copy/Export would produce right now —
   // the same dependency list composedSize (below) already uses, since a pin
   // needs to redraw for exactly the changes that would change that size or
   // its pixels: annotations, the beautify frame, cut bands and (via
   // imageSize, set on decode) a crop.
   useEffect(() => {
-    const win = pinWindowRef.current;
-    const c = controllerRef.current;
-    if (!win || win.closed || !c || !c.image) return;
-    updatePinWindowImage(win, canvasToDataUrl(c.composeFinal(), 'png', 1));
-  }, [annotations, frame, bands, imageSize]);
+    pinRepaint.trigger();
+  }, [annotations, frame, bands, imageSize, pinRepaint]);
 
   const exportPdf = useCallback(async (opts: PdfOptions, filenameBase: string) => {
     const c = controllerRef.current;

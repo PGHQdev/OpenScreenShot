@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
+  coalesceUpdates,
   hasPinWindow,
   pinFailureReason,
   pinWindowSize,
@@ -113,5 +114,108 @@ describe('requestPinWindow', () => {
     await expect(requestPinWindow(scopeThatRejects(err), { width: 480, height: 480 })).rejects.toBe(
       err,
     );
+  });
+});
+
+/**
+ * A stand-in for requestAnimationFrame/cancelAnimationFrame: schedule()
+ * queues a callback and returns a handle, flush() runs everything queued
+ * right now (nothing queued during the run itself), cancel() drops a
+ * handle before it fires. No real timers or a DOM involved.
+ */
+function fakeFrameQueue() {
+  const queue = new Map<number, () => void>();
+  let next = 1;
+  return {
+    schedule: (cb: () => void): number => {
+      const id = next++;
+      queue.set(id, cb);
+      return id;
+    },
+    cancel: (id: number): void => {
+      queue.delete(id);
+    },
+    flush: (): void => {
+      const due = [...queue.entries()];
+      queue.clear();
+      for (const [, cb] of due) cb();
+    },
+  };
+}
+
+describe('coalesceUpdates', () => {
+  it('collapses many triggers before the frame fires into one run', () => {
+    const q = fakeFrameQueue();
+    let runs = 0;
+    const c = coalesceUpdates(
+      () => {
+        runs += 1;
+      },
+      q.schedule,
+      q.cancel,
+    );
+    c.trigger();
+    c.trigger();
+    c.trigger();
+    expect(runs).toBe(0); // nothing runs before the frame
+    q.flush();
+    expect(runs).toBe(1); // three triggers, one run
+  });
+
+  it('reads whatever state is current when the frame fires, not when trigger() was called', () => {
+    const q = fakeFrameQueue();
+    const seen: string[] = [];
+    let latest = 'a';
+    const c = coalesceUpdates(() => seen.push(latest), q.schedule, q.cancel);
+    c.trigger();
+    latest = 'b'; // changes after trigger(), before the frame fires
+    q.flush();
+    expect(seen).toEqual(['b']);
+  });
+
+  it('a trigger after a run schedules again, so a later change still lands', () => {
+    const q = fakeFrameQueue();
+    const seen: string[] = [];
+    let latest = 'a';
+    const c = coalesceUpdates(() => seen.push(latest), q.schedule, q.cancel);
+    c.trigger();
+    q.flush();
+    latest = 'b';
+    c.trigger();
+    q.flush();
+    expect(seen).toEqual(['a', 'b']);
+  });
+
+  it('cancel() drops a still-pending run', () => {
+    const q = fakeFrameQueue();
+    let runs = 0;
+    const c = coalesceUpdates(
+      () => {
+        runs += 1;
+      },
+      q.schedule,
+      q.cancel,
+    );
+    c.trigger();
+    c.cancel();
+    q.flush();
+    expect(runs).toBe(0);
+  });
+
+  it('trigger() after cancel() schedules a fresh run', () => {
+    const q = fakeFrameQueue();
+    let runs = 0;
+    const c = coalesceUpdates(
+      () => {
+        runs += 1;
+      },
+      q.schedule,
+      q.cancel,
+    );
+    c.trigger();
+    c.cancel();
+    c.trigger();
+    q.flush();
+    expect(runs).toBe(1);
   });
 });
