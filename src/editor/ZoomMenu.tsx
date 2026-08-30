@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { IconChevronDown } from '../shared/icons';
 import { arrowNav, getFocusable, syncRovingTabIndex } from './focus';
 import { DUR_MID, useExitDelay } from './transition';
+import { t } from './i18n';
 
 export interface ZoomMenuProps {
   zoomPct: number;
@@ -100,7 +101,7 @@ export function ZoomMenu(props: ZoomMenuProps) {
         disabled={props.disabled}
         aria-haspopup="menu"
         aria-expanded={open}
-        title="Zoom"
+        title={t('editorZoomTitle')}
         onClick={() => (open ? setOpen(false) : openMenu('first'))}
         onKeyDown={(e) => {
           if (open) return; // the window listener above owns keys once it's open
@@ -138,7 +139,7 @@ export function ZoomMenu(props: ZoomMenuProps) {
             tabIndex={-1}
             onClick={() => run(props.onZoomIn)}
           >
-            <span>Zoom in</span>
+            <span>{t('editorZoomIn')}</span>
             <kbd>⌘+</kbd>
           </button>
           <button
@@ -147,11 +148,11 @@ export function ZoomMenu(props: ZoomMenuProps) {
             tabIndex={-1}
             onClick={() => run(props.onZoomOut)}
           >
-            <span>Zoom out</span>
+            <span>{t('editorZoomOut')}</span>
             <kbd>⌘−</kbd>
           </button>
           <button class="zoom-item" role="menuitem" tabIndex={-1} onClick={() => run(props.onFit)}>
-            <span>Fit to screen</span>
+            <span>{t('editorFitToScreen')}</span>
             <kbd>F</kbd>
           </button>
           <button
@@ -160,7 +161,7 @@ export function ZoomMenu(props: ZoomMenuProps) {
             tabIndex={-1}
             onClick={() => run(props.onActualSize)}
           >
-            <span>Actual size</span>
+            <span>{t('editorActualSize')}</span>
             <kbd>⌘0</kbd>
           </button>
         </div>

@@ -11,6 +11,7 @@ import {
 import { tokens } from '../shared/design-tokens';
 import { getFocusable } from './focus';
 import { DUR_MID, useExitDelay } from './transition';
+import { t } from './i18n';
 
 export interface BeautifyMenuProps {
   frame: FrameOptions;
@@ -136,7 +137,7 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
         disabled={props.disabled}
         aria-haspopup="dialog"
         aria-expanded={open}
-        title="Beautify: padding, corners, shadow, background"
+        title={t('editorBeautifyTitle')}
         onMouseDown={() => {
           triggerMouseDownRef.current = true;
         }}
@@ -145,13 +146,13 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
           setOpen((v) => !v);
         }}
       >
-        Beautify
+        {t('editorBeautify')}
       </button>
       {mounted ? (
         <div
           class={`beautify-popover${closing ? ' is-closing' : ''}`}
           role="dialog"
-          aria-label="Beautify"
+          aria-label={t('editorBeautify')}
           ref={popoverRef}
           // Unlike ZoomMenu's items, every control here (the switch, the
           // look buttons, three sliders, the swatches) is a real Tab stop
@@ -166,11 +167,11 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
               checked={f.enabled}
               onChange={(e) => props.onChange({ enabled: (e.target as HTMLInputElement).checked })}
             />
-            <span>Beautify</span>
+            <span>{t('editorBeautify')}</span>
           </label>
 
           <div class="beautify-group">
-            <span class="stylebar-label">Look</span>
+            <span class="stylebar-label">{t('editorLook')}</span>
             {/* Not disabled while beautify is off: picking a look is the one
                 click that turns it on, the same bargain the swatches strike. */}
             <div class="looks">
@@ -186,7 +187,7 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
                     // The dot is decoration; "modified" reaches assistive tech
                     // only through the name. Keeps the visible label as its
                     // first word, so speech input still matches what is drawn.
-                    aria-label={changed ? `${l.label}, modified` : undefined}
+                    aria-label={changed ? t('editorLookModifiedSuffix', [l.label]) : undefined}
                     onClick={() => props.onChange(applyLook(l.id))}
                   >
                     {l.label}
@@ -197,14 +198,17 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
           </div>
 
           <div class="beautify-group">
-            <span class="stylebar-label">Padding{px(m?.pad)}</span>
+            <span class="stylebar-label">
+              {t('editorPadding')}
+              {px(m?.pad)}
+            </span>
             <input
               class="range"
               type="range"
               min="0"
               max="100"
               step="1"
-              aria-label="Padding"
+              aria-label={t('editorPadding')}
               aria-valuetext={m ? `${m.pad}px` : undefined}
               disabled={!f.enabled}
               value={f.padding}
@@ -215,14 +219,17 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
           </div>
 
           <div class="beautify-group">
-            <span class="stylebar-label">Corners{px(m?.radius)}</span>
+            <span class="stylebar-label">
+              {t('editorCorners')}
+              {px(m?.radius)}
+            </span>
             <input
               class="range"
               type="range"
               min="0"
               max="100"
               step="1"
-              aria-label="Corners"
+              aria-label={t('editorCorners')}
               aria-valuetext={m ? `${m.radius}px` : undefined}
               disabled={!f.enabled}
               value={f.radius}
@@ -233,14 +240,17 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
           </div>
 
           <div class="beautify-group">
-            <span class="stylebar-label">Shadow{px(m?.shadowBlur)}</span>
+            <span class="stylebar-label">
+              {t('editorShadow')}
+              {px(m?.shadowBlur)}
+            </span>
             <input
               class="range"
               type="range"
               min="0"
               max="100"
               step="1"
-              aria-label="Shadow"
+              aria-label={t('editorShadow')}
               aria-valuetext={m ? `${m.shadowBlur}px` : undefined}
               disabled={!f.enabled}
               value={f.shadow}
@@ -251,7 +261,7 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
           </div>
 
           <div class="beautify-group">
-            <span class="stylebar-label">Background</span>
+            <span class="stylebar-label">{t('editorBackground')}</span>
             <div class="swatches">
               {BACKGROUND_PRESETS.map((p) => (
                 <button
@@ -265,14 +275,14 @@ export function BeautifyMenu(props: BeautifyMenuProps) {
               ))}
               <button
                 class="swatch swatch-transparent"
-                aria-label="Transparent"
+                aria-label={t('editorTransparent')}
                 aria-pressed={f.background.kind === 'transparent'}
                 onClick={() => pickBackground({ kind: 'transparent' })}
               />
-              <label class="swatch swatch-custom" title="Solid colour">
+              <label class="swatch swatch-custom" title={t('editorSolidColorTitle')}>
                 <input
                   type="color"
-                  aria-label="Solid background colour"
+                  aria-label={t('editorSolidBackgroundColorAria')}
                   value={solidColor}
                   onChange={(e) =>
                     pickBackground({

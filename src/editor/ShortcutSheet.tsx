@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'preact/hooks';
 import { TOOL_LIST } from './tools';
 import { getFocusable, trapFocus } from './focus';
+import { t } from './i18n';
 
 /** True on macOS, where the command modifier renders as ⌘ rather than Ctrl. */
 export function isMacPlatform(platform: string): boolean {
@@ -17,37 +18,37 @@ function buildCommands(isMac: boolean): { label: string; keys: string }[] {
   const mod = modKey(isMac);
   const shift = isMac ? '⇧' : 'Shift+';
   return [
-    { label: 'Set color', keys: '1–8' },
-    { label: 'Pick a color from the screen', keys: 'Style bar' },
-    { label: 'Square / 45° constraint', keys: isMac ? '⇧ + drag' : 'Shift + drag' },
-    { label: 'Edit a text layer', keys: 'Double-click' },
+    { label: t('editorCmdSetColor'), keys: '1–8' },
+    { label: t('editorCmdPickColor'), keys: t('editorKeysStyleBar') },
+    { label: t('editorCmdSquare45'), keys: isMac ? '⇧ + drag' : 'Shift + drag' },
+    { label: t('editorCmdEditText'), keys: 'Double-click' },
     // The canvas keyboard model. These only fire while the canvas has focus.
-    { label: 'Next / previous layer', keys: '] [' },
-    { label: 'Add a layer to the selection', keys: `${shift}] [` },
-    { label: 'Select several with the mouse', keys: `${shift}Click / drag` },
-    { label: 'Place the active tool', keys: 'Enter' },
-    { label: 'Move selection 1px / 10px', keys: `Arrows / ${shift}Arrows` },
-    { label: 'Resize selection', keys: isMac ? '⌥Arrows' : 'Alt+Arrows' },
-    { label: 'Duplicate selection', keys: isMac ? '⌥D' : 'Alt+D' },
-    { label: 'Copy to clipboard', keys: `${mod}C` },
-    { label: 'Export', keys: `${mod}S` },
-    { label: 'Undo', keys: `${mod}Z` },
-    { label: 'Redo', keys: `${mod}${shift}Z` },
-    { label: 'Delete selected', keys: '⌫' },
-    { label: 'Crop: next / previous handle', keys: '] [' },
-    { label: 'Crop: resize from that handle', keys: isMac ? '⌥Arrows' : 'Alt+Arrows' },
+    { label: t('editorCmdNextPrevLayer'), keys: '] [' },
+    { label: t('editorCmdAddLayer'), keys: `${shift}] [` },
+    { label: t('editorCmdSelectSeveral'), keys: `${shift}Click / drag` },
+    { label: t('editorCmdPlaceTool'), keys: 'Enter' },
+    { label: t('editorCmdMoveSelection'), keys: `Arrows / ${shift}Arrows` },
+    { label: t('editorCmdResizeSelection'), keys: isMac ? '⌥Arrows' : 'Alt+Arrows' },
+    { label: t('editorCmdDuplicateSelection'), keys: isMac ? '⌥D' : 'Alt+D' },
+    { label: t('editorCmdCopyClipboard'), keys: `${mod}C` },
+    { label: t('editorExport'), keys: `${mod}S` },
+    { label: t('editorUndoLabel'), keys: `${mod}Z` },
+    { label: t('editorRedoLabel'), keys: `${mod}${shift}Z` },
+    { label: t('editorDeleteSelectedLabel'), keys: '⌫' },
+    { label: t('editorCmdCropNextHandle'), keys: '] [' },
+    { label: t('editorCmdCropResizeHandle'), keys: isMac ? '⌥Arrows' : 'Alt+Arrows' },
     // Both rows name the tool: the sheet is one flat list with no per-tool
     // section, so a row reading "Enter" with nothing else on it would claim a
     // key that does something different under every other tool.
-    { label: 'Cut tool: take the drafted band out', keys: 'Enter' },
-    { label: 'Cut tool: put back the nearest cut', keys: '⌫' },
-    { label: 'Deselect / cancel crop or cut', keys: 'Esc' },
-    { label: 'Zoom in', keys: `${mod}+` },
-    { label: 'Zoom out', keys: `${mod}−` },
-    { label: 'Actual size', keys: `${mod}0` },
-    { label: 'Fit to screen', keys: 'F' },
-    { label: 'Pan', keys: 'Space + drag' },
-    { label: 'This sheet', keys: '?' },
+    { label: t('editorCmdCutTakeOut'), keys: 'Enter' },
+    { label: t('editorCmdCutPutBack'), keys: '⌫' },
+    { label: t('editorCmdDeselectCancel'), keys: 'Esc' },
+    { label: t('editorZoomIn'), keys: `${mod}+` },
+    { label: t('editorZoomOut'), keys: `${mod}−` },
+    { label: t('editorActualSize'), keys: `${mod}0` },
+    { label: t('editorFitToScreen'), keys: 'F' },
+    { label: t('editorCmdPan'), keys: 'Space + drag' },
+    { label: t('editorCmdThisSheet'), keys: '?' },
   ];
 }
 
@@ -78,7 +79,7 @@ export function ShortcutSheet({ onClose, closing }: { onClose: () => void; closi
         class={`modal sheet${closing ? ' is-closing' : ''}`}
         role="dialog"
         aria-modal="true"
-        aria-label="Keyboard shortcuts"
+        aria-label={t('editorShortcutsLabel')}
         inert={closing}
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
@@ -90,19 +91,19 @@ export function ShortcutSheet({ onClose, closing }: { onClose: () => void; closi
           if (e.key === 'Escape' || e.key === '?') onClose();
         }}
       >
-        <h2 class="modal-title">Keyboard shortcuts</h2>
+        <h2 class="modal-title">{t('editorShortcutsLabel')}</h2>
         <div class="sheet-grid">
           <div>
-            <div class="field-label">Tools</div>
-            {TOOL_LIST.map((t) => (
-              <div key={t.id} class="sheet-row">
-                <span>{t.label}</span>
-                <kbd>{t.shortcut}</kbd>
+            <div class="field-label">{t('editorTools')}</div>
+            {TOOL_LIST.map((tool) => (
+              <div key={tool.id} class="sheet-row">
+                <span>{tool.label}</span>
+                <kbd>{tool.shortcut}</kbd>
               </div>
             ))}
           </div>
           <div>
-            <div class="field-label">Commands</div>
+            <div class="field-label">{t('editorCommands')}</div>
             {COMMANDS.map((c) => (
               <div key={c.label} class="sheet-row">
                 <span>{c.label}</span>
@@ -114,7 +115,7 @@ export function ShortcutSheet({ onClose, closing }: { onClose: () => void; closi
         <div class="modal-actions">
           <span class="modal-actions-spacer" />
           <button class="btn-primary" onClick={onClose}>
-            Close
+            {t('editorClose')}
           </button>
         </div>
       </div>

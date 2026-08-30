@@ -11,6 +11,8 @@
  * so it is declared here.
  */
 
+import { t } from './i18n';
+
 export interface DocumentPictureInPictureOptions {
   width?: number;
   height?: number;
@@ -35,16 +37,15 @@ export function hasPinWindow(scope: PinWindowScope): boolean {
 }
 
 /** Shown (via the editor's stage-notice pill) when the browser lacks the API. */
-export const PIN_UNAVAILABLE_REASON =
-  'Pinning needs a browser feature (Document Picture-in-Picture) this browser does not have.';
+export const PIN_UNAVAILABLE_REASON = t('editorPinUnavailable');
 
 /** Names why requestWindow() rejected, for the same pill. */
 export function pinFailureReason(err: unknown): string {
   if (err instanceof DOMException && err.name === 'NotAllowedError') {
-    return 'Could not open the pinned window — try clicking Pin again.';
+    return t('editorPinFailedRetry');
   }
   const detail = err instanceof Error ? err.message : String(err);
-  return `Could not open the pinned window (${detail}).`;
+  return t('editorPinFailedDetail', [detail]);
 }
 
 /**
@@ -100,7 +101,7 @@ img{max-width:100%;max-height:100%;object-fit:contain}`;
  * whole point of a floating pin is to keep matching what the editor holds,
  * the same picture Copy/Export would produce).
  */
-export const PIN_WINDOW_TITLE = 'Pinned capture (updates as you edit) — OpenScreenShot';
+export const PIN_WINDOW_TITLE = t('editorPinWindowTitle');
 
 /** Build the pinned window's content: title, style, and the composed picture. */
 export function renderPinWindow(pipWindow: Window, dataUrl: string, theme: PinTheme): void {
@@ -110,7 +111,7 @@ export function renderPinWindow(pipWindow: Window, dataUrl: string, theme: PinTh
   style.textContent = pinWindowStyle(theme);
   doc.head.appendChild(style);
   const img = doc.createElement('img');
-  img.alt = 'Pinned capture';
+  img.alt = t('editorPinnedCaptureAlt');
   img.src = dataUrl;
   doc.body.appendChild(img);
 }

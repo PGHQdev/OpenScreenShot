@@ -2108,5 +2108,9 @@
   "editorExportDialogAria": {
     "message": "Export screenshot",
     "description": "Editor: accessible label for the export dialog."
+  },
+  "editorKeysStyleBar": {
+    "message": "Style bar",
+    "description": "Editor shortcut sheet: the \"keys\" column for a command with no key of its own, pointing at where to find it instead."
   }
 }

@@ -15,6 +15,7 @@ import { normalizeHex } from './palette';
 import type { Settings } from '../shared/types';
 import { MAX_CANVAS_HEIGHT_PX } from '../shared/geometry';
 import { tokens } from '../shared/design-tokens';
+import { t } from './i18n';
 
 export type { FrameBackground, LookId, PresetId };
 
@@ -56,42 +57,42 @@ export interface BackgroundPreset {
 export const BACKGROUND_PRESETS: BackgroundPreset[] = [
   {
     id: 'ink',
-    label: 'Ink',
+    label: t('editorBgInk'),
     from: tokens.frameInkFrom,
     to: tokens.frameInkTo,
     direction: 'diagonal',
   },
   {
     id: 'coral',
-    label: 'Coral',
+    label: t('editorBgCoral'),
     from: tokens.frameCoralFrom,
     to: tokens.frameCoralTo,
     direction: 'diagonal',
   },
   {
     id: 'dusk',
-    label: 'Dusk',
+    label: t('editorBgDusk'),
     from: tokens.frameDuskFrom,
     to: tokens.frameDuskTo,
     direction: 'diagonal',
   },
   {
     id: 'mint',
-    label: 'Mint',
+    label: t('editorBgMint'),
     from: tokens.frameMintFrom,
     to: tokens.frameMintTo,
     direction: 'diagonal',
   },
   {
     id: 'sand',
-    label: 'Sand',
+    label: t('editorBgSand'),
     from: tokens.frameSandFrom,
     to: tokens.frameSandTo,
     direction: 'vertical',
   },
   {
     id: 'sky',
-    label: 'Sky',
+    label: t('editorBgSky'),
     from: tokens.frameSkyFrom,
     to: tokens.frameSkyTo,
     direction: 'vertical',
@@ -118,8 +119,8 @@ export interface FrameLook extends FrameValues {
 export const FRAME_LOOKS: FrameLook[] = [
   {
     id: 'clean',
-    label: 'Clean',
-    hint: 'The shipped default: a soft dark card.',
+    label: t('editorLookCleanLabel'),
+    hint: t('editorLookCleanHint'),
     // Kept equal to DEFAULT_FRAME on purpose, so a user who has never opened
     // the panel already sees a look selected rather than an empty row. A unit
     // test holds the two in step.
@@ -130,8 +131,8 @@ export const FRAME_LOOKS: FrameLook[] = [
   },
   {
     id: 'airy',
-    label: 'Airy',
-    hint: 'A small crop given room to fill a wide slot.',
+    label: t('editorLookAiryLabel'),
+    hint: t('editorLookAiryHint'),
     // A frame this large reads as a block of colour in its own right, so it
     // takes the warm light ground rather than ink.
     padding: 85,
@@ -141,8 +142,8 @@ export const FRAME_LOOKS: FrameLook[] = [
   },
   {
     id: 'snug',
-    label: 'Snug',
-    hint: 'A tall screenshot in a narrow column.',
+    label: t('editorLookSnugLabel'),
+    hint: t('editorLookSnugHint'),
     padding: 12,
     radius: 18,
     shadow: 25,
@@ -150,8 +151,8 @@ export const FRAME_LOOKS: FrameLook[] = [
   },
   {
     id: 'flat',
-    label: 'Flat',
-    hint: 'Square and shadowless, for docs and print.',
+    label: t('editorLookFlatLabel'),
+    hint: t('editorLookFlatHint'),
     // The only one-click route to no rounding and no shadow at once.
     padding: 30,
     radius: 0,
@@ -160,8 +161,8 @@ export const FRAME_LOOKS: FrameLook[] = [
   },
   {
     id: 'poster',
-    label: 'Poster',
-    hint: 'A hero shot: deep corners, strong lift.',
+    label: t('editorLookPosterLabel'),
+    hint: t('editorLookPosterHint'),
     padding: 70,
     radius: 55,
     shadow: 80,
@@ -169,8 +170,8 @@ export const FRAME_LOOKS: FrameLook[] = [
   },
   {
     id: 'cutout',
-    label: 'Cutout',
-    hint: 'Shadow on transparency, to drop onto any page.',
+    label: t('editorLookCutoutLabel'),
+    hint: t('editorLookCutoutHint'),
     // Transparent skips the background fill but still casts the shadow plate,
     // so a PNG export carries a real drop shadow with no ground behind it.
     padding: 24,

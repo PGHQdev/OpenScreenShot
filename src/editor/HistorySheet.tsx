@@ -3,6 +3,7 @@ import { deleteCapture, listCaptureHistory } from '../shared/storage';
 import type { CaptureHistoryEntry } from '../shared/types';
 import { arrowNav, getFocusable, syncRovingTabIndex, trapFocus } from './focus';
 import { labelForSource } from './capture-label';
+import { t } from './i18n';
 
 /** The date string shared by a row's own label and its Open/Delete names. */
 function capturedLabel(entry: CaptureHistoryEntry): string {
@@ -135,7 +136,7 @@ export function HistorySheet({
         class={`modal${closing ? ' is-closing' : ''}`}
         role="dialog"
         aria-modal="true"
-        aria-label="Capture history"
+        aria-label={t('editorCaptureHistory')}
         tabIndex={-1}
         inert={closing}
         onMouseDown={(e) => e.stopPropagation()}
@@ -146,15 +147,15 @@ export function HistorySheet({
           if (e.key === 'Escape') onClose();
         }}
       >
-        <h2 class="modal-title">Capture history</h2>
+        <h2 class="modal-title">{t('editorCaptureHistory')}</h2>
         {entries === null ? null : entries.length === 0 ? (
-          <p class="modal-text">No captures yet.</p>
+          <p class="modal-text">{t('editorNoCapturesYet')}</p>
         ) : (
           <div
             class="history-list"
             ref={listRef}
             role="toolbar"
-            aria-label="Captures"
+            aria-label={t('editorAriaCaptures')}
             aria-orientation="vertical"
             onKeyDown={(e) => arrowNav(e.currentTarget as HTMLElement, e)}
             onFocusIn={(e) =>
@@ -174,9 +175,9 @@ export function HistorySheet({
                   <button
                     class="text-btn"
                     onClick={() => onOpen(entry)}
-                    aria-label={`Open, captured ${capturedLabel(entry)}`}
+                    aria-label={t('editorOpenAria', [capturedLabel(entry)])}
                   >
-                    Open
+                    {t('editorOpen')}
                   </button>
                   <button
                     class="text-btn history-delete-btn"
@@ -184,11 +185,11 @@ export function HistorySheet({
                     onClick={() => void handleDelete(entry.id)}
                     aria-label={
                       confirmDeleteId === entry.id
-                        ? `Confirm delete, captured ${capturedLabel(entry)}`
-                        : `Delete, captured ${capturedLabel(entry)}`
+                        ? t('editorConfirmDeleteAria', [capturedLabel(entry)])
+                        : t('editorDeleteAria', [capturedLabel(entry)])
                     }
                   >
-                    {confirmDeleteId === entry.id ? 'Confirm delete' : 'Delete'}
+                    {confirmDeleteId === entry.id ? t('editorConfirmDelete') : t('editorDelete')}
                   </button>
                 </div>
               </div>
@@ -198,7 +199,7 @@ export function HistorySheet({
         <div class="modal-actions">
           <span class="modal-actions-spacer" />
           <button class="btn-primary" onClick={onClose}>
-            Close
+            {t('editorClose')}
           </button>
         </div>
       </div>
