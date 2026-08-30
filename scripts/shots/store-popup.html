@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>store — popup over the page</title>
+    <style>
+      /* The Chrome Web Store popup screenshot: the real popup capture, at its
+         natural size, dropped over the sample page the way Chrome opens it —
+         top right, under the toolbar. Same chrome as hero.html at 1280x800. */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      html,
+      body {
+        width: 1280px;
+        height: 800px;
+        overflow: hidden;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        background: #fffdf8;
+        position: relative;
+      }
+      .browser-top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 48px;
+        padding: 0 18px;
+        background: #f4f2ec;
+        border-bottom: 1px solid #e2ded4;
+      }
+      .browser-top .dots {
+        display: flex;
+        gap: 7px;
+      }
+      .browser-top .dots i {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #d8d3c8;
+      }
+      .urlbar {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 31px;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 0 14px;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid #e2ded4;
+        font-size: 13px;
+        color: #6d685e;
+      }
+      /* the extension's own toolbar icon, which the popup hangs from */
+      .ext-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: #e9e6df;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 26px;
+      }
+      .page {
+        position: absolute;
+        top: 48px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        overflow: hidden;
+      }
+      .page iframe {
+        width: 1280px;
+        height: 1000px;
+        border: 0;
+        display: block;
+      }
+      .popup-frame {
+        position: absolute;
+        right: 20px;
+        top: 54px;
+        border-radius: 16px;
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid #dcd7cb;
+        box-shadow:
+          0 2px 6px rgba(27, 26, 23, 0.08),
+          0 32px 64px -20px rgba(27, 26, 23, 0.45);
+      }
+      /* the capture is 2x; shown at its CSS size */
+      .popup-frame img {
+        border: 0;
+        display: block;
+        /* The popup is 340 CSS px wide — Chrome draws it at exactly that, and
+           the capture is that width at 2x. This used to say 411px, the
+           scrollWidth an overflowing footer row gave the clip, which showed
+           the popup wider than it can ever be. */
+        width: 340px;
+        height: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="browser-top">
+      <span class="dots"><i></i><i></i><i></i></span>
+      <span class="urlbar">
+        <svg
+          width="11"
+          height="11"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <rect x="4" y="11" width="16" height="10" rx="2" />
+          <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+        </svg>
+        thecoastalalmanac.com
+      </span>
+      <span class="ext-icon"><img src="brand-mark.svg" width="20" height="20" alt="" /></span>
+    </div>
+    <div class="page">
+      <iframe src="sample-page.html" scrolling="no"></iframe>
+    </div>
+    <div class="popup-frame">
+      <img src="captures/popup.png" alt="" />
+    </div>
+  </body>
+</html>

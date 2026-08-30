@@ -11,6 +11,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # site/astro.config.mjs derives SITE_LASTMOD from
+          # `git log -1 --format=%cI -- .` inside site/. On the default
+          # depth-1 clone that path-filtered log is empty whenever the tip
+          # commit did not touch site/, which drops lastmod from every
+          # sitemap URL without failing anything.
+          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -39,8 +46,64 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Build the site
+        run: npm run site:build
+
       - name: Upload build
         uses: actions/upload-artifact@v4
         with:
           name: openscreenshot-dist
           path: dist
+
+  # The three smokes that need nothing but a page load. smoke:recorder and
+  # smoke:media stay manual on purpose: the first records a real WebM through
+  # MediaRecorder and reads it back, and the second emulates forced-colors and
+  # prefers-contrast through CDP and samples real painted pixels. Both depend
+  # on codec support and colour behaviour that a headless runner does not
+  # reproduce faithfully, so a failure there would report the runner rather
+  # than the product. smoke:region and smoke:setup are cheap and could join
+  # this list; smoke:worker needs Chrome for Testing with --load-extension,
+  # which the runner's branded Chrome ignores.
+  smoke:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      # ubuntu-latest ships Google Chrome stable here; every smoke reads
+      # CHROME_BIN and falls back to the macOS path otherwise.
+      CHROME_BIN: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install the MCP server's dependencies
+        # puppeteer-core is not a devDependency of the root package — the MCP
+        # server vendors it, and tests/browser/dist-server.mjs walks up to
+        # mcp/node_modules to find it rather than adding a second copy.
+        run: npm ci --prefix mcp
+
+      - name: Generate icons
+        run: npm run icons
+
+      - name: Build
+        # The smokes drive the built dist/ and refuse a stale one
+        # (assertDistFresh in tests/browser/dist-server.mjs), so this job
+        # builds its own rather than restoring the build job's artifact,
+        # whose extraction mtimes would be what the freshness check judged.
+        run: npm run build
+
+      - name: Accessibility smoke
+        run: npm run smoke:a11y
+
+      - name: Reflow smoke
+        run: npm run smoke:reflow
+
+      - name: Editor keyboard smoke
+        run: npm run smoke:editor

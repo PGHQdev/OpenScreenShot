@@ -1,0 +1,279 @@
+/*
+ * Shared UI components, imported by all four surfaces (editor, popup,
+ * recorder, setup). Tokens come from tokens.css. This file holds chrome built
+ * from <button>/<div> markup; controls.css stays separate because it styles a
+ * native <input> element (the checkbox switch), a different kind of seam.
+ *
+ * Each rule here was a byte-identical duplicate under one or more names
+ * before this file existed — see the Task 11 report for the collision each
+ * one replaced. A surface may still layer a small override after its
+ * `@import '../shared/ui.css';` line for a legitimate per-surface size or
+ * colour (popup's `.icon-btn`, for one) — that is cascade, not a new
+ * collision, as long as only one file defines the full rule body.
+ */
+
+/* ---- Icon button (ghost) ---- */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-1);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.icon-btn:hover {
+  background: var(--hover-overlay);
+}
+
+.icon-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.icon-btn:disabled:hover {
+  background: transparent;
+}
+
+.icon-btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+
+/* ---- Screen-reader-only ---- */
+/* Available to a screen reader, out of the way of everything else. Not
+   display:none — a hidden live region announces nothing. Moved here from
+   editor.css when the recorder page grew a live region of its own. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- Secondary button ---- */
+.btn-secondary {
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--text-1);
+  font-weight: 600;
+  font-size: var(--fs-base);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--surface-3);
+}
+
+.btn-secondary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.btn-secondary:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+
+/* ---- Swatch (colour chip) ---- */
+.swatches {
+  display: flex;
+  /* Wraps rather than clipping: the editor style bar's 11+ swatches run
+     wider than a 320px viewport can hold on one line. */
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.swatch {
+  /* 24px meets the 24x24 minimum pointer target outright — see the Task 15
+     report for why that reads simpler and safer here than shrinking the
+     visual fill inside a bigger hit box would across five swatch variants
+     (plain, transparent, custom-colour, eyedropper) that share this rule. */
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 2px solid var(--border);
+  border-radius: var(--r-full);
+  cursor: pointer;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+  /*
+   * A swatch's fill is the product — the colour a user is picking — so it
+   * opts out of forced-colors' system-palette substitution across every
+   * variant that shares this rule (the 8 presets, up to 5 recent colours,
+   * the custom colour wheel, the transparent checkerboard): without this,
+   * forced-colors mode would flatten all of them to the same button face
+   * and the picker would show nothing to pick. The one variant on this
+   * class that is not a colour choice — the eyedropper (.swatch-screen) —
+   * opts back in where it is defined. A side effect, verified live: this
+   * also keeps [aria-pressed='true'] and :focus-visible's box-shadow rings
+   * below painting as authored under forced-colors instead of being
+   * dropped — forced-color-adjust: none opts the whole element out of that
+   * too, not just its own background — so neither ring needs a separate
+   * forced-colors rule.
+   */
+  forced-color-adjust: none;
+}
+
+.swatch:hover {
+  transform: scale(1.12);
+}
+
+/* Declared after :hover so a real click (hover + active at once) lands
+   here, not on the hover grow — pressed reads as a press, not a bigger hover. */
+.swatch:active {
+  transform: scale(0.98);
+}
+
+.swatch[aria-pressed='true'] {
+  border-color: var(--text-1);
+  box-shadow:
+    0 0 0 2px var(--surface-1),
+    0 0 0 3px var(--accent);
+}
+
+/*
+ * A swatch's own fill is an arbitrary colour (the user's pick, or a preset
+ * that can sit anywhere in the gamut), so a ring drawn straight against it
+ * cannot promise 3:1 — several presets measure under 2:1 against
+ * --border-focus. The --surface-1 beat below is the same fix
+ * [aria-pressed='true'] already uses: a moat of a known colour, then the
+ * ring against that. Declared after [aria-pressed='true'] so a focused,
+ * selected swatch shows the focus ring.
+ */
+.swatch:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--surface-1),
+    0 0 0 4px var(--border-focus);
+}
+
+/*
+ * A reserved slot for a recent colour the session hasn't picked yet
+ * (editor App.tsx pads .recentColors out to MAX_RECENT_COLORS with these) —
+ * present in the layout so the swatch row's width is fixed, invisible so it
+ * reads as empty rather than as an inert swatch.
+ */
+.swatch-empty {
+  visibility: hidden;
+}
+
+.swatch-transparent {
+  background:
+    linear-gradient(45deg, #d9d9de 25%, transparent 25%) 0 0 / 8px 8px,
+    linear-gradient(-45deg, #d9d9de 25%, transparent 25%) 0 4px / 8px 8px,
+    #fff;
+}
+
+.swatch-custom {
+  position: relative;
+  display: inline-flex;
+  overflow: hidden;
+  background: conic-gradient(
+    var(--swatch-red),
+    var(--swatch-orange),
+    var(--swatch-yellow),
+    var(--swatch-green),
+    var(--swatch-blue),
+    var(--swatch-purple),
+    var(--swatch-red)
+  );
+}
+
+.swatch-custom input[type='color'] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/*
+ * The focusable element here is the opacity:0 <input>, not the label that
+ * carries the visible conic-gradient wheel. The UA's default ring would draw
+ * on the input's own (invisible) box and get clipped by this label's
+ * overflow: hidden besides, so it is suppressed and forwarded to the visible
+ * proxy via :has() instead — the same box-shadow moat as every other swatch.
+ */
+.swatch-custom input[type='color']:focus-visible {
+  outline: none;
+}
+
+.swatch-custom:has(input[type='color']:focus-visible) {
+  box-shadow:
+    0 0 0 2px var(--surface-1),
+    0 0 0 4px var(--border-focus);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-btn,
+  .btn-secondary,
+  .swatch {
+    transition: none;
+  }
+}
+
+/*
+ * box-shadow is dropped outright once forced-colors is active — verified
+ * live (a minimal box with an author box-shadow and no forced-color-adjust
+ * renders boxShadow: none under Chrome's forced-colors emulation) — which is
+ * the trap task-17's brief calls out for .swatch[aria-pressed='true'],
+ * .swatch:focus-visible and .rec-tl-zoom[data-selected='true']
+ * (recorder.css) alike. It turns out not to need a fix here: .swatch's own
+ * forced-color-adjust: none above (kept for the fill) opts the *whole*
+ * element out of forced-colors handling, box-shadow included — verified the
+ * same way, and confirmed live on the built page: with it, the selected and
+ * focus rings both still paint their ordinary box-shadow moat, unchanged,
+ * under forced-colors. .rec-tl-zoom does not carry forced-color-adjust:
+ * none (it is not a colour swatch), so its ring genuinely needs the
+ * outline substitute — see recorder.css.
+ */
+
+/*
+ * Raise --border and --text-2 to their --*-strong values (tokens.css) when
+ * the user asks for more contrast. The switch lives here, not in tokens.css:
+ * the token generator (scripts/gen-design-tokens.mjs) throws on a custom
+ * property re-declared with a different value inside an @tokens group, so it
+ * cannot host a conditional override — see --border-strong's doc comment in
+ * tokens.css. :is() gives this rule the same specificity as tokens.css's own
+ * highest-specificity :root rule (:root[data-theme='dark']), and every
+ * surface's stylesheet imports ui.css after tokens.css, so this wins in
+ * light, dark and OS-followed theming alike without an !important.
+ */
+@media (prefers-contrast: more) {
+  :is(:root, :root[data-theme='light'], :root[data-theme='dark']) {
+    --border: var(--border-strong);
+    --text-2: var(--text-2-strong);
+  }
+}

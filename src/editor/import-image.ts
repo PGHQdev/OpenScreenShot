@@ -8,6 +8,7 @@
 import { sanitizeFilename } from '../shared/utils';
 import { MAX_CANVAS_HEIGHT_PX } from '../shared/geometry';
 import { MAX_EXPORT_AREA_PX } from './scale';
+import { t } from './i18n';
 
 /** The first image in a drop or a paste. Non-images are ignored, not refused. */
 export function pickImageFile<T extends { type: string }>(files: readonly T[]): T | null {
@@ -29,9 +30,9 @@ export function titleFromFilename(name: string): string {
  * but never composed or written out.
  */
 export function importSizeError(w: number, h: number): string | null {
-  if (!(w > 0) || !(h > 0)) return 'That file is not an image the editor can open.';
+  if (!(w > 0) || !(h > 0)) return t('editorImportNotAnImage');
   if (w > MAX_CANVAS_HEIGHT_PX || h > MAX_CANVAS_HEIGHT_PX || w * h > MAX_EXPORT_AREA_PX) {
-    return `That image is too large to edit (${w} × ${h}px).`;
+    return t('editorImportTooLarge', [String(w), String(h)]);
   }
   return null;
 }
@@ -49,5 +50,15 @@ export function readImageFile(file: File): Promise<{ dataUrl: string; img: HTMLI
       img.src = dataUrl;
     };
     reader.readAsDataURL(file);
+  });
+}
+
+/** Decode an already-have data URL — reopening a capture history shelf entry. */
+export function decodeDataUrl(dataUrl: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('decode failed'));
+    img.src = dataUrl;
   });
 }

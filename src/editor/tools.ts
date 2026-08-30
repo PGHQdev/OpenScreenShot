@@ -9,6 +9,7 @@
 import {
   DEFAULT_BLUR_STRENGTH,
   genId,
+  translateAnnotation,
   type Annotation,
   type BlurMode,
   type Point,
@@ -16,6 +17,7 @@ import {
   type StepAnnotation,
   type TextAnnotation,
 } from './annotations';
+import { t } from './i18n';
 
 export type Tool =
   | 'select'
@@ -29,7 +31,8 @@ export type Tool =
   | 'blur'
   | 'spotlight'
   | 'eyedropper'
-  | 'crop';
+  | 'crop'
+  | 'cut';
 
 export type ShapeTool = 'rect' | 'arrow' | 'line' | 'pen' | 'highlight' | 'blur' | 'spotlight';
 
@@ -40,24 +43,36 @@ export interface ToolDef {
 }
 
 export const TOOL_LIST: ToolDef[] = [
-  { id: 'select', label: 'Select', shortcut: 'V' },
-  { id: 'rect', label: 'Rectangle', shortcut: 'R' },
-  { id: 'arrow', label: 'Arrow', shortcut: 'A' },
-  { id: 'line', label: 'Line', shortcut: 'L' },
-  { id: 'pen', label: 'Pen', shortcut: 'P' },
-  { id: 'highlight', label: 'Highlighter', shortcut: 'H' },
-  { id: 'text', label: 'Text', shortcut: 'T' },
-  { id: 'step', label: 'Step number', shortcut: 'S' },
-  { id: 'blur', label: 'Blur', shortcut: 'B' },
-  { id: 'spotlight', label: 'Spotlight', shortcut: 'O' },
-  { id: 'eyedropper', label: 'Eyedropper', shortcut: 'I' },
-  { id: 'crop', label: 'Crop', shortcut: 'C' },
+  { id: 'select', label: t('editorToolSelect'), shortcut: 'V' },
+  { id: 'rect', label: t('editorToolRectangle'), shortcut: 'R' },
+  { id: 'arrow', label: t('editorToolArrow'), shortcut: 'A' },
+  { id: 'line', label: t('editorToolLine'), shortcut: 'L' },
+  { id: 'pen', label: t('editorToolPen'), shortcut: 'P' },
+  { id: 'highlight', label: t('editorToolHighlighter'), shortcut: 'H' },
+  { id: 'text', label: t('editorToolText'), shortcut: 'T' },
+  { id: 'step', label: t('editorToolStep'), shortcut: 'S' },
+  { id: 'blur', label: t('editorToolBlur'), shortcut: 'B' },
+  { id: 'spotlight', label: t('editorToolSpotlight'), shortcut: 'O' },
+  { id: 'eyedropper', label: t('editorToolEyedropper'), shortcut: 'I' },
+  { id: 'crop', label: t('editorToolCrop'), shortcut: 'C' },
+  { id: 'cut', label: t('editorToolCut'), shortcut: 'X' },
 ];
+
+/**
+ * Tool rail dividers: rendered after the tool whose id is a member, splitting
+ * the thirteen-tool column into Select / the drawing and glyph tools / the
+ * colour and redaction tools / Crop and Cut. Select, Crop and Cut are the
+ * tools with no style-bar fields (see stylebar.ts) — every tool between them
+ * draws something onto the canvas, and the last two reshape the picture
+ * itself.
+ */
+export const TOOL_DIVIDER_AFTER: ReadonlySet<Tool> = new Set(['select', 'step', 'eyedropper']);
 
 /** Per-tool options for {@link createShapeDraft} beyond the shared stroke style. */
 export interface ShapeDraftOptions {
   spotlightShape?: SpotlightShape;
   blurMode?: BlurMode;
+  blurStrength?: number;
 }
 
 /** Create a fresh draft annotation for a shape tool at point `p`. */
@@ -80,7 +95,6 @@ export function createShapeDraft(
         h: 0,
         stroke,
         strokeWidth,
-        fill: null,
       };
     case 'arrow':
     case 'line':
@@ -118,7 +132,7 @@ export function createShapeDraft(
         y: p.y,
         w: 0,
         h: 0,
-        strength: DEFAULT_BLUR_STRENGTH,
+        strength: opts.blurStrength ?? DEFAULT_BLUR_STRENGTH,
         mode: opts.blurMode ?? 'blur',
       };
     case 'spotlight':
@@ -243,6 +257,29 @@ export function createStepAnnotation(
 export function renumberSteps(anns: Annotation[]): Annotation[] {
   let n = 0;
   return anns.map((a) => (a.type === 'step' ? { ...a, n: ++n } : a));
+}
+
+/**
+ * How far a duplicate lands from its original, in image pixels. Big enough
+ * that the copy reads as a second object at a fit-to-window zoom rather than
+ * as a thickened edge on the first one.
+ */
+export const DUPLICATE_OFFSET = 16;
+
+/**
+ * Copies of `ids`, each a new annotation offset down and right. Layer order is
+ * kept: the copies come back in the order their originals sit in `anns`, so a
+ * duplicated pair stacks the way the pair it came from does. Step badges are
+ * renumbered by the caller, once the copies are appended to the document.
+ */
+export function duplicateAnnotations(
+  anns: Annotation[],
+  ids: string[],
+  offset = DUPLICATE_OFFSET,
+): Annotation[] {
+  return anns
+    .filter((a) => ids.includes(a.id))
+    .map((a) => ({ ...translateAnnotation(a, offset, offset), id: genId() }));
 }
 
 /** Distance between two points. */

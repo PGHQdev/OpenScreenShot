@@ -1,0 +1,131 @@
+/*
+ * openscreenshot.app design tokens.
+ *
+ * One naming scheme for the whole site. Names and values that overlap the
+ * extension's src/shared/tokens.css are identical there and here: --s-1..--s-6,
+ * --r-sm/--r-md/--r-lg/--r-full, --sh-sm/--sh-md/--sh-lg, --accent, --accent-ink
+ * and --font-mono. Site-only tokens (paper ground, type scale, motion) have no
+ * extension counterpart.
+ *
+ * One deliberate deviation: --font is the system sans stack here, while the
+ * extension puts 'Inter' first. The site keeps body copy on the reader's own UI
+ * face; the extension ships Inter inside the bundle.
+ *
+ * Colour contract. --accent carries non-text marks and large display type only.
+ * --accent-ink is the darkened coral for links, button labels and body-size
+ * accent text; it clears 4.5:1 on every ground it may sit on. --border carries
+ * UI boundaries and clears 3:1 on every adjacent surface. --rule is a decorative
+ * hairline: never the only signal for a boundary, never a control's edge.
+ * The measured ratios are in
+ * .superpowers/sdd/tranquil-drifting-lemon/task-2-report.md.
+ *
+ * The site follows the OS colour preference and has no theme switch, so the ink
+ * theme lives in a prefers-color-scheme block rather than the extension's
+ * data-theme attribute.
+ */
+
+:root {
+  /* spacing */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 80px;
+
+  /* radius */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --r-full: 9999px;
+
+  /* shadows */
+  --sh-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --sh-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --sh-lg: 0 8px 30px rgba(0, 0, 0, 0.16);
+
+  /* families */
+  --font:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Instrument Serif', 'Iowan Old Style', Palatino, Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* type scale */
+  --fs-xs: 0.6875rem;
+  --fs-sm: 0.8125rem;
+  --fs-md: 0.9375rem;
+  --fs-base: 1.0625rem;
+  --fs-lg: 1.1875rem;
+  --fs-xl: clamp(1.375rem, 1.1rem + 1.2vw, 1.75rem);
+  --fs-2xl: clamp(1.75rem, 1.3rem + 2.2vw, 2.5rem);
+  --fs-3xl: clamp(2.25rem, 1.4rem + 4vw, 3.75rem);
+
+  --lh-tight: 1.08;
+  --lh-snug: 1.32;
+  --lh-body: 1.65;
+
+  --tr-tight: -0.015em;
+  --tr-label: 0.14em;
+
+  /* layout */
+  --max-w: 720px;
+  --max-w-wide: 1040px;
+
+  /* motion */
+  --dur-fast: 140ms;
+  --dur-mid: 240ms;
+  --dur-slow: 520ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ---- Paper ---- */
+  color-scheme: light;
+
+  --paper: #f5f3ee;
+  --paper-raised: #fffefb;
+  --paper-dim: #ebe7e0;
+
+  --ink: #171512;
+  --ink-2: #514c44;
+  --ink-3: #645f56;
+
+  --accent: #e8503a;
+  --accent-ink: #bd3722;
+
+  --border: #8a8172;
+  --rule: #dfdad0;
+  --focus: #bd3722;
+
+  /* deep-ink slabs hold the product shots; they stay dark in both themes */
+  --slab: #171512;
+  --slab-ink: #f5f3ee;
+  --slab-ink-2: #b6b1a6;
+}
+
+/* ---- Ink ---- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --paper: #141414;
+    --paper-raised: #1c1c1c;
+    --paper-dim: #242424;
+
+    --ink: #f5f3ee;
+    --ink-2: #b8b5ae;
+    --ink-3: #9a968e;
+
+    --accent: #f26b57;
+    --accent-ink: #f8846f;
+
+    --border: #7a766c;
+    --rule: #35322e;
+    --focus: #f8846f;
+
+    --slab: #1f1f1e;
+    --slab-ink: #f5f3ee;
+    --slab-ink-2: #b6b1a6;
+  }
+}

@@ -1,0 +1,146 @@
+/*
+ * The shared shell for the five sub-pages: Docs, Roadmap, Support, Privacy and
+ * Cool stuff. Loaded once, by Doc.astro. Every selector sits under .doc, so
+ * nothing here reaches the nav or the footer Base.astro renders.
+ *
+ * Colour contract, same as everywhere: --border draws boundaries a reader must
+ * perceive (a kbd key, a status chip); --rule draws decorative hairlines only.
+ */
+
+.doc {
+  padding-block: var(--s-7) var(--s-8);
+}
+
+.doc-head {
+  margin-bottom: var(--s-7);
+}
+
+.doc-head h1 {
+  margin-bottom: var(--s-4);
+}
+
+.doc-lead {
+  max-width: var(--max-w);
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--fs-lg);
+}
+
+/* ---- Sections ---- */
+
+.doc-section {
+  margin-top: var(--s-7);
+  padding-top: var(--s-6);
+  border-top: 1px solid var(--rule);
+}
+
+.doc-section h3 {
+  margin: var(--s-6) 0 var(--s-3);
+  font-size: var(--fs-lg);
+}
+
+/* ---- Prose ---- */
+
+.doc p,
+.doc ul,
+.doc ol {
+  max-width: var(--max-w);
+}
+
+.doc p,
+.doc li {
+  color: var(--ink-2);
+}
+
+.doc strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.doc ul,
+.doc ol {
+  margin: 0 0 var(--s-4);
+  padding-left: var(--s-5);
+}
+
+.doc li {
+  margin-bottom: var(--s-2);
+}
+
+/* Link text is sometimes a bare URL, which has no break opportunity of its own. */
+.doc a {
+  overflow-wrap: break-word;
+}
+
+.doc-fine {
+  max-width: var(--max-w);
+  color: var(--ink-3);
+  font-size: var(--fs-sm);
+}
+
+/* ---- Code and keys ---- */
+
+.doc :not(pre) > code {
+  padding: 0.12em 0.38em;
+  border-radius: var(--r-sm);
+  background: var(--paper-dim);
+  color: var(--ink);
+}
+
+.doc kbd {
+  padding: 0.1em 0.42em;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: var(--r-sm);
+  background: var(--paper-raised);
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.doc pre {
+  max-width: var(--max-w);
+  margin: var(--s-4) 0;
+  padding: var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--slab);
+  color: var(--slab-ink);
+  font-size: var(--fs-sm);
+  overflow-x: auto;
+}
+
+.doc pre code {
+  padding: 0;
+  background: none;
+  color: inherit;
+  font-size: inherit;
+}
+
+/* A quiet emphasis block: the Privacy Policy's zero-collection statement and
+ * the Roadmap's promise. */
+
+.doc-callout {
+  max-width: var(--max-w);
+  padding: var(--s-4) var(--s-5);
+  border-left: 2px solid var(--accent);
+  background: var(--paper-raised);
+  font-size: var(--fs-md);
+}
+
+/* ---- Closing call to action ---- */
+
+.doc-cta {
+  margin-top: var(--s-8);
+  text-align: center;
+}
+
+.doc-cta h2 {
+  margin-bottom: var(--s-3);
+}
+
+.doc-cta p {
+  margin-inline: auto;
+}
+
+.doc-cta .btn {
+  margin-bottom: var(--s-4);
+}

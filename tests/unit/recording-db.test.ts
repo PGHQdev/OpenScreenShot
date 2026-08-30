@@ -5,6 +5,7 @@ import {
   __closeForTests,
   appendChunk,
   appendEvents,
+  chunkBytes,
   countChunks,
   createSegment,
   createSession,
@@ -120,6 +121,31 @@ describe('appendChunk / readChunks / countChunks', () => {
     expect(await countChunks(segment.id, 'tab')).toBe(3);
     expect(await readChunks(segment.id, 'webcam')).toEqual([]);
     expect(await countChunks(segment.id, 'webcam')).toBe(0);
+  });
+
+  it('reports every chunk read to an onChunk callback, in order, before resolving', async () => {
+    const session = await createSession(DEFAULT_RECORDING_SETTINGS);
+    const segment = await createSegment(session.id, 0, { w: 1280, h: 720, dpr: 1 }, false);
+    await appendChunk(segment.id, 'tab', 0, new Blob(['a']));
+    await appendChunk(segment.id, 'tab', 1, new Blob(['bb']));
+
+    const seen: number[] = [];
+    const chunks = await readChunks(segment.id, 'tab', (b) => seen.push(b.size));
+    expect(seen).toEqual([1, 2]);
+    expect(chunks.map((b) => b.size)).toEqual([1, 2]);
+  });
+});
+
+describe('chunkBytes', () => {
+  it('sums a kind’s chunk sizes without reading their content', async () => {
+    const session = await createSession(DEFAULT_RECORDING_SETTINGS);
+    const segment = await createSegment(session.id, 0, { w: 1280, h: 720, dpr: 1 }, false);
+    await appendChunk(segment.id, 'tab', 0, new Blob(['a']));
+    await appendChunk(segment.id, 'tab', 1, new Blob(['bb']));
+    await appendChunk(segment.id, 'tab', 2, new Blob(['ccc']));
+
+    expect(await chunkBytes(segment.id, 'tab')).toBe(6);
+    expect(await chunkBytes(segment.id, 'webcam')).toBe(0);
   });
 });
 

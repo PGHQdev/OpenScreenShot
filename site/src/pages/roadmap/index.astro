@@ -1,0 +1,363 @@
+---
+import Doc from '../../layouts/Doc.astro';
+import CropMarks from '../../components/CropMarks.astro';
+
+const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
+
+type Item = { name: string; status: 'Exploring' | 'Out of scope'; note: string };
+
+// What is not built yet, grouped the way the live page groups it. `note` is an
+// HTML fragment because two of them name a permission in <code>.
+const groups: { id: string; heading: string; items: Item[] }[] = [
+  {
+    id: 'capture',
+    heading: 'Capture',
+    items: [
+      {
+        name: 'Region loupe & element snapping',
+        status: 'Exploring',
+        note: 'A magnifier at the crosshair while you drag, with edges that snap to element boundaries.',
+      },
+      {
+        name: 'Batch capture: list of URLs → one PDF',
+        status: 'Exploring',
+        note: 'Scroll-and-stitch several pages and export them as a single multi-page PDF. It combines two parts that already exist.',
+      },
+    ],
+  },
+  {
+    id: 'recording',
+    heading: 'Recording',
+    items: [
+      {
+        name: 'MP4 export',
+        status: 'Exploring',
+        note: 'WebCodecs plus a muxer, alongside the existing WebM export.',
+      },
+      {
+        name: 'Follow-cursor zoom mode',
+        status: 'Exploring',
+        note: 'A zoom that pans to track the cursor, instead of sitting on fixed zoom blocks.',
+      },
+      {
+        name: 'Platform size presets',
+        status: 'Exploring',
+        note: 'Export at a target aspect ratio — YouTube, Shorts, square — instead of the tab’s own.',
+      },
+      {
+        name: 'Split-and-delete inside a segment',
+        status: 'Exploring',
+        note: 'Cut a segment in two on the timeline and drop the piece you do not want, instead of trimming from an end only.',
+      },
+    ],
+  },
+  {
+    id: 'power',
+    heading: 'Power features',
+    items: [
+      {
+        name: 'Local OCR — copy text out of a screenshot',
+        status: 'Exploring',
+        note: 'Text recognition in WASM, loaded on first use and run on your device. The engine and one language file weigh 10–15 MB, many times the whole extension, so size decides it.',
+      },
+    ],
+  },
+  {
+    id: 'performance',
+    heading: 'Performance & polish',
+    items: [
+      {
+        name: 'Worker-based stitch compositing',
+        status: 'Exploring',
+        note: 'Move full-page stitching to a Web Worker with OffscreenCanvas, so the UI stays responsive on very long pages.',
+      },
+      {
+        name: 'Instant editor open',
+        status: 'Exploring',
+        note: 'Prewarm the editor bundle while the capture runs, so the tab opens near-instantly.',
+      },
+    ],
+  },
+  {
+    id: 'out-of-scope',
+    heading: 'Out of scope',
+    items: [
+      {
+        name: 'Capturing desktop windows or the whole screen',
+        status: 'Out of scope',
+        note: 'It needs the <code>desktopCapture</code> permission, which adds a “capture content of your screen” install warning and a Chrome picker on every shot. OpenScreenShot ships with empty <code>host_permissions</code>, and keeping it that way is worth more than the feature.',
+      },
+    ],
+  },
+];
+
+// The release log, newest first. Items are HTML fragments: they carry <strong>
+// and <code>. Nothing below v1.3.0 changes; v1.5.0 is the current release.
+const shipped: { version: string; current?: boolean; items: string[] }[] = [
+  {
+    version: 'v1.5.0',
+    current: true,
+    items: [
+      '<strong>Full keyboard operation and screen reader support</strong> — a focusable canvas with keyboard layer cycling, placement, move, resize, and crop; live-region announcements for every mutation; roving tabindex on both toolbars; visible focus rings and 24×24 minimum target sizes; <code>forced-colors</code> and <code>prefers-contrast</code> support; and the editor’s UI strings moved behind <code>chrome.i18n</code>.',
+      '<strong>Cut tool</strong> — mark one or more horizontal bands on a full-page capture and remove them with a live preview. Cuts are non-destructive and undo like every other edit.',
+      '<strong>Named Beautify presets</strong> — one-click looks that set padding, corner radius, shadow, and background together, over the existing Beautify sliders.',
+      '<strong>Adjustable crop handles, with undo</strong> — eight resize handles on the crop rectangle, and applying a crop no longer clears the undo/redo stack.',
+      '<strong>Multi-select, duplicate, and arrow-key nudge</strong> — shift-click to select more than one annotation, <code>Alt+D</code> to duplicate, and arrow keys to nudge the selection.',
+      '<strong>Capture history shelf</strong> — the last twelve captures instead of one, reopenable from the editor.',
+      '<strong>Pin a capture in a floating window</strong> — via Document Picture-in-Picture, the only always-on-top surface Chrome offers.',
+      '<strong>Per-layer blur strength control</strong> — a slider on the blur tool instead of one fixed strength.',
+      '<strong>Two-click recording setup</strong> — <code>tabCapture</code> is requested inline from the Record button on its first click.',
+      '<strong>Recorder undo, and a simplified rail</strong> — undo/redo for the recording editor, Beautify collapsed behind one popover, and “Add zoom” moved onto the timeline.',
+      '<strong>Recordings, reachable from the popup</strong> — a Recordings link beside Reopen last opens the recorder’s session list, previously reachable by no button anywhere. Each row shows the date, duration, file size, source, and which tracks (mic, tab audio, webcam) it holds.',
+      '<strong>Redesigned editor chrome</strong> — a stable style bar, a grouped tool rail, a coral-themed range slider and canvas stage that adapt to light and dark, a consistent pressed state, and real loading and error states on export.',
+    ],
+  },
+  {
+    version: 'v1.3.0',
+    items: [
+      '<strong>Auto-hiding control bar</strong> — the recording control bar hides itself about three seconds after your pointer leaves it, so it stays out of the video. Move your cursor to the bottom center of the page to bring it back. It stays visible while you hover it, and while the recording is paused.',
+      '<strong>Synthetic cursor overlay</strong> — a “Show cursor” toggle in the editor’s settings rail, on by default, draws a smooth pointer from the recorded cursor path in both the preview and the WebM export, since <code>tabCapture</code> never records the OS cursor.',
+    ],
+  },
+  {
+    version: 'v1.2.0',
+    items: [
+      '<strong>Screen recorder with auto zoom</strong> — record the current tab, with a <code>tabCapture</code> permission requested once, at your first recording. The editor plays the take on a timeline with automatic zoom at cursor clicks, manual zoom blocks, and per-segment trim, then re-renders the export through canvas, mixing in mic and tab audio, click ripples, and an optional webcam bubble. 1-second chunks land in IndexedDB as you record, so a crash or a killed background page recovers.',
+    ],
+  },
+  {
+    version: 'v1.1.0',
+    items: [
+      '<strong>Quick capture</strong> — an “After capture” row in the popup sends a capture to the editor, the clipboard, or your downloads folder. It covers the popup buttons, the keyboard shortcuts, and the context menu.',
+      '<strong>Eyedropper color picker (<code>I</code>)</strong> — samples the rendered canvas, so a color inside a spotlight or on a beautify gradient picks as it looks. A swatch on the color row opens Chrome’s screen-wide picker.',
+      '<strong>Drag, drop, or paste any image</strong> — annotate a picture you already have. An import takes the same seat a capture takes, so every tool and export path keeps working.',
+      '<strong>Crash-safe editor drafts</strong> — edits are saved locally as you work and offered back when the editor reopens. Restoring is always a click.',
+    ],
+  },
+  {
+    version: 'v0.7.0',
+    items: [
+      '<strong>Beautify mode</strong> — padding, rounded corners, drop shadow, and six gradient presets, a solid color, or transparent. It previews live and travels into every export.',
+      '<strong>Export at any scale</strong> — 25 / 50 / 100 / 200 % or an exact pixel width. It refuses sizes past Chrome’s canvas limits instead of writing an empty file.',
+    ],
+  },
+  {
+    version: 'v0.6.1',
+    items: [
+      '<strong>Delayed capture</strong> — Off / 3s / 5s / 10s in the popup, with a countdown on the badge, for hover states, dropdowns, and tooltips.',
+      '<strong>Right-click context menu capture</strong> — full page, visible area, or region from the page’s own menu. It honors the delay setting.',
+      '<strong>Repeat last region</strong> — re-capture the previous selection rectangle from the popup footer or the context menu.',
+    ],
+  },
+  {
+    version: 'v0.6.0',
+    items: [
+      '<strong>Solid and mosaic redaction</strong> — a mode on the blur tool: soft blur, coarse mosaic, or an opaque fill that survives recompression.',
+      '<strong>Spotlight tool (<code>O</code>)</strong> — rectangle, rounded rectangle, or ellipse cut-outs that merge into one dim layer.',
+      '<strong>Resize every annotation type</strong> — pen and highlighter scale on their bounding box; text and step badges scale from the corner handles.',
+    ],
+  },
+  {
+    version: 'v0.5.0',
+    items: [
+      '<strong>Straight line tool (<code>L</code>)</strong> — the arrow without a head.',
+      '<strong>Shift constraints</strong> — square rectangles and blur regions, and lines and arrows snapped to 45°.',
+      '<strong>Number keys <code>1</code>–<code>8</code></strong> set the color.',
+      '<strong>Double-click a text layer</strong> to re-edit it.',
+    ],
+  },
+  {
+    version: 'v0.4.0 and earlier',
+    items: [
+      '<code>{domain}</code> filename token, alongside <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{w}</code>, and <code>{h}</code> (v0.4.0).',
+      'Numbered step badges and the highlighter tool (v0.3.0).',
+      'Shortcut sheet in the editor, with Export bound to ⌘S (v0.3.0).',
+      'One zoom menu, with keyboard zoom controls (v0.3.0).',
+      'Named swatches, a custom color, and recent colors (v0.3.0).',
+      'The export dialog can save its settings as the new defaults (v0.3.0).',
+      'Clickable filename tokens with a live preview (v0.3.0).',
+      'Ko-fi donation links in the README, the site, and the popup footer (v0.2.7).',
+    ],
+  },
+];
+---
+
+<Doc
+  title="Roadmap — OpenScreenShot"
+  description="OpenScreenShot roadmap — planned features and ideas for the open-source Chrome screenshot extension. Everything stays 100% local: no servers, no accounts."
+  path="/roadmap/"
+  label="Shipped and exploring"
+  heading="Roadmap"
+  lead="What has shipped, what is being explored, and what stays out of scope."
+>
+  <p class="doc-callout">
+    <strong>The promise:</strong> everything on this page stays 100% local. No servers, no accounts, no
+    new data collection — ever. Roadmap items carry no dates. Feedback and pull requests shape what
+    ships. Current release: <strong>v1.5.0</strong>.
+  </p>
+
+  <p class="legend">
+    <span class="visually-hidden">Status legend:</span>
+    <span class="status is-exploring">Exploring</span>
+    <span class="status is-shipped">Shipped</span>
+    <span class="status is-out">Out of scope</span>
+  </p>
+
+  {
+    groups.map((group) => (
+      <section class="doc-section" id={group.id}>
+        <h2>{group.heading}</h2>
+        <ul class="items">
+          {group.items.map((item) => (
+            <li>
+              <p class="item-head">
+                <strong>{item.name}</strong>
+                <span
+                  class:list={[
+                    'status',
+                    item.status === 'Exploring' ? 'is-exploring' : 'is-out',
+                  ]}
+                >
+                  {item.status}
+                </span>
+              </p>
+              <p class="item-note" set:html={item.note} />
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+
+  <section class="doc-section" id="shipped">
+    <h2>Shipped</h2>
+    {
+      shipped.map((release) => (
+        <div class="release">
+          <p class="release-ver">
+            {release.version}
+            {release.current && <span class="release-tag">current release</span>}
+          </p>
+          <ul>
+            {release.items.map((item) => (
+              <li set:html={item} />
+            ))}
+          </ul>
+        </div>
+      ))
+    }
+  </section>
+
+  <section class="doc-cta">
+    <CropMarks arm="26px" inset="18px">
+      <h2>Shape what ships next.</h2>
+      <p>What people ask for is what gets built.</p>
+      <a class="btn btn-ink" href={`${REPO_URL}/issues/new`} target="_blank" rel="noopener">
+        Suggest a feature
+      </a>
+      <p class="doc-fine">
+        Want to build one of these? Pull requests are welcome. See the <a
+          href={`${REPO_URL}/blob/main/CONTRIBUTING.md`}
+          target="_blank"
+          rel="noopener">contributing guide</a
+        >.
+      </p>
+    </CropMarks>
+  </section>
+</Doc>
+
+<style>
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    margin-bottom: 0;
+  }
+
+  .status {
+    display: inline-block;
+    padding: 0.15em 0.7em;
+    border: 1px solid var(--border);
+    border-radius: var(--r-full);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: var(--fs-xs);
+    letter-spacing: var(--tr-label);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .is-exploring {
+    color: var(--ink-2);
+  }
+
+  .is-shipped {
+    color: var(--accent-ink);
+    border-color: var(--accent-ink);
+  }
+
+  .is-out {
+    color: var(--ink-3);
+  }
+
+  /* ---- Not built yet ---- */
+
+  .items {
+    padding: 0;
+    list-style: none;
+  }
+
+  .items > li {
+    margin-bottom: 0;
+    padding: var(--s-4) 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .item-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-2) var(--s-4);
+    margin-bottom: var(--s-2);
+  }
+
+  .item-head strong {
+    font-size: var(--fs-md);
+  }
+
+  .item-note {
+    margin: 0;
+    font-size: var(--fs-md);
+  }
+
+  /* ---- Release log ---- */
+
+  .release {
+    margin-top: var(--s-6);
+  }
+
+  .release-ver {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--s-3);
+    margin-bottom: var(--s-3);
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: var(--fs-sm);
+    letter-spacing: var(--tr-label);
+  }
+
+  .release-tag {
+    color: var(--accent-ink);
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+  }
+
+  .release ul {
+    margin: 0;
+    font-size: var(--fs-md);
+  }
+</style>

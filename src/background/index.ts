@@ -54,12 +54,9 @@ const CAPTURE_THROTTLE_MS = 500;
 /** Time to let the page paint/composite after each scroll before capturing. */
 const PAINT_SETTLE_MS = 60;
 
-chrome.runtime.onInstalled.addListener((details) => {
-  if (details.reason === 'install') {
-    // The setup walkthrough takes the permission grants a first recording
-    // needs; the welcome card still shows on first popup open.
-    void chrome.tabs.create({ url: chrome.runtime.getURL('src/setup/index.html?from=install') });
-  }
+// No tab opens on install: the one grant a recording needs is asked for from
+// the Record click itself, so first run has nothing to walk through.
+chrome.runtime.onInstalled.addListener(() => {
   void createContextMenus();
 });
 
@@ -74,8 +71,37 @@ const MENU_CONTEXTS: NonNullable<chrome.contextMenus.CreateProperties['contexts'
   'audio',
 ];
 
-/** (Re)create the right-click capture menu. Menus persist until update/reload. */
-async function createContextMenus(): Promise<void> {
+/**
+ * (Re)create the right-click capture menu. Menus persist until update/reload.
+ *
+ * `onInstalled` can fire twice close together (a reload while a prior
+ * install/update event is still being handled), and two runs of this
+ * function racing was the cause of a "duplicate id oss-express" error users
+ * hit in the wild. `createContextMenusOnce` reads settings *before* clearing
+ * the menus so no `await` sits between `removeAll()` and the last `create()`
+ * — a competing run can no longer interleave partway through. This wrapper
+ * also makes two overlapping calls join a single in-flight run rather than
+ * racing at all. That guard is module state and does not survive a service
+ * worker restart, so it only protects overlap within one worker lifetime —
+ * the reordering above is what actually removes the race, and the swallowed
+ * `lastError` on the express `create()` below is the last-resort backstop.
+ *
+ * Exported only so `tests/unit/context-menus-race.test.ts` can drive it;
+ * nothing outside this module calls it.
+ */
+let createContextMenusPromise: Promise<void> | null = null;
+
+export async function createContextMenus(): Promise<void> {
+  if (!createContextMenusPromise) {
+    createContextMenusPromise = createContextMenusOnce().finally(() => {
+      createContextMenusPromise = null;
+    });
+  }
+  return createContextMenusPromise;
+}
+
+async function createContextMenusOnce(): Promise<void> {
+  const { expressMode } = await getSettings();
   await chrome.contextMenus.removeAll();
   chrome.contextMenus.create({
     id: 'oss-parent',
@@ -97,13 +123,16 @@ async function createContextMenus(): Promise<void> {
   }
   // Express lives on the icon's right-click menu: once it hijacks the icon
   // click, this checkbox is the only remaining surface that can turn it off.
-  chrome.contextMenus.create({
-    id: MENU_EXPRESS_ID,
-    type: 'checkbox',
-    title: chrome.i18n.getMessage('expressLabel'),
-    contexts: ['action'],
-    checked: (await getSettings()).expressMode,
-  });
+  chrome.contextMenus.create(
+    {
+      id: MENU_EXPRESS_ID,
+      type: 'checkbox',
+      title: chrome.i18n.getMessage('expressLabel'),
+      contexts: ['action'],
+      checked: expressMode,
+    },
+    () => void chrome.runtime.lastError,
+  );
   await ensureRepeatMenuItem();
 }
 

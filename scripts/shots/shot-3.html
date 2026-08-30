@@ -10,7 +10,7 @@
         position: absolute;
         inset: 0;
       }
-      .full iframe {
+      .full img {
         border: 0;
         display: block;
         width: 1280px;
@@ -23,6 +23,10 @@
         display: flex;
         align-items: center;
         gap: 8px;
+        /* narrow enough to sit in the stage's grey margins beside the
+           picture, which the real editor centres at its fit zoom */
+        max-width: 230px;
+        line-height: 1.3;
         background: #fafaf7;
         border: 1px solid #e2ded4;
         border-radius: 10px;
@@ -72,24 +76,24 @@
   <body>
     <div class="poster" style="display: block">
       <div class="full">
-        <iframe src="editor-ui.html" scrolling="no"></iframe>
+        <img src="captures/editor.png" alt="" />
       </div>
 
-      <!-- left toolbar -->
-      <div class="line" style="left: 44px; top: 258px; width: 34px; height: 2px"></div>
-      <div class="callout" style="left: 78px; top: 244px">
+      <!-- left toolbar: the callout sits in the grey margin beside the picture -->
+      <div class="line" style="left: 36px; top: 330px; width: 22px; height: 2px"></div>
+      <div class="callout" style="left: 58px; top: 306px">
         <span class="dot"></span> Shapes, arrows, text, blur &amp; step numbers
       </div>
 
-      <!-- stylebar -->
-      <div class="line amber" style="left: 348px; top: 74px; width: 2px; height: 30px"></div>
-      <div class="callout amber" style="left: 268px; top: 104px">
+      <!-- stylebar: the leader drops from the colour swatches -->
+      <div class="line amber" style="left: 108px; top: 66px; width: 2px; height: 26px"></div>
+      <div class="callout amber" style="left: 58px; top: 92px">
         <span class="dot"></span> Color, stroke &amp; size for every tool
       </div>
 
-      <!-- export / copy -->
-      <div class="line" style="right: 56px; top: 40px; width: 2px; height: 34px"></div>
-      <div class="callout" style="right: 30px; top: 74px">
+      <!-- export / copy: the leader drops from the Export button -->
+      <div class="line" style="right: 36px; top: 32px; width: 2px; height: 40px"></div>
+      <div class="callout" style="right: 30px; top: 72px">
         <span class="dot"></span> Copy or export — nothing uploads
       </div>
 

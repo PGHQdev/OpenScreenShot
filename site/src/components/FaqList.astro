@@ -1,0 +1,100 @@
+---
+/**
+ * The FAQ disclosure list. The homepage renders the eight items flagged for it;
+ * the Support page renders all sixteen. Both pass a slice of ../data/faq, and
+ * both build their FAQPage JSON-LD from the same slice they pass here.
+ */
+import type { FaqItem } from '../data/faq';
+
+interface Props {
+  items: FaqItem[];
+}
+
+const { items } = Astro.props;
+---
+
+<div class="faq-list">
+  {
+    items.map((item) => (
+      <details class="faq">
+        <summary>
+          {item.q}
+          <span class="faq-mark" aria-hidden="true" />
+        </summary>
+        <div class="faq-a" set:html={item.a} />
+      </details>
+    ))
+  }
+</div>
+
+<style>
+  .faq-list {
+    max-width: var(--max-w);
+    margin-top: var(--s-6);
+  }
+
+  .faq {
+    border-top: 1px solid var(--rule);
+  }
+
+  .faq:last-of-type {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .faq summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+    padding: var(--s-4) 0;
+    color: var(--ink);
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .faq summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-mark {
+    position: relative;
+    flex: none;
+    width: 13px;
+    height: 13px;
+  }
+
+  .faq-mark::before,
+  .faq-mark::after {
+    content: '';
+    position: absolute;
+    inset: 50% 0 auto;
+    height: 1.5px;
+    background: var(--accent);
+    transition: transform var(--dur-fast) var(--ease);
+  }
+
+  .faq-mark::after {
+    transform: rotate(90deg);
+  }
+
+  .faq[open] .faq-mark::after {
+    transform: rotate(0deg);
+  }
+
+  .faq-a {
+    padding-bottom: var(--s-4);
+    color: var(--ink-2);
+    font-size: var(--fs-md);
+  }
+
+  /* The answers arrive through set:html, which Astro's scoped styles do not
+   * reach; hence :global here and the code weight in base.css. */
+  .faq-a :global(p) {
+    margin: 0 0 var(--s-3);
+  }
+
+  .faq-a :global(p:last-child) {
+    margin-bottom: 0;
+  }
+</style>

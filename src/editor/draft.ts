@@ -1,15 +1,18 @@
 /**
  * The editor's crash-safety net.
  *
- * A draft is the annotation list plus the beautify frame, tied to the capture
- * the coordinates belong to. This module owns the shape and the validation;
- * `src/shared/storage.ts` only moves the bytes, because shared code must not
- * import editor types.
+ * A draft is the annotation list, the cut bands and the beautify frame, tied
+ * to the capture the coordinates belong to. This module owns the shape and the
+ * validation; `src/shared/storage.ts` only moves the bytes, because shared
+ * code must not import editor types.
  *
  * The frame rides along in `Settings` shape so `frameFromSettings` — which
  * already clamps sliders and vets backgrounds — is the only validator it needs.
+ * The beautify look id rides inside it, which is what keeps a look caught
+ * midway through an adjustment restorable as that look, modified.
  */
-import type { Annotation, AnnotationType } from './annotations';
+import { DEFAULT_BLUR_STRENGTH, type Annotation, type AnnotationType } from './annotations';
+import type { Band } from './bands';
 import { frameFromSettings, frameToSettings, type FrameOptions } from './frame';
 import { DEFAULT_SETTINGS, type Settings } from '../shared/types';
 
@@ -22,6 +25,8 @@ export interface Draft {
   /** `capturedAt` of the capture these annotation coordinates belong to. */
   sourceCapturedAt: number;
   annotations: Annotation[];
+  /** Cut bands, in the same source pixels the annotations are stored in. */
+  bands: Band[];
   frame: FrameSettings;
   savedAt: number;
 }
@@ -41,10 +46,16 @@ const ANNOTATION_TYPES: ReadonlySet<string> = new Set<AnnotationType>([
 export function makeDraft(
   sourceCapturedAt: number,
   annotations: Annotation[],
+  bands: Band[],
   frame: FrameOptions,
   savedAt: number = Date.now(),
 ): Draft {
-  return { sourceCapturedAt, annotations, frame: frameToSettings(frame), savedAt };
+  return { sourceCapturedAt, annotations, bands, frame: frameToSettings(frame), savedAt };
+}
+
+/** Whether a draft holds anything worth offering back. */
+export function draftHasWork(draft: Draft): boolean {
+  return draft.annotations.length > 0 || draft.bands.length > 0;
 }
 
 /** The frame a draft was saved with, clamped and vetted on the way out. */
@@ -57,12 +68,23 @@ export function draftFrame(draft: Draft): FrameOptions {
  *
  * One unusable annotation voids the whole draft. Dropping it instead would
  * restore a picture the user never drew, which is worse than restoring nothing.
+ * A malformed band voids it for the same reason: a cut is part of the picture,
+ * not a decoration on it.
+ *
+ * A missing `bands` field is not malformed — it is every draft written before
+ * the Cut tool existed, and every one of those reads back as a draft with
+ * nothing cut. A frame blob with no `beautifyLook` is the same story one
+ * release later: `frameFromSettings` reads the look off the values instead.
+ * A blur annotation with no `strength` is the same story again, for every
+ * draft written before the strength slider existed: it reads back at the
+ * fixed 8 the redaction always painted with.
  */
 export function parseDraft(value: unknown): Draft | null {
   if (!value || typeof value !== 'object') return null;
   const v = value as {
     sourceCapturedAt?: unknown;
     annotations?: unknown;
+    bands?: unknown;
     frame?: unknown;
     savedAt?: unknown;
   };
@@ -71,13 +93,42 @@ export function parseDraft(value: unknown): Draft | null {
   for (const a of v.annotations) {
     if (!isAnnotation(a)) return null;
   }
+  const rawBands = v.bands ?? [];
+  if (!Array.isArray(rawBands)) return null;
+  for (const b of rawBands) {
+    if (!isBand(b)) return null;
+  }
   const stored = (v.frame ?? {}) as Partial<Settings>;
   return {
     sourceCapturedAt: v.sourceCapturedAt,
-    annotations: v.annotations as Annotation[],
+    annotations: (v.annotations as Annotation[]).map(withBlurStrength),
+    bands: rawBands as Band[],
     frame: frameToSettings(frameFromSettings({ ...DEFAULT_SETTINGS, ...stored })),
     savedAt: typeof v.savedAt === 'number' && Number.isFinite(v.savedAt) ? v.savedAt : 0,
   };
+}
+
+/** A blur annotation missing (or with a non-finite) `strength` reads back at the default. */
+function withBlurStrength(a: Annotation): Annotation {
+  if (a.type !== 'blur' || Number.isFinite(a.strength)) return a;
+  return { ...a, strength: DEFAULT_BLUR_STRENGTH };
+}
+
+/**
+ * A band is two finite numbers and nothing else. Unlike an annotation, there
+ * is no type to key off and no draw path that tolerates NaN: a non-finite edge
+ * would propagate straight into the composed height and into the canvas size
+ * taken from it.
+ */
+function isBand(value: unknown): value is Band {
+  if (!value || typeof value !== 'object') return false;
+  const b = value as { y?: unknown; h?: unknown };
+  return (
+    typeof b.y === 'number' &&
+    Number.isFinite(b.y) &&
+    typeof b.h === 'number' &&
+    Number.isFinite(b.h)
+  );
 }
 
 /**

@@ -1,8 +1,10 @@
 /**
- * Recording setup walkthrough. One page, every permission row visible with a
- * live status; nothing here is a wizard step that can strand the user. All
- * grant state is queried fresh from the browser on every change signal —
- * never cached — so the page cannot disagree with reality.
+ * Recording permission recovery. Not onboarding: the Record click asks for
+ * tabCapture inline, and this page is where a refused prompt or a device
+ * Chrome has hard-blocked is put right. One page, every permission row
+ * visible with a live status; nothing here is a wizard step that can strand
+ * the user. All grant state is queried fresh from the browser on every change
+ * signal — never cached — so the page cannot disagree with reality.
  *
  * Camera and mic are probed on this page (extension origin) because it is the
  * same origin the webcam bubble iframe and the offscreen engine use: a grant
@@ -10,7 +12,18 @@
  */
 import { useEffect, useState } from 'preact/hooks';
 import { BrandMark } from '../shared/BrandMark';
-import { setSettings } from '../shared/storage';
+import {
+  IconCamera,
+  IconCode,
+  IconDisplay,
+  IconEyeOff,
+  IconGift,
+  IconGlobe,
+  IconMic,
+  IconShield,
+} from '../shared/icons';
+import { getSettings } from '../shared/storage';
+import { applyTheme, watchSystemTheme } from '../shared/theme';
 import {
   classifyMediaError,
   setupComplete,
@@ -60,22 +73,22 @@ export function App() {
   const [cameraError, setCameraError] = useState<RowError>(null);
   const [micError, setMicError] = useState<RowError>(null);
   const [tabError, setTabError] = useState<RowError>(null);
-  const from = new URLSearchParams(location.search).get('from');
-  const fromRecord = from === 'record';
-  // A fresh install lands on the feature welcome first; every other route
-  // (Record click, settings, welcome card) goes straight to the checklist.
-  const [showHero, setShowHero] = useState(from === 'install');
+  const fromRecord = new URLSearchParams(location.search).get('from') === 'record';
 
   async function refresh() {
     setSnap(await readSnapshot());
     setLoaded(true);
   }
 
+  // Apply the stored theme on mount, then live-update a "system" setting
+  // when the OS preference flips.
+  useEffect(() => {
+    void getSettings().then((s) => applyTheme(s.theme));
+  }, []);
+  useEffect(() => watchSystemTheme(() => void getSettings().then((s) => applyTheme(s.theme))), []);
+
   useEffect(() => {
     void refresh();
-    // This page IS the onboarding — once it has been seen, the popup's
-    // welcome card must not come back.
-    void setSettings({ showOnboarding: false }).catch(() => {});
     const onChange = () => void refresh();
     chrome.permissions.onAdded.addListener(onChange);
     chrome.permissions.onRemoved.addListener(onChange);
@@ -143,42 +156,8 @@ export function App() {
 
   const ready = setupComplete(snap);
 
-  if (showHero) {
-    return (
-      <div class="setup hero" data-testid="hero">
-        <PinHint />
-        <div class="hero-mark">
-          <BrandMark size={64} />
-        </div>
-        <h1>{t('welcomeTitle')}</h1>
-        <p class="setup-intro">{t('setupHeroLede')}</p>
-        <div class="feature-grid">
-          <Feature icon="page" title={t('setupFeatCapture')} sub={t('setupFeatCaptureSub')} />
-          <Feature icon="display" title={t('setupFeatRecord')} sub={t('setupFeatRecordSub')} />
-          <Feature icon="zoom" title={t('setupFeatZoom')} sub={t('setupFeatZoomSub')} />
-          <Feature icon="pencil" title={t('setupFeatExport')} sub={t('setupFeatExportSub')} />
-        </div>
-        <div class="trust-strip">
-          <span class="trust-pill">
-            <SetupIcon id="code" /> {t('setupTrustOpenSource')}
-          </span>
-          <span class="trust-pill">
-            <SetupIcon id="shield" /> {t('setupTrustLocal')}
-          </span>
-          <span class="trust-pill">
-            <SetupIcon id="eye-off" /> {t('setupTrustNoTracking')}
-          </span>
-        </div>
-        <button class="btn-primary btn-hero" onClick={() => setShowHero(false)}>
-          {t('setupWelcomeCta')} →
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div class="setup">
-      <PinHint />
       <header class="setup-header">
         <BrandMark size={36} />
         <div>
@@ -297,186 +276,27 @@ function Tag({ kind }: { kind: 'granted' | 'required' | 'optional' | 'denied' })
   return <span class={`tag tag-${kind}`}>{label}</span>;
 }
 
-type IconId =
-  | 'display'
-  | 'camera'
-  | 'mic'
-  | 'globe'
-  | 'code'
-  | 'shield'
-  | 'eye-off'
-  | 'page'
-  | 'zoom'
-  | 'pencil'
-  | 'gift';
+type IconId = 'display' | 'camera' | 'mic' | 'globe' | 'code' | 'shield' | 'eye-off' | 'gift';
 
-/**
- * Floating top-right nudge to pin the extension, with an arrow at Chrome's
- * puzzle menu. Live state from chrome.action.getUserSettings (polled — Chrome
- * has no pin-change event); once pinned it celebrates briefly, then leaves.
- */
-function PinHint() {
-  const [pinned, setPinned] = useState<boolean | null>(null);
-  const [justPinned, setJustPinned] = useState(false);
-
-  useEffect(() => {
-    let last: boolean | null = null;
-    let hideTimer: ReturnType<typeof setTimeout> | null = null;
-    const check = () => {
-      if (!chrome.action?.getUserSettings) return;
-      chrome.action
-        .getUserSettings()
-        .then((s) => {
-          if (last === false && s.isOnToolbar) {
-            setJustPinned(true);
-            hideTimer = setTimeout(() => setJustPinned(false), 4000);
-          }
-          last = s.isOnToolbar;
-          setPinned(s.isOnToolbar);
-        })
-        .catch(() => setPinned(null));
-    };
-    check();
-    const id = setInterval(check, 1500);
-    return () => {
-      clearInterval(id);
-      if (hideTimer) clearTimeout(hideTimer);
-    };
-  }, []);
-
-  if (pinned == null || (pinned && !justPinned)) return null;
-  return (
-    <div class={`pin-hint ${pinned ? 'pin-hint-done' : ''}`} data-testid="pin-hint">
-      {pinned ? (
-        <span class="pin-hint-text">{t('setupPinDone')}</span>
-      ) : (
-        <>
-          <svg
-            class="pin-arrow"
-            viewBox="0 0 60 60"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="3"
-            stroke-linecap="round"
-            aria-hidden="true"
-          >
-            <path d="M8 52 C 20 40, 30 24, 44 12" stroke-dasharray="1 7" />
-            <path d="M36 10l9-2 1 9" />
-          </svg>
-          <div class="pin-hint-text">
-            <strong>{t('setupPinTitle')}</strong>
-            <span>{t('setupPinSub')}</span>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function Feature(props: { icon: IconId; title: string; sub: string }) {
-  return (
-    <div class="feature">
-      <span class="row-icon">
-        <SetupIcon id={props.icon} />
-      </span>
-      <div>
-        <h2>{props.title}</h2>
-        <p>{props.sub}</p>
-      </div>
-    </div>
-  );
-}
-
-// Same stroke idiom as the popup's ModeIcon.
+// Same icon set as the popup's ModeIcon.
 function SetupIcon({ id }: { id: IconId }) {
-  const common = {
-    width: 20,
-    height: 20,
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: 'currentColor',
-    'stroke-width': 2,
-    'stroke-linecap': 'round' as const,
-    'stroke-linejoin': 'round' as const,
-    'aria-hidden': true,
-  };
   switch (id) {
     case 'display':
-      return (
-        <svg {...common}>
-          <rect x="2" y="4" width="20" height="14" rx="2" />
-          <circle cx="12" cy="11" r="3" fill="currentColor" stroke="none" />
-          <path d="M8 22h8" />
-        </svg>
-      );
+      return <IconDisplay />;
     case 'camera':
-      return (
-        <svg {...common}>
-          <rect x="2" y="6" width="13" height="12" rx="2" />
-          <path d="M15 10l7-3v10l-7-3" />
-        </svg>
-      );
+      return <IconCamera />;
     case 'mic':
-      return (
-        <svg {...common}>
-          <rect x="9" y="2" width="6" height="12" rx="3" />
-          <path d="M5 10a7 7 0 0 0 14 0M12 17v5" />
-        </svg>
-      );
+      return <IconMic />;
     case 'globe':
-      return (
-        <svg {...common}>
-          <circle cx="12" cy="12" r="10" />
-          <path d="M2 12h20M12 2a15 15 0 0 1 0 20a15 15 0 0 1 0-20" />
-        </svg>
-      );
+      return <IconGlobe />;
     case 'code':
-      return (
-        <svg {...common}>
-          <path d="M8 6l-6 6 6 6M16 6l6 6-6 6" />
-        </svg>
-      );
+      return <IconCode />;
     case 'shield':
-      return (
-        <svg {...common}>
-          <path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z" />
-          <path d="M9 12l2 2 4-4" />
-        </svg>
-      );
+      return <IconShield />;
     case 'eye-off':
-      return (
-        <svg {...common}>
-          <path d="M3 3l18 18M10.5 5.2A10 10 0 0 1 23 12a15 15 0 0 1-3.6 4.3M6.6 6.6A15 15 0 0 0 1 12a10 10 0 0 0 12.3 5.4" />
-        </svg>
-      );
-    case 'page':
-      return (
-        <svg {...common}>
-          <rect x="6" y="3" width="12" height="18" rx="2" />
-          <path d="M9 8h6M9 12h6M9 16h4" />
-        </svg>
-      );
-    case 'zoom':
-      return (
-        <svg {...common}>
-          <circle cx="11" cy="11" r="7" />
-          <path d="M21 21l-4.5-4.5M11 8v6M8 11h6" />
-        </svg>
-      );
-    case 'pencil':
-      return (
-        <svg {...common}>
-          <path d="M17 3l4 4L8 20l-5 1 1-5z" />
-        </svg>
-      );
+      return <IconEyeOff />;
     case 'gift':
-      return (
-        <svg {...common}>
-          <rect x="3" y="8" width="18" height="4" rx="1" />
-          <path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
-          <path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5" />
-        </svg>
-      );
+      return <IconGift />;
   }
 }
 

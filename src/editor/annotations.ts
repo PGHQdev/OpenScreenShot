@@ -8,6 +8,7 @@
  * transform). Coordinates may be signed during drafting (dragging up-left makes
  * w/h negative); {@link normalizeRect} fixes that for drawing and hit-testing.
  */
+import { tokens } from '../shared/design-tokens';
 
 export interface Rect {
   x: number;
@@ -33,7 +34,6 @@ export interface RectAnnotation extends BaseAnnotation {
   h: number;
   stroke: string;
   strokeWidth: number;
-  fill: string | null;
 }
 
 export interface ArrowAnnotation extends BaseAnnotation {
@@ -153,10 +153,20 @@ export function hasStroke(a: Annotation): a is StrokedAnnotation {
 }
 
 /** Default annotation styling (a vivid red reads well on most pages). */
-export const DEFAULT_STROKE = '#ff3b30';
+export const DEFAULT_STROKE = tokens.swatchRed;
 export const DEFAULT_STROKE_WIDTH = 6;
 export const DEFAULT_FONT_SIZE = 28;
 export const DEFAULT_BLUR_STRENGTH = 8;
+/**
+ * The blur strength slider's range. Below 2 the tile downsamples to the same
+ * size as the region (see `getBlurTile`), which draws it back unblurred and
+ * defeats the redaction; above 32 the tile has already hit its 1px floor for
+ * every region this tool is drawn over, so a higher ceiling buys no more
+ * control. Whole steps only — the tile math rounds to the pixel anyway.
+ */
+export const BLUR_STRENGTH_MIN = 2;
+export const BLUR_STRENGTH_MAX = 32;
+export const BLUR_STRENGTH_STEP = 1;
 
 /** Editable annotation style (the style bar's current value). */
 export interface AnnotationStyle {
@@ -171,20 +181,27 @@ export const DEFAULT_STYLE: AnnotationStyle = {
   fontSize: DEFAULT_FONT_SIZE,
 };
 
-/** Swatches for the style bar. */
-export const COLOR_PALETTE: string[] = [
-  '#ff3b30',
-  '#ff9500',
-  '#ffcc00',
-  '#34c759',
-  '#0071e3',
-  '#af52de',
-  '#ffffff',
-  '#1d1d1f',
-];
-
 /** Stroke-width presets for the style bar. */
 export const STROKE_WIDTHS: number[] = [3, 6, 12];
+
+/**
+ * Tallest the style bar's width-preview bar (.width-bar) is allowed to draw,
+ * in px — comfortably inside the 26px .width-btn target's content box
+ * (editor.css) without touching its border. The target itself never resizes;
+ * only the ink inside it scales.
+ */
+const STROKE_BAR_MAX_PX = 20;
+
+/**
+ * On-screen height for a stroke-width preset's swatch bar, proportional to
+ * the widest preset rather than clamped to a flat ceiling — the old
+ * `Math.min(w, 8)` (App.tsx) made the 6px and 12px buttons draw at 6 and 8,
+ * two pixels apart and hard to tell apart at a glance.
+ */
+export function strokeBarHeight(w: number): number {
+  const max = Math.max(...STROKE_WIDTHS);
+  return Math.round((w / max) * STROKE_BAR_MAX_PX);
+}
 
 const FONT_STACK = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif";
 
@@ -240,6 +257,42 @@ export function bbox(a: Annotation): Rect {
     case 'text':
       return { x: a.x, y: a.y, w: a.width, h: a.height };
   }
+}
+
+/**
+ * Ids of every annotation whose bounding box meets `r` — what a marquee drag
+ * catches. Touching counts: a marquee dragged along an edge selects what it
+ * grazes, the same as the 6px slack the click hit-test already allows.
+ */
+export function annotationsInRect(anns: Annotation[], r: Rect): string[] {
+  const n = normalizeRect(r);
+  return anns
+    .filter((a) => {
+      const b = bbox(a);
+      return b.x <= n.x + n.w && b.x + b.w >= n.x && b.y <= n.y + n.h && b.y + b.h >= n.y;
+    })
+    .map((a) => a.id);
+}
+
+/**
+ * The box around several annotations — what a multi-selection is resized by,
+ * and where its handles sit. An empty list has no box, so it reads as a point
+ * at the origin, which no caller draws (canvas.ts only asks once it has two).
+ */
+export function unionBBox(anns: Annotation[]): Rect {
+  if (anns.length === 0) return { x: 0, y: 0, w: 0, h: 0 };
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const a of anns) {
+    const b = bbox(a);
+    x0 = Math.min(x0, b.x);
+    y0 = Math.min(y0, b.y);
+    x1 = Math.max(x1, b.x + b.w);
+    y1 = Math.max(y1, b.y + b.h);
+  }
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
 }
 
 /** Measure rendered text (single or multi-line) for hit-testing & selection bbox. */
@@ -333,10 +386,6 @@ export function drawAnnotation(
 function drawRect(ctx: CanvasRenderingContext2D, a: RectAnnotation): void {
   const r = normalizeRect(a);
   if (r.w <= 0 || r.h <= 0) return;
-  if (a.fill) {
-    ctx.fillStyle = a.fill;
-    ctx.fillRect(r.x, r.y, r.w, r.h);
-  }
   ctx.lineWidth = a.strokeWidth;
   ctx.strokeStyle = a.stroke;
   ctx.strokeRect(r.x, r.y, r.w, r.h);
@@ -417,10 +466,10 @@ function drawHighlight(ctx: CanvasRenderingContext2D, a: HighlightAnnotation): v
 /** Dark text/ring on light badge colors (white, yellow), white otherwise. */
 function badgeContrast(hex: string): string {
   const m = /^#([0-9a-f]{6})$/i.exec(hex);
-  if (!m) return '#ffffff';
+  if (!m) return tokens.canvasMark;
   const v = parseInt(m[1], 16);
   const lum = 0.299 * ((v >> 16) & 255) + 0.587 * ((v >> 8) & 255) + 0.114 * (v & 255);
-  return lum > 200 ? '#1d1d1f' : '#ffffff';
+  return lum > 200 ? tokens.canvasMarkInk : tokens.canvasMark;
 }
 
 function drawStep(ctx: CanvasRenderingContext2D, a: StepAnnotation): void {
@@ -453,7 +502,7 @@ function drawText(ctx: CanvasRenderingContext2D, a: TextAnnotation): void {
 }
 
 /** Fill for solid redaction — opaque, so no pixel data survives. */
-const SOLID_REDACTION_FILL = '#111318';
+const SOLID_REDACTION_FILL = tokens.canvasRedact;
 
 /** Mosaic blocks are this much coarser than the soft blur's pixelation. */
 const MOSAIC_FACTOR = 4;
@@ -567,6 +616,7 @@ export function drawSpotlightLayer(
     lctx.fillStyle = `rgba(0,0,0,${SPOTLIGHT_DIM})`;
     lctx.fillRect(0, 0, imageWidth, imageHeight);
     lctx.globalCompositeOperation = 'destination-out';
+    // destination-out reads only alpha, so any opaque fill punches the hole.
     lctx.fillStyle = '#000';
     for (const a of spotlights) {
       lctx.beginPath();
@@ -621,11 +671,67 @@ export function drawCropPreview(
   ctx.fillRect(0, n.y + n.h, imageWidth, imageHeight - (n.y + n.h));
   ctx.fillRect(0, n.y, n.x, n.h);
   ctx.fillRect(n.x + n.w, n.y, imageWidth - (n.x + n.w), n.h);
-  ctx.strokeStyle = '#ffffff';
+  ctx.strokeStyle = tokens.canvasMark;
   ctx.lineWidth = 2;
   ctx.setLineDash([8, 6]);
   ctx.strokeRect(n.x, n.y, n.w, n.h);
   ctx.setLineDash([]);
+}
+
+/**
+ * Draw a cut preview: dim the band about to be removed and dash both edges it
+ * will close up along. The same treatment as the crop preview, for the same
+ * reason — the dashed edge is guaranteed to read because the dim it borders is
+ * under half of it. Given in composed image space, so a draft that overlaps a
+ * band already cut is drawn as short as it will actually be.
+ */
+export function drawCutPreview(
+  ctx: CanvasRenderingContext2D,
+  y: number,
+  h: number,
+  imageWidth: number,
+): void {
+  if (h <= 0) return;
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.fillRect(0, y, imageWidth, h);
+  ctx.strokeStyle = tokens.canvasMark;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([8, 6]);
+  ctx.beginPath();
+  ctx.moveTo(0, y);
+  ctx.lineTo(imageWidth, y);
+  ctx.moveTo(0, y + h);
+  ctx.lineTo(imageWidth, y + h);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+/**
+ * The mark where a cut band was removed: two abutting hairlines, black over
+ * white, drawn in screen space so the seam stays one pixel of each at any
+ * zoom.
+ *
+ * The pairing is the selection outline's argument (see SELECTION_DASH) without
+ * the dash — a seam runs the full width of the picture over whatever the
+ * screenshot happens to hold there, so one flat colour cannot be guaranteed to
+ * read against it, and the two-tone pair always leaves one line visible. It is
+ * unbroken rather than dashed so it does not read as a selection.
+ */
+export function drawSeam(ctx: CanvasRenderingContext2D, y: number, x0: number, x1: number): void {
+  ctx.save();
+  ctx.lineWidth = 1;
+  ctx.setLineDash([]);
+  ctx.strokeStyle = '#000000';
+  ctx.beginPath();
+  ctx.moveTo(x0, y - 0.5);
+  ctx.lineTo(x1, y - 0.5);
+  ctx.stroke();
+  ctx.strokeStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.moveTo(x0, y + 0.5);
+  ctx.lineTo(x1, y + 0.5);
+  ctx.stroke();
+  ctx.restore();
 }
 
 export type Handle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'start' | 'end';
@@ -636,6 +742,21 @@ export interface HandlePos {
   y: number;
 }
 
+/** The eight handle positions around a box, in image space. */
+export function rectHandles(r: Rect): HandlePos[] {
+  const { x, y, w, h } = r;
+  return [
+    { handle: 'nw', x, y },
+    { handle: 'n', x: x + w / 2, y },
+    { handle: 'ne', x: x + w, y },
+    { handle: 'e', x: x + w, y: y + h / 2 },
+    { handle: 'se', x: x + w, y: y + h },
+    { handle: 's', x: x + w / 2, y: y + h },
+    { handle: 'sw', x, y: y + h },
+    { handle: 'w', x, y: y + h / 2 },
+  ];
+}
+
 /** Handle positions (image space) for resizing a selected annotation. */
 export function getHandles(a: Annotation): HandlePos[] {
   switch (a.type) {
@@ -643,19 +764,8 @@ export function getHandles(a: Annotation): HandlePos[] {
     case 'blur':
     case 'spotlight':
     case 'pen':
-    case 'highlight': {
-      const { x, y, w, h } = bbox(a);
-      return [
-        { handle: 'nw', x, y },
-        { handle: 'n', x: x + w / 2, y },
-        { handle: 'ne', x: x + w, y },
-        { handle: 'e', x: x + w, y: y + h / 2 },
-        { handle: 'se', x: x + w, y: y + h },
-        { handle: 's', x: x + w / 2, y: y + h },
-        { handle: 'sw', x, y: y + h },
-        { handle: 'w', x, y: y + h / 2 },
-      ];
-    }
+    case 'highlight':
+      return rectHandles(bbox(a));
     case 'arrow':
     case 'line':
       return [
@@ -676,15 +786,41 @@ export function getHandles(a: Annotation): HandlePos[] {
   }
 }
 
-/** Hit-test handles in screen space; returns the handle under (sx,sy) or null. */
+/**
+ * Hit-test handles in screen space; returns the handle under (sx,sy) or null.
+ * tol is a half-width: the default 12 gives a 24x24 effective pointer target
+ * around each handle's 8x8 drawn square (drawSelection below), the CSS
+ * target-size minimum applied to a canvas-drawn control.
+ */
 export function handleAt(
   a: Annotation,
   project: (x: number, y: number) => { x: number; y: number },
   sx: number,
   sy: number,
-  tol = 7,
+  tol = 12,
 ): Handle | null {
-  for (const h of getHandles(a)) {
+  return handleAtPoints(getHandles(a), project, sx, sy, tol);
+}
+
+/** The same hit-test against a bare box — the handles a multi-selection carries. */
+export function handleAtRect(
+  r: Rect,
+  project: (x: number, y: number) => { x: number; y: number },
+  sx: number,
+  sy: number,
+  tol = 12,
+): Handle | null {
+  return handleAtPoints(rectHandles(r), project, sx, sy, tol);
+}
+
+function handleAtPoints(
+  handles: HandlePos[],
+  project: (x: number, y: number) => { x: number; y: number },
+  sx: number,
+  sy: number,
+  tol: number,
+): Handle | null {
+  for (const h of handles) {
     const p = project(h.x, h.y);
     if (Math.abs(p.x - sx) <= tol && Math.abs(p.y - sy) <= tol) return h.handle;
   }
@@ -718,11 +854,35 @@ function scaleAnchor(r: Rect, handle: Handle): Point {
 }
 
 /**
- * Scale an annotation from a handle drag, always derived from its state at drag
- * start (`a` + `startBBox`) so repeated calls during one drag never compound.
- * Pen and highlight strokes scale freely per axis; text and step badges scale
- * uniformly (fontSize / radius) around the fixed corner, with a size floor.
- * Rect, blur, arrow and line resize through their own paths and pass through.
+ * The two factors a handle drag applies, and the point map that goes with them.
+ * `startBBox` is the box the drag started from; `target` is where the drag has
+ * taken it. A point keeps its place in the box: the corner the drag anchors on
+ * is a fixed point of the map, because resizeRect leaves that corner alone.
+ */
+function boxMap(startBBox: Rect, handle: Handle, dx: number, dy: number) {
+  const target = resizeRect(startBBox, handle, dx, dy);
+  const kx = startBBox.w > 0 ? target.w / startBBox.w : 1;
+  const ky = startBBox.h > 0 ? target.h / startBBox.h : 1;
+  return {
+    kx,
+    ky,
+    x: (x: number) => target.x + (x - startBBox.x) * kx,
+    y: (y: number) => target.y + (y - startBBox.y) * ky,
+  };
+}
+
+/**
+ * Scale one annotation from a handle drag on its own box, always derived from
+ * its state at drag start (`a` + `startBBox`) so repeated calls during one drag
+ * never compound. Pen and highlight strokes scale freely per axis; text and
+ * step badges scale uniformly (fontSize / radius) around the fixed corner, with
+ * a size floor.
+ *
+ * Rect, blur, spotlight, arrow and line resize through their own paths in
+ * useEditor (a rect by its dragged edge, an arrow by the endpoint under the
+ * pointer) and pass through here untouched. A selection of several is a
+ * different problem — one box around annotations that are not it — and has its
+ * own function below.
  */
 export function scaleAnnotation(
   a: Annotation,
@@ -731,21 +891,15 @@ export function scaleAnnotation(
   dx: number,
   dy: number,
 ): Annotation {
-  const target = resizeRect(startBBox, handle, dx, dy);
-  const kx = startBBox.w > 0 ? target.w / startBBox.w : 1;
-  const ky = startBBox.h > 0 ? target.h / startBBox.h : 1;
+  const m = boxMap(startBBox, handle, dx, dy);
   switch (a.type) {
     case 'pen':
     case 'highlight':
-      return {
-        ...a,
-        points: a.points.map((p) => ({
-          x: target.x + (p.x - startBBox.x) * kx,
-          y: target.y + (p.y - startBBox.y) * ky,
-        })),
-      };
+      return { ...a, points: a.points.map((p) => ({ x: m.x(p.x), y: m.y(p.y) })) };
     case 'text': {
-      const k = Math.max(kx, ky, MIN_FONT_SIZE / a.fontSize);
+      // A lone text layer exposes corner handles only, so its own box and the
+      // uniform factor grow together and it cannot leave the box being drawn.
+      const k = Math.max(m.kx, m.ky, MIN_FONT_SIZE / a.fontSize);
       const anchor = scaleAnchor(startBBox, handle);
       return {
         ...a,
@@ -758,7 +912,7 @@ export function scaleAnnotation(
       };
     }
     case 'step': {
-      const k = Math.max(kx, ky, MIN_STEP_RADIUS / a.r);
+      const k = Math.max(m.kx, m.ky, MIN_STEP_RADIUS / a.r);
       const anchor = scaleAnchor(startBBox, handle);
       return {
         ...a,
@@ -772,28 +926,190 @@ export function scaleAnnotation(
   }
 }
 
-/** Draw the selection bbox + resize handles in screen space via project (toScreen). */
+/**
+ * The uniform factor for something that cannot be stretched on one axis — a
+ * glyph, a badge — inside a box that can. The geometric mean of the two, so
+ * that a drag and the drag back cancel exactly: widening by kx=2 with ky=1
+ * gives sqrt(2), narrowing back gives 1/sqrt(2), and the product is 1. The
+ * larger of the two does not have that property (2 then 1), which is a ratchet:
+ * every widen-and-narrow cycle would leave the glyph permanently bigger.
+ *
+ * `floor` is that annotation's smallest legal factor, and it wins — a size
+ * floor is the one place the round trip is allowed to be lossy, because the
+ * alternative is a badge scaled to nothing.
+ */
+function uniformFactor(kx: number, ky: number, floor: number): number {
+  return Math.max(Math.sqrt(kx * ky), floor);
+}
+
+/**
+ * Scale one member of a multi-selection inside the box around all of them.
+ *
+ * Every member's position comes from the same per-axis map, so a member sits
+ * where it sat in the box and cannot be carried outside it. Rect, blur,
+ * spotlight, arrow, line, pen and highlight take their size from the same two
+ * factors. Text and step badges cannot be stretched on one axis, so their size
+ * takes the uniform factor above, and on the axis that scaled less they overhang
+ * the slot the map gave them.
+ *
+ * That overhang is `own_size * (k - k_axis)` on the axis whose factor is
+ * `k_axis`, which is `own_size * k_axis * (sqrt(r) - 1)` for `r` the ratio
+ * between the two factors. It is proportional to the member's own size but the
+ * coefficient grows with `r` without bound: 0.41 of its own size for a 2:1
+ * stretch, 0.83 at kx=4/ky=2, and 2.16 for 10:1. It stays proportional to the
+ * member — unlike a position error, which grows with distance from the
+ * anchored corner and so has no bound at all in the size of the selection.
+ */
+export function scaleInBox(
+  a: Annotation,
+  startBox: Rect,
+  handle: Handle,
+  dx: number,
+  dy: number,
+): Annotation {
+  const m = boxMap(startBox, handle, dx, dy);
+  switch (a.type) {
+    case 'rect':
+    case 'blur':
+    case 'spotlight': {
+      const n = normalizeRect(a);
+      return { ...a, x: m.x(n.x), y: m.y(n.y), w: n.w * m.kx, h: n.h * m.ky };
+    }
+    case 'arrow':
+    case 'line':
+      return { ...a, x1: m.x(a.x1), y1: m.y(a.y1), x2: m.x(a.x2), y2: m.y(a.y2) };
+    case 'pen':
+    case 'highlight':
+      return { ...a, points: a.points.map((p) => ({ x: m.x(p.x), y: m.y(p.y) })) };
+    case 'text': {
+      const k = uniformFactor(m.kx, m.ky, MIN_FONT_SIZE / a.fontSize);
+      return {
+        ...a,
+        x: m.x(a.x),
+        y: m.y(a.y),
+        fontSize: a.fontSize * k,
+        width: a.width * k,
+        height: a.height * k,
+      };
+    }
+    case 'step': {
+      const k = uniformFactor(m.kx, m.ky, MIN_STEP_RADIUS / a.r);
+      // A badge is drawn around its centre, so that is the point the map moves.
+      return { ...a, x: m.x(a.x), y: m.y(a.y), r: a.r * k };
+    }
+  }
+}
+
+/**
+ * Marching-ants dash: the selection outline sits over an arbitrary
+ * screenshot, so no single flat colour (the old #2f80ed blue included) is
+ * guaranteed visible against it. Two passes of the same dash pattern, offset
+ * by one dash length, alternate opaque black and white along the line. Their
+ * contrast against a flat background is a mirror pair — black wins on light
+ * backgrounds, white wins on dark ones — that crosses at relative luminance
+ * ~0.18, where both still clear ~4.6:1, above the 3:1 UI-boundary floor,
+ * against any solid colour underneath. Deliberately not a design token: it
+ * has to survive arbitrary image content rather than follow either theme.
+ */
+const SELECTION_DASH = [4, 3];
+
+/** The two-tone dashed outline of `r`, given in screen space. */
+function strokeAnts(ctx: CanvasRenderingContext2D, r: Rect): void {
+  ctx.setLineDash(SELECTION_DASH);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = '#000000';
+  ctx.lineDashOffset = 0;
+  ctx.strokeRect(r.x, r.y, r.w, r.h);
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineDashOffset = SELECTION_DASH[0];
+  ctx.strokeRect(r.x, r.y, r.w, r.h);
+  ctx.setLineDash([]);
+}
+
+/**
+ * Draw the selection bbox + resize handles in screen space via `project` —
+ * the caller's projector for whatever the points belong to (see
+ * CanvasController.projectAt). `handles` is false for every member of a
+ * multi-selection: the
+ * handles are a resize target, and a drag can only resize one annotation, so
+ * painting eight of them per layer would offer a control that does not exist.
+ */
 export function drawSelection(
   ctx: CanvasRenderingContext2D,
   a: Annotation,
   project: (x: number, y: number) => { x: number; y: number },
+  handles = true,
 ): void {
   const b = bbox(a);
   const tl = project(b.x, b.y);
   const br = project(b.x + b.w, b.y + b.h);
   ctx.save();
-  ctx.setLineDash([4, 3]);
-  ctx.strokeStyle = '#2f80ed';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
-  ctx.setLineDash([]);
-  ctx.fillStyle = '#ffffff';
-  ctx.strokeStyle = '#2f80ed';
-  ctx.lineWidth = 1.5;
-  for (const h of getHandles(a)) {
-    const p = project(h.x, h.y);
-    ctx.fillRect(p.x - 4, p.y - 4, 8, 8);
-    ctx.strokeRect(p.x - 4, p.y - 4, 8, 8);
+  strokeAnts(ctx, { x: tl.x, y: tl.y, w: br.x - tl.x, h: br.y - tl.y });
+  if (!handles) {
+    ctx.restore();
+    return;
   }
+  drawHandles(ctx, getHandles(a), project);
+  ctx.restore();
+}
+
+/**
+ * The box a multi-selection is dragged by: one outline around every selected
+ * layer, with the eight handles that scale all of them at once. Each member
+ * keeps its own plain outline (drawSelection with no handles), so what is
+ * selected and what the handles act on are both visible.
+ */
+export function drawGroupSelection(
+  ctx: CanvasRenderingContext2D,
+  box: Rect,
+  project: (x: number, y: number) => { x: number; y: number },
+): void {
+  const tl = project(box.x, box.y);
+  const br = project(box.x + box.w, box.y + box.h);
+  ctx.save();
+  strokeAnts(ctx, { x: tl.x, y: tl.y, w: br.x - tl.x, h: br.y - tl.y });
+  drawHandles(ctx, rectHandles(box), project);
+  ctx.restore();
+}
+
+/** The drawn side of a handle square, in screen pixels. */
+export const HANDLE_SIZE = 8;
+
+// Handles: a white fill with a black ring is the same worst-case pairing as the
+// outline — whichever of the two the local background defeats, the other reads.
+// `size` is the drawn side only: the pointer target stays the 24x24 that
+// handleAt's tolerance describes, whatever square is painted inside it.
+export function drawHandles(
+  ctx: CanvasRenderingContext2D,
+  handles: HandlePos[],
+  project: (x: number, y: number) => { x: number; y: number },
+  size = HANDLE_SIZE,
+): void {
+  const half = size / 2;
+  ctx.fillStyle = tokens.canvasMark;
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 1.5;
+  for (const h of handles) {
+    const p = project(h.x, h.y);
+    ctx.fillRect(p.x - half, p.y - half, size, size);
+    ctx.strokeRect(p.x - half, p.y - half, size, size);
+  }
+}
+
+/**
+ * The marquee a Select-tool drag pulls out, in the same two-tone dash as the
+ * selection outline: it sits over the same arbitrary screenshot, so it needs
+ * the same guarantee of being visible against whatever is under it.
+ */
+export function drawMarquee(
+  ctx: CanvasRenderingContext2D,
+  r: Rect,
+  project: (x: number, y: number) => { x: number; y: number },
+): void {
+  const n = normalizeRect(r);
+  const tl = project(n.x, n.y);
+  const br = project(n.x + n.w, n.y + n.h);
+  ctx.save();
+  strokeAnts(ctx, { x: tl.x, y: tl.y, w: br.x - tl.x, h: br.y - tl.y });
   ctx.restore();
 }

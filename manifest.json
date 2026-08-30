@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "1.3.0",
+  "version": "1.5.0",
   "description": "__MSG_extDesc__",
   "default_locale": "en",
   "minimum_chrome_version": "116",
@@ -62,6 +62,9 @@
     "stop-recording": {
       "suggested_key": { "default": "Alt+Shift+X", "mac": "Alt+Shift+X" },
       "description": "Stop the current recording"
+    },
+    "reveal-recording-bar": {
+      "description": "Show the recording control bar"
     }
   }
 }

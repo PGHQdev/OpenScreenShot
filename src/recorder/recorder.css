@@ -7,6 +7,7 @@
 
 @import '../shared/tokens.css';
 @import '../shared/controls.css';
+@import '../shared/ui.css';
 
 * {
   box-sizing: border-box;
@@ -21,7 +22,7 @@ body {
 
 body {
   font-family: var(--font);
-  font-size: 14px;
+  font-size: var(--fs-base);
   line-height: 1.45;
   color: var(--text-1);
   background: var(--surface-1);
@@ -31,7 +32,15 @@ body {
 .rec-app {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  /* A fixed viewport height, not a minimum: without it the rail and the
+     session list have no bounded box to scroll inside of, so they simply
+     push the whole page taller — which happens to reach every control via
+     document scroll today, but leaves the header and transport controls
+     behind rather than staying in view the way a scrollable panel would,
+     and is the wrong foundation for the rail to actually scroll instead of
+     clip (see .rail and .rec-list below). */
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* ---- Header ---- */
@@ -55,7 +64,7 @@ body {
 }
 
 .brand-name {
-  font-size: 15px;
+  font-size: var(--fs-base);
   font-weight: 600;
   letter-spacing: -0.01em;
 }
@@ -64,15 +73,21 @@ body {
   border: none;
   background: transparent;
   color: var(--text-2);
-  font-size: 13px;
+  font-size: var(--fs-sm);
   cursor: pointer;
   padding: var(--s-1) var(--s-2);
   border-radius: var(--r-sm);
-  transition: color 150ms ease-out;
+  transition:
+    color var(--dur-mid) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .link-btn:hover {
-  color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.link-btn:active {
+  transform: scale(0.98);
 }
 
 .link-btn:focus-visible {
@@ -80,7 +95,9 @@ body {
   outline-offset: 1px;
 }
 
-.icon-btn {
+/* Filled-circle transport button: a different meaning from ui.css's ghost
+   .icon-btn, so it keeps its own name instead of colliding with it. */
+.rec-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -88,23 +105,23 @@ body {
   height: 40px;
   border: none;
   border-radius: var(--r-full);
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent-ink);
+  color: var(--on-accent);
   cursor: pointer;
   transition:
-    background 150ms ease-out,
-    transform 150ms ease-out;
+    background var(--dur-mid) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
-.icon-btn:hover {
-  background: var(--accent-hover);
+.rec-icon-btn:hover {
+  background: var(--accent-ink-hover);
 }
 
-.icon-btn:active {
-  transform: scale(0.96);
+.rec-icon-btn:active {
+  transform: scale(0.98);
 }
 
-.icon-btn:focus-visible {
+.rec-icon-btn:focus-visible {
   outline: 2px solid var(--border-focus);
   outline-offset: 2px;
 }
@@ -126,15 +143,53 @@ body {
   gap: var(--s-2);
   padding: var(--s-2) var(--s-3);
   border-radius: var(--r-md);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 500;
   border: 1px solid var(--border);
   background: var(--surface-2);
   box-shadow: var(--sh-md);
 }
 
+.toast-text {
+  flex: 1 1 auto;
+}
+
 .toast-info {
   color: var(--text-2);
+}
+
+/* Same spelling as the popup's error toast: amber is this product's danger
+   accent, and a failure must not read as a neutral hint. */
+.toast-error {
+  background: color-mix(in srgb, var(--danger) 14%, var(--surface-1));
+  color: var(--danger-ink);
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+}
+
+.toast-dismiss {
+  flex: 0 0 auto;
+  padding: 0 var(--s-05);
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: var(--fs-base);
+  line-height: 1.2;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.toast-dismiss:hover {
+  opacity: 1;
+}
+
+.toast-dismiss:active {
+  transform: scale(0.98);
+}
+
+.toast-dismiss:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
 }
 
 /* ---- Session list ---- */
@@ -143,17 +198,23 @@ body {
   width: 100%;
   margin: 0 auto;
   padding: var(--s-5);
+  /* .rec-app is now a fixed 100vh box (see above), so this is what scrolls a
+     long session list instead of the page growing past the viewport. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .rec-list-title {
-  font-size: 18px;
+  font-size: var(--fs-lg);
   font-weight: 600;
   margin: 0 0 var(--s-4);
 }
 
-.rec-empty {
+.rec-empty,
+.rec-list-loading {
   color: var(--text-2);
-  font-size: 13px;
+  font-size: var(--fs-base);
   padding: var(--s-5) 0;
 }
 
@@ -177,31 +238,38 @@ body {
 }
 
 .rec-row-date {
-  font-size: 13px;
+  font-size: var(--fs-base);
   font-weight: 500;
 }
 
 .rec-row-meta {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--text-2);
   font-variant-numeric: tabular-nums;
 }
 
 .pill {
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 600;
-  padding: 2px var(--s-2);
+  padding: var(--s-05) var(--s-2);
   border-radius: var(--r-full);
 }
 
 .pill-recovered {
-  color: var(--warning);
+  color: var(--danger-ink);
   background: color-mix(in srgb, var(--warning) 16%, transparent);
 }
 
 .pill-live {
-  color: var(--accent);
+  color: var(--accent-ink);
   background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+/* A start that never reached the engine. The row is kept so the attempt is
+   visible; there is nothing in it to open. */
+.pill-failed {
+  color: var(--danger-ink);
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
 }
 
 .rec-row-actions {
@@ -220,7 +288,13 @@ body {
 }
 
 .rec-delete-btn[data-armed='true'] {
-  color: var(--danger);
+  color: var(--danger-ink);
+  font-weight: 600;
+}
+
+/* Same armed-Cancel look as the session list's armed Delete above. */
+.rec-cancel-btn[data-armed='true'] {
+  color: var(--danger-ink);
   font-weight: 600;
 }
 
@@ -231,17 +305,62 @@ body {
   min-height: 0;
 }
 
+/* A session still loading its chunks out of IndexedDB — same flex slot as
+   .rec-session, so the header above it never sits over a blank page. */
+.rec-session-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.rec-session-loading .rec-progress {
+  width: 240px;
+}
+
 .rec-main {
   flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  /* The stage, timeline and transport together can run taller than the
+     available height (200% zoom); scrolls instead of clipping. */
+  overflow-y: auto;
 }
 
 .rail {
   flex: 0 0 260px;
+  /* .rec-session stretches this to its own height; the zoom, ripple, webcam
+     and export sections can run taller than that at 200% zoom, so this
+     scrolls instead of clipping. */
+  overflow-y: auto;
   border-left: 1px solid var(--border);
   background: var(--surface-1);
+}
+
+/* Below --bp-md (tokens.css — a var() cannot appear in this condition, so
+   768px is that token's value spelled out; tests/unit/breakpoint-guard.test.ts
+   checks the two stay equal): the 260px rail beside the stage leaves too
+   little width for either, so it stacks below instead. */
+@media (max-width: 768px) {
+  .rec-session {
+    flex-direction: column;
+  }
+  .rail {
+    /* rec-main (flex: 1 1 auto) claims leftover space, same as side-by-side;
+       the rail keeps its natural height when there is room and shrinks —
+       scrolling internally via the base overflow-y: auto above — when
+       there is not, rather than a fixed flex-basis forcing rec-session
+       (now a fixed-height box; see .rec-app) to clip it. */
+    flex: 0 1 auto;
+    min-height: 0;
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
 }
 
 .rail-section {
@@ -254,6 +373,17 @@ body {
 
 .rail-section + .rail-section {
   border-top: 1px solid var(--border);
+}
+
+/* `inert` (App.tsx's dialogs already use it the same way) blocks interaction
+   and drops the subtree out of the accessibility tree on its own; this only
+   adds the visual signal, which `inert` does not supply by itself. Opacity,
+   not colour, so it needs no forced-colors override — same reasoning as the
+   .link-btn[aria-disabled] dimming above. */
+.rail-section[inert],
+.rec-zoom-tools[inert] {
+  opacity: 0.5;
+  transition: opacity var(--dur-fast) var(--ease-out);
 }
 
 .rail-link {
@@ -270,7 +400,7 @@ body {
 }
 
 .rail-row-label {
-  font-size: 13px;
+  font-size: var(--fs-base);
   color: var(--text-1);
 }
 
@@ -278,7 +408,7 @@ body {
   display: flex;
   align-items: center;
   gap: var(--s-2);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--text-2);
   cursor: pointer;
 }
@@ -299,65 +429,48 @@ body {
   margin-top: var(--s-2);
 }
 
-/* popup.css defines the same rule locally; recorder.css does not import it. */
-.range {
-  width: 100%;
+/* ---- Beautify popover ---- */
+/* task 39: the twelve Beautify controls (the switch, three sliders, and
+   eight background swatches — see .swatches below) collapse behind this
+   trigger + popover, the same non-modal contract the screenshot editor's
+   BeautifyMenu uses in editor.css (see Rail.tsx's header comment for why
+   this is a fresh implementation of that contract rather than an import of
+   that component: its styles live in a stylesheet the recorder bundle never
+   loads). */
+.rec-beautify {
+  position: relative;
+}
+
+.btn-secondary.is-active {
+  background: var(--accent-subtle);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+
+/* left/right: 0 instead of a fixed width, so the popover never has to
+   escape .rail's own box — .rail sets overflow-y: auto, which computes
+   overflow-x: auto too (only one axis was given a non-visible value), so
+   anything wider would be clipped or force a horizontal scrollbar. */
+.rec-beautify-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin-top: var(--s-2);
+  padding: var(--s-4);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  box-shadow: var(--sh-md);
 }
 
 /* ---- Beautify background swatches ---- */
-.swatches {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.swatch {
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: 2px solid var(--border);
-  border-radius: var(--r-full);
-  cursor: pointer;
-  transition:
-    transform 100ms ease-out,
-    border-color 100ms ease-out;
-}
-
-.swatch:hover {
-  transform: scale(1.12);
-}
-
-.swatch[aria-pressed='true'] {
-  border-color: var(--text-1);
-  box-shadow:
-    0 0 0 2px var(--surface-1),
-    0 0 0 3px var(--accent);
-}
-
-.swatch-transparent {
-  background:
-    linear-gradient(45deg, #d9d9de 25%, transparent 25%) 0 0 / 8px 8px,
-    linear-gradient(-45deg, #d9d9de 25%, transparent 25%) 0 4px / 8px 8px,
-    #fff;
-}
-
-.swatch-custom {
-  position: relative;
-  display: inline-flex;
-  overflow: hidden;
-  background: conic-gradient(#ff3b30, #ff9500, #ffcc00, #34c759, #0071e3, #af52de, #ff3b30);
-}
-
-.swatch-custom input[type='color'] {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: none;
-  opacity: 0;
-  cursor: pointer;
-}
+/* Wrapping now lives on the shared .swatches rule in ui.css (task-16, for the
+   editor style bar's reflow at 320px) — the beautify grid gets it for free. */
 
 /* ---- Webcam bubble corner picker ---- */
 .rec-bubble-corners {
@@ -376,10 +489,15 @@ body {
   border-radius: var(--r-sm);
   background: var(--surface-2);
   cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 
 .rec-bubble-corner:hover {
   background: var(--surface-3);
+}
+
+.rec-bubble-corner:active {
+  transform: scale(0.98);
 }
 
 .rec-bubble-corner[aria-pressed='true'] {
@@ -426,7 +544,7 @@ body {
 }
 
 .rail-hint {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--text-2);
   font-variant-numeric: tabular-nums;
 }
@@ -436,13 +554,13 @@ body {
 }
 
 .rec-btn-primary {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: #fff;
+  border-color: var(--accent-ink);
+  background: var(--accent-ink);
+  color: var(--on-accent);
 }
 
 .rec-btn-primary:hover {
-  background: var(--accent-hover);
+  background: var(--accent-ink-hover);
 }
 
 .rec-progress {
@@ -456,7 +574,7 @@ body {
 .rec-progress-fill {
   height: 100%;
   background: var(--accent);
-  transition: width 120ms linear;
+  transition: width var(--dur-fast) linear;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -465,26 +583,16 @@ body {
   }
 }
 
-.rec-btn {
-  height: 32px;
-  padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  background: var(--surface-2);
-  color: var(--text-1);
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 120ms ease-out;
-}
-
-.rec-btn:hover {
-  background: var(--surface-3);
-}
-
-.rec-btn:focus-visible {
-  outline: 2px solid var(--border-focus);
-  outline-offset: 1px;
+/* Same amber-on-tint caution look as .pill-recovered above; it is one
+   variant, not two colours compared against each other, so it needs no
+   forced-colors override for the same reason that pill does not. */
+.rec-export-warning {
+  margin: 0;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  color: var(--danger-ink);
+  background: color-mix(in srgb, var(--warning) 16%, transparent);
 }
 
 /* ---- Stage ---- */
@@ -552,6 +660,11 @@ body {
   outline-offset: 2px;
 }
 
+.rec-reticle:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .rec-transport {
   display: flex;
   align-items: center;
@@ -562,7 +675,7 @@ body {
 }
 
 .rec-time {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-variant-numeric: tabular-nums;
   color: var(--text-2);
 }
@@ -571,6 +684,14 @@ body {
 .rec-timeline {
   padding: var(--s-4) var(--s-5) var(--s-5);
   background: var(--surface-1);
+}
+
+/* Add Zoom (task 39 moved it here from the rail): its own row above the
+   track, beside where the blocks it creates and the scale picker that edits
+   them already live. */
+.rec-tl-toolbar {
+  display: flex;
+  margin-bottom: var(--s-3);
 }
 
 /* One box for every row, so a column is the same timeline ms in all of them. */
@@ -603,7 +724,7 @@ body {
   position: absolute;
   top: 0;
   bottom: 0;
-  background: repeating-linear-gradient(-45deg, var(--border) 0 4px, transparent 4px 8px);
+  background: repeating-linear-gradient(-45deg, var(--rule) 0 4px, transparent 4px 8px);
   opacity: 0.7;
   pointer-events: none;
 }
@@ -616,30 +737,65 @@ body {
   right: 0;
 }
 
+/*
+ * The draggable trim edge is 6px visually (rec-tl-handle::before below) but
+ * the element itself — what pointerdown and :focus-visible land on — is
+ * min(24px, 33%): the 24×24 pointer-target minimum, capped so the two edges
+ * of one strip can never together claim more than two-thirds of it. Each
+ * anchors to its own side (left:0 / right:0) and grows inward, so the extra
+ * hit area lands on this strip, never a neighbour's.
+ */
 .rec-tl-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: min(24px, 33%);
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.rec-tl-handle-start {
+  left: 0;
+}
+
+.rec-tl-handle-end {
+  right: 0;
+}
+
+.rec-tl-handle::before {
+  content: '';
   position: absolute;
   top: 0;
   bottom: 0;
   width: 6px;
   background: var(--text-3);
-  cursor: ew-resize;
-  touch-action: none;
 }
 
-.rec-tl-handle:hover,
-.rec-tl-handle:focus-visible {
-  background: var(--accent);
-  outline: none;
-}
-
-.rec-tl-handle-start {
+.rec-tl-handle-start::before {
   left: 0;
   border-radius: var(--r-sm) 0 0 var(--r-sm);
 }
 
-.rec-tl-handle-end {
+.rec-tl-handle-end::before {
   right: 0;
   border-radius: 0 var(--r-sm) var(--r-sm) 0;
+}
+
+.rec-tl-handle:hover::before,
+.rec-tl-handle:focus-visible::before {
+  background: var(--accent);
+}
+
+.rec-tl-handle:focus-visible {
+  outline: none;
+}
+
+.rec-tl-handle[aria-disabled='true'] {
+  cursor: default;
+}
+
+.rec-tl-handle[aria-disabled='true']::before {
+  opacity: 0.4;
 }
 
 .rec-tl-zooms {
@@ -656,34 +812,53 @@ body {
   bottom: 0;
   min-width: 6px;
   border-radius: var(--r-sm);
-  background: color-mix(in srgb, var(--accent) 70%, transparent);
+  background: var(--accent-ink);
   cursor: grab;
   touch-action: none;
   overflow: hidden;
 }
 
+/*
+ * Persistent selection, not focus: --ring-selected instead of --border-focus
+ * keeps that token exclusively a :focus-visible signal (see tokens.css). The
+ * ring sits against --surface-2 (the track), not the chip's own fill —
+ * --accent-ink-pressed measures under 2:1 against --ring-selected in both
+ * themes, so drawing straight onto it would fail 3:1; the moat fixes that the
+ * same way the shared .swatch ring does.
+ */
 .rec-tl-zoom[data-selected='true'] {
-  background: var(--accent);
-  box-shadow: 0 0 0 2px var(--border-focus);
+  background: var(--accent-ink-pressed);
+  box-shadow:
+    0 0 0 2px var(--surface-2),
+    0 0 0 4px var(--ring-selected);
+}
+
+/* Focus is its own ring, so a tabbed-to chip reads distinctly from a merely
+   selected one: outline (crisp, outside the box) vs. the selected state's
+   box-shadow moat (soft-edged, closer in). Declared after [data-selected] so
+   a focused, selected chip still shows it. */
+.rec-tl-zoom:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
 }
 
 .rec-tl-zoom-label {
   display: block;
   padding: 4px 10px;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 600;
-  color: #fff;
+  color: var(--on-accent);
   white-space: nowrap;
   pointer-events: none;
 }
 
+/* Same 24×24-capped-at-a-third technique as .rec-tl-handle above. */
 .rec-tl-zoom-edge {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 6px;
+  width: min(24px, 33%);
   cursor: ew-resize;
-  background: rgba(255, 255, 255, 0.55);
 }
 
 .rec-tl-zoom-edge-start {
@@ -691,6 +866,23 @@ body {
 }
 
 .rec-tl-zoom-edge-end {
+  right: 0;
+}
+
+.rec-tl-zoom-edge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.rec-tl-zoom-edge-start::before {
+  left: 0;
+}
+
+.rec-tl-zoom-edge-end::before {
   right: 0;
 }
 
@@ -711,7 +903,7 @@ body {
 }
 
 .rec-zoom-tools-label {
-  font-size: 11px;
+  font-size: var(--fs-xs);
   color: var(--text-2);
 }
 
@@ -729,8 +921,9 @@ body {
   border-right: 1px solid var(--border);
   background: var(--surface-1);
   color: var(--text-1);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 
 .rec-seg-btn:last-child {
@@ -741,18 +934,22 @@ body {
   background: var(--surface-2);
 }
 
+.rec-seg-btn:active {
+  transform: scale(0.98);
+}
+
 .rec-seg-btn[aria-pressed='true'] {
   background: var(--accent-subtle);
-  color: var(--accent);
+  color: var(--accent-ink);
   font-weight: 600;
 }
 
 .rec-zoom-delete {
-  color: var(--danger);
+  color: var(--danger-ink);
 }
 
 .rec-zoom-delete:hover {
-  color: var(--danger);
+  color: var(--danger-ink);
   text-decoration: underline;
 }
 
@@ -770,7 +967,7 @@ body {
   top: 0;
   padding-left: 4px;
   border-left: 1px solid var(--border);
-  font-size: 10px;
+  font-size: var(--fs-xs);
   line-height: 16px;
   color: var(--text-3);
   font-variant-numeric: tabular-nums;
@@ -799,8 +996,72 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .icon-btn,
-  .rec-btn {
+  .rec-icon-btn,
+  /* Colour-only hover fade; nothing about it conveys progress. */
+  .link-btn,
+  .rec-bubble-corner,
+  .rec-seg-btn,
+  .toast-dismiss,
+  .rail-section[inert],
+  .rec-zoom-tools[inert] {
     transition: none;
+  }
+}
+
+/*
+ * Three colour-only states in this file:
+ *   - .rec-tl-zoom[data-selected]'s ring is a box-shadow, which forced
+ *     colors mode does not paint at all (Chromium drops it outright); an
+ *     outline stands in, at a different offset than the chip's own
+ *     :focus-visible outline below so a chip that is both still reads as
+ *     two rings, the same inner/outer split the box-shadow moat drew.
+ *   - .rec-seg-btn's pressed state and .rec-bubble-corner's selected state
+ *     are background/border/text colour only; forced colors mode buckets
+ *     arbitrary author colour by element role, so a pressed/selected button
+ *     can land on the same system colour as its unpressed sibling unless
+ *     told otherwise. Highlight/HighlightText is the pair Chromium reserves
+ *     for "this one is chosen."
+ */
+@media (forced-colors: active) {
+  .rec-tl-zoom[data-selected='true'] {
+    outline: 2px solid Highlight;
+    outline-offset: 1px;
+  }
+
+  /*
+   * Declared after [data-selected] above, same reason the ordinary-mode
+   * box-shadow/outline pair is ordered that way (task-15-report.md): both
+   * rules target the same `outline` property here (forced colors gives us
+   * no second paintable layer to keep them simultaneous), so a chip that is
+   * both selected and focused needs the focus ring to win the cascade
+   * rather than go silent.
+   */
+  .rec-tl-zoom:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 3px;
+  }
+
+  .rec-seg-btn[aria-pressed='true'] {
+    background-color: Highlight;
+    color: HighlightText;
+  }
+
+  .rec-bubble-corner[aria-pressed='true'] {
+    background-color: Highlight;
+    border-color: Highlight;
+  }
+
+  /* The corner dot paints via background, not the inherited color property,
+     so the button's Highlight fill above does not reach it on its own. */
+  .rec-bubble-corner[aria-pressed='true']::after {
+    background: HighlightText;
+  }
+
+  /* Beautify's trigger button, background/border/text colour only, same as
+     .rec-seg-btn above — "Beautify is on" has to survive forced colors too. */
+  .btn-secondary.is-active {
+    background-color: Highlight;
+    color: HighlightText;
+    border-color: Highlight;
   }
 }

@@ -32,11 +32,11 @@ for (const size of [16, 48, 128]) {
   console.log(`✓ generated ${outDir}/icon${size}.png`);
 }
 
-// Website icons (docs/ is the static root for openscreenshot.app):
+// Website icons (site/public/ is copied verbatim into docs/ by astro build):
 //  - favicon.ico  — multi-size ICO (PNG-compressed entries); /favicon.ico is
 //    fetched by browsers, crawlers, and feed readers regardless of <link> tags
 //  - apple-touch-icon.png — requested by iOS for Add to Home Screen
-const webDir = 'docs';
+const webDir = 'site/public';
 await mkdir(webDir, { recursive: true });
 
 const icoSizes = [16, 32, 48];
@@ -72,5 +72,27 @@ console.log(`✓ generated ${webDir}/favicon.ico`);
 
 await sharp(Buffer.from(svg())).resize(180, 180).png().toFile(`${webDir}/apple-touch-icon.png`);
 console.log(`✓ generated ${webDir}/apple-touch-icon.png`);
+
+// site.webmanifest icons — Android's "Add to Home Screen" and Base.astro's
+// <link rel="manifest">.
+for (const size of [192, 512]) {
+  await sharp(Buffer.from(svg())).resize(size, size).png().toFile(`${webDir}/icon-${size}.png`);
+  console.log(`✓ generated ${webDir}/icon-${size}.png`);
+}
+
+const manifest = {
+  name: 'OpenScreenShot',
+  short_name: 'OpenScreenShot',
+  start_url: '/',
+  display: 'standalone',
+  background_color: '#f5f3ee',
+  theme_color: '#f5f3ee',
+  icons: [
+    { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+  ],
+};
+await writeFile(`${webDir}/site.webmanifest`, `${JSON.stringify(manifest, null, 2)}\n`);
+console.log(`✓ generated ${webDir}/site.webmanifest`);
 
 console.log('Icons generated.');

@@ -31,15 +31,61 @@ export function isNearBar(x: number, y: number, winW: number, winH: number): boo
  * Visibility policy for the control bar. Paused and hovered always show —
  * a paused MediaRecorder writes no frames, so a visible bar costs nothing,
  * and a bar must never vanish under the pointer.
+ *
+ * `warning` joins them: true while chunks are failing to reach IndexedDB (the
+ * one failure that loses the user's recording while it is still being made)
+ * or while a requested camera has been declined (task 40: the permission
+ * frame never shows anything on its own, so this is the only way a denial
+ * ever reaches the user). Either message they can only find after stopping
+ * is a message that arrives too late, and the bar hides after three idle
+ * seconds, so a warning has to hold it open.
  */
 export function shouldShowBar(args: {
   sinceMountMs: number;
   sinceNearMs: number;
   hovering: boolean;
+  /** Focus is inside the bar — set by focusin/focusout on the host, not by
+   *  a pointer event. A bar must never vanish under the keyboard for the
+   *  same reason it must never vanish under the pointer: `host.inert`
+   *  toggling `true` under live focus blurs the user to `<body>`, and
+   *  `inert` is exactly what deliverable 2 put back in the tab order's way. */
+  focused: boolean;
   paused: boolean;
+  warning: boolean;
 }): boolean {
-  if (args.paused || args.hovering) return true;
+  if (args.paused || args.hovering || args.focused || args.warning) return true;
   return args.sinceMountMs < OVERLAY_GRACE_MS || args.sinceNearMs < OVERLAY_GRACE_MS;
+}
+
+/**
+ * What a re-sync should do to the bar's clock. The bar mounts while the start
+ * is still opening streams, so there is a window in which no zero exists yet:
+ * the worker's `startedAt` is the mount, the engine's is whenever its
+ * recorders actually began, and `ENGINE_STARTED` moves the second under the
+ * first. Counting through that window and then re-anchoring is what made the
+ * timer visibly jump back to 0:00.
+ *
+ * Two rules, and both are properties rather than values:
+ *
+ * - **The clock anchors once.** Until a sync arrives saying the engine has
+ *   started, the bar shows no number at all, and the first such sync is the
+ *   anchor — whatever elapsed it carries is taken as-is. An unanchored sync
+ *   can never take an anchor back: a heal that raced the anchoring one would
+ *   otherwise put the bar back to "starting" mid-recording.
+ * - **After the anchor the clock is monotonic.** Heals are re-injections that
+ *   can land out of order (a navigation and a popup open in the same second,
+ *   each carrying the elapsed read at its own moment), so the later-arriving
+ *   one is not always the later-computed one. The larger elapsed is the true
+ *   one, and taking it is what makes "never jumps backwards" hold under every
+ *   ordering rather than under the orderings anyone thought to test.
+ */
+export function anchoredElapsed(
+  current: { elapsedMs: number; anchored: boolean },
+  next: { elapsedMs: number; anchored: boolean },
+): { elapsedMs: number; anchored: boolean } {
+  if (!next.anchored) return current;
+  if (!current.anchored) return { elapsedMs: next.elapsedMs, anchored: true };
+  return { elapsedMs: Math.max(current.elapsedMs, next.elapsedMs), anchored: true };
 }
 
 /** "0:07", "1:23", "1:23:45". Floors ragged ms, clamps negatives to zero. */
@@ -68,15 +114,38 @@ export function mountRecordingOverlay(
   elapsedMs: number,
   paused: boolean,
   tracks: { mic: boolean; tabAudio: boolean; webcam: boolean },
+  /** Chunks are failing to reach IndexedDB; show it here and hold the bar open. */
+  writeFailed: boolean,
+  /**
+   * A requested camera was declined (or is unavailable). The permission
+   * frame itself never shows anything now that it is a 1x1 dot (task 40),
+   * so this is how a denial ever reaches the user — the same "warn and hold
+   * the bar open" treatment writeFailed gets, with its own chip and its own
+   * announcement text.
+   */
+  camDenied: boolean,
+  /**
+   * Whether the engine has reported that the recorders began. Required, not
+   * defaulted: a forgotten argument would put the bar back to counting from
+   * its own mount, which is the bug this replaces. See `anchoredElapsed`.
+   */
+  anchored: boolean,
 ): 'fresh' | 'synced' {
   type SyncFn = (
     elapsedMs: number,
     paused: boolean,
     tracks: { mic: boolean; tabAudio: boolean; webcam: boolean },
+    writeFailed: boolean,
+    camDenied: boolean,
+    anchored: boolean,
   ) => void;
-  const win = window as unknown as { __ossRecOverlay?: () => void; __ossRecSync?: SyncFn };
+  const win = window as unknown as {
+    __ossRecOverlay?: () => void;
+    __ossRecSync?: SyncFn;
+    __ossRecReveal?: () => void;
+  };
   if (win.__ossRecOverlay) {
-    win.__ossRecSync?.(elapsedMs, paused, tracks);
+    win.__ossRecSync?.(elapsedMs, paused, tracks, writeFailed, camDenied, anchored);
     return 'synced';
   }
 
@@ -98,10 +167,24 @@ export function mountRecordingOverlay(
     sinceMountMs: number;
     sinceNearMs: number;
     hovering: boolean;
+    focused: boolean;
     paused: boolean;
+    warning: boolean;
   }): boolean {
-    if (args.paused || args.hovering) return true;
+    if (args.paused || args.hovering || args.focused || args.warning) return true;
     return args.sinceMountMs < OVERLAY_GRACE_MS || args.sinceNearMs < OVERLAY_GRACE_MS;
+  }
+
+  // Duplicated for the same reason as the constants above; the exported copy
+  // in this file's module scope is the one under test, and the two are
+  // spelled identically on purpose.
+  function anchoredElapsed(
+    current: { elapsedMs: number; anchored: boolean },
+    next: { elapsedMs: number; anchored: boolean },
+  ): { elapsedMs: number; anchored: boolean } {
+    if (!next.anchored) return current;
+    if (!current.anchored) return { elapsedMs: next.elapsedMs, anchored: true };
+    return { elapsedMs: Math.max(current.elapsedMs, next.elapsedMs), anchored: true };
   }
 
   function formatTimer(ms: number): string {
@@ -128,6 +211,7 @@ export function mountRecordingOverlay(
     | { kind: 'resize'; t: number; w: number; h: number; dpr: number };
 
   let isPaused = paused;
+  let isAnchored = anchored;
   let startedAt = Date.now() - elapsedMs;
   let pausedAccum = 0;
   let pauseStartedAt: number | null = isPaused ? Date.now() : null;
@@ -145,6 +229,7 @@ export function mountRecordingOverlay(
   // --- Host + shadow root ---------------------------------------------------
 
   const host = document.createElement('div');
+  host.setAttribute('data-testid', 'rec-overlay-host');
   host.style.cssText =
     'all:initial;position:fixed;left:50%;bottom:20px;transform:translateX(-50%);' +
     'z-index:2147483647;transition:opacity .25s;';
@@ -172,7 +257,30 @@ export function mountRecordingOverlay(
       flex: none;
       animation: pulse 1.4s ease-in-out infinite;
     }
-    .dot.paused { animation: none; opacity: .5; }
+    /* Two static white bars, not a dimmed red circle: a paused run has to
+       read as a different state at a glance, not a fainter version of
+       recording, and white keeps it out of the warning chip's own amber
+       (danger, not a pause). Colour alone would not survive forced-colors
+       mode either, which flattens both the pulsing red above and any colour
+       here to the same system colour — the shape is what still tells the
+       two states apart there, so no forced-colors rule is needed on top of
+       this one. */
+    .dot.paused {
+      animation: none;
+      background: transparent;
+      position: relative;
+    }
+    .dot.paused::before,
+    .dot.paused::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      width: 3px;
+      height: 9px;
+      background: #ffffff;
+    }
+    .dot.paused::before { left: 0; }
+    .dot.paused::after { right: 0; }
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: .35; }
@@ -193,6 +301,30 @@ export function mountRecordingOverlay(
       border-radius: 4px;
       background: rgba(255, 255, 255, .12);
     }
+    /* The bar is always dark over whatever page it sits on, so this is the one
+       place in the product a fixed pair is right — a closed shadow root in a
+       serialized function cannot read a CSS variable. The pair is the dark
+       theme's --danger-ink on its --surface-1, kept in step by
+       tests/unit/overlay-warning-contrast.test.ts, which reads both values
+       from here and compares them to the generated tokens. 10.10:1. */
+    .chip.warn {
+      background: #ffbb4d;
+      color: #1c1c1e;
+    }
+    /* Carries the warning to assistive tech exactly once, on the edge. The
+       visible chip cannot do it: renderChips replaces the row on every heal,
+       so an alert living there re-announces on each one, and on a fresh mount
+       it arrives inside a whole subtree, which most screen readers skip. This
+       node is in the document from mount with no text, so the one text change
+       is the one announcement. */
+    .announcer {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
     button {
       all: unset;
       cursor: pointer;
@@ -206,6 +338,18 @@ export function mountRecordingOverlay(
     button:hover { background: rgba(255, 255, 255, .22); }
     button.stop { background: #e8503a; }
     button.stop:hover { background: #d9432c; }
+    /* all: unset above strips the button's native focus ring along with
+       everything else, and Stop/Cancel are reachable by Tab whenever the
+       bar is shown — so they need one back. Outline, not box-shadow: outline
+       is what forced-colors mode remaps to a system colour rather than
+       dropping, the same reason the ring on .rec-tl-zoom (recorder.css) uses
+       it. #f26b57 is a literal copy of the dark theme's --border-focus, like
+       .chip.warn's colours above — a closed shadow root in a serialized
+       function has no stylesheet to read the token from. */
+    button:focus-visible {
+      outline: 2px solid #f26b57;
+      outline-offset: 2px;
+    }
   `;
   shadow.appendChild(style);
 
@@ -214,17 +358,16 @@ export function mountRecordingOverlay(
 
   const dot = document.createElement('div');
   dot.className = 'dot';
+  dot.setAttribute('data-testid', 'rec-overlay-dot');
   bar.appendChild(dot);
 
   const timer = document.createElement('span');
   timer.className = 'timer';
+  timer.setAttribute('data-testid', 'rec-overlay-timer');
   bar.appendChild(timer);
 
   const chips = document.createElement('div');
   chips.className = 'chips';
-  if (tracks.mic) chips.appendChild(makeChip(t('recOverlayMic', 'MIC')));
-  if (tracks.tabAudio) chips.appendChild(makeChip(t('recOverlayTabAudio', 'TAB')));
-  if (tracks.webcam) chips.appendChild(makeChip(t('recOverlayWebcam', 'CAM')));
   bar.appendChild(chips);
 
   function makeChip(label: string): HTMLSpanElement {
@@ -233,6 +376,53 @@ export function mountRecordingOverlay(
     chip.textContent = label;
     return chip;
   }
+
+  /**
+   * Rebuild the chip row. Warnings go first, chunk-loss before camera-denial
+   * — they are the only chips that report a problem rather than a track, and
+   * a row it can be scrolled off the end of is a row it can be missed in.
+   * Purely visual — the announcing is the announcer's job, because this row
+   * is replaced on every heal.
+   */
+  function renderChips(
+    next: { mic: boolean; tabAudio: boolean; webcam: boolean },
+    chunkWarn: boolean,
+    camWarn: boolean,
+  ): void {
+    chips.replaceChildren();
+    if (chunkWarn) {
+      const chip = makeChip(t('recOverlayNotSaving', 'NOT SAVING'));
+      chip.className = 'chip warn';
+      chip.setAttribute('data-testid', 'rec-overlay-warning');
+      chips.appendChild(chip);
+    }
+    if (camWarn) {
+      const chip = makeChip(t('recOverlayCamDenied', 'CAM DECLINED'));
+      chip.className = 'chip warn';
+      chip.setAttribute('data-testid', 'rec-overlay-cam-warning');
+      chips.appendChild(chip);
+    }
+    if (next.mic) chips.appendChild(makeChip(t('recOverlayMic', 'MIC')));
+    if (next.tabAudio) chips.appendChild(makeChip(t('recOverlayTabAudio', 'TAB')));
+    if (next.webcam) chips.appendChild(makeChip(t('recOverlayWebcam', 'CAM')));
+  }
+
+  const announcer = document.createElement('div');
+  announcer.className = 'announcer';
+  announcer.setAttribute('role', 'alert');
+  announcer.setAttribute('data-testid', 'rec-overlay-announcer');
+  bar.appendChild(announcer);
+
+  /** Say it once per warning — each of the two is its own one-way ratchet,
+   *  so this runs at most once per warning per run. */
+  function announceWarning(text: string): void {
+    announcer.textContent = text;
+  }
+
+  let chunkWarning = writeFailed;
+  let camWarning = camDenied;
+  let warning = chunkWarning || camWarning;
+  renderChips(tracks, chunkWarning, camWarning);
 
   const pauseBtn = document.createElement('button');
   bar.appendChild(pauseBtn);
@@ -248,21 +438,38 @@ export function mountRecordingOverlay(
 
   shadow.appendChild(bar);
   document.documentElement.appendChild(host);
+  // After the append, never before: a live region has to be in the document
+  // when its text changes, or the change is part of the insertion and is not
+  // announced. This is the fresh-mount half of the edge. Chunk-loss wins if
+  // both are somehow already true at mount (it never is in practice — a
+  // camera denial resolves before the first ENGINE_STARTED heal, and
+  // chunk-loss cannot happen before recording starts).
+  if (chunkWarning) announceWarning(t('recOverlayNotSaving', 'NOT SAVING'));
+  else if (camWarning)
+    announceWarning(t('recWebcamDenied', 'Camera declined — recording without it'));
 
-  // --- Webcam bubble / permission frame ------------------------------------
+  // --- Webcam/mic permission frame ------------------------------------------
 
   // Camera and mic permission is held per extension origin and the offscreen
-  // document cannot show a prompt, so the prompt (and the live preview) lives
-  // in an iframe of `src/recorder/webcam-frame.html`. With the mic on and the
-  // webcam off that frame is still mounted, 1x1 and invisible: it is the only
-  // prompt surface the mic has.
+  // document cannot show a prompt, so the prompt lives in an iframe of
+  // `src/recorder/webcam-frame.html`. It never renders a visible preview here
+  // (task 40): tabCapture records the tab's own rendered pixels, iframe
+  // content included, so a live self-view drawn into the page's DOM would be
+  // baked into every captured frame — and the editor's own composited bubble
+  // (drawn from the separate 'webcam' chunk stream at export, `render.ts`)
+  // would then be a second one on top of it, permanently, with no way for
+  // "Hide" in the rail to remove the one that shipped inside the capture.
+  // There is no capture-time flag that excludes one page element from what
+  // tabCapture sees, so the only way to avoid that is to never give the
+  // preview a visible footprint — this frame is collapsed to the same 1x1
+  // permission-only dot for every track combination, webcam included, not
+  // just the mic-only case that already used to collapse it. The recording
+  // control bar's "CAM" chip is the live indicator that the camera is on;
+  // the bubble the user actually sees is the one the rail's corner/size
+  // controls position, composited once at export.
   let camHost: HTMLDivElement | null = null;
-  let clampBubble: (() => void) | null = null;
 
   if (tracks.webcam || tracks.mic) {
-    const BUBBLE_PX = 180;
-    const HANDLE_PX = 12;
-    const MARGIN_PX = 24;
     const frameUrl =
       chrome.runtime.getURL('src/recorder/webcam-frame.html') +
       '?webcam=' +
@@ -271,98 +478,19 @@ export function mountRecordingOverlay(
       (tracks.mic ? '1' : '0');
 
     camHost = document.createElement('div');
-    camHost.style.cssText = 'all:initial;position:fixed;left:0;top:0;z-index:2147483646;';
+    camHost.setAttribute('data-testid', 'rec-overlay-cam');
+    camHost.style.cssText =
+      'all:initial;position:fixed;left:0;top:0;width:1px;height:1px;' +
+      'overflow:hidden;opacity:0;pointer-events:none;z-index:2147483646;';
     const camShadow = camHost.attachShadow({ mode: 'closed' });
 
-    const camStyle = document.createElement('style');
-    camStyle.textContent = `
-      .wrap {
-        box-sizing: content-box;
-        width: ${BUBBLE_PX}px;
-        height: ${BUBBLE_PX}px;
-        padding: ${HANDLE_PX}px;
-        border-radius: 50%;
-        background: rgba(20, 20, 22, .92);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, .35);
-        cursor: grab;
-        touch-action: none;
-      }
-      .wrap:active { cursor: grabbing; }
-      .frame {
-        display: block;
-        width: ${BUBBLE_PX}px;
-        height: ${BUBBLE_PX}px;
-        border: 0;
-        border-radius: 50%;
-        background: transparent;
-        /* A drag anywhere over the circle must reach .wrap; the frame is a
-           separate document and would otherwise swallow the pointer. */
-        pointer-events: none;
-      }
-    `;
-    camShadow.appendChild(camStyle);
-
-    const wrap = document.createElement('div');
-    wrap.className = 'wrap';
-
     const frame = document.createElement('iframe');
-    frame.className = 'frame';
     // Camera/mic is delegated to a cross-origin child frame only when the
     // embedder says so; without this the frame's getUserMedia always fails.
     frame.allow = 'camera; microphone';
     frame.src = frameUrl;
-    wrap.appendChild(frame);
-    camShadow.appendChild(wrap);
-
-    if (tracks.webcam) {
-      const size = BUBBLE_PX + HANDLE_PX * 2;
-      let x = Math.max(0, window.innerWidth - size - MARGIN_PX);
-      let y = Math.max(0, window.innerHeight - size - MARGIN_PX);
-      let dragId: number | null = null;
-      let grabX = 0;
-      let grabY = 0;
-
-      const place = (): void => {
-        if (!camHost) return;
-        camHost.style.left = `${x}px`;
-        camHost.style.top = `${y}px`;
-      };
-      place();
-
-      clampBubble = () => {
-        x = Math.min(x, Math.max(0, window.innerWidth - size));
-        y = Math.min(y, Math.max(0, window.innerHeight - size));
-        place();
-      };
-
-      wrap.addEventListener('pointerdown', (e) => {
-        dragId = e.pointerId;
-        grabX = e.clientX - x;
-        grabY = e.clientY - y;
-        wrap.setPointerCapture(e.pointerId);
-        e.preventDefault();
-      });
-      wrap.addEventListener('pointermove', (e) => {
-        if (dragId !== e.pointerId) return;
-        x = Math.min(Math.max(0, e.clientX - grabX), Math.max(0, window.innerWidth - size));
-        y = Math.min(Math.max(0, e.clientY - grabY), Math.max(0, window.innerHeight - size));
-        place();
-      });
-      const endDrag = (e: PointerEvent): void => {
-        if (dragId !== e.pointerId) return;
-        dragId = null;
-        wrap.releasePointerCapture(e.pointerId);
-      };
-      wrap.addEventListener('pointerup', endDrag);
-      wrap.addEventListener('pointercancel', endDrag);
-    } else {
-      // Mic only: no bubble, just the prompt surface. Inline styles win over
-      // the sheet above, so the 180px circle collapses to an invisible dot.
-      camHost.style.cssText +=
-        'width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;';
-      wrap.style.cssText = 'all:unset;display:block;width:1px;height:1px;';
-      frame.style.cssText = 'width:1px;height:1px;border:0;';
-    }
+    frame.style.cssText = 'width:1px;height:1px;border:0;';
+    camShadow.appendChild(frame);
 
     document.documentElement.appendChild(camHost);
   }
@@ -390,6 +518,7 @@ export function mountRecordingOverlay(
   const mountedAt = Date.now();
   let lastNearAt = mountedAt;
   let hoveringBar = false;
+  let focusedBar = false;
 
   function applyBarVisibility(): void {
     const now = Date.now();
@@ -397,11 +526,24 @@ export function mountRecordingOverlay(
       sinceMountMs: now - mountedAt,
       sinceNearMs: now - lastNearAt,
       hovering: hoveringBar,
+      focused: focusedBar,
       paused: isPaused,
+      warning,
     });
     host.style.opacity = show ? '1' : '0';
     // Hidden means hidden to the page too, or it would still swallow clicks.
     host.style.pointerEvents = show ? '' : 'none';
+    // opacity: 0 alone leaves Stop, Cancel and Pause reachable by Tab and
+    // visible to assistive tech even though nothing is painted — a
+    // keyboard or screen-reader user could land a live Stop button they
+    // cannot see. `inert` removes the whole subtree from both the tab order
+    // and the accessibility tree in one property, and reverses the moment
+    // the bar is shown again, so nothing per-button has to track it. It is
+    // exactly why `focused` above has to gate `show` first: without it, a
+    // keyboard user who Tabs onto Stop and holds still past the grace
+    // window would have `inert` flip to `true` under their own focus,
+    // which blurs them out to <body> with no way to Tab back in.
+    host.inert = !show;
   }
 
   host.addEventListener('mouseenter', () => {
@@ -412,6 +554,125 @@ export function mountRecordingOverlay(
     hoveringBar = false;
     applyBarVisibility();
   });
+  // Keyboard counterpart to the mouseenter/mouseleave pair above — a bar
+  // must never vanish under the keyboard for the same reason it must never
+  // vanish under the pointer. Both events bubble, so this fires once per
+  // focus entering or leaving the whole subtree, not once per control.
+  host.addEventListener('focusin', () => {
+    focusedBar = true;
+    applyBarVisibility();
+  });
+  host.addEventListener('focusout', () => {
+    focusedBar = false;
+    applyBarVisibility();
+  });
+
+  // --- Reveal catcher --------------------------------------------------------
+
+  // `mousemove` on `window` (below, in the cursor logger) never reaches this
+  // script while the pointer is over a cross-origin iframe — the iframe's own
+  // document owns those events, and they do not cross the origin boundary —
+  // so the reveal zone above is dead wherever a cross-origin iframe (a chat
+  // widget, an embedded player) sits under it, and the bar can become
+  // permanently unreachable by pointer. This element is a second, much
+  // smaller reveal surface, `position: fixed` at the same top layer as the
+  // bar, so pointer hit-testing resolves to it instead of whatever the
+  // iframe painted underneath, regardless of what the iframe covers.
+  //
+  // It costs the page the hover/click on that patch, permanently, for as
+  // long as a recording is live — kept to 64x24 (the WCAG 2.5.8 minimum
+  // target size, not the full 400x120 zone above) to keep that patch small.
+  // It stays mounted whether the bar itself is shown or hidden, because the
+  // dead zone can be hovered at either moment.
+  //
+  // It is a real `<button>` with an accessible name, not a decorative,
+  // aria-hidden div: `host.inert` takes Stop/Cancel/Pause out of the tab
+  // order while hidden (see `applyBarVisibility`), and the unbound
+  // `reveal-recording-bar` command only helps a user who has bound it — so
+  // this button is the keyboard route every install gets for free, with no
+  // manifest change and no manual binding. It is inserted *before* `host`
+  // in document order (not appended after, like `camHost`), which is what
+  // makes forward-Tab land here first while the bar is hidden and then
+  // continue straight into the now-revealed Stop/Cancel/Pause on the very
+  // next Tab, rather than tabbing past them. It stays reachable while the
+  // bar is hidden because it is `host`'s sibling, not its descendant —
+  // `inert` does not travel sideways.
+  const CATCHER_WIDTH_PX = 64;
+  const CATCHER_HEIGHT_PX = 24;
+  const catcherHost = document.createElement('div');
+  catcherHost.setAttribute('data-testid', 'rec-overlay-catcher');
+  catcherHost.style.cssText =
+    'all:initial;position:fixed;left:50%;bottom:0;' +
+    `width:${CATCHER_WIDTH_PX}px;height:${CATCHER_HEIGHT_PX}px;` +
+    // One below the bar's own z-index, so the real bar always wins the few
+    // pixels where the two could visually meet; still far above any
+    // ordinary page content, iframe included — except a page element that
+    // also claims the maximum 2147483647, which is the one value that can
+    // bury it; no tree-order tiebreak saves it against that specific case.
+    'transform:translateX(-50%);z-index:2147483646;';
+  const catcherShadow = catcherHost.attachShadow({ mode: 'closed' });
+  const catcherStyle = document.createElement('style');
+  catcherStyle.textContent = `
+    .grip {
+      all: unset;
+      display: block;
+      box-sizing: border-box;
+      width: 100%;
+      height: 100%;
+      border-radius: 6px 6px 0 0;
+      /* Transparent by default: painted only on hover/focus, so nothing
+         from this element is burned into the recorded video, which the
+         bar's own auto-hide policy exists to avoid in the first place. */
+      background: transparent;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .grip:hover,
+    .grip:focus-visible {
+      background: rgba(20, 20, 22, .6);
+    }
+    /* Inset, not outset like the bar's buttons: this control sits flush
+       against the bottom of the viewport, and an outward ring there would
+       be clipped by the edge of the screen rather than the page. */
+    .grip:focus-visible {
+      outline: 2px solid #f26b57;
+      outline-offset: -3px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .grip { transition: none; }
+    }
+  `;
+  catcherShadow.appendChild(catcherStyle);
+  const grip = document.createElement('button');
+  grip.type = 'button';
+  grip.className = 'grip';
+  grip.setAttribute('aria-label', t('recOverlayReveal', 'Show recording controls'));
+  grip.setAttribute('data-testid', 'rec-overlay-catcher-grip');
+  catcherShadow.appendChild(grip);
+  document.documentElement.insertBefore(catcherHost, host);
+
+  /** Refresh the reveal clock. Pointer hover, keyboard focus and the
+   *  keyboard command below all just do this — same as a `mousemove`
+   *  landing inside the ordinary reveal zone. */
+  function revealNow(): void {
+    lastNearAt = Date.now();
+    applyBarVisibility();
+  }
+  catcherHost.addEventListener('pointerenter', revealNow);
+  catcherHost.addEventListener('pointermove', revealNow);
+  catcherHost.addEventListener('pointerdown', revealNow);
+  // Composed, so this fires from a focus landing on the button inside the
+  // closed shadow root, the same way host's own focusin listener does.
+  catcherHost.addEventListener('focusin', revealNow);
+
+  // The keyboard command is a supplement, not the primary route: it is what
+  // still works when focus is parked inside a cross-origin iframe, where
+  // Tab cannot reach this button at all (the iframe owns Tab traversal
+  // inside itself). `chrome.commands` fires at the browser level, before
+  // any keystroke reaches page or iframe script, so the worker can call
+  // this from a tab whose focus is anywhere at all. See `handleRevealBar`
+  // in src/background/recording.ts.
+  win.__ossRecReveal = revealNow;
 
   pauseBtn.addEventListener('click', () => {
     isPaused = !isPaused;
@@ -431,11 +692,18 @@ export function mountRecordingOverlay(
 
   // --- Timer ------------------------------------------------------------
 
+  // Never a number before the engine has a zero to count from — see
+  // `anchoredElapsed`. The bar is up and its Stop and Cancel work throughout
+  // this window; what it does not do is claim a duration nothing recorded.
+  function renderTimer(): void {
+    timer.textContent = isAnchored ? formatTimer(nowT()) : t('recOverlayStarting', 'Starting…');
+  }
+
   const timerInterval = setInterval(() => {
-    timer.textContent = formatTimer(nowT());
+    renderTimer();
     applyBarVisibility();
   }, 500);
-  timer.textContent = formatTimer(nowT());
+  renderTimer();
 
   // --- Cursor logger ------------------------------------------------------
 
@@ -460,7 +728,6 @@ export function mountRecordingOverlay(
   }
 
   function onResize(): void {
-    clampBubble?.();
     pushEvent({
       kind: 'resize',
       t: nowT(),
@@ -502,35 +769,65 @@ export function mountRecordingOverlay(
 
   // --- Re-sync ---------------------------------------------------------------
 
-  win.__ossRecSync = (nextElapsedMs, nextPaused, nextTracks) => {
+  win.__ossRecSync = (
+    nextElapsedMs,
+    nextPaused,
+    nextTracks,
+    nextWriteFailed,
+    nextCamDenied,
+    nextAnchored,
+  ) => {
     // Shift what is still buffered by the same amount the clock moves, so a
     // re-anchor cannot leave the last second of cursor events pointing at a
     // timestamp the video never had.
     const before = nowT();
-    startedAt = Date.now() - nextElapsedMs;
+    const adopted = anchoredElapsed(
+      { elapsedMs: before, anchored: isAnchored },
+      { elapsedMs: nextElapsedMs, anchored: nextAnchored },
+    );
+    isAnchored = adopted.anchored;
+    startedAt = Date.now() - adopted.elapsedMs;
     pausedAccum = 0;
     pauseStartedAt = nextPaused ? Date.now() : null;
     isPaused = nextPaused;
     const shift = before - nowT();
     for (const e of buffer) e.t -= shift;
     renderPauseState();
-    timer.textContent = formatTimer(nowT());
+    renderTimer();
 
-    chips.replaceChildren();
-    if (nextTracks.mic) chips.appendChild(makeChip(t('recOverlayMic', 'MIC')));
-    if (nextTracks.tabAudio) chips.appendChild(makeChip(t('recOverlayTabAudio', 'TAB')));
-    if (nextTracks.webcam) chips.appendChild(makeChip(t('recOverlayWebcam', 'CAM')));
+    // One-way, like the tracks above: a run that has started losing chunks
+    // does not stop having lost them (or having had a camera declined), and
+    // a stale heal carrying `false` cannot take either warning back off.
+    const wasChunkWarning = chunkWarning;
+    chunkWarning = chunkWarning || nextWriteFailed;
+    const wasCamWarning = camWarning;
+    camWarning = camWarning || nextCamDenied;
+    warning = chunkWarning || camWarning;
+    renderChips(nextTracks, chunkWarning, camWarning);
+    // Before announceWarning, not after: `warning` is one of shouldShowBar's
+    // own inputs, so this is what takes the host out of `inert` when a
+    // chunk-write failure or a camera denial arrives while the bar is
+    // hidden. An alert whose text changes inside an inert subtree is not
+    // announced — the same edge the fresh-mount comment above already names
+    // for insertion order, one property over for `inert` instead of the
+    // document.
+    applyBarVisibility();
+    // The sync half of the edge: only a false -> true transition speaks, so
+    // the heal on every popup open and every navigation stays silent.
+    // Chunk-loss wins if both flip on the same tick — the more urgent of the
+    // two, and the same tie-break the fresh-mount path above uses.
+    if (chunkWarning && !wasChunkWarning) announceWarning(t('recOverlayNotSaving', 'NOT SAVING'));
+    else if (camWarning && !wasCamWarning)
+      announceWarning(t('recWebcamDenied', 'Camera declined — recording without it'));
 
     // Drop the frame only when neither device is left. A camera that is gone
-    // makes the bubble a preview of something nobody records, but the same
-    // element is the mic's only prompt surface — tearing it down for a
-    // mic-only run kills the prompt it exists to show.
+    // makes the frame a permission surface for nothing, but the same element
+    // is the mic's only prompt surface — tearing it down for a mic-only run
+    // kills the prompt it exists to show.
     if (!nextTracks.webcam && !nextTracks.mic && camHost) {
       camHost.remove();
       camHost = null;
-      clampBubble = null;
     }
-    applyBarVisibility();
   };
 
   // --- Teardown -------------------------------------------------------------
@@ -543,11 +840,13 @@ export function mountRecordingOverlay(
     window.removeEventListener('resize', onResize, true);
     window.removeEventListener('pagehide', onPageHide);
     host.remove();
-    // Removing the frame tears down its document, which stops the preview
-    // stream and drops the camera indicator.
+    catcherHost.remove();
+    // Removing the frame tears down its document, which stops the camera/mic
+    // stream it opened and drops the camera indicator.
     camHost?.remove();
     delete win.__ossRecOverlay;
     delete win.__ossRecSync;
+    delete win.__ossRecReveal;
   }
 
   function onPageHide(): void {

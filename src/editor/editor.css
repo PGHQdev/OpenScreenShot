@@ -2,9 +2,58 @@
 
 @import '../shared/tokens.css';
 @import '../shared/controls.css';
+@import '../shared/ui.css';
 
 * {
   box-sizing: border-box;
+}
+
+/*
+ * Entrance keyframes for the editor's transient panels (popovers, modals,
+ * notices, the transient stage/overlay messages). Each surface below plays
+ * one of these once on mount via `animation` (which fires on insertion with
+ * no JS help, unlike `transition`); the matching `.is-closing` modifier that
+ * transition.ts's useExitDelay applies on the way out reverses the same
+ * opacity/transform via a plain `transition`, declared alongside each
+ * surface's own rule.
+ */
+@keyframes oss-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes oss-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes oss-notice-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+@keyframes oss-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 html,
@@ -16,7 +65,7 @@ body {
 
 body {
   font-family: var(--font);
-  font-size: 14px;
+  font-size: var(--fs-base);
   color: var(--text-1);
   background: var(--surface-1);
   -webkit-font-smoothing: antialiased;
@@ -37,11 +86,21 @@ body {
 .stylebar {
   display: flex;
   align-items: center;
+  /* Wraps rather than clipping: 13 swatches plus the stroke, shape and size
+     groups run wider than a 320px viewport can hold on one line. */
+  flex-wrap: wrap;
   gap: var(--s-4);
   padding: 6px var(--s-4);
   border-bottom: 1px solid var(--border);
   background: var(--surface-1);
   flex: 0 0 auto;
+  /* App.tsx renders this bar for every tool, including Select and Crop
+     (which carry no fields and so render it empty) — min-height is what
+     actually keeps the canvas still on a V -> R -> V loop, matching the
+     28px swatch row's own height so a field-bearing tool draws no taller
+     than an empty one. See the Copy button's min-width for the same fixed-
+     box pattern against horizontal reflow (.btn-fixed, below). */
+  min-height: 40px;
 }
 .stylebar-group {
   display: flex;
@@ -49,55 +108,14 @@ body {
   gap: var(--s-2);
 }
 .stylebar-label {
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: var(--text-2);
   user-select: none;
   white-space: nowrap;
 }
-.swatches {
-  display: flex;
-  gap: 4px;
-}
-.swatch {
-  width: 18px;
-  height: 18px;
-  padding: 0;
-  border: 2px solid var(--border);
-  border-radius: var(--r-full);
-  cursor: pointer;
-  transition:
-    transform 100ms ease-out,
-    border-color 100ms ease-out;
-}
 .swatch[data-light='1'] {
   border-color: var(--border);
-}
-.swatch:hover {
-  transform: scale(1.12);
-}
-.swatch[aria-pressed='true'] {
-  border-color: var(--text-1);
-  box-shadow:
-    0 0 0 2px var(--surface-1),
-    0 0 0 3px var(--accent);
-}
-.swatch-custom {
-  position: relative;
-  display: inline-flex;
-  overflow: hidden;
-  background: conic-gradient(#ff3b30, #ff9500, #ffcc00, #34c759, #0071e3, #af52de, #ff3b30);
-}
-
-.swatch-custom input[type='color'] {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: none;
-  opacity: 0;
-  cursor: pointer;
 }
 .swatch-screen {
   display: inline-flex;
@@ -105,10 +123,14 @@ body {
   justify-content: center;
   background: var(--surface-2);
   color: var(--text-1);
+  /* Not a colour choice — a plain icon button that shares .swatch for
+     sizing — so it opts back into the system palette ui.css's .swatch
+     rule turns off for every other swatch variant. */
+  forced-color-adjust: auto;
 }
 .widths {
   display: flex;
-  gap: 2px;
+  gap: var(--s-05);
 }
 .width-btn {
   display: inline-flex;
@@ -121,23 +143,52 @@ body {
   background: transparent;
   cursor: pointer;
   transition:
-    background 120ms ease-out,
-    border-color 120ms ease-out;
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 .width-btn:hover {
   background: var(--hover-overlay);
 }
+.width-btn:active {
+  transform: scale(0.98);
+}
 .width-btn[aria-pressed='true'] {
   background: var(--accent-subtle);
   border-color: var(--accent);
+}
+.width-btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
 }
 .width-bar {
   width: 20px;
   background: var(--text-1);
   border-radius: 2px;
 }
-.stylebar-range {
+/* Compound with .range (shared/controls.css), not a bare class: equal
+   specificity plus source order used to let .range's own width: 100% win
+   here, squeezing this slider down to whatever its flex row left over
+   instead of the 140px this class asks for. */
+.range.stylebar-range {
   width: 140px;
+}
+
+/*
+ * .segmented-btn's shared 32px height (ui.css/editor.css base rule, also
+ * used by the export modal's PDF page-size picker) is 4px taller than every
+ * other stylebar control (the 28px swatches and width buttons) — enough to
+ * grow .stylebar's own height on the Shape/Redaction tools alone, defeating
+ * the min-height above (every box here is border-box, so .segmented's own
+ * 1px top/bottom wrapper border adds on top of its button's height rather
+ * than being absorbed by it). 24px plus that 2px lands at 26px, at the
+ * Stroke group's own height (.width-btn, the tallest of the other groups) —
+ * comfortably under the 40px floor .stylebar's min-height sets, so every
+ * tool's stylebar renders at exactly that floor. Scoped to the style bar so
+ * the modal's picker keeps its own 32px target.
+ */
+.stylebar .segmented-btn {
+  height: 24px;
 }
 
 /* ---- Top bar ---- */
@@ -145,9 +196,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  /* Wraps rather than clipping: the brand, undo/redo and the beautify/zoom/
+     copy/export cluster together run wider than a 320px viewport can hold on
+     one line. min-height (not height) lets a wrapped second or third line
+     grow the bar instead of being clipped by a fixed box. */
+  flex-wrap: wrap;
+  row-gap: var(--s-1);
   gap: var(--s-3);
-  height: 52px;
-  padding: 0 var(--s-4);
+  min-height: 52px;
+  padding: var(--s-2) var(--s-4);
   border-bottom: 1px solid var(--border);
   background: var(--surface-1);
   flex: 0 0 auto;
@@ -163,7 +220,7 @@ body {
 .topbar-actions {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: var(--s-05);
   margin-right: auto;
   padding-left: var(--s-3);
 }
@@ -173,11 +230,11 @@ body {
 }
 
 .brand-name {
-  font-size: 15px;
+  font-size: var(--fs-base);
 }
 
 .brand-mode {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--text-2);
   background: var(--surface-2);
@@ -189,6 +246,11 @@ body {
 .topbar-controls {
   display: flex;
   align-items: center;
+  /* The beautify/zoom/copy/export cluster is wider than 320px on its own;
+     wraps to a right-aligned second line instead of overflowing. */
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  row-gap: var(--s-1);
   gap: var(--s-3);
 }
 
@@ -207,11 +269,17 @@ body {
   background: var(--surface-2);
   color: var(--text-1);
   cursor: pointer;
-  transition: background 120ms ease-out;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .zoom-trigger:hover:not(:disabled) {
   background: var(--surface-3);
+}
+
+.zoom-trigger:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .zoom-trigger:disabled {
@@ -228,7 +296,7 @@ body {
   min-width: 44px;
   text-align: center;
   font-variant-numeric: tabular-nums;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--text-2);
   user-select: none;
 }
@@ -246,6 +314,18 @@ body {
   border-radius: var(--r-md);
   background: var(--surface-1);
   box-shadow: var(--sh-md);
+  animation: oss-pop-in var(--dur-mid) var(--ease-out);
+  transition:
+    opacity var(--dur-mid) var(--ease-out),
+    transform var(--dur-mid) var(--ease-out);
+}
+
+/* Applied by transition.ts's useExitDelay while the popover plays its exit —
+   the element stays mounted for exactly this transition's duration first. */
+.zoom-popover.is-closing {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+  pointer-events: none;
 }
 
 .zoom-item {
@@ -259,12 +339,17 @@ body {
   border-radius: var(--r-sm);
   background: transparent;
   color: var(--text-1);
-  font-size: 13px;
+  font-size: var(--fs-base);
   cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 
 .zoom-item:hover {
   background: var(--hover-overlay);
+}
+
+.zoom-item:active {
+  transform: scale(0.98);
 }
 
 .zoom-item:focus-visible {
@@ -274,39 +359,19 @@ body {
 
 .zoom-item kbd {
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-3);
+  font-size: var(--fs-xs);
+  /* Not --text-3: :hover on the parent .zoom-item swaps in --hover-overlay,
+     which darkens --surface-1 enough (in both themes) to drop --text-3 back
+     under 4.5:1 even though it clears the surface at rest. --text-2 clears
+     the hovered background too (4.95:1 light / 5.37:1 dark), matching the
+     other <kbd> elements in this file (.mode-card kbd, .sheet-row kbd). */
+  color: var(--text-2);
 }
 
+/* The "?" glyph, not body type — var(--fs-lg) is the nearest rung (task-21). */
 .icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: 1px solid transparent;
-  border-radius: var(--r-sm);
-  background: transparent;
-  color: var(--text-1);
-  font-size: 16px;
+  font-size: var(--fs-lg);
   line-height: 1;
-  cursor: pointer;
-  transition:
-    background 120ms ease-out,
-    border-color 120ms ease-out;
-}
-
-.icon-btn:hover {
-  background: var(--hover-overlay);
-}
-
-.icon-btn:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-.icon-btn:disabled:hover {
-  background: transparent;
 }
 
 .icon-btn-danger:hover:not(:disabled) {
@@ -320,16 +385,21 @@ body {
   border-radius: var(--r-sm);
   background: transparent;
   color: var(--text-1);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   cursor: pointer;
-  transition: background 120ms ease-out;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .text-btn:hover {
   background: var(--hover-overlay);
 }
 
-.icon-btn:focus-visible,
+.text-btn:active {
+  transform: scale(0.98);
+}
+
 .text-btn:focus-visible,
 .btn-primary:focus-visible {
   outline: 2px solid var(--border-focus);
@@ -341,22 +411,24 @@ body {
   padding: 0 14px;
   border: none;
   border-radius: var(--r-md);
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent-ink);
+  color: var(--on-accent);
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--fs-base);
   cursor: pointer;
   transition:
-    background 120ms ease-out,
-    opacity 120ms ease-out;
+    background var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--accent-hover);
+  background: var(--accent-ink-hover);
 }
 
 .btn-primary:active:not(:disabled) {
-  background: var(--accent-pressed);
+  background: var(--accent-ink-pressed);
+  transform: scale(0.98);
 }
 
 .btn-primary:disabled {
@@ -364,36 +436,26 @@ body {
   cursor: default;
 }
 
-.btn-secondary {
-  height: 32px;
-  padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  background: var(--surface-2);
-  color: var(--text-1);
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 120ms ease-out;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: var(--surface-3);
-}
-
-.btn-secondary:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-.btn-secondary:focus-visible {
-  outline: 2px solid var(--border-focus);
-  outline-offset: 1px;
-}
-
 /* The label cycles through three words; a floor stops the topbar shifting. */
 .btn-fixed {
   min-width: 92px;
+  text-align: center;
+}
+
+/*
+ * The export dialog's own Export button cycles Export / Exporting… — wider
+ * than Copy's three words, so it needs its own floor rather than reusing
+ * .btn-fixed's 92px (measured for Copy's own set; too narrow for
+ * "Exporting…" and there's no reason to widen Copy's button to cover a word
+ * it never shows). 116px is the button's own unfloored "Exporting…" width
+ * (~107px, read via getBoundingClientRect in tests/browser/editor-keyboard-
+ * smoke.mjs's negative control) plus a small margin for font-metric
+ * variance across machines/zoom — not a round number picked in advance, and
+ * not claimed to be the exact minimum either. The same smoke asserts the
+ * button's outerWidth is identical across both label states at this floor.
+ */
+.btn-fixed-export {
+  min-width: 116px;
   text-align: center;
 }
 
@@ -425,6 +487,31 @@ body {
   cursor: text;
 }
 
+/* The UA outline would land on image pixels; the ring below replaces it. */
+.stage-canvas:focus-visible {
+  outline: none;
+}
+
+/*
+ * Focus ring for the canvas. It cannot sit on the canvas itself: the canvas
+ * paints the user's screenshot, so any pixel under a ring drawn there is
+ * unknown and no contrast ratio can be promised. This paints the ring on the
+ * stage as a band with --surface-1 on both of its sides, which puts
+ * --border-focus on a known ground: 3.72:1 light, 5.68:1 dark. ::after comes
+ * after the canvas in tree order, so it paints over the picture. No motion, so
+ * nothing to suppress under prefers-reduced-motion.
+ */
+.stage:has(> .stage-canvas:focus-visible)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 0 2px var(--surface-1),
+    inset 0 0 0 5px var(--border-focus),
+    inset 0 0 0 7px var(--surface-1);
+}
+
 /* ---- Workspace (toolbar + stage) ---- */
 .workspace {
   display: flex;
@@ -442,6 +529,12 @@ body {
   border-right: 1px solid var(--border);
   background: var(--surface-1);
   flex: 0 0 auto;
+  /* 13 tools at 36px, plus the gaps and three dividers, is ~560px tall
+     (12 was ~492px — see task-16 report) — taller than .workspace can be at
+     200% zoom. Scrolls instead of clipping; the
+     parent's overflow: hidden only bounds this box, it does not stop this
+     box scrolling its own content. */
+  overflow-y: auto;
 }
 
 .tool-btn {
@@ -456,9 +549,10 @@ body {
   color: var(--text-2);
   cursor: pointer;
   transition:
-    background 120ms ease-out,
-    color 120ms ease-out,
-    border-color 120ms ease-out;
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .tool-btn:hover {
@@ -466,9 +560,13 @@ body {
   color: var(--text-1);
 }
 
+.tool-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
 .tool-btn.is-active {
   background: var(--accent-subtle);
-  color: var(--accent);
+  color: var(--accent-ink);
   border-color: var(--accent);
 }
 
@@ -491,7 +589,7 @@ body {
 .toolbar-divider {
   width: 24px;
   height: 1px;
-  background: var(--border);
+  background: var(--rule);
   margin: 4px 0;
 }
 
@@ -499,10 +597,10 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: var(--s-05);
   margin-top: auto;
   padding: 4px 0;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   color: var(--text-3);
   font-variant-numeric: tabular-nums;
 }
@@ -510,7 +608,7 @@ body {
 .btn-sm {
   height: 28px;
   padding: 0 10px;
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 .crop-confirm {
@@ -526,8 +624,19 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--r-full);
   box-shadow: var(--sh-md);
-  font-size: 13px;
+  font-size: var(--fs-base);
   z-index: 5;
+  animation: oss-notice-in var(--dur-mid) var(--ease-out);
+  transition:
+    opacity var(--dur-mid) var(--ease-out),
+    transform var(--dur-mid) var(--ease-out);
+}
+/* Same pill as .stage-notice — applied by transition.ts's useExitDelay,
+   see .stage-notice.is-closing for why the transform is replaced wholesale. */
+.crop-confirm.is-closing {
+  opacity: 0;
+  transform: translate(-50%, -6px);
+  pointer-events: none;
 }
 
 .draft-restore {
@@ -544,15 +653,24 @@ body {
   border-radius: var(--r-full);
   background: var(--surface-1);
   box-shadow: var(--sh-md);
-  font-size: 13px;
+  font-size: var(--fs-base);
   z-index: 8;
+  animation: oss-notice-in var(--dur-mid) var(--ease-out);
+  transition:
+    opacity var(--dur-mid) var(--ease-out),
+    transform var(--dur-mid) var(--ease-out);
+}
+.draft-restore.is-closing {
+  opacity: 0;
+  transform: translate(-50%, -6px);
+  pointer-events: none;
 }
 
 .text-overlay {
   position: absolute;
   margin: 0;
   min-width: 60px;
-  padding: 2px 4px;
+  padding: var(--s-05) var(--s-1);
   border: 1px dashed var(--accent);
   border-radius: 3px;
   background: transparent;
@@ -564,6 +682,7 @@ body {
   white-space: pre;
   outline: none;
   z-index: 6;
+  animation: oss-fade-in var(--dur-fast) var(--ease-out);
 }
 
 /* ---- Export modal ---- */
@@ -575,23 +694,44 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 100;
+  animation: oss-fade-in var(--dur-mid) var(--ease-out);
+  transition: opacity var(--dur-mid) var(--ease-out);
+}
+/* Applied by transition.ts's useExitDelay — see .zoom-popover.is-closing. */
+.modal-backdrop.is-closing {
+  opacity: 0;
+  pointer-events: none;
 }
 .modal {
   width: 420px;
   max-width: calc(100vw - 32px);
+  /* Centred by .modal-backdrop's flex alignment, so a modal capped at this
+     height always keeps var(--s-6) of clear space above and below it; taller
+     content scrolls inside the box instead of clipping against the viewport
+     edge (the export dialog's PDF options, the shortcut sheet at 200% zoom). */
+  max-height: calc(100vh - var(--s-6) * 2);
+  overflow-y: auto;
   background: var(--surface-1);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   box-shadow: var(--sh-lg);
   padding: var(--s-5);
+  animation: oss-modal-in var(--dur-mid) var(--ease-out);
+  transition:
+    opacity var(--dur-mid) var(--ease-out),
+    transform var(--dur-mid) var(--ease-out);
+}
+.modal.is-closing {
+  opacity: 0;
+  transform: scale(0.96);
 }
 .modal-title {
   margin: 0 0 var(--s-4);
-  font-size: 17px;
+  font-size: var(--fs-lg);
 }
 .field-label {
   display: block;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--text-2);
   margin-bottom: var(--s-2);
@@ -605,7 +745,7 @@ body {
 .format-card {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--s-05);
   padding: var(--s-3);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
@@ -614,15 +754,23 @@ body {
   text-align: left;
   cursor: pointer;
   transition:
-    border-color 120ms ease-out,
-    background 120ms ease-out;
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 .format-card:hover {
   border-color: var(--accent);
 }
+.format-card:active:not(.format-card-disabled) {
+  transform: scale(0.98);
+}
 .format-card.is-selected {
   border-color: var(--accent);
   background: var(--accent-subtle);
+}
+.format-card:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
 }
 .format-card-disabled {
   opacity: 0.45;
@@ -630,17 +778,14 @@ body {
 }
 .format-name {
   font-weight: 600;
-  font-size: 14px;
+  font-size: var(--fs-base);
 }
 .format-hint {
-  font-size: 11px;
+  font-size: var(--fs-xs);
   color: var(--text-2);
 }
 .modal-row {
   margin-bottom: var(--s-4);
-}
-.range {
-  width: 100%;
 }
 .filename-row {
   display: flex;
@@ -656,7 +801,7 @@ body {
   background: var(--surface-2);
   color: var(--text-1);
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--fs-sm);
 }
 .filename-input:focus {
   outline: 2px solid var(--border-focus);
@@ -664,7 +809,7 @@ body {
 }
 .filename-ext {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--fs-sm);
   color: var(--text-2);
 }
 .modal-actions {
@@ -692,11 +837,12 @@ body {
   border-right: 1px solid var(--border);
   background: var(--surface-1);
   color: var(--text-1);
-  font-size: 13px;
+  font-size: var(--fs-base);
   cursor: pointer;
   transition:
-    background 120ms ease-out,
-    color 120ms ease-out;
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 .segmented-btn:last-child {
   border-right: none;
@@ -704,9 +850,12 @@ body {
 .segmented-btn:hover:not(:disabled) {
   background: var(--surface-2);
 }
+.segmented-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
 .segmented-btn.is-selected {
   background: var(--accent-subtle);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 .segmented-btn:disabled {
   opacity: 0.45;
@@ -727,7 +876,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: var(--s-2);
-  font-size: 13px;
+  font-size: var(--fs-base);
   color: var(--text-1);
 }
 .num-input {
@@ -739,26 +888,92 @@ body {
   background: var(--surface-2);
   color: var(--text-1);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   text-align: right;
 }
 .num-input:disabled {
   opacity: 0.45;
 }
+.num-input:focus {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
 .num-input-wide {
   width: 80px;
 }
-.pdf-hint {
-  margin: 0 0 var(--s-3);
-  font-size: 12px;
+.pdf-hint,
+.field-notice {
+  font-size: var(--fs-sm);
   color: var(--text-2);
   line-height: 1.45;
 }
+.pdf-hint {
+  margin: 0 0 var(--s-3);
+}
+.field-notice {
+  margin: var(--s-1) 0 var(--s-3);
+}
 .export-error {
   margin: 0 0 var(--s-3);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--danger);
   line-height: 1.45;
+  animation: oss-fade-in var(--dur-fast) var(--ease-out);
+}
+
+/* Real per-page progress for the multi-page PDF path (a native <progress>,
+   value/max set from pdf.ts's own page loop — see useEditor's exportProgress)
+   and an honest indeterminate spinner for every other format, which has no
+   stage to report (canvasToDataUrl is one synchronous call). Never both. */
+.export-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-3);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  animation: oss-fade-in var(--dur-fast) var(--ease-out);
+}
+/*
+ * ::-webkit-progress-bar/-value are inert in the shipped Chromium this
+ * extension runs on (verified by screenshot: the pseudo-element rules
+ * compile and match, but the element still paints Chromium's own default
+ * blue-on-grey, unaffected) — accent-color is the API that actually works,
+ * confirmed the same way. It only styles the *filled* portion; the track
+ * stays Chromium's own neutral grey, which this doesn't fight (verified:
+ * giving the <progress> itself a background, border or border-radius of
+ * its own — anything beyond accent-color and box sizing — makes it fall
+ * back further, to native green-on-grey, losing the filled colour too).
+ * The outer .export-progress-bar-track carries the rounding + clip instead,
+ * around an inner, minimally-styled <progress>.
+ */
+.export-progress-bar-track {
+  width: 120px;
+  height: 6px;
+  border-radius: var(--r-full);
+  overflow: hidden;
+}
+.export-progress-bar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  accent-color: var(--accent-ink);
+  /* The track (the part accent-color above does not reach) still falls back
+     to Chromium's own native rendering, which reads color-scheme — and
+     :root never sets one for an explicit data-theme="dark" on a light-OS
+     machine (only the @media (prefers-color-scheme: dark) block in
+     tokens.css does, guarded to OS dark). That gap is pre-existing and
+     out of this task's scope; fixed here, at the one element it actually
+     paints wrong (a light track in a dark panel), not at the root. */
+  color-scheme: light;
+}
+:root[data-theme='dark'] .export-progress-bar {
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .export-progress-bar {
+    color-scheme: dark;
+  }
 }
 
 /* ---- Scale row (export dialog) ---- */
@@ -778,8 +993,11 @@ body {
   justify-content: center;
   gap: var(--s-2);
   pointer-events: none;
-  color: var(--text-2);
+  /* --text-2 on --stage-bg is 4.00:1 in light, under the 4.5:1 body-text
+     floor (see tokens.css); --text-1 clears it in both themes. */
+  color: var(--text-1);
   background: var(--stage-bg);
+  animation: oss-fade-in var(--dur-mid) var(--ease-out);
 }
 
 .empty {
@@ -800,13 +1018,14 @@ body {
 
 .empty h2 {
   margin: 0 0 var(--s-2);
-  font-size: 17px;
+  font-size: var(--fs-lg);
   color: var(--text-1);
 }
 
 .empty p {
   margin: 0;
-  color: var(--text-2);
+  /* Same --stage-bg exception as .overlay-msg: --text-2 misses 4.5:1 here. */
+  color: var(--text-1);
   line-height: 1.5;
 }
 
@@ -818,10 +1037,21 @@ body {
   margin-top: var(--s-4);
 }
 
+/* The stage error's Retry/Dismiss pair — .empty-cta above stays scoped to
+   EmptyState's single "Capture a page" button. */
+.empty-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--s-2);
+  margin-top: var(--s-4);
+}
+
 .empty-fallback {
   margin-top: var(--s-2) !important;
-  font-size: 12px;
-  color: var(--text-3);
+  font-size: var(--fs-sm);
+  /* Same --stage-bg exception as .overlay-msg above: --text-3 misses 4.5:1
+     here (it only clears --surface-1), and so does --text-2 (4.37:1 light). */
+  color: var(--text-1);
 }
 
 /* ---- Status bar ---- */
@@ -833,7 +1063,7 @@ body {
   padding: 0 var(--s-4);
   border-top: 1px solid var(--border);
   background: var(--surface-1);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-variant-numeric: tabular-nums;
   color: var(--text-2);
   flex: 0 0 auto;
@@ -847,8 +1077,18 @@ body {
   flex: 1 1 auto;
 }
 
+/*
+ * --text-3 alone used to separate this from the statusbar's own --text-2
+ * text; Task 45 raised --text-3 to clear 4.5:1, which compressed its own
+ * contrast against --text-2 to roughly 1.2-1.5:1 — still fine as body text
+ * (both clear 4.5:1 on --surface-1 independently), but too close to read as
+ * two tiers by colour alone anymore. font-size is the non-colour cue,
+ * matching --text-3's other tertiary-label pairing in this file
+ * (.toolbar-count).
+ */
 .status-hint {
   color: var(--text-3);
+  font-size: var(--fs-xs);
 }
 
 /* ---- Spinner (shared shape with popup) ---- */
@@ -867,12 +1107,6 @@ body {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .spinner {
-    animation-duration: 1.4s;
-  }
-}
-
 .sheet {
   width: 560px;
 }
@@ -883,18 +1117,28 @@ body {
   gap: var(--s-5);
 }
 
+/* Below --bp-sm (tokens.css — a var() cannot appear in this condition, so
+   480px is that token's value spelled out; tests/unit/breakpoint-guard.test.ts
+   checks the two stay equal) two columns of "Move selection 1px / 10px" +
+   kbd leave too little room; stack Tools above Commands instead. */
+@media (max-width: 480px) {
+  .sheet-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .sheet-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--s-3);
   padding: 3px 0;
-  font-size: 13px;
+  font-size: var(--fs-base);
 }
 
 .sheet-row kbd {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   color: var(--text-2);
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -903,10 +1147,71 @@ body {
   white-space: nowrap;
 }
 
+/* ---- Capture history shelf ---- */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin-bottom: var(--s-4);
+  /* Long enough to need its own scroll before it grows the modal past
+     .modal's own max-height clamp. */
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.history-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.history-thumb {
+  width: 64px;
+  height: 48px;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+}
+
+.history-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.history-row-date {
+  font-size: var(--fs-base);
+  font-weight: 500;
+}
+
+.history-row-meta {
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.history-row-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  flex: 0 0 auto;
+}
+
+.history-delete-btn[data-armed='true'] {
+  color: var(--danger);
+  font-weight: 600;
+}
+
 /* ---- Beautify panel ---- */
 .btn-secondary.is-active {
   background: var(--accent-subtle);
-  color: var(--accent);
+  color: var(--accent-ink);
   border-color: var(--accent);
 }
 
@@ -928,6 +1233,16 @@ body {
   border-radius: var(--r-md);
   background: var(--surface-1);
   box-shadow: var(--sh-md);
+  animation: oss-pop-in var(--dur-mid) var(--ease-out);
+  transition:
+    opacity var(--dur-mid) var(--ease-out),
+    transform var(--dur-mid) var(--ease-out);
+}
+/* Applied by transition.ts's useExitDelay — see .zoom-popover.is-closing. */
+.beautify-popover.is-closing {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+  pointer-events: none;
 }
 
 .beautify-toggle {
@@ -947,11 +1262,55 @@ body {
   width: 100%;
 }
 
-.swatch-transparent {
-  background:
-    linear-gradient(45deg, #d9d9de 25%, transparent 25%) 0 0 / 8px 8px,
-    linear-gradient(-45deg, #d9d9de 25%, transparent 25%) 0 4px / 8px 8px,
-    #fff;
+.looks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s-1);
+}
+.look-btn {
+  position: relative;
+  height: 26px;
+  padding: 0 var(--s-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface-1);
+  color: var(--text-1);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.look-btn:hover {
+  background: var(--surface-2);
+}
+.look-btn:active {
+  transform: scale(0.98);
+}
+.look-btn[aria-pressed='true'] {
+  background: var(--accent-subtle);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.look-btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+/* The selected look's values have been changed since it was picked. Painted
+   in currentColor, not --accent: the mark has to survive forced-colors mode,
+   where an author colour is discarded but the button's own text colour is
+   mapped. The word "modified" is in the button's accessible name — this dot
+   is the sighted half of the same statement. */
+.look-btn.is-modified::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: var(--r-full);
+  background: currentColor;
 }
 
 .scale-readout {
@@ -960,7 +1319,9 @@ body {
 }
 
 .stage[data-dropping='true'] {
-  outline: 2px dashed var(--accent);
+  /* --accent is 2.94:1 on --stage-bg, under the 3:1 UI-boundary floor;
+     --accent-ink clears it (4.44:1) without changing what the mark means. */
+  outline: 2px dashed var(--accent-ink);
   outline-offset: -8px;
 }
 
@@ -978,18 +1339,131 @@ body {
   border-radius: var(--r-full);
   background: var(--surface-1);
   box-shadow: var(--sh-md);
-  font-size: 13px;
+  font-size: var(--fs-base);
   z-index: 7;
+  animation: oss-notice-in var(--dur-mid) var(--ease-out);
+  transition:
+    opacity var(--dur-mid) var(--ease-out),
+    transform var(--dur-mid) var(--ease-out);
+}
+/* Applied by transition.ts's useExitDelay — see .zoom-popover.is-closing.
+   translate(-50%, ...) keeps the notice's own horizontal centring, which its
+   base rule's transform sets and this rule replaces wholesale (not `y`
+   alone) since the two never compose. */
+.stage-notice.is-closing {
+  opacity: 0;
+  transform: translate(-50%, -6px);
+  pointer-events: none;
 }
 
 .modal-text {
   margin: 0 0 var(--s-4);
   color: var(--text-2);
-  font-size: 13px;
+  font-size: var(--fs-sm);
   line-height: 1.5;
 }
 
 .empty-alt {
-  color: var(--text-3);
-  font-size: 12px;
+  /* Same --stage-bg exception as .overlay-msg above: --text-3 misses 4.5:1
+     here (it only clears --surface-1), and so does --text-2 (4.37:1 light). */
+  color: var(--text-1);
+  font-size: var(--fs-sm);
+}
+
+/*
+ * Same same-specificity-source-order rule the forced-colors comment below
+ * spells out: a media query adds no specificity, so between this block and
+ * an unconditional rule for the same selector, whichever is declared later
+ * in the file wins — regardless of which one's condition currently matches.
+ * This used to sit right after `.spinner`'s keyframes, well before
+ * `.beautify-popover` and `.stage-notice` are declared (Beautify panel /
+ * stage-notice sections, further down) — so their own unconditional
+ * `animation`/`transition` rules were silently winning the tie under
+ * reduced motion, full duration and all. The reduced-motion browser smoke
+ * caught it (a `.beautify-popover` still reporting 0.15s under
+ * prefers-reduced-motion: reduce). Placed here, after every surface it
+ * touches, for the same reason forced-colors sits last: keep new
+ * reduced-motion rules for *these* selectors above this block, not below it.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 1.4s;
+  }
+  .look-btn,
+  .width-btn,
+  .zoom-trigger,
+  .zoom-item,
+  .text-btn,
+  .btn-primary,
+  .tool-btn,
+  .format-card,
+  .segmented-btn {
+    transition: none;
+  }
+  /* Every popover/modal/notice built on transition.ts's useExitDelay: both
+     the entrance `animation` and the `.is-closing` exit `transition` go off.
+     useExitDelay's own reduced-motion check (separate from this rule) is
+     what stops the *unmount* from waiting on a duration these declarations
+     no longer produce — see that hook's doc comment. */
+  .zoom-popover,
+  .beautify-popover,
+  .modal-backdrop,
+  .modal,
+  .stage-notice,
+  .crop-confirm,
+  .draft-restore {
+    animation: none;
+    transition: none;
+  }
+  /* Entrance-only surfaces: no exit to suppress, just the mount fade. */
+  .overlay-msg,
+  .text-overlay,
+  .export-error,
+  .export-progress {
+    animation: none;
+  }
+}
+
+/*
+ * Active tool, selected width/segment/format and the beautify toggle carry
+ * their state entirely as background/text/border colour today, which forced
+ * colors mode is free to flatten to the same button face as every other
+ * member of the group (it maps arbitrary author colours into a small system
+ * palette by element role, not by hue, so two differently-coloured buttons
+ * of the same role can land on the same system colour). Highlight/
+ * HighlightText is the pair Chromium reserves for "this one is chosen," so
+ * declaring it explicitly is guaranteed to differ from the ButtonFace/
+ * ButtonText an unselected sibling renders with.
+ *
+ * Placed last in the file on purpose: a media query adds no specificity, so
+ * a same-specificity rule declared later still wins inside it. The Beautify
+ * panel's own `.btn-secondary.is-active` is exactly that shape and used to
+ * sit below this block, which silently kept the toggle unfixed until the
+ * smoke caught it. Keep new colour-state rules above this block.
+ */
+@media (forced-colors: active) {
+  .tool-btn.is-active,
+  .look-btn[aria-pressed='true'],
+  .width-btn[aria-pressed='true'],
+  .segmented-btn.is-selected,
+  .format-card.is-selected,
+  .btn-secondary.is-active {
+    background-color: Highlight;
+    border-color: Highlight;
+    color: HighlightText;
+  }
+
+  /* .format-hint sets its own colour rather than inheriting .format-card's,
+     so it needs its own override to stay legible on the Highlight fill
+     above — .format-name has no colour of its own and inherits correctly. */
+  .format-card.is-selected .format-hint {
+    color: HighlightText;
+  }
+
+  /* .width-bar paints via background, not the inherited color property, so
+     the selected button's Highlight fill above does not reach it on its
+     own. */
+  .width-btn[aria-pressed='true'] .width-bar {
+    background-color: HighlightText;
+  }
 }

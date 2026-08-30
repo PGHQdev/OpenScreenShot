@@ -1,0 +1,424 @@
+---
+import Doc from '../../layouts/Doc.astro';
+import CropMarks from '../../components/CropMarks.astro';
+
+const STORE_URL = 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp';
+const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
+
+// The contents list. Every label is its section's own h2, and every id is an
+// anchor the live site already serves, so neither may be renamed.
+const toc = [
+  { id: 'install', label: 'Install' },
+  { id: 'capture', label: 'Capture a screenshot' },
+  { id: 'modes', label: 'Capture modes' },
+  { id: 'after-capture', label: 'After a capture' },
+  { id: 'annotate', label: 'Annotate' },
+  { id: 'beautify', label: 'Beautify' },
+  { id: 'import', label: 'Annotate an image you already have' },
+  { id: 'export', label: 'Export' },
+  { id: 'record', label: 'Record a tab' },
+  { id: 'drafts', label: 'Drafts' },
+  { id: 'shortcuts', label: 'Keyboard shortcuts' },
+  { id: 'settings', label: 'Settings' },
+  { id: 'agents-cli', label: 'Agents & CLI' },
+  { id: 'privacy', label: 'Privacy' },
+  { id: 'support', label: 'Get help' },
+];
+---
+
+<Doc
+  title="Documentation — OpenScreenShot"
+  description="OpenScreenShot documentation. How to install, capture, annotate, and export screenshots with the open-source Chrome extension."
+  path="/docs/"
+  label="Install · Capture · Annotate · Export"
+  heading="Documentation"
+  lead="How to install and use OpenScreenShot, the open-source screenshot and annotation extension for Chrome."
+>
+  <nav class="toc" aria-labelledby="toc-head">
+    <h2 id="toc-head">On this page</h2>
+    <ul>
+      {toc.map((entry) => <li><a href={`#${entry.id}`}>{entry.label}</a></li>)}
+    </ul>
+  </nav>
+
+  <section class="doc-section" id="install">
+    <h2>Install</h2>
+    <p>OpenScreenShot is available on the Chrome Web Store.</p>
+    <ol>
+      <li>
+        Open the <a href={STORE_URL} target="_blank" rel="noopener">OpenScreenShot listing</a> in Chrome.
+      </li>
+      <li>Click <strong>Add to Chrome</strong>.</li>
+      <li>
+        Accept the permissions. The extension needs the active tab and permission to run its
+        capture script there.
+      </li>
+      <li>The OpenScreenShot icon appears in your toolbar. Click it to open the popup.</li>
+    </ol>
+  </section>
+
+  <section class="doc-section" id="capture">
+    <h2>Capture a screenshot</h2>
+    <p>
+      Click the OpenScreenShot icon in your toolbar and pick one of the three capture modes.
+      Everything runs locally in your browser. There are four ways to start a capture:
+    </p>
+    <ul>
+      <li><strong>The popup</strong> — click a mode, or press <kbd>1</kbd>–<kbd>3</kbd>.</li>
+      <li>
+        <strong>A keyboard shortcut</strong> — <kbd>Ctrl+Shift+S</kbd> for the full page,
+        <kbd>Alt+Shift+V</kbd> for the visible area, <kbd>Ctrl+Shift+E</kbd> for a region. On macOS these
+        are <kbd>⌘⇧S</kbd>, <kbd>⌘⇧V</kbd>, and <kbd>⌘⇧E</kbd>. Rebind them at
+        <code>chrome://extensions/shortcuts</code>.
+      </li>
+      <li>
+        <strong>The right-click menu</strong> — the OpenScreenShot submenu on any page offers the
+        same three modes.
+      </li>
+      <li>
+        <strong>Repeat region</strong> — the popup footer and the right-click menu re-capture the
+        last region rectangle. Both items appear once you have selected a region.
+      </li>
+    </ul>
+    <p>
+      The <strong>Delay</strong> row in the popup holds a capture for 3, 5, or 10 seconds, and the
+      toolbar badge counts down. Use it for hover states, dropdown menus, and tooltips that close the
+      moment you click somewhere else.
+    </p>
+  </section>
+
+  <section class="doc-section" id="modes">
+    <h2>Capture modes</h2>
+
+    <h3>Full Page</h3>
+    <p>
+      Captures the entire scrolling page and stitches it into one image. The extension scrolls the
+      page viewport by viewport, captures each tile, and composites them together. Fixed headers are
+      captured on the first tile and composited once at the top. Pages that scroll an inner element
+      instead of the window work too.
+    </p>
+
+    <h3>Visible Area</h3>
+    <p>
+      Captures the current viewport instantly. No scrolling. Use this for a quick screenshot of what
+      is on screen right now.
+    </p>
+
+    <h3>Selected Region</h3>
+    <p>
+      Click and drag to draw a rectangle. Resize handles appear on each edge and corner. Use the
+      arrow keys to nudge the selection by one pixel at a time, or hold <kbd>Shift</kbd> to move it ten
+      pixels at a time. Press <kbd>Enter</kbd> to confirm or <kbd>Esc</kbd> to cancel.
+    </p>
+  </section>
+
+  <section class="doc-section" id="after-capture">
+    <h2>After a capture</h2>
+    <p>
+      The <strong>After capture</strong> row in the popup picks what a finished capture does. It
+      applies to every entry point: the popup buttons, the keyboard shortcuts, and the right-click
+      menu.
+    </p>
+    <ul>
+      <li><strong>Editor</strong> — open the annotation editor in a new tab. This is the default.</li>
+      <li>
+        <strong>Clipboard</strong> — copy the screenshot and skip the editor. Paste it straight into
+        a chat, a document, or an issue.
+      </li>
+      <li>
+        <strong>Download</strong> — save the screenshot to your downloads folder and skip the editor.
+        Quick saves are written as PNG.
+      </li>
+    </ul>
+    <p>
+      Clipboard and Download open no tab, so the toolbar badge is the confirmation. A failed capture
+      flashes <kbd>!</kbd> on the badge. <strong>Reopen last</strong> in the popup footer opens the most
+      recent capture in the editor at any time.
+    </p>
+  </section>
+
+  <section class="doc-section" id="annotate">
+    <h2>Annotate</h2>
+    <p>
+      The editor opens in a full tab and loads the most recent capture from local storage. Each tool
+      has a one-letter shortcut.
+    </p>
+    <ul>
+      <li>
+        <strong>Select</strong> <kbd>V</kbd> — move, resize, or delete any annotation. Double-click a
+        text layer to re-edit it.
+      </li>
+      <li><strong>Rectangle</strong> <kbd>R</kbd> — draw a border rectangle.</li>
+      <li><strong>Arrow</strong> <kbd>A</kbd> — draw a directional arrow.</li>
+      <li><strong>Line</strong> <kbd>L</kbd> — the arrow without a head.</li>
+      <li><strong>Pen</strong> <kbd>P</kbd> — freehand drawing.</li>
+      <li><strong>Highlighter</strong> <kbd>H</kbd> — a translucent freehand stroke.</li>
+      <li><strong>Text</strong> <kbd>T</kbd> — add a text box, sized by the font-size control.</li>
+      <li>
+        <strong>Step number</strong> <kbd>S</kbd> — numbered badges that count up on their own, and
+        renumber when you delete one.
+      </li>
+      <li>
+        <strong>Blur</strong> <kbd>B</kbd> — hide sensitive content as a soft blur, a coarse mosaic,
+        or an opaque fill. The opaque fill survives recompression.
+      </li>
+      <li>
+        <strong>Spotlight</strong> <kbd>O</kbd> — rectangle, rounded rectangle, or ellipse cut-outs
+        that merge into one dim layer.
+      </li>
+      <li>
+        <strong>Eyedropper</strong> <kbd>I</kbd> — take a color from the capture. It samples what you
+        see, so a color inside a spotlight or on a beautify gradient picks as it looks. The swatch
+        button on the color row opens Chrome’s screen-wide picker for anything outside the canvas.
+      </li>
+      <li><strong>Crop</strong> <kbd>C</kbd> — trim the image to a selected area.</li>
+    </ul>
+    <p>
+      Hold <kbd>Shift</kbd> while you draw for square rectangles and 45° lines and arrows. The style
+      bar carries an 8-color palette on <kbd>1</kbd>–<kbd>8</kbd>, a custom color, recent colors,
+      three stroke widths, and a font-size control. Your choices are remembered across sessions. Undo
+      and redo are <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>, or <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd> on macOS.
+    </p>
+  </section>
+
+  <section class="doc-section" id="beautify">
+    <h2>Beautify</h2>
+    <p>
+      The <strong>Beautify</strong> panel in the top bar frames the screenshot for sharing: padding,
+      corner radius, and drop-shadow sliders, plus six gradient presets, a custom solid color, or a
+      transparent background. The frame previews live and travels into every export, the clipboard,
+      and PDF.
+    </p>
+  </section>
+
+  <section class="doc-section" id="import">
+    <h2>Annotate an image you already have</h2>
+    <p>
+      Drop an image file onto the editor stage, or paste one with <kbd>Ctrl+V</kbd> / <kbd>⌘V</kbd> outside
+      a text field. The import takes the same seat a capture takes, so every tool, the beautify frame,
+      and every export path keep working, and the top bar reads <strong>Imported</strong>. Importing
+      replaces the canvas, so the editor asks first when there are annotations to lose.
+    </p>
+  </section>
+
+  <section class="doc-section" id="export">
+    <h2>Export</h2>
+    <p>
+      Click <strong>Export</strong> in the top bar of the editor, or press <kbd>Ctrl+S</kbd> / <kbd
+        >⌘S</kbd
+      >. Choose a format:
+    </p>
+    <ul>
+      <li><strong>PNG</strong> — lossless, keeps transparency.</li>
+      <li><strong>JPEG</strong> — smaller files, adjustable quality.</li>
+      <li><strong>WebP</strong> — adjustable quality like JPEG, transparency like PNG.</li>
+      <li>
+        <strong>PDF</strong> — export as a single image page, fit to A4/Letter, or split across
+        multiple pages with a 5mm overlap so content is not cut mid-line.
+      </li>
+    </ul>
+    <p>
+      <strong>Scale</strong> exports at 25, 50, 100, or 200 %, or at an exact pixel width. It is
+      hidden for PDF, which sizes to the page instead. A size past Chrome’s canvas limit is refused
+      rather than written as an empty file.
+    </p>
+    <p>
+      <kbd>Ctrl+C</kbd> / <kbd>⌘C</kbd> copies the finished image straight to the clipboard. The export
+      dialog can also save its current settings as your new defaults.
+    </p>
+  </section>
+
+  <section class="doc-section" id="record">
+    <h2>Record a tab</h2>
+    <p>
+      Click <strong>Record</strong> in the popup, or press <kbd>Alt+Shift+X</kbd> to stop once a
+      recording is running. The first time you record, Chrome shows one permission prompt for tab
+      capture; every recording after that starts in a single click.
+    </p>
+
+    <h3>Start a recording</h3>
+    <p>
+      The Record row in the popup has three toggles — <strong>Mic</strong>,
+      <strong>Tab audio</strong>, and <strong>Webcam</strong> — turn on any of them before you click
+      Record. With the mic or webcam on, your browser’s own permission prompt appears from a small
+      bubble on the page before capture starts.
+    </p>
+    <p>
+      If a recording navigates to a different site, the control bar needs the optional “Record across
+      sites” permission (see <a href="#settings">Settings</a>) to follow it there. Without that
+      permission the toolbar badge turns amber; click the toolbar icon or interact with the page
+      again to reattach the overlay.
+    </p>
+
+    <h3>The control bar</h3>
+    <p>
+      A small bar sits at the bottom of the page while you record: a timer, a chip for each track you
+      enabled, and Pause/Resume, Stop, and Cancel buttons. With the webcam on, a draggable circular
+      preview floats over the page — drag it anywhere and it stays there for the rest of the
+      recording.
+    </p>
+    <p>
+      The bar hides itself about three seconds after your pointer leaves it, so it stays out of your
+      recording. Move your cursor to the bottom center of the page to bring it back. It stays
+      visible while you hover it, and while the recording is paused.
+    </p>
+
+    <h3>The editor</h3>
+    <p>
+      Stop opens the recording editor on a timeline of your take. The editor adds a smooth 2x zoom
+      at every click your cursor made — adjust or delete any of those, or add your own manual zoom
+      blocks at 1.5x, 2x, or 3x. Trim the start or end of any segment by dragging its
+      handles. Click ripples mark where you clicked, and the webcam bubble, Beautify frame, and
+      mic/tab-audio volume sliders live in the side panel. Show cursor draws a smooth pointer that
+      follows your recorded cursor path; turn it off in the settings rail.
+    </p>
+
+    <h3>Export</h3>
+    <p>
+      Export re-renders the take through canvas, mixing in the tracks and effects you set, and
+      downloads a WebM file.
+    </p>
+  </section>
+
+  <section class="doc-section" id="drafts">
+    <h2>Drafts</h2>
+    <p>
+      Your edits are saved locally as you work. If the editor tab closes or crashes, the next editor
+      tab offers the draft back. Restoring is always a click, so a stale draft never replaces a
+      capture you meant to start fresh. A cropped image gets its own draft, so annotations never
+      restore against the wrong picture.
+    </p>
+  </section>
+
+  <section class="doc-section" id="shortcuts">
+    <h2>Keyboard shortcuts</h2>
+    <p>Press <kbd>?</kbd> in the editor for the full sheet. Beyond the tool letters above:</p>
+    <ul>
+      <li><kbd>1</kbd>–<kbd>8</kbd> — set the annotation color.</li>
+      <li><kbd>Ctrl+C</kbd> / <kbd>⌘C</kbd> — copy to the clipboard.</li>
+      <li><kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd> — export.</li>
+      <li><kbd>Backspace</kbd> — delete the selected annotation.</li>
+      <li><kbd>Esc</kbd> — deselect, or cancel a crop.</li>
+      <li>
+        <kbd>Ctrl</kbd> / <kbd>⌘</kbd> with <kbd>+</kbd>, <kbd>−</kbd>, or <kbd>0</kbd> — zoom in,
+        zoom out, actual size. <kbd>F</kbd> fits to the screen.
+      </li>
+      <li><kbd>Space</kbd> + drag — pan the canvas.</li>
+    </ul>
+    <p>
+      <kbd>Alt+Shift+X</kbd> stops the current recording from anywhere — it does not need the editor or
+      the popup open.
+    </p>
+  </section>
+
+  <section class="doc-section" id="settings">
+    <h2>Settings</h2>
+    <p>Open the gear icon in the popup to set:</p>
+    <ul>
+      <li><strong>Theme</strong> — light, dark, or system.</li>
+      <li><strong>Default format</strong> — PNG, JPEG, WebP, or PDF.</li>
+      <li><strong>Quality</strong> — for JPEG, WebP, and PDF.</li>
+      <li>
+        <strong>Filename template</strong> — click a token chip to insert <code>&#123;date&#125;</code>,
+        <code>&#123;time&#125;</code>, <code>&#123;title&#125;</code>, <code>&#123;domain&#125;</code>,
+        <code>&#123;w&#125;</code>, or <code>&#123;h&#125;</code>. A live preview shows the result.
+      </li>
+    </ul>
+    <p>
+      Settings live in local storage on this device. <strong>Reset to defaults</strong> at the bottom
+      of the panel takes two clicks.
+    </p>
+    <p>
+      <strong>Record across sites</strong> — off by default. Turning it on requests the optional
+      <code>&lt;all_urls&gt;</code> host permission, so the recording control bar and cursor overlay can
+      follow a tab that navigates to a new site mid-recording.
+    </p>
+  </section>
+
+  <section class="doc-section" id="agents-cli">
+    <h2>Agents &amp; CLI</h2>
+    <p>
+      <code>openscreenshot</code> (npm) is a separate, optional, local tool for scripting screenshots
+      from the command line or from an AI agent. It drives the Chrome already on your machine — no
+      browser download, no hosted service. Set <code>CHROME_PATH</code> if your Chrome cannot be found
+      automatically.
+    </p>
+    <pre><code>npx openscreenshot shot https://example.com --out shot.png --full</code></pre>
+    <p>As an MCP server, add this to your MCP client config:</p>
+    <pre><code>{'{ "command": "npx", "args": ["openscreenshot", "serve"] }'}</code></pre>
+    <p>
+      Then call the <code>capture_screenshot</code> tool with{' '}
+      <code>{'{ "url": "https://example.com" }'}</code>.
+    </p>
+  </section>
+
+  <section class="doc-section" id="privacy">
+    <h2>Privacy</h2>
+    <p>
+      OpenScreenShot processes everything locally in your browser. Captures are stored in Chrome
+      local storage and are not uploaded to any server. Recordings, cursor logs, and mic/webcam
+      streams stay in IndexedDB on your device until you delete them. The extension has no analytics,
+      no telemetry, and no third-party services.
+    </p>
+    <p>
+      See the <a href="/privacy/">Privacy Policy</a> for the full details.
+    </p>
+  </section>
+
+  <section class="doc-section" id="support">
+    <h2>Get help</h2>
+    <p>
+      See the <a href="/support/">Support &amp; FAQ</a> page for common questions and known limitations.
+      If you need more help, open an issue on
+      <a href={`${REPO_URL}/issues`} target="_blank" rel="noopener">GitHub</a>.
+    </p>
+  </section>
+
+  <section class="doc-cta">
+    <CropMarks arm="26px" inset="18px">
+      <h2>Install OpenScreenShot</h2>
+      <p>Free, open-source, and private. Available on the Chrome Web Store.</p>
+      <a class="btn btn-ink" href={STORE_URL} target="_blank" rel="noopener">Add to Chrome</a>
+    </CropMarks>
+  </section>
+</Doc>
+
+<style>
+  .toc {
+    max-width: var(--max-w);
+    padding: var(--s-5);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    background: var(--paper-raised);
+  }
+
+  .toc h2 {
+    margin-bottom: var(--s-3);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: var(--fs-xs);
+    letter-spacing: var(--tr-label);
+    text-transform: uppercase;
+  }
+
+  .toc ul {
+    columns: 2;
+    column-gap: var(--s-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--fs-md);
+  }
+
+  .toc li {
+    margin-bottom: var(--s-2);
+    break-inside: avoid;
+  }
+
+  @media (max-width: 620px) {
+    .toc ul {
+      columns: 1;
+    }
+  }
+</style>

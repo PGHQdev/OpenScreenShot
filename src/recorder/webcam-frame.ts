@@ -1,19 +1,20 @@
 /**
- * The webcam preview bubble, hosted in an extension iframe on the recorded
- * page (`src/content/recording-overlay.ts` mounts it).
+ * The camera/mic permission frame, hosted in an extension iframe on the
+ * recorded page (`src/content/recording-overlay.ts` mounts it, collapsed to
+ * a 1x1, invisible dot it never grows out of — task 40).
  *
- * Two jobs, both of which need an extension *page*:
- * 1. It asks for camera/mic here, because camera permission is held per
- *    extension origin and the offscreen document cannot show a prompt. Once
- *    the user grants it here, the engine's own `getUserMedia` in
- *    `src/offscreen/engine.ts` succeeds silently.
- * 2. It shows the live preview — the stream opened here stays live for the
- *    whole recording; the engine records its own separate stream.
+ * One job: it asks for camera/mic here, because camera permission is held
+ * per extension origin and the offscreen document cannot show a prompt.
+ * Once the user grants it here, the engine's own `getUserMedia` in
+ * `src/offscreen/engine.ts` succeeds silently — permission is per origin,
+ * not per stream, so this frame does not need to keep anything open once
+ * that prompt is answered.
  *
- * With the mic on and the webcam off the overlay still mounts this page, 1x1
- * and invisible: it is the only prompt surface for the mic.
+ * With the mic on and the webcam off the overlay still mounts this page —
+ * it is the only prompt surface for the mic.
  */
 
+import './webcam-frame.css';
 import type { RecState } from '../shared/recording-types';
 
 /** A worker that never answers is treated the same as "nothing is recording". */
@@ -23,38 +24,15 @@ const params = new URLSearchParams(location.search);
 const wantWebcam = params.get('webcam') === '1';
 const wantMic = params.get('mic') === '1';
 
-function t(id: string, fallback: string): string {
-  try {
-    return chrome.i18n.getMessage(id) || fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function showDenied(): void {
-  const box = document.createElement('div');
-  box.className = 'denied';
-  box.textContent = t('recWebcamDenied', 'Camera declined — recording without it');
-  document.body.replaceChildren(box);
-}
-
-function showPreview(stream: MediaStream): void {
-  const video = document.createElement('video');
-  video.muted = true;
-  video.autoplay = true;
-  video.playsInline = true;
-  video.srcObject = stream;
-  document.body.replaceChildren(video);
-  void video.play().catch(() => {});
-}
-
 /**
- * Mic audio is only ever requested to fold the mic prompt into the camera
- * prompt — the engine opens its own mic stream, so a live one here would be a
- * second pointless capture (and a second device indicator).
+ * The prompt was the whole point of opening this stream (see `main()`'s own
+ * comment): it renders nothing, and the engine opens its own separate
+ * camera/mic capture for the actual recording, so a live track here —
+ * audio or video alike — would just be a second pointless capture and a
+ * second device indicator, for whichever device this got.
  */
-function dropAudio(stream: MediaStream): void {
-  for (const track of stream.getAudioTracks()) {
+function dropTracks(stream: MediaStream): void {
+  for (const track of stream.getTracks()) {
     track.stop();
     stream.removeTrack(track);
   }
@@ -146,20 +124,18 @@ async function main(): Promise<void> {
   }
 
   if (use.webcam && !haveCamera) {
-    showDenied();
     // Report ready first: the denial makes the worker re-sync the overlay,
     // and that re-sync tears down this frame for having no camera track.
     reportReady();
-    // The engine catches its own camera failure independently; this only
-    // keeps the worker's stored settings (and its overlay chips) truthful.
+    // The control bar surfaces the denial (task 40's `recOverlayCamDenied`
+    // warning) — this only keeps the worker's stored settings (and its
+    // overlay chips) truthful. The engine catches its own camera failure
+    // independently.
     chrome.runtime.sendMessage({ type: 'REC_WEBCAM_DENIED' }).catch(() => {});
   }
   if (!stream) return;
 
-  // Mic-only: `dropAudio` just stopped the one track this page ever held —
-  // the prompt was the whole point, and the frame stays 1x1 and invisible.
-  dropAudio(stream);
-  if (haveCamera) showPreview(stream);
+  dropTracks(stream);
 }
 
 void main().finally(reportReady);

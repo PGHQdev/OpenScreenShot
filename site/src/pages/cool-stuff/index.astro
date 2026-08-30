@@ -1,0 +1,110 @@
+---
+import Doc from '../../layouts/Doc.astro';
+
+const tools = [
+  {
+    href: 'https://minimalistnotes.com',
+    name: 'Minimalist Notes',
+    tag: 'A quiet place to think.',
+    body: 'Open the page and write. Your notes are saved on your device, work offline, and need no account. There is nothing to set up and nothing to pay for.',
+    label: 'minimalistnotes.com',
+  },
+  {
+    href: 'https://musing.wiki',
+    name: 'Musing',
+    tag: 'Let the wisdom of the past guide your present.',
+    body: 'A new tab that meets you with a quote worth keeping — matched to what you have been thinking about, analyzed on your device. Nothing is sent to a server.',
+    label: 'musing.wiki',
+  },
+];
+---
+
+<Doc
+  title="Cool stuff — OpenScreenShot"
+  description="Other small, free tools from the maker of OpenScreenShot: Minimalist Notes, a quiet place to think, and Musing, a new tab with a quote worth keeping."
+  path="/cool-stuff/"
+  label="Also by @PGHQdev"
+  heading="Cool stuff"
+  lead="Small tools from the same hands as OpenScreenShot. Each one is free, private, and made to do one thing well."
+>
+  <ul class="tools">
+    {
+      tools.map((tool) => (
+        <li class="tool">
+          <h2>
+            <a href={tool.href} target="_blank" rel="noopener">
+              {tool.name}
+            </a>
+          </h2>
+          <p class="tool-tag">{tool.tag}</p>
+          <p class="tool-body">{tool.body}</p>
+          <p class="tool-go">{tool.label} →</p>
+        </li>
+      ))
+    }
+  </ul>
+
+  <p class="doc-fine thanks">
+    All of these are given away whole. If you want to give something back,
+    <a href="https://ko-fi.com/T7A624DAY7" target="_blank" rel="noopener">a coffee</a> is plenty.
+  </p>
+</Doc>
+
+<style>
+  .tools {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    gap: var(--s-5);
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .tool {
+    margin-bottom: 0;
+    padding: var(--s-5);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    background: var(--paper-raised);
+  }
+
+  .tool h2 {
+    margin-bottom: var(--s-2);
+    font-size: var(--fs-xl);
+  }
+
+  .tool h2 a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .tool h2 a:hover {
+    color: var(--accent-ink);
+  }
+
+  .tool-tag {
+    margin-bottom: var(--s-3);
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+  }
+
+  .tool-body {
+    font-size: var(--fs-md);
+  }
+
+  .tool-go {
+    margin: 0;
+    color: var(--accent-ink);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: var(--fs-xs);
+    letter-spacing: var(--tr-label);
+    text-transform: uppercase;
+  }
+
+  .thanks {
+    margin-top: var(--s-8);
+  }
+</style>

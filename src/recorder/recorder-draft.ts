@@ -10,9 +10,19 @@
  * The frame rides along in `Settings` shape, mirroring `src/editor/draft.ts`,
  * so `frameFromSettings` — which already clamps sliders and vets backgrounds
  * — is the only validator it needs.
+ *
+ * The undo stack rides along too, as `history`: its entries are `RecorderEdit`
+ * — the same seven fields, without the bookkeeping — so one validator reads
+ * both the live state and every step behind it, and an undo survives a reload.
+ *
+ * `cursor` merges what used to be two independent booleans, `pointer` (draw
+ * the recorded cursor) and `ripple` (draw a ripple at every click) — see
+ * `parseCursor` below for the migration that keeps a legacy draft's two
+ * fields readable as this one.
  */
 import { DEFAULT_FRAME, frameFromSettings, frameToSettings } from '../editor/frame';
 import { DEFAULT_SETTINGS } from '../shared/types';
+import { emptyHistory, HISTORY_DEPTH, type RecorderHistory } from './recorder-history';
 import { ZOOM_SCALES, type ZoomBlock, type ZoomScale } from './zoom';
 
 /** How long the recorder waits after the last edit before writing. */
@@ -22,17 +32,48 @@ export type BubbleCorner = 'tl' | 'tr' | 'bl' | 'br' | 'custom';
 
 type FrameSettings = ReturnType<typeof frameToSettings>;
 
-export interface RecorderDraft {
+/**
+ * The recorded cursor, as one four-state control: no cursor and no ripple
+ * (`hidden`), the cursor alone (`shown`), the cursor plus a ripple at every
+ * recorded click (`ripple`), or a ripple with the cursor itself still
+ * hidden (`rippleOnly`, labelled "Clicks only" in the control) — the state
+ * a legacy `pointer: false, ripple: true` draft migrates to, so hiding the
+ * cursor is never silently undone by the merge. See `parseCursor`.
+ */
+export type CursorMode = 'hidden' | 'shown' | 'ripple' | 'rippleOnly';
+
+const CURSOR_MODES: ReadonlySet<string> = new Set<CursorMode>([
+  'hidden',
+  'shown',
+  'ripple',
+  'rippleOnly',
+]);
+
+/** Whether `mode` draws the recorded cursor itself. */
+export function cursorDrawsPointer(mode: CursorMode): boolean {
+  return mode === 'shown' || mode === 'ripple';
+}
+
+/** Whether `mode` draws a ripple at every recorded click. */
+export function cursorDrawsRipple(mode: CursorMode): boolean {
+  return mode === 'ripple' || mode === 'rippleOnly';
+}
+
+/** Every field the recorder's editor owns — one undo step's worth of state. */
+export interface RecorderEdit {
   zoomBlocks: ZoomBlock[];
   autoZoomDone: boolean;
   trims: Record<string, { start: number; end: number }>;
-  ripple: boolean;
-  pointer: boolean;
+  cursor: CursorMode;
   /** 0..1. */
   volumes: { tab: number; mic: number };
   /** x/y normalized 0..1; size = fraction of min(W,H). */
   bubble: { corner: BubbleCorner; x: number; y: number; size: number; hidden: boolean };
   frame: FrameSettings;
+}
+
+export interface RecorderDraft extends RecorderEdit {
+  history: RecorderHistory;
   savedAt: number;
 }
 
@@ -52,17 +93,23 @@ const DEFAULT_BUBBLE: RecorderDraft['bubble'] = {
   hidden: false,
 };
 
-/** A fresh draft with no zoom, no trims, and the recorder's standard overlay. */
+/**
+ * A fresh draft with no zoom, no trims, and the recorder's standard overlay.
+ * `ripple` seeds the cursor mode from the recording's own capture-time
+ * setting (`RecordingSettings.ripple`) — the cursor itself always starts
+ * shown, so a capture made with the ripple off starts the editor at `shown`
+ * rather than `hidden`.
+ */
 export function defaultRecorderDraft(ripple = true): RecorderDraft {
   return {
     zoomBlocks: [],
     autoZoomDone: false,
     trims: {},
-    ripple,
-    pointer: true,
+    cursor: ripple ? 'ripple' : 'shown',
     volumes: { tab: 1, mic: 1 },
     bubble: { ...DEFAULT_BUBBLE },
     frame: frameToSettings({ ...DEFAULT_FRAME, enabled: false }),
+    history: emptyHistory(),
     savedAt: Date.now(),
   };
 }
@@ -134,21 +181,50 @@ function parseBubble(value: unknown): RecorderDraft['bubble'] {
 }
 
 /**
- * Read a stored value back into a draft, or null when it cannot be vouched
- * for.
+ * `cursor` first, if a draft already stores the merged field. Otherwise a
+ * legacy draft's `pointer`/`ripple` pair, each defaulting on the same way
+ * `parseEdit` always has (`!== false`), migrated by this table — four
+ * legacy combinations, four distinct targets, nothing dropped:
+ *
+ *   pointer  ripple  ->  cursor       why
+ *   true     true    ->  ripple       both were on
+ *   true     false   ->  shown        cursor only
+ *   false    false   ->  hidden       neither
+ *   false    true    ->  rippleOnly   the cursor stays hidden, exactly as
+ *                                     set — clicks still mark, since that
+ *                                     was on too; nothing here overrides a
+ *                                     value the user explicitly turned off
+ *
+ * A draft with neither field (older than `pointer` itself) reads as
+ * `pointer: true, ripple: true` under the same `!== false` default, so it
+ * lands on `ripple` too — unaffected by the merge.
  */
-export function parseRecorderDraft(value: unknown): RecorderDraft | null {
+function parseCursor(v: { cursor?: unknown; pointer?: unknown; ripple?: unknown }): CursorMode {
+  if (typeof v.cursor === 'string' && CURSOR_MODES.has(v.cursor)) return v.cursor as CursorMode;
+  const pointer = v.pointer !== false;
+  const ripple = v.ripple !== false;
+  if (pointer && ripple) return 'ripple';
+  if (pointer) return 'shown';
+  if (!ripple) return 'hidden';
+  return 'rippleOnly';
+}
+
+/**
+ * The editor fields alone, or null when one of them cannot be vouched for.
+ * Read by the draft itself and by every entry in its undo stack.
+ */
+function parseEdit(value: unknown): RecorderEdit | null {
   if (!isPlainObject(value)) return null;
   const v = value as {
     zoomBlocks?: unknown;
     autoZoomDone?: unknown;
     trims?: unknown;
-    ripple?: unknown;
+    cursor?: unknown;
     pointer?: unknown;
+    ripple?: unknown;
     volumes?: unknown;
     bubble?: unknown;
     frame?: unknown;
-    savedAt?: unknown;
   };
 
   if (!Array.isArray(v.zoomBlocks)) return null;
@@ -166,14 +242,57 @@ export function parseRecorderDraft(value: unknown): RecorderDraft | null {
     zoomBlocks: v.zoomBlocks as ZoomBlock[],
     autoZoomDone: v.autoZoomDone === true,
     trims,
-    ripple: v.ripple !== false,
-    pointer: v.pointer !== false,
+    cursor: parseCursor(v),
     volumes: {
       tab: clamp01(volumesRaw.tab, 1),
       mic: clamp01(volumesRaw.mic, 1),
     },
     bubble: parseBubble(v.bubble),
     frame: frameToSettings(frameFromSettings({ ...DEFAULT_SETTINGS, ...storedFrame })),
-    savedAt: typeof v.savedAt === 'number' && Number.isFinite(v.savedAt) ? v.savedAt : 0,
+  };
+}
+
+/**
+ * One unreadable entry voids the whole stack. A partial timeline would undo
+ * into a state the user was never in, and losing the stack costs the undo
+ * history alone — never the work the draft itself carries.
+ */
+function parseEntries(value: unknown): RecorderEdit[] | null {
+  if (!Array.isArray(value)) return null;
+  const entries: RecorderEdit[] = [];
+  for (const raw of value) {
+    const edit = parseEdit(raw);
+    if (edit === null) return null;
+    entries.push(edit);
+  }
+  return entries;
+}
+
+/** A stored stack, capped the same way pushHistory caps a live one: the past
+ *  keeps its newest steps, the future keeps its nearest redos. */
+function parseHistory(value: unknown): RecorderHistory {
+  if (!isPlainObject(value)) return emptyHistory();
+  const past = parseEntries(value.past);
+  const future = parseEntries(value.future);
+  if (past === null || future === null) return emptyHistory();
+  return {
+    past: past.slice(Math.max(0, past.length - HISTORY_DEPTH)),
+    future: future.slice(0, HISTORY_DEPTH),
+  };
+}
+
+/**
+ * Read a stored value back into a draft, or null when it cannot be vouched
+ * for.
+ */
+export function parseRecorderDraft(value: unknown): RecorderDraft | null {
+  if (!isPlainObject(value)) return null;
+  const edit = parseEdit(value);
+  if (edit === null) return null;
+  const savedAt = (value as { savedAt?: unknown }).savedAt;
+  return {
+    ...edit,
+    history: parseHistory((value as { history?: unknown }).history),
+    savedAt: typeof savedAt === 'number' && Number.isFinite(savedAt) ? savedAt : 0,
   };
 }

@@ -1,0 +1,49 @@
+---
+/**
+ * The monospace frame label that numbers each section of the contact sheet.
+ * With an index it reads "FRAME 01 / CAPTURE"; without one it is the plain
+ * eyebrow used above a heading.
+ */
+interface Props {
+  label: string;
+  index?: string;
+  class?: string;
+}
+
+const { label, index, class: className } = Astro.props;
+---
+
+<p class:list={['frame-label', className]}>
+  {
+    index && (
+      <>
+        <span class="frame-label-n">Frame {index}</span>
+        <span class="frame-label-sep" aria-hidden="true">
+          /
+        </span>
+      </>
+    )
+  }
+  {label}
+</p>
+
+<style>
+  .frame-label {
+    margin: 0 0 var(--s-3);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: var(--tr-label);
+    text-transform: uppercase;
+  }
+
+  .frame-label-n {
+    color: var(--accent-ink);
+  }
+
+  .frame-label-sep {
+    margin: 0 0.35em;
+  }
+</style>

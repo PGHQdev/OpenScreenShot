@@ -1,13 +1,109 @@
 /*
  * OpenScreenShot design tokens (CSS custom properties).
- * Single source of truth for the popup and editor surfaces; mirrors
- * src/shared/design-tokens.ts. Defines spacing, radius, shadows, typography,
- * and light/dark themes. Apply a theme by setting data-theme="light"|"dark"
- * on <html> (the editor/popup do this from settings on load).
+ *
+ * This file is the single source of truth. src/shared/design-tokens.ts is
+ * GENERATED from it by scripts/gen-design-tokens.mjs (`npm run tokens`, which
+ * `npm run build` also runs), so canvas code paints with the same values the
+ * stylesheets use. tests/unit/design-tokens.test.ts fails when the two drift.
+ *
+ * Every token lives inside a block marked `@tokens base|light|dark`. The
+ * generator refuses to run on a custom property declared anywhere else, and on
+ * a token declared in one theme but not the other. Apply a theme by setting
+ * data-theme="light"|"dark" on <html>.
+ *
+ * Names shared with the website (site/src/styles/tokens.css) mean the same
+ * thing in both places: --s-1..--s-6, --r-*, --sh-*, --fs-*, --dur-*,
+ * --ease-out, --accent, --accent-ink, --border and --rule. Values differ where
+ * the ground differs: the site sits on warm paper, the extension on white and
+ * near-black. Motion is not shared: --ease-out is cubic-bezier(0, 0, 0.58, 1)
+ * here (the CSS keyword, spelled out) and cubic-bezier(0.16, 1, 0.3, 1) there.
+ *
+ * Colour contract.
+ *   --text-2      secondary body text. Clears 4.5:1 on --surface-1,
+ *                 --surface-2 and --surface-3. It does NOT clear it on
+ *                 --stage-bg (4.37:1 in light), so text on the stage takes
+ *                 --text-1 — same exception --accent-ink documents below.
+ *   --text-3      de-emphasised text (status hints, kbd labels, section
+ *                 headings). Clears 4.5:1 on --surface-1 only; nothing paints
+ *                 it on --surface-2, --surface-3 or --stage-bg (those call
+ *                 sites take --text-2 or --text-1 instead — see
+ *                 task-45-report.md for which). Raising it to the 4.5:1 floor
+ *                 (from 2.21:1/2.84:1) compresses its self-contrast against
+ *                 --text-2 from ~2.2:1 to ~1.2–1.5:1: the two are still
+ *                 ordered correctly (text-1 darkest/lightest, text-3
+ *                 palest/most-muted) but a reader leans on each call site's
+ *                 own size/weight/case more than colour now to tell the two
+ *                 apart. task-45-report.md has the full before/after matrix.
+ *                 tests/unit/token-contrast.test.ts guards the 4.5:1 floor
+ *                 for both tokens, but only on the (theme, surface) pairs
+ *                 listed above — it does not know a new call site exists, so
+ *                 check the usage matrix (or that test file's own header
+ *                 comment) before painting either token somewhere new.
+ *   --accent      non-text marks and large display type only (>= 3:1).
+ *   --accent-ink  links, filled-control grounds and body-size accent text.
+ *                 Clears 4.5:1 on --surface-1, --surface-2, --surface-3 and
+ *                 --accent-subtle. It does NOT clear it on --stage-bg (4.44:1
+ *                 in light), so text on the stage takes --text-1.
+ *   --on-accent   the label colour on an --accent-ink ground.
+ *   --danger      the amber danger mark: warning-chip and error-toast tints,
+ *                 and the border on them. Non-text only, same rule as
+ *                 --accent — it is 5.02:1 on --surface-1 in light but falls
+ *                 to 3.73:1 on its own 16% tint, and its --warning sibling
+ *                 reaches 1.80:1 there.
+ *   --danger-ink  body-size danger text: error toasts, the denied/permission
+ *                 chips, armed destructive buttons, the recorder's session
+ *                 pills. Clears 4.5:1 on --surface-1, --surface-2 and on
+ *                 every --danger/--warning tint this product paints under
+ *                 it (worst pair 5.10:1 — tests/unit/token-contrast.test.ts
+ *                 asserts the tinted grounds, not just the flat surfaces).
+ *                 Despite the name it is the ink for --warning grounds too;
+ *                 there is no --warning-ink, and adding one would be a second
+ *                 token for a hue a reader cannot tell apart from this at
+ *                 body size.
+ *   --warning     the amber caution mark: the tints under warning chips and
+ *                 the recorder's Recovered pill, and the degraded REC badge.
+ *                 Non-text, and more strictly so than --danger — it reaches
+ *                 only 1.80:1 on its own 16% tint in light, which is what the
+ *                 Recovered pill used to paint. Text on a --warning ground
+ *                 takes --danger-ink.
+ *   --border      control boundaries; >= 3:1 on --surface-1..--surface-3.
+ *   --rule        a decorative hairline. Never a control's edge, never the only
+ *                 signal that a boundary exists.
+ *   --border-focus  the keyboard focus ring. Appears only under
+ *                 :focus-visible (or a descendant/proxy of it) — never as a
+ *                 persistent state indicator. >= 3:1 against every surface it
+ *                 can land on; against an arbitrary fill (a colour swatch, a
+ *                 filled chip) it sits behind a known-colour moat instead.
+ *   --ring-selected  a persistent (non-focus) selection indicator, for a
+ *                 control whose "this one is chosen" state has to survive
+ *                 losing focus. Same value as --border-focus today, kept as
+ *                 its own token so the two can diverge and so --border-focus
+ *                 stays exclusively a focus signal.
+ *   --border-strong  --border raised to --text-2's darkness/lightness, for
+ *                 the `prefers-contrast: more` floor. A plain token, not a
+ *                 conditional one: the generator (see below) rejects a
+ *                 custom property re-declared with a different value under
+ *                 the same @tokens group, so the media-query switch that
+ *                 actually applies it lives in src/shared/ui.css instead —
+ *                 the nearest shared file this generator does not parse.
+ *                 Holds --text-2's literal hex, not var(--text-2): that
+ *                 switch also raises --text-2 itself (see --text-2-strong
+ *                 below) on the same element in the same rule, and var()
+ *                 always resolves against a property's final cascaded
+ *                 value — so a live reference here would have silently
+ *                 chased --text-2's raised value instead of its original
+ *                 one. Caught live, not by inspection: task-17-report.md.
+ *   --text-2-strong  --text-2 raised to --text-1, same `prefers-contrast:
+ *                 more` floor, same reason it is a plain token here and
+ *                 switched on from ui.css.
+ * Measured ratios: .superpowers/sdd/tranquil-drifting-lemon/task-9-report.md,
+ * task-15-report.md, task-17-report.md.
  */
 
+/* @tokens base */
 :root {
   /* spacing */
+  --s-05: 2px;
   --s-1: 4px;
   --s-2: 8px;
   --s-3: 12px;
@@ -26,12 +122,97 @@
   --sh-md: 0 4px 12px rgba(0, 0, 0, 0.12);
   --sh-lg: 0 8px 30px rgba(0, 0, 0, 0.16);
 
-  /* type */
+  /* families */
   --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /*
+   * Type scale: 11px, x1.125 a step, rounded to the px grid (11, 12.375, 13.92,
+   * 15.66, 17.62, 19.82). The 15.66 rung has no name here: the site orders
+   * --fs-md below --fs-base, so naming a rung above --fs-base "md" would invert
+   * that reading for anyone working across both trees. --fs-2xl carries the
+   * setup hero at its shipped 24px, off the ratio.
+   */
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-base: 14px;
+  --fs-lg: 18px;
+  --fs-xl: 20px;
+  --fs-2xl: 24px;
+
+  /* motion — --ease-out is the cubic-bezier form of the CSS ease-out keyword */
+  --dur-fast: 120ms;
+  --dur-mid: 150ms;
+  --dur-slow: 250ms;
+  --ease-out: cubic-bezier(0, 0, 0.58, 1);
+
+  /*
+   * Breakpoints. A CSS custom property cannot appear in a @media condition
+   * ("@media (max-width: var(--bp-sm))" is invalid and never matches), so
+   * these have no CSS caller — every "@media (max-width: ...)" in the four
+   * surface stylesheets spells the number out literally instead. These two
+   * tokens are the canonical values that every one of those literals must
+   * equal; tests/unit/breakpoint-guard.test.ts reads them off the generated
+   * src/shared/design-tokens.ts and fails on any stylesheet width that
+   * disagrees, so the numbers cannot drift even though var() can't enforce it.
+   *   --bp-sm  a two-column grid (the shortcut sheet, the setup feature grid)
+   *            stacks to one column below this.
+   *   --bp-md  the recorder's fixed-width settings rail stacks below the
+   *            stage instead of beside it below this.
+   */
+  --bp-sm: 480px;
+  --bp-md: 768px;
+
+  /*
+   * Canvas ink. Painted onto image pixels (annotation marks, the JPEG export
+   * background, the beautify-frame shadow plate), so it never follows the UI
+   * theme. This group and the frame group below have no CSS callers by
+   * design: only canvas code reads them, through the generated module. They
+   * are live, not dead.
+   *
+   * The plate/checkerboard/hairline drawn around a frame-less preview and the
+   * selection outline are UI chrome, not ink: canvas.ts reads them straight
+   * off --surface-1/--surface-3/--rule (getComputedStyle, live per paint, so
+   * a theme flip repaints them) and annotations.ts's selection outline uses
+   * fixed max-contrast literals instead of a token, since it has to survive
+   * arbitrary image pixels rather than follow either theme. Neither reaches
+   * an exported image — see canvas.ts's render() vs composeFinal().
+   */
+  --canvas-paper: #ffffff;
+  --canvas-mark: #ffffff;
+  --canvas-mark-ink: #1d1d1f;
+  --canvas-redact: #111318;
+
+  /*
+   * Annotation swatches. These are the product, not the chrome: they land on
+   * the user's screenshot, so they keep their values in both themes. The
+   * screen-reader name for each one lives beside it in src/editor/palette.ts.
+   */
+  --swatch-red: #ff3b30;
+  --swatch-orange: #ff9500;
+  --swatch-yellow: #ffcc00;
+  --swatch-green: #34c759;
+  --swatch-blue: #0071e3;
+  --swatch-purple: #af52de;
+  --swatch-white: #ffffff;
+  --swatch-black: #1d1d1f;
+
+  /* Beautify frame backgrounds, one gradient pair each. */
+  --frame-ink-from: #2b303b;
+  --frame-ink-to: #12141a;
+  --frame-coral-from: #ff7a59;
+  --frame-coral-to: #e0326b;
+  --frame-dusk-from: #4c3a8f;
+  --frame-dusk-to: #1e1b3a;
+  --frame-mint-from: #37d2a8;
+  --frame-mint-to: #0f8f8f;
+  --frame-sand-from: #f7d08a;
+  --frame-sand-to: #dd8a5b;
+  --frame-sky-from: #8fc4ff;
+  --frame-sky-to: #3f7ae0;
 }
 
-/* ---- Light theme (default) ---- */
+/* @tokens light */
 :root,
 :root[data-theme='light'] {
   --surface-1: #ffffff;
@@ -39,45 +220,92 @@
   --surface-3: #ebebed;
   --stage-bg: #e4e4e9;
   --text-1: #1d1d1f;
-  --text-2: #6e6e73;
-  --text-3: #aeaeb2;
+  --text-2: #68686d;
+  --text-2-strong: var(--text-1);
+  --text-3: #757579;
   --accent: #e8503a;
-  --accent-hover: #ee6450;
-  --accent-pressed: #d43f29;
+  --accent-ink: #bd3722;
+  --accent-ink-hover: #c73d26;
+  --accent-ink-pressed: #a52e1c;
   --accent-subtle: #fdece9;
-  --border: #d2d2d7;
+  --on-accent: #ffffff;
+  --border: #818187;
+  --border-strong: #68686d;
+  --rule: #d2d2d7;
   --border-focus: #e8503a;
+  --ring-selected: #e8503a;
   --danger: #b45309;
+  --danger-ink: #8f4208;
   --success: #34c759;
   --warning: #ff9500;
   /* translucent hover for ghost (transparent-background) buttons */
   --hover-overlay: rgba(0, 0, 0, 0.05);
 }
 
-/* ---- Dark theme ---- */
+/* @tokens dark */
 :root[data-theme='dark'] {
   --surface-1: #1c1c1e;
   --surface-2: #2c2c2e;
   --surface-3: #3a3a3c;
   --stage-bg: #161618;
   --text-1: #f5f5f7;
-  --text-2: #98989d;
-  --text-3: #636366;
+  --text-2: #a5a5aa;
+  --text-2-strong: var(--text-1);
+  --text-3: #858588;
   --accent: #f26b57;
-  --accent-hover: #f58170;
-  --accent-pressed: #e8503a;
+  --accent-ink: #f8846f;
+  --accent-ink-hover: #ff9d8b;
+  --accent-ink-pressed: #e8735e;
   --accent-subtle: #46201a;
-  --border: #48484a;
+  --on-accent: #1c1c1e;
+  --border: #8a8a8f;
+  --border-strong: #a5a5aa;
+  --rule: #48484a;
   --border-focus: #f26b57;
+  --ring-selected: #f26b57;
   --danger: #f5a623;
+  --danger-ink: #ffbb4d;
   --success: #30d158;
   --warning: #ff9f0a;
   --hover-overlay: rgba(255, 255, 255, 0.09);
 }
 
-/* Honour the OS preference when no explicit theme is set. */
+/*
+ * Honour the OS preference when no explicit theme is set: repeat the dark
+ * values from the @tokens dark block above. The generator merges repeats of
+ * the same group and throws if they disagree (scripts/gen-design-tokens.mjs),
+ * so this copy cannot drift from the one above. Guarded against
+ * [data-theme='light'] so an explicit light choice still wins over OS dark;
+ * :root[data-theme='dark'] above already wins over OS light unconditionally,
+ * needing no guard here.
+ */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
+  /* @tokens dark */
+  :root:not([data-theme='light']) {
     color-scheme: dark;
+    --surface-1: #1c1c1e;
+    --surface-2: #2c2c2e;
+    --surface-3: #3a3a3c;
+    --stage-bg: #161618;
+    --text-1: #f5f5f7;
+    --text-2: #a5a5aa;
+    --text-2-strong: var(--text-1);
+    --text-3: #858588;
+    --accent: #f26b57;
+    --accent-ink: #f8846f;
+    --accent-ink-hover: #ff9d8b;
+    --accent-ink-pressed: #e8735e;
+    --accent-subtle: #46201a;
+    --on-accent: #1c1c1e;
+    --border: #8a8a8f;
+    --border-strong: #a5a5aa;
+    --rule: #48484a;
+    --border-focus: #f26b57;
+    --ring-selected: #f26b57;
+    --danger: #f5a623;
+    --danger-ink: #ffbb4d;
+    --success: #30d158;
+    --warning: #ff9f0a;
+    --hover-overlay: rgba(255, 255, 255, 0.09);
   }
 }

@@ -1,0 +1,25 @@
+# OpenScreenShot
+
+> Free, open-source full page screenshot extension for Chrome — full-page (scroll-and-stitch), region, and visible-area screenshots with a built-in annotation editor and export to PNG, JPEG, WebP, or PDF. Also records the current tab, with auto zoom at clicks, a webcam bubble, an auto-hiding control bar, an optional synthetic cursor overlay, and WebM export. 100% local and private: works fully offline, screenshots and recordings never leave the device. MIT licensed.
+
+- Chrome Web Store: https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp
+- Source: https://github.com/pghqdev/OpenScreenShot
+
+## Docs
+
+- [Overview (markdown)](https://openscreenshot.app/index.md): features, install, and agent/CLI usage in one page
+- [Documentation](https://openscreenshot.app/docs/): install, capture modes, annotation, beautify, export, tab recording, shortcuts, and settings
+- [Roadmap](https://openscreenshot.app/roadmap/): shipped releases, what is being explored, and what is out of scope
+- [Support](https://openscreenshot.app/support/): FAQ, known limitations, and how to get help
+
+## Agents & CLI
+
+- [capture-screenshot skill](https://openscreenshot.app/skills/capture-screenshot.md): agent skill for scripting screenshots via the openscreenshot CLI/MCP server
+- [API catalog](https://openscreenshot.app/.well-known/api-catalog): RFC 9727 machine-readable service catalog
+- [auth.md](https://openscreenshot.app/auth.md): no authentication — the CLI and MCP server run locally, with no hosted API
+
+## Optional
+
+- [Privacy policy](https://openscreenshot.app/privacy/): no data collection, all processing local
+- [Cool stuff](https://openscreenshot.app/cool-stuff/): other free tools by the same maker
+- [License](https://github.com/pghqdev/OpenScreenShot/blob/main/LICENSE): MIT

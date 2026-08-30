@@ -110,11 +110,16 @@
           0 2px 6px rgba(27, 26, 23, 0.08),
           0 32px 64px -20px rgba(27, 26, 23, 0.45);
       }
-      .popup-frame iframe {
+      /* the capture is 2x; shown at its CSS size, the frame crops it */
+      .popup-frame img {
         border: 0;
         display: block;
+        /* The popup is 340 CSS px wide — Chrome draws it at exactly that, and
+           the capture is that width at 2x. This used to say 411px, the
+           scrollWidth an overflowing footer row gave the clip, which showed
+           the popup wider than it can ever be. */
         width: 340px;
-        height: 426px;
+        height: auto;
       }
     </style>
   </head>
@@ -151,7 +156,7 @@
       </div>
     </div>
     <div class="popup-frame">
-      <iframe src="popup-ui.html" scrolling="no"></iframe>
+      <img src="captures/popup.png" alt="" />
     </div>
   </body>
 </html>

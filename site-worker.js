@@ -37,19 +37,36 @@ async function proxyKofiAsset(pathname) {
   });
 }
 
-// Live user and star counts for the homepage proof line. Read from shields.io —
-// the same source as the README badges — and cached at the edge, so the page
-// itself never talks to a third party.
+// Live user, star and version counts. Read from shields.io — the same
+// source as the README badges — and cached at the edge, so nothing but this
+// Worker ever talks to a third party. Two consumers share this: the
+// homepage's proof strip (users/stars, injected server-side with
+// HTMLRewriter — the markup's own 985 / 65 numbers are what ships if
+// shields.io doesn't answer in time) and the public /api/stats.json
+// endpoint, live since 95a14dd.
 const STAT_SOURCES = {
   users: 'https://img.shields.io/chrome-web-store/users/hdabbojjccojlapnfjpdppcpfcnhgmdp.json',
   stars: 'https://img.shields.io/github/stars/pghqdev/OpenScreenShot.json',
   version: 'https://img.shields.io/chrome-web-store/v/hdabbojjccojlapnfjpdppcpfcnhgmdp.json',
 };
+const STAT_SHAPE = /^\d[\d,.kKmM+]*$/;
+const VERSION_SHAPE = /^v?\d+(\.\d+)*$/;
 const STATS_TTL = 21600;
+/*
+ * The homepage's first byte waits on this: the two shield lookups run
+ * alongside the asset fetch, but the HTML cannot start streaming until the
+ * rewriter is attached. The markup's own 985 / 65 are current and correct, so
+ * giving up early costs freshness and nothing else.
+ */
+const STATS_TIMEOUT_MS = 500;
 
 async function shieldValue(url, shape) {
+  const timeout = AbortSignal.timeout(STATS_TIMEOUT_MS);
   try {
-    const upstream = await fetch(url, { cf: { cacheEverything: true, cacheTtl: STATS_TTL } });
+    const upstream = await fetch(url, {
+      cf: { cacheEverything: true, cacheTtl: STATS_TTL },
+      signal: timeout,
+    });
     if (!upstream.ok) return null;
     const badge = await upstream.json();
     return shape.test(badge.value ?? '') ? badge.value : null;
@@ -60,9 +77,9 @@ async function shieldValue(url, shape) {
 
 async function siteStats() {
   const [users, stars, version] = await Promise.all([
-    shieldValue(STAT_SOURCES.users, /^\d[\d,.kKmM+]*$/),
-    shieldValue(STAT_SOURCES.stars, /^\d[\d,.kKmM+]*$/),
-    shieldValue(STAT_SOURCES.version, /^v?\d+(\.\d+)*$/),
+    shieldValue(STAT_SOURCES.users, STAT_SHAPE),
+    shieldValue(STAT_SOURCES.stars, STAT_SHAPE),
+    shieldValue(STAT_SOURCES.version, VERSION_SHAPE),
   ]);
   return new Response(JSON.stringify({ users, stars, version }), {
     headers: {
@@ -72,6 +89,45 @@ async function siteStats() {
   });
 }
 
+class StatRewriter {
+  constructor(value) {
+    this.value = value;
+  }
+  element(el) {
+    if (this.value !== null) el.setInnerContent(this.value);
+  }
+}
+
+/*
+ * Takes the asset fetch as a promise, not an awaited Response, so the two
+ * shield lookups run alongside it rather than after it — awaiting the asset
+ * first put the whole shield round trip between the request and the first
+ * byte of HTML on an edge cache miss.
+ *
+ * The degrade contract is unchanged: a lookup that times out or answers
+ * badly yields null, null keeps the number the markup already carries, and
+ * both being null skips the rewriter entirely.
+ */
+async function withInjectedStats(assetPromise) {
+  const [response, users, stars] = await Promise.all([
+    assetPromise,
+    shieldValue(STAT_SOURCES.users, STAT_SHAPE),
+    shieldValue(STAT_SOURCES.stars, STAT_SHAPE),
+  ]);
+  if (users === null && stars === null) return response;
+  // Safe by construction, not by a guard here: .transform() returns
+  // synchronously and runs StatRewriter.element() later, lazily, as the body
+  // streams to the client, so a try/catch around this call can never see
+  // that later work. The actual invariant is upstream — STAT_SHAPE rejects
+  // anything that isn't a bare digit-led badge value, so setInnerContent()
+  // here never receives a string that could break the surrounding markup.
+  // Don't loosen that regex without re-deriving this guarantee.
+  return new HTMLRewriter()
+    .on('[data-stat="users"]', new StatRewriter(users))
+    .on('[data-stat="stars"]', new StatRewriter(stars))
+    .transform(response);
+}
+
 async function route(url, request, env) {
   const accept = request.headers.get('Accept') ?? '';
 
@@ -79,12 +135,15 @@ async function route(url, request, env) {
   if (url.pathname === '/kofi-widget.js') return proxyKofiWidget();
   if (url.pathname.startsWith('/kofi-cdn/')) return proxyKofiAsset(url.pathname);
 
-  if (url.pathname === '/' && accept.includes('text/markdown')) {
-    const md = await env.ASSETS.fetch(new URL('/index.md', url));
-    return new Response(md.body, {
-      status: md.status,
-      headers: { 'content-type': 'text/markdown; charset=utf-8' },
-    });
+  if (url.pathname === '/') {
+    if (accept.includes('text/markdown')) {
+      const md = await env.ASSETS.fetch(new URL('/index.md', url));
+      return new Response(md.body, {
+        status: md.status,
+        headers: { 'content-type': 'text/markdown; charset=utf-8' },
+      });
+    }
+    return withInjectedStats(env.ASSETS.fetch(request));
   }
 
   return env.ASSETS.fetch(request);

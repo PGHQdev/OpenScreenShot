@@ -48,6 +48,8 @@ interface EngineState {
   overlayLost: boolean;
   watchdog: ReturnType<typeof setInterval> | null;
   stopping: boolean;
+  /** Kinds already reported; the worker is told once per kind, not per write. */
+  writeFailed: { media: boolean; events: boolean };
   /**
    * In-flight `appendChunk`/`appendEvents` writes. `stop()` awaits these
    * after the recorders' `stop` events resolve and before finalizing —
@@ -63,8 +65,13 @@ let state: EngineState | null = null;
 /**
  * A stop/cancel that arrived while `start()` was still opening streams. The
  * engine has no state to stop yet at that point, and dropping the gesture
- * would leave a recording nobody asked for running until the tab closes —
- * with a camera prompt in the way, `start()` can stay open for seconds.
+ * would leave a recording nobody asked for running until the tab closes.
+ *
+ * This is the ordinary path now, not the rare one: the worker used to hold
+ * every gesture until the start round trip finished, so this only ever saw
+ * one that outlasted the worker's own 10s deadline. It forwards them as they
+ * land, so any stop pressed between OFFSCREEN_START and ENGINE_STARTED
+ * arrives here.
  */
 let pendingStop: 'stop' | 'cancel' | null = null;
 
@@ -77,14 +84,30 @@ function elapsed(): number {
   return (state.pausedAt || Date.now()) - state.startedAt - state.pausedAccumMs;
 }
 
-/** Tracks a write so `stop()` can wait for it; a failed write never wedges stop. */
-function trackWrite(s: EngineState, write: Promise<void>): void {
+/** Tells the worker a store write failed, once per kind per run. */
+function reportWriteFailed(s: EngineState, kind: 'media' | 'events'): void {
+  if (s.writeFailed[kind]) return;
+  s.writeFailed[kind] = true;
+  send({ type: 'ENGINE_WRITE_FAILED', sessionId: s.sessionId, kind });
+}
+
+/**
+ * Tracks a write so `stop()` can wait for it; a failed write never wedges stop.
+ *
+ * The rejection is caught here and must be, but it used to be caught and
+ * dropped: a chunk that never reached IndexedDB left the recording running,
+ * the clock counting and the file silently short. It is reported once per run
+ * now — every following second would report the same broken store — and the
+ * recording is deliberately not stopped, because the chunks already written
+ * are real and tearing down would throw them away.
+ */
+function trackWrite(s: EngineState, write: Promise<void>, kind: 'media' | 'events'): void {
   // Store the already-caught promise, not the raw one — `stop()` awaits
   // everything in `pendingWrites` via `Promise.all`, and an unswallowed
   // rejection there would throw out of `stop()` after `stopping = true` was
   // set, permanently wedging the engine (state never nulled, ENGINE_STOPPED
   // never sent).
-  const settled = write.catch(() => {});
+  const settled = write.catch(() => reportWriteFailed(s, kind));
   s.pendingWrites.add(settled);
   void settled.finally(() => s.pendingWrites.delete(settled));
 }
@@ -190,18 +213,19 @@ async function start(msg: Extract<OffscreenMessage, { type: 'OFFSCREEN_START' }>
       overlayLost: false,
       watchdog: null,
       stopping: false,
+      writeFailed: { media: false, events: false },
       pendingWrites: new Set(),
     };
 
     tabRecorder.ondataavailable = (e) => {
       if (e.data.size && state) {
-        trackWrite(state, appendChunk(segmentId, 'tab', state.seq.tab++, e.data));
+        trackWrite(state, appendChunk(segmentId, 'tab', state.seq.tab++, e.data), 'media');
       }
     };
     if (camRecorder) {
       camRecorder.ondataavailable = (e) => {
         if (e.data.size && state) {
-          trackWrite(state, appendChunk(segmentId, 'webcam', state.seq.webcam++, e.data));
+          trackWrite(state, appendChunk(segmentId, 'webcam', state.seq.webcam++, e.data), 'media');
         }
       };
     }
@@ -218,6 +242,7 @@ async function start(msg: Extract<OffscreenMessage, { type: 'OFFSCREEN_START' }>
         trackWrite(
           state,
           appendEvents(state.segmentId, state.eventSeq++, [{ kind: 'overlay-lost', t: elapsed() }]),
+          'events',
         );
         send({ type: 'OVERLAY_LOST', sessionId: state.sessionId });
       }
@@ -256,10 +281,11 @@ function handleCursorBatch(batch: CursorBatch): void {
     trackWrite(
       state,
       appendEvents(state.segmentId, state.eventSeq++, [{ kind: 'overlay-healed', t: elapsed() }]),
+      'events',
     );
     send({ type: 'OVERLAY_HEALED', sessionId: state.sessionId });
   }
-  trackWrite(state, appendEvents(state.segmentId, state.eventSeq++, batch.events));
+  trackWrite(state, appendEvents(state.segmentId, state.eventSeq++, batch.events), 'events');
 }
 
 function pause(): void {
@@ -277,10 +303,11 @@ function resume(): void {
 
 async function stop(canceled: boolean): Promise<void> {
   if (!state || state.stopping) return;
-  state.stopping = true;
-  if (state.watchdog) clearInterval(state.watchdog);
+  const s = state;
+  s.stopping = true;
+  if (s.watchdog) clearInterval(s.watchdog);
 
-  const { sessionId, segmentId, recorders, streams, audioCtx, pendingWrites } = state;
+  const { sessionId, segmentId, recorders, streams, audioCtx, pendingWrites } = s;
 
   await Promise.all(
     recorders.map(
@@ -306,15 +333,27 @@ async function stop(canceled: boolean): Promise<void> {
   // wait for it, or a clean stop can silently drop the last second.
   await Promise.all(pendingWrites);
 
-  if (canceled) {
-    await deleteSession(sessionId);
-  } else {
-    await finalizeSegment(segmentId, elapsed());
-    await updateSession(sessionId, { status: 'complete' });
+  // The bookkeeping rows are the last three writes of a run and they go to the
+  // same store the chunks did, so the disk that filled mid-recording fails them
+  // too. Teardown must not depend on them: an unguarded rejection here skips
+  // ENGINE_STOPPED, leaves `stopping` true and `state` set, and every later
+  // OFFSCREEN_STOP returns at the guard above — REC badge on, bar up, Stop and
+  // Cancel inert until the extension is reloaded. The chunks are already on
+  // disk either way; a session left at `status: 'recording'` is offered as a
+  // crash to recover, which is the right outcome for a half-written row.
+  try {
+    if (canceled) {
+      await deleteSession(sessionId);
+    } else {
+      await finalizeSegment(segmentId, elapsed());
+      await updateSession(sessionId, { status: 'complete' });
+    }
+  } catch {
+    reportWriteFailed(s, 'media');
+  } finally {
+    send({ type: 'ENGINE_STOPPED', sessionId, canceled });
+    state = null;
   }
-
-  send({ type: 'ENGINE_STOPPED', sessionId, canceled });
-  state = null;
 }
 
 chrome.runtime.onMessage.addListener((message: unknown) => {

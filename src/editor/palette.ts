@@ -1,21 +1,37 @@
 /**
- * Annotation colour helpers.
+ * The annotation palette, and the colour helpers around it.
  *
- * Screen readers need a word for each swatch, and a custom colour needs a short
- * memory so the user can reach it again. Both are pure data, so they sit apart
- * from the style bar component.
+ * This is the one place a swatch is defined. The colours come from
+ * src/shared/tokens.css (via the generated design-tokens module) so the style
+ * bar's CSS and the canvas paint the same values; the name beside each one is
+ * what a screen reader reads, and what a custom colour is measured against.
  */
+import { tokens } from '../shared/design-tokens';
+import { t } from './i18n';
 
-export const COLOR_NAMES: Record<string, string> = {
-  '#ff3b30': 'Red',
-  '#ff9500': 'Orange',
-  '#ffcc00': 'Yellow',
-  '#34c759': 'Green',
-  '#0071e3': 'Blue',
-  '#af52de': 'Purple',
-  '#ffffff': 'White',
-  '#1d1d1f': 'Black',
-};
+export interface Swatch {
+  hex: string;
+  /** Read out by assistive tech, so it has to be a word, not a hex string. */
+  name: string;
+}
+
+/** The style bar's swatches, in the order they are drawn and keyed 1..8. */
+export const SWATCHES: readonly Swatch[] = [
+  { hex: tokens.swatchRed, name: t('editorColorRed') },
+  { hex: tokens.swatchOrange, name: t('editorColorOrange') },
+  { hex: tokens.swatchYellow, name: t('editorColorYellow') },
+  { hex: tokens.swatchGreen, name: t('editorColorGreen') },
+  { hex: tokens.swatchBlue, name: t('editorColorBlue') },
+  { hex: tokens.swatchPurple, name: t('editorColorPurple') },
+  { hex: tokens.swatchWhite, name: t('editorColorWhite') },
+  { hex: tokens.swatchBlack, name: t('editorColorBlack') },
+];
+
+export const COLOR_PALETTE: string[] = SWATCHES.map((s) => s.hex);
+
+export const COLOR_NAMES: Record<string, string> = Object.fromEntries(
+  SWATCHES.map((s) => [s.hex, s.name]),
+);
 
 export const MAX_RECENT_COLORS = 5;
 
@@ -29,7 +45,7 @@ export function normalizeHex(value: string): string | null {
 export function colorName(hex: string): string {
   const norm = normalizeHex(hex);
   if (!norm) return hex;
-  return COLOR_NAMES[norm] ?? `Custom color ${norm}`;
+  return COLOR_NAMES[norm] ?? t('editorCustomColorHex', [norm]);
 }
 
 /**

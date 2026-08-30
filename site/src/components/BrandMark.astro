@@ -1,0 +1,41 @@
+---
+/**
+ * The "ink viewfinder" brand mark — same artwork as media/brand-mark.svg and
+ * src/shared/BrandMark.tsx. Brand colors are fixed, not themed: the mark is the
+ * paper tile in both light and dark. One copy for the whole site.
+ */
+interface Props {
+  size?: number;
+  class?: string;
+}
+
+const { size = 26, class: className } = Astro.props;
+---
+
+<svg
+  class={className}
+  width={size}
+  height={size}
+  viewBox="0 0 128 128"
+  aria-hidden="true"
+  focusable="false"
+>
+  <rect x="6" y="6" width="116" height="116" rx="30" fill="#FAFAF7"></rect>
+  <rect
+    x="7.5"
+    y="7.5"
+    width="113"
+    height="113"
+    rx="28.5"
+    fill="none"
+    stroke="#1B1A17"
+    stroke-width="3"
+    opacity="0.14"></rect>
+  <g stroke="#1B1A17" stroke-width="11" stroke-linecap="round" fill="none">
+    <path d="M30 46 v-8 a8 8 0 0 1 8 -8 h8"></path>
+    <path d="M82 30 h8 a8 8 0 0 1 8 8 v8"></path>
+    <path d="M98 82 v8 a8 8 0 0 1 -8 8 h-8"></path>
+    <path d="M46 98 h-8 a8 8 0 0 1 -8 -8 v-8"></path>
+  </g>
+  <circle cx="64" cy="64" r="13" fill="#E8503A"></circle>
+</svg>

@@ -5,6 +5,7 @@
 
 @import '../shared/tokens.css';
 @import '../shared/controls.css';
+@import '../shared/ui.css';
 
 * {
   box-sizing: border-box;
@@ -18,7 +19,7 @@ body {
 
 body {
   font-family: var(--font);
-  font-size: 14px;
+  font-size: var(--fs-base);
   line-height: 1.5;
   color: var(--text-1);
   background: var(--surface-2);
@@ -42,56 +43,13 @@ body {
 
 .setup-header h1 {
   margin: 0;
-  font-size: 20px;
+  font-size: var(--fs-xl);
   font-weight: 700;
 }
 
 .setup-intro {
   margin: var(--s-1) 0 0;
   color: var(--text-2);
-}
-
-/* ---- Pin nudge (floats toward Chrome's puzzle menu, top-right) ---- */
-.pin-hint {
-  position: fixed;
-  top: var(--s-3);
-  right: var(--s-4);
-  z-index: 10;
-  display: flex;
-  align-items: flex-start;
-  gap: var(--s-2);
-  max-width: 240px;
-  padding: var(--s-3);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  background: var(--surface-1);
-  box-shadow: var(--sh-md);
-  color: var(--accent);
-}
-
-.pin-arrow {
-  width: 44px;
-  height: 44px;
-  flex: none;
-  transform: translateY(-6px);
-}
-
-.pin-hint-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  color: var(--text-1);
-  font-size: 13px;
-}
-
-.pin-hint-text span {
-  color: var(--text-2);
-}
-
-.pin-hint-done {
-  color: var(--text-1);
-  border-color: color-mix(in srgb, var(--success) 40%, var(--border));
-  background: color-mix(in srgb, var(--success) 14%, var(--surface-1));
 }
 
 /* ---- Trust strip ---- */
@@ -111,7 +69,7 @@ body {
   border-radius: var(--r-full);
   background: var(--surface-1);
   color: var(--text-1);
-  font-size: 13px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   text-decoration: none;
 }
@@ -119,7 +77,7 @@ body {
 .trust-pill svg {
   width: 15px;
   height: 15px;
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 a.trust-pill:hover {
@@ -128,7 +86,7 @@ a.trust-pill:hover {
 
 .trust-hint {
   color: var(--text-2);
-  font-size: 13px;
+  font-size: var(--fs-sm);
 }
 
 .banner {
@@ -138,7 +96,7 @@ a.trust-pill:hover {
 
 .banner-attention {
   background: var(--accent-subtle);
-  color: var(--accent-pressed);
+  color: var(--accent-ink);
 }
 
 .banner-ready {
@@ -148,60 +106,6 @@ a.trust-pill:hover {
   gap: var(--s-3);
   flex-wrap: wrap;
   background: color-mix(in srgb, var(--success) 14%, var(--surface-1));
-}
-
-/* ---- Welcome (hero) view ---- */
-.hero {
-  align-items: center;
-  text-align: center;
-  padding-top: var(--s-6);
-}
-
-.hero h1 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.hero .setup-intro {
-  margin: 0;
-}
-
-.feature-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--s-3);
-  width: 100%;
-  margin: var(--s-3) 0;
-}
-
-.feature {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
-  text-align: left;
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  padding: var(--s-3) var(--s-4);
-}
-
-.feature h2 {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.feature p {
-  margin: 2px 0 0;
-  color: var(--text-2);
-  font-size: 12px;
-}
-
-.btn-hero {
-  padding: var(--s-3) var(--s-5);
-  font-size: 15px;
-  border-radius: var(--r-md);
 }
 
 .setup-rows {
@@ -228,7 +132,7 @@ a.trust-pill:hover {
   flex: none;
   border-radius: var(--r-full);
   background: var(--accent-subtle);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .row-body {
@@ -249,19 +153,19 @@ a.trust-pill:hover {
 
 .row-head h2 {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--fs-base);
   font-weight: 600;
 }
 
 .row-desc {
   color: var(--text-2);
-  font-size: 13px;
+  font-size: var(--fs-sm);
 }
 
 .row-hint {
   margin: var(--s-2) 0 0;
   color: var(--text-2);
-  font-size: 13px;
+  font-size: var(--fs-sm);
 }
 
 .row-recover {
@@ -273,8 +177,8 @@ a.trust-pill:hover {
 
 .tag {
   border-radius: var(--r-full);
-  padding: 2px 10px;
-  font-size: 12px;
+  padding: var(--s-05) 10px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -285,7 +189,7 @@ a.trust-pill:hover {
 
 .tag-required {
   background: var(--accent-subtle);
-  color: var(--accent-pressed);
+  color: var(--accent-ink);
 }
 
 .tag-optional {
@@ -295,22 +199,27 @@ a.trust-pill:hover {
 
 .tag-denied {
   background: color-mix(in srgb, var(--warning) 20%, var(--surface-1));
-  color: var(--danger);
+  color: var(--danger-ink);
 }
 
 .btn-primary {
   border: none;
   border-radius: var(--r-sm);
   padding: var(--s-2) var(--s-4);
-  background: var(--accent);
-  color: #fff;
+  background: var(--accent-ink);
+  color: var(--on-accent);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 
 .btn-primary:hover {
-  background: var(--accent-hover);
+  background: var(--accent-ink-hover);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
 }
 
 .btn-ghost {
@@ -321,10 +230,15 @@ a.trust-pill:hover {
   color: var(--text-1);
   font: inherit;
   cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 
 .btn-ghost:hover {
   background: var(--hover-overlay);
+}
+
+.btn-ghost:active {
+  transform: scale(0.98);
 }
 
 .switch-row {
@@ -332,4 +246,39 @@ a.trust-pill:hover {
   align-items: center;
   gap: var(--s-2);
   cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary,
+  .btn-ghost {
+    transition: none;
+  }
+}
+
+/* Below --bp-sm (tokens.css — a var() cannot appear in this condition, so
+   480px is that token's value spelled out; tests/unit/breakpoint-guard.test.ts
+   checks the two stay equal) the 40px icon, the heading, the state tag and the
+   row's button share too little width side by side; stack the row instead. */
+@media (max-width: 480px) {
+  .row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/*
+ * Forced colors discards every author background, and .tag-granted /
+ * -required / -optional / -denied and .banner-attention / -ready are
+ * distinguished by background alone — so all four tags and both banners
+ * flatten to the page's own surface and stop reading as chips at all.
+ * Which state each one is stays legible without this block: every tag and
+ * banner spells its state in text (setupGranted, setupDeniedTag, ...), so
+ * the job here is the boundary, not re-encoding the colour. A system-palette
+ * border restores it.
+ */
+@media (forced-colors: active) {
+  .tag,
+  .banner {
+    border: 1px solid CanvasText;
+  }
 }

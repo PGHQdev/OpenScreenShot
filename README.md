@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/brand-mark.svg" alt="" width="88" height="88" />
+<img src="media/brand-mark.svg" alt="" width="88" height="88" />
 
 # OpenScreenShot
 
@@ -13,12 +13,13 @@
 
 [**➜ Add to Chrome**](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp) &nbsp;·&nbsp; [Website](https://openscreenshot.app) &nbsp;·&nbsp; [Docs](https://openscreenshot.app/docs/) &nbsp;·&nbsp; [Roadmap](./ROADMAP.md)
 
-<img src="docs/assets/demo.gif" alt="A full page is captured, annotated in the editor, and exported as PNG" width="860" />
+<img src="media/demo.gif" alt="A full page is captured, annotated in the editor, and exported as PNG" width="860" />
 
 </div>
 
-Most screenshot extensions want an account, a watermark, or your browsing history.
-This one runs on your machine and wants nothing: no server, no telemetry, works offline.
+Most screenshot extensions want an account, your browsing history, or a logo in the
+corner of your image. This one runs on your machine and wants nothing: no server, no
+telemetry, works offline.
 
 Capture a full page, the visible area, or a region, then annotate and export.
 Record the current tab when a still image is not enough.
@@ -55,7 +56,7 @@ browser storage until you export or delete them. Full policy: [PRIVACY.md](./PRI
 | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `activeTab`                      | Access the current tab — only when you click the extension, use a shortcut, or pick a capture from the right-click menu                        |
 | `scripting`                      | Inject on-demand page functions for scroll-and-stitch, region selection, the quick-mode clipboard write, and the in-page recording control bar |
-| `storage` (+ `unlimitedStorage`) | Settings, onboarding state, the last region rect, editing drafts, and stashing large full-page PNGs and recording chunks for the editor        |
+| `storage` (+ `unlimitedStorage`) | Settings, the last region rect, editing drafts, a parked Record click, and stashing large full-page PNGs and recording chunks for the editor   |
 | `downloads`                      | Save exports, quick-mode captures, and recording exports to your Downloads folder                                                              |
 | `contextMenus`                   | Add one capture submenu to the page right-click menu                                                                                           |
 | `clipboardWrite`                 | Copy a screenshot from the editor or from quick mode; it never reads the clipboard                                                             |

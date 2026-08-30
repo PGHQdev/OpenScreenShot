@@ -1,6 +1,8 @@
 /*
- * Shared form controls for the popup and editor surfaces.
- * Tokens come from tokens.css (imported by each surface's stylesheet).
+ * Shared form controls: native <input> elements restyled with tokens.css
+ * values, imported by all four surfaces. Kept separate from ui.css, which
+ * holds chrome built from <div>/<button> markup instead of overridden
+ * native controls — a different kind of seam, so a different file.
  */
 
 /* ---- Toggle switch (styled native checkbox) ---- */
@@ -17,30 +19,36 @@ input[type='checkbox'].switch {
   background: var(--surface-3);
   cursor: pointer;
   transition:
-    background 150ms ease-out,
-    border-color 150ms ease-out;
+    background var(--dur-mid) var(--ease-out),
+    border-color var(--dur-mid) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 input[type='checkbox'].switch::before {
   content: '';
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: var(--s-05);
+  left: var(--s-05);
   width: 14px;
   height: 14px;
   border-radius: var(--r-full);
   background: #fff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-  transition: transform 150ms ease-out;
+  transition: transform var(--dur-mid) var(--ease-out);
 }
 
 input[type='checkbox'].switch:checked {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--accent-ink);
+  border-color: var(--accent-ink);
 }
 
 input[type='checkbox'].switch:checked::before {
+  background: var(--on-accent);
   transform: translateX(14px);
+}
+
+input[type='checkbox'].switch:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 input[type='checkbox'].switch:disabled {
@@ -59,3 +67,162 @@ input[type='checkbox'].switch:focus-visible {
     transition: none;
   }
 }
+
+/*
+ * The switch carries its state three ways in ordinary rendering — track
+ * colour, knob position, knob-against-track contrast — but two of the three
+ * are colour, and the third is only visible because of the second. Under
+ * forced colors the track's --surface-3/--accent-ink pair flattens to one
+ * system colour in both states, and the knob's separation from the track is
+ * a box-shadow, which forced colors drops outright (the same trap
+ * ui.css:205 documents). The knob then matches the track and disappears, so
+ * a checked switch and an unchecked one render identically.
+ *
+ * transform: translateX(14px) is not a colour property and still applies,
+ * so the knob is already in the right place — it just cannot be seen.
+ * Restoring its contrast against the track is therefore the whole fix, and
+ * position becomes a real non-colour signal. Highlight/HighlightText is the
+ * same "this one is chosen" pair the surface stylesheets use; unchecked
+ * stays on the ButtonFace/ButtonText an ordinary control renders with, so
+ * the two states differ in track colour as well as knob position.
+ */
+@media (forced-colors: active) {
+  input[type='checkbox'].switch {
+    background-color: ButtonFace;
+    border-color: ButtonText;
+  }
+
+  input[type='checkbox'].switch::before {
+    background-color: ButtonText;
+  }
+
+  input[type='checkbox'].switch:checked {
+    background-color: Highlight;
+    border-color: Highlight;
+  }
+
+  input[type='checkbox'].switch:checked::before {
+    background-color: HighlightText;
+  }
+}
+
+/* ---- Range slider (styled native range input) ---- */
+/*
+ * appearance: none is required to draw a themed track and thumb at all — a
+ * native slider ignores author background/border on its track and thumb
+ * otherwise — but it also opts the control out of accent-color, so track,
+ * thumb, focus, hover and disabled are all drawn by hand below rather than
+ * left to the one-line accent-color fix. -webkit-/-moz- rules are kept
+ * paired throughout: a slider with a styled track and a default thumb (or
+ * the reverse) is the half-done state to avoid.
+ *
+ * Moved here from editor.css (task-21) once the popup and recorder sliders
+ * needed the same treatment (task-46) — three callers of one `.range`
+ * class is what this file already exists for. Each surface may still
+ * override .range's own width locally (editor's .range.stylebar-range,
+ * popup's 150px), which a plain .range declared here does not disturb: a
+ * later same-specificity rule in the importing file's own body still wins.
+ */
+.range {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: var(--r-full);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+}
+.range::-moz-range-track {
+  height: 4px;
+  border-radius: var(--r-full);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+}
+/* Centres a 16px (border included) thumb on the 6px (border included)
+   track: (6 - 20) / 2 — Firefox's ::-moz-range-thumb needs no margin, it
+   centres on the track by default. */
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -7px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  border: 2px solid var(--surface-1);
+  box-shadow: 0 0 0 1px var(--border);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  border: 2px solid var(--surface-1);
+  box-shadow: 0 0 0 1px var(--border);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.range:hover::-webkit-slider-thumb {
+  background: var(--accent-ink-hover);
+}
+.range:hover::-moz-range-thumb {
+  background: var(--accent-ink-hover);
+}
+/* The UA's own focus ring would draw on the host input's box, which is
+   transparent and the wrong size — moved to the thumb, the part a sighted
+   user actually reads as "the control". */
+.range:focus-visible {
+  outline: none;
+}
+.range:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+.range:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+.range:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Kept out of any shared selector list on purpose: Chromium does not
+     recognise ::-moz-range-thumb, and an unrecognised selector in a
+     comma-separated list invalidates the whole rule (not just its own
+     branch) — the trap task-21-report.md hit, dropping reduced-motion
+     from six unrelated editor.css selectors at once. Each vendor prefix
+     gets its own rule instead. */
+  .range::-webkit-slider-thumb {
+    transition: none;
+  }
+  .range::-moz-range-thumb {
+    transition: none;
+  }
+}
+
+/*
+ * No rule needed here for .range's own track/thumb under forced-colors:
+ * verified live on the editor (task-21-report.md) and again on the popup
+ * and recorder (task-46-report.md), Chromium repaints input[type='range']'s
+ * track and thumb under forced-colors on its own — appearance: none does
+ * not hand that off to author CSS the way it does for input[type='checkbox']
+ * (.switch, above), so a background-color declared on
+ * ::-webkit-slider-thumb/::-webkit-slider-runnable-track here is inert, not
+ * a fix; the two stay visually distinct without one. forced-color-adjust:
+ * none would turn that off and substitute this file's own
+ * --accent/--surface-3 for the user's chosen palette, which is the wrong
+ * direction for a control whose colour carries no information of its own
+ * (unlike .swatch's fill).
+ */

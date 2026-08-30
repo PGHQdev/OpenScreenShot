@@ -6,12 +6,15 @@
  * added in the next commit; this covers PNG/JPEG/WebP.
  */
 
+import { tokens } from '../shared/design-tokens';
+import { t } from './i18n';
+
 export type ImageFormat = 'png' | 'jpeg' | 'webp';
 
 export const IMAGE_FORMATS: { id: ImageFormat; label: string; hint: string }[] = [
-  { id: 'png', label: 'PNG', hint: 'Lossless · transparency' },
-  { id: 'jpeg', label: 'JPEG', hint: 'Smaller · no transparency' },
-  { id: 'webp', label: 'WebP', hint: 'Modern · small + quality' },
+  { id: 'png', label: t('editorFormatPngLabel'), hint: t('editorFormatPngHint') },
+  { id: 'jpeg', label: t('editorFormatJpegLabel'), hint: t('editorFormatJpegHint') },
+  { id: 'webp', label: t('editorFormatWebpLabel'), hint: t('editorFormatWebpHint') },
 ];
 
 /** Convert a canvas to a data URL for the given format. JPEG gets a white background. */
@@ -28,7 +31,7 @@ export function canvasToDataUrl(
     tmp.height = canvas.height;
     const ctx = tmp.getContext('2d');
     if (!ctx) return canvas.toDataURL('image/jpeg', quality);
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = tokens.canvasPaper;
     ctx.fillRect(0, 0, tmp.width, tmp.height);
     ctx.drawImage(canvas, 0, 0);
     return tmp.toDataURL('image/jpeg', quality);

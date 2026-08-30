@@ -19,6 +19,20 @@ export interface PdfOptions {
   marginMm: number;
 }
 
+export const MIN_PDF_MARGIN_MM = 0;
+export const MAX_PDF_MARGIN_MM = 40;
+
+/**
+ * Hold a typed margin inside the declared 0-40mm range. Non-finite input (an
+ * emptied field parses to 0 via Number(''), which is already in range and
+ * needs no fallback here — this guards the harder case, a value like Infinity
+ * that would otherwise reach the page-layout math below unclamped.
+ */
+export function clampPdfMargin(value: number): number {
+  if (!Number.isFinite(value)) return MIN_PDF_MARGIN_MM;
+  return Math.round(Math.min(MAX_PDF_MARGIN_MM, Math.max(MIN_PDF_MARGIN_MM, value)));
+}
+
 const PAGE_SIZES_MM: Record<'a4' | 'letter', [number, number]> = {
   a4: [210, 297],
   letter: [215.9, 279.4],
@@ -30,10 +44,20 @@ const OVERLAP_MM = 5;
 
 const pt = (mm: number) => mm * MM_TO_PT;
 
+/** Reported once per page from the multi-page loop below — the only stage in
+ * this module with real, discrete work to report. `total` is the loop's own
+ * page-count estimate; the other two page-sizing strategies never call this
+ * (a single toDataURL-style pass has no stage in between to report). */
+export interface PdfExportProgress {
+  page: number;
+  total: number;
+}
+
 export async function exportPdf(
   canvas: HTMLCanvasElement,
   opts: PdfOptions,
   filename: string,
+  onProgress?: (progress: PdfExportProgress) => void,
 ): Promise<void> {
   const imgW = canvas.width;
   const imgH = canvas.height;
@@ -103,6 +127,29 @@ export async function exportPdf(
         wPt: pt(contentW),
         hPt: pt(srcH * mmPerPx),
       },
+    });
+    onProgress?.({ page: pages.length, total: pageCount });
+    // Slicing a tile is synchronous, so without a yield here the whole loop
+    // runs in one microtask burst and every onProgress call above lands
+    // between two paints — real numbers that never actually get drawn. A
+    // bare rAF wait would fix that while the tab is visible, but Chrome
+    // never runs rAF callbacks while a tab is hidden — a plain rAF yield
+    // here would stall the whole export on "Exporting page N of M…" until
+    // the user switches back, with no way out. Racing it against a short
+    // timer (setTimeout keeps firing, just possibly throttled, while
+    // hidden) means a foregrounded tab still gets the one-frame paint
+    // guarantee (rAF wins in ~16ms), and a backgrounded one still finishes
+    // the export instead of hanging on it.
+    await new Promise((resolve) => {
+      let rafId = 0;
+      let timerId = 0;
+      const done = () => {
+        cancelAnimationFrame(rafId);
+        clearTimeout(timerId);
+        resolve(undefined);
+      };
+      rafId = requestAnimationFrame(done);
+      timerId = window.setTimeout(done, 50);
     });
   }
   await savePdf(pages, filename);

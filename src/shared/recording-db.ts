@@ -240,12 +240,31 @@ export function appendChunk(
   });
 }
 
-export function readChunks(segmentId: string, kind: ChunkKind): Promise<Blob[]> {
-  return tx<ChunkRecord[]>(['chunks'], 'readonly', (t) =>
-    t
+/**
+ * `onChunk`, when given, fires once per chunk as it comes off the cursor —
+ * before the whole read settles — so a caller with a known total (see
+ * `countChunks`) can report real progress through a multi-hundred-MB read
+ * instead of only learning it finished.
+ */
+export function readChunks(
+  segmentId: string,
+  kind: ChunkKind,
+  onChunk?: (blob: Blob) => void,
+): Promise<Blob[]> {
+  const blobs: Blob[] = [];
+  return tx<void>(['chunks'], 'readonly', (t) => {
+    const req = t
       .objectStore('chunks')
-      .getAll(IDBKeyRange.bound([segmentId, kind, 0], [segmentId, kind, Infinity])),
-  ).then((records) => records.map((r) => r.blob));
+      .openCursor(IDBKeyRange.bound([segmentId, kind, 0], [segmentId, kind, Infinity]));
+    req.onsuccess = () => {
+      const cursor = req.result;
+      if (!cursor) return;
+      const blob = (cursor.value as ChunkRecord).blob;
+      blobs.push(blob);
+      onChunk?.(blob);
+      cursor.continue();
+    };
+  }).then(() => blobs);
 }
 
 export function countChunks(segmentId: string, kind: ChunkKind): Promise<number> {
@@ -254,6 +273,28 @@ export function countChunks(segmentId: string, kind: ChunkKind): Promise<number>
       .objectStore('chunks')
       .count(IDBKeyRange.bound([segmentId, kind, 0], [segmentId, kind, Infinity])),
   );
+}
+
+/**
+ * Total bytes of a segment's chunks of one kind, without holding the blobs
+ * themselves — a plain running sum over the cursor, the same shape as
+ * `countChunks`. The session list reads this per row; a chunk's `Blob.size`
+ * is known from its IndexedDB record without reading its bytes, so this
+ * costs about what `countChunks` does, not what `readChunks` does.
+ */
+export function chunkBytes(segmentId: string, kind: ChunkKind): Promise<number> {
+  let total = 0;
+  return tx<void>(['chunks'], 'readonly', (t) => {
+    const req = t
+      .objectStore('chunks')
+      .openCursor(IDBKeyRange.bound([segmentId, kind, 0], [segmentId, kind, Infinity]));
+    req.onsuccess = () => {
+      const cursor = req.result;
+      if (!cursor) return;
+      total += (cursor.value as ChunkRecord).blob.size;
+      cursor.continue();
+    };
+  }).then(() => total);
 }
 
 export function appendEvents(segmentId: string, seq: number, events: CursorEvent[]): Promise<void> {

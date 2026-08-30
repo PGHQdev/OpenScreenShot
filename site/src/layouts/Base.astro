@@ -1,0 +1,301 @@
+---
+import BrandMark from '../components/BrandMark.astro';
+import ogCard from '../assets/og-card.png';
+import '../styles/tokens.css';
+import '../styles/fonts.css';
+import '../styles/base.css';
+
+export type NavLink = {
+  href: string;
+  label: string;
+  /** Adds target="_blank" rel="noopener". Off-site links only. */
+  external?: boolean;
+};
+
+export interface Props {
+  title: string;
+  description: string;
+  /** Canonical path, leading and trailing slash included: '/', '/docs/'. */
+  path: string;
+  /** Site-absolute path to the social card. Pairs with ogImageAlt. */
+  ogImage?: string;
+  /** Alt text for ogImage. Required by og:image:alt whenever ogImage is overridden. */
+  ogImageAlt?: string;
+  pageType?: 'website' | 'article';
+  /**
+   * Nav entries between the brand and the install CTA. The homepage passes
+   * same-page anchors only; sub-pages pass cross-page links.
+   */
+  navLinks?: NavLink[];
+  /** Preloads the display italic. Set it on pages whose hero type uses it. */
+  preloadItalic?: boolean;
+}
+
+const STORE_URL = 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp';
+const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
+const OG_DEFAULT = {
+  src: ogCard.src,
+  width: String(ogCard.width),
+  height: String(ogCard.height),
+  alt: 'OpenScreenShot: full page screenshot and annotation for Chrome. Free, open source, and 100% local.',
+};
+
+const {
+  title,
+  description,
+  path,
+  ogImage = OG_DEFAULT.src,
+  ogImageAlt = OG_DEFAULT.alt,
+  pageType = 'website',
+  navLinks = [],
+  preloadItalic = false,
+} = Astro.props;
+
+const canonical = new URL(path, Astro.site).href;
+const ogImageUrl = new URL(ogImage, Astro.site).href;
+const year = new Date().getFullYear();
+const isHome = path === '/';
+
+const footLinks: NavLink[] = [
+  { href: '/docs/', label: 'Docs' },
+  { href: '/support/', label: 'Support & FAQ' },
+  { href: '/roadmap/', label: 'Roadmap' },
+  { href: '/privacy/', label: 'Privacy' },
+  { href: '/cool-stuff/', label: 'Cool stuff' },
+  { href: REPO_URL, label: 'GitHub', external: true },
+  { href: `${REPO_URL}/blob/main/LICENSE`, label: 'MIT License', external: true },
+  { href: 'https://ko-fi.com/T7A624DAY7', label: 'Buy me a coffee', external: true },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <meta name="theme-color" content="#f5f3ee" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#141414" media="(prefers-color-scheme: dark)" />
+
+    <meta property="og:type" content={pageType} />
+    <meta property="og:site_name" content="OpenScreenShot" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:alt" content={ogImageAlt} />
+    {
+      ogImage === OG_DEFAULT.src && (
+        <>
+          <meta property="og:image:width" content={OG_DEFAULT.width} />
+          <meta property="og:image:height" content={OG_DEFAULT.height} />
+        </>
+      )
+    }
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+    <meta name="twitter:image:alt" content={ogImageAlt} />
+
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <link
+      rel="preload"
+      href="/fonts/instrument-serif-latin-400-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    {
+      preloadItalic && (
+        <link
+          rel="preload"
+          href="/fonts/instrument-serif-latin-400-italic.woff2"
+          as="font"
+          type="font/woff2"
+          crossorigin
+        />
+      )
+    }
+
+    <slot name="head" />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-head">
+      <nav class="container-wide nav" aria-label="Primary">
+        <a class="nav-brand" href={isHome ? '#top' : '/'}>
+          <BrandMark size={26} />
+          OpenScreenShot
+        </a>
+        <ul class="nav-links">
+          {
+            navLinks.map((link) => (
+              <li>
+                <a
+                  href={link.href}
+                  target={link.external ? '_blank' : undefined}
+                  rel={link.external ? 'noopener' : undefined}
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))
+          }
+          <li>
+            <a class="btn nav-cta" href={STORE_URL} target="_blank" rel="noopener">Install</a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="site-foot">
+      <div class="container-wide">
+        <nav class="foot-links" aria-label="Footer">
+          {
+            footLinks.map((link) => (
+              <a
+                href={link.href}
+                target={link.external ? '_blank' : undefined}
+                rel={link.external ? 'noopener' : undefined}
+              >
+                {link.label}
+              </a>
+            ))
+          }
+        </nav>
+        <p class="foot-also">
+          Also by @PGHQdev:{' '}
+          <a href="https://minimalistnotes.com" target="_blank" rel="noopener">Minimalist Notes</a>,
+          distraction-free notes ·{' '}
+          <a href="https://musing.wiki" target="_blank" rel="noopener">Musing</a>, a quote on every
+          new tab
+        </p>
+        <p class="foot-bottom">© {year} OpenScreenShot @PGHQdev</p>
+      </div>
+    </footer>
+
+    <slot name="body-end" />
+  </body>
+</html>
+
+<style>
+  .site-head {
+    position: relative;
+    z-index: 10;
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+    flex-wrap: wrap;
+    padding-block: var(--s-4);
+  }
+
+  .nav-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    color: var(--ink);
+    font-size: var(--fs-md);
+    font-weight: 700;
+    letter-spacing: var(--tr-tight);
+    text-decoration: none;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: var(--s-5);
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--fs-sm);
+  }
+
+  .nav-links a {
+    color: var(--ink-2);
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .nav-links a:hover {
+    color: var(--ink);
+  }
+
+  .nav-cta {
+    min-height: 34px;
+    padding: 0 var(--s-4);
+    border-color: var(--border);
+    color: var(--ink);
+    font-size: var(--fs-sm);
+  }
+
+  .nav-cta:hover {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+
+  .site-foot {
+    margin-top: var(--s-8);
+    padding-block: var(--s-6);
+    border-top: 1px solid var(--rule);
+    color: var(--ink-3);
+    font-size: var(--fs-sm);
+  }
+
+  .foot-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-5);
+    margin-bottom: var(--s-4);
+  }
+
+  .foot-links a {
+    color: var(--ink-2);
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .foot-links a:hover {
+    color: var(--accent-ink);
+    text-decoration: underline;
+  }
+
+  .foot-also,
+  .foot-bottom {
+    margin: 0 0 var(--s-2);
+    max-width: var(--max-w);
+  }
+
+  .foot-bottom {
+    margin-bottom: 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.04em;
+  }
+
+  @media (max-width: 620px) {
+    .nav-links {
+      gap: var(--s-4);
+    }
+  }
+</style>

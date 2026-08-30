@@ -1,13 +1,18 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   createShapeDraft,
+  DUPLICATE_OFFSET,
+  duplicateAnnotations,
   extendDraft,
+  renumberSteps,
   shouldCommit,
   snapTo45,
   squareDelta,
   TOOL_LIST,
 } from '../../src/editor/tools';
-import type { Annotation } from '../../src/editor/annotations';
+import { bbox, type Annotation } from '../../src/editor/annotations';
 
 describe('squareDelta', () => {
   it('grows the short axis to match the long one', () => {
@@ -124,6 +129,18 @@ describe('blur redaction modes', () => {
   });
 });
 
+describe('blur strength', () => {
+  it('defaults to the fixed 8 when no strength is given', () => {
+    const draft = createShapeDraft('blur', { x: 0, y: 0 }, '#ff3b30', 6);
+    expect(draft).toMatchObject({ type: 'blur', strength: 8 });
+  });
+
+  it('drafts a blur carrying the chosen strength, the style bar current default', () => {
+    const draft = createShapeDraft('blur', { x: 0, y: 0 }, '#ff3b30', 6, { blurStrength: 20 });
+    expect(draft).toMatchObject({ type: 'blur', strength: 20 });
+  });
+});
+
 describe('extendDraft with shift held', () => {
   function draft(type: 'rect' | 'line' | 'arrow' | 'blur'): Annotation {
     return createShapeDraft(type, { x: 0, y: 0 }, '#ff3b30', 6);
@@ -176,5 +193,109 @@ describe('eyedropper tool', () => {
     expect(dropper?.shortcut).toBe('I');
     const letters = TOOL_LIST.map((t) => t.shortcut);
     expect(new Set(letters).size).toBe(letters.length);
+  });
+});
+
+describe('duplicateAnnotations', () => {
+  const box = (id: string, x: number): Annotation => ({
+    id,
+    type: 'rect',
+    x,
+    y: 0,
+    w: 20,
+    h: 20,
+    stroke: '#f00',
+    strokeWidth: 4,
+    fill: null,
+  });
+  const list = [box('a', 0), box('b', 100), box('c', 200)];
+
+  it('copies only the ids it was given, in layer order', () => {
+    const copies = duplicateAnnotations(list, ['c', 'a']);
+    expect(copies).toHaveLength(2);
+    expect(copies.map((a) => (a.type === 'rect' ? a.x : -1))).toEqual([
+      DUPLICATE_OFFSET,
+      200 + DUPLICATE_OFFSET,
+    ]);
+  });
+
+  it('offsets each copy so it does not hide under its original', () => {
+    const [copy] = duplicateAnnotations(list, ['b']);
+    expect(bbox(copy)).toEqual({
+      x: 100 + DUPLICATE_OFFSET,
+      y: DUPLICATE_OFFSET,
+      w: 20,
+      h: 20,
+    });
+    expect(DUPLICATE_OFFSET).toBeGreaterThan(0);
+  });
+
+  it('gives every copy a new id, and leaves the originals alone', () => {
+    const copies = duplicateAnnotations(list, ['a', 'b']);
+    const fresh = new Set(copies.map((a) => a.id));
+    expect(fresh.size).toBe(2);
+    expect([...fresh].some((id) => id === 'a' || id === 'b')).toBe(false);
+    expect(list.map((a) => (a.type === 'rect' ? a.x : -1))).toEqual([0, 100, 200]);
+  });
+
+  it('copies nothing when nothing is selected', () => {
+    expect(duplicateAnnotations(list, [])).toEqual([]);
+    expect(duplicateAnnotations(list, ['gone'])).toEqual([]);
+  });
+
+  it('carries a step badge across, for the caller to renumber', () => {
+    const step: Annotation = { id: 's', type: 'step', x: 10, y: 10, r: 12, n: 3, color: '#f00' };
+    const [copy] = duplicateAnnotations([step], ['s']);
+    expect(copy).toMatchObject({ type: 'step', x: 10 + DUPLICATE_OFFSET, n: 3 });
+    expect(renumberSteps([step, copy]).map((a) => (a.type === 'step' ? a.n : 0))).toEqual([1, 2]);
+  });
+});
+
+describe('cut tool', () => {
+  it('is in the toolbar with a free shortcut letter', () => {
+    const cut = TOOL_LIST.find((t) => t.id === 'cut');
+    expect(cut).toBeDefined();
+    expect(cut?.shortcut).toBe('X');
+    const letters = TOOL_LIST.map((t) => t.shortcut);
+    expect(new Set(letters).size).toBe(letters.length);
+  });
+
+  /**
+   * The tool rail is not the only thing in the editor that claims a bare
+   * letter: useEditor's window keydown tests a few of its own before it ever
+   * looks at TOOL_LIST, and the first match wins, so a tool that took one of
+   * those letters would simply never fire. The letters are read out of the
+   * source rather than copied here, so a binding added later is checked too.
+   *
+   * All three spellings the file uses are collected — `toUpperCase() === 'F'`,
+   * the plain `e.key === 'z'`, and `e.code === 'KeyD'` — and one whose condition requires a
+   * modifier is passed over, because a chord cannot collide with a bare
+   * letter. Negations are stripped first: the fit binding reads
+   * `!isMod(e) && !e.altKey && ...`, which names the same modifiers it is
+   * refusing.
+   */
+  it('takes no letter the window keydown already claims before the tool rail', () => {
+    const source = readFileSync(join(process.cwd(), 'src/editor/useEditor.ts'), 'utf8');
+    const claimed: string[] = [];
+    for (const line of source.split('\n')) {
+      const letters = [
+        ...line.matchAll(
+          /(?:toUpperCase\(\) === '([A-Za-z])'|e\.key === '([A-Za-z])'|e\.code === 'Key([A-Za-z])')/g,
+        ),
+      ].map((m) => (m[1] ?? m[2] ?? m[3]).toUpperCase());
+      if (letters.length === 0) continue;
+      const required = line.replace(/![A-Za-z.()]+/g, '');
+      if (/isMod\(e\)|metaKey|ctrlKey|altKey/.test(required)) continue;
+      claimed.push(...letters);
+    }
+    // F fits the view today. If this ever comes back empty the guard has
+    // stopped guarding, so the count is asserted as well as the overlap.
+    expect(claimed).toContain('F');
+    // ...and the modifier filter really is filtering: ⌘Z and ⌥D are both in
+    // that file, in two of the three spellings.
+    expect(claimed).not.toContain('Z');
+    expect(claimed).not.toContain('D');
+    const letters = new Set(TOOL_LIST.map((t) => t.shortcut));
+    expect(claimed.filter((letter) => letters.has(letter))).toEqual([]);
   });
 });
