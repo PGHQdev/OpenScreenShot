@@ -25,7 +25,7 @@
     "site:build": "astro build --root site",
     "site:dev": "astro dev --root site",
     "site:preview": "wrangler dev",
-    "site:deploy": "npm run site:build && wrangler deploy",
+    "site:deploy": "wrangler deploy",
     "shots": "node scripts/shots/render.mjs",
     "smoke:a11y": "node tests/browser/a11y-smoke.mjs",
     "smoke:editor": "node tests/browser/editor-keyboard-smoke.mjs",

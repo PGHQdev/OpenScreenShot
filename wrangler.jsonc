@@ -2,6 +2,12 @@
   "name": "openscreenshot",
   "compatibility_date": "2026-07-27",
   "main": "site-worker.js",
+  // docs/ is Astro's outDir and is git-ignored, so a bare `wrangler deploy`
+  // (what Workers Builds runs) has nothing to upload. Wrangler runs this
+  // before deploy and before `wrangler dev`.
+  "build": {
+    "command": "npm run site:build",
+  },
   "assets": {
     "directory": "./docs",
     "binding": "ASSETS",
