@@ -359,15 +359,33 @@ async function scan(page, label) {
     `${label}: ${stats.elements} DOM elements, ${stats.controls} interactive controls (populated, not empty)`,
   );
 
-  const violations = await page.evaluate(async () => {
-    const result = await window.axe.run(document, { resultTypes: ['violations'] });
-    return result.violations.map((v) => ({
-      id: v.id,
-      impact: v.impact ?? 'minor',
-      help: v.help,
-      nodes: v.nodes.map((n) => n.target.join(' ')),
-    }));
+  const scanned = await page.evaluate(async () => {
+    // target-size (WCAG 2.2 AA, 2.5.8) is `enabled: false` by default in
+    // axe-core 4.13, so an unconfigured run silently skips the one rule that
+    // covers the 24x24 minimum the swatches, width buttons and trim handles
+    // were sized to. Turning it on is what makes a revert of those sizes fail.
+    const result = await window.axe.run(document, {
+      resultTypes: ['violations'],
+      rules: { 'target-size': { enabled: true } },
+    });
+    return {
+      // Proof the rule above really ran: `resultTypes` truncates the node
+      // lists of everything that is not a violation but still reports which
+      // rules were evaluated, so an option that stopped taking effect (or a
+      // rule axe renamed) shows up here rather than as a quiet green.
+      evaluated: [...result.violations, ...result.passes, ...result.incomplete].some(
+        (r) => r.id === 'target-size',
+      ),
+      violations: result.violations.map((v) => ({
+        id: v.id,
+        impact: v.impact ?? 'minor',
+        help: v.help,
+        nodes: v.nodes.map((n) => n.target.join(' ')),
+      })),
+    };
   });
+  assert(scanned.evaluated, `${label}: axe evaluated the target-size rule (WCAG 2.5.8)`);
+  const violations = scanned.violations;
 
   let unallowedCount = 0;
   let moderateCount = 0;
