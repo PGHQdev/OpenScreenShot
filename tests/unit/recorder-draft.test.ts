@@ -26,7 +26,7 @@ describe('defaultRecorderDraft', () => {
     expect(d.zoomBlocks).toEqual([]);
     expect(d.autoZoomDone).toBe(false);
     expect(d.trims).toEqual({});
-    expect(d.ripple).toBe(true);
+    expect(d.cursor).toBe('ripple');
     expect(d.volumes).toEqual({ tab: 1, mic: 1 });
     expect(d.bubble).toEqual({ corner: 'br', x: 0.85, y: 0.85, size: 0.22, hidden: false });
     expect(d.frame).toEqual(frameToSettings({ ...DEFAULT_FRAME, enabled: false }));
@@ -40,7 +40,7 @@ describe('parseRecorderDraft', () => {
       zoomBlocks: [block],
       autoZoomDone: true,
       trims: { seg1: { start: 100, end: 200 } },
-      ripple: false,
+      cursor: 'hidden',
       volumes: { tab: 0.5, mic: 0.75 },
       bubble: { corner: 'tl', x: 0.1, y: 0.2, size: 0.3, hidden: true },
       savedAt: 1234,
@@ -102,13 +102,48 @@ describe('parseRecorderDraft', () => {
   });
 });
 
-describe('pointer', () => {
-  it('defaults on', () => expect(defaultRecorderDraft().pointer).toBe(true));
-  it('parses a missing pointer as on (pre-pointer drafts)', () => {
-    const stored = makeDraft() as { pointer?: unknown };
-    delete stored.pointer;
-    expect(parseRecorderDraft(stored)?.pointer).toBe(true);
+describe('cursor', () => {
+  it('round-trips every mode', () => {
+    expect(parseRecorderDraft(makeDraft({ cursor: 'hidden' }))?.cursor).toBe('hidden');
+    expect(parseRecorderDraft(makeDraft({ cursor: 'shown' }))?.cursor).toBe('shown');
+    expect(parseRecorderDraft(makeDraft({ cursor: 'ripple' }))?.cursor).toBe('ripple');
   });
-  it('round-trips pointer off', () =>
-    expect(parseRecorderDraft(makeDraft({ pointer: false }))?.pointer).toBe(false));
+
+  it('falls back to the default mode on an unrecognised value', () => {
+    const raw = { ...makeDraft(), cursor: 'blink' };
+    expect(parseRecorderDraft(raw)?.cursor).toBe('ripple');
+  });
+
+  // Pre-merge drafts (task 38 and earlier) stored `pointer`/`ripple` as two
+  // independent booleans. The merged control has no state for "cursor
+  // hidden, but still show a click ripple" — the one combination below with
+  // no direct equivalent — so every one of the four legacy combinations has
+  // to land on a *stated* mode, never silently dropped.
+  describe('migrates a legacy pointer/ripple draft', () => {
+    function legacy(pointer: boolean, ripple: boolean) {
+      const { cursor: _cursor, ...rest } = makeDraft();
+      return { ...rest, pointer, ripple };
+    }
+
+    it('pointer true, ripple true -> ripple (both shown)', () => {
+      expect(parseRecorderDraft(legacy(true, true))?.cursor).toBe('ripple');
+    });
+
+    it('pointer true, ripple false -> shown (cursor only)', () => {
+      expect(parseRecorderDraft(legacy(true, false))?.cursor).toBe('shown');
+    });
+
+    it('pointer false, ripple false -> hidden (neither)', () => {
+      expect(parseRecorderDraft(legacy(false, false))?.cursor).toBe('hidden');
+    });
+
+    it('pointer false, ripple true -> ripple: the explicit click-ripple opt-in wins, the cursor shows as its side effect', () => {
+      expect(parseRecorderDraft(legacy(false, true))?.cursor).toBe('ripple');
+    });
+
+    it('a draft missing both legacy fields defaults as if pointer and ripple were both on', () => {
+      const { cursor: _cursor, ...rest } = makeDraft();
+      expect(parseRecorderDraft(rest)?.cursor).toBe('ripple');
+    });
+  });
 });

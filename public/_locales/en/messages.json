@@ -603,13 +603,21 @@
     "message": "Timeline",
     "description": "Recorder page: aria-label of the timeline region."
   },
-  "recorderRipple": {
-    "message": "Click ripple",
-    "description": "Recorder page: label of the toggle that draws a ripple at every recorded click."
+  "recorderCursorMode": {
+    "message": "Cursor",
+    "description": "Recorder page: label of the segmented control that merges showing the recorded cursor and drawing a ripple at every recorded click."
   },
-  "recorderPointer": {
-    "message": "Show cursor",
-    "description": "Recorder page: label of the toggle that draws the recorded cursor path as a pointer in the video."
+  "recorderCursorHidden": {
+    "message": "Hidden",
+    "description": "Recorder page: state of the cursor control that draws neither the cursor nor a click ripple."
+  },
+  "recorderCursorShown": {
+    "message": "Shown",
+    "description": "Recorder page: state of the cursor control that draws the recorded cursor path as a pointer, with no click ripple."
+  },
+  "recorderCursorRipple": {
+    "message": "Click ripple",
+    "description": "Recorder page: state of the cursor control that draws the cursor and a ripple at every recorded click."
   },
   "recorderVolTab": {
     "message": "Tab volume",

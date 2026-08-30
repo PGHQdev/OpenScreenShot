@@ -199,14 +199,10 @@ describe('stepDifference', () => {
     expect(stepDifference(base, swatched)).toEqual({ kind: 'field', labelKey: 'recorderBeautify' });
   });
 
-  it('names the ripple and the cursor apart', () => {
-    expect(stepDifference(base, { ...base, ripple: !base.ripple })).toEqual({
+  it('names the cursor', () => {
+    expect(stepDifference(base, { ...base, cursor: 'hidden' })).toEqual({
       kind: 'field',
-      labelKey: 'recorderRipple',
-    });
-    expect(stepDifference(base, { ...base, pointer: !base.pointer })).toEqual({
-      kind: 'field',
-      labelKey: 'recorderPointer',
+      labelKey: 'recorderCursorMode',
     });
   });
 

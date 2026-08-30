@@ -867,6 +867,118 @@ async function main() {
     const canvasSize = await page.$eval('.rec-canvas', (el) => `${el.width}x${el.height}`);
     assert(painted > 0.9, `stage canvas ${canvasSize} is painted (${(painted * 100).toFixed(1)}%)`);
 
+    step('task 39: Add Zoom moved to the timeline');
+    // Beside the blocks and the scale picker it edits, not on the rail. A
+    // fresh session for this: the seeded fixture's own auto-zoom block
+    // already spans its whole ~2.1s timeline (the auto-zoom comment above
+    // explains why), leaving no room to add a second one without deleting
+    // it first — done here, on a throwaway session, so it does not disturb
+    // the undo/redo choreography the rest of this test relies on.
+    const zoomFixture = await page.evaluate(seedSession);
+    await page.goto(`${base}${PAGE}?session=${zoomFixture.sessionId}`, { waitUntil: 'load' });
+    await page.waitForFunction(() => document.querySelectorAll('.rec-tl-zoom').length > 0, {
+      timeout: 15_000,
+    });
+    const addZoomBtn = await page.waitForSelector('.rec-tl-toolbar button', { timeout: 5000 });
+    const addZoomLabel = await addZoomBtn.evaluate((el) => el.textContent?.trim());
+    assert(
+      addZoomLabel === messages.recorderAddZoom.message,
+      `the timeline's Add Zoom button reads "${addZoomLabel}"`,
+    );
+    await page.click('.rec-tl-zoom');
+    await page.waitForSelector('.rec-zoom-delete', { timeout: 5000 });
+    await page.click('.rec-zoom-delete');
+    await page.waitForFunction(() => document.querySelectorAll('.rec-tl-zoom').length === 0, {
+      timeout: 5000,
+    });
+    await addZoomBtn.click();
+    await page.waitForFunction(() => document.querySelectorAll('.rec-tl-zoom').length === 1, {
+      timeout: 5000,
+    });
+    assert(true, 'clicking Add Zoom on the (now empty) timeline added a block (0 -> 1)');
+
+    step('task 39: the merged cursor control, through all three states');
+    // Still on the throwaway session: cycling the control pushes undo steps,
+    // which would otherwise dirty `seeded.sessionId`'s history before the
+    // "undo starts disabled" check below it. `.rail` scopes every query away
+    // from the timeline's own zoom-scale picker, which reuses the same
+    // `.rec-seg`/`.rec-seg-btn` classes.
+    const clickCursor = async (labelKey) => {
+      const label = messages[labelKey].message;
+      await page.evaluate((wantLabel) => {
+        const btn = [...document.querySelectorAll('.rail .rec-seg-btn')].find(
+          (el) => el.textContent?.trim() === wantLabel,
+        );
+        btn?.click();
+      }, label);
+    };
+    const cursorPressed = () =>
+      page.evaluate(
+        () =>
+          [...document.querySelectorAll('.rail .rec-seg-btn')]
+            .find((el) => el.getAttribute('aria-pressed') === 'true')
+            ?.textContent?.trim() ?? null,
+      );
+    assert(
+      (await cursorPressed()) === messages.recorderCursorRipple.message,
+      'the seeded session starts on "Click ripple" (settings.ripple: true)',
+    );
+    for (const labelKey of [
+      'recorderCursorShown',
+      'recorderCursorHidden',
+      'recorderCursorRipple',
+    ]) {
+      await clickCursor(labelKey);
+      await page.waitForFunction(
+        (want) =>
+          [...document.querySelectorAll('.rail .rec-seg-btn')]
+            .find((el) => el.getAttribute('aria-pressed') === 'true')
+            ?.textContent?.trim() === want,
+        { timeout: 5000 },
+        messages[labelKey].message,
+      );
+      assert(true, `the cursor control reaches "${messages[labelKey].message}"`);
+    }
+
+    step('task 39: the Beautify popover opens and closes by keyboard, matching R-19a');
+    const beautifyTrigger = await page.waitForSelector('.rec-beautify > button', { timeout: 5000 });
+    const beautifyLabel = await beautifyTrigger.evaluate((el) => el.textContent?.trim());
+    assert(
+      beautifyLabel === messages.recorderBeautify.message,
+      `the Beautify trigger reads "${beautifyLabel}"`,
+    );
+    await beautifyTrigger.focus();
+    await page.keyboard.press('Enter');
+    await page.waitForSelector('.rec-beautify-popover[role="dialog"]', { timeout: 5000 });
+    // The popover's own effect moves focus a render after it mounts — poll
+    // rather than read document.activeElement once, right on the mount.
+    await page.waitForFunction(
+      () => {
+        const popover = document.querySelector('.rec-beautify-popover');
+        return popover ? popover.contains(document.activeElement) : false;
+      },
+      { timeout: 5000 },
+    );
+    assert(true, 'opening by keyboard lands focus inside the popover');
+    const notModal = await page.$eval('.rec-beautify-popover', (el) =>
+      el.getAttribute('aria-modal'),
+    );
+    assert(notModal === null, 'the popover carries role="dialog" without aria-modal (non-modal)');
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(() => document.querySelector('.rec-beautify-popover') === null, {
+      timeout: 5000,
+    });
+    const focusedAfterEscape = await page.evaluate(
+      () => document.activeElement?.closest('.rec-beautify') !== null,
+    );
+    assert(focusedAfterEscape, 'Escape closes the popover and returns focus to the trigger');
+
+    // Back to the main fixture, untouched, for the rest of this test.
+    await page.goto(`${base}${PAGE}?session=${seeded.sessionId}`, { waitUntil: 'load' });
+    await page.waitForFunction(() => document.querySelectorAll('.rec-tl-zoom').length > 0, {
+      timeout: 15_000,
+    });
+
     step('undo and redo the timeline, and carry the stack through a reload');
     const blockCount = () => page.evaluate(() => document.querySelectorAll('.rec-tl-zoom').length);
     const waitForBlocks = (n) =>
@@ -904,24 +1016,36 @@ async function main() {
       'undo and redo start disabled — the auto zoom is not a step the user took',
     );
 
-    // Seven of the eight editable fields are not zoom blocks, and an undo of
+    // Six of the seven editable fields are not zoom blocks, and an undo of
     // one has to say so: the live region is the only feedback a screen-reader
-    // user gets for a step. The ripple switch is the cheapest of the seven to
-    // drive, and it leaves the draft where it found it.
-    await page.click('.rail-section input.switch');
+    // user gets for a step. The cursor control is the cheapest of the six to
+    // drive, and clicking it back to its starting state leaves the draft
+    // where it found it. `clickCursor`/`cursorPressed` are the same helpers
+    // the "all three states" step above already exercised — the control was
+    // left on "Click ripple" (its starting state) at the end of that loop.
+    await clickCursor('recorderCursorHidden');
     await page.waitForFunction(
-      () => document.querySelector('.rail-section input.switch')?.checked === false,
+      (want) =>
+        [...document.querySelectorAll('.rail .rec-seg-btn')]
+          .find((el) => el.getAttribute('aria-pressed') === 'true')
+          ?.textContent?.trim() === want,
       { timeout: 5000 },
+      messages.recorderCursorHidden.message,
     );
     await chord(false);
     await page.waitForFunction(
-      () => document.querySelector('.rail-section input.switch')?.checked === true,
+      (want) =>
+        [...document.querySelectorAll('.rail .rec-seg-btn')]
+          .find((el) => el.getAttribute('aria-pressed') === 'true')
+          ?.textContent?.trim() === want,
       { timeout: 5000 },
+      messages.recorderCursorRipple.message,
     );
     const afterSwitchUndo = await historyState();
-    assert(true, 'Ctrl+Z puts the click-ripple switch back');
+    assert(true, 'Ctrl+Z puts the cursor control back to "Click ripple"');
     assert(
-      afterSwitchUndo.announced === announcementNaming('recorderUndoAnnounce', 'recorderRipple'),
+      afterSwitchUndo.announced ===
+        announcementNaming('recorderUndoAnnounce', 'recorderCursorMode'),
       `a non-zoom undo names the control it took back ("${afterSwitchUndo.announced}")`,
     );
 
@@ -929,9 +1053,10 @@ async function main() {
     await page.waitForSelector('.rec-zoom-delete', { timeout: 5000 });
 
     // Re-picking the scale already in force rebuilds the block without moving
-    // a value in it. That is not a step, so the redo the switch's undo armed
-    // must still be there — a banked step would have dropped it.
-    await page.click('.rec-seg-btn[aria-pressed="true"]');
+    // a value in it. That is not a step, so the redo the cursor control's
+    // undo armed must still be there — a banked step would have dropped it.
+    // `.rec-timeline` scopes this away from the rail's own `.rec-seg-btn`s.
+    await page.click('.rec-timeline .rec-seg-btn[aria-pressed="true"]');
     const afterNoOp = await historyState();
     assert(
       afterNoOp.redoDisabled === false,
@@ -1031,9 +1156,14 @@ async function main() {
         cancelLabel: document.querySelector('.rec-cancel-btn')?.textContent?.trim() ?? null,
         trimAriaDisabled: document.querySelector('.rec-tl-handle')?.getAttribute('aria-disabled'),
         redoDisabled: document.querySelector('.rec-redo-btn')?.disabled ?? null,
-        addZoomLocked: inertOf(document.querySelector('.rail-section .btn-secondary')),
-        rippleLocked: inertOf(document.querySelector('.rail-section input.switch')),
-        beautifyLocked: inertOf(document.querySelector('.swatches')),
+        // Add Zoom (task 39: moved to the timeline) is a lone button, natively
+        // disabled rather than wrapped in `inert` — same idiom as the zoom
+        // target reticle (task 36).
+        addZoomLocked: document.querySelector('.rec-tl-toolbar button')?.disabled ?? null,
+        cursorLocked: inertOf(document.querySelector('.rail .rec-seg-btn')),
+        // Beautify (task 39: collapsed behind a popover) is locked the same
+        // way — its trigger disables, which also makes it unopenable.
+        beautifyLocked: document.querySelector('.rec-beautify button')?.disabled ?? null,
       };
     });
     assert(
@@ -1052,9 +1182,9 @@ async function main() {
     // The undo it would take back is still on the stack, so this is a real
     // lock rather than an empty one.
     assert(mid.redoDisabled === true, 'the redo button is disabled during export');
-    assert(mid.addZoomLocked === true, 'the Add Zoom section is locked (inert)');
-    assert(mid.rippleLocked === true, 'the ripple/pointer section is locked (inert)');
-    assert(mid.beautifyLocked === true, 'the beautify section is locked (inert)');
+    assert(mid.addZoomLocked === true, 'the timeline Add Zoom button is locked (disabled)');
+    assert(mid.cursorLocked === true, 'the cursor control section is locked (inert)');
+    assert(mid.beautifyLocked === true, 'the Beautify trigger is locked (disabled)');
 
     const cancelBtn = await page.$('.rec-cancel-btn');
     await cancelBtn.click();
@@ -1128,6 +1258,45 @@ async function main() {
       afterCancel === beforeCancel,
       `a confirmed cancel produced no download (${beforeCancel} -> ${afterCancel})`,
     );
+
+    step('task 39: Export WebM is reachable in a short viewport, not off-screen');
+    // A 200%-zoom-shaped viewport, the same height reflow-smoke.mjs uses for
+    // this same page: short enough that the simplified rail still needs to
+    // scroll to reach Export.
+    await page.setViewport({ width: 900, height: 260 });
+    const shortViewport = await page.evaluate(() => {
+      const rail = document.querySelector('.rail');
+      const btn = document.querySelector('.rail .rec-btn-primary');
+      if (!rail || !btn) return null;
+      // The property that actually makes the rail user-scrollable: checked
+      // directly, not inferred from a forced-scroll result — Chromium still
+      // honours a programmatic btn.scrollIntoView()/rail.scrollTop write
+      // even under overflow-y: hidden, so a geometry check taken only after
+      // one of those would pass whether or not the rail is really scrollable.
+      const overflowY = getComputedStyle(rail).overflowY;
+      btn.scrollIntoView({ block: 'nearest' });
+      const after = btn.getBoundingClientRect();
+      const railBox = rail.getBoundingClientRect();
+      return {
+        overflowY,
+        needsScroll: rail.scrollHeight > rail.clientHeight,
+        reachable: after.top >= railBox.top - 1 && after.bottom <= railBox.bottom + 1,
+      };
+    });
+    assert(shortViewport !== null, 'the export button and the rail were both found');
+    assert(
+      shortViewport.overflowY === 'auto' || shortViewport.overflowY === 'scroll',
+      `.rail computes overflow-y: ${shortViewport?.overflowY} (real scrolling, not just a forced one)`,
+    );
+    assert(
+      shortViewport.needsScroll,
+      'the rail is taller than its box at 900x260 — scrolling matters here',
+    );
+    assert(
+      shortViewport.reachable,
+      'Export WebM scrolls into view inside the rail, not off-screen, at 900x260',
+    );
+    await page.setViewport({ width: 1440, height: 900 });
 
     step('delete after export only deletes once the download is confirmed complete');
     const deleteReal = await page.evaluate(seedSession);

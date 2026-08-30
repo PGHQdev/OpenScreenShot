@@ -236,10 +236,10 @@ export async function exportVideo(
   // Clicks are normalized once per segment, on the segment's own clock —
   // the same source `rippleAt` ages against.
   const clicks: NormClick[][] = loaded.segments.map((s) =>
-    draft.ripple ? normalizeClicks(s.events, s.segment.viewport) : [],
+    draft.cursor === 'ripple' ? normalizeClicks(s.events, s.segment.viewport) : [],
   );
   const moves: NormClick[][] = loaded.segments.map((s) =>
-    draft.pointer ? normalizeMoves(s.events, s.segment.viewport) : [],
+    draft.cursor !== 'hidden' ? normalizeMoves(s.events, s.segment.viewport) : [],
   );
 
   const videos = loaded.segments.map((s) => createVideo(s.tabUrl, loaded.hasAudio.tab));

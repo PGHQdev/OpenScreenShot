@@ -364,8 +364,7 @@ function SessionView({
     zoomBlocks: sess.zoomBlocks,
     autoZoomDone: sess.autoZoomDone,
     trims: sess.trims,
-    ripple: sess.ripple,
-    pointer: sess.pointer,
+    cursor: sess.cursor,
     volumes: sess.volumes,
     bubble: sess.bubble,
     frame: sess.frame,
@@ -561,6 +560,7 @@ function SessionView({
           onSeek={sess.seek}
           onTrim={sess.setTrim}
           onBlocks={sess.setBlocks}
+          onAddZoom={addZoom}
           locked={exporting}
         />
       </div>
@@ -568,12 +568,10 @@ function SessionView({
       <Rail
         loaded={loaded}
         draft={draft}
-        onRipple={sess.setRipple}
-        onPointer={sess.setPointer}
+        onCursor={sess.setCursor}
         onVolumes={sess.setVolumes}
         onBubble={sess.setBubble}
         onFrame={onFrame}
-        onAddZoom={addZoom}
         onToast={onToast}
         onDeleted={onMissing}
         onExportingChange={setExporting}
@@ -707,12 +705,13 @@ function Stage({
       webcamW: webcamReady ? webcam.videoWidth : 0,
       webcamH: webcamReady ? webcam.videoHeight : 0,
       camera: cameraAt(sess.zoomBlocks, sess.playheadMs),
-      ripples: draft.ripple
-        ? (clicks[sess.segmentIndex] ?? [])
-            .filter((c) => sourceMs >= c.t && sourceMs - c.t < RIPPLE_MS)
-            .map((c) => ({ nx: c.nx, ny: c.ny, ageMs: sourceMs - c.t }))
-        : [],
-      cursor: draft.pointer ? cursorAt(moves[sess.segmentIndex] ?? [], sourceMs) : null,
+      ripples:
+        draft.cursor === 'ripple'
+          ? (clicks[sess.segmentIndex] ?? [])
+              .filter((c) => sourceMs >= c.t && sourceMs - c.t < RIPPLE_MS)
+              .map((c) => ({ nx: c.nx, ny: c.ny, ageMs: sourceMs - c.t }))
+          : [],
+      cursor: draft.cursor !== 'hidden' ? cursorAt(moves[sess.segmentIndex] ?? [], sourceMs) : null,
       bubble: webcamReady ? draft.bubble : null,
       frame: geometry.frame,
       frameMetrics: metrics,

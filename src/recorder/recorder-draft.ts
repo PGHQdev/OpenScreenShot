@@ -12,8 +12,13 @@
  * — is the only validator it needs.
  *
  * The undo stack rides along too, as `history`: its entries are `RecorderEdit`
- * — the same eight fields, without the bookkeeping — so one validator reads
+ * — the same seven fields, without the bookkeeping — so one validator reads
  * both the live state and every step behind it, and an undo survives a reload.
+ *
+ * `cursor` merges what used to be two independent booleans, `pointer` (draw
+ * the recorded cursor) and `ripple` (draw a ripple at every click) — see
+ * `parseCursor` below for the migration that keeps a legacy draft's two
+ * fields readable as this one.
  */
 import { DEFAULT_FRAME, frameFromSettings, frameToSettings } from '../editor/frame';
 import { DEFAULT_SETTINGS } from '../shared/types';
@@ -27,13 +32,21 @@ export type BubbleCorner = 'tl' | 'tr' | 'bl' | 'br' | 'custom';
 
 type FrameSettings = ReturnType<typeof frameToSettings>;
 
+/**
+ * The recorded cursor, as one three-state control: no cursor drawn, the
+ * cursor drawn, or the cursor drawn plus a ripple at every recorded click.
+ * There is no "ripple with no cursor" state — see `parseCursor`.
+ */
+export type CursorMode = 'hidden' | 'shown' | 'ripple';
+
+const CURSOR_MODES: ReadonlySet<string> = new Set<CursorMode>(['hidden', 'shown', 'ripple']);
+
 /** Every field the recorder's editor owns — one undo step's worth of state. */
 export interface RecorderEdit {
   zoomBlocks: ZoomBlock[];
   autoZoomDone: boolean;
   trims: Record<string, { start: number; end: number }>;
-  ripple: boolean;
-  pointer: boolean;
+  cursor: CursorMode;
   /** 0..1. */
   volumes: { tab: number; mic: number };
   /** x/y normalized 0..1; size = fraction of min(W,H). */
@@ -62,14 +75,19 @@ const DEFAULT_BUBBLE: RecorderDraft['bubble'] = {
   hidden: false,
 };
 
-/** A fresh draft with no zoom, no trims, and the recorder's standard overlay. */
+/**
+ * A fresh draft with no zoom, no trims, and the recorder's standard overlay.
+ * `ripple` seeds the cursor mode from the recording's own capture-time
+ * setting (`RecordingSettings.ripple`) — the cursor itself always starts
+ * shown, so a capture made with the ripple off starts the editor at `shown`
+ * rather than `hidden`.
+ */
 export function defaultRecorderDraft(ripple = true): RecorderDraft {
   return {
     zoomBlocks: [],
     autoZoomDone: false,
     trims: {},
-    ripple,
-    pointer: true,
+    cursor: ripple ? 'ripple' : 'shown',
     volumes: { tab: 1, mic: 1 },
     bubble: { ...DEFAULT_BUBBLE },
     frame: frameToSettings({ ...DEFAULT_FRAME, enabled: false }),
@@ -145,6 +163,31 @@ function parseBubble(value: unknown): RecorderDraft['bubble'] {
 }
 
 /**
+ * `cursor` first, if a draft already stores the merged field. Otherwise a
+ * legacy draft's `pointer`/`ripple` pair, each defaulting on the same way
+ * `parseEdit` always has (`!== false`), migrated by this table:
+ *
+ *   pointer  ripple  ->  cursor    why
+ *   true     true    ->  ripple    both were on
+ *   true     false   ->  shown     cursor only
+ *   false    false   ->  hidden    neither
+ *   false    true    ->  ripple    no state means "ripple, cursor hidden" —
+ *                                  the explicit click-ripple opt-in wins,
+ *                                  the cursor comes back as its side effect
+ *
+ * A draft with neither field (older than `pointer` itself) reads as
+ * `pointer: true, ripple: true` under the same `!== false` default, so it
+ * lands on `ripple` too — unaffected by the merge.
+ */
+function parseCursor(v: { cursor?: unknown; pointer?: unknown; ripple?: unknown }): CursorMode {
+  if (typeof v.cursor === 'string' && CURSOR_MODES.has(v.cursor)) return v.cursor as CursorMode;
+  const pointer = v.pointer !== false;
+  const ripple = v.ripple !== false;
+  if (!pointer && !ripple) return 'hidden';
+  return ripple ? 'ripple' : 'shown';
+}
+
+/**
  * The editor fields alone, or null when one of them cannot be vouched for.
  * Read by the draft itself and by every entry in its undo stack.
  */
@@ -154,8 +197,9 @@ function parseEdit(value: unknown): RecorderEdit | null {
     zoomBlocks?: unknown;
     autoZoomDone?: unknown;
     trims?: unknown;
-    ripple?: unknown;
+    cursor?: unknown;
     pointer?: unknown;
+    ripple?: unknown;
     volumes?: unknown;
     bubble?: unknown;
     frame?: unknown;
@@ -176,8 +220,7 @@ function parseEdit(value: unknown): RecorderEdit | null {
     zoomBlocks: v.zoomBlocks as ZoomBlock[],
     autoZoomDone: v.autoZoomDone === true,
     trims,
-    ripple: v.ripple !== false,
-    pointer: v.pointer !== false,
+    cursor: parseCursor(v),
     volumes: {
       tab: clamp01(volumesRaw.tab, 1),
       mic: clamp01(volumesRaw.mic, 1),

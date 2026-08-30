@@ -429,6 +429,45 @@ body {
   margin-top: var(--s-2);
 }
 
+/* ---- Beautify popover ---- */
+/* task 39: the twelve Beautify controls (the switch, three sliders, and
+   eight background swatches — see .swatches below) collapse behind this
+   trigger + popover, the same non-modal contract the screenshot editor's
+   BeautifyMenu uses in editor.css (see Rail.tsx's header comment for why
+   this is a fresh implementation of that contract rather than an import of
+   that component: its styles live in a stylesheet the recorder bundle never
+   loads). */
+.rec-beautify {
+  position: relative;
+}
+
+.btn-secondary.is-active {
+  background: var(--accent-subtle);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+
+/* left/right: 0 instead of a fixed width, so the popover never has to
+   escape .rail's own box — .rail sets overflow-y: auto, which computes
+   overflow-x: auto too (only one axis was given a non-visible value), so
+   anything wider would be clipped or force a horizontal scrollbar. */
+.rec-beautify-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin-top: var(--s-2);
+  padding: var(--s-4);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  box-shadow: var(--sh-md);
+}
+
 /* ---- Beautify background swatches ---- */
 /* Wrapping now lives on the shared .swatches rule in ui.css (task-16, for the
    editor style bar's reflow at 320px) — the beautify grid gets it for free. */
@@ -645,6 +684,14 @@ body {
 .rec-timeline {
   padding: var(--s-4) var(--s-5) var(--s-5);
   background: var(--surface-1);
+}
+
+/* Add Zoom (task 39 moved it here from the rail): its own row above the
+   track, beside where the blocks it creates and the scale picker that edits
+   them already live. */
+.rec-tl-toolbar {
+  display: flex;
+  margin-bottom: var(--s-3);
 }
 
 /* One box for every row, so a column is the same timeline ms in all of them. */
@@ -1008,5 +1055,13 @@ body {
      so the button's Highlight fill above does not reach it on its own. */
   .rec-bubble-corner[aria-pressed='true']::after {
     background: HighlightText;
+  }
+
+  /* Beautify's trigger button, background/border/text colour only, same as
+     .rec-seg-btn above — "Beautify is on" has to survive forced colors too. */
+  .btn-secondary.is-active {
+    background-color: Highlight;
+    color: HighlightText;
+    border-color: Highlight;
   }
 }

@@ -494,8 +494,12 @@ async function testRecorder(browser, base, messages) {
   const railWidth = await page.evaluate(() => document.querySelector('.rail').clientWidth);
   assert(railWidth <= 320, `stacked rail is ${railWidth}px wide, at or under the viewport`);
 
-  step('RECORDER — wide but short (900x380, a 200%-zoom-shaped viewport): rail scrolls');
-  await page.setViewport({ width: 900, height: 380 });
+  // Task 39 shrank the rail (Beautify's twelve controls collapsed behind one
+  // popover, Add Zoom moved to the timeline), so 380px of height no longer
+  // forces a scroll — 260px, the same "200%-zoom-shaped" height the popup
+  // case above uses, still does.
+  step('RECORDER — wide but short (900x260, a 200%-zoom-shaped viewport): rail scrolls');
+  await page.setViewport({ width: 900, height: 260 });
   await new Promise((r) => setTimeout(r, 150));
   const sideBySide = await page.evaluate(
     () => getComputedStyle(document.querySelector('.rec-session')).flexDirection,

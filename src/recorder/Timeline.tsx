@@ -57,6 +57,9 @@ export interface TimelineProps {
   onSeek: (timelineMs: number) => void;
   onTrim: (segmentId: string, patch: { start?: number; end?: number }) => void;
   onBlocks: (blocks: ZoomBlock[]) => void;
+  /** Adds a zoom block at the playhead — task 39 moved this here from the
+   *  rail, next to the blocks and the scale picker it edits. */
+  onAddZoom: () => void;
   /**
    * An export is running off its own copy of the trims and zoom blocks, so
    * editing either here would only desync the live preview from the file
@@ -207,6 +210,16 @@ export function Timeline(props: TimelineProps) {
     // `timeline` is the plain hook the browser smoke test selects on;
     // `rec-timeline` carries the styles.
     <div class="rec-timeline timeline" role="group" aria-label={t('recorderTimelineAria')}>
+      <div class="rec-tl-toolbar">
+        <button
+          type="button"
+          class="btn-secondary"
+          disabled={props.locked}
+          onClick={props.onAddZoom}
+        >
+          {t('recorderAddZoom')}
+        </button>
+      </div>
       <div class="rec-tl-track" ref={trackRef}>
         <div class="rec-tl-segments">
           {timings.map((timing) => {

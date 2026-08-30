@@ -8,7 +8,7 @@
  * popped — the same shape `src/editor/history.ts` uses for the image editor.
  *
  * An entry is the WHOLE editor state rather than one field's before-value.
- * The recorder's editable state is the eight small fields `recorder-draft.ts`
+ * The recorder's editable state is the seven small fields `recorder-draft.ts`
  * already serialises as one object, so a snapshot costs about what a patch
  * would and no two fields can end up describing different moments. (The image
  * editor stops at the annotation list plus the selection because its lists run
@@ -75,8 +75,7 @@ const NAMED_FIELDS: readonly { of: (e: RecorderEdit) => unknown; labelKey: strin
   { of: (e) => e.volumes.mic, labelKey: 'recorderVolMic' },
   { of: (e) => e.bubble, labelKey: 'recorderBubble' },
   { of: (e) => e.frame, labelKey: 'recorderBeautify' },
-  { of: (e) => e.ripple, labelKey: 'recorderRipple' },
-  { of: (e) => e.pointer, labelKey: 'recorderPointer' },
+  { of: (e) => e.cursor, labelKey: 'recorderCursorMode' },
 ];
 
 /**

@@ -18,13 +18,14 @@
  * `<video>` elements from pulling apart over a long recording.
  *
  * Editor state grew, in task 10, to everything `RecorderDraft` persists:
- * `{ zoomBlocks, autoZoomDone, trims, ripple, volumes, bubble, frame }`. The
- * mutators keep the persisted fields canonical (blocks always run through
- * `normalizeBlocks`, trims always through `clampTrim`); `ripple`, `volumes`,
- * `bubble`, and `frame` are plain pass-throughs whose panels land in later
- * tasks. On load, `parseRecorderDraft(session.editorState)` hydrates this
- * state — including `autoZoomDone` — before the auto-zoom effect below can
- * run, so a session with a saved draft never re-clusters clicks.
+ * `{ zoomBlocks, autoZoomDone, trims, cursor, volumes, bubble, frame }` (task
+ * 39 merged what were once two separate fields, `ripple` and `pointer`, into
+ * `cursor`). The mutators keep the persisted fields canonical (blocks always
+ * run through `normalizeBlocks`, trims always through `clampTrim`); `cursor`,
+ * `volumes`, `bubble`, and `frame` are plain pass-throughs whose panels land
+ * in later tasks. On load, `parseRecorderDraft(session.editorState)` hydrates
+ * this state — including `autoZoomDone` — before the auto-zoom effect below
+ * can run, so a session with a saved draft never re-clusters clicks.
  *
  * Undo (task 38) is the reason the mutators are split in two. `commitEditor`
  * is every edit the user makes: it banks the state being replaced on the undo
@@ -54,6 +55,7 @@ import {
   defaultRecorderDraft,
   parseRecorderDraft,
   RECORDER_DRAFT_DEBOUNCE_MS,
+  type CursorMode,
   type RecorderDraft,
   type RecorderEdit,
 } from './recorder-draft';
@@ -91,9 +93,9 @@ function zoomBlockCount(total: number): string {
 /**
  * What the live region says about one step. Naming the field the step moved is
  * the whole point: for a screen-reader user this sentence is the only feedback
- * an undo gives, and seven of the eight editable fields are not zoom blocks —
+ * an undo gives, and six of the seven editable fields are not zoom blocks —
  * a bare block count would be true of the timeline and silent about what was
- * taken back, identically for all seven.
+ * taken back, identically for all six.
  */
 function stepAnnouncement(dir: -1 | 1, diff: StepDifference): string {
   if (diff.kind === 'none') {
@@ -108,8 +110,7 @@ function editorFromDraft(draft: RecorderDraft): EditorState {
     zoomBlocks: draft.zoomBlocks,
     autoZoomDone: draft.autoZoomDone,
     trims: draft.trims,
-    ripple: draft.ripple,
-    pointer: draft.pointer,
+    cursor: draft.cursor,
     volumes: draft.volumes,
     bubble: draft.bubble,
     frame: draft.frame,
@@ -156,13 +157,11 @@ export interface UseRecorderSession {
   canRedo: boolean;
   /** What the session view's live region reads out after an undo or a redo. */
   announcement: string;
-  ripple: boolean;
-  pointer: boolean;
+  cursor: CursorMode;
   volumes: { tab: number; mic: number };
   bubble: EditorState['bubble'];
   frame: EditorState['frame'];
-  setRipple: (ripple: boolean) => void;
-  setPointer: (pointer: boolean) => void;
+  setCursor: (cursor: CursorMode) => void;
   setVolumes: (patch: Partial<{ tab: number; mic: number }>) => void;
   setBubble: (patch: Partial<EditorState['bubble']>) => void;
   setFrame: (frame: EditorState['frame']) => void;
@@ -681,16 +680,9 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
   const undo = useCallback(() => travel(-1), [travel]);
   const redo = useCallback(() => travel(1), [travel]);
 
-  const setRipple = useCallback(
-    (ripple: boolean) => {
-      commitEditor((prev) => (prev.ripple === ripple ? prev : { ...prev, ripple }));
-    },
-    [commitEditor],
-  );
-
-  const setPointer = useCallback(
-    (pointer: boolean) => {
-      commitEditor((prev) => (prev.pointer === pointer ? prev : { ...prev, pointer }));
+  const setCursor = useCallback(
+    (cursor: CursorMode) => {
+      commitEditor((prev) => (prev.cursor === cursor ? prev : { ...prev, cursor }));
     },
     [commitEditor],
   );
@@ -793,13 +785,11 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
     canUndo: history.past.length > 0,
     canRedo: history.future.length > 0,
     announcement,
-    ripple: editor.ripple,
-    pointer: editor.pointer,
+    cursor: editor.cursor,
     volumes: editor.volumes,
     bubble: editor.bubble,
     frame: editor.frame,
-    setRipple,
-    setPointer,
+    setCursor,
     setVolumes,
     setBubble,
     setFrame,
