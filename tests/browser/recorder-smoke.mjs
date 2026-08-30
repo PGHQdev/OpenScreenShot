@@ -63,6 +63,30 @@ async function loadPuppeteer() {
   return (await import(pathToFileURL(require.resolve('puppeteer-core')).href)).default;
 }
 
+/**
+ * A second server for the cross-origin iframe case, on a different hostname
+ * of the same loopback address — `localhost` and `127.0.0.1` are different
+ * origins to Chrome, so a real origin boundary sits between this and `dist/`
+ * without needing a real second machine. The page it serves is static: a
+ * click counter, standing in for a chat widget or an embedded player that
+ * might sit at the bottom of a real page.
+ */
+function serveChild() {
+  const server = createServer((req, res) => {
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+    res.end(
+      '<!doctype html><html><body style="margin:0;background:#234166">' +
+        '<script>' +
+        'window.__clicks = 0;' +
+        'document.addEventListener("click", () => { window.__clicks += 1; });' +
+        '</script></body></html>',
+    );
+  });
+  return new Promise((done) => {
+    server.listen(0, '127.0.0.1', () => done(server));
+  });
+}
+
 function serveDist() {
   const server = createServer((req, res) => {
     const path = decodeURIComponent((req.url ?? '/').split('?')[0]);
@@ -372,6 +396,9 @@ async function main() {
   const server = await serveDist();
   const base = `http://127.0.0.1:${server.address().port}`;
   step(`serving dist/ on ${base}`);
+  const childServer = await serveChild();
+  const childBase = `http://localhost:${childServer.address().port}`;
+  step(`serving a cross-origin child on ${childBase}`);
 
   // Everything from here on runs inside the cleanup frame: a failure before
   // the server closes would otherwise hold the event loop open forever.
@@ -747,6 +774,186 @@ async function main() {
     const afterUnanchored = await timerText();
     assert(afterUnanchored === '1:04', `and cannot un-anchor a running clock (${afterUnanchored})`);
     await page.evaluate(() => window.__ossRecOverlay?.());
+
+    /** The rendered `opacity` of the light-DOM bar host, read directly (not
+     *  through CDP pierce — the host itself sits outside the closed shadow
+     *  root, in the page's own DOM). */
+    const hostOpacity = () =>
+      page.evaluate(
+        () => document.querySelector('[data-testid="rec-overlay-host"]')?.style.opacity,
+      );
+    /** `.inert` on the same host — what actually removes Stop/Cancel/Pause
+     *  from the tab order and the accessibility tree while hidden. */
+    const hostInert = () =>
+      page.evaluate(() => document.querySelector('[data-testid="rec-overlay-host"]')?.inert);
+    /** Past `OVERLAY_GRACE_MS` with the pointer away from both the bar and
+     *  the catcher: the bar's one path to actually being hidden. */
+    async function letBarHide() {
+      await page.mouse.move(50, 50);
+      await new Promise((done) => setTimeout(done, 3400));
+    }
+
+    step('the reveal catcher survives a cross-origin iframe over the reveal zone');
+    await page.evaluate(() =>
+      window.__mount(
+        'seg-1',
+        0,
+        false,
+        { mic: false, tabAudio: false, webcam: false },
+        false,
+        true,
+      ),
+    );
+    await page.evaluate((src) => {
+      const iframe = document.createElement('iframe');
+      iframe.id = 'oss-smoke-cross-origin';
+      iframe.src = src;
+      iframe.style.cssText =
+        'position:fixed;left:0;right:0;bottom:0;width:100vw;height:200px;border:0;z-index:1000;';
+      document.body.appendChild(iframe);
+    }, `${childBase}/child.html`);
+    await page.waitForSelector('#oss-smoke-cross-origin');
+    // The child page is a few bytes of static HTML; a short settle is enough
+    // for its own script (the click counter) to have run.
+    await new Promise((done) => setTimeout(done, 300));
+    const childFrame = page.frames().find((f) => f.url().startsWith(childBase));
+    assert(!!childFrame, `the cross-origin iframe loaded (${childFrame?.url()})`);
+
+    await letBarHide();
+    assert((await hostOpacity()) === '0', 'bar is hidden before any cross-origin hover');
+
+    // A point inside the classic 400x120 reveal zone (|x - winW/2| <= 200,
+    // y >= winH - 120 — see isNearBar), over the iframe, but outside the
+    // catcher's own 64x24 footprint: proof the classic zone really is dead
+    // there, not just that the catcher happens to cover the whole thing.
+    await page.mouse.move(600, 800, { steps: 5 });
+    await new Promise((done) => setTimeout(done, 200));
+    assert(
+      (await hostOpacity()) === '0',
+      'hovering the classic zone over the iframe stays dead — mousemove never reaches window',
+    );
+
+    const catcherRect = await page.evaluate(() => {
+      const r = document
+        .querySelector('[data-testid="rec-overlay-catcher"]')
+        .getBoundingClientRect();
+      return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+    });
+    await page.mouse.move(catcherRect.x, catcherRect.y, { steps: 5 });
+    await new Promise((done) => setTimeout(done, 200));
+    assert(
+      (await hostOpacity()) === '1',
+      'hovering the catcher reveals the bar despite the cross-origin iframe under it',
+    );
+
+    step('the catcher costs the page only its own small footprint, not the whole zone');
+    await letBarHide();
+    const clicksBefore = await childFrame.evaluate(() => window.__clicks ?? 0);
+    // A click on the catcher's own patch: intercepted, the iframe sees nothing.
+    await page.mouse.click(catcherRect.x, catcherRect.y);
+    const clicksAfterCatcher = await childFrame.evaluate(() => window.__clicks ?? 0);
+    assert(
+      clicksAfterCatcher === clicksBefore,
+      `a click on the catcher never reaches the iframe (${clicksBefore} -> ${clicksAfterCatcher})`,
+    );
+    // The same iframe, a point well outside the catcher: reaches it normally
+    // — the cost is the 64x24 patch, not the 400x120 zone around it.
+    await page.mouse.click(200, 750);
+    const clicksAfterElsewhere = await childFrame.evaluate(() => window.__clicks ?? 0);
+    assert(
+      clicksAfterElsewhere === clicksBefore + 1,
+      `a click just outside the catcher reaches the iframe normally (${clicksBefore} -> ${clicksAfterElsewhere})`,
+    );
+    await page.evaluate(() => document.querySelector('#oss-smoke-cross-origin')?.remove());
+
+    step('the keyboard command reveals the bar without depending on pointer position');
+    await letBarHide();
+    assert((await hostOpacity()) === '0', 'bar hidden before the command');
+    // Stands in for the worker's chrome.scripting.executeScript injection
+    // that handleRevealBar performs on the real 'reveal-recording-bar'
+    // command — same window global, same call, no in-page key listener
+    // involved (that command is delivered by Chrome at the browser level).
+    await page.evaluate(() => window.__ossRecReveal?.());
+    assert((await hostOpacity()) === '1', 'the command reveals the bar');
+
+    step('hidden removes Stop, Cancel and Pause from the tab order, not just from view');
+    await letBarHide();
+    assert((await hostInert()) === true, 'the hidden host is inert');
+    await page.evaluate(() => document.body.focus());
+    const landsOnHost = async (rounds) => {
+      for (let i = 0; i < rounds; i++) {
+        await page.keyboard.press('Tab');
+        const onHost = await page.evaluate(
+          () =>
+            document.activeElement === document.querySelector('[data-testid="rec-overlay-host"]'),
+        );
+        if (onHost) return true;
+      }
+      return false;
+    };
+    assert(!(await landsOnHost(40)), 'Tab never lands on the bar while it is hidden');
+
+    await page.evaluate(() => window.__ossRecReveal?.());
+    assert((await hostInert()) === false, 'the revealed host is not inert');
+    assert(await landsOnHost(40), 'and Tab can reach it once revealed');
+
+    step('a real paused treatment, distinct from recording');
+    await page.evaluate(() =>
+      window.__mount('seg-1', 0, true, { mic: false, tabAudio: false, webcam: false }, false, true),
+    );
+    const pausedDot = await pierced('rec-overlay-dot');
+    assert(
+      pausedDot?.html.includes('class="dot paused"'),
+      `the dot carries a distinct paused class, not just a dimmer recording one (${pausedDot?.html})`,
+    );
+
+    step('the bubble position persists across navigation, via the mount contract');
+    // healOverlay re-mounts fresh on every navigation, handing back whatever
+    // it read from storage as this function's 7th argument — this is that
+    // argument, exercised on the built mount function directly.
+    await page.evaluate(() => window.__ossRecOverlay?.());
+    const camPos = () =>
+      page.evaluate(() => {
+        const el = document.querySelector('[data-testid="rec-overlay-cam"]');
+        return { left: el.style.left, top: el.style.top };
+      });
+    const freshWithPos = await page.evaluate(() =>
+      window.__mount(
+        'seg-1',
+        0,
+        false,
+        { mic: false, tabAudio: false, webcam: true },
+        false,
+        true,
+        { x: 300, y: 220 },
+      ),
+    );
+    assert(freshWithPos === 'fresh', `mounted fresh with a persisted position (${freshWithPos})`);
+    assert(
+      (await camPos()).left === '300px' && (await camPos()).top === '220px',
+      `the bubble mounts exactly where healOverlay would hand it back (${JSON.stringify(await camPos())})`,
+    );
+
+    await page.evaluate(() => window.__ossRecOverlay?.());
+    const clampedPos = await page.evaluate(() =>
+      window.__mount(
+        'seg-1',
+        0,
+        false,
+        { mic: false, tabAudio: false, webcam: true },
+        false,
+        true,
+        { x: 5000, y: -50 },
+      ),
+    );
+    assert(clampedPos === 'fresh', `mounted fresh with an out-of-bounds position (${clampedPos})`);
+    assert(
+      (await camPos()).left === '1236px' && (await camPos()).top === '0px',
+      // 1440 (viewport) - 204 (BUBBLE_PX 180 + HANDLE_PX 12 * 2) = 1236
+      `an out-of-bounds persisted position is clamped to this window (${JSON.stringify(await camPos())})`,
+    );
+
+    await page.evaluate(() => window.__ossRecOverlay?.());
     await dom.detach();
 
     assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
@@ -754,6 +961,8 @@ async function main() {
     await browser?.close();
     server.closeAllConnections();
     server.close();
+    childServer.closeAllConnections();
+    childServer.close();
     await rm(work, { recursive: true, force: true });
   }
   console.log('\nRecorder smoke passed.');

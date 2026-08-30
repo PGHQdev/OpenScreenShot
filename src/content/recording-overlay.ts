@@ -80,6 +80,26 @@ export function anchoredElapsed(
   return { elapsedMs: Math.max(current.elapsedMs, next.elapsedMs), anchored: true };
 }
 
+/**
+ * Clamp a webcam-bubble position to the current viewport. Shared by three
+ * call sites inside `mountRecordingOverlay` — the initial placement (a
+ * persisted position can predate a resize, or land in a smaller window after
+ * a navigation), the resize handler, and the drag handler — so a position
+ * that was valid where it was set can never leave the bubble partly or
+ * wholly off-screen where it is applied.
+ */
+export function clampBubblePosition(
+  pos: { x: number; y: number },
+  winW: number,
+  winH: number,
+  size: number,
+): { x: number; y: number } {
+  return {
+    x: Math.min(Math.max(0, pos.x), Math.max(0, winW - size)),
+    y: Math.min(Math.max(0, pos.y), Math.max(0, winH - size)),
+  };
+}
+
 /** "0:07", "1:23", "1:23:45". Floors ragged ms, clamps negatives to zero. */
 export function formatTimer(ms: number): string {
   const totalSec = Math.floor(Math.max(0, ms) / 1000);
@@ -114,6 +134,15 @@ export function mountRecordingOverlay(
    * its own mount, which is the bug this replaces. See `anchoredElapsed`.
    */
   anchored: boolean,
+  /**
+   * The webcam bubble's last dragged position, or null for the default
+   * bottom-right corner. Unlike `anchored`, forgetting this only resets the
+   * bubble to that corner rather than showing a wrong number, so it is the
+   * one argument here allowed to default — and only a fresh mount applies
+   * it; a heal that only re-syncs an already-mounted bar leaves a bubble the
+   * user has since moved exactly where they put it.
+   */
+  bubblePos: { x: number; y: number } | null = null,
 ): 'fresh' | 'synced' {
   type SyncFn = (
     elapsedMs: number,
@@ -122,7 +151,11 @@ export function mountRecordingOverlay(
     writeFailed: boolean,
     anchored: boolean,
   ) => void;
-  const win = window as unknown as { __ossRecOverlay?: () => void; __ossRecSync?: SyncFn };
+  const win = window as unknown as {
+    __ossRecOverlay?: () => void;
+    __ossRecSync?: SyncFn;
+    __ossRecReveal?: () => void;
+  };
   if (win.__ossRecOverlay) {
     win.__ossRecSync?.(elapsedMs, paused, tracks, writeFailed, anchored);
     return 'synced';
@@ -163,6 +196,20 @@ export function mountRecordingOverlay(
     if (!next.anchored) return current;
     if (!current.anchored) return { elapsedMs: next.elapsedMs, anchored: true };
     return { elapsedMs: Math.max(current.elapsedMs, next.elapsedMs), anchored: true };
+  }
+
+  // Duplicated for the same reason: the exported copy above is the one under
+  // test, and the two are spelled identically on purpose.
+  function clampBubblePosition(
+    pos: { x: number; y: number },
+    winW: number,
+    winH: number,
+    size: number,
+  ): { x: number; y: number } {
+    return {
+      x: Math.min(Math.max(0, pos.x), Math.max(0, winW - size)),
+      y: Math.min(Math.max(0, pos.y), Math.max(0, winH - size)),
+    };
   }
 
   function formatTimer(ms: number): string {
@@ -207,6 +254,7 @@ export function mountRecordingOverlay(
   // --- Host + shadow root ---------------------------------------------------
 
   const host = document.createElement('div');
+  host.setAttribute('data-testid', 'rec-overlay-host');
   host.style.cssText =
     'all:initial;position:fixed;left:50%;bottom:20px;transform:translateX(-50%);' +
     'z-index:2147483647;transition:opacity .25s;';
@@ -234,7 +282,30 @@ export function mountRecordingOverlay(
       flex: none;
       animation: pulse 1.4s ease-in-out infinite;
     }
-    .dot.paused { animation: none; opacity: .5; }
+    /* Two static white bars, not a dimmed red circle: a paused run has to
+       read as a different state at a glance, not a fainter version of
+       recording, and white keeps it out of the warning chip's own amber
+       (danger, not a pause). Colour alone would not survive forced-colors
+       mode either, which flattens both the pulsing red above and any colour
+       here to the same system colour — the shape is what still tells the
+       two states apart there, so no forced-colors rule is needed on top of
+       this one. */
+    .dot.paused {
+      animation: none;
+      background: transparent;
+      position: relative;
+    }
+    .dot.paused::before,
+    .dot.paused::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      width: 3px;
+      height: 9px;
+      background: #ffffff;
+    }
+    .dot.paused::before { left: 0; }
+    .dot.paused::after { right: 0; }
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: .35; }
@@ -292,6 +363,18 @@ export function mountRecordingOverlay(
     button:hover { background: rgba(255, 255, 255, .22); }
     button.stop { background: #e8503a; }
     button.stop:hover { background: #d9432c; }
+    /* all: unset above strips the button's native focus ring along with
+       everything else, and Stop/Cancel are reachable by Tab whenever the
+       bar is shown — so they need one back. Outline, not box-shadow: outline
+       is what forced-colors mode remaps to a system colour rather than
+       dropping, the same reason the ring on .rec-tl-zoom (recorder.css) uses
+       it. #f26b57 is a literal copy of the dark theme's --border-focus, like
+       .chip.warn's colours above — a closed shadow root in a serialized
+       function has no stylesheet to read the token from. */
+    button:focus-visible {
+      outline: 2px solid #f26b57;
+      outline-offset: 2px;
+    }
   `;
   shadow.appendChild(style);
 
@@ -300,6 +383,7 @@ export function mountRecordingOverlay(
 
   const dot = document.createElement('div');
   dot.className = 'dot';
+  dot.setAttribute('data-testid', 'rec-overlay-dot');
   bar.appendChild(dot);
 
   const timer = document.createElement('span');
@@ -395,6 +479,7 @@ export function mountRecordingOverlay(
       (tracks.mic ? '1' : '0');
 
     camHost = document.createElement('div');
+    camHost.setAttribute('data-testid', 'rec-overlay-cam');
     camHost.style.cssText = 'all:initial;position:fixed;left:0;top:0;z-index:2147483646;';
     const camShadow = camHost.attachShadow({ mode: 'closed' });
 
@@ -440,8 +525,21 @@ export function mountRecordingOverlay(
 
     if (tracks.webcam) {
       const size = BUBBLE_PX + HANDLE_PX * 2;
-      let x = Math.max(0, window.innerWidth - size - MARGIN_PX);
-      let y = Math.max(0, window.innerHeight - size - MARGIN_PX);
+      // A persisted position rides `healOverlay`'s re-mount after a
+      // navigation; a fresh recording with nothing persisted keeps the old
+      // bottom-right default. Either way it is clamped to *this* window,
+      // which may be a different size than the one the position was saved
+      // from.
+      const defaultPos = {
+        x: Math.max(0, window.innerWidth - size - MARGIN_PX),
+        y: Math.max(0, window.innerHeight - size - MARGIN_PX),
+      };
+      let { x, y } = clampBubblePosition(
+        bubblePos ?? defaultPos,
+        window.innerWidth,
+        window.innerHeight,
+        size,
+      );
       let dragId: number | null = null;
       let grabX = 0;
       let grabY = 0;
@@ -454,8 +552,7 @@ export function mountRecordingOverlay(
       place();
 
       clampBubble = () => {
-        x = Math.min(x, Math.max(0, window.innerWidth - size));
-        y = Math.min(y, Math.max(0, window.innerHeight - size));
+        ({ x, y } = clampBubblePosition({ x, y }, window.innerWidth, window.innerHeight, size));
         place();
       };
 
@@ -468,14 +565,23 @@ export function mountRecordingOverlay(
       });
       wrap.addEventListener('pointermove', (e) => {
         if (dragId !== e.pointerId) return;
-        x = Math.min(Math.max(0, e.clientX - grabX), Math.max(0, window.innerWidth - size));
-        y = Math.min(Math.max(0, e.clientY - grabY), Math.max(0, window.innerHeight - size));
+        ({ x, y } = clampBubblePosition(
+          { x: e.clientX - grabX, y: e.clientY - grabY },
+          window.innerWidth,
+          window.innerHeight,
+          size,
+        ));
         place();
       });
       const endDrag = (e: PointerEvent): void => {
         if (dragId !== e.pointerId) return;
         dragId = null;
         wrap.releasePointerCapture(e.pointerId);
+        // Only a real drag end persists — the worker stores it on
+        // `StoredRecState` and `healOverlay` hands it back as this
+        // function's `bubblePos` argument on the next mount, which is what
+        // makes the position survive a navigation.
+        safeSend({ type: 'REC_BUBBLE_MOVED', x, y });
       };
       wrap.addEventListener('pointerup', endDrag);
       wrap.addEventListener('pointercancel', endDrag);
@@ -527,6 +633,13 @@ export function mountRecordingOverlay(
     host.style.opacity = show ? '1' : '0';
     // Hidden means hidden to the page too, or it would still swallow clicks.
     host.style.pointerEvents = show ? '' : 'none';
+    // opacity: 0 alone leaves Stop, Cancel and Pause reachable by Tab and
+    // visible to assistive tech even though nothing is painted — a
+    // keyboard or screen-reader user could land a live Stop button they
+    // cannot see. `inert` removes the whole subtree from both the tab order
+    // and the accessibility tree in one property, and reverses the moment
+    // the bar is shown again, so nothing per-button has to track it.
+    host.inert = !show;
   }
 
   host.addEventListener('mouseenter', () => {
@@ -537,6 +650,74 @@ export function mountRecordingOverlay(
     hoveringBar = false;
     applyBarVisibility();
   });
+
+  // --- Reveal catcher --------------------------------------------------------
+
+  // `mousemove` on `window` (below, in the cursor logger) never reaches this
+  // script while the pointer is over a cross-origin iframe — the iframe's own
+  // document owns those events, and they do not cross the origin boundary —
+  // so the reveal zone above is dead wherever a cross-origin iframe (a chat
+  // widget, an embedded player) sits under it, and the bar can become
+  // permanently unreachable by pointer. This element is a second, much
+  // smaller reveal surface, `position: fixed` at the same top layer as the
+  // bar, so pointer hit-testing resolves to it instead of whatever the
+  // iframe painted underneath, regardless of what the iframe covers.
+  //
+  // It costs the page the hover/click on that patch, permanently, for as
+  // long as a recording is live — kept to 64x24 (the WCAG 2.5.8 minimum
+  // target size, not the full 400x120 zone above) to keep that patch small.
+  // It stays mounted whether the bar itself is shown or hidden, because the
+  // dead zone can be hovered at either moment.
+  const CATCHER_WIDTH_PX = 64;
+  const CATCHER_HEIGHT_PX = 24;
+  const catcherHost = document.createElement('div');
+  catcherHost.setAttribute('data-testid', 'rec-overlay-catcher');
+  catcherHost.setAttribute('aria-hidden', 'true');
+  catcherHost.style.cssText =
+    'all:initial;position:fixed;left:50%;bottom:0;' +
+    `width:${CATCHER_WIDTH_PX}px;height:${CATCHER_HEIGHT_PX}px;` +
+    // One below the bar's own z-index, so the real bar always wins the few
+    // pixels where the two could visually meet; still far above any
+    // ordinary page content, iframe included.
+    'transform:translateX(-50%);z-index:2147483646;';
+  const catcherShadow = catcherHost.attachShadow({ mode: 'closed' });
+  const catcherStyle = document.createElement('style');
+  catcherStyle.textContent = `
+    .grip {
+      width: 100%;
+      height: 100%;
+      border-radius: 6px 6px 0 0;
+      background: rgba(20, 20, 22, .35);
+      transition: background .15s;
+    }
+    .grip:hover { background: rgba(20, 20, 22, .6); }
+    @media (prefers-reduced-motion: reduce) {
+      .grip { transition: none; }
+    }
+  `;
+  catcherShadow.appendChild(catcherStyle);
+  const grip = document.createElement('div');
+  grip.className = 'grip';
+  catcherShadow.appendChild(grip);
+  document.documentElement.appendChild(catcherHost);
+
+  /** Refresh the reveal clock. Pointer hover on the catcher, and the
+   *  keyboard command below, both just do this — same as a `mousemove`
+   *  landing inside the ordinary reveal zone. */
+  function revealNow(): void {
+    lastNearAt = Date.now();
+    applyBarVisibility();
+  }
+  catcherHost.addEventListener('pointerenter', revealNow);
+  catcherHost.addEventListener('pointermove', revealNow);
+  catcherHost.addEventListener('pointerdown', revealNow);
+
+  // The keyboard route: `chrome.commands` fires this at the browser level,
+  // before any keystroke reaches page or iframe script, so the worker can
+  // call this from a tab whose focus is anywhere at all — including inside a
+  // cross-origin iframe, which no in-page key listener could say. See
+  // `handleRevealBar` in src/background/recording.ts.
+  win.__ossRecReveal = revealNow;
 
   pauseBtn.addEventListener('click', () => {
     isPaused = !isPaused;
@@ -685,11 +866,13 @@ export function mountRecordingOverlay(
     window.removeEventListener('resize', onResize, true);
     window.removeEventListener('pagehide', onPageHide);
     host.remove();
+    catcherHost.remove();
     // Removing the frame tears down its document, which stops the preview
     // stream and drops the camera indicator.
     camHost?.remove();
     delete win.__ossRecOverlay;
     delete win.__ossRecSync;
+    delete win.__ossRecReveal;
   }
 
   function onPageHide(): void {

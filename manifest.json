@@ -62,6 +62,9 @@
     "stop-recording": {
       "suggested_key": { "default": "Alt+Shift+X", "mac": "Alt+Shift+X" },
       "description": "Stop the current recording"
+    },
+    "reveal-recording-bar": {
+      "description": "Show the recording control bar"
     }
   }
 }

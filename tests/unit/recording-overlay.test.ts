@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   anchoredElapsed,
+  clampBubblePosition,
   formatTimer,
   isNearBar,
   shouldShowBar,
@@ -127,5 +130,102 @@ describe('anchoredElapsed', () => {
         }
       }
     }
+  });
+});
+
+describe('clampBubblePosition', () => {
+  // The webcam bubble's persisted position — a spot saved before a resize,
+  // or before a navigation lands on a smaller window — has to fit whatever
+  // window it is applied in, not the one it was saved from.
+  const size = 204; // BUBBLE_PX + HANDLE_PX * 2 in mountRecordingOverlay
+
+  it('leaves an in-bounds position alone', () => {
+    expect(clampBubblePosition({ x: 400, y: 300 }, 1920, 1080, size)).toEqual({ x: 400, y: 300 });
+  });
+
+  it('pulls a negative x back to the left edge', () => {
+    expect(clampBubblePosition({ x: -50, y: 300 }, 1920, 1080, size)).toEqual({ x: 0, y: 300 });
+  });
+
+  it('pulls a negative y back to the top edge', () => {
+    expect(clampBubblePosition({ x: 400, y: -50 }, 1920, 1080, size)).toEqual({ x: 400, y: 0 });
+  });
+
+  it('pulls x back onto a window narrower than where it was saved', () => {
+    expect(clampBubblePosition({ x: 1800, y: 300 }, 900, 1080, size)).toEqual({
+      x: 900 - size,
+      y: 300,
+    });
+  });
+
+  it('pulls y back onto a window shorter than where it was saved', () => {
+    expect(clampBubblePosition({ x: 400, y: 1000 }, 1920, 500, size)).toEqual({
+      x: 400,
+      y: 500 - size,
+    });
+  });
+
+  it('clamps to zero rather than negative when the window is smaller than the bubble', () => {
+    expect(clampBubblePosition({ x: 400, y: 300 }, 100, 100, size)).toEqual({ x: 0, y: 0 });
+  });
+});
+
+/**
+ * The paused dot is a literal, like the warning chip's colours in
+ * overlay-warning-contrast.test.ts, for the same reason: `mountRecordingOverlay`
+ * is serialized with `toString()` into a closed shadow root over an arbitrary
+ * page, so it has no stylesheet, no custom properties and no imports to read
+ * a token from. This reads the rule straight out of the shipped source and
+ * holds it to the two things "a real paused treatment" means: a different
+ * colour from the recording dot's red, and enough contrast to actually read.
+ */
+describe('the control bar paused dot', () => {
+  const SOURCE = readFileSync(join(__dirname, '../../src/content/recording-overlay.ts'), 'utf8');
+
+  function relativeLuminance(hex: string): number {
+    const n = Number.parseInt(hex.replace('#', ''), 16);
+    const channel = (c: number) => {
+      const v = c / 255;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    };
+    return (
+      0.2126 * channel((n >> 16) & 255) +
+      0.7152 * channel((n >> 8) & 255) +
+      0.0722 * channel(n & 255)
+    );
+  }
+
+  function contrastRatio(a: string, b: string): number {
+    const [lighter, darker] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
+    return (lighter + 0.05) / (darker + 0.05);
+  }
+
+  it('is a different colour from the recording dot, not just a dimmer one', () => {
+    const recordingBg = /\.dot\s*\{[^}]*background:\s*(#[0-9a-fA-F]{3,8})/.exec(SOURCE)?.[1];
+    const pausedBg = /\.dot\.paused::before[^{]*\{[^}]*background:\s*(#[0-9a-fA-F]{3,8})/.exec(
+      SOURCE,
+    )?.[1];
+    expect(recordingBg, '.dot has no literal background').toBeTruthy();
+    expect(pausedBg, '.dot.paused::before has no literal background').toBeTruthy();
+    expect(pausedBg?.toLowerCase()).not.toBe(recordingBg?.toLowerCase());
+  });
+
+  it('drops the pulse animation while paused', () => {
+    const block = /\.dot\.paused\s*\{([^}]*)\}/.exec(SOURCE)?.[1];
+    expect(block, 'no .dot.paused rule').toBeTruthy();
+    expect(block).toMatch(/animation:\s*none/);
+  });
+
+  it('clears the 3:1 non-text contrast floor against the bar', () => {
+    const bg = /\.bar\s*\{[^}]*background:\s*rgba\((\d+),\s*(\d+),\s*(\d+)/.exec(SOURCE);
+    expect(bg, 'no .bar background found').toBeTruthy();
+    const barBg = `#${[bg![1], bg![2], bg![3]]
+      .map((n) => Number(n).toString(16).padStart(2, '0'))
+      .join('')}`;
+    const pausedBg = /\.dot\.paused::before[^{]*\{[^}]*background:\s*(#[0-9a-fA-F]{3,8})/.exec(
+      SOURCE,
+    )?.[1];
+    const ratio = contrastRatio(pausedBg!, barBg);
+    expect(ratio, `${pausedBg} on ${barBg} is ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(3);
   });
 });

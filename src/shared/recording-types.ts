@@ -86,7 +86,11 @@ export type RecMessage =
    *  gated off). The worker holds `OFFSCREEN_START` until this arrives, so the
    *  engine's own camera/mic capture runs after the origin's permission
    *  prompt, not before it. */
-  | { type: 'REC_FRAME_READY' };
+  | { type: 'REC_FRAME_READY' }
+  /** The webcam bubble was dragged to a new spot, at the end of the drag —
+   *  not on every pointermove. `x`/`y` are the bubble's fixed-position CSS
+   *  px, already clamped to the viewport it was dragged in. */
+  | { type: 'REC_BUBBLE_MOVED'; x: number; y: number };
 
 /** REC_QUERY reply. */
 export interface RecState {

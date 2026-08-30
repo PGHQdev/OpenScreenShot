@@ -98,6 +98,14 @@ interface StoredRecState {
   anchored: boolean;
   /** True when this run appends to an existing session (Continue). */
   continued: boolean;
+  /**
+   * The webcam bubble's last dragged position, or null for the default
+   * corner. Set by `REC_BUBBLE_MOVED` and read back by `healOverlay` on
+   * every re-mount, which is what makes a drag survive a navigation — reset
+   * to null on every fresh `handleStart`, Continue included, so this is
+   * scoped to one run rather than carried across separate recordings.
+   */
+  bubblePos: { x: number; y: number } | null;
 }
 
 // --- Persistent state (chrome.storage.session) ------------------------------
@@ -380,6 +388,10 @@ async function healOverlay(tabId: number): Promise<'fresh' | 'synced' | 'failed'
         // read as unanchored and leave a live recording's bar on "Starting…".
         // Only an explicit false is unanchored.
         s.anchored !== false,
+        // A state written before this field exists reads as null, same as a
+        // run nobody has dragged the bubble in yet — both take the default
+        // corner.
+        s.bubblePos ?? null,
       ],
     });
     // The bar is on the page. If this run had reported that it could not get
@@ -548,6 +560,7 @@ async function handleStart(
       writeFailed: false,
       anchored: false,
       continued: !!continueSessionId,
+      bubblePos: null,
     });
 
     await showRecBadge(false);
@@ -947,6 +960,43 @@ async function handleWebcamDenied(): Promise<void> {
   void healOverlay(state.tabId);
 }
 
+/**
+ * Store where the user last dragged the webcam bubble. No heal here: the
+ * bubble that just sent this is already where it says, and re-mounting would
+ * be the second mount path the mount contract forbids — the position only
+ * needs to reach storage, for `healOverlay` to read back on the next
+ * navigation.
+ */
+async function handleBubbleMoved(x: number, y: number): Promise<void> {
+  const state = await getRecState();
+  if (!state) return;
+  await setRecState({ sessionId: state.sessionId, bubblePos: { x, y } });
+}
+
+/**
+ * The keyboard route to reveal the bar. `chrome.commands` fires at the
+ * browser level, before any keystroke reaches page or iframe script, so this
+ * reaches the overlay from a tab whose focus is anywhere at all — including
+ * inside a cross-origin iframe, which no in-page key listener could say.
+ * Mirrors `unmountOverlay`'s shape: a tiny self-contained function that calls
+ * a window global the mount already set up, if it is there.
+ */
+async function handleRevealBar(): Promise<void> {
+  const state = await getRecState();
+  if (!state) return;
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId: state.tabId },
+      func: () => {
+        const w = window as unknown as { __ossRecReveal?: () => void };
+        if (typeof w.__ossRecReveal === 'function') w.__ossRecReveal();
+      },
+    });
+  } catch {
+    // No permission on this origin, or the tab is gone — nothing to reveal.
+  }
+}
+
 async function handleQuery(sendResponse: (state: RecState) => void): Promise<void> {
   try {
     let state = await getRecState();
@@ -1216,6 +1266,9 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
       case 'REC_FRAME_READY':
         handleFrameReady();
         break;
+      case 'REC_BUBBLE_MOVED':
+        void handleBubbleMoved(message.x, message.y);
+        break;
     }
     return false;
   }
@@ -1251,6 +1304,7 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
 
 chrome.commands.onCommand.addListener((command) => {
   if (command === 'stop-recording') void handleStop();
+  if (command === 'reveal-recording-bar') void handleRevealBar();
 });
 
 /**
