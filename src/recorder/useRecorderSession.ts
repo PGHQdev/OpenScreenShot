@@ -37,7 +37,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { loadSession } from './session-load';
-import type { LoadedSegment } from './session-load';
+import type { LoadedSegment, LoadProgress } from './session-load';
 import { updateSession } from '../shared/recording-db';
 import type { RecordingSession } from '../shared/recording-types';
 import { normalizeClicks } from './events-map';
@@ -84,6 +84,10 @@ function editorFromDraft(draft: RecorderDraft): EditorState {
 
 export interface UseRecorderSession {
   loading: boolean;
+  /** The chunk read's progress while `loading` — see `session-load.ts`'s
+   *  `LoadProgress`. `total` is 0 until the count is known, which for a
+   *  session with no chunks is also its final value. */
+  loadProgress: LoadProgress;
   session: RecordingSession | null;
   segments: LoadedSegment[];
   /** Mirrors `LoadedSession.hasAudio`; see `session-load.ts`. */
@@ -127,6 +131,7 @@ export interface UseRecorderSession {
 
 const EMPTY_EDITOR: EditorState = editorFromDraft(defaultRecorderDraft());
 const EMPTY_HAS_AUDIO = { tab: false, mic: false };
+const EMPTY_LOAD_PROGRESS: LoadProgress = { loaded: 0, total: 0 };
 
 /** Seek tolerance: under one frame, so a skipped seek changes no picture. */
 const SEEK_EPSILON_MS = 20;
@@ -177,6 +182,7 @@ function clampBlocksTo(blocks: ZoomBlock[], totalMs: number): ZoomBlock[] {
 
 export function useRecorderSession(sessionId: string | null): UseRecorderSession {
   const [loading, setLoading] = useState(true);
+  const [loadProgress, setLoadProgress] = useState<LoadProgress>(EMPTY_LOAD_PROGRESS);
   const [session, setSession] = useState<RecordingSession | null>(null);
   const [segments, setSegments] = useState<LoadedSegment[]>([]);
   const [hasAudio, setHasAudio] = useState(EMPTY_HAS_AUDIO);
@@ -225,6 +231,7 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
     setHasAudio(EMPTY_HAS_AUDIO);
     setEditor(EMPTY_EDITOR);
     setError(null);
+    setLoadProgress(EMPTY_LOAD_PROGRESS);
 
     if (!sessionId) {
       setLoading(false);
@@ -235,7 +242,9 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
     let loadedUrls: string[] = [];
     setLoading(true);
 
-    loadSession(sessionId)
+    loadSession(sessionId, (p) => {
+      if (!cancelled) setLoadProgress(p);
+    })
       .then((loaded) => {
         if (!loaded) {
           if (cancelled) return;
@@ -588,6 +597,7 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
 
   return {
     loading,
+    loadProgress,
     session,
     segments,
     hasAudio,

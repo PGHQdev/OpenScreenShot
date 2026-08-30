@@ -51,6 +51,10 @@
     "message": "Reopen last",
     "description": "Link in the popup that reopens the most recent capture in the editor."
   },
+  "recRecordings": {
+    "message": "Recordings",
+    "description": "Link in the popup that opens the recorder page's session list."
+  },
   "footerShortcuts": {
     "message": "Shortcuts",
     "description": "Short footer label for the link that opens Chrome's shortcut settings."
@@ -452,6 +456,18 @@
   "recorderEmpty": {
     "message": "No recordings yet. Record a tab from the popup.",
     "description": "Recorder page: shown when the session list is empty."
+  },
+  "recorderLoadingList": {
+    "message": "Loading recordings…",
+    "description": "Recorder page: shown in place of the session list while it loads."
+  },
+  "recorderSessionLoading": {
+    "message": "Loading recording…",
+    "description": "Recorder page: label on the progress bar shown while a session's chunks load."
+  },
+  "recorderSourceTab": {
+    "message": "Tab",
+    "description": "Recorder page: session list row — capture source. Every recording is a tab capture; there is no window/screen source to distinguish yet."
   },
   "recorderRecovered": {
     "message": "Recovered",

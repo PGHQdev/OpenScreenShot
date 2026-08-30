@@ -885,6 +885,20 @@ export function App() {
             </button>
             <button
               class="link-btn"
+              onClick={() => {
+                void chrome.tabs
+                  .create({ url: chrome.runtime.getURL('src/recorder/index.html') })
+                  .then(
+                    () => window.close(),
+                    () => pushToast(t('popupOpenFailed'), 'error'),
+                  );
+              }}
+              title={t('recRecordings')}
+            >
+              {t('recRecordings')}
+            </button>
+            <button
+              class="link-btn"
               onClick={() => capture('region', true)}
               disabled={!hasRegion || !!busy}
               title={hasRegion ? t('repeatLastRegion') : t('repeatRegionDisabledTitle')}

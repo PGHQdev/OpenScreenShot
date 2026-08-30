@@ -39,6 +39,39 @@ function assert(condition, message) {
   console.log(`    ok: ${message}`);
 }
 
+/** Mirrors `formatBytes` in `src/recorder/App.tsx`, to predict a row's size text. */
+function formatBytesForTest(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ['KB', 'MB', 'GB'];
+  let value = bytes / 1024;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return `${value.toFixed(value < 10 ? 1 : 0)} ${units[unit]}`;
+}
+
+/**
+ * Polls `read()` inside the page every `intervalMs`, collecting every
+ * non-null reading, stopping as soon as `read()` returns null (the state
+ * being watched is gone) or `timeoutMs` runs out. The two loading states this
+ * drives are both real but brief; CPU throttling (set by the caller before
+ * this runs) stretches them out enough for this to catch more than one frame
+ * of them, proving the state actually moved rather than just existed.
+ */
+async function pollUntilGone(page, read, { intervalMs = 15, timeoutMs = 5000 } = {}) {
+  const readings = [];
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const value = await page.evaluate(read);
+    if (value === null) break;
+    readings.push(value);
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+  return readings;
+}
+
 /**
  * `puppeteer-core` is a dependency of the MCP workspace, not of this package —
  * this script must not add one. A git worktree has no `mcp/node_modules` of
@@ -370,6 +403,163 @@ async function seedEmptySession() {
   return sessionId;
 }
 
+/**
+ * A session with real-sized (but content-empty) chunks across two segments,
+ * mic and tab audio on and webcam off — a stand-in for the "multi-hundred-MB
+ * recording" the loading states exist for. The real fixture (`seedSession`)
+ * is a real 2 s WebM and loads before a poll can ever catch it mid-flight;
+ * this fixture's chunks are large enough that reading them back out of
+ * IndexedDB is itself real, observable work, which is what actually stretches
+ * the window — CPU throttling alone does not, since a chunk read is mostly
+ * IPC/storage-service latency, not renderer JS time.
+ */
+async function seedManyChunksSession() {
+  const db = await new Promise((done, fail) => {
+    const req = indexedDB.open('openscreenshot-recordings', 1);
+    req.onsuccess = () => done(req.result);
+    req.onerror = () => fail(req.error);
+  });
+  const sessionId = crypto.randomUUID();
+  const CHUNK_BYTES = 100_000;
+  const segments = [
+    { id: crypto.randomUUID(), index: 0, duration: 90_000, chunkCount: 150 },
+    { id: crypto.randomUUID(), index: 1, duration: 45_000, chunkCount: 150 },
+  ];
+  await new Promise((done, fail) => {
+    const tx = db.transaction(['sessions', 'segments', 'chunks'], 'readwrite');
+    tx.objectStore('sessions').put({
+      id: sessionId,
+      createdAt: Date.now(),
+      status: 'complete',
+      settings: { mic: true, tabAudio: true, webcam: false, ripple: true },
+      segmentIds: segments.map((s) => s.id),
+    });
+    const segStore = tx.objectStore('segments');
+    const chunkStore = tx.objectStore('chunks');
+    for (const seg of segments) {
+      segStore.put({
+        id: seg.id,
+        sessionId,
+        index: seg.index,
+        startedAt: Date.now(),
+        duration: seg.duration,
+        viewport: { w: 640, h: 360, dpr: 1 },
+        hasWebcam: false,
+      });
+      for (let seq = 0; seq < seg.chunkCount; seq++) {
+        chunkStore.put({
+          segmentId: seg.id,
+          kind: 'tab',
+          seq,
+          blob: new Blob([new Uint8Array(CHUNK_BYTES)]),
+        });
+      }
+    }
+    tx.oncomplete = () => done();
+    tx.onerror = () => fail(tx.error);
+    tx.onabort = () => fail(tx.error);
+  });
+  db.close();
+  const chunks = segments.reduce((sum, s) => sum + s.chunkCount, 0);
+  return {
+    sessionId,
+    chunks,
+    bytes: chunks * CHUNK_BYTES,
+    totalDurationMs: segments.reduce((sum, s) => sum + s.duration, 0),
+  };
+}
+
+/**
+ * The `chrome` stub the popup page needs to mount at all — a superset of
+ * `installChromeStub` above (tabs/permissions/commands/action), trimmed from
+ * the shape `a11y-smoke.mjs` already carries for the same page. Every
+ * `chrome.tabs.create` call is recorded on `window.__smokePopup.tabCreates`,
+ * which is the one thing this file's popup step reads back.
+ */
+function installPopupChromeStub(messages) {
+  function getMessage(key, subs) {
+    const entry = messages[key];
+    if (!entry) return key;
+    const list = Array.isArray(subs) ? subs : subs == null ? [] : [subs];
+    let text = entry.message;
+    for (const [name, placeholder] of Object.entries(entry.placeholders ?? {})) {
+      const index = Number(String(placeholder.content).replace('$', '')) - 1;
+      text = text.replace(new RegExp(`\\$${name}\\$`, 'gi'), list[index] ?? '');
+    }
+    return text;
+  }
+  const area = () => {
+    const map = new Map();
+    return {
+      async get(keys) {
+        const out = keys && typeof keys === 'object' && !Array.isArray(keys) ? { ...keys } : {};
+        const list =
+          keys == null
+            ? [...map.keys()]
+            : typeof keys === 'string'
+              ? [keys]
+              : Array.isArray(keys)
+                ? keys
+                : Object.keys(keys);
+        for (const key of list) if (map.has(key)) out[key] = map.get(key);
+        return out;
+      },
+      async set(items) {
+        for (const [k, v] of Object.entries(items)) map.set(k, v);
+      },
+      async remove(keys) {
+        for (const key of Array.isArray(keys) ? keys : [keys]) map.delete(key);
+      },
+      async getBytesInUse(keys) {
+        let bytes = 0;
+        for (const key of Array.isArray(keys) ? keys : [keys]) {
+          if (map.has(key)) bytes += JSON.stringify(map.get(key)).length;
+        }
+        return bytes;
+      },
+    };
+  };
+  const noop = () => {};
+  globalThis.__smokePopup = { tabCreates: [] };
+  globalThis.chrome = {
+    i18n: { getMessage },
+    storage: {
+      local: area(),
+      session: area(),
+      onChanged: { addListener: noop, removeListener: noop },
+    },
+    runtime: {
+      id: 'smoke',
+      getURL: (p) => '/' + String(p).replace(/^\//, ''),
+      sendMessage: async () => ({}),
+      onMessage: { addListener: noop, removeListener: noop },
+    },
+    action: {
+      setBadgeText: noop,
+      setBadgeBackgroundColor: noop,
+      getUserSettings: async () => ({ isOnToolbar: true }),
+    },
+    tabs: {
+      create: async (opts) => {
+        globalThis.__smokePopup.tabCreates.push(opts);
+        return { id: 1 };
+      },
+      update: async () => ({}),
+      query: async () => [{ id: 1, url: 'https://example.com/' }],
+      remove: noop,
+    },
+    windows: { update: async () => ({}) },
+    commands: { getAll: async () => [] },
+    permissions: {
+      contains: async () => true,
+      request: async () => true,
+      remove: async () => true,
+      onAdded: { addListener: noop, removeListener: noop },
+      onRemoved: { addListener: noop, removeListener: noop },
+    },
+  };
+}
+
 /** Share of the stage canvas that is painted, 0..1. */
 function stageOpacity() {
   const canvas = document.querySelector('.rec-canvas');
@@ -419,6 +609,10 @@ async function main() {
 
     const page = await browser.newPage();
     await page.setViewport({ width: 1440, height: 900 });
+    // A page-level session — `session` above is the browser-level one
+    // `Browser.setDownloadBehavior` needs; `Emulation.setCPUThrottlingRate`
+    // is a Page/Target-domain command and lives on this one instead.
+    const pageCdp = await page.createCDPSession();
     const crashes = [];
     page.on('pageerror', (err) => crashes.push(String(err)));
     page.on('console', (msg) => {
@@ -436,6 +630,102 @@ async function main() {
     await page.waitForSelector('.rec-empty', { timeout: 15_000 });
     const empty = await page.$eval('.rec-empty', (el) => el.textContent?.trim());
     assert(empty === messages.recorderEmpty.message, `empty list shows recorderEmpty ("${empty}")`);
+
+    step('the editor shows a determinate loading state while its chunks load');
+    // The real 2 s fixture below loads too fast to ever be seen loading, even
+    // throttled — this fixture exists only to give that window something
+    // real to measure.
+    const many = await page.evaluate(seedManyChunksSession);
+    assert(many.chunks === 300, `fixture has ${many.chunks} chunks across two segments`);
+    await pageCdp.send('Emulation.setCPUThrottlingRate', { rate: 20 });
+    await page.goto(`${base}${PAGE}?session=${many.sessionId}`, { waitUntil: 'load' });
+    const editorReadings = await pollUntilGone(
+      page,
+      () => {
+        const el = document.querySelector('.rec-session-loading [role="progressbar"]');
+        if (!el) return null;
+        return {
+          now: el.getAttribute('aria-valuenow'),
+          max: el.getAttribute('aria-valuemax'),
+          text: el.getAttribute('aria-valuetext'),
+        };
+      },
+      { timeoutMs: 10_000 },
+    );
+    await pageCdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+    // `max` is null (indeterminate — no aria-valuenow at all) until the
+    // chunk count resolves, then fixed for the rest of the load — the two
+    // readings this splits into are session-load.ts's "total not known yet"
+    // and "total known, reading chunk N of it" phases.
+    const indeterminate = editorReadings.filter((r) => r.max === null);
+    const determinate = editorReadings.filter((r) => r.max !== null);
+    assert(
+      indeterminate.length >= 1,
+      `saw the total-not-yet-known phase at least once (${indeterminate.length} reading(s))`,
+    );
+    assert(
+      determinate.length >= 2,
+      `captured ${determinate.length} determinate reading(s) once the total was known: ` +
+        JSON.stringify(determinate.slice(0, 3)),
+    );
+    assert(
+      determinate.every((r) => r.max === String(many.chunks)),
+      `every determinate reading already carried the full total (${many.chunks}) up front, first: ` +
+        JSON.stringify(determinate[0]),
+    );
+    const editorNows = determinate.map((r) => Number(r.now));
+    assert(
+      editorNows.some((n, i) => i > 0 && n > editorNows[i - 1]),
+      `aria-valuenow advanced across readings (${editorNows.join(',')})`,
+    );
+    assert(
+      determinate.every((r) => r.text === `${Math.round((Number(r.now) / many.chunks) * 100)}%`),
+      'aria-valuetext mirrors the percentage aria-valuenow/aria-valuemax already say',
+    );
+    await page.waitForSelector('.rec-timeline.timeline', { timeout: 20_000 });
+    assert(true, 'and the editor renders once the load finishes');
+
+    step('the session list shows a busy loading state, then real row fields');
+    await pageCdp.send('Emulation.setCPUThrottlingRate', { rate: 20 });
+    await page.goto(base + PAGE, { waitUntil: 'load' });
+    const listReadings = await pollUntilGone(
+      page,
+      () => {
+        const list = document.querySelector('.rec-list');
+        if (!list || list.getAttribute('aria-busy') !== 'true') return null;
+        const status = list.querySelector('[role="status"]');
+        return { statusText: status ? status.textContent.trim() : null };
+      },
+      { timeoutMs: 10_000 },
+    );
+    await pageCdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+    assert(
+      listReadings.length >= 1,
+      `captured ${listReadings.length} busy reading(s) before the rows loaded`,
+    );
+    assert(
+      listReadings[0].statusText === messages.recorderLoadingList.message,
+      `the busy region announces itself via role="status" ("${listReadings[0].statusText}")`,
+    );
+    await page.waitForSelector(`.rec-row[data-session-id="${many.sessionId}"]`, {
+      timeout: 15_000,
+    });
+    const rowMeta = await page.$eval(
+      `.rec-row[data-session-id="${many.sessionId}"] .rec-row-meta`,
+      (el) => el.textContent?.trim(),
+    );
+    const middot = '·';
+    const expectedMeta = [
+      '2',
+      '2:15', // 90_000 + 45_000 ms, formatTimer
+      formatBytesForTest(many.bytes),
+      messages.recorderSourceTab.message,
+      `${messages.recMic.message}, ${messages.recTabAudio.message}`,
+    ].join(` ${middot} `);
+    assert(
+      rowMeta === expectedMeta,
+      `row shows duration units, size, source and tracks ("${rowMeta}")`,
+    );
 
     step('seeding a fixture session into IndexedDB');
     const seeded = await page.evaluate(seedSession);
@@ -1032,6 +1322,40 @@ async function main() {
 
     await page.evaluate(() => window.__ossRecOverlay?.());
     await dom.detach();
+
+    step("the popup opens the recorder's session list, not a specific session");
+    const popupCrashes = [];
+    const popupPage = await browser.newPage();
+    popupPage.on('pageerror', (err) => popupCrashes.push(String(err)));
+    await popupPage.evaluateOnNewDocument(installPopupChromeStub, messages);
+    await popupPage.goto(`${base}/src/popup/index.html`, { waitUntil: 'load' });
+    await popupPage.waitForSelector('.footer-row .link-btn', { timeout: 15_000 });
+    const recordingsLabel = messages.recRecordings.message;
+    const clicked = await popupPage.evaluate((label) => {
+      const btn = [...document.querySelectorAll('.footer-row .link-btn')].find(
+        (el) => el.textContent?.trim() === label,
+      );
+      if (!btn) return false;
+      btn.click();
+      return true;
+    }, recordingsLabel);
+    assert(clicked, `found a footer link labeled "${recordingsLabel}" beside Reopen last`);
+    await popupPage.waitForFunction(() => window.__smokePopup.tabCreates.length > 0, {
+      timeout: 15_000,
+    });
+    const tabCreates = await popupPage.evaluate(() => window.__smokePopup.tabCreates);
+    assert(tabCreates.length === 1, `Recordings click called chrome.tabs.create once`);
+    const opened = new URL(tabCreates[0].url, base);
+    assert(
+      opened.pathname === '/src/recorder/index.html',
+      `it opens the recorder page (${opened.pathname})`,
+    );
+    assert(
+      !opened.search.includes('session='),
+      `with no session param — that's the list route, not a specific session (${opened.search || '(none)'})`,
+    );
+    assert(popupCrashes.length === 0, `no uncaught popup page errors ${popupCrashes.join('; ')}`);
+    await popupPage.close();
 
     assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
   } finally {

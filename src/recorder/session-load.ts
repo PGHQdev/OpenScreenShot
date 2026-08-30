@@ -96,7 +96,17 @@ export function fixDuration(video: HTMLVideoElement): Promise<number> {
   });
 }
 
-export async function loadSession(id: string): Promise<LoadedSession | null> {
+/** Progress through `loadSession`'s chunk read: `total` is known before the
+ *  first chunk is read, never grows partway through. */
+export interface LoadProgress {
+  loaded: number;
+  total: number;
+}
+
+export async function loadSession(
+  id: string,
+  onProgress?: (progress: LoadProgress) => void,
+): Promise<LoadedSession | null> {
   const session = await getSession(id);
   if (!session) return null;
 
@@ -106,17 +116,35 @@ export async function loadSession(id: string): Promise<LoadedSession | null> {
   const crashed = session.status === 'recording';
 
   const rawSegments = await getSegments(id);
+
+  // Every segment's chunk count is a cheap IndexedDB `count()`, so the total
+  // is known before any chunk is actually read — that's what makes the
+  // progress below a real fraction instead of a spinner.
+  const chunkCounts = await Promise.all(
+    rawSegments.map(async (s) => ({
+      tab: await countChunks(s.id, 'tab'),
+      webcam: await countChunks(s.id, 'webcam'),
+    })),
+  );
+  const total = chunkCounts.reduce((sum, c) => sum + c.tab + c.webcam, 0);
+  let loaded = 0;
+  onProgress?.({ loaded, total });
+  const onChunk = () => {
+    loaded += 1;
+    onProgress?.({ loaded, total });
+  };
+
   const segments: LoadedSegment[] = [];
-  for (const rawSegment of rawSegments) {
-    const [tabChunks, webcamCount, events] = await Promise.all([
-      readChunks(rawSegment.id, 'tab'),
-      countChunks(rawSegment.id, 'webcam'),
+  for (let i = 0; i < rawSegments.length; i++) {
+    const rawSegment = rawSegments[i];
+    const [tabChunks, events] = await Promise.all([
+      readChunks(rawSegment.id, 'tab', onChunk),
       readEvents(rawSegment.id),
     ]);
     const tabUrl = URL.createObjectURL(assembleBlob(tabChunks));
     const webcamUrl =
-      webcamCount > 0
-        ? URL.createObjectURL(assembleBlob(await readChunks(rawSegment.id, 'webcam')))
+      chunkCounts[i].webcam > 0
+        ? URL.createObjectURL(assembleBlob(await readChunks(rawSegment.id, 'webcam', onChunk)))
         : null;
 
     let segment = rawSegment;

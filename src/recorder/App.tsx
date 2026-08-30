@@ -5,7 +5,7 @@ import { frameFromSettings, frameToSettings, type FrameOptions } from '../editor
 import { getSettings } from '../shared/storage';
 import { DEFAULT_SETTINGS } from '../shared/types';
 import { applyTheme, watchSystemTheme } from '../shared/theme';
-import { deleteSession, getSegments, listSessions } from '../shared/recording-db';
+import { chunkBytes, deleteSession, getSegments, listSessions } from '../shared/recording-db';
 import type { RecordingSession, RecState } from '../shared/recording-types';
 import { formatTimer } from '../content/recording-overlay';
 import { fixDuration, type LoadedSession } from './session-load';
@@ -28,6 +28,19 @@ import { cameraAt, EASE_MS } from './zoom';
 // i18n helper
 function t(id: string): string {
   return chrome.i18n.getMessage(id) ?? id;
+}
+
+/** A session's chunk total, human-sized — the session list's only caller. */
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ['KB', 'MB', 'GB'];
+  let value = bytes / 1024;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return `${value.toFixed(value < 10 ? 1 : 0)} ${units[unit]}`;
 }
 
 // Popup reads this to prefill "Continue recording" on the tab it's opened on
@@ -161,10 +174,15 @@ async function queryActiveSessionId(): Promise<string | null> {
   }
 }
 
+interface SessionRow {
+  session: RecordingSession;
+  segmentCount: number;
+  totalDurationMs: number;
+  totalBytes: number;
+}
+
 function SessionListView({ onOpen }: { onOpen: (id: string) => void }) {
-  const [rows, setRows] = useState<
-    { session: RecordingSession; segmentCount: number; totalDurationMs: number }[] | null
-  >(null);
+  const [rows, setRows] = useState<SessionRow[] | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -177,10 +195,14 @@ function SessionListView({ onOpen }: { onOpen: (id: string) => void }) {
     const withMeta = await Promise.all(
       sessions.map(async (session) => {
         const segments = await getSegments(session.id);
+        const sizes = await Promise.all(
+          segments.map((s) => Promise.all([chunkBytes(s.id, 'tab'), chunkBytes(s.id, 'webcam')])),
+        );
         return {
           session,
           segmentCount: segments.length,
           totalDurationMs: segments.reduce((sum, s) => sum + s.duration, 0),
+          totalBytes: sizes.reduce((sum, [tab, webcam]) => sum + tab + webcam, 0),
         };
       }),
     );
@@ -199,7 +221,22 @@ function SessionListView({ onOpen }: { onOpen: (id: string) => void }) {
     await refresh();
   }
 
-  if (rows === null) return null;
+  // No chunk total to build a fraction from here — listing sessions and
+  // summing their chunk bytes isn't the chunked read `loadSession` reports
+  // progress through, just an IndexedDB read of unknown length. `aria-busy`
+  // on the region plus a polite status line is the honest way to announce
+  // that, against the alternative of a progressbar with a fraction it does
+  // not have.
+  if (rows === null) {
+    return (
+      <div class="rec-list" aria-busy="true">
+        <h1 class="rec-list-title">{t('recorderSessions')}</h1>
+        <p class="rec-list-loading" role="status">
+          {t('recorderLoadingList')}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div class="rec-list">
@@ -207,13 +244,23 @@ function SessionListView({ onOpen }: { onOpen: (id: string) => void }) {
       {rows.length === 0 ? (
         <p class="rec-empty">{t('recorderEmpty')}</p>
       ) : (
-        rows.map(({ session, segmentCount, totalDurationMs }) => {
+        rows.map(({ session, segmentCount, totalDurationMs, totalBytes }) => {
           const live = session.id === activeId;
           // A retained failed start holds no segments — there is nothing to
           // open, only the record that the attempt happened, and a Delete.
           const failed = session.status === 'failed';
+          // The stored settings are what was asked for, not what recorded —
+          // a declined mic/webcam degrades silently (see engine.ts) and that
+          // correction lives only in the live control bar, never written
+          // back to the session. Good enough for a list row; a session that
+          // needs the real answer already gets it from hasAudio on open.
+          const tracks = [
+            session.settings.mic ? t('recMic') : null,
+            session.settings.tabAudio ? t('recTabAudio') : null,
+            session.settings.webcam ? t('recWebcam') : null,
+          ].filter((label): label is string => label !== null);
           return (
-            <div class="rec-row" key={session.id}>
+            <div class="rec-row" key={session.id} data-session-id={session.id}>
               <div class="rec-row-info">
                 <span class="rec-row-date">{new Date(session.createdAt).toLocaleString()}</span>
                 {live ? (
@@ -224,7 +271,9 @@ function SessionListView({ onOpen }: { onOpen: (id: string) => void }) {
                   <span class="pill pill-recovered">{t('recorderRecovered')}</span>
                 ) : null}
                 <span class="rec-row-meta">
-                  {segmentCount} &middot; {formatTimer(totalDurationMs)}
+                  {segmentCount} &middot; {formatTimer(totalDurationMs)} &middot;{' '}
+                  {formatBytes(totalBytes)} &middot; {t('recorderSourceTab')}
+                  {tracks.length > 0 ? <> &middot; {tracks.join(', ')}</> : null}
                 </span>
               </div>
               <div class="rec-row-actions">
@@ -316,7 +365,32 @@ function SessionView({
     }
   }, [sess.segments, sess.volumes.mic, sess.webcamVideoAt]);
 
-  if (sess.loading || !sess.session) return null;
+  // `loadProgress.total` is a real chunk count, known before any chunk is
+  // read (session-load.ts), so this is a determinate fraction, not a
+  // spinner standing in for one — except a session with no chunks at all,
+  // where there is nothing to count a fraction of and the bar stays
+  // indeterminate (no aria-valuenow) for the instant it takes to resolve.
+  if (sess.loading) {
+    const { loaded, total } = sess.loadProgress;
+    const pct = total > 0 ? Math.round((loaded / total) * 100) : null;
+    return (
+      <div class="rec-session-loading">
+        <div
+          class="rec-progress"
+          role="progressbar"
+          aria-label={t('recorderSessionLoading')}
+          aria-valuemin={0}
+          aria-valuemax={total > 0 ? total : undefined}
+          aria-valuenow={total > 0 ? loaded : undefined}
+          aria-valuetext={pct !== null ? `${pct}%` : undefined}
+        >
+          <div class="rec-progress-fill" style={{ width: `${pct ?? 0}%` }} />
+        </div>
+        <span class="rail-hint">{pct !== null ? `${pct}%` : t('recorderSessionLoading')}</span>
+      </div>
+    );
+  }
+  if (!sess.session) return null;
 
   const loaded: LoadedSession = {
     session: sess.session,

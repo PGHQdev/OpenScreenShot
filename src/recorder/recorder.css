@@ -211,7 +211,8 @@ body {
   margin: 0 0 var(--s-4);
 }
 
-.rec-empty {
+.rec-empty,
+.rec-list-loading {
   color: var(--text-2);
   font-size: var(--fs-base);
   padding: var(--s-5) 0;
@@ -296,6 +297,22 @@ body {
   display: flex;
   flex: 1 1 auto;
   min-height: 0;
+}
+
+/* A session still loading its chunks out of IndexedDB — same flex slot as
+   .rec-session, so the header above it never sits over a blank page. */
+.rec-session-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.rec-session-loading .rec-progress {
+  width: 240px;
 }
 
 .rec-main {

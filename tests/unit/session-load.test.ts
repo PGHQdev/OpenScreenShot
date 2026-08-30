@@ -105,3 +105,40 @@ describe('loadSession', () => {
     expect(persistedSegments[0].duration).toBe(estimateDuration(3));
   });
 });
+
+describe('loadSession progress', () => {
+  it('reports the total up front, then one step per chunk in read order', async () => {
+    const session = await createSession(DEFAULT_RECORDING_SETTINGS);
+    const seg1 = await createSegment(session.id, 0, { w: 800, h: 600, dpr: 1 }, false);
+    await appendChunk(seg1.id, 'tab', 0, new Blob(['a']));
+    await appendChunk(seg1.id, 'tab', 1, new Blob(['b']));
+    const seg2 = await createSegment(session.id, 1, { w: 800, h: 600, dpr: 1 }, false);
+    await appendChunk(seg2.id, 'tab', 0, new Blob(['c']));
+    await finalizeSegment(seg1.id, 2000);
+    await finalizeSegment(seg2.id, 1000);
+    await updateSession(session.id, { status: 'complete' });
+
+    const steps: { loaded: number; total: number }[] = [];
+    await loadSession(session.id, (p) => steps.push({ ...p }));
+
+    // The total (3 chunks across both segments) is known before the first
+    // chunk is read, not discovered as the read goes.
+    expect(steps[0]).toEqual({ loaded: 0, total: 3 });
+    expect(steps.slice(1)).toEqual([
+      { loaded: 1, total: 3 },
+      { loaded: 2, total: 3 },
+      { loaded: 3, total: 3 },
+    ]);
+    expect(steps.every((s) => s.total === 3)).toBe(true);
+  });
+
+  it('reports total 0 for a session with no chunks, without calling onProgress again', async () => {
+    const session = await createSession(DEFAULT_RECORDING_SETTINGS);
+    await createSegment(session.id, 0, { w: 800, h: 600, dpr: 1 }, false);
+
+    const steps: { loaded: number; total: number }[] = [];
+    await loadSession(session.id, (p) => steps.push({ ...p }));
+
+    expect(steps).toEqual([{ loaded: 0, total: 0 }]);
+  });
+});
