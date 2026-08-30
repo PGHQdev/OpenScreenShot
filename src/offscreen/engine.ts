@@ -84,6 +84,13 @@ function elapsed(): number {
   return (state.pausedAt || Date.now()) - state.startedAt - state.pausedAccumMs;
 }
 
+/** Tells the worker a store write failed, once per kind per run. */
+function reportWriteFailed(s: EngineState, kind: 'media' | 'events'): void {
+  if (s.writeFailed[kind]) return;
+  s.writeFailed[kind] = true;
+  send({ type: 'ENGINE_WRITE_FAILED', sessionId: s.sessionId, kind });
+}
+
 /**
  * Tracks a write so `stop()` can wait for it; a failed write never wedges stop.
  *
@@ -100,11 +107,7 @@ function trackWrite(s: EngineState, write: Promise<void>, kind: 'media' | 'event
   // rejection there would throw out of `stop()` after `stopping = true` was
   // set, permanently wedging the engine (state never nulled, ENGINE_STOPPED
   // never sent).
-  const settled = write.catch(() => {
-    if (s.writeFailed[kind]) return;
-    s.writeFailed[kind] = true;
-    send({ type: 'ENGINE_WRITE_FAILED', sessionId: s.sessionId, kind });
-  });
+  const settled = write.catch(() => reportWriteFailed(s, kind));
   s.pendingWrites.add(settled);
   void settled.finally(() => s.pendingWrites.delete(settled));
 }
@@ -300,10 +303,11 @@ function resume(): void {
 
 async function stop(canceled: boolean): Promise<void> {
   if (!state || state.stopping) return;
-  state.stopping = true;
-  if (state.watchdog) clearInterval(state.watchdog);
+  const s = state;
+  s.stopping = true;
+  if (s.watchdog) clearInterval(s.watchdog);
 
-  const { sessionId, segmentId, recorders, streams, audioCtx, pendingWrites } = state;
+  const { sessionId, segmentId, recorders, streams, audioCtx, pendingWrites } = s;
 
   await Promise.all(
     recorders.map(
@@ -329,15 +333,27 @@ async function stop(canceled: boolean): Promise<void> {
   // wait for it, or a clean stop can silently drop the last second.
   await Promise.all(pendingWrites);
 
-  if (canceled) {
-    await deleteSession(sessionId);
-  } else {
-    await finalizeSegment(segmentId, elapsed());
-    await updateSession(sessionId, { status: 'complete' });
+  // The bookkeeping rows are the last three writes of a run and they go to the
+  // same store the chunks did, so the disk that filled mid-recording fails them
+  // too. Teardown must not depend on them: an unguarded rejection here skips
+  // ENGINE_STOPPED, leaves `stopping` true and `state` set, and every later
+  // OFFSCREEN_STOP returns at the guard above — REC badge on, bar up, Stop and
+  // Cancel inert until the extension is reloaded. The chunks are already on
+  // disk either way; a session left at `status: 'recording'` is offered as a
+  // crash to recover, which is the right outcome for a half-written row.
+  try {
+    if (canceled) {
+      await deleteSession(sessionId);
+    } else {
+      await finalizeSegment(segmentId, elapsed());
+      await updateSession(sessionId, { status: 'complete' });
+    }
+  } catch {
+    reportWriteFailed(s, 'media');
+  } finally {
+    send({ type: 'ENGINE_STOPPED', sessionId, canceled });
+    state = null;
   }
-
-  send({ type: 'ENGINE_STOPPED', sessionId, canceled });
-  state = null;
 }
 
 chrome.runtime.onMessage.addListener((message: unknown) => {
