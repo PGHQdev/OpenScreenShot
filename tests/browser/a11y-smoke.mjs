@@ -510,6 +510,14 @@ async function testEditor(browser, base, messages) {
   await settle(220); // see the export dialog step above
   await scan(page, 'editor shortcut sheet');
   await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('.sheet'), { timeout: 5000 });
+
+  step('EDITOR — capture history shelf (task 28)');
+  await page.click('button[title="Capture history"]');
+  await page.waitForSelector('.history-row', { timeout: 5000 });
+  await settle(220); // see the export dialog step above
+  await scan(page, 'editor capture history shelf');
+  await page.keyboard.press('Escape');
 
   assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
   await page.close();
@@ -549,7 +557,7 @@ async function popupMain(browser, base, messages) {
   await scan(page, 'popup main surface');
 
   step('POPUP — settings view');
-  await page.click('.icon-btn[aria-label]');
+  await page.click('.icon-btn[aria-label="Settings"]');
   await page.waitForSelector('.settings');
   await scan(page, 'popup settings view');
 

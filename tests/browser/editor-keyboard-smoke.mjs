@@ -273,6 +273,26 @@ async function makeTallCapture() {
   };
 }
 
+/** A second, visibly different capture (green, and a different size than
+ * makeCapture's blue 800x600) — task 28's shelf test opens this one over the
+ * seeded default and checks the canvas actually swapped, not just the modal. */
+async function makeGreenCapture() {
+  const sharp = createRequire(join(ROOT, 'package.json'))('sharp');
+  const png = await sharp({
+    create: { width: 400, height: 300, channels: 3, background: { r: 40, g: 170, b: 90 } },
+  })
+    .png()
+    .toBuffer();
+  return {
+    dataUrl: `data:image/png;base64,${png.toString('base64')}`,
+    width: 400,
+    height: 300,
+    mode: 'import',
+    title: 'history smoke green',
+    capturedAt: Date.now(),
+  };
+}
+
 /** Syntactically a data: URL, but not real image bytes — getLastCapture()
  * resolves it fine (it is just stored JSON), so the load only fails later,
  * at img.onerror, the same way a genuinely corrupt stash would. */
@@ -3923,6 +3943,118 @@ async function testCropHandlesAndUndo(browser, base) {
   await page.close();
 }
 
+/**
+ * task 28: the capture history shelf — lists shelf entries, opens one onto
+ * the canvas (a real swap, not just closing the modal), and deletes one
+ * behind a two-tap confirm. Seeds `openscreenshot:captures` +
+ * `openscreenshot:capture-image:{id}` directly (the shape setLastCapture
+ * itself writes) rather than driving a live import, so this test is about
+ * the shelf's own list/open/delete wiring — real thumbnail encoding is
+ * already exercised for real by every other test in this file (they all
+ * seed the legacy `openscreenshot:last-capture` key, which migrates through
+ * the real makeThumbnail encoder on first read; task-28-report.md has that
+ * regression run).
+ */
+async function testCaptureHistoryShelf(browser, base) {
+  step('task 28: the capture history shelf lists, opens and deletes shelf entries');
+  const { page } = await newSmokePage(browser);
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+
+  const capBlue = await makeCapture(); // 800x600
+  const capGreen = await makeGreenCapture(); // 400x300, newer
+  const idBlue = 'hist-blue';
+  const idGreen = 'hist-green';
+  const tinyThumb =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:captures': [
+      {
+        id: idGreen,
+        thumbnail: tinyThumb,
+        width: capGreen.width,
+        height: capGreen.height,
+        mode: capGreen.mode,
+        title: capGreen.title,
+        capturedAt: 2000,
+      },
+      {
+        id: idBlue,
+        thumbnail: tinyThumb,
+        width: capBlue.width,
+        height: capBlue.height,
+        mode: capBlue.mode,
+        title: capBlue.title,
+        capturedAt: 1000,
+      },
+    ],
+    [`openscreenshot:capture-image:${idGreen}`]: capGreen.dataUrl,
+    [`openscreenshot:capture-image:${idBlue}`]: capBlue.dataUrl,
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+
+  // The newest entry (green, capturedAt 2000) autoloads — same as
+  // getLastCapture always has.
+  await page.waitForSelector('.stage-canvas[aria-label*="400 by 300"]', { timeout: 5000 });
+
+  step('task 28: opening the shelf lists both seeded entries, thumbnails included');
+  await page.click('button[title="Capture history"]');
+  await page.waitForSelector('.modal[aria-label="Capture history"]');
+  // The row list loads async (listCaptureHistory reads storage) — wait for
+  // it, rather than reading the modal's still-empty first render.
+  await page.waitForSelector('.history-row', { timeout: 5000 });
+  const rowCount = await page.$$eval('.history-row', (els) => els.length);
+  assert(rowCount === 2, `the shelf lists both seeded entries (${rowCount})`);
+  const thumbSrcs = await page.$$eval('.history-thumb', (els) =>
+    els.map((el) => el.getAttribute('src')),
+  );
+  assert(
+    thumbSrcs.every((s) => s?.startsWith('data:image/')),
+    'every row renders its own thumbnail as an <img>',
+  );
+
+  step('task 28: Open on the older entry swaps the canvas to its picture');
+  // Row order follows the seeded array: index 0 = green (newest), index 1 =
+  // blue (older) — nth-child is 1-based.
+  await page.click('.history-row:nth-child(2) .history-row-actions button:first-child');
+  await page.waitForFunction(() => !document.querySelector('.modal[aria-label="Capture history"]'));
+  await page.waitForSelector('.stage-canvas[aria-label*="800 by 600"]', { timeout: 5000 });
+
+  step('task 28: Delete needs a second click to confirm, then removes the row');
+  await page.click('button[title="Capture history"]');
+  await page.waitForSelector('.modal[aria-label="Capture history"]');
+  const deleteBtn = '.history-row:nth-child(1) .history-delete-btn';
+  await page.waitForSelector(deleteBtn, { timeout: 5000 });
+  await page.click(deleteBtn);
+  assert(
+    (await page.$eval(deleteBtn, (el) => el.getAttribute('data-armed'))) === 'true',
+    'the first click arms the confirm, without deleting yet',
+  );
+  assert(
+    (await page.$$eval('.history-row', (els) => els.length)) === 2,
+    'the row is still there after the first click',
+  );
+  await page.click(deleteBtn);
+  await page.waitForFunction(() => document.querySelectorAll('.history-row').length === 1);
+  assert(
+    (await page.$$eval('.history-row', (els) => els.length)) === 1,
+    'the second click actually deletes the row',
+  );
+
+  step('task 28: Escape closes the shelf and returns focus to its trigger');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('.modal[aria-label="Capture history"]'));
+  const onTrigger = await page.evaluate(
+    () => document.activeElement === document.querySelector('button[title="Capture history"]'),
+  );
+  assert(onTrigger, 'focus returns to the History trigger on Escape');
+
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
+}
+
 async function main() {
   const built = await stat(join(DIST, PAGE.slice(1))).then(
     () => true,
@@ -5057,6 +5189,7 @@ async function main() {
     await testCutDraftRestore(browser, base);
     await testBeautifyLooks(browser, base);
     await testCropHandlesAndUndo(browser, base);
+    await testCaptureHistoryShelf(browser, base);
 
     console.log('\nALL STEPS PASSED');
   } finally {

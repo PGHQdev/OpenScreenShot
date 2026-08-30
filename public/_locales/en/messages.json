@@ -79,6 +79,10 @@
     "message": "Reopen last",
     "description": "Link in the popup that reopens the most recent capture in the editor."
   },
+  "historyAria": {
+    "message": "History",
+    "description": "Header icon button in the popup that opens the editor's capture history shelf."
+  },
   "footerShortcuts": {
     "message": "Shortcuts",
     "description": "Short footer label for the link that opens Chrome's shortcut settings."

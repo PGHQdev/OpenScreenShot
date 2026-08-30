@@ -1161,6 +1161,67 @@ body {
   white-space: nowrap;
 }
 
+/* ---- Capture history shelf ---- */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin-bottom: var(--s-4);
+  /* Long enough to need its own scroll before it grows the modal past
+     .modal's own max-height clamp. */
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.history-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.history-thumb {
+  width: 64px;
+  height: 48px;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+  background: var(--surface-3);
+}
+
+.history-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.history-row-date {
+  font-size: var(--fs-base);
+  font-weight: 500;
+}
+
+.history-row-meta {
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.history-row-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  flex: 0 0 auto;
+}
+
+.history-delete-btn[data-armed='true'] {
+  color: var(--danger);
+  font-weight: 600;
+}
+
 /* ---- Beautify panel ---- */
 .btn-secondary.is-active {
   background: var(--accent-subtle);

@@ -17,6 +17,7 @@ import {
   IconCut,
   IconEyedropper,
   IconHighlight,
+  IconHistory,
   IconImage,
   IconLayers,
   IconLine,
@@ -31,11 +32,12 @@ import {
   IconUndo,
 } from '../shared/icons';
 import { getSettings, setSettings } from '../shared/storage';
-import type { LastCapture } from '../shared/types';
+import { labelForSource } from './capture-label';
 import { ZoomMenu } from './ZoomMenu';
 import { BeautifyMenu } from './BeautifyMenu';
 import { stylebarFields } from './stylebar';
 import { ShortcutSheet } from './ShortcutSheet';
+import { HistorySheet } from './HistorySheet';
 import { hasScreenPicker, openScreenPicker } from './eyedropper';
 import {
   clampTargetWidth,
@@ -52,6 +54,12 @@ export function App() {
   const ed = useEditor();
   const [exportOpen, setExportOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  // The popup's History footer link opens the editor with ?history=1 (see
+  // openHistory() in popup/App.tsx) — read once, at mount, same as the
+  // recorder page reads its own ?session= param.
+  const [historyOpen, setHistoryOpen] = useState(() =>
+    new URLSearchParams(window.location.search).has('history'),
+  );
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
   const [dragOver, setDragOver] = useState(false);
   const toolbarRef = useRef<HTMLElement>(null);
@@ -71,6 +79,7 @@ export function App() {
   // stageNotice are ed's own state, not local booleans).
   const exportT = useExitDelay(exportOpen && !!ed.capture, DUR_MID);
   const sheetT = useExitDelay(sheetOpen, DUR_MID);
+  const historyT = useExitDelay(historyOpen, DUR_MID);
   const importT = useExitDelay(!!ed.pendingImport, DUR_MID);
   // draft-restore, stage-notice and crop-confirm all share the same pill
   // position (top: s-3, centred), so each waits for the others to be fully
@@ -243,6 +252,14 @@ export function App() {
           </button>
         </div>
         <div class="topbar-controls">
+          <button
+            class="icon-btn"
+            title="Capture history"
+            aria-label="Capture history"
+            onClick={() => setHistoryOpen(true)}
+          >
+            <IconHistory size={16} />
+          </button>
           <button
             class="icon-btn"
             title="Keyboard shortcuts (?)"
@@ -474,6 +491,16 @@ export function App() {
       ) : null}
       {sheetT.mounted ? (
         <ShortcutSheet onClose={() => setSheetOpen(false)} closing={sheetT.closing} />
+      ) : null}
+      {historyT.mounted ? (
+        <HistorySheet
+          onOpen={(entry) => {
+            setHistoryOpen(false);
+            void ed.openHistoryEntry(entry);
+          }}
+          onClose={() => setHistoryOpen(false)}
+          closing={historyT.closing}
+        />
       ) : null}
       {importT.mounted && pendingImportSnapshot ? (
         <ImportConfirm
@@ -1356,19 +1383,6 @@ function draftSummary(draft: Draft): string {
     parts.push(`${draft.bands.length} cut${draft.bands.length === 1 ? '' : 's'}`);
   }
   return parts.join(', ');
-}
-
-function labelForSource(mode: LastCapture['mode']): string {
-  switch (mode) {
-    case 'full-page':
-      return 'Full Page';
-    case 'visible':
-      return 'Visible';
-    case 'region':
-      return 'Region';
-    case 'import':
-      return 'Imported';
-  }
 }
 
 function hintForTool(tool: Tool): string {

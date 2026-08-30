@@ -15,6 +15,7 @@ import {
   IconCoffee,
   IconGear,
   IconGift,
+  IconHistory,
   IconPage,
   IconRecordDot,
   IconRegion,
@@ -122,6 +123,13 @@ function formatElapsed(ms: number): string {
 // Reopen the stashed capture in the editor (the stash survives editor loads).
 function openEditor() {
   void chrome.tabs.create({ url: chrome.runtime.getURL('src/editor/index.html') });
+  window.close();
+}
+
+// Open the editor straight into its capture history shelf — the header icon
+// button next to Settings.
+function openHistory() {
+  void chrome.tabs.create({ url: chrome.runtime.getURL('src/editor/index.html') + '?history=1' });
   window.close();
 }
 
@@ -392,14 +400,24 @@ export function App() {
               </span>
               <span class="brand-name">OpenScreenShot</span>
             </div>
-            <button
-              class="icon-btn"
-              title={t('settingsTitle')}
-              aria-label={t('settingsTitle')}
-              onClick={() => setShowSettings(true)}
-            >
-              <IconGear size={16} />
-            </button>
+            <div class="header-actions">
+              <button
+                class="icon-btn"
+                title={t('historyAria')}
+                aria-label={t('historyAria')}
+                onClick={openHistory}
+              >
+                <IconHistory size={16} />
+              </button>
+              <button
+                class="icon-btn"
+                title={t('settingsTitle')}
+                aria-label={t('settingsTitle')}
+                onClick={() => setShowSettings(true)}
+              >
+                <IconGear size={16} />
+              </button>
+            </div>
           </>
         )}
       </header>

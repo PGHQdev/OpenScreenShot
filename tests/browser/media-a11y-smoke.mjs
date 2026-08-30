@@ -1313,8 +1313,10 @@ async function testPopup(browser, base, messages) {
   );
   // The quality slider only renders for a lossy default format (App.tsx
   // showQuality) — Settings starts on PNG, so Settings is opened and JPEG
-  // (the seg-grid's 2nd of 4 format buttons) selected first.
-  await page.click('.icon-btn');
+  // (the seg-grid's 2nd of 4 format buttons) selected first. Targeted by
+  // aria-label, not just `.icon-btn` — task 28 added a second header
+  // icon-btn (History) ahead of Settings in the DOM.
+  await page.click('.icon-btn[aria-label="Settings"]');
   await page.waitForSelector('.seg-grid');
   await page.click('.seg-grid .seg-btn:nth-child(2)');
   await page.waitForSelector('.range');

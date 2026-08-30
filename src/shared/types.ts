@@ -84,7 +84,13 @@ export interface TileSpec {
 /** Where the editor's image came from. An import is not a capture mode. */
 export type CaptureSource = CaptureMode | 'import';
 
-/** The most recent capture, stashed in storage so the editor page can load it. */
+/**
+ * A capture, decoded and ready for the editor's canvas. Returned by
+ * `getLastCapture`/`openCapture` (src/shared/storage.ts), which read it back
+ * out of the capture history shelf. `id` names the shelf entry it came from —
+ * absent when the capture predates the shelf and has not round-tripped
+ * through storage yet (a fresh import, before `applyImport` stashes it).
+ */
 export interface LastCapture {
   dataUrl: string;
   width: number;
@@ -92,6 +98,26 @@ export interface LastCapture {
   mode: CaptureSource;
   title: string;
   /** Page URL, used by the `{domain}` filename token. Absent on pre-0.4.0 stashes. */
+  url?: string;
+  capturedAt: number;
+  id?: string;
+}
+
+/**
+ * One row in the capture history shelf — everything the shelf's list needs
+ * to draw itself without loading a single full-size image. `thumbnail` is a
+ * small JPEG data URL (see src/shared/thumbnail.ts); the full-size image
+ * lives under its own storage key, read only when this entry is opened. See
+ * src/shared/storage.ts's CAPTURE_HISTORY_LIMIT doc comment for why the
+ * split exists.
+ */
+export interface CaptureHistoryEntry {
+  id: string;
+  thumbnail: string;
+  width: number;
+  height: number;
+  mode: CaptureSource;
+  title: string;
   url?: string;
   capturedAt: number;
 }

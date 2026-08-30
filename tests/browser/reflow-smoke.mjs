@@ -448,7 +448,7 @@ async function testPopup(browser, base, messages) {
   assert(footerReachable, 'the last footer control scrolls into view');
 
   step('POPUP — settings view scrolls at a short viewport too');
-  await page.click('.icon-btn[aria-label]');
+  await page.click('.icon-btn[aria-label="Settings"]');
   await page.waitForSelector('.settings');
   const settingsRows = await page.$$eval('.settings-row', (els) => els.length);
   assert(settingsRows > 0, `settings view renders ${settingsRows} rows`);

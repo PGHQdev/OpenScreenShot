@@ -51,3 +51,13 @@ export function readImageFile(file: File): Promise<{ dataUrl: string; img: HTMLI
     reader.readAsDataURL(file);
   });
 }
+
+/** Decode an already-have data URL — reopening a capture history shelf entry. */
+export function decodeDataUrl(dataUrl: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('decode failed'));
+    img.src = dataUrl;
+  });
+}

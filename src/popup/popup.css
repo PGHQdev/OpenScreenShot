@@ -43,6 +43,15 @@ body {
   justify-content: space-between;
 }
 
+/* Groups the History and Settings icon buttons as .header's one right-hand
+   child, so .header's space-between still reads as two things (brand, the
+   button group) rather than spreading a third child out across the row. */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+
 .brand {
   display: flex;
   align-items: center;

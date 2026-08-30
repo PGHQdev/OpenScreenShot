@@ -96,7 +96,7 @@ import {
   type CarriedBox,
   type Mutation,
 } from './keyboard';
-import type { LastCapture, Settings } from '../shared/types';
+import type { CaptureHistoryEntry, LastCapture, Settings } from '../shared/types';
 import {
   clearDraft,
   clearDraftImage,
@@ -104,6 +104,7 @@ import {
   getDraftImage,
   getLastCapture,
   getSettings,
+  openCapture,
   setDraft,
   setDraftImage,
   setLastCapture,
@@ -128,7 +129,7 @@ import {
   type HistoryEntry,
 } from './history';
 import { agreed } from './stylebar';
-import { importSizeError, readImageFile, titleFromFilename } from './import-image';
+import { decodeDataUrl, importSizeError, readImageFile, titleFromFilename } from './import-image';
 import { exportPdf as exportPdfFile, type PdfExportProgress, type PdfOptions } from './pdf';
 import { resampleToWidth } from './scale';
 
@@ -145,6 +146,14 @@ interface PendingImport {
   name: string;
   dataUrl: string;
   img: HTMLImageElement;
+  /**
+   * Set when this replacement is reopening a capture history shelf entry
+   * rather than a freshly imported file. applyImport reads its mode/title/
+   * url/capturedAt/id instead of manufacturing an 'import' capture, and
+   * skips re-stashing it — it is already in the shelf, and stashing it again
+   * would mint a duplicate row with a fresh thumbnail.
+   */
+  history?: CaptureHistoryEntry;
 }
 
 type Interaction =
@@ -2208,17 +2217,29 @@ export function useEditor() {
       if (!c) return;
       const width = p.img.naturalWidth;
       const height = p.img.naturalHeight;
-      const cap: LastCapture = {
-        dataUrl: p.dataUrl,
-        width,
-        height,
-        mode: 'import',
-        title: titleFromFilename(p.name),
-        capturedAt: Date.now(),
-      };
-      // Stashed like a capture, so the popup's "Reopen last" and a page reload
-      // both find it.
-      void setLastCapture(cap);
+      const cap: LastCapture = p.history
+        ? {
+            dataUrl: p.dataUrl,
+            width,
+            height,
+            mode: p.history.mode,
+            title: p.history.title,
+            url: p.history.url,
+            capturedAt: p.history.capturedAt,
+            id: p.history.id,
+          }
+        : {
+            dataUrl: p.dataUrl,
+            width,
+            height,
+            mode: 'import',
+            title: titleFromFilename(p.name),
+            capturedAt: Date.now(),
+          };
+      // A fresh import is stashed like a capture, so the popup's "Reopen
+      // last" and a page reload both find it. A shelf entry is already
+      // stashed — see the `history` field's own doc comment.
+      if (!p.history) void setLastCapture(cap);
       setCapture(cap);
       setImageSize({ w: width, h: height });
       // The old draft belongs to a document that no longer exists.
@@ -2259,6 +2280,36 @@ export function useEditor() {
         setStageNotice('Could not read that image.');
         return;
       }
+      if (annotationsRef.current.length > 0) setPendingImport(next);
+      else applyImport(next);
+    },
+    [applyImport],
+  );
+
+  /**
+   * Reopen a capture history shelf entry on the canvas — same "would this
+   * destroy work?" gate as importFromFile, reusing its pendingImport/
+   * confirmImport/cancelImport machinery via the `history` field. Bad or
+   * deleted-out-from-under-it storage surfaces as a stage notice rather than
+   * the stage error overlay: unlike the initial load, there is a document
+   * already open, so this is a failed action on it, not a failure to load.
+   */
+  const openHistoryEntry = useCallback(
+    async (entry: CaptureHistoryEntry) => {
+      setStageNotice(null);
+      const full = await openCapture(entry.id);
+      if (!full) {
+        setStageNotice('That capture is gone.');
+        return;
+      }
+      let img: HTMLImageElement;
+      try {
+        img = await decodeDataUrl(full.dataUrl);
+      } catch {
+        setStageNotice('Could not load that capture.');
+        return;
+      }
+      const next: PendingImport = { name: entry.title, dataUrl: full.dataUrl, img, history: entry };
       if (annotationsRef.current.length > 0) setPendingImport(next);
       else applyImport(next);
     },
@@ -2430,6 +2481,7 @@ export function useEditor() {
     exportProgress,
     settings,
     importFromFile,
+    openHistoryEntry,
     pendingImport,
     confirmImport,
     cancelImport,
