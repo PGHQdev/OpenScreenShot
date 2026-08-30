@@ -56,7 +56,6 @@ export interface RailProps {
   onBubble: (patch: Partial<ExportDraft['bubble']>) => void;
   onFrame: (patch: Partial<FrameOptions>) => void;
   onAddZoom: () => void;
-  onRegenerate: () => void;
   onToast: (message: string, tone?: 'info' | 'error') => void;
   /** The session was deleted after a successful export; leave the editor. */
   onDeleted: () => void;
@@ -175,9 +174,6 @@ export function Rail(props: RailProps) {
       <div class="rail-section" inert={exporting}>
         <button class="btn-secondary" onClick={props.onAddZoom}>
           {t('recorderAddZoom')}
-        </button>
-        <button class="link-btn rail-link" onClick={props.onRegenerate}>
-          {t('recorderRegenerate')}
         </button>
       </div>
 

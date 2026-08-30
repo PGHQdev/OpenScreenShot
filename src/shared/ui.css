@@ -52,6 +52,22 @@
   outline-offset: 1px;
 }
 
+/* ---- Screen-reader-only ---- */
+/* Available to a screen reader, out of the way of everything else. Not
+   display:none — a hidden live region announces nothing. Moved here from
+   editor.css when the recorder page grew a live region of its own. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ---- Secondary button ---- */
 .btn-secondary {
   height: 32px;

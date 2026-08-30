@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { BrandMark } from '../shared/BrandMark';
-import { IconPause, IconPlay } from '../shared/icons';
+import { IconPause, IconPlay, IconRedo, IconUndo } from '../shared/icons';
 import { frameFromSettings, frameToSettings, type FrameOptions } from '../editor/frame';
 import { getSettings } from '../shared/storage';
 import { DEFAULT_SETTINGS } from '../shared/types';
@@ -339,6 +339,11 @@ function SessionView({
   // which would otherwise repaint the live preview into something the file
   // being written no longer matches.
   const [exporting, setExporting] = useState(false);
+  // Read by the undo/redo keydown handler below, which fires between renders
+  // and must see the render that started the export — not the one an effect
+  // has yet to re-register against.
+  const exportingRef = useRef(exporting);
+  exportingRef.current = exporting;
 
   // A session that will not load used to drop straight back to the list with
   // nothing said: the hook set `error` and no one read it, so a recording the
@@ -385,6 +390,27 @@ function SessionView({
       if (webcam) webcam.volume = sess.volumes.mic;
     }
   }, [sess.segments, sess.volumes.mic, sess.webcamVideoAt]);
+
+  // Undo / redo, on the image editor's chords: Ctrl/Cmd+Z, Shift for redo,
+  // and Ctrl+Y for the Windows habit. Locked for an export's duration for the
+  // same reason every other draft control is — the render is already working
+  // from a copy, so an edit now would only make the preview lie about it.
+  // No typing-target guard: this page has no text entry to steal a chord from.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (exportingRef.current || !(e.ctrlKey || e.metaKey)) return;
+      if (e.key === 'z' || e.key === 'Z') {
+        e.preventDefault();
+        if (e.shiftKey) sess.redo();
+        else sess.undo();
+      } else if (e.key === 'y' || e.key === 'Y') {
+        e.preventDefault();
+        sess.redo();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [sess.undo, sess.redo]);
 
   // `loadProgress.total` is a real chunk count, known before any chunk is
   // read (session-load.ts), so this is a determinate fraction, not a
@@ -437,11 +463,6 @@ function SessionView({
     }
   }
 
-  function regenerate() {
-    setSelectedId(null);
-    sess.regenerateAutoZoom();
-  }
-
   // The Rail panel works in `FrameOptions` (frame.ts's unit shape); the draft
   // stores the frame in `Settings` shape so `frameFromSettings` — already
   // vetting sliders and backgrounds — stays the one validator it needs.
@@ -452,6 +473,12 @@ function SessionView({
 
   return (
     <div class="rec-session">
+      {/* Undo and redo are the only edits here with no visible control of
+          their own to confirm them, so the region names what the timeline
+          holds once the step has landed. */}
+      <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {sess.announcement}
+      </div>
       <div class="rec-main">
         <div class="rec-stage">
           <Stage
@@ -504,6 +531,24 @@ function SessionView({
           <span class="rec-time">
             {formatTimer(sess.playheadMs)} / {formatTimer(sess.totalMs)}
           </span>
+          <button
+            class="icon-btn rec-undo-btn"
+            aria-label={t('recorderUndo')}
+            title={t('recorderUndo')}
+            disabled={exporting || !sess.canUndo}
+            onClick={sess.undo}
+          >
+            <IconUndo size={16} />
+          </button>
+          <button
+            class="icon-btn rec-redo-btn"
+            aria-label={t('recorderRedo')}
+            title={t('recorderRedo')}
+            disabled={exporting || !sess.canRedo}
+            onClick={sess.redo}
+          >
+            <IconRedo size={16} />
+          </button>
         </div>
 
         <Timeline
@@ -529,7 +574,6 @@ function SessionView({
         onBubble={sess.setBubble}
         onFrame={onFrame}
         onAddZoom={addZoom}
-        onRegenerate={regenerate}
         onToast={onToast}
         onDeleted={onMissing}
         onExportingChange={setExporting}

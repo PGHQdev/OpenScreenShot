@@ -24,7 +24,7 @@ import {
 import { pickRecorderMime } from '../offscreen/mime';
 import { DEFAULT_SETTINGS } from '../shared/types';
 import { cursorAt, normalizeClicks, normalizeMoves, type NormClick } from './events-map';
-import type { RecorderDraft } from './recorder-draft';
+import type { RecorderEdit } from './recorder-draft';
 import { drawExportFrame, RIPPLE_MS } from './render';
 import { fixDuration, type LoadedSession } from './session-load';
 import { clampTrim, timelineAt, totalDuration, type SegmentTiming } from './timeline-math';
@@ -78,11 +78,12 @@ export interface ExportResult {
 }
 
 /**
- * Every draft field the renderer reads. `savedAt` is persistence bookkeeping,
- * so a caller holding live editor state does not have to invent one; a whole
- * `RecorderDraft` still satisfies it.
+ * Every draft field the renderer reads: the editor's own state, without the
+ * bookkeeping a stored draft carries alongside it (`savedAt`, and the undo
+ * stack), so a caller holding live editor state does not have to invent
+ * either; a whole `RecorderDraft` still satisfies it.
  */
-export type ExportDraft = Omit<RecorderDraft, 'savedAt'>;
+export type ExportDraft = RecorderEdit;
 
 const EXPORT_FPS = 30;
 const VIDEO_BITS_PER_SECOND = 2_500_000;

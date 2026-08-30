@@ -10,9 +10,14 @@
  * The frame rides along in `Settings` shape, mirroring `src/editor/draft.ts`,
  * so `frameFromSettings` — which already clamps sliders and vets backgrounds
  * — is the only validator it needs.
+ *
+ * The undo stack rides along too, as `history`: its entries are `RecorderEdit`
+ * — the same eight fields, without the bookkeeping — so one validator reads
+ * both the live state and every step behind it, and an undo survives a reload.
  */
 import { DEFAULT_FRAME, frameFromSettings, frameToSettings } from '../editor/frame';
 import { DEFAULT_SETTINGS } from '../shared/types';
+import { emptyHistory, HISTORY_DEPTH, type RecorderHistory } from './recorder-history';
 import { ZOOM_SCALES, type ZoomBlock, type ZoomScale } from './zoom';
 
 /** How long the recorder waits after the last edit before writing. */
@@ -22,7 +27,8 @@ export type BubbleCorner = 'tl' | 'tr' | 'bl' | 'br' | 'custom';
 
 type FrameSettings = ReturnType<typeof frameToSettings>;
 
-export interface RecorderDraft {
+/** Every field the recorder's editor owns — one undo step's worth of state. */
+export interface RecorderEdit {
   zoomBlocks: ZoomBlock[];
   autoZoomDone: boolean;
   trims: Record<string, { start: number; end: number }>;
@@ -33,6 +39,10 @@ export interface RecorderDraft {
   /** x/y normalized 0..1; size = fraction of min(W,H). */
   bubble: { corner: BubbleCorner; x: number; y: number; size: number; hidden: boolean };
   frame: FrameSettings;
+}
+
+export interface RecorderDraft extends RecorderEdit {
+  history: RecorderHistory;
   savedAt: number;
 }
 
@@ -63,6 +73,7 @@ export function defaultRecorderDraft(ripple = true): RecorderDraft {
     volumes: { tab: 1, mic: 1 },
     bubble: { ...DEFAULT_BUBBLE },
     frame: frameToSettings({ ...DEFAULT_FRAME, enabled: false }),
+    history: emptyHistory(),
     savedAt: Date.now(),
   };
 }
@@ -134,10 +145,10 @@ function parseBubble(value: unknown): RecorderDraft['bubble'] {
 }
 
 /**
- * Read a stored value back into a draft, or null when it cannot be vouched
- * for.
+ * The editor fields alone, or null when one of them cannot be vouched for.
+ * Read by the draft itself and by every entry in its undo stack.
  */
-export function parseRecorderDraft(value: unknown): RecorderDraft | null {
+function parseEdit(value: unknown): RecorderEdit | null {
   if (!isPlainObject(value)) return null;
   const v = value as {
     zoomBlocks?: unknown;
@@ -148,7 +159,6 @@ export function parseRecorderDraft(value: unknown): RecorderDraft | null {
     volumes?: unknown;
     bubble?: unknown;
     frame?: unknown;
-    savedAt?: unknown;
   };
 
   if (!Array.isArray(v.zoomBlocks)) return null;
@@ -174,6 +184,50 @@ export function parseRecorderDraft(value: unknown): RecorderDraft | null {
     },
     bubble: parseBubble(v.bubble),
     frame: frameToSettings(frameFromSettings({ ...DEFAULT_SETTINGS, ...storedFrame })),
-    savedAt: typeof v.savedAt === 'number' && Number.isFinite(v.savedAt) ? v.savedAt : 0,
+  };
+}
+
+/**
+ * One unreadable entry voids the whole stack. A partial timeline would undo
+ * into a state the user was never in, and losing the stack costs the undo
+ * history alone — never the work the draft itself carries.
+ */
+function parseEntries(value: unknown): RecorderEdit[] | null {
+  if (!Array.isArray(value)) return null;
+  const entries: RecorderEdit[] = [];
+  for (const raw of value) {
+    const edit = parseEdit(raw);
+    if (edit === null) return null;
+    entries.push(edit);
+  }
+  return entries;
+}
+
+/** A stored stack, capped the same way pushHistory caps a live one: the past
+ *  keeps its newest steps, the future keeps its nearest redos. */
+function parseHistory(value: unknown): RecorderHistory {
+  if (!isPlainObject(value)) return emptyHistory();
+  const past = parseEntries(value.past);
+  const future = parseEntries(value.future);
+  if (past === null || future === null) return emptyHistory();
+  return {
+    past: past.slice(Math.max(0, past.length - HISTORY_DEPTH)),
+    future: future.slice(0, HISTORY_DEPTH),
+  };
+}
+
+/**
+ * Read a stored value back into a draft, or null when it cannot be vouched
+ * for.
+ */
+export function parseRecorderDraft(value: unknown): RecorderDraft | null {
+  if (!isPlainObject(value)) return null;
+  const edit = parseEdit(value);
+  if (edit === null) return null;
+  const savedAt = (value as { savedAt?: unknown }).savedAt;
+  return {
+    ...edit,
+    history: parseHistory((value as { history?: unknown }).history),
+    savedAt: typeof savedAt === 'number' && Number.isFinite(savedAt) ? savedAt : 0,
   };
 }

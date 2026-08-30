@@ -289,6 +289,24 @@ async function sessionExists(sessionId) {
   return found;
 }
 
+/** The undo stack as the session record on disk holds it, or null. */
+async function savedHistory(sessionId) {
+  const db = await new Promise((done, fail) => {
+    const req = indexedDB.open('openscreenshot-recordings', 1);
+    req.onsuccess = () => done(req.result);
+    req.onerror = () => fail(req.error);
+  });
+  const row = await new Promise((done, fail) => {
+    const tx = db.transaction(['sessions'], 'readonly');
+    const get = tx.objectStore('sessions').get(sessionId);
+    get.onsuccess = () => done(get.result);
+    get.onerror = () => fail(get.error);
+  });
+  db.close();
+  const history = row?.editorState?.history;
+  return history ? { past: history.past.length, future: history.future.length } : null;
+}
+
 /**
  * Records a real 2 s WebM in the page and writes a complete one-segment
  * session into the app's own IndexedDB, raw rows, schema per
@@ -849,6 +867,92 @@ async function main() {
     const canvasSize = await page.$eval('.rec-canvas', (el) => `${el.width}x${el.height}`);
     assert(painted > 0.9, `stage canvas ${canvasSize} is painted (${(painted * 100).toFixed(1)}%)`);
 
+    step('undo and redo the timeline, and carry the stack through a reload');
+    const blockCount = () => page.evaluate(() => document.querySelectorAll('.rec-tl-zoom').length);
+    const waitForBlocks = (n) =>
+      page.waitForFunction(
+        (want) => document.querySelectorAll('.rec-tl-zoom').length === want,
+        { timeout: 5000 },
+        n,
+      );
+    const historyState = () =>
+      page.evaluate(() => ({
+        undoDisabled: document.querySelector('.rec-undo-btn')?.disabled ?? null,
+        redoDisabled: document.querySelector('.rec-redo-btn')?.disabled ?? null,
+        announced: document.querySelector('.sr-only[role="status"]')?.textContent?.trim() ?? null,
+      }));
+    // A real chord, not a synthetic KeyboardEvent: the handler reads
+    // ctrlKey/shiftKey off the event the browser itself built.
+    const chord = async (shift) => {
+      await page.keyboard.down('Control');
+      if (shift) await page.keyboard.down('Shift');
+      await page.keyboard.press('KeyZ');
+      if (shift) await page.keyboard.up('Shift');
+      await page.keyboard.up('Control');
+    };
+    const zoomPhrase = (n) =>
+      n === 1
+        ? messages.recorderZoomBlockOne.message
+        : messages.recorderZoomBlockMany.message.replace(/\$COUNT\$/i, String(n));
+    const announcementFor = (key, n) => messages[key].message.replace(/\$BLOCKS\$/i, zoomPhrase(n));
+
+    const fresh = await historyState();
+    assert(
+      fresh.undoDisabled === true && fresh.redoDisabled === true,
+      'undo and redo start disabled — the auto zoom is not a step the user took',
+    );
+
+    // Deleting the only zoom block is the edit the removed `Regenerate auto
+    // zoom` button used to be the sole (dishonest) escape from.
+    await page.click('.rec-tl-zoom');
+    await page.waitForSelector('.rec-zoom-delete', { timeout: 5000 });
+    await page.click('.rec-zoom-delete');
+    await waitForBlocks(0);
+    assert(true, 'deleting the selected zoom block empties the zoom track');
+
+    await chord(false);
+    await waitForBlocks(1);
+    const afterUndo = await historyState();
+    assert(true, 'Ctrl+Z puts the deleted zoom block back');
+    assert(
+      afterUndo.announced === announcementFor('recorderUndoAnnounce', 1),
+      `the undo is announced as "${afterUndo.announced}"`,
+    );
+    assert(afterUndo.redoDisabled === false, 'an undo arms redo');
+
+    await chord(true);
+    await waitForBlocks(0);
+    const afterRedo = await historyState();
+    assert(true, 'Ctrl+Shift+Z takes the block away again');
+    assert(
+      afterRedo.announced === announcementFor('recorderRedoAnnounce', 0),
+      `the redo is announced as "${afterRedo.announced}"`,
+    );
+
+    // The draft lands RECORDER_DRAFT_DEBOUNCE_MS after the last edit; poll
+    // the record itself rather than sleep past a number this file would then
+    // have to keep in sync.
+    let saved = null;
+    for (const deadline = Date.now() + 10_000; Date.now() < deadline;) {
+      saved = await page.evaluate(savedHistory, seeded.sessionId);
+      if (saved && saved.past > 0) break;
+      await new Promise((done) => setTimeout(done, 100));
+    }
+    assert(
+      saved?.past === 1 && saved?.future === 0,
+      `the saved draft carries the stack (past ${saved?.past}, future ${saved?.future})`,
+    );
+
+    await page.goto(`${base}${PAGE}?session=${seeded.sessionId}`, { waitUntil: 'load' });
+    await page.waitForSelector('.rec-timeline.timeline', { timeout: 15_000 });
+    const restored = await blockCount();
+    assert(restored === 0, `the reloaded session shows the edited timeline (${restored} block(s))`);
+    const restoredState = await historyState();
+    assert(restoredState.undoDisabled === false, 'undo survived the reload');
+    await chord(false);
+    await waitForBlocks(1);
+    assert(true, 'undo against the restored draft puts the deleted block back');
+
     step('exporting');
     await page.evaluate(() => {
       const seen = new Set();
@@ -892,6 +996,7 @@ async function main() {
         warningText: document.querySelector('.rec-export-warning')?.textContent ?? null,
         cancelLabel: document.querySelector('.rec-cancel-btn')?.textContent?.trim() ?? null,
         trimAriaDisabled: document.querySelector('.rec-tl-handle')?.getAttribute('aria-disabled'),
+        redoDisabled: document.querySelector('.rec-redo-btn')?.disabled ?? null,
         addZoomLocked: inertOf(document.querySelector('.rail-section .btn-secondary')),
         rippleLocked: inertOf(document.querySelector('.rail-section input.switch')),
         beautifyLocked: inertOf(document.querySelector('.swatches')),
@@ -910,7 +1015,10 @@ async function main() {
       `cancel button reads "${mid.cancelLabel}"`,
     );
     assert(mid.trimAriaDisabled === 'true', 'a trim handle is aria-disabled during export');
-    assert(mid.addZoomLocked === true, 'the Add Zoom / Regenerate section is locked (inert)');
+    // The undo it would take back is still on the stack, so this is a real
+    // lock rather than an empty one.
+    assert(mid.redoDisabled === true, 'the redo button is disabled during export');
+    assert(mid.addZoomLocked === true, 'the Add Zoom section is locked (inert)');
     assert(mid.rippleLocked === true, 'the ripple/pointer section is locked (inert)');
     assert(mid.beautifyLocked === true, 'the beautify section is locked (inert)');
 
@@ -968,6 +1076,15 @@ async function main() {
     const exportAgain = await page.waitForSelector('.rec-btn-primary', { timeout: 15_000 });
     await exportAgain.click();
     const cancelBtn2 = await page.waitForSelector('.rec-cancel-btn', { timeout: 5000 });
+    // The chord has to be locked too, not just the buttons: the redo waiting
+    // on the stack would otherwise empty the zoom track mid-render.
+    const beforeChord = await blockCount();
+    await chord(true);
+    const afterChord = await blockCount();
+    assert(
+      afterChord === beforeChord && beforeChord === 1,
+      `the redo chord is inert during an export (${beforeChord} -> ${afterChord} block)`,
+    );
     // Two clicks: the first arms, the second — while still armed — confirms.
     await cancelBtn2.click();
     await cancelBtn2.click();
