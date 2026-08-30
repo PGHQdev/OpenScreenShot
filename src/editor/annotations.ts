@@ -34,7 +34,6 @@ export interface RectAnnotation extends BaseAnnotation {
   h: number;
   stroke: string;
   strokeWidth: number;
-  fill: string | null;
 }
 
 export interface ArrowAnnotation extends BaseAnnotation {
@@ -368,10 +367,6 @@ export function drawAnnotation(
 function drawRect(ctx: CanvasRenderingContext2D, a: RectAnnotation): void {
   const r = normalizeRect(a);
   if (r.w <= 0 || r.h <= 0) return;
-  if (a.fill) {
-    ctx.fillStyle = a.fill;
-    ctx.fillRect(r.x, r.y, r.w, r.h);
-  }
   ctx.lineWidth = a.strokeWidth;
   ctx.strokeStyle = a.stroke;
   ctx.strokeRect(r.x, r.y, r.w, r.h);

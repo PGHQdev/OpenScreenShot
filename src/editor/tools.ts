@@ -94,7 +94,6 @@ export function createShapeDraft(
         h: 0,
         stroke,
         strokeWidth,
-        fill: null,
       };
     case 'arrow':
     case 'line':

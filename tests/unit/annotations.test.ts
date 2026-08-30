@@ -241,6 +241,53 @@ describe('drawAnnotation on a blur: strength drives what actually gets painted',
   });
 });
 
+describe('drawAnnotation — rect', () => {
+  /**
+   * A rect never fills, only strokes: `RectAnnotation.fill` documented a
+   * capability the style bar never exposed, so it is gone, not just always
+   * null. This uses a rect literal that still carries a `fill` value — the
+   * shape a pre-existing persisted draft could hand back — to prove drawRect
+   * has stopped reading it rather than merely defaulting it away.
+   */
+  function recorder() {
+    const calls: { op: string; args: number[] }[] = [];
+    const ctx = {
+      strokeStyle: '',
+      fillStyle: '',
+      lineWidth: 0,
+      strokeRect(...args: number[]) {
+        calls.push({ op: 'strokeRect', args });
+      },
+      fillRect(...args: number[]) {
+        calls.push({ op: 'fillRect', args });
+      },
+    };
+    return { ctx: ctx as unknown as CanvasRenderingContext2D, calls };
+  }
+
+  it('strokes but never fills, even for a legacy rect carrying a stray fill value', () => {
+    const { ctx, calls } = recorder();
+    const legacy = {
+      id: 'r',
+      type: 'rect',
+      x: 10,
+      y: 20,
+      w: 100,
+      h: 50,
+      stroke: '#f00',
+      strokeWidth: 4,
+      fill: '#00ff00',
+    } as unknown as Annotation;
+
+    drawAnnotation(ctx, legacy, {} as HTMLImageElement, createBlurCache());
+
+    expect(calls.filter((c) => c.op === 'fillRect')).toEqual([]);
+    expect(calls.filter((c) => c.op === 'strokeRect')).toEqual([
+      { op: 'strokeRect', args: [10, 20, 100, 50] },
+    ]);
+  });
+});
+
 describe('getHandles', () => {
   it('returns 8 handles for a rect', () => {
     const a: Annotation = {
