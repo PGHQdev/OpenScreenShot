@@ -57,6 +57,7 @@ import {
   SCALE_PRESETS,
 } from './scale';
 import { DUR_MID, useExitDelay, useFrozenWhileClosing } from './transition';
+import { t } from './i18n';
 
 type DialogFormat = ImageFormat | 'pdf';
 
@@ -239,31 +240,31 @@ export function App() {
           <span class="brand-name">OpenScreenShot</span>
           {ed.capture ? <span class="brand-mode">{labelForSource(ed.capture.mode)}</span> : null}
         </div>
-        <div class="topbar-actions" role="group" aria-label="Document actions">
+        <div class="topbar-actions" role="group" aria-label={t('editorAriaDocumentActions')}>
           <button
             class="icon-btn"
-            title="Undo (⌘Z)"
+            title={t('editorUndoTitle')}
             disabled={!ed.canUndo}
             onClick={ed.undo}
-            aria-label="Undo"
+            aria-label={t('editorUndoLabel')}
           >
             <IconUndo />
           </button>
           <button
             class="icon-btn"
-            title="Redo (⌘⇧Z)"
+            title={t('editorRedoTitle')}
             disabled={!ed.canRedo}
             onClick={ed.redo}
-            aria-label="Redo"
+            aria-label={t('editorRedoLabel')}
           >
             <IconRedo />
           </button>
           <button
             class="icon-btn icon-btn-danger"
-            title="Delete selected (⌫)"
+            title={t('editorDeleteSelectedTitle')}
             disabled={!ed.hasSelection}
             onClick={ed.deleteSelection}
-            aria-label="Delete selected"
+            aria-label={t('editorDeleteSelectedLabel')}
           >
             <IconTrash />
           </button>
@@ -271,8 +272,8 @@ export function App() {
         <div class="topbar-controls">
           <button
             class="icon-btn"
-            title="Capture history"
-            aria-label="Capture history"
+            title={t('editorCaptureHistory')}
+            aria-label={t('editorCaptureHistory')}
             onClick={() => setHistoryOpen(true)}
           >
             <IconHistory size={16} />
@@ -280,8 +281,8 @@ export function App() {
           {canPin ? (
             <button
               class="icon-btn"
-              title="Pin in a floating window — closes with this tab"
-              aria-label="Pin in a floating window"
+              title={t('editorPinTitle')}
+              aria-label={t('editorPinLabel')}
               disabled={!ed.capture}
               onClick={ed.pinCapture}
             >
@@ -290,8 +291,8 @@ export function App() {
           ) : null}
           <button
             class="icon-btn"
-            title="Keyboard shortcuts (?)"
-            aria-label="Keyboard shortcuts"
+            title={t('editorShortcutsTitle')}
+            aria-label={t('editorShortcutsLabel')}
             onClick={() => setSheetOpen(true)}
           >
             ?
@@ -312,19 +313,23 @@ export function App() {
           />
           <button
             class="btn-primary btn-fixed"
-            title="Copy to clipboard as PNG (⌘C)"
+            title={t('editorCopyTitle')}
             disabled={!ed.hasImage}
             onClick={copyToClipboard}
           >
-            {copyState === 'copied' ? 'Copied' : copyState === 'failed' ? 'Failed' : 'Copy'}
+            {copyState === 'copied'
+              ? t('editorCopyDone')
+              : copyState === 'failed'
+                ? t('editorCopyFailed')
+                : t('editorCopyIdle')}
           </button>
           <button
             class="btn-secondary"
-            title="Export (⌘S)"
+            title={t('editorExportTitle')}
             disabled={!ed.hasImage}
             onClick={() => setExportOpen(true)}
           >
-            Export
+            {t('editorExport')}
           </button>
         </div>
       </header>
@@ -336,7 +341,7 @@ export function App() {
           class="toolbar"
           role="toolbar"
           aria-orientation="vertical"
-          aria-label="Annotation tools"
+          aria-label={t('editorAriaAnnotationTools')}
           ref={toolbarRef}
           onKeyDown={(e) => arrowNav(e.currentTarget as HTMLElement, e)}
           onFocusIn={(e) =>
@@ -361,10 +366,7 @@ export function App() {
           ))}
 
           {ed.annotations.length > 0 ? (
-            <div
-              class="toolbar-count"
-              title={`${ed.annotations.length} annotation${ed.annotations.length === 1 ? '' : 's'}`}
-            >
+            <div class="toolbar-count" title={annotationCount(ed.annotations.length)}>
               <IconLayers size={14} />
               <span>{ed.annotations.length}</span>
             </div>
@@ -400,8 +402,8 @@ export function App() {
             tabIndex={0}
             aria-label={
               ed.imageSize
-                ? `Screenshot canvas, ${ed.imageSize.w} by ${ed.imageSize.h} pixels`
-                : 'Screenshot canvas, empty'
+                ? t('editorScreenshotCanvasSized', [String(ed.imageSize.w), String(ed.imageSize.h)])
+                : t('editorScreenshotCanvasEmpty')
             }
             onMouseDown={ed.onCanvasMouseDown}
             onDblClick={ed.onCanvasDoubleClick}
@@ -409,18 +411,13 @@ export function App() {
           >
             <p>
               {ed.imageSize
-                ? `The captured screenshot, ${ed.imageSize.w} by ${ed.imageSize.h} pixels, with ${ed.annotations.length} annotation${ed.annotations.length === 1 ? '' : 's'} drawn on it.`
-                : 'No screenshot is open.'}{' '}
-              Press the right bracket to select the next annotation and the left bracket for the
-              previous one. Hold Shift with either bracket to add that annotation to the selection
-              instead of replacing it. Press Enter to place the tool you picked in the toolbar. Use
-              the arrow keys to move the selection by one pixel, Shift and an arrow to move it by
-              ten, and Alt and an arrow to resize it. Press Alt and D to duplicate the selection.
-              With a crop open, the arrow keys move it, the brackets pick one of its eight handles,
-              Alt and an arrow resize it from that handle, Enter applies it and Escape cancels it.
-              With the Cut tool, Enter starts a band across the picture, the up and down arrows move
-              it, Alt and an arrow resize it, Enter takes it out and Escape cancels it. Press Delete
-              with the Cut tool to put back the nearest cut.
+                ? t('editorCanvasDescLoaded', [
+                    String(ed.imageSize.w),
+                    String(ed.imageSize.h),
+                    annotationCount(ed.annotations.length),
+                  ])
+                : t('editorCanvasDescEmpty')}{' '}
+              {t('editorCanvasKeyboardHelp')}
             </p>
           </canvas>
 
@@ -432,7 +429,7 @@ export function App() {
             >
               <span>{stageNoticeText}</span>
               <button class="text-btn" onClick={ed.dismissStageNotice}>
-                Dismiss
+                {t('dismiss')}
               </button>
             </div>
           ) : null}
@@ -443,12 +440,12 @@ export function App() {
               role="status"
               inert={draftPromptT.closing}
             >
-              <span>Unsaved edits from your last session ({draftPromptSummary}).</span>
+              <span>{t('editorDraftRestoreText', [draftPromptSummary])}</span>
               <button class="btn-primary btn-sm" onClick={ed.restoreDraft}>
-                Restore
+                {t('editorRestore')}
               </button>
               <button class="text-btn" onClick={ed.discardDraft}>
-                Discard
+                {t('editorDiscard')}
               </button>
             </div>
           ) : null}
@@ -458,12 +455,12 @@ export function App() {
               class={`crop-confirm${cropConfirmT.closing ? ' is-closing' : ''}`}
               inert={cropConfirmT.closing}
             >
-              <span>Crop to selection</span>
+              <span>{t('editorCropToSelection')}</span>
               <button class="btn-primary btn-sm" onClick={ed.applyCrop}>
-                Apply
+                {t('editorApply')}
               </button>
               <button class="text-btn" onClick={ed.cancelCrop}>
-                Cancel
+                {t('editorCancel')}
               </button>
             </div>
           ) : null}
@@ -472,8 +469,8 @@ export function App() {
 
           {ed.loading ? (
             <div class="overlay-msg">
-              <span class="spinner" aria-label="Loading" />
-              <span>Loading screenshot…</span>
+              <span class="spinner" aria-label={t('editorLoading')} />
+              <span>{t('editorLoadingScreenshot')}</span>
             </div>
           ) : null}
           {!ed.loading && !ed.capture && !ed.error ? <EmptyState /> : null}
@@ -483,14 +480,14 @@ export function App() {
                 <div class="empty-icon empty-icon-error" aria-hidden="true">
                   <IconAlert size={40} />
                 </div>
-                <h2>Something went wrong</h2>
+                <h2>{t('editorSomethingWrong')}</h2>
                 <p>{ed.error}</p>
                 <div class="empty-actions">
                   <button class="btn-primary" onClick={ed.retryLoad}>
-                    Retry
+                    {t('editorRetry')}
                   </button>
                   <button class="text-btn" onClick={ed.dismissError}>
-                    Dismiss
+                    {t('dismiss')}
                   </button>
                 </div>
               </div>
@@ -583,14 +580,14 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
       class="stylebar"
       role="toolbar"
       aria-orientation="horizontal"
-      aria-label="Annotation style"
+      aria-label={t('editorAriaAnnotationStyle')}
       ref={barRef}
       onKeyDown={(e) => arrowNav(e.currentTarget as HTMLElement, e)}
       onFocusIn={(e) => syncRovingTabIndex(e.currentTarget as HTMLElement, e.target as HTMLElement)}
     >
       {fields.color ? (
         <div class="stylebar-group">
-          <span class="stylebar-label">Color</span>
+          <span class="stylebar-label">{t('editorStyleColor')}</span>
           <div class="swatches">
             {COLOR_PALETTE.map((c) => (
               <button
@@ -625,10 +622,10 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
             {Array.from({ length: MAX_RECENT_COLORS - ed.recentColors.length }, (_, i) => (
               <span key={`recent-empty-${i}`} class="swatch swatch-empty" aria-hidden="true" />
             ))}
-            <label class="swatch swatch-custom" title="Custom color">
+            <label class="swatch swatch-custom" title={t('editorCustomColorLabel')}>
               <input
                 type="color"
-                aria-label="Custom color"
+                aria-label={t('editorCustomColorLabel')}
                 value={ed.style.color}
                 onChange={(e) => ed.setStyleColor((e.target as HTMLInputElement).value)}
               />
@@ -636,8 +633,8 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
             {canPickScreen ? (
               <button
                 class="swatch swatch-screen"
-                title="Pick a color from anywhere on screen"
-                aria-label="Pick a color from anywhere on screen"
+                title={t('editorPickScreenColor')}
+                aria-label={t('editorPickScreenColor')}
                 onClick={pickFromScreen}
               >
                 <IconEyedropper size={11} />
@@ -648,7 +645,7 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
       ) : null}
       {fields.stroke ? (
         <div class="stylebar-group">
-          <span class="stylebar-label">Stroke</span>
+          <span class="stylebar-label">{t('editorStyleStroke')}</span>
           <div class="widths">
             {STROKE_WIDTHS.map((w) => (
               <button
@@ -666,7 +663,7 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
       ) : null}
       {fields.shape ? (
         <div class="stylebar-group">
-          <span class="stylebar-label">Shape</span>
+          <span class="stylebar-label">{t('editorStyleShape')}</span>
           <div class="segmented">
             {SPOTLIGHT_SHAPES.map((s) => (
               <button
@@ -683,7 +680,7 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
       ) : null}
       {fields.redaction ? (
         <div class="stylebar-group">
-          <span class="stylebar-label">Redaction</span>
+          <span class="stylebar-label">{t('editorStyleRedaction')}</span>
           <div class="segmented">
             {BLUR_MODES.map((m) => (
               <button
@@ -701,14 +698,14 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
       ) : null}
       {fields.strength ? (
         <div class="stylebar-group">
-          <span class="stylebar-label">Strength · {ed.blurStrength}</span>
+          <span class="stylebar-label">{t('editorStyleStrength', [String(ed.blurStrength)])}</span>
           <input
             class="range stylebar-range"
             type="range"
             min={BLUR_STRENGTH_MIN}
             max={BLUR_STRENGTH_MAX}
             step={BLUR_STRENGTH_STEP}
-            aria-label="Blur strength"
+            aria-label={t('editorAriaBlurStrength')}
             aria-valuetext={`${ed.blurStrength}`}
             // Solid fill reads no strength at all (drawBlur, annotations.ts) —
             // disabled rather than hidden, so the group doesn't reflow as the
@@ -721,14 +718,14 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
       ) : null}
       {fields.fontSize ? (
         <div class="stylebar-group">
-          <span class="stylebar-label">Size · {ed.style.fontSize}px</span>
+          <span class="stylebar-label">{t('editorStyleSize', [String(ed.style.fontSize)])}</span>
           <input
             class="range stylebar-range"
             type="range"
             min="12"
             max="96"
             step="2"
-            aria-label="Size"
+            aria-label={t('editorAriaSize')}
             value={ed.style.fontSize}
             onInput={(e) => ed.setStyleFontSize(Number((e.target as HTMLInputElement).value))}
           />
@@ -739,15 +736,15 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
 }
 
 const BLUR_MODES: { id: BlurMode; label: string; hint: string }[] = [
-  { id: 'blur', label: 'Blur', hint: 'Soft pixelation' },
-  { id: 'mosaic', label: 'Mosaic', hint: 'Coarse blocks — survives recompression' },
-  { id: 'solid', label: 'Solid', hint: 'Opaque fill — nothing survives' },
+  { id: 'blur', label: t('editorToolBlur'), hint: t('editorBlurModeBlurHint') },
+  { id: 'mosaic', label: t('editorBlurModeMosaic'), hint: t('editorBlurModeMosaicHint') },
+  { id: 'solid', label: t('editorBlurModeSolid'), hint: t('editorBlurModeSolidHint') },
 ];
 
 const SPOTLIGHT_SHAPES: { id: SpotlightShape; label: string }[] = [
-  { id: 'rect', label: 'Rectangle' },
-  { id: 'rounded', label: 'Rounded' },
-  { id: 'ellipse', label: 'Ellipse' },
+  { id: 'rect', label: t('editorToolRectangle') },
+  { id: 'rounded', label: t('editorShapeRounded') },
+  { id: 'ellipse', label: t('editorShapeEllipse') },
 ];
 
 function isLight(hex: string): boolean {
@@ -884,7 +881,7 @@ function ExportDialog({
     } catch {
       // Keep the dialog open on failure — there is no other surface for this
       // error, and the fields (scale, format) are right here to adjust and retry.
-      setExportError('Could not export the image. Try a smaller scale or a different format.');
+      setExportError(t('editorExportError'));
     } finally {
       // ed.exporting only covers the export call itself, so it clears before the
       // settings write. This flag spans the whole operation, so the button
@@ -929,7 +926,7 @@ function ExportDialog({
         class={`modal${closing ? ' is-closing' : ''}`}
         role="dialog"
         aria-modal="true"
-        aria-label="Export screenshot"
+        aria-label={t('editorExportDialogAria')}
         tabIndex={-1}
         inert={closing}
         onMouseDown={(e) => e.stopPropagation()}
@@ -941,9 +938,9 @@ function ExportDialog({
           if (e.key === 'Escape') onClose();
         }}
       >
-        <h2 class="modal-title">Export</h2>
+        <h2 class="modal-title">{t('editorExport')}</h2>
 
-        <div class="field-label">Format</div>
+        <div class="field-label">{t('editorFormat')}</div>
         <div class="format-grid">
           {IMAGE_FORMATS.map((f) => (
             <button
@@ -961,14 +958,14 @@ function ExportDialog({
             aria-pressed={format === 'pdf'}
             onClick={() => setFormat('pdf')}
           >
-            <span class="format-name">PDF</span>
-            <span class="format-hint">Document · multi-page</span>
+            <span class="format-name">{t('editorFormatPdfLabel')}</span>
+            <span class="format-hint">{t('editorFormatPdfHint')}</span>
           </button>
         </div>
 
         {showScale && composed ? (
           <div class="modal-row">
-            <div class="field-label">Scale</div>
+            <div class="field-label">{t('editorScale')}</div>
             <div class="scale-row">
               <div class="segmented">
                 {SCALE_PRESETS.map((p) => {
@@ -982,7 +979,7 @@ function ExportDialog({
                       class={`segmented-btn${!exceeds && outW === w ? ' is-selected' : ''}`}
                       aria-pressed={!exceeds && outW === w}
                       disabled={exceeds}
-                      title={exceeds ? `${p * 100}% would exceed the export size limit` : undefined}
+                      title={exceeds ? t('editorPctExceedsLimit', [String(p * 100)]) : undefined}
                       onClick={() => {
                         setTargetWidth(p === 1 ? null : w);
                         setWidthText(null);
@@ -994,7 +991,7 @@ function ExportDialog({
                 })}
               </div>
               <label class="check-label">
-                Width
+                {t('editorWidth')}
                 <input
                   class="num-input num-input-wide"
                   type="number"
@@ -1019,7 +1016,7 @@ function ExportDialog({
                     const clamped = clampTargetWidth(n, composed.w, composed.h);
                     setWidthNotice(
                       !Number.isFinite(n) || n !== clamped
-                        ? `Width clamped to ${clamped}px (allowed range ${floor}–${ceiling}px).`
+                        ? t('editorWidthClamped', [String(clamped), String(floor), String(ceiling)])
                         : null,
                     );
                     setTargetWidth(clamped);
@@ -1041,7 +1038,7 @@ function ExportDialog({
         {showQuality ? (
           <div class="modal-row">
             <label class="field-label" for="oss-quality">
-              Quality · {Math.round(quality * 100)}%
+              {t('editorQuality', [String(Math.round(quality * 100))])}
             </label>
             <input
               id="oss-quality"
@@ -1060,33 +1057,33 @@ function ExportDialog({
         {showPdfOptions ? (
           <>
             <div class="modal-row">
-              <div class="field-label">Page size</div>
+              <div class="field-label">{t('editorPageSize')}</div>
               <div class="segmented">
                 <button
                   class={`segmented-btn${pdfPageSize === 'a4' ? ' is-selected' : ''}`}
                   aria-pressed={pdfPageSize === 'a4'}
                   onClick={() => setPdfPageSize('a4')}
                 >
-                  A4
+                  {t('editorA4')}
                 </button>
                 <button
                   class={`segmented-btn${pdfPageSize === 'letter' ? ' is-selected' : ''}`}
                   aria-pressed={pdfPageSize === 'letter'}
                   onClick={() => setPdfPageSize('letter')}
                 >
-                  Letter
+                  {t('editorLetter')}
                 </button>
                 <button
                   class={`segmented-btn${pdfPageSize === 'full' ? ' is-selected' : ''}`}
                   aria-pressed={pdfPageSize === 'full'}
                   onClick={() => setPdfPageSize('full')}
                 >
-                  Full
+                  {t('editorFull')}
                 </button>
               </div>
             </div>
             <div class="modal-row">
-              <div class="field-label">Orientation</div>
+              <div class="field-label">{t('editorOrientation')}</div>
               <div class="segmented">
                 <button
                   class={`segmented-btn${pdfOrientation === 'portrait' ? ' is-selected' : ''}`}
@@ -1094,7 +1091,7 @@ function ExportDialog({
                   disabled={isFull}
                   onClick={() => setPdfOrientation('portrait')}
                 >
-                  Portrait
+                  {t('editorPortrait')}
                 </button>
                 <button
                   class={`segmented-btn${pdfOrientation === 'landscape' ? ' is-selected' : ''}`}
@@ -1102,7 +1099,7 @@ function ExportDialog({
                   disabled={isFull}
                   onClick={() => setPdfOrientation('landscape')}
                 >
-                  Landscape
+                  {t('editorLandscape')}
                 </button>
               </div>
             </div>
@@ -1115,10 +1112,10 @@ function ExportDialog({
                   disabled={isFull}
                   onChange={(e) => setPdfMultiPage((e.target as HTMLInputElement).checked)}
                 />
-                Split across multiple pages
+                {t('editorSplitPages')}
               </label>
               <label class="check-label">
-                Margin
+                {t('editorMargin')}
                 <input
                   class="num-input"
                   type="number"
@@ -1142,7 +1139,11 @@ function ExportDialog({
                     const clamped = clampPdfMargin(n);
                     setMarginNotice(
                       !Number.isFinite(n) || n !== clamped
-                        ? `Margin clamped to ${clamped}mm (allowed range ${MIN_PDF_MARGIN_MM}–${MAX_PDF_MARGIN_MM}mm).`
+                        ? t('editorMarginClamped', [
+                            String(clamped),
+                            String(MIN_PDF_MARGIN_MM),
+                            String(MAX_PDF_MARGIN_MM),
+                          ])
                         : null,
                     );
                     setPdfMargin(clamped);
@@ -1155,18 +1156,13 @@ function ExportDialog({
             <p class="field-notice" role="status">
               {marginNotice ?? ''}
             </p>
-            {isFull ? (
-              <p class="pdf-hint">
-                “Full” makes one page sized to the image, so orientation, multi-page and margin
-                don’t apply.
-              </p>
-            ) : null}
+            {isFull ? <p class="pdf-hint">{t('editorFullPdfHint')}</p> : null}
           </>
         ) : null}
 
         <div class="modal-row">
           <label class="field-label" for="oss-filename">
-            Filename
+            {t('editorFilename')}
           </label>
           <div class="filename-row">
             <input
@@ -1204,13 +1200,16 @@ function ExportDialog({
                   />
                 </span>
                 <span>
-                  Exporting page {ed.exportProgress.page} of {ed.exportProgress.total}…
+                  {t('editorExportingPage', [
+                    String(ed.exportProgress.page),
+                    String(ed.exportProgress.total),
+                  ])}
                 </span>
               </>
             ) : (
               <>
                 <span class="spinner" aria-hidden="true" />
-                <span>Exporting…</span>
+                <span>{t('editorExporting')}</span>
               </>
             )}
           </div>
@@ -1224,18 +1223,18 @@ function ExportDialog({
               checked={remember}
               onChange={(e) => setRemember((e.target as HTMLInputElement).checked)}
             />
-            Remember these settings
+            {t('editorRememberSettings')}
           </label>
           <span class="modal-actions-spacer" />
           <button class="text-btn" onClick={onClose}>
-            Cancel
+            {t('editorCancel')}
           </button>
           <button
             class="btn-primary btn-fixed-export"
             onClick={doExport}
             disabled={ed.exporting || busy}
           >
-            {ed.exporting ? 'Exporting…' : 'Export'}
+            {ed.exporting ? t('editorExporting') : t('editorExport')}
           </button>
         </div>
       </div>
@@ -1279,7 +1278,7 @@ function ImportConfirm({
         class={`modal${closing ? ' is-closing' : ''}`}
         role="dialog"
         aria-modal="true"
-        aria-label="Replace the current image"
+        aria-label={t('editorReplaceImage')}
         tabIndex={-1}
         inert={closing}
         onMouseDown={(e) => e.stopPropagation()}
@@ -1291,18 +1290,15 @@ function ImportConfirm({
           if (e.key === 'Escape') onCancel();
         }}
       >
-        <h2 class="modal-title">Replace the current image?</h2>
-        <p class="modal-text">
-          “{name}” opens in place of what is on the canvas. {count}{' '}
-          {count === 1 ? 'annotation' : 'annotations'} and the undo history go with it.
-        </p>
+        <h2 class="modal-title">{t('editorReplaceImageTitle')}</h2>
+        <p class="modal-text">{t('editorReplaceImageBody', [name, annotationCount(count)])}</p>
         <div class="modal-actions">
           <span class="modal-actions-spacer" />
           <button class="text-btn" onClick={onCancel}>
-            Cancel
+            {t('editorCancel')}
           </button>
           <button class="btn-primary" onClick={onConfirm}>
-            Replace
+            {t('editorReplace')}
           </button>
         </div>
       </div>
@@ -1336,7 +1332,7 @@ function TextOverlay({ ed }: { ed: ReturnType<typeof useEditor> }) {
         height: `${Math.max(pos.fontSize * 1.4, pos.height + 4)}px`,
       }}
       value={ann.text}
-      placeholder="Type…"
+      placeholder={t('editorTypePlaceholder')}
       onInput={(e) => ed.updateText(id, (e.target as HTMLTextAreaElement).value)}
       onBlur={() => ed.finishText(id)}
       onKeyDown={(e) => {
@@ -1377,15 +1373,13 @@ function EmptyState() {
         <div class="empty-icon" aria-hidden="true">
           <IconImage size={40} />
         </div>
-        <h2>Nothing to edit yet</h2>
-        <p>Capture a page with OpenScreenShot, and it opens here.</p>
-        <p class="empty-alt">Or drop an image here — paste works too.</p>
+        <h2>{t('editorNothingToEdit')}</h2>
+        <p>{t('editorCaptureHint')}</p>
+        <p class="empty-alt">{t('editorDropHint')}</p>
         <button class="btn-primary empty-cta" onClick={openPopup}>
-          Capture a page
+          {t('editorCapturePage')}
         </button>
-        {failed ? (
-          <p class="empty-fallback">Click the OpenScreenShot icon in the toolbar.</p>
-        ) : null}
+        {failed ? <p class="empty-fallback">{t('editorOpenExtensionIcon')}</p> : null}
       </div>
     </div>
   );
@@ -1422,47 +1416,51 @@ function ToolIcon({ id }: { id: Tool }) {
   }
 }
 
+/** The "$1 annotation(s)" phrase, the plural pair keyboard.ts's live region also uses. */
+function annotationCount(n: number): string {
+  return t(n === 1 ? 'editorAnnotationCountOne' : 'editorAnnotationCountOther', [String(n)]);
+}
+
+/** The "$1 cut(s)" phrase, draftSummary's own plural pair. */
+function cutCount(n: number): string {
+  return t(n === 1 ? 'editorCutCountOne' : 'editorCutCountOther', [String(n)]);
+}
+
 /** What a stored draft holds, for the restore pill: annotations, cuts, or both. */
 function draftSummary(draft: Draft): string {
   const parts: string[] = [];
-  if (draft.annotations.length > 0) {
-    parts.push(
-      `${draft.annotations.length} annotation${draft.annotations.length === 1 ? '' : 's'}`,
-    );
-  }
-  if (draft.bands.length > 0) {
-    parts.push(`${draft.bands.length} cut${draft.bands.length === 1 ? '' : 's'}`);
-  }
+  if (draft.annotations.length > 0) parts.push(annotationCount(draft.annotations.length));
+  if (draft.bands.length > 0) parts.push(cutCount(draft.bands.length));
   return parts.join(', ');
 }
 
 function hintForTool(tool: Tool): string {
   switch (tool) {
     case 'rect':
-      return 'Drag to draw a rectangle · Shift keeps it square';
+      return t('editorHintRect');
     case 'arrow':
-      return 'Drag to draw an arrow · Shift snaps to 45°';
+      return t('editorHintArrow');
     case 'line':
-      return 'Drag to draw a line · Shift snaps to 45°';
+      return t('editorHintLine');
     case 'pen':
-      return 'Drag to draw freehand';
+      return t('editorHintPen');
     case 'highlight':
-      return 'Drag to highlight — marker stays translucent';
+      return t('editorHintHighlight');
     case 'step':
-      return 'Click to place a numbered badge · numbers stay in order';
+      return t('editorHintStep');
     case 'text':
-      return 'Click to place text, then type';
+      return t('editorHintText');
     case 'blur':
-      return 'Drag over an area to redact it · pick Blur, Mosaic, or Solid above';
+      return t('editorHintBlur');
     case 'spotlight':
-      return 'Drag to keep an area lit — everything else dims · Shift keeps it square';
+      return t('editorHintSpotlight');
     case 'crop':
-      return 'Drag to select, then Apply to crop';
+      return t('editorHintCrop');
     case 'cut':
-      return 'Drag over a band to take it out · click a seam to put it back · nothing is erased';
+      return t('editorHintCut');
     case 'eyedropper':
-      return 'Click any pixel to take its color · the previous tool comes back';
+      return t('editorHintEyedropper');
     case 'select':
-      return 'Select · drag to move · handles to resize · double-click text · ⌫ delete';
+      return t('editorHintSelect');
   }
 }

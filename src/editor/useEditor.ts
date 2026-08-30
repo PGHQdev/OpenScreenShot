@@ -143,6 +143,7 @@ import { agreed } from './stylebar';
 import { decodeDataUrl, importSizeError, readImageFile, titleFromFilename } from './import-image';
 import { exportPdf as exportPdfFile, type PdfExportProgress, type PdfOptions } from './pdf';
 import { resampleToWidth } from './scale';
+import { t } from './i18n';
 
 export interface TextOverlayPos {
   x: number;
@@ -951,8 +952,8 @@ export function useEditor() {
     } catch (err) {
       setError(
         err instanceof Error && err.message === 'decode'
-          ? 'Could not load the screenshot.'
-          : 'Could not load your settings or the saved screenshot.',
+          ? t('editorLoadFailedDecode')
+          : t('editorLoadFailedGeneric'),
       );
       setLoading(false);
     }
@@ -2205,7 +2206,7 @@ export function useEditor() {
     selectAnnotations([]);
     const refuse = () => {
       restoringRef.current = false;
-      setStageNotice('Your saved edits could not be restored.');
+      setStageNotice(t('editorDraftRestoreFailed'));
       void clearDraft();
       void clearDraftImage();
     };
@@ -2320,7 +2321,7 @@ export function useEditor() {
           return;
         }
       } catch {
-        setStageNotice('Could not read that image.');
+        setStageNotice(t('editorImportReadFailed'));
         return;
       }
       if (annotationsRef.current.length > 0) setPendingImport(next);
@@ -2342,14 +2343,14 @@ export function useEditor() {
       setStageNotice(null);
       const full = await openCapture(entry.id);
       if (!full) {
-        setStageNotice('That capture is gone.');
+        setStageNotice(t('editorHistoryCaptureGone'));
         return;
       }
       let img: HTMLImageElement;
       try {
         img = await decodeDataUrl(full.dataUrl);
       } catch {
-        setStageNotice('Could not load that capture.');
+        setStageNotice(t('editorHistoryCaptureLoadFailed'));
         return;
       }
       const next: PendingImport = { name: entry.title, dataUrl: full.dataUrl, img, history: entry };

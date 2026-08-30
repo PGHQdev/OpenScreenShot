@@ -2080,5 +2080,33 @@
   "editorSourceImported": {
     "message": "Imported",
     "description": "Editor: the brand-mode chip / history row label for an imported image."
+  },
+  "editorLoadFailedDecode": {
+    "message": "Could not load the screenshot.",
+    "description": "Editor: error overlay text when the saved screenshot fails to decode."
+  },
+  "editorLoadFailedGeneric": {
+    "message": "Could not load your settings or the saved screenshot.",
+    "description": "Editor: error overlay text when loading the screenshot fails for any other reason."
+  },
+  "editorDraftRestoreFailed": {
+    "message": "Your saved edits could not be restored.",
+    "description": "Editor: stage notice shown when restoring a saved draft fails."
+  },
+  "editorImportReadFailed": {
+    "message": "Could not read that image.",
+    "description": "Editor: stage notice shown when a dropped/pasted file cannot be read."
+  },
+  "editorHistoryCaptureGone": {
+    "message": "That capture is gone.",
+    "description": "Editor: stage notice shown when a capture history entry no longer exists in storage."
+  },
+  "editorHistoryCaptureLoadFailed": {
+    "message": "Could not load that capture.",
+    "description": "Editor: stage notice shown when a capture history entry fails to decode."
+  },
+  "editorExportDialogAria": {
+    "message": "Export screenshot",
+    "description": "Editor: accessible label for the export dialog."
   }
 }
