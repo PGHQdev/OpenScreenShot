@@ -20,7 +20,9 @@ body {
   min-height: 100vh;
   min-height: 100svh;
   margin: 0;
-  background: var(--paper);
+  /* paper, with a fine diagonal hatch that reads as texture, not as lines */
+  background-color: var(--paper);
+  background-image: repeating-linear-gradient(-45deg, transparent 0 7px, var(--hatch) 7px 8px);
   color: var(--ink);
   font-family: var(--font);
   font-size: var(--fs-base);
@@ -203,21 +205,21 @@ samp {
   background: var(--paper-raised);
 }
 
-/* ---- Product slab ----
- * Shared by the hero shot and every Frame product shot: the deep-ink card a
- * screenshot sits in.
+/* ---- Cards ----
+ * The raised paper card every page's tiles share: the homepage feature and
+ * gallery tiles, the privacy receipt, and the FAQ rows.
  */
 
-.slab {
-  padding: var(--s-4);
-  border-radius: var(--r-lg);
-  background: var(--slab);
-  box-shadow: var(--sh-lg);
+.card {
+  border: 1px solid var(--rule);
+  border-radius: var(--r-xl);
+  background: var(--paper-raised);
+  box-shadow: var(--sh-card);
 }
 
-.slab img {
-  width: 100%;
-  border-radius: var(--r-md);
+/* The second, quieter half of a two-tone heading. */
+.muted {
+  color: var(--ink-3);
 }
 
 /* ---- Scroll reveal ----

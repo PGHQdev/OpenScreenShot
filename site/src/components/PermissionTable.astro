@@ -74,9 +74,42 @@ const hasWhen = rows.some((row) => row.when);
     color: var(--ink-2);
   }
 
+  /* Narrow screens: one stacked block per permission, the column headers
+   * kept for assistive tech only. */
   @media (max-width: 620px) {
-    .perms tbody th {
+    .perms,
+    .perms tbody,
+    .perms tr,
+    .perms th,
+    .perms td {
+      display: block;
+    }
+
+    .perms thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .perms tr {
+      padding-block: var(--s-3);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .perms th,
+    .perms td {
       width: auto;
+      padding: 0 0 var(--s-2);
+      border: 0;
+    }
+
+    .perms td:last-child {
+      padding-bottom: 0;
     }
   }
 </style>

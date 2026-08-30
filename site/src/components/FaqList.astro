@@ -16,7 +16,7 @@ const { items } = Astro.props;
 <div class="faq-list">
   {
     items.map((item) => (
-      <details class="faq">
+      <details class="faq card">
         <summary>
           {item.q}
           <span class="faq-mark" aria-hidden="true" />
@@ -29,16 +29,14 @@ const { items } = Astro.props;
 
 <style>
   .faq-list {
+    display: grid;
+    gap: var(--s-3);
     max-width: var(--max-w);
     margin-top: var(--s-6);
   }
 
   .faq {
-    border-top: 1px solid var(--rule);
-  }
-
-  .faq:last-of-type {
-    border-bottom: 1px solid var(--rule);
+    border-radius: var(--r-lg);
   }
 
   .faq summary {
@@ -46,7 +44,8 @@ const { items } = Astro.props;
     align-items: center;
     justify-content: space-between;
     gap: var(--s-4);
-    padding: var(--s-4) 0;
+    padding: var(--s-4) var(--s-5);
+    border-radius: var(--r-lg);
     color: var(--ink);
     font-weight: 600;
     cursor: pointer;
@@ -83,7 +82,7 @@ const { items } = Astro.props;
   }
 
   .faq-a {
-    padding-bottom: var(--s-4);
+    padding: 0 var(--s-5) var(--s-5);
     color: var(--ink-2);
     font-size: var(--fs-md);
   }
