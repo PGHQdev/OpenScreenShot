@@ -156,7 +156,7 @@ export interface Settings {
   pdfOrientation: 'portrait' | 'landscape';
   pdfMultiPage: boolean;
   pdfMarginMm: number;
-  quality: number; // 0..1, JPEG/WebP/PDF quality
+  quality: number; // 0..1, JPEG/WebP quality — PDF export is lossless (pdf-writer.ts)
   filenameTemplate: string;
   showOnboarding: boolean;
   // Annotation style (remembered across sessions)
