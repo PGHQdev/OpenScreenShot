@@ -1038,11 +1038,14 @@ async function testRecorder(browser, base, messages) {
   await page.goto(`${base}/src/recorder/index.html?session=${sessionId}`, { waitUntil: 'load' });
   await page.waitForSelector('.rail', { timeout: 15_000 });
 
-  step('RECORDER — adding and selecting a zoom block (rail "Add Zoom")');
+  step('RECORDER — adding and selecting a zoom block (timeline toolbar "Add Zoom")');
   // addBlockAtPlayhead (useRecorderSession.ts) needs total segment duration
   // >= 2*EASE_MS (1200ms) or it silently returns null — the fixture's
   // segment.duration is set well above that for exactly this reason.
-  await page.click('.rail .btn-secondary');
+  // Add Zoom lives in Timeline.tsx's own toolbar, not inside Rail.tsx's
+  // <aside class="rail"> — a sibling, not an ancestor — since rail
+  // simplification moved it there.
+  await page.click('.rec-tl-toolbar .btn-secondary');
   await page.waitForSelector(".rec-tl-zoom[data-selected='true']");
   await page.waitForSelector('.rec-zoom-tools .rec-seg-btn');
 
@@ -1185,6 +1188,15 @@ async function testRecorder(browser, base, messages) {
   // controls.css's toggle carried its whole state as colour plus a knob
   // separated from the track only by a box-shadow, which forced-colors
   // drops — checked and unchecked rendered identically with no visible knob.
+  // Rail simplification collapsed Beautify's switch behind a popover and its
+  // own default is off (frame.enabled: false, recorder-draft.ts), same as
+  // the webcam-bubble switch's own default (bubble.hidden: false) — so
+  // nothing is checked until the popover opens and its switch is turned on,
+  // giving the on/off pair this assertion compares.
+  await page.click('.rec-beautify > .btn-secondary');
+  await page.waitForSelector('.rec-beautify-popover');
+  await page.click('.rec-beautify-popover .switch');
+  await page.waitForSelector('.rec-beautify-popover .switch:checked');
   const switches = await page.evaluate(() => {
     const list = [...document.querySelectorAll('input.switch')];
     const on = list.find((el) => el.checked);
@@ -1217,11 +1229,20 @@ async function testRecorder(browser, base, messages) {
     switches.on.knobX !== switches.off.knobX,
     `knob position still carries the state as a non-colour signal (checked ${switches.on.knobX} vs unchecked ${switches.off.knobX})`,
   );
+  await page.click('.rec-beautify-popover .switch'); // back off
+  await page.click('.rec-beautify > .btn-secondary'); // close the popover
+  await page.waitForFunction(() => !document.querySelector('.rec-beautify-popover'));
   await emulateMedia(cdp, []);
 
   step('RECORDER — prefers-reduced-motion: reduce — .link-btn and .rec-bubble-corner');
+  // `.rail .link-btn` used to hit the rail's always-present Regenerate
+  // button; dropping auto zoom (c695647) removed Regenerate outright, and
+  // the rail's one remaining .link-btn (Cancel) only renders mid-export. The
+  // timeline's own .rec-zoom-delete is a .link-btn too, and it is on screen
+  // for exactly the same reason .rec-seg-btn is above: this test already
+  // added and selected a zoom block.
   await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'no-preference' }]);
-  const baseLink = await computedOf(page, '.rail .link-btn', ['transitionDuration']);
+  const baseLink = await computedOf(page, '.rec-zoom-delete', ['transitionDuration']);
   const baseCorner = await computedOf(page, '.rec-bubble-corner', ['transitionDuration']);
   assert(
     !allZero(baseLink.transitionDuration),
@@ -1232,7 +1253,7 @@ async function testRecorder(browser, base, messages) {
     `.rec-bubble-corner has a real transition under no-preference (${baseCorner.transitionDuration})`,
   );
   await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'reduce' }]);
-  const reducedLink = await computedOf(page, '.rail .link-btn', ['transitionDuration']);
+  const reducedLink = await computedOf(page, '.rec-zoom-delete', ['transitionDuration']);
   const reducedCorner = await computedOf(page, '.rec-bubble-corner', ['transitionDuration']);
   assert(
     allZero(reducedLink.transitionDuration),
