@@ -120,6 +120,15 @@ export interface CaptureHistoryEntry {
   title: string;
   url?: string;
   capturedAt: number;
+  /**
+   * The full image's stored size, in bytes — `dataUrl.length` at write time
+   * (the base64 string's UTF-16 length, close enough to its byte count to
+   * budget against; decoding it just to measure would defeat the point of
+   * keeping the shelf's list read light). Eviction enforces a byte budget
+   * against this alongside the count cap — see CAPTURE_IMAGE_BYTES_BUDGET
+   * in src/shared/storage.ts.
+   */
+  imageBytes: number;
 }
 
 // --- Settings --------------------------------------------------------------

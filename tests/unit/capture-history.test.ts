@@ -31,10 +31,14 @@ function makeStorageStub() {
 }
 
 let uuidCounter: number;
+/** Kept so a test can inspect what is actually left in storage — e.g. to
+ * prove no `capture-image:{id}` key survives without a row that names it. */
+let storeRef: Map<string, unknown>;
 
 beforeEach(() => {
   uuidCounter = 0;
   const stub = makeStorageStub();
+  storeRef = stub.store;
   vi.stubGlobal('chrome', { storage: { local: stub.local } });
   vi.stubGlobal('crypto', {
     ...crypto,
@@ -61,65 +65,97 @@ function capture(overrides: Partial<LastCapture> = {}): LastCapture {
   };
 }
 
+/** A `CaptureHistoryEntry` fixture — `withCapture` is pure, so its tests
+ * build these directly rather than going through storage/thumbnail at all. */
+function entry(overrides: Partial<CaptureHistoryEntry> = {}): CaptureHistoryEntry {
+  return {
+    id: 'x',
+    thumbnail: 't',
+    width: 1,
+    height: 1,
+    mode: 'visible',
+    title: 'x',
+    capturedAt: 0,
+    imageBytes: 0,
+    ...overrides,
+  };
+}
+
 describe('withCapture (eviction policy)', () => {
   it('prepends the new entry ahead of the existing ones', async () => {
     const { withCapture } = await import('../../src/shared/storage');
-    const existing: CaptureHistoryEntry[] = [
-      { id: 'a', thumbnail: 't', width: 1, height: 1, mode: 'visible', title: 'a', capturedAt: 1 },
-    ];
-    const fresh: CaptureHistoryEntry = {
-      id: 'b',
-      thumbnail: 't',
-      width: 1,
-      height: 1,
-      mode: 'visible',
-      title: 'b',
-      capturedAt: 2,
-    };
-    const { kept, evicted } = withCapture(existing, fresh, 12);
+    const existing = [entry({ id: 'a', capturedAt: 1 })];
+    const fresh = entry({ id: 'b', capturedAt: 2 });
+    const { kept, evicted } = withCapture(existing, fresh, 12, 1_000_000);
     expect(kept.map((e) => e.id)).toEqual(['b', 'a']);
     expect(evicted).toEqual([]);
   });
 
-  it('evicts exactly what falls past the limit, oldest-appended first', async () => {
+  it('evicts exactly what falls past the count limit, oldest-appended first', async () => {
     const { withCapture } = await import('../../src/shared/storage');
-    const existing: CaptureHistoryEntry[] = Array.from({ length: 3 }, (_, i) => ({
-      id: `e${i}`,
-      thumbnail: 't',
-      width: 1,
-      height: 1,
-      mode: 'visible' as const,
-      title: `e${i}`,
-      capturedAt: i,
-    }));
-    const fresh: CaptureHistoryEntry = {
-      id: 'new',
-      thumbnail: 't',
-      width: 1,
-      height: 1,
-      mode: 'visible',
-      title: 'new',
-      capturedAt: 99,
-    };
-    const { kept, evicted } = withCapture(existing, fresh, 2);
+    const existing = Array.from({ length: 3 }, (_, i) => entry({ id: `e${i}`, capturedAt: i }));
+    const fresh = entry({ id: 'new', capturedAt: 99 });
+    const { kept, evicted } = withCapture(existing, fresh, 2, 1_000_000);
     expect(kept.map((e) => e.id)).toEqual(['new', 'e0']);
     expect(evicted.map((e) => e.id)).toEqual(['e1', 'e2']);
   });
 
-  it('evicts nothing when the list is under the limit', async () => {
+  it('evicts nothing when the list is under the count limit', async () => {
     const { withCapture } = await import('../../src/shared/storage');
-    const fresh: CaptureHistoryEntry = {
-      id: 'only',
-      thumbnail: 't',
-      width: 1,
-      height: 1,
-      mode: 'visible',
-      title: 'only',
-      capturedAt: 1,
-    };
-    const { kept, evicted } = withCapture([], fresh, 12);
+    const fresh = entry({ id: 'only', capturedAt: 1 });
+    const { kept, evicted } = withCapture([], fresh, 12, 1_000_000);
     expect(kept.map((e) => e.id)).toEqual(['only']);
     expect(evicted).toEqual([]);
+  });
+});
+
+describe('withCapture (byte budget — R-28a)', () => {
+  it('evicts nothing on bytes alone when the total already fits', async () => {
+    const { withCapture } = await import('../../src/shared/storage');
+    const existing = [entry({ id: 'a', imageBytes: 100, capturedAt: 1 })];
+    const fresh = entry({ id: 'b', imageBytes: 100, capturedAt: 2 });
+    const { kept, evicted } = withCapture(existing, fresh, 12, 1000);
+    expect(kept.map((e) => e.id)).toEqual(['b', 'a']);
+    expect(evicted).toEqual([]);
+  });
+
+  it('drops the oldest survivors, by bytes, until the total fits the budget', async () => {
+    const { withCapture } = await import('../../src/shared/storage');
+    // existing is newest-first, same convention withCapture assumes throughout.
+    const existing = [
+      entry({ id: 'newer', imageBytes: 400, capturedAt: 2 }),
+      entry({ id: 'oldest', imageBytes: 400, capturedAt: 1 }),
+    ];
+    const fresh = entry({ id: 'fresh', imageBytes: 400, capturedAt: 3 });
+    // next totals 1200 against a 900 budget: drop the oldest survivor (400)
+    // to land at 800, which fits — one drop is enough, not two.
+    const { kept, evicted } = withCapture(existing, fresh, 12, 900);
+    expect(kept.map((e) => e.id)).toEqual(['fresh', 'newer']);
+    expect(evicted.map((e) => e.id)).toEqual(['oldest']);
+  });
+
+  it('never evicts below one entry, even when that entry alone exceeds the budget', async () => {
+    const { withCapture } = await import('../../src/shared/storage');
+    const fresh = entry({ id: 'huge', imageBytes: 5000, capturedAt: 1 });
+    const { kept, evicted } = withCapture([], fresh, 12, 100);
+    expect(kept.map((e) => e.id)).toEqual(['huge']);
+    expect(evicted).toEqual([]);
+  });
+
+  it('applies the count cap first, then trims survivors further by bytes', async () => {
+    const { withCapture } = await import('../../src/shared/storage');
+    const existing = [
+      entry({ id: 'e0', imageBytes: 10, capturedAt: 0 }),
+      entry({ id: 'e1', imageBytes: 10, capturedAt: 1 }),
+      entry({ id: 'e2', imageBytes: 10, capturedAt: 2 }),
+    ];
+    const fresh = entry({ id: 'new', imageBytes: 10, capturedAt: 3 });
+    // Count cap (limit 2) keeps [new, e0] and evicts [e1, e2] by count first.
+    // Bytes (20 > 15) then trim further: e0 goes too, down to the floor of
+    // one entry — the freshly-added capture always survives.
+    const { kept, evicted } = withCapture(existing, fresh, 2, 15);
+    expect(kept.map((e) => e.id)).toEqual(['new']);
+    expect(evicted.map((e) => e.id)).toEqual(['e1', 'e2', 'e0']);
   });
 });
 
@@ -166,11 +202,61 @@ describe('setLastCapture (eviction, end to end)', () => {
   it('deleteCapture removes the row and its image, and is a no-op for an unknown id', async () => {
     const storage = await import('../../src/shared/storage');
     await storage.setLastCapture(capture());
-    const [entry] = await storage.listCaptureHistory();
-    await storage.deleteCapture(entry.id);
+    const [entry1] = await storage.listCaptureHistory();
+    await storage.deleteCapture(entry1.id);
     expect(await storage.listCaptureHistory()).toEqual([]);
-    expect(await storage.openCapture(entry.id)).toBeNull();
+    expect(await storage.openCapture(entry1.id)).toBeNull();
     await expect(storage.deleteCapture('nope')).resolves.toBeUndefined();
+  });
+});
+
+// R-28a review, Important #1: setLastCapture was a read-modify-write across
+// a long await (thumbnail encode) with no serialization. Two overlapping
+// writers each read the same list, computed eviction independently, and
+// the second `set` clobbered the first — a whole row, and its full-image
+// key, silently vanished with nothing left to reference it. Fixed by
+// `withCaptureLock`, a module-level promise queue every capture-store
+// mutation runs through.
+describe('capture-store concurrency (R-28a Important #1)', () => {
+  it('two overlapping setLastCapture calls both land — no lost row, no orphaned image key', async () => {
+    const storage = await import('../../src/shared/storage');
+    await Promise.all([
+      storage.setLastCapture(capture({ title: 'first', dataUrl: 'data:image/png;base64,ONE' })),
+      storage.setLastCapture(capture({ title: 'second', dataUrl: 'data:image/png;base64,TWO' })),
+    ]);
+    const list = await storage.listCaptureHistory();
+    expect(list.map((e) => e.title).sort()).toEqual(['first', 'second']);
+    // Every image key actually stored is referenced by exactly one row, and
+    // every row's image key actually exists — neither direction is broken.
+    const referenced = new Set(list.map((e) => `openscreenshot:capture-image:${e.id}`));
+    const storedImageKeys = new Set(
+      [...storeRef.keys()].filter((k) => k.startsWith('openscreenshot:capture-image:')),
+    );
+    expect(storedImageKeys).toEqual(referenced);
+  });
+
+  it('three overlapping setLastCapture calls all land (not just two)', async () => {
+    const storage = await import('../../src/shared/storage');
+    await Promise.all([
+      storage.setLastCapture(capture({ title: 'a' })),
+      storage.setLastCapture(capture({ title: 'b' })),
+      storage.setLastCapture(capture({ title: 'c' })),
+    ]);
+    const list = await storage.listCaptureHistory();
+    expect(list.map((e) => e.title).sort()).toEqual(['a', 'b', 'c']);
+  });
+
+  it('a capture racing a delete does not resurrect the deleted row', async () => {
+    const storage = await import('../../src/shared/storage');
+    await storage.setLastCapture(capture({ title: 'to delete' }));
+    const [existing] = await storage.listCaptureHistory();
+    await Promise.all([
+      storage.deleteCapture(existing.id),
+      storage.setLastCapture(capture({ title: 'new one' })),
+    ]);
+    const list = await storage.listCaptureHistory();
+    expect(list.map((e) => e.title)).toEqual(['new one']);
+    expect(await storage.openCapture(existing.id)).toBeNull();
   });
 });
 
@@ -227,6 +313,23 @@ describe('legacy capture migration', () => {
     const storage = await import('../../src/shared/storage');
     await expect(storage.listCaptureHistory()).resolves.toEqual([]);
   });
+
+  it('two overlapping reads of a legacy-only store do not double-migrate it', async () => {
+    // Same shape as the concurrency describe above, but for migration
+    // specifically: two listCaptureHistory() calls racing the one-time
+    // legacy migration must not each mint their own copy.
+    const storage = await import('../../src/shared/storage');
+    await chrome.storage.local.set({
+      'openscreenshot:last-capture': capture({ title: 'legacy shot' }),
+    });
+    const [listA, listB] = await Promise.all([
+      storage.listCaptureHistory(),
+      storage.listCaptureHistory(),
+    ]);
+    expect(listA).toHaveLength(1);
+    expect(listB).toHaveLength(1);
+    expect(listA[0].id).toBe(listB[0].id);
+  });
 });
 
 describe('a thumbnail encode failure never fails the read/write it happened inside', () => {
@@ -255,5 +358,34 @@ describe('a thumbnail encode failure never fails the read/write it happened insi
     expect(list[0].title).toBe('legacy corrupt');
     expect(list[0].thumbnail).toMatch(/^data:image\/png;base64,/);
     expect(await chrome.storage.local.get('openscreenshot:last-capture')).toEqual({});
+  });
+});
+
+// R-28a review, Important #2: a total encode failure fell back silently —
+// indistinguishable from success except for a shelf of identical blank
+// squares. `safeThumbnail` now bumps an exported counter and warns once, so
+// the failure is observable even though it is still swallowed (the shelf
+// row still needs to exist — see the describe block above).
+describe('thumbnail fallback observability (R-28a Important #2)', () => {
+  it('bumps thumbnailFallbackCount and warns once when the encode fails', async () => {
+    const { makeThumbnail } = await import('../../src/shared/thumbnail');
+    vi.mocked(makeThumbnail).mockRejectedValueOnce(new Error('decode failed'));
+    const storage = await import('../../src/shared/storage');
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const before = storage.thumbnailFallbackCount;
+    await storage.setLastCapture(capture({ title: 'corrupt' }));
+    expect(storage.thumbnailFallbackCount).toBe(before + 1);
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    warnSpy.mockRestore();
+  });
+
+  it('does not warn or bump the counter when the encode succeeds', async () => {
+    const storage = await import('../../src/shared/storage');
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const before = storage.thumbnailFallbackCount;
+    await storage.setLastCapture(capture());
+    expect(storage.thumbnailFallbackCount).toBe(before);
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
   });
 });
