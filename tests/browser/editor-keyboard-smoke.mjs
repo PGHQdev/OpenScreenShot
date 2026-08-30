@@ -782,6 +782,35 @@ async function testStageErrorRetryAndDismiss(browser, base) {
     'the error overlay carries role="alert"',
   );
 
+  // task 41, defect 4 — `capture` is set before the image even starts
+  // decoding (loadCapture, useEditor.ts), so a decode failure used to leave
+  // it set too: the topbar's old `!ed.capture` checks kept Copy/Export/Zoom/
+  // Beautify enabled the whole time this overlay is up, and ⌘S/⌘C bypassed
+  // even those. Checked here, before Retry or Dismiss touch anything, which
+  // is exactly the window the old checks got wrong.
+  step('task 41: while the error overlay is up, Copy/Export/Zoom/Beautify are disabled');
+  assert(
+    (await page.$eval('.btn-fixed', (el) => el.disabled)) === true,
+    'Copy is disabled with no image decoded',
+  );
+  assert(
+    (await page.$eval('header .btn-secondary[title^="Export"]', (el) => el.disabled)) === true,
+    'Export is disabled with no image decoded',
+  );
+  assert(
+    (await page.$eval('button[title="Zoom"]', (el) => el.disabled)) === true,
+    'Zoom is disabled with no image decoded',
+  );
+  assert(
+    (await page.$eval('button[title^="Beautify"]', (el) => el.disabled)) === true,
+    'Beautify is disabled with no image decoded',
+  );
+  await page.keyboard.down('Meta');
+  await page.keyboard.press('s');
+  await page.keyboard.up('Meta');
+  await new Promise((r) => setTimeout(r, 150));
+  assert((await page.$('.modal')) === null, '⌘S does not open Export over a canvas with no image');
+
   // Swap in a real capture behind the scenes first — the way a transient
   // storage/network hiccup would resolve on its own — so Retry succeeding
   // proves it re-ran getSettings/getLastCapture/decode for real, not that it

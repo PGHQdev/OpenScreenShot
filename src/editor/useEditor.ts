@@ -2534,6 +2534,7 @@ export function useEditor() {
     setTool: selectTool,
     selectedIds,
     capture,
+    hasImage: hasLoadedImage(capture, error),
     imageSize: visibleSize,
     loading,
     error,
@@ -2662,4 +2663,18 @@ function clampToImage(p: { x: number; y: number }, w: number, h: number): { x: n
 export function isTypingTarget(t: EventTarget | null): boolean {
   const el = t as HTMLElement | null;
   return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+}
+
+/**
+ * Whether the controller actually has an image to act on.
+ *
+ * `capture` is set as soon as `getLastCapture()` resolves, before the
+ * `Image` it names has decoded onto the canvas (loadCapture, above) — a
+ * decode failure (img.onerror) then leaves `capture` set with `error` also
+ * set, describing a capture that exists in storage but nothing behind it on
+ * the canvas. Copy/Export/Zoom/Beautify read this instead of `capture` alone
+ * so none of them can open over a canvas that has nothing to compose.
+ */
+export function hasLoadedImage(capture: LastCapture | null, error: string | null): boolean {
+  return capture !== null && error === null;
 }

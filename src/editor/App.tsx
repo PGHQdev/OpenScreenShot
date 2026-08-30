@@ -170,12 +170,13 @@ export function App() {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.metaKey || e.ctrlKey) || e.key !== 'c') return;
       if (isTypingTarget(e.target) || window.getSelection()?.toString()) return;
+      if (!ed.hasImage) return;
       e.preventDefault();
       copyToClipboard();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [ed.copyImage]);
+  }, [ed.copyImage, ed.hasImage]);
 
   // ⌘S opens Export; ? toggles the shortcut sheet.
   useEffect(() => {
@@ -183,7 +184,7 @@ export function App() {
       if (isTypingTarget(e.target)) return;
       if ((e.metaKey || e.ctrlKey) && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
-        if (ed.capture) setExportOpen(true);
+        if (ed.hasImage) setExportOpen(true);
         return;
       }
       if (e.key === '?') {
@@ -193,7 +194,7 @@ export function App() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [ed.capture]);
+  }, [ed.hasImage]);
 
   // Without this, a file dropped anywhere but the stage navigates this tab to it.
   useEffect(() => {
@@ -296,7 +297,7 @@ export function App() {
           </button>
           <ZoomMenu
             zoomPct={ed.zoomPct}
-            disabled={!ed.capture}
+            disabled={!ed.hasImage}
             onZoomIn={ed.zoomIn}
             onZoomOut={ed.zoomOut}
             onFit={ed.fit}
@@ -304,14 +305,14 @@ export function App() {
           />
           <BeautifyMenu
             frame={ed.frame}
-            disabled={!ed.capture}
+            disabled={!ed.hasImage}
             imageSize={ed.imageSize}
             onChange={ed.setFrame}
           />
           <button
             class="btn-primary btn-fixed"
             title="Copy to clipboard as PNG (⌘C)"
-            disabled={!ed.capture}
+            disabled={!ed.hasImage}
             onClick={copyToClipboard}
           >
             {copyState === 'copied' ? 'Copied' : copyState === 'failed' ? 'Failed' : 'Copy'}
@@ -319,7 +320,7 @@ export function App() {
           <button
             class="btn-secondary"
             title="Export (⌘S)"
-            disabled={!ed.capture}
+            disabled={!ed.hasImage}
             onClick={() => setExportOpen(true)}
           >
             Export
