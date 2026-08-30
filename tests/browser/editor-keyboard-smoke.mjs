@@ -9,28 +9,20 @@
 // faster than a frame, and every failure that causes is silent. Steps 4, 5 and
 // 6 below are that pairing, re-driven at keyboard speed.
 // Run with: npm run build && npm run smoke:editor
-import { createReadStream } from 'node:fs';
-import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
-import { createServer } from 'node:http';
+
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
-import { dirname, extname, join, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { assertDistFresh, loadPuppeteer, serveDist } from './dist-server.mjs';
 
 const ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const DIST = join(ROOT, 'dist');
 const PAGE = '/src/editor/index.html';
 const CHROME =
   process.env.CHROME_BIN ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-
-const MIME = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.png': 'image/png',
-  '.svg': 'image/svg+xml',
-};
 
 let stepNo = 0;
 function step(message) {
@@ -52,49 +44,6 @@ function hexToRGB(hex) {
         parseInt(m[1].slice(4, 6), 16),
       ]
     : null;
-}
-
-/** Same resolution walk as recorder-smoke.mjs — puppeteer-core lives in mcp/. */
-async function loadPuppeteer() {
-  let dir = ROOT;
-  for (;;) {
-    const pkg = join(dir, 'mcp', 'node_modules', 'puppeteer-core', 'package.json');
-    try {
-      const manifest = JSON.parse(await readFile(pkg, 'utf8'));
-      const entry = join(dirname(pkg), manifest.exports['.'].import);
-      return (await import(pathToFileURL(entry).href)).default;
-    } catch {
-      const parent = dirname(dir);
-      if (parent === dir) break;
-      dir = parent;
-    }
-  }
-  const require = createRequire(import.meta.url);
-  return (await import(pathToFileURL(require.resolve('puppeteer-core')).href)).default;
-}
-
-function serveDist() {
-  const server = createServer((req, res) => {
-    const path = decodeURIComponent((req.url ?? '/').split('?')[0]);
-    const file = join(DIST, path);
-    if (!file.startsWith(DIST)) {
-      res.writeHead(403).end();
-      return;
-    }
-    stat(file)
-      .then((info) => {
-        if (!info.isFile()) throw new Error('not a file');
-        res.writeHead(200, {
-          'content-type': MIME[extname(file)] ?? 'application/octet-stream',
-          'content-length': info.size,
-        });
-        createReadStream(file).pipe(res);
-      })
-      .catch(() => res.writeHead(404).end('not found'));
-  });
-  return new Promise((done) => {
-    server.listen(0, '127.0.0.1', () => done(server));
-  });
 }
 
 /**
@@ -4666,16 +4615,15 @@ async function testStrokeWidthPreviewDistinct(browser, base, messages) {
 }
 
 async function main() {
-  const built = await stat(join(DIST, PAGE.slice(1))).then(
-    () => true,
-    () => false,
+  const { sourceCount } = await assertDistFresh(ROOT);
+  console.log(
+    `dist/ is present and newer than all ${sourceCount} files under src/, public/ and manifest.json`,
   );
-  if (!built) throw new Error(`${DIST}${PAGE} is missing — run "npm run build" first`);
 
   const messages = JSON.parse(await readFile(join(DIST, '_locales/en/messages.json'), 'utf8'));
-  const puppeteer = await loadPuppeteer();
+  const puppeteer = await loadPuppeteer(ROOT);
   const work = await mkdtemp(join(tmpdir(), 'oss-editor-smoke-'));
-  const server = await serveDist();
+  const server = await serveDist(DIST);
   const base = `http://127.0.0.1:${server.address().port}`;
   console.log(`serving dist/ on ${base}`);
 

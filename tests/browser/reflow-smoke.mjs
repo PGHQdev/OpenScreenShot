@@ -6,29 +6,19 @@
 // keyboard focus trap while scrolled, and no surface that is meant to reflow
 // grows a horizontal scrollbar.
 // Run with: npm run build && npm run smoke:reflow
-import { createReadStream, readFileSync } from 'node:fs';
-import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
-import { createServer } from 'node:http';
+import { readFileSync } from 'node:fs';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
-import { dirname, extname, join, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { assertDistFresh, loadPuppeteer, serveDist } from './dist-server.mjs';
 
 const ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const DIST = join(ROOT, 'dist');
 const CHROME =
   process.env.CHROME_BIN ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-
-const MIME = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.png': 'image/png',
-  '.svg': 'image/svg+xml',
-  '.webm': 'video/webm',
-  '.woff2': 'font/woff2',
-};
 
 let stepNo = 0;
 function step(message) {
@@ -39,49 +29,6 @@ function step(message) {
 function assert(condition, message) {
   if (!condition) throw new Error(`assertion failed: ${message}`);
   console.log(`    ok: ${message}`);
-}
-
-/** Same resolution walk as the other browser smokes — puppeteer-core lives in mcp/. */
-async function loadPuppeteer() {
-  let dir = ROOT;
-  for (;;) {
-    const pkg = join(dir, 'mcp', 'node_modules', 'puppeteer-core', 'package.json');
-    try {
-      const manifest = JSON.parse(await readFile(pkg, 'utf8'));
-      const entry = join(dirname(pkg), manifest.exports['.'].import);
-      return (await import(pathToFileURL(entry).href)).default;
-    } catch {
-      const parent = dirname(dir);
-      if (parent === dir) break;
-      dir = parent;
-    }
-  }
-  const require = createRequire(import.meta.url);
-  return (await import(pathToFileURL(require.resolve('puppeteer-core')).href)).default;
-}
-
-function serveDist() {
-  const server = createServer((req, res) => {
-    const path = decodeURIComponent((req.url ?? '/').split('?')[0]);
-    const file = join(DIST, path);
-    if (!file.startsWith(DIST)) {
-      res.writeHead(403).end();
-      return;
-    }
-    stat(file)
-      .then((info) => {
-        if (!info.isFile()) throw new Error('not a file');
-        res.writeHead(200, {
-          'content-type': MIME[extname(file)] ?? 'application/octet-stream',
-          'content-length': info.size,
-        });
-        createReadStream(file).pipe(res);
-      })
-      .catch(() => res.writeHead(404).end('not found'));
-  });
-  return new Promise((done) => {
-    server.listen(0, '127.0.0.1', () => done(server));
-  });
 }
 
 /**
@@ -605,17 +552,16 @@ async function testSetup(browser, base, messages) {
 
 async function main() {
   step('checking the build');
-  const built = await stat(join(DIST, 'manifest.json')).then(
-    () => true,
-    () => false,
+  const { sourceCount } = await assertDistFresh(ROOT);
+  assert(
+    sourceCount > 0,
+    `dist/ is present and newer than all ${sourceCount} files under src/, public/ and manifest.json`,
   );
-  if (!built) throw new Error(`${DIST}/manifest.json is missing — run "npm run build" first`);
-  assert(built, 'dist/manifest.json exists');
 
   const messages = JSON.parse(await readFile(join(DIST, '_locales/en/messages.json'), 'utf8'));
-  const puppeteer = await loadPuppeteer();
+  const puppeteer = await loadPuppeteer(ROOT);
   const work = await mkdtemp(join(tmpdir(), 'oss-reflow-smoke-'));
-  const server = await serveDist();
+  const server = await serveDist(DIST);
   const base = `http://127.0.0.1:${server.address().port}`;
   step(`serving dist/ on ${base}`);
 

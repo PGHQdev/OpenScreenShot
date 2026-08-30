@@ -28,12 +28,12 @@
 // Run with: npm run build && npm run shots
 import sharp from 'sharp';
 import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, readdir, readFile, rm, stat } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { loadPuppeteer, serveDist } from '../../tests/browser/dist-server.mjs';
+import { assertDistFresh, loadPuppeteer, serveDist } from '../../tests/browser/dist-server.mjs';
 
 const execFileP = promisify(execFile);
 
@@ -65,90 +65,6 @@ const SEED_SEGMENT_ID = 'shots-segment-0001';
 
 /** `path`, relative to the repo root, for a shorter log line. */
 const rel = (path) => relative(ROOT, path);
-
-/* -------------------------------------------------------------------------
- * dist/ freshness check. Pure decision in `checkDistFreshness` (unit-tested
- * in tests/unit/); the file-system walk that feeds it lives in
- * `assertDistFresh` below.
- * ---------------------------------------------------------------------- */
-
-/**
- * Decides whether `dist/` is fit to render from, given nothing but file
- * lists and mtimes — no I/O, so a test can hand it fixtures directly.
- * `sourceFiles` is every file under src/, public/ and manifest.json;
- * `distOldestMtimeMs` is the *oldest* mtime anywhere under dist/ (Infinity if
- * dist/ has no files at all). The oldest, not the newest: a build writes
- * every file in dist/ (vite empties it first), so a source file newer than
- * the oldest output is newer than the build. A build that wrote some outputs
- * and then failed leaves the untouched rest carrying the previous build's
- * mtime, and it is that older mtime the source has to be compared against —
- * against the newest output such a half-written dist/ would read as fresh.
- * Missing takes priority over stale: an absent manifest means there is
- * nothing to compare mtimes against in the first place.
- */
-export function checkDistFreshness({ manifestExists, sourceFiles, distOldestMtimeMs }) {
-  if (!manifestExists) return { fresh: false, reason: 'missing' };
-  let newest = null;
-  for (const file of sourceFiles) {
-    if (file.mtimeMs > distOldestMtimeMs && (!newest || file.mtimeMs > newest.mtimeMs)) {
-      newest = file;
-    }
-  }
-  if (newest) return { fresh: false, reason: 'stale', file: newest.path, mtimeMs: newest.mtimeMs };
-  return { fresh: true };
-}
-
-/** Every file under `dir`, recursively, as absolute paths. */
-async function listFiles(dir) {
-  let entries;
-  try {
-    entries = await readdir(dir, { withFileTypes: true });
-  } catch {
-    return [];
-  }
-  const out = [];
-  for (const entry of entries) {
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...(await listFiles(full)));
-    else if (entry.isFile()) out.push(full);
-  }
-  return out;
-}
-
-/** Reads `checkDistFreshness`'s inputs off disk, then exits non-zero on a stale or missing dist/. */
-async function assertDistFresh() {
-  const manifestExists = await stat(join(DIST, 'manifest.json')).then(
-    () => true,
-    () => false,
-  );
-  const distFiles = await listFiles(DIST);
-  let distOldestMtimeMs = Infinity;
-  for (const file of distFiles) {
-    const info = await stat(file);
-    if (info.mtimeMs < distOldestMtimeMs) distOldestMtimeMs = info.mtimeMs;
-  }
-
-  const sourcePaths = [
-    ...(await listFiles(join(ROOT, 'src'))),
-    ...(await listFiles(join(ROOT, 'public'))),
-    join(ROOT, 'manifest.json'),
-  ];
-  const sourceFiles = [];
-  for (const path of sourcePaths) {
-    const info = await stat(path).catch(() => null);
-    if (info) sourceFiles.push({ path, mtimeMs: info.mtimeMs });
-  }
-
-  const result = checkDistFreshness({ manifestExists, sourceFiles, distOldestMtimeMs });
-  if (result.fresh) return;
-  if (result.reason === 'missing') {
-    console.error('dist/manifest.json is missing. Run `npm run build` first.');
-  } else {
-    console.error(`${result.file} is newer than dist/. Run \`npm run build\` first.`);
-  }
-  process.exitCode = 1;
-  process.exit(1);
-}
 
 /* -------------------------------------------------------------------------
  * Real UI captures. Each `install*ChromeStub` below follows the pattern in
@@ -831,7 +747,8 @@ async function renderPosters() {
  * ---------------------------------------------------------------------- */
 
 async function main() {
-  await assertDistFresh();
+  const { sourceCount } = await assertDistFresh(ROOT);
+  console.log(`dist/ is newer than all ${sourceCount} files under src/, public/ and manifest.json`);
   await mkdir(OUT_DIR, { recursive: true });
   await mkdir(STORE_DIR, { recursive: true });
 

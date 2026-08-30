@@ -3,12 +3,12 @@
 // The live capture path is not covered here — tabCapture needs a real tab
 // (manual checklist in docs/).
 // Run with: npm run build && npm run smoke:recorder
-import { mkdtemp, readdir, readFile, rm, stat } from 'node:fs/promises';
+import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadPuppeteer, serveDist } from './dist-server.mjs';
+import { assertDistFresh, loadPuppeteer, serveDist } from './dist-server.mjs';
 
 const ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const DIST = join(ROOT, 'dist');
@@ -681,12 +681,11 @@ function stageOpacity() {
 
 async function main() {
   step('checking the build');
-  const built = await stat(join(DIST, 'manifest.json')).then(
-    () => true,
-    () => false,
+  const { sourceCount } = await assertDistFresh(ROOT);
+  assert(
+    sourceCount > 0,
+    `dist/ is present and newer than all ${sourceCount} files under src/, public/ and manifest.json`,
   );
-  if (!built) throw new Error(`${DIST}/manifest.json is missing — run "npm run build" first`);
-  assert(built, 'dist/manifest.json exists');
 
   const messages = JSON.parse(await readFile(join(DIST, '_locales/en/messages.json'), 'utf8'));
   const puppeteer = await loadPuppeteer(ROOT);

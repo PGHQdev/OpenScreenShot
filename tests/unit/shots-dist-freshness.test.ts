@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { checkDistFreshness } from '../../scripts/shots/render.mjs';
+import { checkDistFreshness } from '../browser/dist-server.mjs';
 
 /**
- * `checkDistFreshness` is the pure decision `scripts/shots/render.mjs`'s
+ * `checkDistFreshness` is the pure decision `tests/browser/dist-server.mjs`'s
  * `assertDistFresh` calls after walking the file system — see that module's
- * doc comment. Missing beats stale: with no manifest there is nothing to
- * compare mtimes against yet. Source mtimes are compared against the oldest
- * file in dist/, so a build that failed part-way cannot pass on the strength
- * of the files it did write.
+ * doc comment. Its callers are the seven dist/-driven smokes and the shot
+ * pipeline; all of them read the built `dist/`, and a stale one makes the
+ * whole run measure the previous version. Missing beats stale: with no
+ * manifest there is nothing to compare mtimes against yet. Source mtimes are
+ * compared against the oldest file in dist/, so a build that failed part-way
+ * cannot pass on the strength of the files it did write.
  */
 describe('checkDistFreshness', () => {
   it('is fresh when the manifest exists and nothing under src/public/manifest.json is newer', () => {

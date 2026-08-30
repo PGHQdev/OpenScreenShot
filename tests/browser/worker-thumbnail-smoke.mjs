@@ -35,11 +35,12 @@
 // Run with: npm run build && npm run smoke:worker
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdtemp, readdir, readFile, rm, stat } from 'node:fs/promises';
+import { mkdtemp, readdir, rm } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { homedir, tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { assertDistFresh, loadPuppeteer } from './dist-server.mjs';
 
 const ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const DIST = join(ROOT, 'dist');
@@ -144,25 +145,6 @@ function assert(condition, message) {
   console.log(`    ok: ${message}`);
 }
 
-/** Same resolution walk as every other browser smoke — puppeteer-core lives in mcp/. */
-async function loadPuppeteer() {
-  let dir = ROOT;
-  for (;;) {
-    const pkg = join(dir, 'mcp', 'node_modules', 'puppeteer-core', 'package.json');
-    try {
-      const manifest = JSON.parse(await readFile(pkg, 'utf8'));
-      const entry = join(dirname(pkg), manifest.exports['.'].import);
-      return (await import(pathToFileURL(entry).href)).default;
-    } catch {
-      const parent = dirname(dir);
-      if (parent === dir) break;
-      dir = parent;
-    }
-  }
-  const require = createRequire(import.meta.url);
-  return (await import(pathToFileURL(require.resolve('puppeteer-core')).href)).default;
-}
-
 /**
  * A tiny solid PNG, generated for real via `sharp` rather than a
  * hand-transcribed base64 literal — the first version of this file used a
@@ -237,14 +219,13 @@ async function evalThumbnailChain(dataUrl, maxDim, corrupt) {
 }
 
 async function main() {
-  const built = await stat(join(DIST, 'manifest.json')).then(
-    () => true,
-    () => false,
+  const { sourceCount } = await assertDistFresh(ROOT);
+  console.log(
+    `dist/ is present and newer than all ${sourceCount} files under src/, public/ and manifest.json`,
   );
-  if (!built) throw new Error(`${DIST}/manifest.json is missing — run "npm run build" first`);
 
   const chrome = await resolveChrome();
-  const puppeteer = await loadPuppeteer();
+  const puppeteer = await loadPuppeteer(ROOT);
   const work = await mkdtemp(join(tmpdir(), 'oss-worker-smoke-'));
   let browser = null;
   try {
