@@ -28,6 +28,7 @@ import {
   type Point,
   type Rect,
 } from './annotations';
+import { t } from './i18n';
 import type { Band } from './bands';
 import { TOOL_LIST } from './tools';
 
@@ -353,7 +354,7 @@ export function placementRect(c: Point, size: number, imgW: number, imgH: number
 
 /** The human name for an annotation type — the same word the toolbar uses. */
 export function annotationLabel(type: AnnotationType): string {
-  return TOOL_LIST.find((t) => t.id === type)?.label ?? 'Annotation';
+  return TOOL_LIST.find((tool) => tool.id === type)?.label ?? t('editorAnnotationFallback');
 }
 
 /** Everything the live region has something to say about. */
@@ -394,36 +395,47 @@ export type Mutation =
   /** A mark left the picture, and what is still selected after it went. */
   | { kind: 'hidden'; count: number; remaining: number };
 
+/** The live region's "N annotations" phrase — its own message per plural form. */
 function count(n: number): string {
-  return `${n} annotation${n === 1 ? '' : 's'}`;
+  return t(n === 1 ? 'editorAnnotationCountOne' : 'editorAnnotationCountOther', [String(n)]);
 }
 
 /** The new picture, for a timeline step that changed it. */
 function stepSize(m: { imageHeight?: number; imageSize?: { w: number; h: number } }): string {
-  if (m.imageSize)
-    return ` Image ${Math.round(m.imageSize.w)} by ${Math.round(m.imageSize.h)} pixels.`;
-  return m.imageHeight === undefined ? '' : ` Image ${Math.round(m.imageHeight)} pixels tall.`;
+  if (m.imageSize) {
+    return ` ${t('editorStepImageSize', [String(Math.round(m.imageSize.w)), String(Math.round(m.imageSize.h))])}`;
+  }
+  return m.imageHeight === undefined
+    ? ''
+    : ` ${t('editorStepImageHeight', [String(Math.round(m.imageHeight))])}`;
 }
 
 /** What each handle is called out loud. */
-const HANDLE_LABEL: Record<Handle, string> = {
-  nw: 'Top left',
-  n: 'Top',
-  ne: 'Top right',
-  e: 'Right',
-  se: 'Bottom right',
-  s: 'Bottom',
-  sw: 'Bottom left',
-  w: 'Left',
-  start: 'Start',
-  end: 'End',
-};
+function handleLabel(h: Handle): string {
+  const ids: Record<Handle, string> = {
+    nw: 'editorHandleTopLeft',
+    n: 'editorHandleTop',
+    ne: 'editorHandleTopRight',
+    e: 'editorHandleRight',
+    se: 'editorHandleBottomRight',
+    s: 'editorHandleBottom',
+    sw: 'editorHandleBottomLeft',
+    w: 'editorHandleLeft',
+    start: 'editorHandleStart',
+    end: 'editorHandleEnd',
+  };
+  return t(ids[h]);
+}
 
 /** The size and place of a crop rect, as one sentence. */
 function cropPhrase(rect: Rect): string {
   const n = normalizeRect(rect);
-  const size = `${Math.round(n.w)} by ${Math.round(n.h)} pixels`;
-  return `Crop ${size} at ${Math.round(n.x)}, ${Math.round(n.y)}.`;
+  return t('editorCropPhrase', [
+    String(Math.round(n.w)),
+    String(Math.round(n.h)),
+    String(Math.round(n.x)),
+    String(Math.round(n.y)),
+  ]);
 }
 
 /** What the live region says for one mutation. */
@@ -431,73 +443,89 @@ export function announce(m: Mutation): string {
   switch (m.kind) {
     case 'select': {
       const label = annotationLabel(m.annotation.type);
-      return `${label} selected, layer ${m.index} of ${m.total}.`;
+      return t('editorAnnounceSelect', [label, String(m.index), String(m.total)]);
     }
     case 'select-many':
-      return `${m.count} of ${count(m.total)} selected.`;
+      return t('editorAnnounceSelectMany', [String(m.count), count(m.total)]);
     case 'deselect':
-      return 'Selection cleared.';
+      return t('editorAnnounceDeselect');
     case 'add': {
       const b = bbox(m.annotation);
-      return `${annotationLabel(m.annotation.type)} added at ${Math.round(b.x)}, ${Math.round(b.y)}.`;
+      return t('editorAnnounceAdd', [
+        annotationLabel(m.annotation.type),
+        String(Math.round(b.x)),
+        String(Math.round(b.y)),
+      ]);
     }
     case 'move': {
       const b = bbox(m.annotation);
-      return `${annotationLabel(m.annotation.type)} moved to ${Math.round(b.x)}, ${Math.round(b.y)}.`;
+      return t('editorAnnounceMove', [
+        annotationLabel(m.annotation.type),
+        String(Math.round(b.x)),
+        String(Math.round(b.y)),
+      ]);
     }
     case 'move-many':
-      return `${count(m.count)} moved.`;
+      return t('editorAnnounceMoveMany', [count(m.count)]);
     case 'resize': {
       const b = bbox(m.annotation);
       const label = annotationLabel(m.annotation.type);
-      return `${label} resized to ${Math.round(b.w)} by ${Math.round(b.h)} pixels.`;
+      return t('editorAnnounceResize', [label, String(Math.round(b.w)), String(Math.round(b.h))]);
     }
     case 'resize-many':
-      return `${count(m.count)} resized.`;
+      return t('editorAnnounceResizeMany', [count(m.count)]);
     case 'delete': {
-      const left = m.remaining === 0 ? 'no annotations' : count(m.remaining);
-      return `${annotationLabel(m.type)} deleted, ${left} left.`;
+      const left = m.remaining === 0 ? t('editorNoAnnotations') : count(m.remaining);
+      return t('editorAnnounceDelete', [annotationLabel(m.type), left]);
     }
     case 'delete-many': {
-      const left = m.remaining === 0 ? 'no annotations' : count(m.remaining);
-      return `${count(m.count)} deleted, ${left} left.`;
+      const left = m.remaining === 0 ? t('editorNoAnnotations') : count(m.remaining);
+      return t('editorAnnounceDeleteMany', [count(m.count), left]);
     }
     case 'duplicate':
-      return `${count(m.count)} duplicated.`;
+      return t('editorAnnounceDuplicate', [count(m.count)]);
     case 'undo':
-      return `Undo.${stepSize(m)} ${count(m.total)}.`;
+      return `${t('editorAnnounceUndo')}${stepSize(m)} ${count(m.total)}.`;
     case 'redo':
-      return `Redo.${stepSize(m)} ${count(m.total)}.`;
+      return `${t('editorAnnounceRedo')}${stepSize(m)} ${count(m.total)}.`;
     case 'crop':
       return cropPhrase(m.rect);
     case 'crop-handle':
-      return `${HANDLE_LABEL[m.handle]} handle. ${cropPhrase(m.rect)}`;
+      return t('editorAnnounceCropHandle', [handleLabel(m.handle), cropPhrase(m.rect)]);
     case 'crop-applied':
-      return `Cropped to ${m.w} by ${m.h} pixels.`;
+      return t('editorAnnounceCropApplied', [String(m.w), String(m.h)]);
     case 'crop-cancelled':
-      return 'Crop cancelled.';
+      return t('editorAnnounceCropCancelled');
     case 'cut':
-      return `Cut band ${Math.round(m.band.h)} pixels tall at ${Math.round(m.band.y)}.`;
+      return t('editorAnnounceCut', [String(Math.round(m.band.h)), String(Math.round(m.band.y))]);
     case 'cut-applied':
       return (
-        `Cut ${Math.round(m.band.h)} pixels. Image ${Math.round(m.imageHeight)} pixels tall.` +
+        t('editorAnnounceCutApplied', [
+          String(Math.round(m.band.h)),
+          String(Math.round(m.imageHeight)),
+        ]) +
         // The layer count keeps counting a mark on cut rows, so the cut says
         // how many it took out of the picture rather than leaving the user to
         // notice more layers than marks.
-        (m.hidden > 0 ? ` ${count(m.hidden)} out of the picture.` : '')
+        (m.hidden > 0 ? ` ${t('editorAnnounceOutOfPicture', [count(m.hidden)])}` : '')
       );
     case 'cut-removed':
-      return `Put back ${Math.round(m.band.h)} pixels. Image ${Math.round(m.imageHeight)} pixels tall.`;
+      return t('editorAnnounceCutRemoved', [
+        String(Math.round(m.band.h)),
+        String(Math.round(m.imageHeight)),
+      ]);
     case 'cut-cancelled':
-      return 'Cut cancelled.';
+      return t('editorAnnounceCutCancelled');
     case 'cut-refused':
-      return 'A cut cannot take the whole picture.';
+      return t('editorAnnounceCutRefused');
     case 'cut-none':
-      return 'Those rows are cut already.';
+      return t('editorAnnounceCutNone');
     case 'hidden':
       return (
-        `${count(m.count)} out of the picture. ` +
-        (m.remaining === 0 ? 'Selection cleared.' : `${count(m.remaining)} selected.`)
+        `${t('editorAnnounceOutOfPicture', [count(m.count)])} ` +
+        (m.remaining === 0
+          ? t('editorAnnounceDeselect')
+          : t('editorAnnounceSelectedRemaining', [count(m.remaining)]))
       );
   }
 }
