@@ -79,18 +79,14 @@ export type RecMessage =
   | { type: 'REC_RESUME' }
   | { type: 'REC_CANCEL' }
   | { type: 'REC_QUERY' }
-  /** The preview iframe could not open the camera; the worker drops the track
-   *  from stored settings. The engine degrades on its own catch. */
+  /** The permission iframe could not open the camera; the worker drops the
+   *  track from stored settings. The engine degrades on its own catch. */
   | { type: 'REC_WEBCAM_DENIED' }
-  /** The preview iframe settled its `getUserMedia` (granted, declined, or
+  /** The permission iframe settled its `getUserMedia` (granted, declined, or
    *  gated off). The worker holds `OFFSCREEN_START` until this arrives, so the
    *  engine's own camera/mic capture runs after the origin's permission
    *  prompt, not before it. */
-  | { type: 'REC_FRAME_READY' }
-  /** The webcam bubble was dragged to a new spot, at the end of the drag —
-   *  not on every pointermove. `x`/`y` are the bubble's fixed-position CSS
-   *  px, already clamped to the viewport it was dragged in. */
-  | { type: 'REC_BUBBLE_MOVED'; x: number; y: number };
+  | { type: 'REC_FRAME_READY' };
 
 /** REC_QUERY reply. */
 export interface RecState {

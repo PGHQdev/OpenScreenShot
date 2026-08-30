@@ -3,7 +3,6 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   anchoredElapsed,
-  clampBubblePosition,
   formatTimer,
   isNearBar,
   shouldShowBar,
@@ -149,40 +148,28 @@ describe('anchoredElapsed', () => {
   });
 });
 
-describe('clampBubblePosition', () => {
-  // The webcam bubble's persisted position — a spot saved before a resize,
-  // or before a navigation lands on a smaller window — has to fit whatever
-  // window it is applied in, not the one it was saved from.
-  const size = 204; // BUBBLE_PX + HANDLE_PX * 2 in mountRecordingOverlay
-
-  it('leaves an in-bounds position alone', () => {
-    expect(clampBubblePosition({ x: 400, y: 300 }, 1920, 1080, size)).toEqual({ x: 400, y: 300 });
-  });
-
-  it('pulls a negative x back to the left edge', () => {
-    expect(clampBubblePosition({ x: -50, y: 300 }, 1920, 1080, size)).toEqual({ x: 0, y: 300 });
-  });
-
-  it('pulls a negative y back to the top edge', () => {
-    expect(clampBubblePosition({ x: 400, y: -50 }, 1920, 1080, size)).toEqual({ x: 400, y: 0 });
-  });
-
-  it('pulls x back onto a window narrower than where it was saved', () => {
-    expect(clampBubblePosition({ x: 1800, y: 300 }, 900, 1080, size)).toEqual({
-      x: 900 - size,
-      y: 300,
-    });
-  });
-
-  it('pulls y back onto a window shorter than where it was saved', () => {
-    expect(clampBubblePosition({ x: 400, y: 1000 }, 1920, 500, size)).toEqual({
-      x: 400,
-      y: 500 - size,
-    });
-  });
-
-  it('clamps to zero rather than negative when the window is smaller than the bubble', () => {
-    expect(clampBubblePosition({ x: 400, y: 300 }, 100, 100, size)).toEqual({ x: 0, y: 0 });
+/**
+ * Task 40: tabCapture records the tab's own rendered pixels, iframe content
+ * included (the same fact `mountRecordingOverlay`'s catcher/host comments
+ * already rely on) — so a live camera preview drawn inside the page's DOM
+ * would be baked into every captured frame, and the editor's own composited
+ * bubble (drawn from the separate 'webcam' chunk stream at export) would then
+ * be a second one on top of it. There is no capture-time flag that excludes
+ * one element from what tabCapture sees; the only way to avoid the double
+ * bubble is to never give the live preview a visible footprint in the page.
+ * `camHost` is a closed shadow root with no stylesheet to inspect from a
+ * headless test, so this reads the shipped source the same way the paused-dot
+ * and grip checks above do.
+ */
+describe('the webcam permission frame never grows a visible bubble', () => {
+  it('collapses to a 1x1 permission surface unconditionally, not just when webcam is off', () => {
+    const block = /if \(tracks\.webcam \|\| tracks\.mic\) \{[\s\S]*?\n {2}\}/.exec(SOURCE)?.[0];
+    expect(block, 'camHost mount block not found').toBeTruthy();
+    // A conditional branch keyed on tracks.webcam is exactly the shape that
+    // built the draggable, full-size circle this task removes — its absence
+    // is the evidence the collapse is no longer conditional.
+    expect(block).not.toMatch(/if \(tracks\.webcam\)/);
+    expect(block).toMatch(/width:\s*1px;height:\s*1px/);
   });
 });
 

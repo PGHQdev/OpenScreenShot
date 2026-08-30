@@ -86,26 +86,6 @@ export function anchoredElapsed(
   return { elapsedMs: Math.max(current.elapsedMs, next.elapsedMs), anchored: true };
 }
 
-/**
- * Clamp a webcam-bubble position to the current viewport. Shared by three
- * call sites inside `mountRecordingOverlay` — the initial placement (a
- * persisted position can predate a resize, or land in a smaller window after
- * a navigation), the resize handler, and the drag handler — so a position
- * that was valid where it was set can never leave the bubble partly or
- * wholly off-screen where it is applied.
- */
-export function clampBubblePosition(
-  pos: { x: number; y: number },
-  winW: number,
-  winH: number,
-  size: number,
-): { x: number; y: number } {
-  return {
-    x: Math.min(Math.max(0, pos.x), Math.max(0, winW - size)),
-    y: Math.min(Math.max(0, pos.y), Math.max(0, winH - size)),
-  };
-}
-
 /** "0:07", "1:23", "1:23:45". Floors ragged ms, clamps negatives to zero. */
 export function formatTimer(ms: number): string {
   const totalSec = Math.floor(Math.max(0, ms) / 1000);
@@ -140,15 +120,6 @@ export function mountRecordingOverlay(
    * its own mount, which is the bug this replaces. See `anchoredElapsed`.
    */
   anchored: boolean,
-  /**
-   * The webcam bubble's last dragged position, or null for the default
-   * bottom-right corner. Unlike `anchored`, forgetting this only resets the
-   * bubble to that corner rather than showing a wrong number, so it is the
-   * one argument here allowed to default — and only a fresh mount applies
-   * it; a heal that only re-syncs an already-mounted bar leaves a bubble the
-   * user has since moved exactly where they put it.
-   */
-  bubblePos: { x: number; y: number } | null = null,
 ): 'fresh' | 'synced' {
   type SyncFn = (
     elapsedMs: number,
@@ -203,20 +174,6 @@ export function mountRecordingOverlay(
     if (!next.anchored) return current;
     if (!current.anchored) return { elapsedMs: next.elapsedMs, anchored: true };
     return { elapsedMs: Math.max(current.elapsedMs, next.elapsedMs), anchored: true };
-  }
-
-  // Duplicated for the same reason: the exported copy above is the one under
-  // test, and the two are spelled identically on purpose.
-  function clampBubblePosition(
-    pos: { x: number; y: number },
-    winW: number,
-    winH: number,
-    size: number,
-  ): { x: number; y: number } {
-    return {
-      x: Math.min(Math.max(0, pos.x), Math.max(0, winW - size)),
-      y: Math.min(Math.max(0, pos.y), Math.max(0, winH - size)),
-    };
   }
 
   function formatTimer(ms: number): string {
@@ -464,20 +421,28 @@ export function mountRecordingOverlay(
   // announced. This is the fresh-mount half of the edge.
   if (warning) announceWarning();
 
-  // --- Webcam bubble / permission frame ------------------------------------
+  // --- Webcam/mic permission frame ------------------------------------------
 
   // Camera and mic permission is held per extension origin and the offscreen
-  // document cannot show a prompt, so the prompt (and the live preview) lives
-  // in an iframe of `src/recorder/webcam-frame.html`. With the mic on and the
-  // webcam off that frame is still mounted, 1x1 and invisible: it is the only
-  // prompt surface the mic has.
+  // document cannot show a prompt, so the prompt lives in an iframe of
+  // `src/recorder/webcam-frame.html`. It never renders a visible preview here
+  // (task 40): tabCapture records the tab's own rendered pixels, iframe
+  // content included, so a live self-view drawn into the page's DOM would be
+  // baked into every captured frame — and the editor's own composited bubble
+  // (drawn from the separate 'webcam' chunk stream at export, `render.ts`)
+  // would then be a second one on top of it, permanently, with no way for
+  // "Hide" in the rail to remove the one that shipped inside the capture.
+  // There is no capture-time flag that excludes one page element from what
+  // tabCapture sees, so the only way to avoid that is to never give the
+  // preview a visible footprint — this frame is collapsed to the same 1x1
+  // permission-only dot for every track combination, webcam included, not
+  // just the mic-only case that already used to collapse it. The recording
+  // control bar's "CAM" chip is the live indicator that the camera is on;
+  // the bubble the user actually sees is the one the rail's corner/size
+  // controls position, composited once at export.
   let camHost: HTMLDivElement | null = null;
-  let clampBubble: (() => void) | null = null;
 
   if (tracks.webcam || tracks.mic) {
-    const BUBBLE_PX = 180;
-    const HANDLE_PX = 12;
-    const MARGIN_PX = 24;
     const frameUrl =
       chrome.runtime.getURL('src/recorder/webcam-frame.html') +
       '?webcam=' +
@@ -487,119 +452,18 @@ export function mountRecordingOverlay(
 
     camHost = document.createElement('div');
     camHost.setAttribute('data-testid', 'rec-overlay-cam');
-    camHost.style.cssText = 'all:initial;position:fixed;left:0;top:0;z-index:2147483646;';
+    camHost.style.cssText =
+      'all:initial;position:fixed;left:0;top:0;width:1px;height:1px;' +
+      'overflow:hidden;opacity:0;pointer-events:none;z-index:2147483646;';
     const camShadow = camHost.attachShadow({ mode: 'closed' });
 
-    const camStyle = document.createElement('style');
-    camStyle.textContent = `
-      .wrap {
-        box-sizing: content-box;
-        width: ${BUBBLE_PX}px;
-        height: ${BUBBLE_PX}px;
-        padding: ${HANDLE_PX}px;
-        border-radius: 50%;
-        background: rgba(20, 20, 22, .92);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, .35);
-        cursor: grab;
-        touch-action: none;
-      }
-      .wrap:active { cursor: grabbing; }
-      .frame {
-        display: block;
-        width: ${BUBBLE_PX}px;
-        height: ${BUBBLE_PX}px;
-        border: 0;
-        border-radius: 50%;
-        background: transparent;
-        /* A drag anywhere over the circle must reach .wrap; the frame is a
-           separate document and would otherwise swallow the pointer. */
-        pointer-events: none;
-      }
-    `;
-    camShadow.appendChild(camStyle);
-
-    const wrap = document.createElement('div');
-    wrap.className = 'wrap';
-
     const frame = document.createElement('iframe');
-    frame.className = 'frame';
     // Camera/mic is delegated to a cross-origin child frame only when the
     // embedder says so; without this the frame's getUserMedia always fails.
     frame.allow = 'camera; microphone';
     frame.src = frameUrl;
-    wrap.appendChild(frame);
-    camShadow.appendChild(wrap);
-
-    if (tracks.webcam) {
-      const size = BUBBLE_PX + HANDLE_PX * 2;
-      // A persisted position rides `healOverlay`'s re-mount after a
-      // navigation; a fresh recording with nothing persisted keeps the old
-      // bottom-right default. Either way it is clamped to *this* window,
-      // which may be a different size than the one the position was saved
-      // from.
-      const defaultPos = {
-        x: Math.max(0, window.innerWidth - size - MARGIN_PX),
-        y: Math.max(0, window.innerHeight - size - MARGIN_PX),
-      };
-      let { x, y } = clampBubblePosition(
-        bubblePos ?? defaultPos,
-        window.innerWidth,
-        window.innerHeight,
-        size,
-      );
-      let dragId: number | null = null;
-      let grabX = 0;
-      let grabY = 0;
-
-      const place = (): void => {
-        if (!camHost) return;
-        camHost.style.left = `${x}px`;
-        camHost.style.top = `${y}px`;
-      };
-      place();
-
-      clampBubble = () => {
-        ({ x, y } = clampBubblePosition({ x, y }, window.innerWidth, window.innerHeight, size));
-        place();
-      };
-
-      wrap.addEventListener('pointerdown', (e) => {
-        dragId = e.pointerId;
-        grabX = e.clientX - x;
-        grabY = e.clientY - y;
-        wrap.setPointerCapture(e.pointerId);
-        e.preventDefault();
-      });
-      wrap.addEventListener('pointermove', (e) => {
-        if (dragId !== e.pointerId) return;
-        ({ x, y } = clampBubblePosition(
-          { x: e.clientX - grabX, y: e.clientY - grabY },
-          window.innerWidth,
-          window.innerHeight,
-          size,
-        ));
-        place();
-      });
-      const endDrag = (e: PointerEvent): void => {
-        if (dragId !== e.pointerId) return;
-        dragId = null;
-        wrap.releasePointerCapture(e.pointerId);
-        // Only a real drag end persists — the worker stores it on
-        // `StoredRecState` and `healOverlay` hands it back as this
-        // function's `bubblePos` argument on the next mount, which is what
-        // makes the position survive a navigation.
-        safeSend({ type: 'REC_BUBBLE_MOVED', x, y });
-      };
-      wrap.addEventListener('pointerup', endDrag);
-      wrap.addEventListener('pointercancel', endDrag);
-    } else {
-      // Mic only: no bubble, just the prompt surface. Inline styles win over
-      // the sheet above, so the 180px circle collapses to an invisible dot.
-      camHost.style.cssText +=
-        'width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;';
-      wrap.style.cssText = 'all:unset;display:block;width:1px;height:1px;';
-      frame.style.cssText = 'width:1px;height:1px;border:0;';
-    }
+    frame.style.cssText = 'width:1px;height:1px;border:0;';
+    camShadow.appendChild(frame);
 
     document.documentElement.appendChild(camHost);
   }
@@ -837,7 +701,6 @@ export function mountRecordingOverlay(
   }
 
   function onResize(): void {
-    clampBubble?.();
     pushEvent({
       kind: 'resize',
       t: nowT(),
@@ -916,13 +779,12 @@ export function mountRecordingOverlay(
     if (warning && !wasWarning) announceWarning();
 
     // Drop the frame only when neither device is left. A camera that is gone
-    // makes the bubble a preview of something nobody records, but the same
-    // element is the mic's only prompt surface — tearing it down for a
-    // mic-only run kills the prompt it exists to show.
+    // makes the frame a permission surface for nothing, but the same element
+    // is the mic's only prompt surface — tearing it down for a mic-only run
+    // kills the prompt it exists to show.
     if (!nextTracks.webcam && !nextTracks.mic && camHost) {
       camHost.remove();
       camHost = null;
-      clampBubble = null;
     }
   };
 
@@ -937,8 +799,8 @@ export function mountRecordingOverlay(
     window.removeEventListener('pagehide', onPageHide);
     host.remove();
     catcherHost.remove();
-    // Removing the frame tears down its document, which stops the preview
-    // stream and drops the camera indicator.
+    // Removing the frame tears down its document, which stops the camera/mic
+    // stream it opened and drops the camera indicator.
     camHost?.remove();
     delete win.__ossRecOverlay;
     delete win.__ossRecSync;

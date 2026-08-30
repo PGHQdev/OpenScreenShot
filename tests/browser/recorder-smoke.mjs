@@ -398,6 +398,87 @@ async function seedSession() {
 }
 
 /**
+ * Task 40: records two real, decodable WebM streams — a plain tab background
+ * and a flat, unmistakable magenta stand-in for a webcam feed — and writes a
+ * one-segment session with a real `'webcam'`-kind chunk stream, so an actual
+ * `export-video.ts` render has a real bubble to composite. Placeholder byte
+ * blobs (`seedManyChunksSession`'s) are fine for DOM-shape assertions but
+ * cannot play, so they cannot prove anything about what gets drawn.
+ */
+async function seedWebcamBubbleSession() {
+  async function recordFlat(color, w, h, ms) {
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    const paint = () => {
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, w, h);
+    };
+    const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+      ? 'video/webm;codecs=vp9'
+      : 'video/webm';
+    const recorder = new MediaRecorder(canvas.captureStream(30), { mimeType: mime });
+    const blobs = [];
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) blobs.push(e.data);
+    };
+    paint();
+    recorder.start(1000);
+    const painter = setInterval(paint, 1000 / 30);
+    await new Promise((done) => {
+      setTimeout(() => {
+        clearInterval(painter);
+        recorder.onstop = done;
+        recorder.stop();
+      }, ms);
+    });
+    return blobs;
+  }
+
+  const DURATION_MS = 2100;
+  const [tabBlobs, camBlobs] = await Promise.all([
+    recordFlat('#123a5e', 640, 360, DURATION_MS),
+    recordFlat('#ff33cc', 640, 360, DURATION_MS),
+  ]);
+
+  const db = await new Promise((done, fail) => {
+    const req = indexedDB.open('openscreenshot-recordings', 1);
+    req.onsuccess = () => done(req.result);
+    req.onerror = () => fail(req.error);
+  });
+  const sessionId = crypto.randomUUID();
+  const segmentId = crypto.randomUUID();
+  await new Promise((done, fail) => {
+    const tx = db.transaction(['sessions', 'segments', 'chunks'], 'readwrite');
+    tx.objectStore('sessions').put({
+      id: sessionId,
+      createdAt: Date.now(),
+      status: 'complete',
+      settings: { mic: false, tabAudio: false, webcam: true, ripple: true },
+      segmentIds: [segmentId],
+    });
+    tx.objectStore('segments').put({
+      id: segmentId,
+      sessionId,
+      index: 0,
+      startedAt: Date.now(),
+      duration: 2000,
+      viewport: { w: 640, h: 360, dpr: 1 },
+      hasWebcam: true,
+    });
+    const chunks = tx.objectStore('chunks');
+    tabBlobs.forEach((blob, seq) => chunks.put({ segmentId, kind: 'tab', seq, blob }));
+    camBlobs.forEach((blob, seq) => chunks.put({ segmentId, kind: 'webcam', seq, blob }));
+    tx.oncomplete = () => done();
+    tx.onerror = () => fail(tx.error);
+    tx.onabort = () => fail(tx.error);
+  });
+  db.close();
+  return sessionId;
+}
+
+/**
  * Append a segment row with no chunks to `sessionId`. A continue whose engine
  * died after the row was written leaves exactly this: a segment whose blob is
  * zero bytes, whose metadata never loads, and which the export has to skip
@@ -1260,6 +1341,115 @@ async function main() {
       `a confirmed cancel produced no download (${beforeCancel} -> ${afterCancel})`,
     );
 
+    step('task 40: the export composites exactly one bubble, and Hide removes it');
+    // The live in-page preview never renders (asserted on the content-script
+    // overlay directly, below) — so the only bubble that can ever reach the
+    // recorded pixels is the one `export-video.ts` composites from the
+    // separate 'webcam' chunk stream. This proves that composite lands where
+    // the rail's default corner says, and that Hide really removes it — by
+    // decoding the real exported file, not by reading source.
+    const bubbleSessionId = await page.evaluate(seedWebcamBubbleSession);
+    await page.goto(`${base}${PAGE}?session=${bubbleSessionId}`, { waitUntil: 'load' });
+    await page.waitForSelector('.rec-bubble-corners', { timeout: 15_000 });
+    await page.waitForFunction(`(${stageOpacity.toString()})() > 0.9`, { timeout: 15_000 });
+
+    /** Average colour of a small square, so one compression-noisy pixel cannot swing the result. */
+    async function sampleLatestExport(before) {
+      const after = await readdir(downloads);
+      const fresh = after.filter((name) => !before.includes(name));
+      assert(fresh.length === 1, `export produced exactly one new file (${fresh.join(', ')})`);
+      const bytes = await readFile(join(downloads, fresh[0]));
+      const b64 = bytes.toString('base64');
+      return page.evaluate(async (b64video) => {
+        const bin = atob(b64video);
+        const arr = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+        const blobUrl = URL.createObjectURL(new Blob([arr], { type: 'video/webm' }));
+        const video = document.createElement('video');
+        video.muted = true;
+        video.src = blobUrl;
+        await new Promise((done, fail) => {
+          video.onloadedmetadata = done;
+          video.onerror = () => fail(new Error('exported file failed to decode'));
+        });
+        // Not video.duration: MediaRecorder WebM carries no duration header,
+        // so a fresh <video> reports Infinity until something forces it to
+        // resolve (session-load.ts's fixDuration, same quirk). Seeking to a
+        // fixed timestamp well inside the known-2.1s clip sidesteps it.
+        video.currentTime = 0.8;
+        await new Promise((done) => (video.onseeked = done));
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+        // Same corner math as render.ts's bubbleRect, corner 'br', size 0.22 —
+        // the rail's own defaults, untouched by this session.
+        const short = Math.min(canvas.width, canvas.height);
+        const d = 0.22 * short;
+        const inset = 0.02 * short + d / 2;
+        const cx = Math.round(canvas.width - inset);
+        const cy = Math.round(canvas.height - inset);
+        const { data } = ctx.getImageData(cx - 5, cy - 5, 10, 10);
+        let r = 0,
+          g = 0,
+          bch = 0;
+        const n = data.length / 4;
+        for (let i = 0; i < data.length; i += 4) {
+          r += data[i];
+          g += data[i + 1];
+          bch += data[i + 2];
+        }
+        URL.revokeObjectURL(blobUrl);
+        return { r: Math.round(r / n), g: Math.round(g / n), b: Math.round(bch / n) };
+      }, b64);
+    }
+
+    const beforeFirst = await readdir(downloads);
+    const downloadsSoFar1 = await page.evaluate(() => window.__smoke.downloads.length);
+    const exportBtn1 = await page.waitForSelector('.rec-btn-primary', { timeout: 15_000 });
+    await exportBtn1.click();
+    await page.waitForFunction(
+      (n) => window.__smoke.downloads.length > n,
+      { timeout: 120_000 },
+      downloadsSoFar1,
+    );
+    const shown = await sampleLatestExport(beforeFirst);
+    // Magenta (#ff33cc = 255,51,204) vs the tab's flat #123a5e (18,58,94) —
+    // not adjacent in any channel, so a threshold well clear of encoder noise
+    // tells them apart.
+    assert(
+      shown.r > 180 && shown.b > 130 && shown.g < 130,
+      `the bubble corner is the magenta webcam feed by default (${JSON.stringify(shown)})`,
+    );
+
+    const hideLabel = messages.recorderBubbleHide.message;
+    const toggled = await page.evaluate((label) => {
+      const row = [...document.querySelectorAll('.rail-row')].find(
+        (el) => el.querySelector('.rail-row-label')?.textContent === label,
+      );
+      const input = row?.querySelector('input[type="checkbox"]');
+      if (!input) return false;
+      input.click();
+      return input.checked;
+    }, hideLabel);
+    assert(toggled === true, 'the Hide switch is now checked');
+
+    const beforeSecond = await readdir(downloads);
+    const downloadsSoFar2 = await page.evaluate(() => window.__smoke.downloads.length);
+    const exportBtn2 = await page.waitForSelector('.rec-btn-primary', { timeout: 15_000 });
+    await exportBtn2.click();
+    await page.waitForFunction(
+      (n) => window.__smoke.downloads.length > n,
+      { timeout: 120_000 },
+      downloadsSoFar2,
+    );
+    const hidden = await sampleLatestExport(beforeSecond);
+    assert(
+      hidden.r < 100 && hidden.b < 130 && hidden.g < 100,
+      `Hide removes the composite — the corner is back to the tab background, not magenta (${JSON.stringify(hidden)})`,
+    );
+
     step('task 39: Export WebM is reachable in a short viewport, not off-screen');
     // A 200%-zoom-shaped viewport, the same height reflow-smoke.mjs uses for
     // this same page: short enough that the simplified rail still needs to
@@ -1858,50 +2048,34 @@ async function main() {
       `the dot carries a distinct paused class, not just a dimmer recording one (${pausedDot?.html})`,
     );
 
-    step('the bubble position persists across navigation, via the mount contract');
-    // healOverlay re-mounts fresh on every navigation, handing back whatever
-    // it read from storage as this function's 7th argument — this is that
-    // argument, exercised on the built mount function directly.
+    step('task 40: no live self-view is ever baked into the recorded tab, only the composited one');
+    // tabCapture records the tab's own rendered pixels, iframe content
+    // included (the same fact the catcher/host comments above already rely
+    // on) — this measures the DOM footprint tabCapture would actually see
+    // for the camera permission frame, with the webcam track on. Real
+    // tabCapture pixel capture needs a real tab (see
+    // agent_docs/runbooks/recorder-manual-checklist.md); this is the
+    // headless-reachable proxy for it.
     await page.evaluate(() => window.__ossRecOverlay?.());
-    const camPos = () =>
+    const camGeometry = () =>
       page.evaluate(() => {
         const el = document.querySelector('[data-testid="rec-overlay-cam"]');
-        return { left: el.style.left, top: el.style.top };
+        const r = el.getBoundingClientRect();
+        const style = getComputedStyle(el);
+        return { w: r.width, h: r.height, opacity: style.opacity, pe: style.pointerEvents };
       });
-    const freshWithPos = await page.evaluate(() =>
-      window.__mount(
-        'seg-1',
-        0,
-        false,
-        { mic: false, tabAudio: false, webcam: true },
-        false,
-        true,
-        { x: 300, y: 220 },
-      ),
+    const freshWithWebcam = await page.evaluate(() =>
+      window.__mount('seg-1', 0, false, { mic: false, tabAudio: false, webcam: true }, false, true),
     );
-    assert(freshWithPos === 'fresh', `mounted fresh with a persisted position (${freshWithPos})`);
+    assert(freshWithWebcam === 'fresh', `mounted fresh with webcam on (${freshWithWebcam})`);
+    const geom = await camGeometry();
     assert(
-      (await camPos()).left === '300px' && (await camPos()).top === '220px',
-      `the bubble mounts exactly where healOverlay would hand it back (${JSON.stringify(await camPos())})`,
+      geom.w === 1 && geom.h === 1,
+      `the camera frame is a 1x1 permission surface even with webcam on, not a visible bubble (${JSON.stringify(geom)})`,
     );
-
-    await page.evaluate(() => window.__ossRecOverlay?.());
-    const clampedPos = await page.evaluate(() =>
-      window.__mount(
-        'seg-1',
-        0,
-        false,
-        { mic: false, tabAudio: false, webcam: true },
-        false,
-        true,
-        { x: 5000, y: -50 },
-      ),
-    );
-    assert(clampedPos === 'fresh', `mounted fresh with an out-of-bounds position (${clampedPos})`);
     assert(
-      (await camPos()).left === '1236px' && (await camPos()).top === '0px',
-      // 1440 (viewport) - 204 (BUBBLE_PX 180 + HANDLE_PX 12 * 2) = 1236
-      `an out-of-bounds persisted position is clamped to this window (${JSON.stringify(await camPos())})`,
+      geom.opacity === '0' && geom.pe === 'none',
+      `and it paints nothing and accepts no input (${JSON.stringify(geom)})`,
     );
 
     await page.evaluate(() => window.__ossRecOverlay?.());

@@ -173,7 +173,6 @@ function liveState(sessionId = 'sess-1', segmentId = 'seg-1', overlayMounted = t
     writeFailed: false,
     anchored: true,
     continued: false,
-    bubblePos: null,
   };
 }
 
@@ -358,68 +357,6 @@ describe('the control bar', () => {
     void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS });
     await settle();
     expect(parked()).toBe('overlay-blocked');
-  });
-});
-
-describe('the webcam bubble position', () => {
-  it('is stored for the next heal to read back', async () => {
-    session.set(REC_STATE_KEY, liveState());
-    await loadWorker();
-    void send({ type: 'REC_BUBBLE_MOVED', x: 40, y: 80 });
-    await settle();
-    const stored = session.get(REC_STATE_KEY) as { bubblePos?: { x: number; y: number } | null };
-    expect(stored.bubblePos).toEqual({ x: 40, y: 80 });
-  });
-
-  it('does nothing when nothing is recording', async () => {
-    await loadWorker();
-    void send({ type: 'REC_BUBBLE_MOVED', x: 40, y: 80 });
-    await settle();
-    expect(session.get(REC_STATE_KEY)).toBeUndefined();
-  });
-
-  it('does not re-mount the bar — storage only, no second mount path', async () => {
-    session.set(REC_STATE_KEY, liveState());
-    await loadWorker();
-    const before = fakeChrome.scripting.executeScript.mock.calls.length;
-    void send({ type: 'REC_BUBBLE_MOVED', x: 40, y: 80 });
-    await settle();
-    expect(fakeChrome.scripting.executeScript.mock.calls.length).toBe(before);
-  });
-
-  it("rides healOverlay's re-mount as the mount function's 7th argument", async () => {
-    workingTab();
-    session.set(REC_STATE_KEY, {
-      ...liveState(),
-      settings: { ...DEFAULT_RECORDING_SETTINGS, webcam: true },
-      bubblePos: { x: 12, y: 34 },
-    });
-    await loadWorker();
-    // Any gesture that heals the bar will do; webcam-denied is a short path
-    // to it that does not depend on the start sequence.
-    void send({ type: 'REC_WEBCAM_DENIED' });
-    await settle();
-    const mounts = (fakeChrome.scripting.executeScript.mock.calls as [{ args?: unknown[] }][])
-      .map(([call]) => call.args)
-      .filter((args): args is unknown[] => (args?.length ?? 0) > 1);
-    expect(mounts.at(-1)?.[6]).toEqual({ x: 12, y: 34 });
-  });
-
-  it('reads null off a state written before this field existed', async () => {
-    workingTab();
-    const legacy: Record<string, unknown> = {
-      ...liveState(),
-      settings: { ...DEFAULT_RECORDING_SETTINGS, webcam: true },
-    };
-    delete legacy.bubblePos;
-    session.set(REC_STATE_KEY, legacy);
-    await loadWorker();
-    void send({ type: 'REC_WEBCAM_DENIED' });
-    await settle();
-    const mounts = (fakeChrome.scripting.executeScript.mock.calls as [{ args?: unknown[] }][])
-      .map(([call]) => call.args)
-      .filter((args): args is unknown[] => (args?.length ?? 0) > 1);
-    expect(mounts.at(-1)?.[6]).toBe(null);
   });
 });
 
