@@ -129,6 +129,18 @@ describe('blur redaction modes', () => {
   });
 });
 
+describe('blur strength', () => {
+  it('defaults to the fixed 8 when no strength is given', () => {
+    const draft = createShapeDraft('blur', { x: 0, y: 0 }, '#ff3b30', 6);
+    expect(draft).toMatchObject({ type: 'blur', strength: 8 });
+  });
+
+  it('drafts a blur carrying the chosen strength, the style bar current default', () => {
+    const draft = createShapeDraft('blur', { x: 0, y: 0 }, '#ff3b30', 6, { blurStrength: 20 });
+    expect(draft).toMatchObject({ type: 'blur', strength: 20 });
+  });
+});
+
 describe('extendDraft with shift held', () => {
   function draft(type: 'rect' | 'line' | 'arrow' | 'blur'): Annotation {
     return createShapeDraft(type, { x: 0, y: 0 }, '#ff3b30', 6);

@@ -71,6 +71,7 @@ export const TOOL_DIVIDER_AFTER: ReadonlySet<Tool> = new Set(['select', 'step', 
 export interface ShapeDraftOptions {
   spotlightShape?: SpotlightShape;
   blurMode?: BlurMode;
+  blurStrength?: number;
 }
 
 /** Create a fresh draft annotation for a shape tool at point `p`. */
@@ -131,7 +132,7 @@ export function createShapeDraft(
         y: p.y,
         w: 0,
         h: 0,
-        strength: DEFAULT_BLUR_STRENGTH,
+        strength: opts.blurStrength ?? DEFAULT_BLUR_STRENGTH,
         mode: opts.blurMode ?? 'blur',
       };
     case 'spotlight':

@@ -158,6 +158,16 @@ export const DEFAULT_STROKE = tokens.swatchRed;
 export const DEFAULT_STROKE_WIDTH = 6;
 export const DEFAULT_FONT_SIZE = 28;
 export const DEFAULT_BLUR_STRENGTH = 8;
+/**
+ * The blur strength slider's range. Below 2 the tile downsamples to the same
+ * size as the region (see `getBlurTile`), which draws it back unblurred and
+ * defeats the redaction; above 32 the tile has already hit its 1px floor for
+ * every region this tool is drawn over, so a higher ceiling buys no more
+ * control. Whole steps only — the tile math rounds to the pixel anyway.
+ */
+export const BLUR_STRENGTH_MIN = 2;
+export const BLUR_STRENGTH_MAX = 32;
+export const BLUR_STRENGTH_STEP = 1;
 
 /** Editable annotation style (the style bar's current value). */
 export interface AnnotationStyle {

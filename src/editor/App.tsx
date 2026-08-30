@@ -3,7 +3,14 @@ import { isTypingTarget, useEditor } from './useEditor';
 import { TOOL_DIVIDER_AFTER, TOOL_LIST, type Tool } from './tools';
 import { IMAGE_FORMATS, type ImageFormat } from './export';
 import { clampPdfMargin, MAX_PDF_MARGIN_MM, MIN_PDF_MARGIN_MM, type PdfOptions } from './pdf';
-import { STROKE_WIDTHS, type BlurMode, type SpotlightShape } from './annotations';
+import {
+  BLUR_STRENGTH_MAX,
+  BLUR_STRENGTH_MIN,
+  BLUR_STRENGTH_STEP,
+  STROKE_WIDTHS,
+  type BlurMode,
+  type SpotlightShape,
+} from './annotations';
 import { COLOR_PALETTE, colorName, MAX_RECENT_COLORS } from './palette';
 import { arrowNav, getFocusable, syncRovingTabIndex, trapFocus } from './focus';
 import { pickImageFile } from './import-image';
@@ -542,9 +549,10 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
   const barRef = useRef<HTMLDivElement>(null);
 
   // Unlike the tool rail, this toolbar's membership changes: switching tools
-  // swaps which field group renders, and recentColors grows. Re-sync after
-  // every render that can change it, so the tab stop never lands on a member
-  // that just unmounted.
+  // swaps which field group renders, recentColors grows, and the strength
+  // slider drops out of the set (disabled, not unmounted) while the mode is
+  // Solid. Re-sync after every render that can change it, so the tab stop
+  // never lands on a member that just unmounted or went disabled.
   useEffect(() => {
     if (barRef.current) syncRovingTabIndex(barRef.current);
   }, [
@@ -552,8 +560,10 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
     fields.stroke,
     fields.shape,
     fields.redaction,
+    fields.strength,
     fields.fontSize,
     ed.recentColors.length,
+    ed.blurMode,
   ]);
 
   function pickFromScreen() {
@@ -685,6 +695,26 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
               </button>
             ))}
           </div>
+        </div>
+      ) : null}
+      {fields.strength ? (
+        <div class="stylebar-group">
+          <span class="stylebar-label">Strength · {ed.blurStrength}</span>
+          <input
+            class="range stylebar-range"
+            type="range"
+            min={BLUR_STRENGTH_MIN}
+            max={BLUR_STRENGTH_MAX}
+            step={BLUR_STRENGTH_STEP}
+            aria-label="Blur strength"
+            aria-valuetext={`${ed.blurStrength}`}
+            // Solid fill reads no strength at all (drawBlur, annotations.ts) —
+            // disabled rather than hidden, so the group doesn't reflow as the
+            // mode segmented control is toggled.
+            disabled={ed.blurMode === 'solid'}
+            value={ed.blurStrength}
+            onInput={(e) => ed.setBlurStrength(Number((e.target as HTMLInputElement).value))}
+          />
         </div>
       ) : null}
       {fields.fontSize ? (

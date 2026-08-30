@@ -23,6 +23,7 @@ import type { Annotation, Rect } from './annotations';
 import {
   annotationsInRect,
   bbox,
+  DEFAULT_BLUR_STRENGTH,
   DEFAULT_STYLE,
   handleAt,
   handleAtRect,
@@ -235,6 +236,7 @@ export function useEditor() {
   const [recentColors, setRecentColors] = useState<string[]>([]);
   const [spotlightShape, setSpotlightShapeState] = useState<SpotlightShape>('rect');
   const [blurMode, setBlurModeState] = useState<BlurMode>('blur');
+  const [blurStrength, setBlurStrengthState] = useState<number>(DEFAULT_BLUR_STRENGTH);
   const [frame, setFrameState] = useState<FrameOptions>(DEFAULT_FRAME);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
   // The dismissible pill over the stage. Import failures and a draft that
@@ -297,6 +299,7 @@ export function useEditor() {
   const styleRef = useRef(style);
   const spotlightShapeRef = useRef(spotlightShape);
   const blurModeRef = useRef(blurMode);
+  const blurStrengthRef = useRef(blurStrength);
   // True from the moment restoreDraft clears draftPrompt until the restored
   // annotations land. The canvas is transiently empty in that window; without
   // this, the debounce or the visibility flush could wipe the draft being
@@ -319,9 +322,10 @@ export function useEditor() {
    *   decide what to do belongs in this group.
    *
    *   Lazy, synced from an effect: styleRef, spotlightShapeRef, blurModeRef,
-   *   frameRef. All four are read only when something is being drawn or saved,
-   *   where being one frame behind costs at most the previous colour on one
-   *   shape. Move a ref into the eager group before letting a key chord read it.
+   *   blurStrengthRef, frameRef. All of these are read only when something is
+   *   being drawn or saved, where being one frame behind costs at most the
+   *   previous colour on one shape. Move a ref into the eager group before
+   *   letting a key chord read it.
    */
 
   /**
@@ -467,6 +471,10 @@ export function useEditor() {
     blurModeRef.current = blurMode;
   }, [blurMode]);
 
+  useEffect(() => {
+    blurStrengthRef.current = blurStrength;
+  }, [blurStrength]);
+
   /** The one way the active tool changes. */
   const selectTool = useCallback((t: Tool) => {
     // A drafted cut goes with its tool. Without this the canvas stays in cut
@@ -561,6 +569,7 @@ export function useEditor() {
     const fontSize = agreed(sel, (a) => (a.type === 'text' ? a.fontSize : undefined));
     const shape = agreed(sel, (a) => (a.type === 'spotlight' ? a.shape : undefined));
     const mode = agreed(sel, (a) => (a.type === 'blur' ? (a.mode ?? 'blur') : undefined));
+    const strength = agreed(sel, (a) => (a.type === 'blur' ? a.strength : undefined));
     if (color !== null || strokeWidth !== null || fontSize !== null) {
       setStyle((s) => ({
         color: color ?? s.color,
@@ -570,6 +579,7 @@ export function useEditor() {
     }
     if (shape !== null) setSpotlightShapeState(shape);
     if (mode !== null) setBlurModeState(mode);
+    if (strength !== null) setBlurStrengthState(strength);
   }, [selectedIds]);
 
   /**
@@ -835,6 +845,14 @@ export function useEditor() {
     (mode: BlurMode) => {
       setBlurModeState(mode);
       applyStyleToSelected((a) => (a.type === 'blur' ? { ...a, mode } : a));
+    },
+    [applyStyleToSelected],
+  );
+
+  const setBlurStrength = useCallback(
+    (strength: number) => {
+      setBlurStrengthState(strength);
+      applyStyleToSelected((a) => (a.type === 'blur' ? { ...a, strength } : a));
     },
     [applyStyleToSelected],
   );
@@ -1697,7 +1715,11 @@ export function useEditor() {
         p,
         styleRef.current.color,
         styleRef.current.strokeWidth,
-        { spotlightShape: spotlightShapeRef.current, blurMode: blurModeRef.current },
+        {
+          spotlightShape: spotlightShapeRef.current,
+          blurMode: blurModeRef.current,
+          blurStrength: blurStrengthRef.current,
+        },
       );
       draftRef.current = draft;
       c.setDraft(draft);
@@ -1923,7 +1945,11 @@ export function useEditor() {
       { x: box.x, y: box.y },
       styleRef.current.color,
       styleRef.current.strokeWidth,
-      { spotlightShape: spotlightShapeRef.current, blurMode: blurModeRef.current },
+      {
+        spotlightShape: spotlightShapeRef.current,
+        blurMode: blurModeRef.current,
+        blurStrength: blurStrengthRef.current,
+      },
     );
     // One extension gives every shape tool its second point: the far corner of
     // a box, the end of an arrow, the second sample of a freehand stroke.
@@ -2528,6 +2554,8 @@ export function useEditor() {
     setSpotlightShape,
     blurMode,
     setBlurMode,
+    blurStrength,
+    setBlurStrength,
     frame,
     setFrame,
     composedSize,

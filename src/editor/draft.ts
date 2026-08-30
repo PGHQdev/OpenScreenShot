@@ -11,7 +11,7 @@
  * The beautify look id rides inside it, which is what keeps a look caught
  * midway through an adjustment restorable as that look, modified.
  */
-import type { Annotation, AnnotationType } from './annotations';
+import { DEFAULT_BLUR_STRENGTH, type Annotation, type AnnotationType } from './annotations';
 import type { Band } from './bands';
 import { frameFromSettings, frameToSettings, type FrameOptions } from './frame';
 import { DEFAULT_SETTINGS, type Settings } from '../shared/types';
@@ -75,6 +75,9 @@ export function draftFrame(draft: Draft): FrameOptions {
  * the Cut tool existed, and every one of those reads back as a draft with
  * nothing cut. A frame blob with no `beautifyLook` is the same story one
  * release later: `frameFromSettings` reads the look off the values instead.
+ * A blur annotation with no `strength` is the same story again, for every
+ * draft written before the strength slider existed: it reads back at the
+ * fixed 8 the redaction always painted with.
  */
 export function parseDraft(value: unknown): Draft | null {
   if (!value || typeof value !== 'object') return null;
@@ -98,11 +101,17 @@ export function parseDraft(value: unknown): Draft | null {
   const stored = (v.frame ?? {}) as Partial<Settings>;
   return {
     sourceCapturedAt: v.sourceCapturedAt,
-    annotations: v.annotations as Annotation[],
+    annotations: (v.annotations as Annotation[]).map(withBlurStrength),
     bands: rawBands as Band[],
     frame: frameToSettings(frameFromSettings({ ...DEFAULT_SETTINGS, ...stored })),
     savedAt: typeof v.savedAt === 'number' && Number.isFinite(v.savedAt) ? v.savedAt : 0,
   };
+}
+
+/** A blur annotation missing (or with a non-finite) `strength` reads back at the default. */
+function withBlurStrength(a: Annotation): Annotation {
+  if (a.type !== 'blur' || Number.isFinite(a.strength)) return a;
+  return { ...a, strength: DEFAULT_BLUR_STRENGTH };
 }
 
 /**

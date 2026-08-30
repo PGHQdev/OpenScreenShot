@@ -20,6 +20,8 @@ export interface StylebarFields {
   shape: boolean;
   /** The blur redaction mode picker (blur / mosaic / solid). */
   redaction: boolean;
+  /** The blur strength slider. */
+  strength: boolean;
 }
 
 const NONE: StylebarFields = {
@@ -28,11 +30,12 @@ const NONE: StylebarFields = {
   fontSize: false,
   shape: false,
   redaction: false,
+  strength: false,
 };
 const SHAPE: StylebarFields = { ...NONE, color: true, stroke: true };
 const GLYPH: StylebarFields = { ...NONE, color: true, fontSize: true };
 const SPOTLIGHT: StylebarFields = { ...NONE, shape: true };
-const BLUR: StylebarFields = { ...NONE, redaction: true };
+const BLUR: StylebarFields = { ...NONE, redaction: true, strength: true };
 
 export function stylebarFields(
   tool: Tool,
@@ -80,7 +83,7 @@ export function stylebarFields(
 
 /** True when no control applies, so the bar should not render at all. */
 export function stylebarEmpty(f: StylebarFields): boolean {
-  return !f.color && !f.stroke && !f.fontSize && !f.shape && !f.redaction;
+  return !f.color && !f.stroke && !f.fontSize && !f.shape && !f.redaction && !f.strength;
 }
 
 /**

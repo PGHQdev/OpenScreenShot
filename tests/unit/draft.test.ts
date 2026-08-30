@@ -131,6 +131,35 @@ describe('parseDraft', () => {
     expect(draftFrame(parsed!)).toEqual(DEFAULT_FRAME);
   });
 
+  it('round-trips a blur strength the style bar set away from the default', () => {
+    const blur: Annotation = { id: 'b1', type: 'blur', x: 0, y: 0, w: 40, h: 30, strength: 20 };
+    const parsed = parseDraft(JSON.parse(JSON.stringify(makeDraft(1, [blur], [], DEFAULT_FRAME))));
+    expect(parsed?.annotations).toEqual([blur]);
+  });
+
+  it('reads a blur drawn before the strength slider existed at the fixed default', () => {
+    // Exactly what makeDraft produced up to v1.4.0: a blur with no `strength`
+    // key at all, from the fixed-8 redaction the paint path always used.
+    const old = {
+      sourceCapturedAt: 1,
+      annotations: [{ id: 'b1', type: 'blur', x: 0, y: 0, w: 40, h: 30, mode: 'blur' }],
+    };
+    const parsed = parseDraft(old);
+    expect(parsed).not.toBeNull();
+    expect(parsed?.annotations).toEqual([
+      { id: 'b1', type: 'blur', x: 0, y: 0, w: 40, h: 30, mode: 'blur', strength: 8 },
+    ]);
+  });
+
+  it('reads a blur with a non-finite strength at the fixed default, rather than voiding the draft', () => {
+    const old = {
+      sourceCapturedAt: 1,
+      annotations: [{ id: 'b1', type: 'blur', x: 0, y: 0, w: 40, h: 30, strength: 'lots' }],
+    };
+    const parsed = parseDraft(old);
+    expect(parsed?.annotations[0]).toMatchObject({ strength: 8 });
+  });
+
   it('rejects a pen or highlight annotation with no points, but accepts one that has them', () => {
     expect(parseDraft({ sourceCapturedAt: 1, annotations: [{ id: 'x', type: 'pen' }] })).toBeNull();
     expect(

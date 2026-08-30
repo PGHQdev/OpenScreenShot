@@ -308,6 +308,39 @@ function makeBadCapture() {
 }
 
 /**
+ * A checkerboard, 20px cells. A flat capture (makeCapture) blurs to itself at
+ * every strength — nothing to tell two strengths apart by. Every patch of
+ * this one has both colours in it, so downsampling it harder always blends a
+ * visibly different average out of the same pixels.
+ */
+async function makeCheckerCapture() {
+  const sharp = createRequire(join(ROOT, 'package.json'))('sharp');
+  const [w, h, cell] = [800, 600, 20];
+  const raw = Buffer.alloc(w * h * 3);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const even = (Math.floor(x / cell) + Math.floor(y / cell)) % 2 === 0;
+      const [r, g, b] = even ? [230, 60, 60] : [60, 60, 230];
+      const i = (y * w + x) * 3;
+      raw[i] = r;
+      raw[i + 1] = g;
+      raw[i + 2] = b;
+    }
+  }
+  const png = await sharp(raw, { raw: { width: w, height: h, channels: 3 } })
+    .png()
+    .toBuffer();
+  return {
+    dataUrl: `data:image/png;base64,${png.toString('base64')}`,
+    width: w,
+    height: h,
+    mode: 'visible',
+    title: 'blur strength smoke',
+    capturedAt: Date.now(),
+  };
+}
+
+/**
  * task 23 — the export dialog's own Export button cycles Export / Exporting…
  * and must not shift the modal-actions row when it does (the .btn-fixed
  * technique the topbar Copy button already uses, applied here as its own
@@ -4288,6 +4321,150 @@ async function testPinToFloatingWindow(browser, base) {
   await page3.close();
 }
 
+/**
+ * task 30 — the blur strength slider: opens at the fixed default, carries an
+ * accessible name and a value text, steps by keyboard including Home/End,
+ * and — the thing none of that proves by itself — actually changes what the
+ * redaction paints into an export.
+ */
+async function testBlurStrength(browser, base) {
+  step('task 30: the strength slider opens at the fixed default, with a range and a value text');
+  const { page } = await newSmokePage(browser);
+  const crashes = [];
+  page.on('pageerror', (err) => crashes.push(String(err)));
+  await page.evaluateOnNewDocument(installChromeStub, {
+    'openscreenshot:last-capture': await makeCheckerCapture(),
+  });
+  await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.stage-canvas');
+  await new Promise((r) => setTimeout(r, 900));
+
+  const sharp = createRequire(join(ROOT, 'package.json'))('sharp');
+  const settle = (ms = 120) => new Promise((r) => setTimeout(r, ms));
+  const focusCanvas = () => page.$eval('.stage-canvas', (el) => el.focus());
+  const say = () =>
+    page.evaluate(() =>
+      document.querySelector('[aria-live="polite"][role="status"]').textContent.trim(),
+    );
+  const strengthInput = 'input[aria-label="Blur strength"]';
+  const strengthState = () =>
+    page.$eval(strengthInput, (el) => ({
+      value: el.value,
+      min: el.min,
+      max: el.max,
+      step: el.step,
+      valuetext: el.getAttribute('aria-valuetext'),
+    }));
+
+  await focusCanvas();
+  await page.keyboard.press('b');
+  await settle(80);
+  await page.waitForSelector(strengthInput);
+  const initial = await strengthState();
+  assert(
+    initial.value === '8',
+    `a fresh blur strength opens at the fixed default (${initial.value})`,
+  );
+  assert(
+    initial.valuetext === '8',
+    `and the value text reads the same number a sighted user sees (${initial.valuetext})`,
+  );
+  assert(
+    initial.min === '2' && initial.max === '32' && initial.step === '1',
+    `range 2-32, step 1 (${initial.min}-${initial.max} step ${initial.step})`,
+  );
+
+  step('task 30: Enter places a blur at that default, selected and ready to re-edit');
+  await page.keyboard.press('Enter');
+  await settle(120);
+  const added = /added at (\d+), (\d+)\./.exec(await say());
+  assert(added, `placing a blur announces where it landed ("${await say()}")`);
+  const [cx, cy] = [Number(added[1]) + 70, Number(added[2]) + 70]; // PLACE_SIZE_PX is 140
+
+  // The checker's own two colours are a 50/50 split, so a patch big enough to
+  // catch a cell either strength averages straight back to the same midpoint
+  // — mean colour cannot tell them apart. Local contrast can: strength 8's
+  // tile is still finer than one 20px cell, so the patch holds both colours
+  // close to full-strength; strength 32's tile is coarser than the whole
+  // region, so every pixel in it is already blended toward that midpoint.
+  // Red channel only — it is the one that differs between the two colours.
+  const patchRedStdDev = ({ data, info }, x, y, half = 24) => {
+    let sum = 0;
+    let sumSq = 0;
+    let n = 0;
+    for (let yy = Math.max(0, y - half); yy < Math.min(info.height, y + half); yy++) {
+      for (let xx = Math.max(0, x - half); xx < Math.min(info.width, x + half); xx++) {
+        const r = data[(yy * info.width + xx) * info.channels];
+        sum += r;
+        sumSq += r * r;
+        n++;
+      }
+    }
+    const mean = sum / n;
+    return Math.sqrt(Math.max(0, sumSq / n - mean * mean));
+  };
+  const exportPng = async () => {
+    await page.click('header .btn-secondary[title^="Export"]');
+    await page.waitForSelector('.modal-actions .btn-primary');
+    await page.click('.modal-actions .btn-primary');
+    await page.waitForFunction(() => !document.querySelector('.modal'), { timeout: 5000 });
+    const download = await page.evaluate(() => globalThis.__smoke.downloads.at(-1));
+    return sharp(Buffer.from(download.url.slice(download.url.indexOf(',') + 1), 'base64'))
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+  };
+
+  const atDefault = await exportPng();
+  const defaultStdDev = patchRedStdDev(atDefault, cx, cy);
+
+  step('task 30: arrow keys, Home and End move the strength, each announced in its value text');
+  await page.$eval(strengthInput, (el) => el.focus());
+  await page.keyboard.press('ArrowRight');
+  await settle(60);
+  const afterArrow = await strengthState();
+  assert(
+    afterArrow.value === '9' && afterArrow.valuetext === '9',
+    `ArrowRight steps by 1 (${afterArrow.value}), value text matches (${afterArrow.valuetext})`,
+  );
+  await page.keyboard.press('Home');
+  await settle(60);
+  assert(
+    (await strengthState()).value === '2',
+    `Home jumps to the minimum (${(await strengthState()).value})`,
+  );
+  await page.keyboard.press('End');
+  await settle(60);
+  const afterEnd = await strengthState();
+  assert(
+    afterEnd.value === '32' && afterEnd.valuetext === '32',
+    `End jumps to the maximum, value text matches (${afterEnd.value}/${afterEnd.valuetext})`,
+  );
+
+  step(
+    'task 30: strength 32 on the same blur paints a measurably different export than the default 8',
+  );
+  const atMax = await exportPng();
+  const maxStdDev = patchRedStdDev(atMax, cx, cy);
+  assert(
+    defaultStdDev > maxStdDev + 15,
+    `strength alone flattens the same rect's local contrast (red std-dev default ${defaultStdDev.toFixed(1)}, max ${maxStdDev.toFixed(1)})`,
+  );
+
+  step(
+    'task 30: Solid redaction has no strength — the slider disables rather than lying about one',
+  );
+  await page.click('.stylebar .segmented-btn[title="Opaque fill — nothing survives"]');
+  await settle(80);
+  assert(
+    await page.$eval(strengthInput, (el) => el.disabled),
+    'the strength slider disables under Solid, which reads no strength at all (drawBlur, annotations.ts)',
+  );
+
+  assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
+  await page.close();
+}
+
 async function main() {
   const built = await stat(join(DIST, PAGE.slice(1))).then(
     () => true,
@@ -5424,6 +5601,7 @@ async function main() {
     await testCropHandlesAndUndo(browser, base);
     await testCaptureHistoryShelf(browser, base);
     await testPinToFloatingWindow(browser, base);
+    await testBlurStrength(browser, base);
 
     console.log('\nALL STEPS PASSED');
   } finally {

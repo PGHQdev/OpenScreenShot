@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import {
   annotationsInRect,
   bbox,
   createBlurCache,
+  drawAnnotation,
   drawGroupSelection,
   drawMarquee,
   drawSelection,
@@ -166,6 +167,77 @@ describe('pruneBlurCache', () => {
     const cache = fakeCache(['a', 'b']);
     pruneBlurCache(cache, new Set());
     expect(cache.size).toBe(0);
+  });
+});
+
+describe('drawAnnotation on a blur: strength drives what actually gets painted', () => {
+  // getBlurTile (drawBlur's private helper) downsamples into a real <canvas>
+  // — the vitest environment here is node, with no DOM at all, so this stubs
+  // just enough of `document` for that call to run. Everything else is the
+  // same FakeCtx-recorder idiom drawSelection/drawMarquee above use.
+  function stubCanvasDocument() {
+    const created: { width: number; height: number }[] = [];
+    (globalThis as { document?: unknown }).document = {
+      createElement: (tag: string) => {
+        if (tag !== 'canvas') throw new Error(`unexpected element: ${tag}`);
+        const el = { width: 0, height: 0, getContext: () => ({ drawImage() {} }) };
+        created.push(el);
+        return el;
+      },
+    };
+    return created;
+  }
+
+  afterEach(() => {
+    delete (globalThis as { document?: unknown }).document;
+  });
+
+  function ctxRecorder() {
+    const draws: { tile: unknown; args: number[] }[] = [];
+    const ctx = {
+      imageSmoothingEnabled: true,
+      fillStyle: '',
+      fillRect() {},
+      drawImage(tile: unknown, ...args: number[]) {
+        draws.push({ tile, args });
+      },
+    };
+    return { ctx: ctx as unknown as CanvasRenderingContext2D, draws };
+  }
+
+  const region = { id: 'b', type: 'blur', x: 0, y: 0, w: 160, h: 160 } as const;
+  const image = {} as HTMLImageElement;
+
+  it('downsamples to a smaller tile for a higher strength — every painted pixel comes from it', () => {
+    const created = stubCanvasDocument();
+    const { ctx, draws } = ctxRecorder();
+
+    drawAnnotation(ctx, { ...region, strength: 8 }, image, createBlurCache());
+    drawAnnotation(ctx, { ...region, strength: 32 }, image, createBlurCache());
+
+    expect(created[0]).toMatchObject({ width: 20, height: 20 }); // 160 / 8
+    expect(created[1]).toMatchObject({ width: 5, height: 5 }); // 160 / 32
+    expect(draws.map((d) => d.tile)).toEqual(created);
+  });
+
+  it('mosaic takes the same strength, at four times the cell size', () => {
+    const created = stubCanvasDocument();
+    const { ctx } = ctxRecorder();
+
+    drawAnnotation(ctx, { ...region, strength: 8, mode: 'mosaic' }, image, createBlurCache());
+
+    // MOSAIC_FACTOR is 4 (annotations.ts): factor 32, tile 160/32 = 5.
+    expect(created[0]).toMatchObject({ width: 5, height: 5 });
+  });
+
+  it('solid ignores strength — no tile is built at all', () => {
+    const created = stubCanvasDocument();
+    const { ctx, draws } = ctxRecorder();
+
+    drawAnnotation(ctx, { ...region, strength: 999, mode: 'solid' }, image, createBlurCache());
+
+    expect(created).toHaveLength(0);
+    expect(draws).toHaveLength(0);
   });
 });
 
