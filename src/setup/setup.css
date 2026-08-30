@@ -52,49 +52,6 @@ body {
   color: var(--text-2);
 }
 
-/* ---- Pin nudge (floats toward Chrome's puzzle menu, top-right) ---- */
-.pin-hint {
-  position: fixed;
-  top: var(--s-3);
-  right: var(--s-4);
-  z-index: 10;
-  display: flex;
-  align-items: flex-start;
-  gap: var(--s-2);
-  max-width: 240px;
-  padding: var(--s-3);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  background: var(--surface-1);
-  box-shadow: var(--sh-md);
-  color: var(--accent-ink);
-}
-
-.pin-arrow {
-  width: 44px;
-  height: 44px;
-  flex: none;
-  transform: translateY(-6px);
-}
-
-.pin-hint-text {
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-05);
-  color: var(--text-1);
-  font-size: var(--fs-base);
-}
-
-.pin-hint-text span {
-  color: var(--text-2);
-}
-
-.pin-hint-done {
-  color: var(--text-1);
-  border-color: color-mix(in srgb, var(--success) 40%, var(--border));
-  background: color-mix(in srgb, var(--success) 14%, var(--surface-1));
-}
-
 /* ---- Trust strip ---- */
 .trust-strip {
   display: flex;
@@ -149,70 +106,6 @@ a.trust-pill:hover {
   gap: var(--s-3);
   flex-wrap: wrap;
   background: color-mix(in srgb, var(--success) 14%, var(--surface-1));
-}
-
-/* ---- Welcome (hero) view ---- */
-.hero {
-  align-items: center;
-  text-align: center;
-  padding-top: var(--s-6);
-}
-
-.hero h1 {
-  margin: 0;
-  font-size: var(--fs-2xl);
-  font-weight: 700;
-}
-
-.hero .setup-intro {
-  margin: 0;
-}
-
-.feature-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--s-3);
-  width: 100%;
-  margin: var(--s-3) 0;
-}
-
-/* Below --bp-sm (tokens.css — a var() cannot appear in this condition, so
-   480px is that token's value spelled out; tests/unit/breakpoint-guard.test.ts
-   checks the two stay equal): two columns of icon + heading + body text
-   leave each card too narrow, so the grid stacks to one column. */
-@media (max-width: 480px) {
-  .feature-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.feature {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
-  text-align: left;
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  padding: var(--s-3) var(--s-4);
-}
-
-.feature h2 {
-  margin: 0;
-  font-size: var(--fs-base);
-  font-weight: 600;
-}
-
-.feature p {
-  margin: var(--s-05) 0 0;
-  color: var(--text-2);
-  font-size: var(--fs-sm);
-}
-
-.btn-hero {
-  padding: var(--s-3) var(--s-5);
-  font-size: var(--fs-lg);
-  border-radius: var(--r-md);
 }
 
 .setup-rows {
@@ -306,7 +199,7 @@ a.trust-pill:hover {
 
 .tag-denied {
   background: color-mix(in srgb, var(--warning) 20%, var(--surface-1));
-  color: var(--danger);
+  color: var(--danger-ink);
 }
 
 .btn-primary {

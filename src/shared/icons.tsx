@@ -422,26 +422,3 @@ export function IconPencil(props: IconProps) {
     </StrokeIcon>
   );
 }
-
-/**
- * The pin-hint arrow pointing at Chrome's puzzle menu. Bespoke illustration
- * with its own coordinate space (60x60) rather than a 24x24 UI icon, so it
- * keeps its own viewBox and stroke-width the way BrandMark keeps its own —
- * sized and positioned by the caller's `class`, not the `size` prop.
- */
-export function IconPinArrow({ class: className }: { class?: string }) {
-  return (
-    <svg
-      class={className}
-      viewBox="0 0 60 60"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="3"
-      stroke-linecap="round"
-      aria-hidden="true"
-    >
-      <path d="M8 52 C 20 40, 30 24, 44 12" stroke-dasharray="1 7" />
-      <path d="M36 10l9-2 1 9" />
-    </svg>
-  );
-}

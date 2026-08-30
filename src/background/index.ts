@@ -54,12 +54,9 @@ const CAPTURE_THROTTLE_MS = 500;
 /** Time to let the page paint/composite after each scroll before capturing. */
 const PAINT_SETTLE_MS = 60;
 
-chrome.runtime.onInstalled.addListener((details) => {
-  if (details.reason === 'install') {
-    // The setup walkthrough takes the permission grants a first recording
-    // needs; the welcome card still shows on first popup open.
-    void chrome.tabs.create({ url: chrome.runtime.getURL('src/setup/index.html?from=install') });
-  }
+// No tab opens on install: the one grant a recording needs is asked for from
+// the Record click itself, so first run has nothing to walk through.
+chrome.runtime.onInstalled.addListener(() => {
   void createContextMenus();
 });
 

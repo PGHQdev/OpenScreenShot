@@ -18,13 +18,23 @@
  * `<video>` elements from pulling apart over a long recording.
  *
  * Editor state grew, in task 10, to everything `RecorderDraft` persists:
- * `{ zoomBlocks, autoZoomDone, trims, ripple, volumes, bubble, frame }`. The
- * mutators keep the persisted fields canonical (blocks always run through
- * `normalizeBlocks`, trims always through `clampTrim`); `ripple`, `volumes`,
- * `bubble`, and `frame` are plain pass-throughs whose panels land in later
- * tasks. On load, `parseRecorderDraft(session.editorState)` hydrates this
- * state — including `autoZoomDone` — before the auto-zoom effect below can
- * run, so a session with a saved draft never re-clusters clicks.
+ * `{ zoomBlocks, autoZoomDone, trims, cursor, volumes, bubble, frame }` (task
+ * 39 merged what were once two separate fields, `ripple` and `pointer`, into
+ * `cursor`). The mutators keep the persisted fields canonical (blocks always
+ * run through `normalizeBlocks`, trims always through `clampTrim`); `cursor`,
+ * `volumes`, `bubble`, and `frame` are plain pass-throughs whose panels land
+ * in later tasks. On load, `parseRecorderDraft(session.editorState)` hydrates
+ * this state — including `autoZoomDone` — before the auto-zoom effect below
+ * can run, so a session with a saved draft never re-clusters clicks.
+ *
+ * Undo (task 38) is the reason the mutators are split in two. `commitEditor`
+ * is every edit the user makes: it banks the state being replaced on the undo
+ * past before writing the new one. `applyEditor` is everything else — the
+ * hydration above, the auto zoom's one seeding run, and the clamp a measured
+ * segment duration forces — none of which the user did, and none of which may
+ * become a step they can undo into a timeline they never had. The stacks
+ * themselves live in `recorder-history.ts` and ride the draft, so an undo
+ * survives a reload.
  *
  * The persistence effect must not treat hydration itself as an edit (a
  * read-only second tab would otherwise schedule a write 800ms after every
@@ -37,7 +47,7 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { loadSession } from './session-load';
-import type { LoadedSegment } from './session-load';
+import type { LoadedSegment, LoadProgress } from './session-load';
 import { updateSession } from '../shared/recording-db';
 import type { RecordingSession } from '../shared/recording-types';
 import { normalizeClicks } from './events-map';
@@ -45,9 +55,18 @@ import {
   defaultRecorderDraft,
   parseRecorderDraft,
   RECORDER_DRAFT_DEBOUNCE_MS,
-  type BubbleCorner,
+  type CursorMode,
   type RecorderDraft,
+  type RecorderEdit,
 } from './recorder-draft';
+import {
+  emptyHistory,
+  historyStep,
+  pushHistory,
+  stepDifference,
+  type RecorderHistory,
+  type StepDifference,
+} from './recorder-history';
 import {
   autoZoomBlocks,
   EASE_MS,
@@ -58,15 +77,32 @@ import {
 } from './zoom';
 import { clampTrim, locate, timelineAt, totalDuration, type SegmentTiming } from './timeline-math';
 
-export interface EditorState {
-  zoomBlocks: ZoomBlock[];
-  autoZoomDone: boolean;
-  trims: Record<string, { start: number; end: number }>;
-  ripple: boolean;
-  pointer: boolean;
-  volumes: { tab: number; mic: number };
-  bubble: { corner: BubbleCorner; x: number; y: number; size: number; hidden: boolean };
-  frame: RecorderDraft['frame'];
+/** The editor's live state is exactly one undo step's worth of it. */
+export type EditorState = RecorderEdit;
+
+/** i18n helper (one per surface, like the rail and the timeline). */
+function t(id: string, subs?: string[]): string {
+  return chrome.i18n.getMessage(id, subs) ?? id;
+}
+
+/** "1 zoom block" / "4 zoom blocks" — what a zoom step's announcement counts. */
+function zoomBlockCount(total: number): string {
+  return total === 1 ? t('recorderZoomBlockOne') : t('recorderZoomBlockMany', [String(total)]);
+}
+
+/**
+ * What the live region says about one step. Naming the field the step moved is
+ * the whole point: for a screen-reader user this sentence is the only feedback
+ * an undo gives, and six of the seven editable fields are not zoom blocks —
+ * a bare block count would be true of the timeline and silent about what was
+ * taken back, identically for all six.
+ */
+function stepAnnouncement(dir: -1 | 1, diff: StepDifference): string {
+  if (diff.kind === 'none') {
+    return t(dir === -1 ? 'recorderUndoPlain' : 'recorderRedoPlain');
+  }
+  const what = diff.kind === 'zoomBlocks' ? zoomBlockCount(diff.total) : t(diff.labelKey);
+  return t(dir === -1 ? 'recorderUndoAnnounce' : 'recorderRedoAnnounce', [what]);
 }
 
 function editorFromDraft(draft: RecorderDraft): EditorState {
@@ -74,8 +110,7 @@ function editorFromDraft(draft: RecorderDraft): EditorState {
     zoomBlocks: draft.zoomBlocks,
     autoZoomDone: draft.autoZoomDone,
     trims: draft.trims,
-    ripple: draft.ripple,
-    pointer: draft.pointer,
+    cursor: draft.cursor,
     volumes: draft.volumes,
     bubble: draft.bubble,
     frame: draft.frame,
@@ -84,6 +119,10 @@ function editorFromDraft(draft: RecorderDraft): EditorState {
 
 export interface UseRecorderSession {
   loading: boolean;
+  /** The chunk read's progress while `loading` — see `session-load.ts`'s
+   *  `LoadProgress`. `total` is 0 until the count is known, which for a
+   *  session with no chunks is also its final value. */
+  loadProgress: LoadProgress;
   session: RecordingSession | null;
   segments: LoadedSegment[];
   /** Mirrors `LoadedSession.hasAudio`; see `session-load.ts`. */
@@ -112,14 +151,17 @@ export interface UseRecorderSession {
   setTrim: (segmentId: string, patch: { start?: number; end?: number }) => void;
   /** Returns the new block's id, or null when it left no room to ease. */
   addBlockAtPlayhead: () => string | null;
-  regenerateAutoZoom: () => void;
-  ripple: boolean;
-  pointer: boolean;
+  undo: () => void;
+  redo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  /** What the session view's live region reads out after an undo or a redo. */
+  announcement: string;
+  cursor: CursorMode;
   volumes: { tab: number; mic: number };
   bubble: EditorState['bubble'];
   frame: EditorState['frame'];
-  setRipple: (ripple: boolean) => void;
-  setPointer: (pointer: boolean) => void;
+  setCursor: (cursor: CursorMode) => void;
   setVolumes: (patch: Partial<{ tab: number; mic: number }>) => void;
   setBubble: (patch: Partial<EditorState['bubble']>) => void;
   setFrame: (frame: EditorState['frame']) => void;
@@ -127,6 +169,7 @@ export interface UseRecorderSession {
 
 const EMPTY_EDITOR: EditorState = editorFromDraft(defaultRecorderDraft());
 const EMPTY_HAS_AUDIO = { tab: false, mic: false };
+const EMPTY_LOAD_PROGRESS: LoadProgress = { loaded: 0, total: 0 };
 
 /** Seek tolerance: under one frame, so a skipped seek changes no picture. */
 const SEEK_EPSILON_MS = 20;
@@ -177,6 +220,7 @@ function clampBlocksTo(blocks: ZoomBlock[], totalMs: number): ZoomBlock[] {
 
 export function useRecorderSession(sessionId: string | null): UseRecorderSession {
   const [loading, setLoading] = useState(true);
+  const [loadProgress, setLoadProgress] = useState<LoadProgress>(EMPTY_LOAD_PROGRESS);
   const [session, setSession] = useState<RecordingSession | null>(null);
   const [segments, setSegments] = useState<LoadedSegment[]>([]);
   const [hasAudio, setHasAudio] = useState(EMPTY_HAS_AUDIO);
@@ -185,16 +229,32 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
   const [playing, setPlaying] = useState(false);
   const [segmentIndex, setSegmentIndex] = useState(0);
   const [editor, setEditor] = useState<EditorState>(EMPTY_EDITOR);
+  const [history, setHistory] = useState<RecorderHistory>(emptyHistory);
+  const [announcement, setAnnouncement] = useState('');
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const webcamRefs = useRef<(HTMLVideoElement | null)[]>([]);
+
+  // Eager mirrors, written beside their state rather than synced from an
+  // effect: a keydown that reads them has to see the keydown before it, not
+  // the previous frame. Same convention `useEditor` documents for its own
+  // undo stacks.
+  const editorRef = useRef(editor);
+  const historyRef = useRef(history);
+  // One pointer press, or one held key, is one undo step: `open` spans the
+  // gesture, `pushed` remembers whether it already banked one.
+  const gestureRef = useRef({ open: false, pushed: false });
 
   // Persistence bookkeeping (see the module doc above for why each exists).
   const skipNextPersistRef = useRef(false);
   const timerRef = useRef<number | null>(null);
-  const pendingRef = useRef<{ editor: EditorState; sessionId: string } | null>(null);
+  const pendingRef = useRef<{
+    editor: EditorState;
+    history: RecorderHistory;
+    sessionId: string;
+  } | null>(null);
 
-  const writeDraft = useCallback((state: EditorState, id: string) => {
-    const draft: RecorderDraft = { ...state, savedAt: Date.now() };
+  const writeDraft = useCallback((state: EditorState, stack: RecorderHistory, id: string) => {
+    const draft: RecorderDraft = { ...state, history: stack, savedAt: Date.now() };
     void updateSession(id, { editorState: draft });
   }, []);
 
@@ -211,8 +271,75 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
   const flushPending = useCallback(() => {
     const pending = pendingRef.current;
     cancelPending();
-    if (pending) writeDraft(pending.editor, pending.sessionId);
+    if (pending) writeDraft(pending.editor, pending.history, pending.sessionId);
   }, [cancelPending, writeDraft]);
+
+  /** State the user did not edit: hydration, the auto zoom, the duration
+   *  clamp. It moves the editor without leaving a step behind it. */
+  const applyEditor = useCallback((next: EditorState) => {
+    editorRef.current = next;
+    setEditor(next);
+  }, []);
+
+  /** The one way the undo stacks change. */
+  const applyHistory = useCallback((next: RecorderHistory) => {
+    historyRef.current = next;
+    setHistory(next);
+  }, []);
+
+  /**
+   * Every edit the user makes. The state being replaced joins the past first,
+   * unless this edit is riding a gesture that already banked one — which is
+   * what makes a whole trim drag, or a held arrow key, undo in one go.
+   */
+  const commitEditor = useCallback(
+    (update: (prev: EditorState) => EditorState) => {
+      const prev = editorRef.current;
+      const next = update(prev);
+      // An edit that changed nothing is not a step. The reference check is the
+      // fast path a mutator's own early return takes; the value check catches
+      // the rest — re-picking the scale, corner or swatch already in force
+      // rebuilds an array or an object without moving a number in it, and a
+      // step the user cannot see undone is worse than no step at all.
+      if (next === prev || stepDifference(prev, next).kind === 'none') return;
+      const gesture = gestureRef.current;
+      applyHistory(pushHistory(historyRef.current, prev, gesture.open && gesture.pushed));
+      gesture.pushed = true;
+      applyEditor(next);
+    },
+    [applyEditor, applyHistory],
+  );
+
+  /*
+   * Gesture boundaries, read off the window rather than wired into each
+   * control. Every edit between a pointerdown and its release — a trim handle,
+   * a zoom block, a rail slider, the bubble on the canvas — belongs to one
+   * step, and there are a dozen such controls across three components. A
+   * capture-phase pair here covers all of them and cannot be forgotten at a
+   * new one. Key repeat holds a gesture open the same way `useEditor` holds
+   * one across a held arrow key.
+   */
+  useEffect(() => {
+    const open = () => {
+      gestureRef.current.open = true;
+    };
+    const close = () => {
+      gestureRef.current.open = false;
+      gestureRef.current.pushed = false;
+    };
+    window.addEventListener('pointerdown', open, true);
+    window.addEventListener('pointerup', close, true);
+    window.addEventListener('pointercancel', close, true);
+    window.addEventListener('keydown', open, true);
+    window.addEventListener('keyup', close, true);
+    return () => {
+      window.removeEventListener('pointerdown', open, true);
+      window.removeEventListener('pointerup', close, true);
+      window.removeEventListener('pointercancel', close, true);
+      window.removeEventListener('keydown', open, true);
+      window.removeEventListener('keyup', close, true);
+    };
+  }, []);
 
   useEffect(() => {
     videoRefs.current = [];
@@ -223,8 +350,11 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
     setSession(null);
     setSegments([]);
     setHasAudio(EMPTY_HAS_AUDIO);
-    setEditor(EMPTY_EDITOR);
+    applyEditor(EMPTY_EDITOR);
+    applyHistory(emptyHistory());
+    setAnnouncement('');
     setError(null);
+    setLoadProgress(EMPTY_LOAD_PROGRESS);
 
     if (!sessionId) {
       setLoading(false);
@@ -235,7 +365,9 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
     let loadedUrls: string[] = [];
     setLoading(true);
 
-    loadSession(sessionId)
+    loadSession(sessionId, (p) => {
+      if (!cancelled) setLoadProgress(p);
+    })
       .then((loaded) => {
         if (!loaded) {
           if (cancelled) return;
@@ -264,7 +396,8 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
         // Hydration is not an edit — the persistence effect's next firing,
         // caused by this very setEditor, must not schedule a write.
         skipNextPersistRef.current = true;
-        setEditor(editorFromDraft(draft));
+        applyEditor(editorFromDraft(draft));
+        applyHistory(draft.history);
         setLoading(false);
       })
       .catch((err: unknown) => {
@@ -280,7 +413,7 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
       // sitting in the debounce window.
       flushPending();
     };
-  }, [sessionId, flushPending]);
+  }, [sessionId, flushPending, applyEditor, applyHistory]);
 
   const timings = useMemo(() => timingsFor(segments, editor.trims), [segments, editor.trims]);
   const totalMs = useMemo(() => totalDuration(timings), [timings]);
@@ -298,18 +431,19 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
   activeRef.current = segmentIndex;
   playingRef.current = playing;
 
-  // Auto zoom runs once per session, on first open.
+  // Auto zoom runs once per session, on first open. Not a step: undoing it
+  // would leave the user staring at a timeline they never emptied, and the
+  // seeding is the state their first real edit is measured against.
   useEffect(() => {
     if (loading || segments.length === 0) return;
-    setEditor((prev) => {
-      if (prev.autoZoomDone) return prev;
-      return {
-        ...prev,
-        zoomBlocks: buildAutoZoom(segments, timingsFor(segments, prev.trims)),
-        autoZoomDone: true,
-      };
+    const prev = editorRef.current;
+    if (prev.autoZoomDone) return;
+    applyEditor({
+      ...prev,
+      zoomBlocks: buildAutoZoom(segments, timingsFor(segments, prev.trims)),
+      autoZoomDone: true,
     });
-  }, [loading, segments]);
+  }, [loading, segments, applyEditor]);
 
   const setPosition = useCallback((index: number, sourceMs: number, timelineMs: number) => {
     activeRef.current = index;
@@ -423,23 +557,30 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
 
   const webcamVideoAt = useCallback((index: number) => webcamRefs.current[index] ?? null, []);
 
-  const updateSegmentDuration = useCallback((index: number, durationMs: number) => {
-    // Every segment measures itself, and two results can land in one flush —
-    // so the merge has to build on the queued state, never on a ref that only
-    // refreshes at render. The merged array is stashed for the clamp below.
-    let merged: LoadedSegment[] | null = null;
-    setSegments((prev) => {
-      merged = prev.map((s, i) => (i === index ? { ...s, durationMs } : s));
-      return merged;
-    });
-    // A measured duration can come in shorter than the estimate the blocks
-    // were generated against, which would leave them past the end.
-    const source = merged ?? segmentsRef.current;
-    setEditor((prev) => ({
-      ...prev,
-      zoomBlocks: clampBlocksTo(prev.zoomBlocks, totalDuration(timingsFor(source, prev.trims))),
-    }));
-  }, []);
+  const updateSegmentDuration = useCallback(
+    (index: number, durationMs: number) => {
+      // Every segment measures itself, and two results can land in one flush —
+      // so the segment merge has to build on the queued state, never on a ref
+      // that refreshes at render. The merged array is stashed for the clamp
+      // below, which reads the eager editorRef instead: that one is written by
+      // the writers above, so it already carries any edit still queued.
+      let merged: LoadedSegment[] | null = null;
+      setSegments((prev) => {
+        merged = prev.map((s, i) => (i === index ? { ...s, durationMs } : s));
+        return merged;
+      });
+      // A measured duration can come in shorter than the estimate the blocks
+      // were generated against, which would leave them past the end.
+      const source = merged ?? segmentsRef.current;
+      // Measurement, not an edit — it leaves no undo step behind it.
+      const prev = editorRef.current;
+      applyEditor({
+        ...prev,
+        zoomBlocks: clampBlocksTo(prev.zoomBlocks, totalDuration(timingsFor(source, prev.trims))),
+      });
+    },
+    [applyEditor],
+  );
 
   const play = useCallback(() => {
     const current = timingsRef.current;
@@ -471,26 +612,32 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
     [advance],
   );
 
-  const setBlocks = useCallback((blocks: ZoomBlock[]) => {
-    setEditor((prev) => ({ ...prev, zoomBlocks: normalizeBlocks(blocks) }));
-  }, []);
+  const setBlocks = useCallback(
+    (blocks: ZoomBlock[]) => {
+      commitEditor((prev) => ({ ...prev, zoomBlocks: normalizeBlocks(blocks) }));
+    },
+    [commitEditor],
+  );
 
-  const setTrim = useCallback((segmentId: string, patch: { start?: number; end?: number }) => {
-    setEditor((prev) => {
-      const segment = segmentsRef.current.find((s) => s.segment.id === segmentId);
-      if (!segment) return prev;
-      const current = prev.trims[segmentId] ?? { start: 0, end: 0 };
-      const next = clampTrim(
-        segment.durationMs,
-        patch.start ?? current.start,
-        patch.end ?? current.end,
-      );
-      if (next.start === current.start && next.end === current.end) return prev;
-      const trims = { ...prev.trims, [segmentId]: next };
-      const total = totalDuration(timingsFor(segmentsRef.current, trims));
-      return { ...prev, trims, zoomBlocks: clampBlocksTo(prev.zoomBlocks, total) };
-    });
-  }, []);
+  const setTrim = useCallback(
+    (segmentId: string, patch: { start?: number; end?: number }) => {
+      commitEditor((prev) => {
+        const segment = segmentsRef.current.find((s) => s.segment.id === segmentId);
+        if (!segment) return prev;
+        const current = prev.trims[segmentId] ?? { start: 0, end: 0 };
+        const next = clampTrim(
+          segment.durationMs,
+          patch.start ?? current.start,
+          patch.end ?? current.end,
+        );
+        if (next.start === current.start && next.end === current.end) return prev;
+        const trims = { ...prev.trims, [segmentId]: next };
+        const total = totalDuration(timingsFor(segmentsRef.current, trims));
+        return { ...prev, trims, zoomBlocks: clampBlocksTo(prev.zoomBlocks, total) };
+      });
+    },
+    [commitEditor],
+  );
 
   const addBlockAtPlayhead = useCallback((): string | null => {
     const total = totalDuration(timingsRef.current);
@@ -505,45 +652,65 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
       cx: 0.5,
       cy: 0.5,
     };
-    setEditor((prev) => ({
+    commitEditor((prev) => ({
       ...prev,
       zoomBlocks: normalizeBlocks([...prev.zoomBlocks, block]),
     }));
     return block.id;
-  }, []);
+  }, [commitEditor]);
 
-  const regenerateAutoZoom = useCallback(() => {
-    setEditor((prev) => ({
-      ...prev,
-      autoZoomDone: true,
-      zoomBlocks: buildAutoZoom(segmentsRef.current, timingsFor(segmentsRef.current, prev.trims)),
-    }));
-  }, []);
+  /** Undo (-1) or redo (1), and say what the timeline holds afterwards. */
+  const travel = useCallback(
+    (dir: -1 | 1) => {
+      const step = historyStep(historyRef.current, editorRef.current, dir);
+      if (!step) return;
+      const diff = stepDifference(editorRef.current, step.entry);
+      applyHistory(step.history);
+      applyEditor(step.entry);
+      // The alternating trailing space is load-bearing, the same as the image
+      // editor's: two undos in a row can produce the same sentence, and an
+      // identical string is not a state change, so the region would say
+      // nothing the second time.
+      const text = stepAnnouncement(dir, diff);
+      setAnnouncement((prev) => (prev === text ? `${text} ` : text));
+    },
+    [applyEditor, applyHistory],
+  );
 
-  const setRipple = useCallback((ripple: boolean) => {
-    setEditor((prev) => ({ ...prev, ripple }));
-  }, []);
+  const undo = useCallback(() => travel(-1), [travel]);
+  const redo = useCallback(() => travel(1), [travel]);
 
-  const setPointer = useCallback((pointer: boolean) => {
-    setEditor((prev) => ({ ...prev, pointer }));
-  }, []);
+  const setCursor = useCallback(
+    (cursor: CursorMode) => {
+      commitEditor((prev) => (prev.cursor === cursor ? prev : { ...prev, cursor }));
+    },
+    [commitEditor],
+  );
 
-  const setVolumes = useCallback((patch: Partial<{ tab: number; mic: number }>) => {
-    setEditor((prev) => ({ ...prev, volumes: { ...prev.volumes, ...patch } }));
-  }, []);
+  const setVolumes = useCallback(
+    (patch: Partial<{ tab: number; mic: number }>) => {
+      commitEditor((prev) => ({ ...prev, volumes: { ...prev.volumes, ...patch } }));
+    },
+    [commitEditor],
+  );
 
-  const setBubble = useCallback((patch: Partial<EditorState['bubble']>) => {
-    setEditor((prev) => ({ ...prev, bubble: { ...prev.bubble, ...patch } }));
-  }, []);
+  const setBubble = useCallback(
+    (patch: Partial<EditorState['bubble']>) => {
+      commitEditor((prev) => ({ ...prev, bubble: { ...prev.bubble, ...patch } }));
+    },
+    [commitEditor],
+  );
 
-  const setFrame = useCallback((frame: EditorState['frame']) => {
-    setEditor((prev) => ({ ...prev, frame }));
-  }, []);
+  const setFrame = useCallback(
+    (frame: EditorState['frame']) => {
+      commitEditor((prev) => ({ ...prev, frame }));
+    },
+    [commitEditor],
+  );
 
-  // Editor/session refs for the visibilitychange flush below, which runs
-  // outside a render pass and must see the latest values.
-  const editorRef = useRef(editor);
-  editorRef.current = editor;
+  // Session ref for the visibilitychange flush below, which runs outside a
+  // render pass and must see the latest value. (The editor and history refs
+  // are the eager ones written by the writers above.)
   const sessionRef = useRef(session);
   sessionRef.current = session;
 
@@ -557,11 +724,11 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
       skipNextPersistRef.current = false;
       return;
     }
-    pendingRef.current = { editor, sessionId: session.id };
+    pendingRef.current = { editor, history, sessionId: session.id };
     timerRef.current = window.setTimeout(() => {
       timerRef.current = null;
       pendingRef.current = null;
-      writeDraft(editor, session.id);
+      writeDraft(editor, history, session.id);
     }, RECORDER_DRAFT_DEBOUNCE_MS);
     return () => {
       if (timerRef.current !== null) {
@@ -569,7 +736,7 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
         timerRef.current = null;
       }
     };
-  }, [editor, loading, session, writeDraft]);
+  }, [editor, history, loading, session, writeDraft]);
 
   // A closing tab does not wait out the debounce. `beforeunload` is not
   // used: a storage write started there is not guaranteed to land.
@@ -580,7 +747,7 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
       // Supersede the debounce timer instead of racing it: it would otherwise
       // still fire later with the same value, a harmless but pointless write.
       cancelPending();
-      writeDraft(editorRef.current, sessionRef.current.id);
+      writeDraft(editorRef.current, historyRef.current, sessionRef.current.id);
     };
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
@@ -588,6 +755,7 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
 
   return {
     loading,
+    loadProgress,
     session,
     segments,
     hasAudio,
@@ -612,14 +780,16 @@ export function useRecorderSession(sessionId: string | null): UseRecorderSession
     setBlocks,
     setTrim,
     addBlockAtPlayhead,
-    regenerateAutoZoom,
-    ripple: editor.ripple,
-    pointer: editor.pointer,
+    undo,
+    redo,
+    canUndo: history.past.length > 0,
+    canRedo: history.future.length > 0,
+    announcement,
+    cursor: editor.cursor,
     volumes: editor.volumes,
     bubble: editor.bubble,
     frame: editor.frame,
-    setRipple,
-    setPointer,
+    setCursor,
     setVolumes,
     setBubble,
     setFrame,

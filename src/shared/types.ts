@@ -158,7 +158,6 @@ export interface Settings {
   pdfMarginMm: number;
   quality: number; // 0..1, JPEG/WebP quality — PDF export is lossless (pdf-writer.ts)
   filenameTemplate: string;
-  showOnboarding: boolean;
   // Annotation style (remembered across sessions)
   annotationColor: string;
   annotationStrokeWidth: number;
@@ -190,7 +189,6 @@ export const DEFAULT_SETTINGS: Settings = {
   pdfMarginMm: 8,
   quality: 0.92,
   filenameTemplate: 'screenshot_{date}_{time}',
-  showOnboarding: true,
   annotationColor: tokens.swatchRed,
   annotationStrokeWidth: 6,
   annotationFontSize: 28,

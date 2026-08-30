@@ -17,6 +17,7 @@ import {
   deleteSession,
   findRecoverableSessions,
   getSession,
+  listSessions,
   updateSession,
 } from '../shared/recording-db';
 import {
@@ -29,9 +30,27 @@ import {
   type RecState,
   type SegmentViewport,
 } from '../shared/recording-types';
+import { PENDING_RECORD_KEY, pendingRecordIsLive, type PendingRecord } from '../shared/permissions';
+import {
+  REC_FAILURE_KEY,
+  REC_FAILURE_MESSAGE,
+  isRecFailure,
+  sameRun,
+  supersedes,
+  type RecFailure,
+  type RecFailureCode,
+} from '../shared/rec-failure';
 import { isProtectedUrl } from '../shared/utils';
 
 const REC_STATE_KEY = 'openscreenshot:rec-state';
+/**
+ * A finished session whose recorder tab failed to open. `handleQuery` offers
+ * it through the same Recover link a crashed session uses, which is what
+ * makes 'recorder-open-failed' a message the user can act on.
+ */
+const UNOPENED_SESSION_KEY = 'openscreenshot:unopened-session';
+/** Written by the recorder's Continue button; read by the popup and here. */
+const CONTINUE_SESSION_KEY = 'openscreenshot:continue-session';
 const RECORDER_URL = chrome.runtime.getURL('src/recorder/index.html');
 const START_TIMEOUT_MS = 10_000;
 /**
@@ -41,6 +60,15 @@ const START_TIMEOUT_MS = 10_000;
  * for a frame that never loaded at all (blocked iframe, dead tab).
  */
 const FRAME_READY_TIMEOUT_MS = 15_000;
+/**
+ * How long a Stop on a run that has not anchored waits for `ENGINE_STOPPED`
+ * before the run is torn down as stalled. It only has to outlast a healthy
+ * engine's own stop — which has no recorders to flush, because it never
+ * started any — so it is short: the user is already waiting on a gesture they
+ * made, and every second past this one is a second of "Starting…" over dead
+ * buttons.
+ */
+const STALLED_STOP_TIMEOUT_MS = 3000;
 
 interface StoredRecState {
   sessionId: string;
@@ -51,6 +79,30 @@ interface StoredRecState {
   pausedAccumMs: number;
   settings: RecordingSettings;
   overlayLost: boolean;
+  /**
+   * Whether the control bar has ever reached the page during this run.
+   * `overlayLost` cannot answer that: it is false both before the first mount
+   * and after a heal, and the engine's watchdog is edge-triggered — it stays
+   * quiet while it believes the bar is already lost — so a bar that recovers
+   * inside its 2500ms window never produces an `OVERLAY_HEALED` to clear
+   * anything. This is the flag the mount itself sets.
+   */
+  overlayMounted: boolean;
+  /** Media chunks are failing to reach IndexedDB; the control bar says so. */
+  writeFailed: boolean;
+  /**
+   * A requested camera was declined (or unavailable). One-way, like
+   * `writeFailed` — set by `handleWebcamDenied`, never cleared within a run,
+   * and read back by `healOverlay` so the control bar's warning survives a
+   * heal the same way a chunk-write failure's does.
+   */
+  camDenied: boolean;
+  /**
+   * Whether `ENGINE_STARTED` has arrived, i.e. whether `startedAt` is the
+   * moment the recorders began rather than the moment the bar was mounted.
+   * The clock has no zero until then, so no surface may show elapsed.
+   */
+  anchored: boolean;
   /** True when this run appends to an existing session (Continue). */
   continued: boolean;
 }
@@ -62,17 +114,42 @@ async function getRecState(): Promise<StoredRecState | null> {
   return (stored[REC_STATE_KEY] as StoredRecState | undefined) ?? null;
 }
 
+/** Write the whole state. Only the start does this; everything else patches. */
+async function writeRecState(state: StoredRecState): Promise<void> {
+  lastKnownLive = true;
+  await chrome.storage.session.set({ [REC_STATE_KEY]: state });
+}
+
+/**
+ * Patch the live run's state. Does nothing when there is no live run, or when
+ * the run has moved on: every caller reaches here after an await, and a
+ * teardown inside that window used to be undone — `{...null, ...patch}` is a
+ * partial state object, which put REC back on the badge after the recording
+ * had ended and answered the next Record click with 'start-busy'.
+ */
 async function setRecState(
   patch: Partial<StoredRecState> & Pick<StoredRecState, 'sessionId'>,
 ): Promise<void> {
   const existing = await getRecState();
-  const next: StoredRecState = { ...(existing as StoredRecState), ...patch };
-  await chrome.storage.session.set({ [REC_STATE_KEY]: next });
+  if (!existing || existing.sessionId !== patch.sessionId) return;
+  await chrome.storage.session.set({ [REC_STATE_KEY]: { ...existing, ...patch } });
 }
 
 async function clearRecState(): Promise<void> {
+  lastKnownLive = false;
   await chrome.storage.session.remove(REC_STATE_KEY);
 }
+
+/**
+ * Whether a recording was live the last time the store answered, or null if
+ * this worker has never had an answer. `restoreRecBadge` falls back to it when
+ * the store cannot be read, so a capture's own badge flash — the caller sets
+ * a digit, '!' or a tick immediately before calling — is still cleared when we
+ * know there is nothing to keep. It is deliberately not consulted when null:
+ * an MV3 worker that has just restarted mid-recording would clear a REC it has
+ * simply not seen yet.
+ */
+let lastKnownLive: boolean | null = null;
 
 // --- Start-round-trip serialization -----------------------------------------
 
@@ -89,11 +166,56 @@ let startPending: Promise<void> | null = null;
 let resolveStartPendingFn: (() => void) | null = null;
 let startTimeout: ReturnType<typeof setTimeout> | null = null;
 
+/**
+ * True while `handleStart` is preparing a run the engine has not been asked
+ * to begin yet. Distinct from `startPending`, which the deadline above can
+ * release while the start is still running: this one is owned by
+ * `handleStart` itself, so it answers "has `OFFSCREEN_START` gone out?"
+ * without ever being wrong about it.
+ *
+ * Two things read it. The concurrent-start guard, which a released deadline
+ * used to let a second Record click walk straight through; and Stop/Cancel,
+ * which have to know whether the gesture belongs to this worker (tear the
+ * preparation down) or to the engine (forward it).
+ */
+let preparingStart = false;
+
+/**
+ * A Stop or Cancel that landed while the start was still preparing. It is
+ * recorded rather than acted on directly, because the start owns the session
+ * row, the segment row, the badge and the overlay it has to give back, and
+ * they are locals inside `handleStart`.
+ */
+let startAbort: 'stop' | 'cancel' | null = null;
+
 function beginStartPending(): void {
   startPending = new Promise<void>((resolve) => {
     resolveStartPendingFn = resolve;
   });
   armStartTimeout();
+}
+
+/**
+ * Take a Stop or Cancel that arrived before `OFFSCREEN_START` went out, and
+ * say whether it was taken.
+ *
+ * Forwarding it instead would be worse than dropping it, which is what used
+ * to happen: `OFFSCREEN_STOP` reaching an engine with no state parks a
+ * `pendingStop` that the start then consumes on its way in, so the user's
+ * Stop would produce a recording that starts, runs for a frame and stops —
+ * a session with nothing in it. The preparation is abandoned instead, and
+ * nothing is ever handed to the engine.
+ *
+ * The frame wait is released here on purpose. Without it the gesture would
+ * sit unread until the permission frame answered or its 15s timeout ran out,
+ * which is the whole complaint: Stop looked broken because it was queued
+ * behind the longest wait in the start.
+ */
+function abortPreparingStart(gesture: 'stop' | 'cancel'): boolean {
+  if (!preparingStart) return false;
+  startAbort = gesture;
+  resolveFrameReadyFn?.();
+  return true;
 }
 
 /**
@@ -160,22 +282,83 @@ async function clearRecBadge(): Promise<void> {
 }
 
 /**
- * Put the badge back the way a live recording needs it. The action badge is
+ * The badge for a recording failure nobody has read yet. Coral and '!' is
+ * how `flashErrorBadge` in the capture worker already spells an error; this
+ * one persists instead of counting down, because it is the only surface left
+ * when a failure lands with no popup, recorder page or control bar open.
+ */
+async function showFailBadge(): Promise<void> {
+  await chrome.action.setBadgeBackgroundColor({ color: '#e8503a' });
+  await chrome.action.setBadgeTextColor({ color: '#ffffff' });
+  await chrome.action.setBadgeText({ text: '!' });
+}
+
+async function pendingFailure(): Promise<RecFailure | null> {
+  const stored = await chrome.storage.session.get(REC_FAILURE_KEY);
+  const value: unknown = stored[REC_FAILURE_KEY];
+  return isRecFailure(value) ? value : null;
+}
+
+/**
+ * Put the badge back the way current state needs it. The action badge is
  * one shared surface: a capture taken mid-recording runs its own countdown,
  * done or error flash and then clears the text, which used to wipe the REC
  * indicator for the rest of the recording. Capture calls this instead of
- * clearing, so the badge lands on REC while a recording runs and on empty
- * otherwise.
+ * clearing, so the badge lands on REC while a recording runs, on '!' while an
+ * unread recording failure is parked, and on empty otherwise.
  */
 export async function restoreRecBadge(): Promise<void> {
   let state: StoredRecState | null = null;
+  let failure: RecFailure | null = null;
   try {
     state = await getRecState();
+    failure = await pendingFailure();
   } catch {
-    // Session storage unavailable — fall through and clear, as before.
+    // The store that says whether a recording is live is the store that just
+    // failed, so there is nothing to restore the badge *to*. Clearing here
+    // used to wipe REC on the strength of a read that never answered — the
+    // badge lying in the one state where it is the user's only indicator. The
+    // last answer this worker did get is better than either guess: it clears a
+    // capture's leftover flash without touching a live REC.
+    if (lastKnownLive === false) {
+      await clearRecBadge();
+      return;
+    }
+    // Never had an answer — an MV3 worker that restarted. `getContexts` is a
+    // second authority on the same question and does not go through session
+    // storage; `handleQuery` already treats it as the arbiter of whether a
+    // recording is live. No offscreen document means nothing is recording, so
+    // a capture's leftover flash can go. A `getContexts` that also fails
+    // leaves the badge exactly as it is.
+    if (lastKnownLive === null && !(await hasOffscreenDocument().catch(() => true))) {
+      await clearRecBadge();
+    }
+    return;
   }
+  lastKnownLive = !!state;
   if (state) await showRecBadge(state.overlayLost);
+  else if (failure) await showFailBadge();
   else await clearRecBadge();
+}
+
+// --- Failure reporting -------------------------------------------------------
+
+/**
+ * Surface a failure the worker has no caller to answer. Most of these land
+ * with nothing of ours on screen — the popup hands the click over and closes,
+ * and the control bar is either not up yet or is itself what failed — so this
+ * takes all three routes it can: it parks the failure for the next popup open,
+ * broadcasts it to any surface that happens to be listening right now, and
+ * puts '!' on the action badge, which needs nothing open at all.
+ *
+ * Best-effort throughout. A failure report that throws would replace the
+ * failure being reported with a less useful one.
+ */
+async function reportFailure(code: RecFailureCode, sessionId?: string): Promise<void> {
+  const failure: RecFailure = { code, at: Date.now(), ...(sessionId ? { sessionId } : {}) };
+  await chrome.storage.session.set({ [REC_FAILURE_KEY]: failure }).catch(() => {});
+  chrome.runtime.sendMessage({ type: REC_FAILURE_MESSAGE, failure }).catch(() => {});
+  await restoreRecBadge().catch(() => {});
 }
 
 // --- Overlay heal ------------------------------------------------------------
@@ -199,8 +382,27 @@ async function healOverlay(tabId: number): Promise<'fresh' | 'synced' | 'failed'
         elapsed,
         s.pausedAt !== 0,
         { mic: s.settings.mic, tabAudio: s.settings.tabAudio, webcam: s.settings.webcam },
+        s.writeFailed,
+        // A state written by a build that predates the field reads as
+        // false — no denial to report, same "absent means off" reading
+        // `writeFailed` already gets nowhere else in this call.
+        !!s.camDenied,
+        // A state written by a build that predates the field would otherwise
+        // read as unanchored and leave a live recording's bar on "Starting…".
+        // Only an explicit false is unanchored.
+        s.anchored !== false,
       ],
     });
+    // The bar is on the page. If this run had reported that it could not get
+    // there, that message is now wrong, and the flag has to flip so a genuine
+    // loss later is reported rather than suppressed as a repeat.
+    if (!s.overlayMounted) {
+      await setRecState({ sessionId: s.sessionId, overlayMounted: true });
+      const parked = await pendingFailure().catch(() => null);
+      if (parked?.code === 'overlay-blocked' && sameRun(parked, { sessionId: s.sessionId })) {
+        await chrome.storage.session.remove(REC_FAILURE_KEY).catch(() => {});
+      }
+    }
     return injection?.result === 'fresh' ? 'fresh' : 'synced';
   } catch {
     return 'failed'; // no permission on this origin — overlay stays lost
@@ -267,11 +469,21 @@ async function closeOffscreenSafe(): Promise<void> {
 
 // --- REC_* handlers ------------------------------------------------------
 
-async function handleStart(settings: RecordingSettings, continueSessionId?: string): Promise<void> {
-  if (startPending) return; // a start is already mid-flight
+/**
+ * `devicesGranted` is the popup's answer to "is there a permission prompt
+ * coming?" — see `src/shared/permissions.ts`. A worker has no
+ * `navigator.permissions`, so it cannot ask; absent or false keeps the wait.
+ */
+async function handleStart(
+  settings: RecordingSettings,
+  continueSessionId?: string,
+  devicesGranted = false,
+): Promise<void> {
+  if (startPending || preparingStart) return; // a start is already mid-flight
   // Claim the slot synchronously, before any `await` — otherwise two
   // near-simultaneous REC_STARTs can both pass the check above while the
   // first is suspended on an await (check-then-act split across awaits).
+  startAbort = null;
   beginStartPending();
 
   let session: RecordingSession | undefined;
@@ -283,15 +495,24 @@ async function handleStart(settings: RecordingSettings, continueSessionId?: stri
   try {
     if (await getRecState()) {
       resolveStartPending(); // already recording — release the claim
+      await reportFailure('start-busy');
       return;
     }
 
     const tab = await getActiveTab();
     if (!tab || tab.id == null || isProtectedUrl(tab.url)) {
       resolveStartPending();
+      await reportFailure('start-blocked');
       return;
     }
     tabId = tab.id;
+
+    // Only from here is there a run to give back, so only from here is a Stop
+    // or Cancel this start's to answer. Claimed later than the slot above on
+    // purpose: a gesture that lands while the two checks above are running
+    // belongs to whatever was already recording, and swallowing it would
+    // leave that recording running with the user's Stop spent.
+    preparingStart = true;
 
     await ensureOffscreen();
 
@@ -325,7 +546,7 @@ async function handleStart(settings: RecordingSettings, continueSessionId?: stri
     segmentId = segment.id;
 
     const now = Date.now();
-    await setRecState({
+    await writeRecState({
       sessionId: session.id,
       segmentId: segment.id,
       tabId,
@@ -334,19 +555,45 @@ async function handleStart(settings: RecordingSettings, continueSessionId?: stri
       pausedAccumMs: 0,
       settings,
       overlayLost: false,
+      overlayMounted: false,
+      writeFailed: false,
+      camDenied: false,
+      anchored: false,
       continued: !!continueSessionId,
     });
 
     await showRecBadge(false);
+
+    /**
+     * A Stop or Cancel that landed while this start was preparing. Checked on
+     * both sides of the permission wait: before it, because a gesture that
+     * arrives ahead of the wait finds no wait to release and would otherwise
+     * go unanswered until the frame reported or its 15s timeout ran out; and
+     * after it, so the last steps are not run for a run nobody wants.
+     */
+    const abandoned = async (): Promise<boolean> => {
+      if (!startAbort || !session || tabId == null) return false;
+      await discardPreparedRun(session.id, tabId, segmentId, !!continueSessionId);
+      return true;
+    };
 
     // The overlay goes up before the engine is asked to capture, because its
     // iframe is the only surface that can prompt for camera/mic on this
     // extension origin. A fresh mount means that prompt is now on screen, so
     // hold the engine until the frame reports the answer — its own
     // `getUserMedia` runs in the offscreen document, which cannot prompt and
-    // would just fail. `ENGINE_STARTED` re-anchors the clock afterwards.
+    // would just fail. `ENGINE_STARTED` anchors the clock afterwards.
     const mount = await healOverlay(tabId);
-    if (mount === 'fresh' && (settings.webcam || settings.mic)) {
+    // A bar that never went up leaves the recording running with no in-page
+    // stop button; the popup is the remaining way to end it, so say so.
+    if (mount === 'failed') void reportFailure('overlay-blocked', session.id);
+    if (await abandoned()) return;
+    // Gated on the grant, because the wait exists for the prompt and nothing
+    // else: with camera and mic already granted the frame raises no prompt,
+    // reports ready as fast as an iframe can load, and the engine's own
+    // getUserMedia would have succeeded anyway. Waiting there spent up to
+    // FRAME_READY_TIMEOUT_MS of a start that had nothing to wait for.
+    if (mount === 'fresh' && (settings.webcam || settings.mic) && !devicesGranted) {
       await waitForFrameReady();
       armStartTimeout();
     }
@@ -362,16 +609,24 @@ async function handleStart(settings: RecordingSettings, continueSessionId?: stri
     // to answer a permission prompt.
     const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tabId });
 
+    // The last moment a Stop or Cancel can be answered by giving the run back
+    // instead of by asking the engine to undo it. Only microtasks separate
+    // this check from the dispatch below, and a message listener runs as a
+    // task, so a gesture is either taken here or reaches an engine that has
+    // been asked to begin — never neither.
+    if (await abandoned()) return;
+
+    const startedSessionId = session.id;
     chrome.runtime
       .sendMessage({
         type: 'OFFSCREEN_START',
         target: 'offscreen',
         streamId,
-        sessionId: session.id,
+        sessionId: startedSessionId,
         segmentId: segment.id,
         settings: effective,
       })
-      .catch(() => {});
+      .catch(() => void abandonUnstartedRun(startedSessionId));
     // startPending stays claimed here — resolved by ENGINE_STARTED,
     // ENGINE_ERROR, or the timeout guard in armStartTimeout().
   } catch (err) {
@@ -382,37 +637,213 @@ async function handleStart(settings: RecordingSettings, continueSessionId?: stri
     // The session row was already written when this threw (a navigating tab
     // fails `execInTab`, for one), and a row left at status 'recording' with
     // no engine behind it reads as a crash the user is offered to recover.
-    await discardStartedSession(session?.id, !!continueSessionId, segmentId);
+    const retained = await retainFailedSession(session?.id, !!continueSessionId, segmentId);
     await clearRecState();
     await clearRecBadge();
     await closeOffscreenSafe();
     resolveStartPending();
+    // Reported after the badge clear above, which would otherwise win. A
+    // cleanup that also failed is the message worth showing: it is the one
+    // that leaves a row behind for the user to deal with.
+    await reportFailure(retained ? 'start-failed' : 'cleanup-failed');
+  } finally {
+    // Cleared the moment `handleStart` returns, which is right after the
+    // dispatch above — from there on the gesture belongs to the engine.
+    preparingStart = false;
   }
 }
 
 /**
- * Undo the DB half of a start that never reached the engine. A brand-new
- * session is deleted outright; a continued one only loses the 'recording'
- * status it was just given, because its earlier segments are real recordings.
+ * The user stopped or cancelled while the start was still preparing. Give the
+ * run back and go quiet.
  *
- * The segment row created for this run goes either way. In the continued case
- * it has to go on its own: no chunk was ever written to it, so it would load
- * as a zero-byte source that the editor cannot play and that used to make
- * every later export of the session fail.
+ * Nothing was recorded: no recorder ever ran, so there is no file to keep and
+ * no shortfall to explain. It is not a failure either — the user asked for
+ * it — so no message is parked and no '!' is raised. The bar going away and
+ * the badge clearing is the whole answer, which is the same answer a Stop one
+ * second later would give.
+ *
+ * The DB half is a discard rather than `retainFailedSession`'s retention: a
+ * 'failed' row on the Recorder page would report a deliberate cancel as
+ * something that went wrong.
  */
-async function discardStartedSession(
+async function discardPreparedRun(
+  sessionId: string,
+  tabId: number,
+  segmentId: string | undefined,
+  continued: boolean,
+): Promise<void> {
+  await unmountOverlay(tabId);
+  await discardRun(sessionId, continued, segmentId);
+  await clearRecState();
+  await closeOffscreenSafe();
+  resolveStartPending();
+  // Not clearRecBadge: this start may already have parked its own
+  // 'overlay-blocked', and that '!' is still owed to the user.
+  await restoreRecBadge();
+}
+
+/**
+ * `OFFSCREEN_START` never landed, so the engine holds nothing and no
+ * `ENGINE_ERROR` is coming. Everything downstream still claims a live
+ * recording: the stored state, the REC badge, the control bar counting up.
+ *
+ * Reporting alone was not enough — the message says "stop and try again" and
+ * Stop could not work. `OFFSCREEN_STOP` reaches an engine whose own state is
+ * null, which parks it as a pending stop and returns without sending
+ * `ENGINE_STOPPED`, so the state was never cleared; and with the document
+ * already gone the send rejects and parks a second message for the same
+ * failure. So the run is torn down here first, exactly as `handleEngineError`
+ * tears down the same class, and only then reported.
+ */
+async function abandonUnstartedRun(sessionId: string): Promise<void> {
+  const state = await getRecState().catch(() => null);
+  if (state && state.sessionId !== sessionId) return;
+  await tearDownUnstartedRun(state, 'engine-unreachable');
+}
+
+/**
+ * A Stop or a Cancel the engine never answered, on a run it never started.
+ * `handleStop` and `handleCancel` arm this on every gesture; by the time it
+ * runs either `ENGINE_STOPPED` has cleared the state, or the anchor has
+ * arrived and the recording is real, or neither — and neither is the hung
+ * engine.
+ *
+ * That last case has no other exit. `OFFSCREEN_STOP` (and `OFFSCREEN_CANCEL`)
+ * to an engine whose own `state` is null parks a pending stop and returns, so
+ * no `ENGINE_STOPPED` comes back and nothing clears; `handleQuery`'s escape
+ * hatch checks for an offscreen document, which exists and is merely hung.
+ * Without this the bar stays up reading "Starting…" over dead buttons, with a
+ * REC badge that never goes down, until the tab is closed.
+ *
+ * `code` carries which gesture is waiting: `engine-stalled` for a Stop, whose
+ * intent to record did fail, and null for a Cancel, which asked for nothing
+ * to be kept and gets the silent teardown `discardPreparedRun` gives the same
+ * gesture one tick earlier.
+ */
+async function abandonStalledRun(sessionId: string, code: RecFailureCode | null): Promise<void> {
+  const state = await getRecState().catch(() => null);
+  if (!state || state.sessionId !== sessionId || state.anchored) return;
+  await tearDownUnstartedRun(state, code);
+}
+
+/**
+ * Tear down a run the engine never took charge of, and say so — or say
+ * nothing, when `code` is null because the user asked for the teardown.
+ *
+ * **The state goes first, and the bar goes after it.** The other order —
+ * unmount, then several awaits of IndexedDB, then clear — leaves a window in
+ * which a Stop reads a live state and `healOverlay`s the bar back onto the
+ * page. The state is then cleared under it and nothing will ever unmount that
+ * bar again: it sits there reading "Starting…", with a live REC dot and a
+ * webcam frame, over buttons whose messages all hit `if (!state) return`.
+ * Clearing first narrows that window to the microtask between `healOverlay`'s
+ * own re-read and the clear, because a heal that reads no state returns
+ * 'failed' instead of mounting.
+ *
+ * A null `code` takes the cancel's three differences with it, which are one
+ * rule stated three times: the run is discarded rather than kept as 'failed',
+ * the badge is restored rather than cleared so a '!' this start already
+ * parked survives, and nothing is reported.
+ */
+async function tearDownUnstartedRun(
+  state: StoredRecState | null,
+  code: RecFailureCode | null,
+): Promise<void> {
+  await clearRecState();
+  let retained = true;
+  if (state) {
+    if (code) {
+      retained = await retainFailedSession(state.sessionId, state.continued, state.segmentId);
+    } else {
+      await discardRun(state.sessionId, state.continued, state.segmentId);
+    }
+    await unmountOverlay(state.tabId);
+  }
+  if (code) await clearRecBadge();
+  await closeOffscreenSafe();
+  resolveStartPending();
+  if (code) await reportFailure(retained ? code : 'cleanup-failed');
+  else await restoreRecBadge();
+}
+
+/**
+ * Settle the DB half of a start that never reached the engine.
+ *
+ * A brand-new session used to be deleted outright, which is why a failed
+ * start was indistinguishable from a click that did nothing: the message,
+ * the state and the row all vanished together. The row is kept and marked
+ * 'failed' instead, so the Recorder page has something to show — when it was
+ * attempted, and which tracks were asked for. A continued session keeps its
+ * earlier segments and just loses the 'recording' status it was given, as
+ * before, because those segments are real recordings and the session as a
+ * whole is not a failure.
+ *
+ * The segment row created for this run goes either way. No chunk was ever
+ * written to it, so it would load as a zero-byte source that the editor
+ * cannot play and that used to make every later export of the session fail.
+ */
+async function retainFailedSession(
   sessionId: string | undefined,
   continued: boolean,
   segmentId?: string,
+): Promise<boolean> {
+  if (!sessionId) return true;
+  try {
+    if (segmentId) await deleteSegment(segmentId);
+    if (continued) {
+      await updateSession(sessionId, { status: 'complete' });
+    } else {
+      await dropOlderFailedSessions(sessionId);
+      await updateSession(sessionId, { status: 'failed' });
+    }
+    return true;
+  } catch (err) {
+    console.error('[OpenScreenShot] retaining the failed session failed', err);
+    return false;
+  }
+}
+
+/**
+ * Keep exactly one failed session. A retained failure is there to be looked
+ * at once and deleted; without this, a start that fails the same way every
+ * time (a permanently blocked origin, say) would stack up an empty row per
+ * click and the Recorder page would fill with them.
+ */
+async function dropOlderFailedSessions(keepId: string): Promise<void> {
+  const sessions = await listSessions();
+  for (const session of sessions) {
+    if (session.status === 'failed' && session.id !== keepId) await deleteSession(session.id);
+  }
+}
+
+/**
+ * Settle the DB half of a run the user asked to end before it began — the
+ * counterpart of `retainFailedSession`, for a gesture rather than a failure.
+ *
+ * Nothing recorded and nothing kept: a 'failed' row on the Recorder page
+ * would report a deliberate cancel as something that went wrong. A continued
+ * session keeps its earlier segments, which are real recordings, and only
+ * loses the 'recording' status this run gave it.
+ *
+ * A discard that throws stays quiet, unlike `retainFailedSession`'s
+ * 'cleanup-failed': the row it left behind is the one the user was dropping,
+ * and telling them their cancel half-worked is worse than the stray row.
+ */
+async function discardRun(
+  sessionId: string,
+  continued: boolean,
+  segmentId?: string,
 ): Promise<void> {
-  if (!sessionId) return;
   try {
     if (continued) {
       if (segmentId) await deleteSegment(segmentId);
       await updateSession(sessionId, { status: 'complete' });
-    } else await deleteSession(sessionId);
+    } else {
+      await deleteSession(sessionId);
+    }
   } catch (err) {
-    console.error('[OpenScreenShot] discarding the failed session failed', err);
+    console.error('[OpenScreenShot] discarding the abandoned start failed', err);
   }
 }
 
@@ -433,12 +864,43 @@ async function execInTab<A extends unknown[], R>(
   return result as Awaited<R>;
 }
 
+/**
+ * A stop or a cancel that never reached the engine. Silent when a teardown has
+ * already taken the run down — `abandonUnstartedRun` reports the same failure
+ * from the other end, and both firing is the one-message-per-failure rule
+ * broken. A live run means nothing else is reporting this, so it must.
+ */
+async function reportControlUnreachable(): Promise<void> {
+  // A read that threw is not evidence the run is gone, and reporting still
+  // does something useful when it is: the badge half of `reportFailure` works
+  // even where the park cannot. Only a store that answered "nothing is
+  // running" buys the silence.
+  const state = await getRecState().catch(() => 'unreadable' as const);
+  if (state !== null) await reportFailure('control-unreachable');
+}
+
 async function handleStop(): Promise<void> {
-  await waitForStartPending();
+  // Checked before anything is awaited, so it cannot race the dispatch it is
+  // deciding against — `handleStart` sets `preparingStart` false in the same
+  // synchronous run as the send.
+  if (abortPreparingStart('stop')) return;
   const state = await getRecState();
   if (!state) return;
   await healOverlay(state.tabId);
-  chrome.runtime.sendMessage({ type: 'OFFSCREEN_STOP', target: 'offscreen' }).catch(() => {});
+  chrome.runtime
+    .sendMessage({ type: 'OFFSCREEN_STOP', target: 'offscreen' })
+    .catch(() => reportControlUnreachable());
+  // Armed on every stop, and it is `abandonStalledRun` that decides. Testing
+  // `state.anchored` here as well would be a second guard on the same
+  // question that no test could tell apart from the first — and it would be
+  // the wrong one of the two, because the anchor can arrive *after* this
+  // gesture: a Stop pressed on "Starting…" whose ENGINE_STARTED lands a beat
+  // later is stopping a real recording, and only a check made at the deadline
+  // can know that.
+  setTimeout(
+    () => void abandonStalledRun(state.sessionId, 'engine-stalled'),
+    STALLED_STOP_TIMEOUT_MS,
+  );
 }
 
 async function handlePause(): Promise<void> {
@@ -446,7 +908,9 @@ async function handlePause(): Promise<void> {
   const state = await getRecState();
   if (!state || state.pausedAt) return;
   await setRecState({ sessionId: state.sessionId, pausedAt: Date.now() });
-  chrome.runtime.sendMessage({ type: 'OFFSCREEN_PAUSE', target: 'offscreen' }).catch(() => {});
+  chrome.runtime
+    .sendMessage({ type: 'OFFSCREEN_PAUSE', target: 'offscreen' })
+    .catch(() => reportFailure('control-unreachable'));
 }
 
 async function handleResume(): Promise<void> {
@@ -458,21 +922,32 @@ async function handleResume(): Promise<void> {
     pausedAccumMs: state.pausedAccumMs + (Date.now() - state.pausedAt),
     pausedAt: 0,
   });
-  chrome.runtime.sendMessage({ type: 'OFFSCREEN_RESUME', target: 'offscreen' }).catch(() => {});
+  chrome.runtime
+    .sendMessage({ type: 'OFFSCREEN_RESUME', target: 'offscreen' })
+    .catch(() => reportFailure('control-unreachable'));
 }
 
 async function handleCancel(): Promise<void> {
-  await waitForStartPending();
+  if (abortPreparingStart('cancel')) return;
   const state = await getRecState();
   if (!state) return;
-  chrome.runtime.sendMessage({ type: 'OFFSCREEN_CANCEL', target: 'offscreen' }).catch(() => {});
+  chrome.runtime
+    .sendMessage({ type: 'OFFSCREEN_CANCEL', target: 'offscreen' })
+    .catch(() => reportControlUnreachable());
+  // The same watchdog Stop arms, for the same hung engine: OFFSCREEN_CANCEL
+  // parks a pending cancel against a null engine state and nothing comes
+  // back. It tears down without a word — the user cancelled, and the bar
+  // going away is the whole answer.
+  setTimeout(() => void abandonStalledRun(state.sessionId, null), STALLED_STOP_TIMEOUT_MS);
 }
 
 /**
- * The preview iframe failed to open the camera. The engine catches its own
+ * The permission frame failed to open the camera. The engine catches its own
  * `getUserMedia` failure independently, so nothing is forwarded to it — this
- * only keeps stored settings truthful, so a later overlay mount (or a popup
- * REC_QUERY) stops claiming a webcam track that is not being recorded.
+ * keeps stored settings truthful, so a later overlay mount (or a popup
+ * REC_QUERY) stops claiming a webcam track that is not being recorded, and
+ * it flags the denial so the control bar can say so (task 40: the permission
+ * frame itself never shows anything, now that it is a 1x1 dot).
  */
 async function handleWebcamDenied(): Promise<void> {
   const state = await getRecState();
@@ -480,10 +955,35 @@ async function handleWebcamDenied(): Promise<void> {
   await setRecState({
     sessionId: state.sessionId,
     settings: { ...state.settings, webcam: false },
+    camDenied: true,
   });
-  // A mounted control bar keeps its CAM chip (and its preview bubble) until it
-  // is told otherwise — the heal re-syncs both from the settings above.
+  // A mounted control bar keeps its CAM chip until it is told otherwise — the
+  // heal re-syncs it (and the new camDenied warning) from the state above.
   void healOverlay(state.tabId);
+}
+
+/**
+ * The keyboard route to reveal the bar. `chrome.commands` fires at the
+ * browser level, before any keystroke reaches page or iframe script, so this
+ * reaches the overlay from a tab whose focus is anywhere at all — including
+ * inside a cross-origin iframe, which no in-page key listener could say.
+ * Mirrors `unmountOverlay`'s shape: a tiny self-contained function that calls
+ * a window global the mount already set up, if it is there.
+ */
+async function handleRevealBar(): Promise<void> {
+  const state = await getRecState();
+  if (!state) return;
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId: state.tabId },
+      func: () => {
+        const w = window as unknown as { __ossRecReveal?: () => void };
+        if (typeof w.__ossRecReveal === 'function') w.__ossRecReveal();
+      },
+    });
+  } catch {
+    // No permission on this origin, or the tab is gone — nothing to reveal.
+  }
 }
 
 async function handleQuery(sendResponse: (state: RecState) => void): Promise<void> {
@@ -500,19 +1000,37 @@ async function handleQuery(sendResponse: (state: RecState) => void): Promise<voi
 
     if (!state) {
       const recoverable = await findRecoverableSessions();
+      // A session whose recorder tab never opened is complete, so it is not
+      // in `recoverable` — it is offered through the same link because the
+      // link does the same thing, and it is dropped once it is gone.
+      const stored = await chrome.storage.session.get(UNOPENED_SESSION_KEY);
+      let unopened = stored[UNOPENED_SESSION_KEY] as string | undefined;
+      if (unopened && !(await getSession(unopened))) {
+        await chrome.storage.session.remove(UNOPENED_SESSION_KEY);
+        unopened = undefined;
+      }
       sendResponse({
         active: false,
         paused: false,
-        recoverableSessionId: recoverable[0]?.id,
+        recoverableSessionId: recoverable[0]?.id ?? unopened,
       });
       return;
     }
 
     void healOverlay(state.tabId);
 
-    const elapsedMs = (state.pausedAt || Date.now()) - state.startedAt - state.pausedAccumMs;
+    // Zero until the engine has reported in: before that `startedAt` is the
+    // mount, not a recording, and a surface that showed it would have to take
+    // the number back when the anchor lands. Read the same defensive way as
+    // `healOverlay` does — only an explicit false is unanchored, so a state
+    // written before the field existed still reports its elapsed.
+    const anchored = state.anchored !== false;
+    const elapsedMs = anchored
+      ? (state.pausedAt || Date.now()) - state.startedAt - state.pausedAccumMs
+      : 0;
     sendResponse({
       active: true,
+      anchored,
       paused: state.pausedAt !== 0,
       sessionId: state.sessionId,
       elapsedMs,
@@ -521,6 +1039,9 @@ async function handleQuery(sendResponse: (state: RecState) => void): Promise<voi
     });
   } catch (err) {
     console.error('[OpenScreenShot] REC_QUERY failed', err);
+    // The reply below is a guess, not an answer: a live recording would be
+    // reported as idle. Whoever asked has to know the state is untrustworthy.
+    void reportFailure('query-failed');
     sendResponse({ active: false, paused: false });
   }
 }
@@ -540,13 +1061,29 @@ async function handleEngineStarted(sessionId: string, tracks?: CapturedTracks): 
   if (!state || state.sessionId !== sessionId) return;
 
   const settings = applyCapturedTracks(state.settings, tracks);
-  // Re-anchor only an untouched start: a pause during the wait already owns
-  // the clock, and moving the zero under it would report the wrong elapsed.
-  const fresh = state.pausedAt === 0 && state.pausedAccumMs === 0;
+  // The anchor lands once, on the first ENGINE_STARTED, and it lands on zero.
+  //
+  // It used to be skipped for a run whose clock had been touched — the old
+  // `pausedAt === 0 && pausedAccumMs === 0` test — on the reasoning that a
+  // pause owned the clock. A pause is reachable in this window: the 10s claim
+  // deadline releases `handlePause`'s wait while the start is still waiting
+  // for the permission frame. So the run kept the mount as its zero and the
+  // bar went "Starting…" -> 0:11, paused, for zero seconds of content, which
+  // is the exact reading the anchor exists to prevent. Both counters are
+  // reset with it, and an open pause is re-stamped to now, so a paused run
+  // anchors at 0:00 rather than at however long the prompt was up.
+  const now = Date.now();
   await setRecState({
     sessionId,
     settings,
-    ...(fresh ? { startedAt: Date.now() } : {}),
+    anchored: true,
+    ...(state.anchored
+      ? {}
+      : {
+          startedAt: now,
+          pausedAccumMs: 0,
+          ...(state.pausedAt ? { pausedAt: now } : {}),
+        }),
   });
   void healOverlay(state.tabId);
 }
@@ -556,6 +1093,21 @@ async function handleOverlayLost(sessionId: string): Promise<void> {
   if (!state || state.sessionId !== sessionId) return;
   await setRecState({ sessionId, overlayLost: true });
   await showRecBadge(true);
+  // A bar that never reached the page is one absent bar, and the start
+  // already named it: the engine's watchdog reports a bar that stopped
+  // sending 2.5-3.5s later, which for a refused mount is the same situation
+  // told twice. 'overlay-blocked' is the more accurate of the two sentences
+  // and arrives first, so it keeps the slot. Scoped to a bar that has never
+  // mounted for this run, so a real loss minutes later is still reported —
+  // `overlayMounted` is set by the mount, not by the watchdog, precisely
+  // because the watchdog cannot report a heal it never noticed. The state and
+  // the badge above flip either way: those are state, not a message.
+  const parked = await pendingFailure().catch(() => null);
+  const blockedThisRun =
+    parked?.code === 'overlay-blocked' && sameRun(parked, { sessionId: state.sessionId });
+  if (state.overlayMounted || !blockedThisRun) {
+    await reportFailure('overlay-lost', state.sessionId);
+  }
 }
 
 async function handleOverlayHealed(sessionId: string): Promise<void> {
@@ -563,6 +1115,61 @@ async function handleOverlayHealed(sessionId: string): Promise<void> {
   if (!state || state.sessionId !== sessionId) return;
   await setRecState({ sessionId, overlayLost: false });
   await showRecBadge(false);
+  // The bar is back, so the parked "controls were lost" message is stale —
+  // a navigation that heals in a second must not leave the next popup open
+  // reporting a problem that has already fixed itself.
+  const parked = await pendingFailure().catch(() => null);
+  const mine = parked ? sameRun(parked, { sessionId }) : false;
+  if (mine && (parked?.code === 'overlay-lost' || parked?.code === 'overlay-blocked')) {
+    await chrome.storage.session.remove(REC_FAILURE_KEY).catch(() => {});
+  }
+}
+
+/**
+ * A write rejected mid-recording. Nothing is torn down: what is already
+ * written is a real recording and the user may still want the rest of it. The
+ * engine sends this once per kind per run, so this cannot nag.
+ *
+ * A media failure also goes to the control bar, which is the only surface the
+ * user can see while it is happening — a parked message they find after
+ * stopping arrives after the data is already gone. `handleWebcamDenied` is
+ * the same shape: learn something mid-recording, write it to state, re-heal to
+ * push it into the bar.
+ */
+async function handleEngineWriteFailed(
+  sessionId: string,
+  kind: 'media' | 'events' | undefined,
+): Promise<void> {
+  const state = await getRecState();
+  if (state && state.sessionId !== sessionId) return;
+  // Absent kind means an engine older than this message shape. Read it as
+  // media: reporting a lost recording as a lost cursor track is the one
+  // direction of that mistake that costs the user data.
+  const media = kind !== 'events';
+  if (media) {
+    if (state) {
+      await setRecState({ sessionId, writeFailed: true });
+      void healOverlay(state.tabId);
+    }
+    await reportFailure('chunk-write-failed', sessionId);
+    return;
+  }
+  // A broken store breaks both writers at once — media chunks land every
+  // TIMESLICE_MS and cursor batches every FLUSH_INTERVAL_MS, on independent
+  // phases — so both failures arrive inside the same second in arbitrary
+  // order. Last-writer-wins would leave "The video is fine" standing half the
+  // time, beside a control bar reading NOT SAVING. The graver sentence keeps
+  // the slot, the same rule `handleOverlayLost` uses below.
+  if (state?.writeFailed) return;
+  // Scoped to this run, and it has to be: a parked failure outlives its
+  // recording on purpose, so an unread `chunk-write-failed` from an earlier
+  // run would otherwise suppress this one entirely — no message, no
+  // broadcast, for a failure that just happened.
+  const parked = await pendingFailure().catch(() => null);
+  if (parked && sameRun(parked, { sessionId }) && supersedes(parked.code, 'events-write-failed')) {
+    return;
+  }
+  await reportFailure('events-write-failed', sessionId);
 }
 
 async function handleEngineError(sessionId: string, message: string): Promise<void> {
@@ -573,16 +1180,12 @@ async function handleEngineError(sessionId: string, message: string): Promise<vo
   // from a session that already ended would otherwise delete the recording
   // that replaced it, along with its state, badge and offscreen document.
   if (state && state.sessionId !== sessionId) return;
-  if (state) {
-    await unmountOverlay(state.tabId);
-    // The engine only reports this from its own start, before any recorder
-    // ran, so the session holds nothing. Left at 'recording' it would offer
-    // the user an empty recording to recover.
-    await discardStartedSession(state.sessionId, state.continued, state.segmentId);
-  }
-  await clearRecState();
-  await clearRecBadge();
-  await closeOffscreenSafe();
+  // The engine only reports this from its own start, before any recorder ran,
+  // so the session holds nothing recorded. Left at 'recording' it would offer
+  // the user an empty recording to recover; `tearDownUnstartedRun` marks it
+  // 'failed' so it stays visible on the Recorder page as an attempt that did
+  // not work, and clears the state before the bar for the reason given there.
+  await tearDownUnstartedRun(state, 'engine-failed');
 }
 
 async function handleEngineStopped(sessionId: string, canceled: boolean): Promise<void> {
@@ -590,12 +1193,31 @@ async function handleEngineStopped(sessionId: string, canceled: boolean): Promis
   // Read the tab before the state is cleared; `handleStop` healed the overlay
   // on the way in, so the bar and frame are live right up to this point.
   const state = await getRecState();
-  if (state) await unmountOverlay(state.tabId);
+  // Cleared before the unmount, so a Stop landing in this window cannot heal
+  // the bar back onto a page nothing will unmount it from again — the same
+  // ordering `tearDownUnstartedRun` explains.
   await clearRecState();
-  await clearRecBadge();
+  if (state) await unmountOverlay(state.tabId);
+  // Not clearRecBadge: a failure parked during this recording (an overlay
+  // lost, say) still has its '!' owed to it, and the recording ending is not
+  // the user having read it.
+  await restoreRecBadge();
   await closeOffscreenSafe();
   if (!canceled) {
-    await chrome.tabs.create({ url: `${RECORDER_URL}?session=${sessionId}` });
+    try {
+      await chrome.tabs.create({ url: `${RECORDER_URL}?session=${sessionId}` });
+      // A page that opened retires any earlier one that did not: the offer is
+      // a shortcut to the recording the user has not seen, and they are
+      // looking at one now.
+      await chrome.storage.session.remove(UNOPENED_SESSION_KEY).catch(() => {});
+    } catch {
+      // The recording is safe in IndexedDB; only the page that shows it did
+      // not open, and nothing else would ever mention that. Parked with the
+      // id so the popup's Recover link can reach it — the session is
+      // 'complete', so `findRecoverableSessions` will not offer it.
+      await chrome.storage.session.set({ [UNOPENED_SESSION_KEY]: sessionId }).catch(() => {});
+      await reportFailure('recorder-open-failed');
+    }
   }
 }
 
@@ -609,7 +1231,11 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
     }
     switch (message.type) {
       case 'REC_START':
-        void handleStart(message.settings, message.continueSessionId);
+        void handleStart(
+          message.settings,
+          message.continueSessionId,
+          message.devicesGranted === true,
+        );
         break;
       case 'REC_STOP':
         void handleStop();
@@ -644,6 +1270,9 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
       case 'OVERLAY_HEALED':
         void handleOverlayHealed(message.sessionId);
         break;
+      case 'ENGINE_WRITE_FAILED':
+        void handleEngineWriteFailed(message.sessionId, message.kind);
+        break;
       case 'ENGINE_ERROR':
         void handleEngineError(message.sessionId, message.message);
         break;
@@ -661,6 +1290,50 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
 
 chrome.commands.onCommand.addListener((command) => {
   if (command === 'stop-recording') void handleStop();
+  if (command === 'reveal-recording-bar') void handleRevealBar();
+});
+
+/**
+ * Finish a Record click that was waiting on the tabCapture grant.
+ *
+ * The popup asks for the permission from the click itself (a service worker
+ * has no user gesture, so the ask can never move here), and Chrome's dialog
+ * can tear that popup down before it hears the answer. The click is parked in
+ * session storage before the ask, so this listener is the one place a granted
+ * prompt turns into a recording — on both the survived and the killed popup,
+ * which is why the popup starts nothing itself.
+ *
+ * The parked click is consumed first, then vetted: a leftover must not sit
+ * there waiting to hijack an unrelated grant later.
+ */
+chrome.permissions.onAdded.addListener((added) => {
+  if (!added.permissions?.includes('tabCapture')) return;
+  void (async () => {
+    const stored = await chrome.storage.session.get(PENDING_RECORD_KEY);
+    const parked: unknown = stored[PENDING_RECORD_KEY];
+    if (parked === undefined) return;
+    await chrome.storage.session.remove(PENDING_RECORD_KEY);
+    const activeTabId = (await getActiveTab())?.id ?? null;
+    if (!pendingRecordIsLive(parked, Date.now(), activeTabId)) return;
+    const pending: PendingRecord = parked;
+    // Same consumption the popup's own start does: a continue that is about
+    // to be spent must not keep being offered as "Continue recording".
+    if (pending.continueSessionId) await chrome.storage.session.remove(CONTINUE_SESSION_KEY);
+    await handleStart(pending.settings, pending.continueSessionId, pending.devicesGranted);
+  })();
+});
+
+/**
+ * The '!' badge belongs to a parked failure nobody has read. The surface that
+ * reads one out removes the key, and the badge has to follow — the popup is
+ * closing at that moment and cannot own a badge that outlives it, and the
+ * recorder page, which reads a parked chunk-write failure, has no badge of
+ * its own to put down.
+ */
+chrome.storage.session.onChanged.addListener((changes) => {
+  const change = changes[REC_FAILURE_KEY];
+  if (!change || change.newValue !== undefined) return;
+  void restoreRecBadge();
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {

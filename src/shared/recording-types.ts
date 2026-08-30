@@ -14,7 +14,13 @@ export const DEFAULT_RECORDING_SETTINGS: RecordingSettings = {
   ripple: true,
 };
 
-export type SessionStatus = 'recording' | 'complete';
+/**
+ * 'failed' is a start that never reached the engine: the row is kept, with no
+ * segments, so the Recorder page can show that the attempt happened rather
+ * than deleting every trace of it. `findRecoverableSessions` deliberately
+ * does not offer one — there is nothing in it to recover.
+ */
+export type SessionStatus = 'recording' | 'complete' | 'failed';
 
 export interface RecordingSession {
   id: string;
@@ -56,16 +62,27 @@ export type CursorEvent =
 // --- Gesture surfaces (popup / overlay / command) → worker -----------------
 
 export type RecMessage =
-  | { type: 'REC_START'; settings: RecordingSettings; continueSessionId?: string }
+  | {
+      type: 'REC_START';
+      settings: RecordingSettings;
+      continueSessionId?: string;
+      /**
+       * The popup's `devicesGranted` answer: true when every device this
+       * recording wants is already granted, so the start skips the wait for
+       * the permission frame. `isRecMessage` is a prefix check, so the
+       * handler reads this defensively — absent or malformed keeps the wait.
+       */
+      devicesGranted?: boolean;
+    }
   | { type: 'REC_STOP' }
   | { type: 'REC_PAUSE' }
   | { type: 'REC_RESUME' }
   | { type: 'REC_CANCEL' }
   | { type: 'REC_QUERY' }
-  /** The preview iframe could not open the camera; the worker drops the track
-   *  from stored settings. The engine degrades on its own catch. */
+  /** The permission iframe could not open the camera; the worker drops the
+   *  track from stored settings. The engine degrades on its own catch. */
   | { type: 'REC_WEBCAM_DENIED' }
-  /** The preview iframe settled its `getUserMedia` (granted, declined, or
+  /** The permission iframe settled its `getUserMedia` (granted, declined, or
    *  gated off). The worker holds `OFFSCREEN_START` until this arrives, so the
    *  engine's own camera/mic capture runs after the origin's permission
    *  prompt, not before it. */
@@ -76,8 +93,15 @@ export interface RecState {
   active: boolean;
   paused: boolean;
   sessionId?: string;
-  /** Elapsed recorded ms at reply time, pauses excluded. */
+  /** Elapsed recorded ms at reply time, pauses excluded. 0 until anchored. */
   elapsedMs?: number;
+  /**
+   * Whether the engine has reported that the recorders actually began. The
+   * clock has no zero before that — the run is still opening streams — so a
+   * surface that shows elapsed has to show that it is starting instead of a
+   * number it would have to take back.
+   */
+  anchored?: boolean;
   settings?: RecordingSettings;
   overlayLost?: boolean;
   recoverableSessionId?: string;
@@ -110,6 +134,23 @@ export interface CapturedTracks {
 export type EngineMessage =
   /** `tracks` is absent only from an engine older than this message shape. */
   | { type: 'ENGINE_STARTED'; sessionId: string; tracks?: CapturedTracks }
+  /**
+   * A write to IndexedDB rejected. The recording keeps going — what is already
+   * written is real and stopping would throw it away — but the result is now
+   * poorer than the clock says, so the user has to be told.
+   *
+   * `kind` separates the two costs, because they are not the same message:
+   * 'media' loses video or audio the user believes they are recording, and
+   * 'events' loses only the cursor track, so zoom and click effects go missing
+   * from an otherwise intact file. Sent once per kind per run.
+   *
+   * Optional for the same reason `tracks` above is: `isEngineMessage` is a
+   * prefix check, not a validator, so an engine older than this shape sends
+   * no kind at all. Absent reads as 'media' at the handler — the graver of
+   * the two, because reporting a lost recording as a lost cursor track is the
+   * one direction of that mistake that costs the user data.
+   */
+  | { type: 'ENGINE_WRITE_FAILED'; sessionId: string; kind?: 'media' | 'events' }
   | { type: 'ENGINE_STOPPED'; sessionId: string; canceled: boolean }
   | { type: 'ENGINE_ERROR'; sessionId: string; message: string }
   | { type: 'OVERLAY_LOST'; sessionId: string }

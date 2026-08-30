@@ -48,6 +48,8 @@ interface EngineState {
   overlayLost: boolean;
   watchdog: ReturnType<typeof setInterval> | null;
   stopping: boolean;
+  /** Kinds already reported; the worker is told once per kind, not per write. */
+  writeFailed: { media: boolean; events: boolean };
   /**
    * In-flight `appendChunk`/`appendEvents` writes. `stop()` awaits these
    * after the recorders' `stop` events resolve and before finalizing —
@@ -63,8 +65,13 @@ let state: EngineState | null = null;
 /**
  * A stop/cancel that arrived while `start()` was still opening streams. The
  * engine has no state to stop yet at that point, and dropping the gesture
- * would leave a recording nobody asked for running until the tab closes —
- * with a camera prompt in the way, `start()` can stay open for seconds.
+ * would leave a recording nobody asked for running until the tab closes.
+ *
+ * This is the ordinary path now, not the rare one: the worker used to hold
+ * every gesture until the start round trip finished, so this only ever saw
+ * one that outlasted the worker's own 10s deadline. It forwards them as they
+ * land, so any stop pressed between OFFSCREEN_START and ENGINE_STARTED
+ * arrives here.
  */
 let pendingStop: 'stop' | 'cancel' | null = null;
 
@@ -77,14 +84,27 @@ function elapsed(): number {
   return (state.pausedAt || Date.now()) - state.startedAt - state.pausedAccumMs;
 }
 
-/** Tracks a write so `stop()` can wait for it; a failed write never wedges stop. */
-function trackWrite(s: EngineState, write: Promise<void>): void {
+/**
+ * Tracks a write so `stop()` can wait for it; a failed write never wedges stop.
+ *
+ * The rejection is caught here and must be, but it used to be caught and
+ * dropped: a chunk that never reached IndexedDB left the recording running,
+ * the clock counting and the file silently short. It is reported once per run
+ * now — every following second would report the same broken store — and the
+ * recording is deliberately not stopped, because the chunks already written
+ * are real and tearing down would throw them away.
+ */
+function trackWrite(s: EngineState, write: Promise<void>, kind: 'media' | 'events'): void {
   // Store the already-caught promise, not the raw one — `stop()` awaits
   // everything in `pendingWrites` via `Promise.all`, and an unswallowed
   // rejection there would throw out of `stop()` after `stopping = true` was
   // set, permanently wedging the engine (state never nulled, ENGINE_STOPPED
   // never sent).
-  const settled = write.catch(() => {});
+  const settled = write.catch(() => {
+    if (s.writeFailed[kind]) return;
+    s.writeFailed[kind] = true;
+    send({ type: 'ENGINE_WRITE_FAILED', sessionId: s.sessionId, kind });
+  });
   s.pendingWrites.add(settled);
   void settled.finally(() => s.pendingWrites.delete(settled));
 }
@@ -190,18 +210,19 @@ async function start(msg: Extract<OffscreenMessage, { type: 'OFFSCREEN_START' }>
       overlayLost: false,
       watchdog: null,
       stopping: false,
+      writeFailed: { media: false, events: false },
       pendingWrites: new Set(),
     };
 
     tabRecorder.ondataavailable = (e) => {
       if (e.data.size && state) {
-        trackWrite(state, appendChunk(segmentId, 'tab', state.seq.tab++, e.data));
+        trackWrite(state, appendChunk(segmentId, 'tab', state.seq.tab++, e.data), 'media');
       }
     };
     if (camRecorder) {
       camRecorder.ondataavailable = (e) => {
         if (e.data.size && state) {
-          trackWrite(state, appendChunk(segmentId, 'webcam', state.seq.webcam++, e.data));
+          trackWrite(state, appendChunk(segmentId, 'webcam', state.seq.webcam++, e.data), 'media');
         }
       };
     }
@@ -218,6 +239,7 @@ async function start(msg: Extract<OffscreenMessage, { type: 'OFFSCREEN_START' }>
         trackWrite(
           state,
           appendEvents(state.segmentId, state.eventSeq++, [{ kind: 'overlay-lost', t: elapsed() }]),
+          'events',
         );
         send({ type: 'OVERLAY_LOST', sessionId: state.sessionId });
       }
@@ -256,10 +278,11 @@ function handleCursorBatch(batch: CursorBatch): void {
     trackWrite(
       state,
       appendEvents(state.segmentId, state.eventSeq++, [{ kind: 'overlay-healed', t: elapsed() }]),
+      'events',
     );
     send({ type: 'OVERLAY_HEALED', sessionId: state.sessionId });
   }
-  trackWrite(state, appendEvents(state.segmentId, state.eventSeq++, batch.events));
+  trackWrite(state, appendEvents(state.segmentId, state.eventSeq++, batch.events), 'events');
 }
 
 function pause(): void {

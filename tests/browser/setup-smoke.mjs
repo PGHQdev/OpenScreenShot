@@ -1,6 +1,9 @@
-// Headless browser smoke for the recording setup page: serves the built
-// `dist/`, stubs `chrome` with a mutable permission store, and walks the page
-// through grant, revoke, and the ready banner.
+// Headless browser smoke for the recording permission flow, across both of
+// its surfaces: the popup, which asks for `tabCapture` inline from the Record
+// click, and the setup page, which is now only the recovery route for a
+// refused prompt or a blocked device. Serves the built `dist/` and stubs
+// `chrome` with a mutable permission store whose request outcome is set per
+// case — the refusal path is a real case here, not a stub that always grants.
 // Run with: npm run build && npm run smoke:setup
 import { createReadStream } from 'node:fs';
 import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
@@ -12,7 +15,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const DIST = join(ROOT, 'dist');
-const PAGE = '/src/setup/index.html';
+const SETUP_PAGE = '/src/setup/index.html';
+const POPUP_PAGE = '/src/popup/index.html';
+const PENDING_RECORD_KEY = 'openscreenshot:pending-record';
+const REC_FAILURE_KEY = 'openscreenshot:rec-failure';
 const CHROME =
   process.env.CHROME_BIN ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
@@ -82,9 +88,14 @@ function serveDist() {
 /**
  * The page-side `chrome` stub: i18n from the built locales plus a mutable
  * permission store whose request/remove fire the onAdded/onRemoved events the
- * page listens to — that event path IS the live-status behavior under test.
+ * setup page listens to — that event path IS its live-status behavior under
+ * test. `opts.grants` seeds what is already granted and `opts.allowRequest`
+ * decides what Chrome's dialog answers, so a case can enter the refused path
+ * the recovery route exists for.
  */
-function installChromeStub(messages) {
+function installChromeStub(messages, opts) {
+  const PENDING_KEY = 'openscreenshot:pending-record';
+
   function getMessage(key, subs) {
     const entry = messages[key];
     if (!entry) return key;
@@ -97,10 +108,13 @@ function installChromeStub(messages) {
     return text;
   }
 
-  const granted = { permissions: new Set(), origins: new Set() };
+  const granted = {
+    permissions: new Set(opts.grants ?? []),
+    origins: new Set(opts.origins ?? []),
+  };
   const added = new Set();
   const removed = new Set();
-  const fire = (listeners) => listeners.forEach((fn) => fn());
+  const fire = (listeners, arg) => listeners.forEach((fn) => fn(arg));
   const matches = (query, presentOnly) => {
     const perms = query.permissions ?? [];
     const origins = query.origins ?? [];
@@ -110,42 +124,151 @@ function installChromeStub(messages) {
     );
   };
 
-  const store = new Map();
-  globalThis.__smoke = { created: [], removed: [], granted, store };
+  const store = new Map(Object.entries(opts.local ?? {}));
+  const session = new Map(Object.entries(opts.session ?? {}));
+  const sessionRemoved = [];
+  const area = (map) => ({
+    async get(keys) {
+      const out = {};
+      const list =
+        keys == null
+          ? [...map.keys()]
+          : typeof keys === 'string'
+            ? [keys]
+            : Array.isArray(keys)
+              ? keys
+              : Object.keys(keys);
+      for (const key of list) if (map.has(key)) out[key] = map.get(key);
+      return out;
+    },
+    async set(items) {
+      if (opts.failPark && map === session && PENDING_KEY in items) {
+        throw new Error('quota exceeded');
+      }
+      for (const [k, v] of Object.entries(items)) map.set(k, v);
+    },
+    async remove(keys) {
+      for (const key of Array.isArray(keys) ? keys : [keys]) {
+        if (map === session) sessionRemoved.push(key);
+        map.delete(key);
+      }
+    },
+    async getBytesInUse(key) {
+      return map.has(key) ? JSON.stringify(map.get(key)).length : 0;
+    },
+  });
+
+  const noop = () => {};
+  globalThis.__smoke = {
+    created: [],
+    removed: [],
+    sent: [],
+    // Every permissions.contains answer, recorded as the stub returns it, so
+    // a test can settle on the popup's permission read having resolved rather
+    // than on some unrelated element that happens to render first.
+    contains: [],
+    sessionRemoved,
+    granted,
+    store,
+    session,
+    closed: 0,
+    listeners: new Set(),
+    fire: (msg) => {
+      for (const fn of globalThis.__smoke.listeners) fn(msg, {}, () => {});
+    },
+  };
+  // window.close() is a no-op on a tab the script did not open, so the popup's
+  // hand-off has to be observable some other way.
+  globalThis.close = () => {
+    globalThis.__smoke.closed += 1;
+  };
+  // The browser's own `navigator.permissions.query` still answers unless a
+  // case needs the grant present — that is the whole point, since a service
+  // worker has no such API and the read has to happen in a document. The
+  // wrapper only records which descriptors were answered, so a test can wait
+  // for the popup's device read the way it waits for its tabCapture read.
+  const realPermissions = navigator.permissions;
+  globalThis.__smoke.deviceQueries = [];
+  Object.defineProperty(navigator, 'permissions', {
+    configurable: true,
+    value: {
+      query: async (descriptor) => {
+        const status = opts.devicePermission
+          ? { state: opts.devicePermission }
+          : await realPermissions.query(descriptor);
+        globalThis.__smoke.deviceQueries.push({ name: descriptor.name, state: status.state });
+        return status;
+      },
+    },
+  });
   globalThis.chrome = {
     i18n: { getMessage },
     storage: {
-      local: {
-        get: async (key) => (store.has(key) ? { [key]: store.get(key) } : {}),
-        set: async (items) => {
-          for (const [k, v] of Object.entries(items)) store.set(k, v);
-        },
-      },
-      onChanged: { addListener() {}, removeListener() {} },
+      local: area(store),
+      session: area(session),
+      onChanged: { addListener: noop, removeListener: noop },
     },
-    runtime: { id: 'smoke', getURL: (p) => '/' + String(p).replace(/^\//, '') },
+    runtime: {
+      id: 'smoke',
+      getURL: (p) => '/' + String(p).replace(/^\//, ''),
+      sendMessage: async (msg) => {
+        globalThis.__smoke.sent.push(msg);
+        // `recActive` puts the popup in its live-recording state, which is
+        // the only state its Stop and Cancel buttons exist in.
+        if (!opts.recActive) return { active: false, paused: false };
+        // `recStarting` is the run the engine has not reported in for yet:
+        // active, with no zero for its clock to count from.
+        return opts.recStarting
+          ? { active: true, paused: false, sessionId: 'live-1', anchored: false, elapsedMs: 0 }
+          : {
+              active: true,
+              paused: false,
+              sessionId: 'live-1',
+              anchored: true,
+              elapsedMs: 4000,
+            };
+      },
+      // A real registry: the popup listens here for the worker's failure
+      // broadcasts, and __smoke.fire is how a test delivers one.
+      onMessage: {
+        addListener: (fn) => globalThis.__smoke.listeners.add(fn),
+        removeListener: (fn) => globalThis.__smoke.listeners.delete(fn),
+      },
+    },
+    action: { getUserSettings: async () => ({ isOnToolbar: opts.pinned !== false }) },
+    commands: { getAll: async () => [] },
+    windows: { update: async () => ({}) },
     tabs: {
-      create: async (opts) => {
-        globalThis.__smoke.created.push(opts.url);
+      create: async (o) => {
+        globalThis.__smoke.created.push(o.url);
         return { id: 1 };
       },
+      update: async () => ({}),
+      // A url-filtered query is the popup looking for an open setup tab;
+      // there is never one here, so the hand-off has to create it.
+      query: async (q) => (q?.url ? [] : [{ id: 5, url: 'https://example.com/' }]),
       getCurrent: (cb) => cb({ id: 7 }),
       remove: (id) => {
         globalThis.__smoke.removed.push(id);
       },
     },
     permissions: {
-      contains: async (query) => matches(query, true),
+      contains: async (query) => {
+        const answer = matches(query, true);
+        globalThis.__smoke.contains.push({ query, answer });
+        return answer;
+      },
       request: async (query) => {
+        if (opts.allowRequest === false) return false;
         (query.permissions ?? []).forEach((p) => granted.permissions.add(p));
         (query.origins ?? []).forEach((o) => granted.origins.add(o));
-        fire(added);
+        fire(added, { permissions: [...(query.permissions ?? [])], origins: [] });
         return true;
       },
       remove: async (query) => {
         (query.permissions ?? []).forEach((p) => granted.permissions.delete(p));
         (query.origins ?? []).forEach((o) => granted.origins.delete(o));
-        fire(removed);
+        fire(removed, { permissions: [], origins: [] });
         return true;
       },
       onAdded: { addListener: (fn) => added.add(fn), removeListener: (fn) => added.delete(fn) },
@@ -157,14 +280,46 @@ function installChromeStub(messages) {
   };
 }
 
+/**
+ * Wait until the popup's `permissions.contains({permissions:['tabCapture']})`
+ * has been answered. The stub records the answer as it returns it, and a
+ * `waitForFunction` poll is a CDP round trip — orders of magnitude more time
+ * than the microtasks the popup's own continuation takes — so an assertion
+ * placed after this is reading a chain that has run, not one that has not
+ * started.
+ */
+async function settlePermissionRead(page) {
+  await page.waitForFunction(() =>
+    globalThis.__smoke.contains.some((c) => (c.query.permissions ?? []).includes('tabCapture')),
+  );
+  // One further round trip through the same storage the chain uses, so a
+  // consume that costs an extra await would also have landed by now.
+  await page.evaluate(() => chrome.storage.session.get('smoke:flush'));
+}
+
+/**
+ * Wait until the popup's `navigator.permissions.query` has answered for both
+ * devices. `settlePermissionRead` waits on the tabCapture `contains` call,
+ * which is a different chain: an assertion about `devicesGranted` placed
+ * after that one alone also passes while the device read is still in flight,
+ * because the popup's initial state is 'prompt' either way.
+ */
+async function settleDeviceRead(page) {
+  await page.waitForFunction(() => {
+    const seen = globalThis.__smoke.deviceQueries.map((q) => q.name);
+    return seen.includes('camera') && seen.includes('microphone');
+  });
+  await page.evaluate(() => chrome.storage.session.get('smoke:flush'));
+}
+
 async function main() {
   step('checking the build');
-  const built = await stat(join(DIST, PAGE.slice(1))).then(
+  const built = await stat(join(DIST, SETUP_PAGE.slice(1))).then(
     () => true,
     () => false,
   );
-  if (!built) throw new Error(`${DIST}${PAGE} is missing — run "npm run build" first`);
-  assert(built, `dist${PAGE} exists`);
+  if (!built) throw new Error(`${DIST}${SETUP_PAGE} is missing — run "npm run build" first`);
+  assert(built, `dist${SETUP_PAGE} exists`);
 
   const messages = JSON.parse(await readFile(join(DIST, '_locales/en/messages.json'), 'utf8'));
   const puppeteer = await loadPuppeteer();
@@ -174,6 +329,7 @@ async function main() {
   step(`serving dist/ on ${base}`);
 
   let browser = null;
+  const crashes = [];
   try {
     browser = await puppeteer.launch({
       executablePath: CHROME,
@@ -181,25 +337,508 @@ async function main() {
       userDataDir: join(work, 'profile'),
       args: ['--no-first-run', '--no-default-browser-check', '--disable-gpu'],
     });
-    const page = await browser.newPage();
-    const crashes = [];
-    page.on('pageerror', (err) => crashes.push(String(err)));
-    page.on('console', (msg) => {
-      if (msg.type() === 'error') console.log(`    console.error: ${msg.text()}`);
+
+    /**
+     * Every page is pinned to `no-preference` so this machine's own
+     * accessibility setting cannot change what the smoke drives. Nothing here
+     * asserts motion; the pin is what keeps that true on a reduced-motion box
+     * as well as a plain one.
+     */
+    async function open(url, opts) {
+      const page = await browser.newPage();
+      const cdp = await page.createCDPSession();
+      await cdp.send('Emulation.setEmulatedMedia', {
+        features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }],
+      });
+      page.on('pageerror', (err) => crashes.push(String(err)));
+      page.on('console', (msg) => {
+        if (msg.type() === 'error') console.log(`    console.error: ${msg.text()}`);
+      });
+      await page.evaluateOnNewDocument(installChromeStub, messages, opts);
+      await page.setViewport({ width: opts.width ?? 360, height: 700 });
+      await page.goto(base + url, { waitUntil: 'networkidle0' });
+      return page;
+    }
+
+    // ---------------------------------------------------------------- popup ---
+    step('popup, tabCapture missing: the ask carries its assurance');
+    let page = await open(POPUP_PAGE, { grants: [] });
+    await page.waitForSelector('[data-testid="rec-trust"]');
+    const trust = await page.$eval('[data-testid="rec-trust"]', (el) => el.textContent);
+    for (const claim of [/open source/i, /100% local/i, /no tracking/i, /never leave/i]) {
+      assert(claim.test(trust), `the Record ask states ${claim}`);
+    }
+    assert(
+      !/audit/i.test(trust),
+      'the assurance claims nothing about an audit (there is no audit to cite)',
+    );
+    const repo = await page.$eval('[data-testid="rec-trust"] a', (el) => el.href);
+    assert(
+      /github\.com\/pghqdev\/OpenScreenShot/.test(repo),
+      `the open-source pill links to ${repo}`,
+    );
+
+    step('popup Record click: the permission is asked for inline, not in a setup tab');
+    await page.click('.mode-card[aria-disabled]');
+    await page.waitForFunction(() => globalThis.__smoke.granted.permissions.has('tabCapture'));
+    let state = await page.evaluate(
+      (key) => ({
+        parked: globalThis.__smoke.session.get(key),
+        created: globalThis.__smoke.created,
+        sent: globalThis.__smoke.sent.map((m) => m.type),
+        closed: globalThis.__smoke.closed,
+      }),
+      PENDING_RECORD_KEY,
+    );
+    assert(state.created.length === 0, 'the Record click opened no setup tab');
+    assert(
+      state.parked != null && state.parked.tabId === 5 && typeof state.parked.at === 'number',
+      `the click is parked for the worker (tab ${state.parked?.tabId})`,
+    );
+    assert(
+      state.parked.settings != null,
+      'the parked click carries the recording settings it was made with',
+    );
+    assert(
+      !state.sent.includes('REC_START'),
+      'the popup starts nothing itself — permissions.onAdded in the worker owns that',
+    );
+    await page.waitForFunction(() => globalThis.__smoke.closed > 0);
+    assert(true, 'the popup closes once the grant lands');
+    await page.close();
+
+    step('popup Record click, prompt refused: the parked click is dropped, recovery offered');
+    page = await open(POPUP_PAGE, { grants: [], allowRequest: false });
+    await page.waitForSelector('[data-testid="rec-trust"]');
+    await page.click('.mode-card[aria-disabled]');
+    await page.waitForSelector('[data-testid="rec-refused"]');
+    state = await page.evaluate(
+      (key) => ({
+        parked: globalThis.__smoke.session.get(key),
+        granted: [...globalThis.__smoke.granted.permissions],
+        closed: globalThis.__smoke.closed,
+        sent: globalThis.__smoke.sent.map((m) => m.type),
+      }),
+      PENDING_RECORD_KEY,
+    );
+    assert(state.granted.length === 0, 'nothing was granted');
+    assert(state.parked === undefined, 'the parked click is cleared, so no later grant hijacks it');
+    assert(!state.sent.includes('REC_START'), 'no recording is started on a refusal');
+    assert(state.closed === 0, 'the popup stays open to show the way out');
+    await page.click('[data-testid="rec-refused"]');
+    await page.waitForFunction(() => globalThis.__smoke.created.length > 0);
+    const routed = await page.evaluate(() => globalThis.__smoke.created[0]);
+    assert(/setup\/index\.html\?from=record/.test(routed), `refusal routes to ${routed}`);
+    await page.close();
+
+    step('popup reopened after a refusal it never got to show');
+    // The popup that asked was torn down by Chrome's dialog, so the parked
+    // click outlived it. That leftover is the only evidence a request went
+    // unanswered, and it is what the recovery route now hangs off.
+    page = await open(POPUP_PAGE, {
+      grants: [],
+      session: {
+        [PENDING_RECORD_KEY]: {
+          settings: { mic: false, tabAudio: true, webcam: false, ripple: true },
+          tabId: 5,
+          at: Date.now() - 30_000,
+          asked: true,
+        },
+      },
     });
-    await page.evaluateOnNewDocument(installChromeStub, messages);
+    await page.waitForSelector('[data-testid="rec-refused"]');
+    assert(true, 'the refusal shows on the next open, not nowhere');
+    state = await page.evaluate(
+      (key) => ({
+        parked: globalThis.__smoke.session.get(key),
+        sent: globalThis.__smoke.sent.map((m) => m.type),
+      }),
+      PENDING_RECORD_KEY,
+    );
+    assert(state.parked === undefined, 'the leftover is consumed, so it shows once and not again');
+    assert(!state.sent.includes('REC_START'), 'nothing is started on the strength of a leftover');
+    await page.close();
 
-    step('opening from install: the feature welcome shows first');
-    await page.goto(`${base}${PAGE}?from=install`, { waitUntil: 'networkidle0' });
-    await page.waitForSelector('[data-testid="hero"]');
-    const tiles = await page.$$eval('.feature', (els) => els.length);
-    assert(tiles === 4, `welcome view renders ${tiles} feature tiles`);
-    await page.click('.btn-hero');
+    step("popup reopened after the grant landed: the leftover is the worker's, not the popup's");
+    page = await open(POPUP_PAGE, {
+      grants: ['tabCapture'],
+      session: {
+        [PENDING_RECORD_KEY]: {
+          settings: { mic: false, tabAudio: true, webcam: false, ripple: true },
+          tabId: 5,
+          at: Date.now() - 200,
+          asked: true,
+        },
+      },
+    });
+    // Settle on the state this case is about: the tabCapture read answering.
+    // `.mode-card` is gated on the recorder state, not on this, so waiting for
+    // it would leave the assertions below resting on incidental ordering.
+    await settlePermissionRead(page);
+    assert(
+      (await page.$('[data-testid="rec-refused"]')) === null,
+      'a granted permission shows no refusal',
+    );
+    state = await page.evaluate(
+      (key) => ({
+        parked: globalThis.__smoke.session.get(key),
+        removed: globalThis.__smoke.sessionRemoved,
+      }),
+      PENDING_RECORD_KEY,
+    );
+    assert(
+      state.parked !== undefined && !state.removed.includes(PENDING_RECORD_KEY),
+      'and the popup neither eats nor deletes the click the worker is about to start',
+    );
+    await page.close();
+
+    step('popup Record click whose park fails: the popup starts it itself');
+    // With no parked click the worker has nothing to act on, so the popup —
+    // which by then has evidently survived the dialog — is the only context
+    // left that can start the recording.
+    page = await open(POPUP_PAGE, { grants: [], failPark: true });
+    await page.waitForSelector('[data-testid="rec-trust"]');
+    await page.click('.mode-card[aria-disabled]');
+    await page.waitForFunction(() => globalThis.__smoke.sent.some((m) => m.type === 'REC_START'));
+    state = await page.evaluate(
+      (key) => ({
+        parked: globalThis.__smoke.session.get(key),
+        granted: [...globalThis.__smoke.granted.permissions],
+      }),
+      PENDING_RECORD_KEY,
+    );
+    assert(state.granted.includes('tabCapture'), 'the grant still lands');
+    assert(state.parked === undefined, 'nothing is parked — the write is what failed');
+    assert(
+      (await page.$('[data-testid="rec-refused"]')) === null,
+      'and a failed park is not reported as a refusal',
+    );
+    await page.close();
+
+    step('popup reopened after a click that was dismissed before it could ask');
+    // Torn down between the durable park and the request going out. Nothing
+    // was ever asked, so nothing may be claimed about permission.
+    page = await open(POPUP_PAGE, {
+      grants: [],
+      session: {
+        [PENDING_RECORD_KEY]: {
+          settings: { mic: false, tabAudio: true, webcam: false, ripple: true },
+          tabId: 5,
+          at: Date.now() - 30_000,
+        },
+      },
+    });
+    await page.waitForSelector('[data-testid="rec-trust"]');
+    await settlePermissionRead(page);
+    assert(
+      (await page.$('[data-testid="rec-refused"]')) === null,
+      'a park that never asked is not reported as a refusal',
+    );
+    state = await page.evaluate((key) => globalThis.__smoke.session.get(key), PENDING_RECORD_KEY);
+    assert(state === undefined, 'and it is cleared rather than left to age');
+    await page.close();
+
+    step('popup, unpinned: the pin nudge has a home again');
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'], pinned: false });
+    await page.waitForSelector('[data-testid="pin-hint"]');
+    const pin = await page.$eval('[data-testid="pin-hint"]', (el) => el.textContent);
+    assert(/pin/i.test(pin), `the popup asks to be pinned ("${pin.trim()}")`);
+    await page.close();
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'], pinned: true });
+    await page.waitForSelector('.mode-card[aria-disabled]');
+    assert(
+      (await page.$('[data-testid="pin-hint"]')) === null,
+      'and stops asking once it is pinned',
+    );
+    await page.close();
+
+    step('popup settings: the record-across-sites ask carries the assurance too');
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'] });
+    await page.waitForSelector('.mode-card[aria-disabled]');
+    await page.click('.icon-btn[aria-label="Settings"]');
+    await page.waitForSelector('.settings');
+    await page.waitForSelector('[data-testid="sites-trust"]');
+    const sites = await page.$eval('[data-testid="sites-trust"]', (el) => el.textContent);
+    for (const claim of [/open source/i, /100% local/i, /no tracking/i, /never leave/i]) {
+      assert(claim.test(sites), `the all-sites ask states ${claim}`);
+    }
+    assert(!/audit/i.test(sites), 'and claims nothing about an audit');
+    await page.close();
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'], origins: ['<all_urls>'] });
+    await page.waitForSelector('.mode-card[aria-disabled]');
+    await page.click('.icon-btn[aria-label="Settings"]');
+    await page.waitForSelector('.settings');
+    // The row reads its grant asynchronously and renders "off" for the frame
+    // before the answer lands, so wait for the settled state rather than
+    // sampling a frame that has not read it yet.
+    await page.waitForFunction(() => {
+      const row = [...document.querySelectorAll('.settings-row')].find((r) =>
+        /across sites/i.test(r.querySelector('.settings-label')?.textContent ?? ''),
+      );
+      return row?.querySelectorAll('.seg-btn')[1]?.getAttribute('aria-pressed') === 'true';
+    });
+    assert(
+      (await page.$('[data-testid="sites-trust"]')) === null,
+      'the assurance leaves once all-sites is granted',
+    );
+    await page.close();
+
+    step('popup with tabCapture already granted: no ask, no assurance to carry');
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'] });
+    await page.waitForSelector('.mode-card[aria-disabled]');
+    assert(
+      (await page.$('[data-testid="rec-trust"]')) === null,
+      'the trust strip is gone once there is nothing left to ask for',
+    );
+    await page.click('.mode-card[aria-disabled]');
+    await page.waitForFunction(() => globalThis.__smoke.sent.some((m) => m.type === 'REC_START'));
+    state = await page.evaluate(
+      (key) => ({
+        parked: globalThis.__smoke.session.get(key),
+        created: globalThis.__smoke.created,
+      }),
+      PENDING_RECORD_KEY,
+    );
+    assert(state.parked === undefined, 'a granted Record click parks nothing');
+    assert(state.created.length === 0, 'a granted Record click opens no tab');
+    await page.close();
+
+    step('popup Webcam toggle: no self-view while recording is disclosed before Record is pressed');
+    // Important 2 (task 40, fix round 1): the bubble only ever exists in the
+    // exported file — there is no live preview while recording — so this has
+    // to be said before Record is pressed, not discovered after.
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'] });
+    await page.waitForSelector('.mode-card[aria-disabled]');
+    const findWebcamChip = () =>
+      page.evaluateHandle((label) => {
+        return [...document.querySelectorAll('.chip-toggle')].find(
+          (el) => el.textContent?.trim() === label,
+        );
+      }, messages.recWebcam.message);
+    assert(
+      (await page.$('[data-testid="rec-webcam-hint"]')) === null,
+      'no disclosure while Webcam is off — nothing to disclose yet',
+    );
+    let chip = await findWebcamChip();
+    await chip.asElement().click();
+    await page.waitForSelector('[data-testid="rec-webcam-hint"]');
+    const hintText = await page.$eval('[data-testid="rec-webcam-hint"]', (el) =>
+      el.textContent?.trim(),
+    );
+    assert(
+      hintText === messages.recWebcamNoPreview.message,
+      `turning Webcam on discloses no live preview ("${hintText}")`,
+    );
+    chip = await findWebcamChip();
+    await chip.asElement().click();
+    assert(
+      (await page.$('[data-testid="rec-webcam-hint"]')) === null,
+      'turning Webcam back off removes the disclosure with it',
+    );
+    await page.close();
+
+    step('popup Record click the worker never received: the popup stays to say so');
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'] });
+    await page.waitForSelector('.mode-card[aria-disabled]');
+    // The worker is unreachable from here on. Every worker failure used to
+    // land on `.catch(() => {}).finally(() => window.close())`, so the popup
+    // went away whether the start happened or not.
+    await page.evaluate(() => {
+      chrome.runtime.sendMessage = async (msg) => {
+        globalThis.__smoke.sent.push(msg);
+        throw new Error('Could not establish connection. Receiving end does not exist.');
+      };
+    });
+    await page.click('.mode-card[aria-disabled]');
+    await page.waitForSelector('.toast-error .toast-text');
+    let failText = await page.$eval('.toast-error .toast-text', (el) => el.textContent.trim());
+    assert(
+      failText === messages.recFailStartUnreachable.message,
+      `the popup names the failure ("${failText}")`,
+    );
+    assert(
+      (await page.evaluate(() => globalThis.__smoke.closed)) === 0,
+      'and stays open, instead of closing over a start that never happened',
+    );
+    await page.close();
+
+    step('the Record click carries the device grant a worker cannot read for itself');
+    // `navigator.permissions` needs a document. The worker has none, so the
+    // start would otherwise wait up to FRAME_READY_TIMEOUT_MS for a
+    // permission frame that had nothing to ask. This case runs the browser's
+    // own query in a real popup document: headless Chrome has never granted
+    // the mic, so the answer is a genuine 'prompt'.
+    const micOn = {
+      'openscreenshot:rec-settings': { mic: true, tabAudio: true, webcam: false, ripple: true },
+    };
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'], local: micOn });
+    await settlePermissionRead(page);
+    await settleDeviceRead(page);
+    const asked = await page.evaluate(() => globalThis.__smoke.deviceQueries);
+    assert(
+      asked.some((q) => q.name === 'microphone' && q.state === 'prompt'),
+      `the browser's own query answered for the mic (${JSON.stringify(asked)})`,
+    );
+    await page.click('[data-testid="rec-start"]');
+    await page.waitForFunction(() => globalThis.__smoke.sent.some((m) => m.type === 'REC_START'));
+    let recStart = await page.evaluate(() =>
+      globalThis.__smoke.sent.find((m) => m.type === 'REC_START'),
+    );
+    assert(
+      recStart.devicesGranted === false,
+      `an ungranted mic keeps the wait (devicesGranted=${recStart.devicesGranted})`,
+    );
+    await page.close();
+
+    // The same click with the grant in place. Two cases, not one: a constant
+    // would satisfy either on its own, and only the pair shows the value
+    // tracking what the query answered.
+    page = await open(POPUP_PAGE, {
+      grants: ['tabCapture'],
+      local: micOn,
+      devicePermission: 'granted',
+    });
+    await settlePermissionRead(page);
+    await settleDeviceRead(page);
+    await page.click('[data-testid="rec-start"]');
+    await page.waitForFunction(() => globalThis.__smoke.sent.some((m) => m.type === 'REC_START'));
+    recStart = await page.evaluate(() =>
+      globalThis.__smoke.sent.find((m) => m.type === 'REC_START'),
+    );
+    assert(
+      recStart.devicesGranted === true,
+      `a granted mic drops it (devicesGranted=${recStart.devicesGranted})`,
+    );
+    await page.close();
+
+    step('a recording that has not started yet shows no elapsed time');
+    page = await open(POPUP_PAGE, {
+      grants: ['tabCapture'],
+      recActive: true,
+      recStarting: true,
+    });
+    await page.waitForSelector('.rec-live');
+    const startingSub = await page.$eval('.rec-live .mode-sub', (el) => el.textContent.trim());
+    assert(
+      startingSub === messages.recStarting.message,
+      `the row says it is starting rather than counting (${startingSub})`,
+    );
+    // The same row on an anchored run, so the assertion above is reading the
+    // flag and not a permanently blank slot.
+    await page.close();
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'], recActive: true });
+    await page.waitForSelector('.rec-live');
+    const runningSub = await page.$eval('.rec-live .mode-sub', (el) => el.textContent.trim());
+    assert(runningSub === '0:04', `an anchored run counts (${runningSub})`);
+    await page.close();
+
+    step('popup Stop the worker never received: the recording is still running, so say so');
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'], recActive: true });
+    await page.waitForSelector('.rec-live');
+    // The other half of the same `.finally` defect: a stop that never arrived
+    // used to close the popup, leaving the recording running with the REC
+    // badge as the user's only evidence that nothing had happened.
+    await page.evaluate(() => {
+      chrome.runtime.sendMessage = async (msg) => {
+        globalThis.__smoke.sent.push(msg);
+        throw new Error('Could not establish connection. Receiving end does not exist.');
+      };
+    });
+    const [stopBtn] = await page.$$('.rec-live .seg-btn');
+    await stopBtn.click();
+    await page.waitForSelector('.toast-error .toast-text');
+    failText = await page.$eval('.toast-error .toast-text', (el) => el.textContent.trim());
+    assert(
+      failText === messages.recFailControlUnreachable.message,
+      `the popup names the failed stop ("${failText}")`,
+    );
+    assert(
+      (await page.evaluate(() => globalThis.__smoke.closed)) === 0,
+      'and stays open, with the Stop button still there to press',
+    );
+    // role="status" carries its own polite live region and wins over the
+    // container's, so an error announced through it waits for a pause.
+    const toastRole = await page.$eval('.toast-error', (el) => el.getAttribute('role'));
+    assert(toastRole === 'alert', `the error toast announces assertively (role="${toastRole}")`);
+    await page.close();
+
+    step('popup told two things about one broken store: only the true one stays');
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'] });
+    await page.waitForSelector('.mode-card[aria-disabled]');
+    // A store that breaks takes both writers with it inside the same second,
+    // in arbitrary order. Error toasts never expire, so the reassuring one
+    // used to sit on screen beside the message correcting it until the user
+    // dismissed it by hand.
+    await page.evaluate(() => {
+      const at = Date.now();
+      globalThis.__smoke.fire({
+        type: 'RECORDER_FAILURE',
+        failure: { code: 'events-write-failed', at, sessionId: 'run-1' },
+      });
+      globalThis.__smoke.fire({
+        type: 'RECORDER_FAILURE',
+        failure: { code: 'chunk-write-failed', at: at + 1, sessionId: 'run-1' },
+      });
+    });
+    await page.waitForSelector('.toast-error .toast-text');
+    let shown = await page.$$eval('.toast-error .toast-text', (els) =>
+      els.map((el) => el.textContent.trim()),
+    );
+    assert(
+      shown.length === 1 && shown[0] === messages.recFailChunkWrite.message,
+      `the reassuring message is retired, not stacked (${JSON.stringify(shown)})`,
+    );
+
+    // A failure from a different recording is not this one's to retire.
+    await page.evaluate(() => {
+      globalThis.__smoke.fire({
+        type: 'RECORDER_FAILURE',
+        failure: { code: 'events-write-failed', at: Date.now(), sessionId: 'run-2' },
+      });
+    });
+    await page.waitForFunction(() => document.querySelectorAll('.toast-error').length === 2);
+    shown = await page.$$eval('.toast-error .toast-text', (els) =>
+      els.map((el) => el.textContent.trim()),
+    );
+    assert(
+      shown.includes(messages.recFailEventsWrite.message),
+      `another run's failure stands on its own (${JSON.stringify(shown)})`,
+    );
+    await page.close();
+
+    step('popup reopened after a failure the worker had nowhere to show');
+    // Every worker failure lands with the popup already gone, so the worker
+    // parks it and this is the read-out. Consumed on sight, so the open after
+    // this one is quiet.
+    page = await open(POPUP_PAGE, {
+      grants: ['tabCapture'],
+      session: { [REC_FAILURE_KEY]: { code: 'engine-failed', at: Date.now() } },
+    });
+    await page.waitForSelector('.toast-error .toast-text');
+    failText = await page.$eval('.toast-error .toast-text', (el) => el.textContent.trim());
+    assert(
+      failText === messages.recFailEngine.message,
+      `the parked failure is read out ("${failText}")`,
+    );
+    assert(
+      await page.evaluate(
+        (key) => globalThis.__smoke.sessionRemoved.includes(key),
+        REC_FAILURE_KEY,
+      ),
+      'and consumed, so it says its piece once rather than nagging every open',
+    );
+    await page.close();
+
+    // ---------------------------------------------------------------- setup ---
+    step('the setup page is a recovery surface, with no walkthrough in front of it');
+    page = await open(`${SETUP_PAGE}?from=install`, { grants: [], width: 1100 });
     await page.waitForSelector('[data-testid="row-tabcapture"]');
-    assert(true, 'welcome CTA advances to the permission checklist');
+    assert((await page.$('[data-testid="hero"]')) === null, 'no marketing hero on the way in');
+    assert((await page.$$('.feature')).length === 0, 'no feature grid to click through');
+    await page.close();
 
-    step('opening the setup page fresh (nothing granted)');
-    await page.goto(`${base}${PAGE}?from=record`, { waitUntil: 'networkidle0' });
+    step('opening the setup page from a failed record (nothing granted)');
+    page = await open(`${SETUP_PAGE}?from=record`, { grants: [], width: 1100 });
     await page.waitForSelector('[data-testid="row-tabcapture"]');
     const initial = await page.$eval('[data-testid="row-tabcapture"]', (el) => el.dataset.state);
     assert(initial === 'required', 'tab recording row starts as required');
@@ -209,10 +848,10 @@ async function main() {
     );
     const banner = await page.$eval('.banner-attention', (el) => el.textContent);
     assert(banner.length > 0, `?from=record shows the routed banner ("${banner.trim()}")`);
-    const trust = await page.$eval('[data-testid="trust-strip"]', (el) => el.textContent);
+    const strip = await page.$eval('[data-testid="trust-strip"]', (el) => el.textContent);
     assert(
-      /open source/i.test(trust) && /local/i.test(trust),
-      'trust strip renders with the open-source and local pills',
+      /open source/i.test(strip) && /local/i.test(strip) && !/audit/i.test(strip),
+      'trust strip renders with the open-source and local pills, and claims no audit',
     );
 
     step('clicking Enable on the tab recording row');
@@ -230,30 +869,22 @@ async function main() {
     await page.waitForSelector('[data-testid="row-allurls"][data-state="optional"]');
     assert(true, 'across-sites row returns to optional via the onRemoved event');
 
-    step('camera and mic rows are present and skippable');
+    step('camera and mic keep their own recovery rows');
     for (const row of ['row-camera', 'row-mic']) {
-      const state = await page.$eval(`[data-testid="${row}"]`, (el) => el.dataset.state);
-      assert(state === 'optional' || state === 'granted', `${row} renders as ${state}`);
+      const rowState = await page.$eval(`[data-testid="${row}"]`, (el) => el.dataset.state);
+      assert(rowState === 'optional' || rowState === 'granted', `${row} renders as ${rowState}`);
     }
-
-    step('the setup page marks onboarding as seen');
-    const settings = await page.evaluate(() =>
-      globalThis.__smoke.store.get('openscreenshot:settings'),
-    );
-    assert(
-      settings?.showOnboarding === false,
-      'showOnboarding is false after the setup page loads',
-    );
 
     step('finishing: the ready banner closes the tab');
     await page.waitForSelector('[data-testid="finish-btn"]');
     assert(true, 'finish button renders on the ready banner');
     await page.click('[data-testid="finish-btn"]');
     const closed = await page
-      .evaluate(() => globalThis.__smoke.removed.length)
+      .evaluate(() => globalThis.__smoke.removed.length + globalThis.__smoke.closed)
       .then((n) => n > 0)
       .catch(() => true); // window.close() beat the tabs fallback — also a close
     assert(closed, 'finish click closes the tab');
+    await page.close();
 
     assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
     console.log('\nSetup smoke passed.');

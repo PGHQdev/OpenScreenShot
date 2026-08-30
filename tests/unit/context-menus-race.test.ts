@@ -72,6 +72,9 @@ function makeFakeChrome() {
       onClicked: { addListener: vi.fn() },
     },
     commands: { onCommand: { addListener: vi.fn() } },
+    // recording.ts registers this at module scope to finish a Record click
+    // that was parked waiting on the tabCapture grant.
+    permissions: { onAdded: { addListener: vi.fn() } },
     tabs: {
       onUpdated: { addListener: vi.fn() },
       query: vi.fn(() => Promise.resolve([])),
@@ -91,6 +94,9 @@ function makeFakeChrome() {
         getBytesInUse: vi.fn(() => Promise.resolve(0)),
       },
       onChanged: { addListener: vi.fn() },
+      // recording.ts watches this at module scope: the surface that reads a
+      // parked failure removes the key, and the badge has to follow.
+      session: { onChanged: { addListener: vi.fn() } },
     },
     i18n: { getMessage: vi.fn((key: string) => key) },
     windows: { WINDOW_ID_CURRENT: -2 },
@@ -140,5 +146,50 @@ describe('createContextMenus concurrency', () => {
       ALL_MENU_IDS.map((id) => [id, createdIds.filter((created) => created === id).length]),
     );
     expect(counts).toEqual(Object.fromEntries(ALL_MENU_IDS.map((id) => [id, 1])));
+  });
+});
+
+/**
+ * Install opens nothing. The whole "the setup page is reached only from a
+ * failure" deliverable is one hunk in `src/background/index.ts`, and it is
+ * invisible to every other check here: reverting it leaves lint, types and
+ * every other test green. This is the one assertion that fails when it comes
+ * back, so it reads the listener the module actually registered and fires it
+ * rather than trusting the source.
+ */
+describe('onInstalled', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    fakeChrome = makeFakeChrome();
+    vi.stubGlobal('chrome', fakeChrome);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('opens no tab on a fresh install', async () => {
+    await import('../../src/background/index.ts');
+    const listener = fakeChrome.runtime.onInstalled.addListener.mock.calls[0]?.[0] as (details: {
+      reason: string;
+    }) => void;
+    expect(listener, 'background/index.ts registers an onInstalled listener').toBeTypeOf(
+      'function',
+    );
+
+    listener({ reason: 'install' });
+    // Let the menu build get as far as its settings read, then release it, so
+    // a tab created after that await would still be caught below.
+    await flushMicrotasks();
+    while (getResolvers.length > 0) getResolvers.shift()?.({});
+    await flushMicrotasks();
+
+    expect(
+      fakeChrome.tabs.create.mock.calls.map(([opts]) => (opts as { url: string }).url),
+      'a fresh install must not open the setup page (or any other tab)',
+    ).toEqual([]);
+    // The install still has to build the menus — the assertion above must not
+    // pass by the listener having stopped doing its real work.
+    expect(new Set(createdIds)).toEqual(new Set(ALL_MENU_IDS));
   });
 });

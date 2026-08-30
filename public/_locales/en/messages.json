@@ -43,34 +43,6 @@
     "message": "Coming in a later milestone.",
     "description": "Placeholder message for features not yet implemented."
   },
-  "welcomeTitle": {
-    "message": "Welcome to OpenScreenShot!",
-    "description": "Onboarding welcome card title."
-  },
-  "welcomeLede": {
-    "message": "Capture full-length screenshots of any webpage — even long-scrolling pages — annotate them, and export as PNG or PDF.",
-    "description": "Welcome card description text."
-  },
-  "welcomeList1": {
-    "message": "📄 Full Page — Scroll & stitch the entire page, top to bottom",
-    "description": "Welcome card feature list item 1"
-  },
-  "welcomeList2": {
-    "message": "👁 Visible — Just what you see now",
-    "description": "Welcome card feature list item 2"
-  },
-  "welcomeList3": {
-    "message": "✂️ Region — Drag to select an area",
-    "description": "Welcome card feature list item 3"
-  },
-  "welcomePerm": {
-    "message": "🔒 We need permission to read page content for screenshots. Your data never leaves your device.",
-    "description": "Welcome card permission notice."
-  },
-  "welcomeCta": {
-    "message": "Got it, let’s go!",
-    "description": "Primary call-to-action on the welcome card."
-  },
   "customizeShortcuts": {
     "message": "Customize keyboard shortcuts",
     "description": "Link that opens Chrome's extension shortcut settings."
@@ -82,6 +54,10 @@
   "historyAria": {
     "message": "History",
     "description": "Header icon button in the popup that opens the editor's capture history shelf."
+  },
+  "recRecordings": {
+    "message": "Recordings",
+    "description": "Link in the popup that opens the recorder page's session list."
   },
   "footerShortcuts": {
     "message": "Shortcuts",
@@ -281,6 +257,10 @@
     "message": "Cancel",
     "description": "Recording control bar: button that cancels the recording and discards it."
   },
+  "recOverlayReveal": {
+    "message": "Show recording controls",
+    "description": "Recording control bar: accessible name of the small always-present control that reveals the hidden bar, by pointer, touch or keyboard focus."
+  },
   "recOverlayMic": {
     "message": "MIC",
     "description": "Recording control bar: chip shown when the microphone track is enabled."
@@ -317,6 +297,10 @@
     "message": "Paused",
     "description": "Popup: status label shown while a recording is paused."
   },
+  "recStarting": {
+    "message": "Starting…",
+    "description": "Popup: shown in place of the elapsed time while the recording is still opening its streams, before the clock has a zero."
+  },
   "recMic": {
     "message": "Mic",
     "description": "Popup: toggle chip for the microphone track."
@@ -329,13 +313,131 @@
     "message": "Webcam",
     "description": "Popup: toggle chip for the webcam track."
   },
+  "recWebcamNoPreview": {
+    "message": "Added to the export \u2014 no live preview while you record.",
+    "description": "Popup: one-line disclosure shown under the Webcam toggle once it is on, before Record is pressed (task 40: the recorded page never shows a live self-view)."
+  },
   "recWebcamDenied": {
     "message": "Camera declined — recording without it",
-    "description": "Webcam preview bubble: shown in place of the video when the camera prompt is declined or the camera is unavailable."
+    "description": "The permission frame's own denied-state text, and the control bar's screen-reader announcement when a requested camera is declined or unavailable (task 40: the frame itself is not visible, so the bar is what a sighted user reads)."
   },
   "recProtected": {
     "message": "Can’t record this protected page.",
     "description": "Popup: error toast shown when the active tab can't be recorded."
+  },
+  "popupRecordRefused": {
+    "message": "Tab recording was not allowed — open setup",
+    "description": "Popup button shown after the user refuses the inline tabCapture prompt."
+  },
+  "recFailStartUnreachable": {
+    "message": "Recording didn\u2019t start \u2014 the extension didn\u2019t answer. Try again.",
+    "description": "Popup: error toast when REC_START never reached the service worker."
+  },
+  "recFailStartBlocked": {
+    "message": "Recording didn\u2019t start \u2014 this page can\u2019t be recorded. Switch to a normal tab and try again.",
+    "description": "Popup: error toast when the start found no recordable tab (gone, or a protected URL)."
+  },
+  "recFailStartBusy": {
+    "message": "A recording is already running \u2014 stop it before starting another.",
+    "description": "Popup: error toast when a start arrives while a recording is live."
+  },
+  "recFailStartFailed": {
+    "message": "Recording didn\u2019t start \u2014 the tab couldn\u2019t be prepared. Reload the tab and try again.",
+    "description": "Popup: error toast when the worker's start threw before the engine was asked to capture."
+  },
+  "recFailCleanup": {
+    "message": "A failed recording is still stored \u2014 delete it on the Recorder page.",
+    "description": "Popup: error toast when a failed session could not be tidied up."
+  },
+  "recFailEngine": {
+    "message": "Recording stopped before it began \u2014 the tab couldn\u2019t be captured. Try again.",
+    "description": "Popup: error toast when the offscreen engine failed to open its streams."
+  },
+  "recFailEngineUnreachable": {
+    "message": "Nothing is being recorded \u2014 the recorder never started. Stop and try again.",
+    "description": "Popup: error toast when OFFSCREEN_START never reached the offscreen engine, so the badge and control bar claim a recording that is not happening."
+  },
+  "recFailEngineStalled": {
+    "message": "Recording didn\u2019t start, and stopping it got no answer. Nothing was saved \u2014 try again.",
+    "description": "Popup: the user pressed Stop on a recording that had not begun, and the offscreen recorder never answered. The run was torn down."
+  },
+  "popupOpenFailed": {
+    "message": "That page couldn\u2019t be opened. Try again.",
+    "description": "Popup: error toast when chrome.tabs.create fails for the setup page, the editor or the recorder."
+  },
+  "recFailChunkWrite": {
+    "message": "Part of this recording isn\u2019t being saved. Stop it and check what you have on the Recorder page.",
+    "description": "Popup: error toast when a chunk write to IndexedDB failed mid-recording, so the file is shorter than the clock says."
+  },
+  "recFailEventsWrite": {
+    "message": "The cursor track isn\u2019t being saved. The video is fine; zoom and click effects will be missing.",
+    "description": "Popup: error toast when cursor-event writes to IndexedDB failed mid-recording, leaving the video intact."
+  },
+  "recOverlayStarting": {
+    "message": "Starting…",
+    "description": "Recording control bar: shown in place of the timer while the recording is still opening its streams. Keep it short; it replaces a 0:00 clock."
+  },
+  "recOverlayNotSaving": {
+    "message": "NOT SAVING",
+    "description": "Recording control bar: warning chip shown when chunks are failing to reach storage. Keep it short; it sits in a row of three-letter track chips."
+  },
+  "recOverlayCamDenied": {
+    "message": "CAM DECLINED",
+    "description": "Recording control bar: warning chip shown when a requested camera was declined or unavailable. Keep it short; it sits in a row of three-letter track chips."
+  },
+  "recFailRecorderOpen": {
+    "message": "Your recording is saved \u2014 the Recorder page didn\u2019t open. Use Recover last recording below.",
+    "description": "Popup: error toast when chrome.tabs.create for the recorder page failed after a recording finished."
+  },
+  "recFailQuery": {
+    "message": "Recording status is unavailable \u2014 open the Recorder page to check.",
+    "description": "Popup: error toast when REC_QUERY threw, so \"not recording\" cannot be trusted."
+  },
+  "recFailOverlayBlocked": {
+    "message": "The recording controls couldn\u2019t open on this page \u2014 stop the recording from here.",
+    "description": "Popup: error toast when the in-page control bar could not be injected."
+  },
+  "recFailOverlayLost": {
+    "message": "The recording controls were lost on this page \u2014 stop the recording from here.",
+    "description": "Popup: error toast when the in-page control bar stopped reporting mid-recording."
+  },
+  "recFailControlUnreachable": {
+    "message": "That didn\u2019t reach the recorder \u2014 the extension didn\u2019t answer. Try again.",
+    "description": "Popup: error toast when stop/cancel never reached the service worker."
+  },
+  "recFailSessionLoad": {
+    "message": "That recording couldn\u2019t be opened \u2014 it may be incomplete.",
+    "description": "Recorder page: error toast when a session could not be read out of IndexedDB."
+  },
+  "recFailSegmentSkipped": {
+    "message": "Part of this recording wouldn\u2019t play and was left out of the export.",
+    "description": "Recorder page: error toast when one or more segments were skipped during an export."
+  },
+  "recFailExport": {
+    "message": "Export failed \u2014 no file was saved. Try again.",
+    "description": "Recorder page: error toast when the export threw."
+  },
+  "recFailSaveInterrupted": {
+    "message": "Save failed: $ERROR$. The recording was kept.",
+    "description": "Recorder page: error toast when the Save dialog's download was interrupted for a reason other than the user cancelling it.",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "FILE_NO_SPACE"
+      }
+    }
+  },
+  "recFailSaveUnverified": {
+    "message": "Could not confirm the save finished. The recording was kept.",
+    "description": "Recorder page: error toast when the download never reported a terminal state within the bounded wait."
+  },
+  "recorderSaveCancelled": {
+    "message": "Save cancelled",
+    "description": "Recorder page: toast shown when the user dismisses the export's Save dialog."
+  },
+  "recorderFailed": {
+    "message": "Failed",
+    "description": "Recorder page: pill on a session whose recording never started."
   },
   "recRecover": {
     "message": "Recover last recording",
@@ -385,6 +487,28 @@
     "message": "No recordings yet. Record a tab from the popup.",
     "description": "Recorder page: shown when the session list is empty."
   },
+  "recorderLoadingList": {
+    "message": "Loading recordings…",
+    "description": "Recorder page: shown in place of the session list while it loads."
+  },
+  "recorderSessionLoading": {
+    "message": "Loading recording…",
+    "description": "Recorder page: label on the progress bar shown while a session's chunks load."
+  },
+  "recorderSourceTab": {
+    "message": "Tab",
+    "description": "Recorder page: session list row — capture source. Every recording is a tab capture; there is no window/screen source to distinguish yet."
+  },
+  "recorderTrackRequested": {
+    "message": "$TRACK$ requested",
+    "description": "Recorder page: session list row — a mic/webcam track that was asked for and has some evidence (the combined recorder-#2 stream exists) but cannot be confirmed individually, since a mic-only and a webcam-only stream are indistinguishable from chunk presence alone.",
+    "placeholders": {
+      "track": {
+        "content": "$1",
+        "example": "Mic"
+      }
+    }
+  },
   "recorderRecovered": {
     "message": "Recovered",
     "description": "Recorder page: pill on a session that was left mid-recording by a crash."
@@ -409,9 +533,59 @@
     "message": "Add zoom",
     "description": "Recorder page: button that adds a zoom block at the playhead."
   },
-  "recorderRegenerate": {
-    "message": "Regenerate auto zoom",
-    "description": "Recorder page: button that rebuilds all zoom blocks from the recorded clicks."
+  "recorderUndo": {
+    "message": "Undo",
+    "description": "Recorder page: transport button that takes back the last timeline edit."
+  },
+  "recorderRedo": {
+    "message": "Redo",
+    "description": "Recorder page: transport button that puts back an edit undo took away."
+  },
+  "recorderUndoAnnounce": {
+    "message": "Undo. $BLOCKS$.",
+    "description": "Recorder page: live-region announcement after an undo, naming what the timeline holds afterwards.",
+    "placeholders": {
+      "blocks": {
+        "content": "$1",
+        "example": "3 zoom blocks"
+      }
+    }
+  },
+  "recorderRedoAnnounce": {
+    "message": "Redo. $BLOCKS$.",
+    "description": "Recorder page: live-region announcement after a redo, naming what the timeline holds afterwards.",
+    "placeholders": {
+      "blocks": {
+        "content": "$1",
+        "example": "3 zoom blocks"
+      }
+    }
+  },
+  "recorderUndoPlain": {
+    "message": "Undo.",
+    "description": "Recorder page: live-region announcement for an undo whose step names no single editor field."
+  },
+  "recorderRedoPlain": {
+    "message": "Redo.",
+    "description": "Recorder page: live-region announcement for a redo whose step names no single editor field."
+  },
+  "recorderTrim": {
+    "message": "Trim",
+    "description": "Recorder page: the trim, named by an undo/redo announcement — the timeline has a start and an end handle per segment (recorderTrimStart/recorderTrimEnd), and the announcement names the pair."
+  },
+  "recorderZoomBlockOne": {
+    "message": "1 zoom block",
+    "description": "Recorder page: the zoom-block count an undo/redo announcement carries, when there is exactly one."
+  },
+  "recorderZoomBlockMany": {
+    "message": "$COUNT$ zoom blocks",
+    "description": "Recorder page: the zoom-block count an undo/redo announcement carries, for none or several.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
   },
   "recorderDeleteZoom": {
     "message": "Delete zoom",
@@ -441,13 +615,25 @@
     "message": "Timeline",
     "description": "Recorder page: aria-label of the timeline region."
   },
-  "recorderRipple": {
-    "message": "Click ripple",
-    "description": "Recorder page: label of the toggle that draws a ripple at every recorded click."
+  "recorderCursorMode": {
+    "message": "Cursor",
+    "description": "Recorder page: label of the segmented control that merges showing the recorded cursor and drawing a ripple at every recorded click."
   },
-  "recorderPointer": {
-    "message": "Show cursor",
-    "description": "Recorder page: label of the toggle that draws the recorded cursor path as a pointer in the video."
+  "recorderCursorHidden": {
+    "message": "Hidden",
+    "description": "Recorder page: state of the cursor control that draws neither the cursor nor a click ripple."
+  },
+  "recorderCursorShown": {
+    "message": "Shown",
+    "description": "Recorder page: state of the cursor control that draws the recorded cursor path as a pointer, with no click ripple."
+  },
+  "recorderCursorRippleOnly": {
+    "message": "Clicks only",
+    "description": "Recorder page: state of the cursor control that draws a ripple at every recorded click, with the cursor itself hidden."
+  },
+  "recorderCursorRipple": {
+    "message": "Click ripple",
+    "description": "Recorder page: state of the cursor control that draws the cursor and a ripple at every recorded click."
   },
   "recorderVolTab": {
     "message": "Tab volume",
@@ -525,6 +711,24 @@
     "message": "Cancel",
     "description": "Recorder page: button that stops an export in progress and discards it."
   },
+  "recorderCancelConfirm": {
+    "message": "Discard render?",
+    "description": "Recorder page: armed state of the export Cancel button, click again to confirm."
+  },
+  "recorderExportRemaining": {
+    "message": "$TIME$ remaining",
+    "description": "Recorder page: wall-clock time left in an export in progress, formatted m:ss (or h:mm:ss for a long recording).",
+    "placeholders": {
+      "time": {
+        "content": "$1",
+        "example": "1:23"
+      }
+    }
+  },
+  "recorderExportStayVisible": {
+    "message": "Keep this tab visible. The render pauses while it's hidden.",
+    "description": "Recorder page: warning shown for the whole export — a background tab throttles requestAnimationFrame and stalls the render."
+  },
   "recorderExported": {
     "message": "Saved $SIZE$ MB",
     "description": "Recorder page: toast shown after an export is downloaded.",
@@ -534,10 +738,6 @@
         "example": "12.4"
       }
     }
-  },
-  "recorderExportFailed": {
-    "message": "Export failed",
-    "description": "Recorder page: toast shown when an export could not be rendered."
   },
   "recorderDeleteAfter": {
     "message": "Delete recording after export",
@@ -550,46 +750,6 @@
   "setupIntro": {
     "message": "One-time setup.",
     "description": "Setup page: intro line under the heading."
-  },
-  "setupHeroLede": {
-    "message": "The open-source screen studio in your browser.",
-    "description": "Setup page welcome view: one-line lede under the title."
-  },
-  "setupFeatCapture": {
-    "message": "Full-page capture",
-    "description": "Setup welcome: feature tile title 1."
-  },
-  "setupFeatCaptureSub": {
-    "message": "Scroll & stitch any page",
-    "description": "Setup welcome: feature tile subtitle 1."
-  },
-  "setupFeatRecord": {
-    "message": "Tab recording",
-    "description": "Setup welcome: feature tile title 2."
-  },
-  "setupFeatRecordSub": {
-    "message": "Webcam bubble, mic & tab audio",
-    "description": "Setup welcome: feature tile subtitle 2."
-  },
-  "setupFeatZoom": {
-    "message": "Auto-zoom",
-    "description": "Setup welcome: feature tile title 3."
-  },
-  "setupFeatZoomSub": {
-    "message": "Your clicks become smooth zooms",
-    "description": "Setup welcome: feature tile subtitle 3."
-  },
-  "setupFeatExport": {
-    "message": "Annotate & export",
-    "description": "Setup welcome: feature tile title 4."
-  },
-  "setupFeatExportSub": {
-    "message": "PNG, PDF, WebM — saved locally",
-    "description": "Setup welcome: feature tile subtitle 4."
-  },
-  "setupWelcomeCta": {
-    "message": "Set up recording",
-    "description": "Setup welcome: button that advances to the permission checklist."
   },
   "setupFinish": {
     "message": "All set — close this tab",
@@ -613,15 +773,11 @@
   },
   "setupPinTitle": {
     "message": "Pin OpenScreenShot",
-    "description": "Setup page: floating hint asking the user to pin the extension."
+    "description": "Popup: nudge to pin the extension, shown while it is not on the toolbar."
   },
   "setupPinSub": {
     "message": "Click the 🧩 up there, then the 📌 next to OpenScreenShot.",
-    "description": "Setup page: how to pin, pointing at Chrome's toolbar."
-  },
-  "setupPinDone": {
-    "message": "📌 Pinned — one click to record!",
-    "description": "Setup page: hint state once the extension is pinned."
+    "description": "Popup: how to pin — the puzzle menu sits directly above the popup."
   },
   "setupFromRecord": {
     "message": "One step left: enable tab recording below.",
@@ -648,7 +804,7 @@
     "description": "Setup page: row title for the camera permission."
   },
   "setupCameraDesc": {
-    "message": "Adds a webcam bubble.",
+    "message": "Adds a bubble to the export \u2014 no live preview while recording.",
     "description": "Setup page: row description for the camera permission."
   },
   "setupMic": {
@@ -728,10 +884,6 @@
   "popupSetupLink": {
     "message": "Recording permissions",
     "description": "Popup settings: row that opens the recording setup page."
-  },
-  "welcomeSkip": {
-    "message": "Skip for now",
-    "description": "Welcome card: secondary link that dismisses without opening setup."
   },
   "editorAnnotationCountOne": {
     "message": "$COUNT$ annotation",

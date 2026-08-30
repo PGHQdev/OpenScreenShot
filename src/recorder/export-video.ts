@@ -24,7 +24,7 @@ import {
 import { pickRecorderMime } from '../offscreen/mime';
 import { DEFAULT_SETTINGS } from '../shared/types';
 import { cursorAt, normalizeClicks, normalizeMoves, type NormClick } from './events-map';
-import type { RecorderDraft } from './recorder-draft';
+import { cursorDrawsPointer, cursorDrawsRipple, type RecorderEdit } from './recorder-draft';
 import { drawExportFrame, RIPPLE_MS } from './render';
 import { fixDuration, type LoadedSession } from './session-load';
 import { clampTrim, timelineAt, totalDuration, type SegmentTiming } from './timeline-math';
@@ -33,14 +33,57 @@ import { cameraAt } from './zoom';
 export interface ExportProgress {
   /** 0..1 by timeline position. */
   fraction: number;
+  /** Wall-clock ms left; see `remainingExportMs`. */
+  remainingMs: number;
 }
 
 /**
- * Every draft field the renderer reads. `savedAt` is persistence bookkeeping,
- * so a caller holding live editor state does not have to invent one; a whole
- * `RecorderDraft` still satisfies it.
+ * Wall-clock time left in an export: the total timeline duration minus how
+ * far the driven video clock has reached. A pure function of its two
+ * inputs, so nothing here can keep it ticking down on its own — the export
+ * loop only calls this again once a new frame actually decodes and moves
+ * `timelineMs`, which is also why a hidden tab (`requestAnimationFrame`
+ * stalled, see this file's header comment) freezes the figure instead of
+ * racing ahead of what was actually rendered. Clamped to zero: a last frame
+ * can land a hair past `total` on a sub-frame rounding.
  */
-export type ExportDraft = Omit<RecorderDraft, 'savedAt'>;
+export function remainingExportMs(total: number, timelineMs: number): number {
+  return Math.max(0, total - timelineMs);
+}
+
+/**
+ * Cancel's armed two-step, the same idiom the session list's Delete uses
+ * (`App.tsx`'s `handleDelete`): a first click arms it, a second click before
+ * the disarm timer — or Escape — fires confirms the abort. Pure; the caller
+ * owns the actual timer and the `AbortController`.
+ */
+export function nextCancelClick(armed: boolean): { armed: boolean; confirmed: boolean } {
+  return armed ? { armed: false, confirmed: true } : { armed: true, confirmed: false };
+}
+
+/**
+ * What an export produced. `blob` is null only for a cancel — a partial file
+ * is not what was asked for.
+ *
+ * `skippedParts` counts *parts* the render could not use, not segments: a tab
+ * video that would not play is left out of the file entirely, and a
+ * recorder-#2 element that would not play costs that segment its mic and its
+ * bubble, so one segment can contribute two. Either way the file is shorter
+ * or quieter than the timeline says, which is what the caller tells the user;
+ * nothing reads the magnitude, only whether it is above zero.
+ */
+export interface ExportResult {
+  blob: Blob | null;
+  skippedParts: number;
+}
+
+/**
+ * Every draft field the renderer reads: the editor's own state, without the
+ * bookkeeping a stored draft carries alongside it (`savedAt`, and the undo
+ * stack), so a caller holding live editor state does not have to invent
+ * either; a whole `RecorderDraft` still satisfies it.
+ */
+export type ExportDraft = RecorderEdit;
 
 const EXPORT_FPS = 30;
 const VIDEO_BITS_PER_SECOND = 2_500_000;
@@ -177,8 +220,8 @@ export async function exportVideo(
   draft: ExportDraft,
   onProgress: (p: ExportProgress) => void,
   signal: AbortSignal,
-): Promise<Blob | null> {
-  if (loaded.segments.length === 0) return null;
+): Promise<ExportResult> {
+  if (loaded.segments.length === 0) return { blob: null, skippedParts: 0 };
 
   const timings = exportTimings(loaded, draft);
   const total = totalDuration(timings);
@@ -193,10 +236,10 @@ export async function exportVideo(
   // Clicks are normalized once per segment, on the segment's own clock —
   // the same source `rippleAt` ages against.
   const clicks: NormClick[][] = loaded.segments.map((s) =>
-    draft.ripple ? normalizeClicks(s.events, s.segment.viewport) : [],
+    cursorDrawsRipple(draft.cursor) ? normalizeClicks(s.events, s.segment.viewport) : [],
   );
   const moves: NormClick[][] = loaded.segments.map((s) =>
-    draft.pointer ? normalizeMoves(s.events, s.segment.viewport) : [],
+    cursorDrawsPointer(draft.cursor) ? normalizeMoves(s.events, s.segment.viewport) : [],
   );
 
   const videos = loaded.segments.map((s) => createVideo(s.tabUrl, loaded.hasAudio.tab));
@@ -282,7 +325,10 @@ export async function exportVideo(
       frame,
       frameMetrics: metrics,
     });
-    onProgress({ fraction: total > 0 ? Math.min(1, Math.max(0, timelineMs / total)) : 0 });
+    onProgress({
+      fraction: total > 0 ? Math.min(1, Math.max(0, timelineMs / total)) : 0,
+      remainingMs: remainingExportMs(total, timelineMs),
+    });
   }
 
   /** Parks a segment on its first visible frame and paints it. */
@@ -331,6 +377,7 @@ export async function exportVideo(
     });
   }
 
+  let skippedParts = 0;
   try {
     await Promise.all([
       ...videos.map(prepareVideo),
@@ -340,6 +387,7 @@ export async function exportVideo(
     for (let i = 0; i < videos.length && !signal.aborted; i++) {
       if (!isPlayable(videos[i], timings[i])) {
         console.warn(`[OpenScreenShot] segment ${i} has no playable video; skipping it`);
+        skippedParts += 1;
         continue;
       }
       await enter(i);
@@ -369,10 +417,12 @@ export async function exportVideo(
                 `[OpenScreenShot] segment ${i} mic/webcam failed to play; exporting without it`,
                 err,
               );
+              skippedParts += 1;
             })
           : Promise.resolve(),
       ]);
       if (!tabPlaying) {
+        skippedParts += 1;
         webcams[i]?.pause();
         continue;
       }
@@ -399,9 +449,9 @@ export async function exportVideo(
 
   // A cancel discards the file: a half-length recording is not what was asked
   // for, and keeping it would look like the export finished early.
-  if (signal.aborted) return null;
+  if (signal.aborted) return { blob: null, skippedParts };
   if (chunks.length === 0) throw new Error('export produced no data');
 
-  onProgress({ fraction: 1 });
-  return new Blob(chunks, { type: mime || 'video/webm' });
+  onProgress({ fraction: 1, remainingMs: 0 });
+  return { blob: new Blob(chunks, { type: mime || 'video/webm' }), skippedParts };
 }

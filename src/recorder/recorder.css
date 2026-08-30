@@ -150,8 +150,46 @@ body {
   box-shadow: var(--sh-md);
 }
 
+.toast-text {
+  flex: 1 1 auto;
+}
+
 .toast-info {
   color: var(--text-2);
+}
+
+/* Same spelling as the popup's error toast: amber is this product's danger
+   accent, and a failure must not read as a neutral hint. */
+.toast-error {
+  background: color-mix(in srgb, var(--danger) 14%, var(--surface-1));
+  color: var(--danger-ink);
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+}
+
+.toast-dismiss {
+  flex: 0 0 auto;
+  padding: 0 var(--s-05);
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: var(--fs-base);
+  line-height: 1.2;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.toast-dismiss:hover {
+  opacity: 1;
+}
+
+.toast-dismiss:active {
+  transform: scale(0.98);
+}
+
+.toast-dismiss:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
 }
 
 /* ---- Session list ---- */
@@ -173,7 +211,8 @@ body {
   margin: 0 0 var(--s-4);
 }
 
-.rec-empty {
+.rec-empty,
+.rec-list-loading {
   color: var(--text-2);
   font-size: var(--fs-base);
   padding: var(--s-5) 0;
@@ -217,13 +256,20 @@ body {
 }
 
 .pill-recovered {
-  color: var(--warning);
+  color: var(--danger-ink);
   background: color-mix(in srgb, var(--warning) 16%, transparent);
 }
 
 .pill-live {
   color: var(--accent-ink);
   background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+/* A start that never reached the engine. The row is kept so the attempt is
+   visible; there is nothing in it to open. */
+.pill-failed {
+  color: var(--danger-ink);
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
 }
 
 .rec-row-actions {
@@ -242,7 +288,13 @@ body {
 }
 
 .rec-delete-btn[data-armed='true'] {
-  color: var(--danger);
+  color: var(--danger-ink);
+  font-weight: 600;
+}
+
+/* Same armed-Cancel look as the session list's armed Delete above. */
+.rec-cancel-btn[data-armed='true'] {
+  color: var(--danger-ink);
   font-weight: 600;
 }
 
@@ -251,6 +303,22 @@ body {
   display: flex;
   flex: 1 1 auto;
   min-height: 0;
+}
+
+/* A session still loading its chunks out of IndexedDB — same flex slot as
+   .rec-session, so the header above it never sits over a blank page. */
+.rec-session-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.rec-session-loading .rec-progress {
+  width: 240px;
 }
 
 .rec-main {
@@ -307,6 +375,17 @@ body {
   border-top: 1px solid var(--border);
 }
 
+/* `inert` (App.tsx's dialogs already use it the same way) blocks interaction
+   and drops the subtree out of the accessibility tree on its own; this only
+   adds the visual signal, which `inert` does not supply by itself. Opacity,
+   not colour, so it needs no forced-colors override — same reasoning as the
+   .link-btn[aria-disabled] dimming above. */
+.rail-section[inert],
+.rec-zoom-tools[inert] {
+  opacity: 0.5;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
 .rail-link {
   padding-left: 0;
 }
@@ -348,6 +427,45 @@ body {
 
 .rail-slider + .rail-slider {
   margin-top: var(--s-2);
+}
+
+/* ---- Beautify popover ---- */
+/* task 39: the twelve Beautify controls (the switch, three sliders, and
+   eight background swatches — see .swatches below) collapse behind this
+   trigger + popover, the same non-modal contract the screenshot editor's
+   BeautifyMenu uses in editor.css (see Rail.tsx's header comment for why
+   this is a fresh implementation of that contract rather than an import of
+   that component: its styles live in a stylesheet the recorder bundle never
+   loads). */
+.rec-beautify {
+  position: relative;
+}
+
+.btn-secondary.is-active {
+  background: var(--accent-subtle);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+
+/* left/right: 0 instead of a fixed width, so the popover never has to
+   escape .rail's own box — .rail sets overflow-y: auto, which computes
+   overflow-x: auto too (only one axis was given a non-visible value), so
+   anything wider would be clipped or force a horizontal scrollbar. */
+.rec-beautify-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin-top: var(--s-2);
+  padding: var(--s-4);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  box-shadow: var(--sh-md);
 }
 
 /* ---- Beautify background swatches ---- */
@@ -465,6 +583,18 @@ body {
   }
 }
 
+/* Same amber-on-tint caution look as .pill-recovered above; it is one
+   variant, not two colours compared against each other, so it needs no
+   forced-colors override for the same reason that pill does not. */
+.rec-export-warning {
+  margin: 0;
+  padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+  color: var(--danger-ink);
+  background: color-mix(in srgb, var(--warning) 16%, transparent);
+}
+
 /* ---- Stage ---- */
 .rec-stage {
   flex: 1 1 auto;
@@ -530,6 +660,11 @@ body {
   outline-offset: 2px;
 }
 
+.rec-reticle:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .rec-transport {
   display: flex;
   align-items: center;
@@ -549,6 +684,14 @@ body {
 .rec-timeline {
   padding: var(--s-4) var(--s-5) var(--s-5);
   background: var(--surface-1);
+}
+
+/* Add Zoom (task 39 moved it here from the rail): its own row above the
+   track, beside where the blocks it creates and the scale picker that edits
+   them already live. */
+.rec-tl-toolbar {
+  display: flex;
+  margin-bottom: var(--s-3);
 }
 
 /* One box for every row, so a column is the same timeline ms in all of them. */
@@ -645,6 +788,14 @@ body {
 
 .rec-tl-handle:focus-visible {
   outline: none;
+}
+
+.rec-tl-handle[aria-disabled='true'] {
+  cursor: default;
+}
+
+.rec-tl-handle[aria-disabled='true']::before {
+  opacity: 0.4;
 }
 
 .rec-tl-zooms {
@@ -794,11 +945,11 @@ body {
 }
 
 .rec-zoom-delete {
-  color: var(--danger);
+  color: var(--danger-ink);
 }
 
 .rec-zoom-delete:hover {
-  color: var(--danger);
+  color: var(--danger-ink);
   text-decoration: underline;
 }
 
@@ -849,7 +1000,10 @@ body {
   /* Colour-only hover fade; nothing about it conveys progress. */
   .link-btn,
   .rec-bubble-corner,
-  .rec-seg-btn {
+  .rec-seg-btn,
+  .toast-dismiss,
+  .rail-section[inert],
+  .rec-zoom-tools[inert] {
     transition: none;
   }
 }
@@ -901,5 +1055,13 @@ body {
      so the button's Highlight fill above does not reach it on its own. */
   .rec-bubble-corner[aria-pressed='true']::after {
     background: HighlightText;
+  }
+
+  /* Beautify's trigger button, background/border/text colour only, same as
+     .rec-seg-btn above — "Beautify is on" has to survive forced colors too. */
+  .btn-secondary.is-active {
+    background-color: Highlight;
+    color: HighlightText;
+    border-color: Highlight;
   }
 }

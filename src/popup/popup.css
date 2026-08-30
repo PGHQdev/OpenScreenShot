@@ -574,7 +574,7 @@ body {
   border-radius: var(--r-full);
   padding: var(--s-05) 10px;
   background: color-mix(in srgb, var(--warning) 20%, var(--surface-1));
-  color: var(--danger);
+  color: var(--danger-ink);
   font: inherit;
   font-size: var(--fs-sm);
   font-weight: 600;
@@ -629,88 +629,72 @@ body {
   outline-offset: 2px;
 }
 
-/* ---- Welcome / onboarding ---- */
-.welcome {
+/* ---- Pin nudge: Chrome does not pin on install, so say so once ---- */
+.pin-hint {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: var(--s-2);
-  padding: var(--s-3) var(--s-2) var(--s-2);
-}
-
-.welcome-mark {
-  display: flex;
-  justify-content: center;
-}
-
-.welcome-title {
-  margin: 0;
-  font-size: var(--fs-lg);
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.welcome-lede {
-  margin: 0;
-  font-size: var(--fs-base);
-  color: var(--text-2);
-  line-height: 1.5;
-}
-
-.welcome-list {
-  list-style: none;
-  margin: var(--s-1) 0;
-  padding: 0;
-  width: 100%;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
-  font-size: var(--fs-base);
-  color: var(--text-1);
-}
-
-.welcome-list li {
+  gap: var(--s-05);
   padding: var(--s-2) var(--s-3);
-  background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
+  background: var(--surface-2);
+  font-size: var(--fs-sm);
 }
 
-.welcome-perm {
-  margin: var(--s-1) 0 0;
-  font-size: var(--fs-sm);
+.pin-hint strong {
+  color: var(--text-1);
+  font-weight: 600;
+}
+
+.pin-hint span {
   color: var(--text-2);
 }
 
-.btn-primary {
-  margin-top: var(--s-2);
-  width: 100%;
-  padding: var(--s-2) var(--s-4);
-  border: none;
-  border-radius: var(--r-md);
-  background: var(--accent-ink);
-  color: var(--on-accent);
-  font-size: var(--fs-base);
+/* ---- Trust strip: the assurance that rides with a permission ask ---- */
+.rec-trust {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rec-trust-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+}
+
+.rec-trust-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  background: var(--surface-1);
+  color: var(--text-1);
+  font-size: var(--fs-sm);
   font-weight: 600;
-  cursor: pointer;
-  transition:
-    background var(--dur-mid) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
+  text-decoration: none;
 }
 
-.btn-primary:hover {
-  background: var(--accent-ink-hover);
+.rec-trust-pill svg {
+  width: 13px;
+  height: 13px;
+  color: var(--accent-ink);
 }
 
-.btn-primary:active {
-  transform: scale(0.98);
+a.rec-trust-pill:hover {
+  border-color: var(--accent);
 }
 
-.btn-primary:focus-visible {
+a.rec-trust-pill:focus-visible {
   outline: 2px solid var(--border-focus);
   outline-offset: 2px;
+}
+
+.rec-trust-hint {
+  font-size: var(--fs-sm);
+  color: var(--text-2);
 }
 
 /* ---- Toasts ---- */
@@ -770,7 +754,7 @@ body {
 
 .toast-error {
   background: color-mix(in srgb, var(--danger) 14%, var(--surface-1));
-  color: var(--danger);
+  color: var(--danger-ink);
   border-color: color-mix(in srgb, var(--danger) 40%, transparent);
 }
 
@@ -792,14 +776,13 @@ body {
 }
 
 .reset-btn[data-armed='true'] {
-  color: var(--danger);
+  color: var(--danger-ink);
   font-weight: 600;
 }
 
 /* ---- Reduced motion ---- */
 @media (prefers-reduced-motion: reduce) {
   .mode-card,
-  .btn-primary,
   .icon-btn,
   .toast,
   /* Colour-only hover and toggle fades — none of them convey progress the

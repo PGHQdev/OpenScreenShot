@@ -1251,11 +1251,7 @@ async function testRecorder(browser, base, messages) {
 // ------------------------------------------------------------------ popup ---
 async function testPopup(browser, base, messages) {
   step('POPUP — opening');
-  // showOnboarding defaults to true, which replaces the whole popup with the
-  // welcome card — seeded off so the real controls render.
-  const { page, cdp, crashes } = await newPage(browser, messages, {
-    'openscreenshot:settings': { showOnboarding: false },
-  });
+  const { page, cdp, crashes } = await newPage(browser, messages, {});
   await page.setViewport({ width: 420, height: 900 });
   await page.goto(`${base}/src/popup/index.html`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.seg-btn');
@@ -1430,7 +1426,7 @@ async function testPopup(browser, base, messages) {
 
 // ------------------------------------------------------------------ setup ---
 async function testSetup(browser, base, messages) {
-  step('SETUP — opening the install welcome view');
+  step('SETUP — opening the permission checklist');
   // this task's own near-miss (the -webkit-/-moz- comma-list bug that
   // silently dropped reduced-motion from six unrelated editor.css selectors,
   // caught only because an unrelated forced-colors smoke happened to sample
@@ -1439,15 +1435,17 @@ async function testSetup(browser, base, messages) {
   // instead of staying hand-reviewed.
   const { page, cdp, crashes } = await newPage(browser, messages, {});
   await page.setViewport({ width: 1280, height: 860 });
-  await page.goto(`${base}/src/setup/index.html?from=install`, { waitUntil: 'networkidle0' });
-  await page.waitForSelector('[data-testid="hero"]');
+  await page.goto(`${base}/src/setup/index.html?from=record`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('[data-testid="row-tabcapture"]');
 
   step('SETUP — prefers-reduced-motion: reduce — .btn-primary and .btn-ghost');
-  // .btn-primary (the hero CTA) is real and on screen already; .btn-ghost
-  // only renders for a blocked-permission device row, a fixture this smoke
-  // does not seed — a detached probe carrying the class exercises the same
-  // rule, the same fallback testPopup above already uses for selectors that
-  // are not always mounted.
+  // This file's stub answers `permissions.contains` true, so the page renders
+  // in its ready state and .btn-primary is the ready banner's finish button —
+  // the row's own Enable button only exists while a grant is missing.
+  // .btn-ghost only renders for a blocked-permission device row, a fixture
+  // this smoke does not seed — a detached probe carrying the class exercises
+  // the same rule, the same fallback testPopup above already uses for
+  // selectors that are not always mounted.
   await emulateMedia(cdp, [{ name: 'prefers-reduced-motion', value: 'no-preference' }]);
   const SELECTORS = ['.btn-primary', '.btn-ghost'];
   const readTransitions = () =>
