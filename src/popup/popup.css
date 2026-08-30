@@ -505,11 +505,13 @@ body {
 
 /* ---- Footer ---- */
 /*
- * Four entries at --fs-xs measure 292px against the panel's 308px content
- * box; at --fs-sm they measure 315px and the last one ran through the edge,
- * which is what shipped in the store screenshot. The wrap stays as the
- * fallback for a locale that spells these longer than English does —
- * nothing shrinks below min-content, so it is the only thing that can.
+ * Six entries measured ~395px of min-content against the panel's 308px
+ * content box, and sat in a `flex-wrap: nowrap` row, so the last one ran
+ * through the panel edge — visible in the shipped store screenshot. Ko-fi
+ * and Cool stuff moved to a Support row in Settings; the four that stay
+ * measure 283px and share one line at the .link-btn's own --fs-sm. The wrap
+ * stays as the fallback for a locale that spells these longer than English
+ * does — nothing shrinks below min-content, so it is the only thing that can.
  */
 .footer-row {
   display: flex;
@@ -517,10 +519,6 @@ body {
   justify-content: space-between;
   gap: var(--s-1) var(--s-2);
   flex-wrap: wrap;
-}
-
-.footer-row .link-btn {
-  font-size: var(--fs-xs);
 }
 
 .kofi-link {
