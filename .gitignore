@@ -14,6 +14,9 @@ public/icons/
 /docs/
 # Astro's local build cache
 site/.astro/
+# Real screenshots of dist/, rebuilt fresh by scripts/shots/render.mjs on
+# every run — scratch space for the poster HTML, not an output in itself.
+scripts/shots/captures/
 # Pi session logs
 pi-session-*.html
 .gstack/

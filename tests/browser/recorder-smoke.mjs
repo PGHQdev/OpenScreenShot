@@ -3,30 +3,18 @@
 // The live capture path is not covered here — tabCapture needs a real tab
 // (manual checklist in docs/).
 // Run with: npm run build && npm run smoke:recorder
-import { createReadStream } from 'node:fs';
 import { mkdtemp, readdir, readFile, rm, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
-import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
-import { dirname, extname, join, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { loadPuppeteer, serveDist } from './dist-server.mjs';
 
 const ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const DIST = join(ROOT, 'dist');
 const PAGE = '/src/recorder/index.html';
 const CHROME =
   process.env.CHROME_BIN ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-
-const MIME = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.png': 'image/png',
-  '.svg': 'image/svg+xml',
-  '.webm': 'video/webm',
-  '.woff2': 'font/woff2',
-};
 
 let stepNo = 0;
 function step(message) {
@@ -73,30 +61,6 @@ async function pollUntilGone(page, read, { intervalMs = 15, timeoutMs = 5000 } =
 }
 
 /**
- * `puppeteer-core` is a dependency of the MCP workspace, not of this package —
- * this script must not add one. A git worktree has no `mcp/node_modules` of
- * its own, so walk up until the install turns up.
- */
-async function loadPuppeteer() {
-  let dir = ROOT;
-  for (;;) {
-    const pkg = join(dir, 'mcp', 'node_modules', 'puppeteer-core', 'package.json');
-    try {
-      const manifest = JSON.parse(await readFile(pkg, 'utf8'));
-      const entry = join(dirname(pkg), manifest.exports['.'].import);
-      return (await import(pathToFileURL(entry).href)).default;
-    } catch {
-      const parent = dirname(dir);
-      if (parent === dir) break;
-      dir = parent;
-    }
-  }
-  // Fall back to a normal resolution, in case it is installed elsewhere.
-  const require = createRequire(import.meta.url);
-  return (await import(pathToFileURL(require.resolve('puppeteer-core')).href)).default;
-}
-
-/**
  * A second server for the cross-origin iframe case, on a different hostname
  * of the same loopback address — `localhost` and `127.0.0.1` are different
  * origins to Chrome, so a real origin boundary sits between this and `dist/`
@@ -114,30 +78,6 @@ function serveChild() {
         'document.addEventListener("click", () => { window.__clicks += 1; });' +
         '</script></body></html>',
     );
-  });
-  return new Promise((done) => {
-    server.listen(0, '127.0.0.1', () => done(server));
-  });
-}
-
-function serveDist() {
-  const server = createServer((req, res) => {
-    const path = decodeURIComponent((req.url ?? '/').split('?')[0]);
-    const file = join(DIST, path);
-    if (!file.startsWith(DIST)) {
-      res.writeHead(403).end();
-      return;
-    }
-    stat(file)
-      .then((info) => {
-        if (!info.isFile()) throw new Error('not a file');
-        res.writeHead(200, {
-          'content-type': MIME[extname(file)] ?? 'application/octet-stream',
-          'content-length': info.size,
-        });
-        createReadStream(file).pipe(res);
-      })
-      .catch(() => res.writeHead(404).end('not found'));
   });
   return new Promise((done) => {
     server.listen(0, '127.0.0.1', () => done(server));
@@ -749,10 +689,10 @@ async function main() {
   assert(built, 'dist/manifest.json exists');
 
   const messages = JSON.parse(await readFile(join(DIST, '_locales/en/messages.json'), 'utf8'));
-  const puppeteer = await loadPuppeteer();
+  const puppeteer = await loadPuppeteer(ROOT);
   const work = await mkdtemp(join(tmpdir(), 'oss-recorder-smoke-'));
   const downloads = join(work, 'downloads');
-  const server = await serveDist();
+  const server = await serveDist(DIST);
   const base = `http://127.0.0.1:${server.address().port}`;
   step(`serving dist/ on ${base}`);
   const childServer = await serveChild();
