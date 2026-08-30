@@ -24,7 +24,7 @@ import {
 import { pickRecorderMime } from '../offscreen/mime';
 import { DEFAULT_SETTINGS } from '../shared/types';
 import { cursorAt, normalizeClicks, normalizeMoves, type NormClick } from './events-map';
-import type { RecorderEdit } from './recorder-draft';
+import { cursorDrawsPointer, cursorDrawsRipple, type RecorderEdit } from './recorder-draft';
 import { drawExportFrame, RIPPLE_MS } from './render';
 import { fixDuration, type LoadedSession } from './session-load';
 import { clampTrim, timelineAt, totalDuration, type SegmentTiming } from './timeline-math';
@@ -236,10 +236,10 @@ export async function exportVideo(
   // Clicks are normalized once per segment, on the segment's own clock —
   // the same source `rippleAt` ages against.
   const clicks: NormClick[][] = loaded.segments.map((s) =>
-    draft.cursor === 'ripple' ? normalizeClicks(s.events, s.segment.viewport) : [],
+    cursorDrawsRipple(draft.cursor) ? normalizeClicks(s.events, s.segment.viewport) : [],
   );
   const moves: NormClick[][] = loaded.segments.map((s) =>
-    draft.cursor !== 'hidden' ? normalizeMoves(s.events, s.segment.viewport) : [],
+    cursorDrawsPointer(draft.cursor) ? normalizeMoves(s.events, s.segment.viewport) : [],
   );
 
   const videos = loaded.segments.map((s) => createVideo(s.tabUrl, loaded.hasAudio.tab));

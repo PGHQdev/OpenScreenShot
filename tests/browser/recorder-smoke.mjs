@@ -897,7 +897,7 @@ async function main() {
     });
     assert(true, 'clicking Add Zoom on the (now empty) timeline added a block (0 -> 1)');
 
-    step('task 39: the merged cursor control, through all three states');
+    step('task 39: the merged cursor control, through all four states');
     // Still on the throwaway session: cycling the control pushes undo steps,
     // which would otherwise dirty `seeded.sessionId`'s history before the
     // "undo starts disabled" check below it. `.rail` scopes every query away
@@ -926,6 +926,7 @@ async function main() {
     for (const labelKey of [
       'recorderCursorShown',
       'recorderCursorHidden',
+      'recorderCursorRippleOnly',
       'recorderCursorRipple',
     ]) {
       await clickCursor(labelKey);
@@ -1021,7 +1022,7 @@ async function main() {
     // user gets for a step. The cursor control is the cheapest of the six to
     // drive, and clicking it back to its starting state leaves the draft
     // where it found it. `clickCursor`/`cursorPressed` are the same helpers
-    // the "all three states" step above already exercised — the control was
+    // the "all four states" step above already exercised — the control was
     // left on "Click ripple" (its starting state) at the end of that loop.
     await clickCursor('recorderCursorHidden');
     await page.waitForFunction(

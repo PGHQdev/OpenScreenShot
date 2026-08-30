@@ -57,9 +57,11 @@ const BUBBLE_CORNER_LABEL: Record<BubbleCorner, string> = {
   custom: '',
 };
 
+// Ascending "how much shows": nothing, the cursor alone, clicks alone, both.
 const CURSOR_MODES: readonly { mode: CursorMode; labelKey: string }[] = [
   { mode: 'hidden', labelKey: 'recorderCursorHidden' },
   { mode: 'shown', labelKey: 'recorderCursorShown' },
+  { mode: 'rippleOnly', labelKey: 'recorderCursorRippleOnly' },
   { mode: 'ripple', labelKey: 'recorderCursorRipple' },
 ];
 

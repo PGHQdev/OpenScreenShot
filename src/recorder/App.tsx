@@ -21,6 +21,7 @@ import {
   type FitRect,
 } from './render';
 import { exportGeometry, type ExportDraft } from './export-video';
+import { cursorDrawsPointer, cursorDrawsRipple } from './recorder-draft';
 import { cursorAt, normalizeClicks, normalizeMoves } from './events-map';
 import { REC_FAILURE_KEY, isRecFailure, recFailureMessageKey } from '../shared/rec-failure';
 import { cameraAt, EASE_MS } from './zoom';
@@ -705,13 +706,14 @@ function Stage({
       webcamW: webcamReady ? webcam.videoWidth : 0,
       webcamH: webcamReady ? webcam.videoHeight : 0,
       camera: cameraAt(sess.zoomBlocks, sess.playheadMs),
-      ripples:
-        draft.cursor === 'ripple'
-          ? (clicks[sess.segmentIndex] ?? [])
-              .filter((c) => sourceMs >= c.t && sourceMs - c.t < RIPPLE_MS)
-              .map((c) => ({ nx: c.nx, ny: c.ny, ageMs: sourceMs - c.t }))
-          : [],
-      cursor: draft.cursor !== 'hidden' ? cursorAt(moves[sess.segmentIndex] ?? [], sourceMs) : null,
+      ripples: cursorDrawsRipple(draft.cursor)
+        ? (clicks[sess.segmentIndex] ?? [])
+            .filter((c) => sourceMs >= c.t && sourceMs - c.t < RIPPLE_MS)
+            .map((c) => ({ nx: c.nx, ny: c.ny, ageMs: sourceMs - c.t }))
+        : [],
+      cursor: cursorDrawsPointer(draft.cursor)
+        ? cursorAt(moves[sess.segmentIndex] ?? [], sourceMs)
+        : null,
       bubble: webcamReady ? draft.bubble : null,
       frame: geometry.frame,
       frameMetrics: metrics,

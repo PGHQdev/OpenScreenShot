@@ -33,13 +33,31 @@ export type BubbleCorner = 'tl' | 'tr' | 'bl' | 'br' | 'custom';
 type FrameSettings = ReturnType<typeof frameToSettings>;
 
 /**
- * The recorded cursor, as one three-state control: no cursor drawn, the
- * cursor drawn, or the cursor drawn plus a ripple at every recorded click.
- * There is no "ripple with no cursor" state — see `parseCursor`.
+ * The recorded cursor, as one four-state control: no cursor and no ripple
+ * (`hidden`), the cursor alone (`shown`), the cursor plus a ripple at every
+ * recorded click (`ripple`), or a ripple with the cursor itself still
+ * hidden (`rippleOnly`, labelled "Clicks only" in the control) — the state
+ * a legacy `pointer: false, ripple: true` draft migrates to, so hiding the
+ * cursor is never silently undone by the merge. See `parseCursor`.
  */
-export type CursorMode = 'hidden' | 'shown' | 'ripple';
+export type CursorMode = 'hidden' | 'shown' | 'ripple' | 'rippleOnly';
 
-const CURSOR_MODES: ReadonlySet<string> = new Set<CursorMode>(['hidden', 'shown', 'ripple']);
+const CURSOR_MODES: ReadonlySet<string> = new Set<CursorMode>([
+  'hidden',
+  'shown',
+  'ripple',
+  'rippleOnly',
+]);
+
+/** Whether `mode` draws the recorded cursor itself. */
+export function cursorDrawsPointer(mode: CursorMode): boolean {
+  return mode === 'shown' || mode === 'ripple';
+}
+
+/** Whether `mode` draws a ripple at every recorded click. */
+export function cursorDrawsRipple(mode: CursorMode): boolean {
+  return mode === 'ripple' || mode === 'rippleOnly';
+}
 
 /** Every field the recorder's editor owns — one undo step's worth of state. */
 export interface RecorderEdit {
@@ -165,15 +183,17 @@ function parseBubble(value: unknown): RecorderDraft['bubble'] {
 /**
  * `cursor` first, if a draft already stores the merged field. Otherwise a
  * legacy draft's `pointer`/`ripple` pair, each defaulting on the same way
- * `parseEdit` always has (`!== false`), migrated by this table:
+ * `parseEdit` always has (`!== false`), migrated by this table — four
+ * legacy combinations, four distinct targets, nothing dropped:
  *
- *   pointer  ripple  ->  cursor    why
- *   true     true    ->  ripple    both were on
- *   true     false   ->  shown     cursor only
- *   false    false   ->  hidden    neither
- *   false    true    ->  ripple    no state means "ripple, cursor hidden" —
- *                                  the explicit click-ripple opt-in wins,
- *                                  the cursor comes back as its side effect
+ *   pointer  ripple  ->  cursor       why
+ *   true     true    ->  ripple       both were on
+ *   true     false   ->  shown        cursor only
+ *   false    false   ->  hidden       neither
+ *   false    true    ->  rippleOnly   the cursor stays hidden, exactly as
+ *                                     set — clicks still mark, since that
+ *                                     was on too; nothing here overrides a
+ *                                     value the user explicitly turned off
  *
  * A draft with neither field (older than `pointer` itself) reads as
  * `pointer: true, ripple: true` under the same `!== false` default, so it
@@ -183,8 +203,10 @@ function parseCursor(v: { cursor?: unknown; pointer?: unknown; ripple?: unknown 
   if (typeof v.cursor === 'string' && CURSOR_MODES.has(v.cursor)) return v.cursor as CursorMode;
   const pointer = v.pointer !== false;
   const ripple = v.ripple !== false;
-  if (!pointer && !ripple) return 'hidden';
-  return ripple ? 'ripple' : 'shown';
+  if (pointer && ripple) return 'ripple';
+  if (pointer) return 'shown';
+  if (!ripple) return 'hidden';
+  return 'rippleOnly';
 }
 
 /**

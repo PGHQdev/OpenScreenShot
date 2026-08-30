@@ -107,6 +107,7 @@ describe('cursor', () => {
     expect(parseRecorderDraft(makeDraft({ cursor: 'hidden' }))?.cursor).toBe('hidden');
     expect(parseRecorderDraft(makeDraft({ cursor: 'shown' }))?.cursor).toBe('shown');
     expect(parseRecorderDraft(makeDraft({ cursor: 'ripple' }))?.cursor).toBe('ripple');
+    expect(parseRecorderDraft(makeDraft({ cursor: 'rippleOnly' }))?.cursor).toBe('rippleOnly');
   });
 
   it('falls back to the default mode on an unrecognised value', () => {
@@ -115,11 +116,11 @@ describe('cursor', () => {
   });
 
   // Pre-merge drafts (task 38 and earlier) stored `pointer`/`ripple` as two
-  // independent booleans. The merged control has no state for "cursor
-  // hidden, but still show a click ripple" — the one combination below with
-  // no direct equivalent — so every one of the four legacy combinations has
-  // to land on a *stated* mode, never silently dropped.
-  describe('migrates a legacy pointer/ripple draft', () => {
+  // independent booleans. `CursorMode` has a fourth state, `rippleOnly`
+  // ("Clicks only" in the control), precisely so every one of the four
+  // legacy combinations lands on its own distinct mode — nothing dropped,
+  // nothing merged into a mode that changes what a restored recording draws.
+  describe('migrates a legacy pointer/ripple draft, losslessly', () => {
     function legacy(pointer: boolean, ripple: boolean) {
       const { cursor: _cursor, ...rest } = makeDraft();
       return { ...rest, pointer, ripple };
@@ -137,13 +138,23 @@ describe('cursor', () => {
       expect(parseRecorderDraft(legacy(false, false))?.cursor).toBe('hidden');
     });
 
-    it('pointer false, ripple true -> ripple: the explicit click-ripple opt-in wins, the cursor shows as its side effect', () => {
-      expect(parseRecorderDraft(legacy(false, true))?.cursor).toBe('ripple');
+    it('pointer false, ripple true -> rippleOnly: the cursor stays hidden, clicks still mark — nothing silently shown', () => {
+      expect(parseRecorderDraft(legacy(false, true))?.cursor).toBe('rippleOnly');
     });
 
     it('a draft missing both legacy fields defaults as if pointer and ripple were both on', () => {
       const { cursor: _cursor, ...rest } = makeDraft();
       expect(parseRecorderDraft(rest)?.cursor).toBe('ripple');
+    });
+
+    it('all four legacy combinations land on four distinct modes', () => {
+      const modes = [
+        parseRecorderDraft(legacy(true, true))?.cursor,
+        parseRecorderDraft(legacy(true, false))?.cursor,
+        parseRecorderDraft(legacy(false, false))?.cursor,
+        parseRecorderDraft(legacy(false, true))?.cursor,
+      ];
+      expect(new Set(modes).size).toBe(4);
     });
   });
 });
