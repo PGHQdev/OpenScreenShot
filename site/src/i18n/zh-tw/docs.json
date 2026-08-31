@@ -21,11 +21,11 @@
   },
   "capture": {
     "heading": "擷取截圖",
-    "intro": "點工具列上的 OpenScreenShot 圖示，從三種擷取模式中挑一種。一切都在你的瀏覽器本機執行。啟動擷取有四種方式：",
+    "intro": "點一下工具列中的 OpenScreenShot 圖示，整頁擷取隨即開始，不經過任何選單。一切都在瀏覽器本機執行。開始擷取有四種方式：",
     "ways": [
-      "<strong>彈出式視窗</strong>——點一個模式，或按 <kbd>1</kbd>–<kbd>3</kbd>。",
+      "<strong>工具列圖示</strong> — 一鍵擷取整個網頁。在設定中關閉<strong>點一下圖示即擷取整個網頁</strong>即可恢復模式選擇彈窗；在圖示上按右鍵可選擇其他模式與設定。",
       "<strong>鍵盤快速鍵</strong>——整個網頁 <kbd>Ctrl+Shift+S</kbd>、可見範圍 <kbd>Alt+Shift+V</kbd>、選取區域 <kbd>Ctrl+Shift+E</kbd>。macOS 上是 <kbd>⌘⇧S</kbd>、<kbd>⌘⇧V</kbd> 和 <kbd>⌘⇧E</kbd>。可到 <code>chrome://extensions/shortcuts</code> 重新綁定。",
-      "<strong>右鍵選單</strong>——任何頁面上的 OpenScreenShot 子選單都提供同樣的三種模式。",
+      "<strong>右鍵選單</strong> — 任何網頁上的 OpenScreenShot 子選單都提供相同的三種模式與設定。",
       "<strong>重複區域</strong>——彈出式視窗底部和右鍵選單可重新擷取上次的區域矩形。這兩個項目在你選取過區域後才會出現。"
     ],
     "delay": "彈出式視窗的「<strong>延遲</strong>」列可讓擷取等 3、5 或 10 秒，工具列徽章會倒數。適合用在懸停狀態、下拉選單，以及一點別處就關閉的提示框。"

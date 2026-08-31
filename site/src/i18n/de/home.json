@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "Ganzseiten-Screenshot & Editor für Chrome — OpenScreenShot",
+    "title": "Ganzseiten-Screenshot mit einem Klick — OpenScreenShot",
     "description": "Kostenlose Open-Source-Erweiterung für Chrome: Screenshots der ganzen Seite, des sichtbaren Bereichs oder eines Ausschnitts, mit Anmerkungs-Editor, Export als PNG, JPEG, WebP oder PDF und einem Tab-Rekorder. Nichts verlässt dein Gerät."
   },
   "hero": {
     "note": "Kostenlos · Open Source · MIT-lizenziert",
     "title1": "Klick. Aufgenommen. Fertig.",
     "title2": "So privat, dass es ohne WLAN funktioniert.",
-    "sub": "Ganze Seite, Markierungen, Export, Tab-Aufnahme — direkt in Chrome. Kein Konto, kein Wasserzeichen, keine Cloud.",
+    "sub": "Ganzseiten-Screenshot mit einem Klick. Kein Konto, kein Wasserzeichen, keine Cloud.",
     "viewOnGithub": "Auf GitHub ansehen",
     "tablistLabel": "Die Ansichten der Erweiterung",
     "credit": "Die Website in diesen Screenshots ist OpenTechCheck, ebenfalls von uns — sieh nach, womit eine Website gebaut ist.",
@@ -50,7 +50,7 @@
   "quartet": [
     {
       "title": "Alles aufnehmen",
-      "body": "Die ganze Seite, der sichtbare Bereich oder ein aufgezogener Ausschnitt. Ein Klick, ein Tastenkürzel oder das Rechtsklick-Menü."
+      "body": "Klicke auf das Symbol und erhalte die ganze Seite. Oder den sichtbaren Bereich oder einen Ausschnitt — per Rechtsklick oder Tastenkürzel."
     },
     {
       "title": "Bearbeiten vor dem Teilen",
@@ -98,7 +98,8 @@
     "installFold": "Was bei der Installation angefragt wird",
     "recordFold": "Was die Aufnahme dazunimmt — nur wenn du aufnimmst",
     "micFine": "Mikrofon und Kamera werden, wenn du sie aktivierst, über die Berechtigungsabfrage deines Browsers geöffnet. Der Stream verlässt nie dein Gerät.",
-    "moreFine": "Dieselben Tabellen, mit der vollständigen Richtlinie, auf der <a href=\"/privacy/\">Datenschutzseite</a>."
+    "moreFine": "Dieselben Tabellen, mit der vollständigen Richtlinie, auf der <a href=\"/privacy/\">Datenschutzseite</a>.",
+    "compareLine": "Der Vergleich: OpenScreenShot vs. GoFullPage vs. FullPage Capture."
   },
   "cli": {
     "eyebrow": "Agenten & CLI",

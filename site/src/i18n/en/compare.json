@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "title": "OpenScreenShot vs GoFullPage vs FullPage Capture",
+    "description": "A factual comparison of the three full page screenshot extensions: store status, open source, standing site access, one-click capture, free annotation, PDF, and tab recording."
+  },
+  "label": "Compare",
+  "heading": "OpenScreenShot vs GoFullPage vs FullPage Capture",
+  "lead": "GoFullPage was removed from the Chrome Web Store in August 2026. OpenScreenShot is the open-source full page screenshot you can actually audit. FullPage Capture is a closed extension that says local while asking for access to every website.",
+  "asOf": "Facts as of 31 Aug 2026. GoFullPage's private fork since 2018 is from its own FAQ.",
+  "columns": {
+    "feature": "",
+    "oss": "OpenScreenShot",
+    "fpc": "FullPage Capture",
+    "gfp": "GoFullPage"
+  },
+  "rows": [
+    {
+      "feature": "In the Chrome Web Store",
+      "oss": "Yes",
+      "fpc": "Yes",
+      "gfp": "Main listing removed; BETA only"
+    },
+    {
+      "feature": "Open source",
+      "oss": "Yes — MIT, public",
+      "fpc": "No",
+      "gfp": "Ancestor repo only; privately forked since 2018"
+    },
+    {
+      "feature": "Standing site access",
+      "oss": "None",
+      "fpc": "Every site",
+      "gfp": "None at install"
+    },
+    {
+      "feature": "One-click full page",
+      "oss": "Yes",
+      "fpc": "Yes",
+      "gfp": "Yes"
+    },
+    {
+      "feature": "Annotate, blur, crop",
+      "oss": "Free",
+      "fpc": "Free",
+      "gfp": "Paid"
+    },
+    {
+      "feature": "PDF extras",
+      "oss": "Free",
+      "fpc": "Free",
+      "gfp": "Paid"
+    },
+    {
+      "feature": "Tab recording",
+      "oss": "Free",
+      "fpc": "No",
+      "gfp": "No"
+    },
+    {
+      "feature": "Readable source",
+      "oss": "github.com/pghqdev/OpenScreenShot",
+      "fpc": "None",
+      "gfp": "Old GitHub, not the shipping binary"
+    }
+  ],
+  "cta": {
+    "addToChrome": "Add to Chrome",
+    "starOnGithub": "Star on GitHub"
+  }
+}

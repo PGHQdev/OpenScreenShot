@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "Chrome용 전체 페이지 스크린샷 및 편집기 — OpenScreenShot",
+    "title": "한 번의 클릭으로 전체 페이지 스크린샷 — OpenScreenShot",
     "description": "전체 페이지, 보이는 영역, 선택 영역 스크린샷과 주석 편집기, PNG·JPEG·WebP·PDF 내보내기, 탭 레코더까지 담은 무료 오픈 소스 Chrome 확장 프로그램. 그 무엇도 기기 밖으로 나가지 않아요."
   },
   "hero": {
     "note": "무료 · 오픈 소스 · MIT 라이선스",
     "title1": "클릭. 캡처. 끝.",
     "title2": "Wi-Fi를 꺼도 작동할 만큼 프라이빗.",
-    "sub": "전체 페이지, 주석, 내보내기, 탭 녹화 — 전부 Chrome 안에서. 계정 없음, 워터마크 없음, 클라우드 없음.",
+    "sub": "한 번의 클릭으로 전체 페이지 스크린샷. 계정 없음, 워터마크 없음, 클라우드 없음.",
     "viewOnGithub": "GitHub에서 보기",
     "tablistLabel": "확장 프로그램 화면",
     "credit": "이 스크린샷 속 사이트는 저희가 만든 OpenTechCheck예요 — 어떤 웹사이트가 무엇으로 만들어졌는지 확인해 보세요.",
@@ -50,7 +50,7 @@
   "quartet": [
     {
       "title": "무엇이든 캡처",
-      "body": "페이지 전체, 보이는 영역, 드래그한 영역까지. 클릭 한 번, 단축키, 또는 마우스 오른쪽 버튼 메뉴로 시작하세요."
+      "body": "아이콘을 클릭하면 전체 페이지를 얻습니다. 보이는 영역이나 드래그한 영역도 오른쪽 클릭 메뉴나 단축키로 캡처할 수 있습니다."
     },
     {
       "title": "공유 전에 편집",
@@ -98,7 +98,8 @@
     "installFold": "설치 시 요청하는 권한",
     "recordFold": "녹화할 때만 추가되는 권한",
     "micFine": "마이크와 카메라는 사용 설정할 때 브라우저 자체 권한 요청으로 열려요. 스트림은 절대 기기 밖으로 나가지 않아요.",
-    "moreFine": "같은 표와 전체 정책은 <a href=\"/privacy/\">개인정보 처리방침 페이지</a>에 있어요."
+    "moreFine": "같은 표와 전체 정책은 <a href=\"/privacy/\">개인정보 처리방침 페이지</a>에 있어요.",
+    "compareLine": "비교: OpenScreenShot vs GoFullPage vs FullPage Capture"
   },
   "cli": {
     "eyebrow": "에이전트 & CLI",
