@@ -1,0 +1,40 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "OpenScreenShot",
+    "identifier": "did:web:openscreenshot.app"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:openscreenshot.app:server:openscreenshot",
+      "displayName": "OpenScreenShot MCP server",
+      "type": "application/mcp-server-card+json",
+      "url": "https://openscreenshot.app/.well-known/mcp/server-card.json",
+      "representativeQueries": [
+        "take a full page screenshot of a web page",
+        "capture https://example.com as a PNG",
+        "screenshot a URL from the command line"
+      ]
+    },
+    {
+      "identifier": "urn:air:openscreenshot.app:skill:capture-screenshot",
+      "displayName": "Capture screenshot skill",
+      "type": "text/markdown",
+      "url": "https://openscreenshot.app/skills/capture-screenshot.md",
+      "representativeQueries": [
+        "how to capture a screenshot of a page locally",
+        "capture a PNG of a public web page without uploading it"
+      ]
+    },
+    {
+      "identifier": "urn:air:openscreenshot.app:doc:llms",
+      "displayName": "OpenScreenShot site overview for agents",
+      "type": "text/plain",
+      "url": "https://openscreenshot.app/llms.txt",
+      "representativeQueries": [
+        "what is OpenScreenShot",
+        "what does the OpenScreenShot Chrome extension do"
+      ]
+    }
+  ]
+}
