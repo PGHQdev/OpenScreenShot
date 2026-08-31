@@ -31,13 +31,13 @@
     "message": "Kliknij i przeciągnij, aby zaznaczyć",
     "description": "Subtitle for the Selected Region capture mode."
   },
-  "repeatLastRegion": {
-    "message": "Powtórz ostatni obszar",
-    "description": "Footer link and context menu item that re-captures the previous region selection."
-  },
   "settingsTitle": {
     "message": "Ustawienia",
     "description": "Settings panel heading."
+  },
+  "repeatLastRegion": {
+    "message": "Powtórz ostatni obszar",
+    "description": "Footer link and context menu item that re-captures the previous region selection."
   },
   "expressLabel": {
     "message": "Kliknięcie ikony na pasku narzędzi przechwytuje całą stronę",
@@ -50,6 +50,34 @@
   "expressMigratedNote": {
     "message": "Kliknięcie ikony przechwytuje teraz całą stronę. Inne tryby po kliknięciu prawym przyciskiem.",
     "description": "One-time editor note after the update that made a toolbar click capture the full page."
+  },
+  "setupPinTitle": {
+    "message": "Przypnij OpenScreenShot",
+    "description": "Popup: nudge to pin the extension, shown while it is not on the toolbar."
+  },
+  "setupPinSub": {
+    "message": "Kliknij 🧩 powyżej, a potem 📌 obok OpenScreenShot.",
+    "description": "Popup: how to pin — the puzzle menu sits directly above the popup."
+  },
+  "editorCopyIdle": {
+    "message": "Kopiuj",
+    "description": "Editor topbar: the Copy button’s resting label."
+  },
+  "editorMarkup": {
+    "message": "Adnotacje",
+    "description": "Editor topbar (View mode): button that opens the Markup chrome."
+  },
+  "editorFitHint": {
+    "message": "Dopasowano do okna. Przewiń lub powiększ, aby zobaczyć pełny rozmiar.",
+    "description": "Editor: one-time note when a capture opens fitted well below actual size."
+  },
+  "editorSaveImage": {
+    "message": "Zapisz obraz",
+    "description": "Editor topbar: label on the primary Save image button (opens the export dialog)."
+  },
+  "editorPdfLabel": {
+    "message": "PDF",
+    "description": "Editor topbar: label on the one-click PDF export button."
   },
   "editorRateLabel": {
     "message": "Oceń",

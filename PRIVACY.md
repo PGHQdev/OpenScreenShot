@@ -45,13 +45,15 @@ The microphone and camera, when you enable them, are opened directly by your bro
 permission prompt — the extension never sees a stream until you grant it, and the stream
 never leaves your device.
 
-## Uninstall
+## Install and uninstall
 
-If you uninstall the extension, your browser opens a feedback page at
-<https://openscreenshot.app/uninstall>. The page's address carries only the extension
-version and your UI language. We do not receive your browsing history, any page you
-visited, or any capture — the extension has none of that to send. The page itself sets no
-cookies and runs no analytics; nothing is sent unless you type feedback and press Send.
+The extension makes no network request of its own, but your browser opens one page at each
+end of its life: a welcome page at <https://openscreenshot.app/welcome> when you install
+it, and a feedback page at <https://openscreenshot.app/uninstall> when you remove it. Both
+addresses carry only the extension version and your UI language. We do not receive your
+browsing history, any page you visited, or any capture — the extension has none of that to
+send. Neither page sets cookies or runs analytics; nothing is sent unless you type feedback
+on the uninstall page and press Send.
 
 ## Third-party services
 

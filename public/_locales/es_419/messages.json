@@ -31,13 +31,13 @@
     "message": "Haz clic y arrastra para seleccionar",
     "description": "Subtitle for the Selected Region capture mode."
   },
-  "repeatLastRegion": {
-    "message": "Repetir última región",
-    "description": "Footer link and context menu item that re-captures the previous region selection."
-  },
   "settingsTitle": {
     "message": "Configuración",
     "description": "Settings panel heading."
+  },
+  "repeatLastRegion": {
+    "message": "Repetir última región",
+    "description": "Footer link and context menu item that re-captures the previous region selection."
   },
   "expressLabel": {
     "message": "Al hacer clic en el ícono se captura la página completa",
@@ -50,6 +50,34 @@
   "expressMigratedNote": {
     "message": "Ahora el clic en el ícono captura la página completa. Otros modos con clic derecho.",
     "description": "One-time editor note after the update that made a toolbar click capture the full page."
+  },
+  "setupPinTitle": {
+    "message": "Fija OpenScreenShot",
+    "description": "Popup: nudge to pin the extension, shown while it is not on the toolbar."
+  },
+  "setupPinSub": {
+    "message": "Haz clic en el 🧩 de arriba y luego en el 📌 junto a OpenScreenShot.",
+    "description": "Popup: how to pin — the puzzle menu sits directly above the popup."
+  },
+  "editorCopyIdle": {
+    "message": "Copiar",
+    "description": "Editor topbar: the Copy button’s resting label."
+  },
+  "editorMarkup": {
+    "message": "Anotar",
+    "description": "Editor topbar (View mode): button that opens the Markup chrome."
+  },
+  "editorFitHint": {
+    "message": "Ajustada a la ventana. Desplázate o acerca para verla a tamaño completo.",
+    "description": "Editor: one-time note when a capture opens fitted well below actual size."
+  },
+  "editorSaveImage": {
+    "message": "Guardar imagen",
+    "description": "Editor topbar: label on the primary Save image button (opens the export dialog)."
+  },
+  "editorPdfLabel": {
+    "message": "PDF",
+    "description": "Editor topbar: label on the one-click PDF export button."
   },
   "editorRateLabel": {
     "message": "Calificar",

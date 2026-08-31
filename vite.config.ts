@@ -41,12 +41,15 @@ export default defineConfig({
     rollupOptions: {
       // crxjs only builds pages reachable from the manifest; the offscreen and
       // recorder pages are opened via chrome.runtime.getURL, so list them here.
+      // The popup joined them when the manifest dropped `action.default_popup`
+      // — the worker binds it at runtime (see syncExpressMode), so the manifest
+      // no longer names it.
       input: {
+        popup: 'src/popup/index.html',
         offscreen: 'src/offscreen/index.html',
         recorder: 'src/recorder/index.html',
         webcamFrame: 'src/recorder/webcam-frame.html',
         setup: 'src/setup/index.html',
-        welcome: 'src/welcome/index.html',
       },
     },
   },

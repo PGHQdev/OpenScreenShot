@@ -12,7 +12,7 @@
     },
     {
       "q": "¿Por qué la captura de página completa tarda unos segundos?",
-      "a": "<p>Chrome limita <code>captureVisibleTab</code> a unas 2 llamadas por segundo. Cada franja de la altura del viewport cuesta una llamada, más una breve pausa para que la página se repinte. Una página típica de 10 franjas tarda 5–6 segundos, y una página más larga tarda proporcionalmente más. La barra de progreso del menú te dice por dónde va.</p>",
+      "a": "<p>Chrome limita <code>captureVisibleTab</code> a unas 2 llamadas por segundo. Cada franja de la altura del viewport cuesta una llamada, más una breve pausa para que la página se repinte. Una página típica de 10 franjas tarda 5–6 segundos, y una página más larga tarda proporcionalmente más. La insignia del icono cuenta el porcentaje mientras avanza.</p>",
       "home": true
     },
     {

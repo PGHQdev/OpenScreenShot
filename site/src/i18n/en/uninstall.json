@@ -14,8 +14,9 @@
   "broken": {
     "heading": "Something was wrong.",
     "body": "What happened? What did you expect?",
-    "placeholder": "Example: full page missed the footer on a dashboard. Or: I wanted region capture on first click.",
+    "placeholder": "Example: full page missed the footer on a dashboard. Or: the capture came out blank on a site I use every day.",
     "cta": "Send feedback",
+    "mailFallback": "If your mail app does not open, write to",
     "thanks": "Thanks. If you are willing, a rating still helps people who need a private option.",
     "rateAnyway": "Rate anyway"
   },

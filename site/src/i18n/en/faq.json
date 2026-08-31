@@ -12,7 +12,7 @@
     },
     {
       "q": "Why does full-page capture take a few seconds?",
-      "a": "<p>Chrome limits <code>captureVisibleTab</code> to about 2 calls per second. Every viewport-height tile costs one call, plus a short pause for the page to repaint. A typical 10-tile page takes 5–6 seconds, and a longer page takes proportionally longer. The progress bar in the popup tells you where it is.</p>",
+      "a": "<p>Chrome limits <code>captureVisibleTab</code> to about 2 calls per second. Every viewport-height tile costs one call, plus a short pause for the page to repaint. A typical 10-tile page takes 5–6 seconds, and a longer page takes proportionally longer. The toolbar badge counts the percentage up while it works.</p>",
       "home": true
     },
     {

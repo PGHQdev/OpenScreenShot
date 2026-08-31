@@ -25,6 +25,10 @@
     "heading": "Services tiers",
     "body": "OpenScreenShot n’utilise aucun service tiers d’analytics, de publicité ou de traitement de données. L’export PDF repose sur un petit générateur intégré à l’extension : exporter un PDF ne fait donc aucune requête réseau non plus."
   },
+  "uninstall": {
+    "heading": "Installation et désinstallation",
+    "body": "L’extension ne fait aucune requête réseau de son côté, mais votre navigateur ouvre une page à chaque bout : openscreenshot.app/welcome à l’installation et openscreenshot.app/uninstall à la suppression. Les deux adresses ne transportent que deux valeurs : la version de l’extension et la langue d’interface de votre navigateur. Aucune URL de page, aucun titre, aucune capture, aucun identifiant. Aucune des deux pages ne pose de cookies ni n’utilise d’analyse, et le champ de commentaire de la page de désinstallation n’envoie rien tant que vous n’appuyez pas sur Envoyer — ce qui ouvre votre propre client de messagerie avec le texte que vous avez écrit."
+  },
   "changes": {
     "heading": "Modifications de cette politique",
     "body": "Si cette politique change, la version mise à jour est publiée sur cette page avec une nouvelle date de <em>Dernière mise à jour</em>."

@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "title": "Antes de você ir — OpenScreenShot",
+    "description": "Você desinstalou o OpenScreenShot. Se funcionou, uma avaliação ajuda outras pessoas a encontrar uma ferramenta privada. Se falhou, conte o que aconteceu."
+  },
+  "label": "OpenScreenShot",
+  "heading": "Antes de você ir.",
+  "lead": "Se funcionou, uma avaliação é todo o motor de crescimento. Se falhou, diga. A gente lê.",
+  "happy": {
+    "heading": "Funcionou, eu só não preciso mais.",
+    "body": "Então uma avaliação pública é a coisa mais útil que você pode fazer por uma ferramenta de código aberto. Leva 30 segundos.",
+    "cta": "Avaliar o OpenScreenShot"
+  },
+  "broken": {
+    "heading": "Alguma coisa deu errado.",
+    "body": "O que aconteceu? O que você esperava?",
+    "placeholder": "Exemplo: a página inteira perdeu o rodapé de um painel. Ou: a captura saiu em branco num site que uso todo dia.",
+    "cta": "Enviar feedback",
+    "mailFallback": "Se o seu app de e-mail não abrir, escreva para",
+    "thanks": "Obrigado. Se quiser, uma avaliação ainda ajuda quem precisa de uma opção privada.",
+    "rateAnyway": "Avaliar mesmo assim"
+  },
+  "footer": "O código continua público."
+}

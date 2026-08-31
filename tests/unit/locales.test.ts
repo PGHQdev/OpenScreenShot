@@ -29,6 +29,16 @@ const MINIMUM_KEYS = [
   'expressLabel',
   'expressHint',
   'expressMigratedNote',
+  // The popup's pin nudge — the first thing a user who cannot find the icon
+  // reads. (The welcome page itself is hosted on the site, in site i18n.)
+  'setupPinTitle',
+  'setupPinSub',
+  // The View-mode editor header the first capture lands in.
+  'editorMarkup',
+  'editorCopyIdle',
+  'editorPdfLabel',
+  'editorSaveImage',
+  'editorFitHint',
   'editorRateLabel',
   'editorRateTooltip',
   'ratePromptHeadline',

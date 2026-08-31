@@ -12,7 +12,7 @@
     },
     {
       "q": "Pourquoi la capture de page entière prend-elle quelques secondes ?",
-      "a": "<p>Chrome limite <code>captureVisibleTab</code> à environ 2 appels par seconde. Chaque tuile de la hauteur de l’écran coûte un appel, plus une courte pause pour laisser la page se redessiner. Une page typique de 10 tuiles prend 5 à 6 secondes, et une page plus longue prend proportionnellement plus. La barre de progression du popup vous indique où elle en est.</p>",
+      "a": "<p>Chrome limite <code>captureVisibleTab</code> à environ 2 appels par seconde. Chaque tuile de la hauteur de l’écran coûte un appel, plus une courte pause pour laisser la page se redessiner. Une page typique de 10 tuiles prend 5 à 6 secondes, et une page plus longue prend proportionnellement plus. Le badge de la barre d’outils fait défiler le pourcentage pendant la capture.</p>",
       "home": true
     },
     {

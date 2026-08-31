@@ -6,7 +6,8 @@
  * it sends by opening their own mail client (there is no backend).
  */
 import Doc from '../../../layouts/Doc.astro';
-import { t, localePaths, localeFromParams } from '../../../i18n';
+import LocaleRedirect from '../../../components/LocaleRedirect.astro';
+import { t, localePaths, localeFromParams, DEFAULT_LOCALE } from '../../../i18n';
 
 export const getStaticPaths = localePaths;
 
@@ -16,6 +17,7 @@ const d = t(locale, 'uninstall');
 const REVIEWS_URL =
   'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp/reviews';
 const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
+const SUPPORT_EMAIL = 'support@minimalistprojects.com';
 ---
 
 <Doc
@@ -27,6 +29,14 @@ const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
   heading={d.heading}
   lead={d.lead}
 >
+  {
+    locale === DEFAULT_LOCALE && (
+      <Fragment slot="head">
+        <LocaleRedirect path="/uninstall/" />
+      </Fragment>
+    )
+  }
+
   <section class="doc-section" id="worked">
     <h2>{d.happy.heading}</h2>
     <p>{d.happy.body}</p>
@@ -38,7 +48,7 @@ const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
   <section class="doc-section" id="broken">
     <h2>{d.broken.heading}</h2>
     <p>{d.broken.body}</p>
-    <form id="feedback-form">
+    <form id="feedback-form" data-email={SUPPORT_EMAIL}>
       <textarea
         id="feedback-text"
         rows="5"
@@ -48,6 +58,10 @@ const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
         <button class="btn btn-quiet" type="submit">{d.broken.cta}</button>
       </p>
     </form>
+    {/* Send opens a mail client. A visitor who has none needs the address itself. */}
+    <p class="mail-fallback">
+      {d.broken.mailFallback} <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
+    </p>
     <p id="feedback-thanks" hidden>
       {d.broken.thanks}
       <a class="btn btn-quiet" href={REVIEWS_URL} target="_blank" rel="noopener"
@@ -72,6 +86,10 @@ const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
     font: inherit;
     resize: vertical;
   }
+  .mail-fallback {
+    color: var(--ink-3);
+    font-size: var(--fs-sm);
+  }
 </style>
 
 <script>
@@ -85,7 +103,7 @@ const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
     e.preventDefault();
     const version = new URLSearchParams(location.search).get('v') ?? 'unknown';
     const body = `${text?.value ?? ''}\n\n—\nExtension version: ${version}`;
-    location.href = `mailto:support@minimalistprojects.com?subject=${encodeURIComponent(
+    location.href = `mailto:${form.dataset.email}?subject=${encodeURIComponent(
       'Uninstall feedback',
     )}&body=${encodeURIComponent(body)}`;
     form.hidden = true;

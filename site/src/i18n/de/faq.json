@@ -12,7 +12,7 @@
     },
     {
       "q": "Warum dauert die Ganzseiten-Aufnahme ein paar Sekunden?",
-      "a": "<p>Chrome begrenzt <code>captureVisibleTab</code> auf etwa 2 Aufrufe pro Sekunde. Jede Kachel in Viewport-Höhe kostet einen Aufruf, plus eine kurze Pause, damit die Seite neu zeichnen kann. Eine typische Seite mit 10 Kacheln braucht 5–6 Sekunden, eine längere Seite entsprechend länger. Der Fortschrittsbalken im Popup zeigt dir, wo sie gerade steht.</p>",
+      "a": "<p>Chrome begrenzt <code>captureVisibleTab</code> auf etwa 2 Aufrufe pro Sekunde. Jede Kachel in Viewport-Höhe kostet einen Aufruf, plus eine kurze Pause, damit die Seite neu zeichnen kann. Eine typische Seite mit 10 Kacheln braucht 5–6 Sekunden, eine längere Seite entsprechend länger. Das Symbol in der Symbolleiste zählt den Fortschritt in Prozent mit.</p>",
       "home": true
     },
     {

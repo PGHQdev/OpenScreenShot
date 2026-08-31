@@ -1529,6 +1529,10 @@
     "message": "Anotar",
     "description": "Editor topbar (View mode): button that opens the Markup chrome."
   },
+  "editorFitHint": {
+    "message": "Ajustada à janela. Role ou amplie para ver no tamanho real.",
+    "description": "Editor: one-time note when a capture opens fitted well below actual size."
+  },
   "editorDone": {
     "message": "Concluir",
     "description": "Editor topbar (Markup mode): button that returns to View."
@@ -2288,26 +2292,6 @@
   "settingsSupport": {
     "message": "Apoio",
     "description": "Popup settings: label for the row holding the Ko-fi and cool-stuff links."
-  },
-  "welcomeTitle": {
-    "message": "Boas-vindas",
-    "description": "Welcome page: browser tab title."
-  },
-  "welcomeHeadline": {
-    "message": "Pronto. Clique no ícone.",
-    "description": "Welcome page: headline inviting the first icon click."
-  },
-  "welcomeBody": {
-    "message": "O OpenScreenShot captura a página inteira com um clique. Sem conta. Nada sai desta máquina. Experimente agora mesmo nesta página.",
-    "description": "Welcome page: one-paragraph pitch under the headline."
-  },
-  "welcomePrimary": {
-    "message": "Clique no ícone do OpenScreenShot na barra de ferramentas.",
-    "description": "Welcome page: the primary instruction line."
-  },
-  "welcomeSecondary": {
-    "message": "Ou pressione Ctrl+Shift+S (Cmd+Shift+S no Mac).",
-    "description": "Welcome page: the keyboard-shortcut alternative line."
   },
   "editorRateLabel": {
     "message": "Avaliar",

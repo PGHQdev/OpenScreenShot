@@ -12,7 +12,7 @@
     },
     {
       "q": "Por que a captura de página inteira leva alguns segundos?",
-      "a": "<p>O Chrome limita <code>captureVisibleTab</code> a cerca de 2 chamadas por segundo. Cada bloco da altura da janela custa uma chamada, mais uma pequena pausa para a página redesenhar. Uma página típica de 10 blocos leva de 5 a 6 segundos, e uma página mais longa leva proporcionalmente mais. A barra de progresso no popup mostra em que ponto a captura está.</p>",
+      "a": "<p>O Chrome limita <code>captureVisibleTab</code> a cerca de 2 chamadas por segundo. Cada bloco da altura da janela custa uma chamada, mais uma pequena pausa para a página redesenhar. Uma página típica de 10 blocos leva de 5 a 6 segundos, e uma página mais longa leva proporcionalmente mais. O selo na barra de ferramentas conta a porcentagem enquanto a captura avança.</p>",
       "home": true
     },
     {

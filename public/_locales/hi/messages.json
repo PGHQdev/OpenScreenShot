@@ -31,13 +31,13 @@
     "message": "चुनने के लिए क्लिक करके खींचें",
     "description": "Subtitle for the Selected Region capture mode."
   },
-  "repeatLastRegion": {
-    "message": "पिछला क्षेत्र दोहराएँ",
-    "description": "Footer link and context menu item that re-captures the previous region selection."
-  },
   "settingsTitle": {
     "message": "सेटिंग",
     "description": "Settings panel heading."
+  },
+  "repeatLastRegion": {
+    "message": "पिछला क्षेत्र दोहराएँ",
+    "description": "Footer link and context menu item that re-captures the previous region selection."
   },
   "expressLabel": {
     "message": "टूलबार आइकन पर क्लिक करने से पूरा पेज कैप्चर होता है",
@@ -50,6 +50,34 @@
   "expressMigratedNote": {
     "message": "आइकन पर क्लिक अब पूरा पेज कैप्चर करता है। अन्य मोड के लिए राइट-क्लिक करें।",
     "description": "One-time editor note after the update that made a toolbar click capture the full page."
+  },
+  "setupPinTitle": {
+    "message": "OpenScreenShot पिन करें",
+    "description": "Popup: nudge to pin the extension, shown while it is not on the toolbar."
+  },
+  "setupPinSub": {
+    "message": "ऊपर 🧩 पर क्लिक करें, फिर OpenScreenShot के आगे 📌 पर।",
+    "description": "Popup: how to pin — the puzzle menu sits directly above the popup."
+  },
+  "editorCopyIdle": {
+    "message": "कॉपी",
+    "description": "Editor topbar: the Copy button’s resting label."
+  },
+  "editorMarkup": {
+    "message": "मार्कअप",
+    "description": "Editor topbar (View mode): button that opens the Markup chrome."
+  },
+  "editorFitHint": {
+    "message": "विंडो में फ़िट किया गया। पूरा आकार देखने के लिए स्क्रॉल या ज़ूम करें।",
+    "description": "Editor: one-time note when a capture opens fitted well below actual size."
+  },
+  "editorSaveImage": {
+    "message": "इमेज सेव करें",
+    "description": "Editor topbar: label on the primary Save image button (opens the export dialog)."
+  },
+  "editorPdfLabel": {
+    "message": "PDF",
+    "description": "Editor topbar: label on the one-click PDF export button."
   },
   "editorRateLabel": {
     "message": "रेट करें",

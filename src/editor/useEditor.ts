@@ -153,6 +153,13 @@ import { t } from './i18n';
  */
 export type EditorMode = 'view' | 'markup';
 
+/**
+ * Below this fitted zoom, a freshly opened capture says out loud that it is
+ * fitted. A full page stitched from ten viewports lands near 10%, which looks
+ * like a thumbnail of a failed capture until something names it.
+ */
+const SMALL_FIT_ZOOM = 0.5;
+
 export interface TextOverlayPos {
   x: number;
   y: number;
@@ -968,6 +975,13 @@ export function useEditor() {
         img.onerror = () => reject(new Error('decode'));
         img.src = cap.dataUrl;
       });
+      // A stitched full page is many viewports tall, so fitting it lands the
+      // view at a small fraction of actual size. That is the fit working, and
+      // it still reads as a broken capture the first time you see it. Say what
+      // happened rather than opening at 100% on a corner of the image. The
+      // functional form keeps the one-time express note, which writes the same
+      // pill and matters more, whichever of the two resolves first.
+      if (c.view.zoom < SMALL_FIT_ZOOM) setStageNotice((cur) => cur ?? t('editorFitHint'));
       setLoading(false);
     } catch (err) {
       setError(

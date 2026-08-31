@@ -58,6 +58,9 @@ function makeFakeChrome() {
       setBadgeBackgroundColor: vi.fn(() => Promise.resolve()),
       setBadgeTextColor: vi.fn(() => Promise.resolve()),
       setBadgeText: vi.fn(() => Promise.resolve()),
+      setTitle: vi.fn(() => Promise.resolve()),
+      getTitle: vi.fn(() => Promise.resolve('OpenScreenShot')),
+      openPopup: vi.fn(() => Promise.resolve()),
     },
     contextMenus: {
       removeAll: vi.fn(() => {
@@ -208,9 +211,12 @@ describe('onInstalled', () => {
   const openedUrls = () =>
     fakeChrome.tabs.create.mock.calls.map(([opts]) => (opts as { url: string }).url);
 
-  it('opens exactly the welcome page on a fresh install', async () => {
+  it('opens exactly the hosted welcome page on a fresh install', async () => {
     await fireOnInstalled('install');
-    expect(openedUrls()).toEqual(['chrome-extension://fake/src/welcome/index.html']);
+    // https, not chrome-extension://: an extension page is one no capture can
+    // read, and this page's whole job is to be the first capture. Version and
+    // UI language only — the same two values the uninstall URL carries.
+    expect(openedUrls()).toEqual(['https://openscreenshot.app/welcome?v=1.6.0&hl=en']);
     // The install still has to build the menus — the assertion above must not
     // pass by the listener having stopped doing its real work.
     expect(new Set(createdIds)).toEqual(new Set(ALL_MENU_IDS));

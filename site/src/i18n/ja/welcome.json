@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "title": "ようこそ — OpenScreenShot",
+    "description": "OpenScreenShot をインストールしました。ツールバーのアイコンをクリックして、このページで最初のページ全体キャプチャを撮ってみてください。"
+  },
+  "eyebrow": "インストール完了",
+  "headline": "準備完了。アイコンをクリック。",
+  "body": "OpenScreenShot はワンクリックでページ全体をキャプチャします。アカウント不要。このマシンから何も送信されません。今すぐこのページで試してみてください。",
+  "primary": "ツールバーの OpenScreenShot アイコンをクリックしてください。",
+  "secondary": "または Ctrl+Shift+S（Mac では Cmd+Shift+S）を押してください。",
+  "pinTitle": "OpenScreenShot を固定",
+  "pinSub": "上の 🧩 をクリックし、OpenScreenShot の横の 📌 をクリックします。",
+  "quartetHeading": "追加されたもの。",
+  "bandHeading": "ページ全体。",
+  "bandBody": "長いページはスクロールして 1 枚の画像につなぎます。固定ヘッダーは 1 回だけ写り、入れ子のスクロール領域も処理し、フッターまで入ります。",
+  "receiptHeading": "ここにあるものは何ひとつ届きません。",
+  "endHeading": "ここまでです。",
+  "endBody": "キャプチャがこの帯まで届いていれば、ページ全体が入っています。それがこのツールの要点です。"
+}

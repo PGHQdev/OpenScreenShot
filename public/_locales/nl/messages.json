@@ -31,13 +31,13 @@
     "message": "Klik en sleep om te selecteren",
     "description": "Subtitle for the Selected Region capture mode."
   },
-  "repeatLastRegion": {
-    "message": "Laatste gebied herhalen",
-    "description": "Footer link and context menu item that re-captures the previous region selection."
-  },
   "settingsTitle": {
     "message": "Instellingen",
     "description": "Settings panel heading."
+  },
+  "repeatLastRegion": {
+    "message": "Laatste gebied herhalen",
+    "description": "Footer link and context menu item that re-captures the previous region selection."
   },
   "expressLabel": {
     "message": "Een klik op het werkbalkpictogram legt de volledige pagina vast",
@@ -50,6 +50,34 @@
   "expressMigratedNote": {
     "message": "Een klik op het pictogram legt nu de volledige pagina vast. Rechtsklik voor andere modi.",
     "description": "One-time editor note after the update that made a toolbar click capture the full page."
+  },
+  "setupPinTitle": {
+    "message": "OpenScreenShot vastzetten",
+    "description": "Popup: nudge to pin the extension, shown while it is not on the toolbar."
+  },
+  "setupPinSub": {
+    "message": "Klik hierboven op 🧩 en dan op 📌 naast OpenScreenShot.",
+    "description": "Popup: how to pin — the puzzle menu sits directly above the popup."
+  },
+  "editorCopyIdle": {
+    "message": "Kopiëren",
+    "description": "Editor topbar: the Copy button’s resting label."
+  },
+  "editorMarkup": {
+    "message": "Annoteren",
+    "description": "Editor topbar (View mode): button that opens the Markup chrome."
+  },
+  "editorFitHint": {
+    "message": "Passend gemaakt aan het venster. Scroll of zoom voor de volledige grootte.",
+    "description": "Editor: one-time note when a capture opens fitted well below actual size."
+  },
+  "editorSaveImage": {
+    "message": "Afbeelding opslaan",
+    "description": "Editor topbar: label on the primary Save image button (opens the export dialog)."
+  },
+  "editorPdfLabel": {
+    "message": "PDF",
+    "description": "Editor topbar: label on the one-click PDF export button."
   },
   "editorRateLabel": {
     "message": "Beoordelen",

@@ -92,10 +92,12 @@ describe('isProtectedUrl', () => {
   it('treats missing urls as protected', () => {
     expect(isProtectedUrl(undefined)).toBe(true);
   });
-  it("allows the extension's own pages but no other extension's", () => {
+  it("blocks every extension page, this extension's included", () => {
+    // Chrome refuses scripting.executeScript into a chrome-extension:// tab no
+    // matter what the manifest asks for, so "ours" is not a capturable page.
     vi.stubGlobal('chrome', { runtime: { id: 'ownid' } });
     try {
-      expect(isProtectedUrl('chrome-extension://ownid/src/welcome/index.html')).toBe(false);
+      expect(isProtectedUrl('chrome-extension://ownid/src/editor/index.html')).toBe(true);
       expect(isProtectedUrl('chrome-extension://otherid/page.html')).toBe(true);
     } finally {
       vi.unstubAllGlobals();

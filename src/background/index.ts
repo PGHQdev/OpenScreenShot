@@ -48,8 +48,15 @@ import { restoreRecBadge } from './recording';
 
 const EDITOR_URL = chrome.runtime.getURL('src/editor/index.html');
 const POPUP_URL = 'src/popup/index.html';
-/** First-run page: a tall dummy article that invites the first capture. */
-const WELCOME_URL = chrome.runtime.getURL('src/welcome/index.html');
+/**
+ * First-run page: a tall article that invites the first capture, hosted on the
+ * site rather than bundled. It has to be an ordinary https page — Chrome
+ * refuses script injection into a chrome-extension:// tab whatever the
+ * manifest asks for, so a bundled welcome page is the one page the capture it
+ * invites can never read. Carries the version and UI language only, same as
+ * UNINSTALL_URL; the page reads `hl` to send the visitor to their own locale.
+ */
+const WELCOME_URL = 'https://openscreenshot.app/welcome';
 /**
  * Where an uninstall lands (Surface D of the rating funnel). Query carries
  * the extension version and UI locale only — never a page URL, title, or
@@ -86,8 +93,14 @@ const PAINT_SETTLE_MS = 60;
 // value.
 chrome.runtime.onInstalled.addListener((details) => {
   void migrateExpressDefault(details.reason).then(() => createContextMenus());
-  if (details.reason === 'install') void chrome.tabs.create({ url: WELCOME_URL });
+  if (details.reason === 'install') void chrome.tabs.create({ url: welcomeUrl() });
 });
+
+/** The welcome URL with the same two values the uninstall URL carries. */
+function welcomeUrl(): string {
+  const manifest = chrome.runtime.getManifest();
+  return `${WELCOME_URL}?v=${manifest.version}&hl=${chrome.i18n.getUILanguage()}`;
+}
 
 // Registered on every worker start so it survives service-worker restarts.
 // Version and locale only — see UNINSTALL_URL.
@@ -209,8 +222,29 @@ chrome.runtime.onStartup.addListener(() => void syncExpressMode());
 
 // Express mode only: with no popup bound, the icon click grants `activeTab`
 // and lands here.
+//
+// The manifest declares no `default_popup`, so an unbound action is the state
+// Chrome starts in and `syncExpressMode` is the only thing that ever binds
+// one. That removes the express-mode leak (a manifest default could serve the
+// old mode picker for one click before the worker woke) but opens the mirror
+// case: a cold start where a non-express user clicks before `onStartup` has
+// re-bound the popup would capture instead of showing the picker. Re-reading
+// the setting here closes it — the click binds the popup and opens it rather
+// than capturing something nobody asked for.
 chrome.action.onClicked.addListener(() => {
-  void handleCapture('full-page').catch(onCaptureError);
+  void (async () => {
+    const { expressMode } = await getSettings();
+    if (!expressMode) {
+      await syncExpressMode();
+      // Chrome 127+. On older builds the binding above still lands, so the
+      // user's next click reaches the picker.
+      await chrome.action.openPopup?.().catch(() => {
+        /* no popup to open (unsupported, or no focused window) */
+      });
+      return;
+    }
+    await handleCapture('full-page');
+  })().catch(onCaptureError);
 });
 
 /**
@@ -463,7 +497,7 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
       await delay(PAINT_SETTLE_MS);
       const first = await captureVisibleTabPng(windowId);
       tiles.push({ dataUrl: first, y: 0 });
-      broadcast({ type: 'CAPTURE_PROGRESS', percent: Math.round((1 / positions.length) * 100) });
+      await reportProgress(1, positions.length);
     }
     // Remaining tiles: hide fixed elements so they don't duplicate.
     if (positions.length > 1) {
@@ -474,10 +508,7 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
         await delay(PAINT_SETTLE_MS);
         const dataUrl = await captureVisibleTabPng(windowId);
         tiles.push({ dataUrl, y: Math.round(scrollY * dpr) });
-        broadcast({
-          type: 'CAPTURE_PROGRESS',
-          percent: Math.round(((i + 1) / positions.length) * 100),
-        });
+        await reportProgress(i + 1, positions.length);
       }
     }
   } finally {
@@ -505,6 +536,24 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
 }
 
 /**
+ * Report one finished tile to both progress surfaces.
+ *
+ * The popup's bar is the richer one, but express mode has no popup, and a tall
+ * page is half a second per tile: the page scrolls itself for several seconds
+ * with nothing to say why. The action badge is the only surface an express
+ * capture owns, so it carries the same number. Single-tile pages are instant
+ * and get no badge — a flash of "100%" is noise.
+ */
+async function reportProgress(done: number, total: number): Promise<void> {
+  const percent = Math.round((done / total) * 100);
+  broadcast({ type: 'CAPTURE_PROGRESS', percent });
+  if (total < 2) return;
+  await chrome.action.setBadgeBackgroundColor({ color: '#e8503a' });
+  await chrome.action.setBadgeTextColor({ color: '#ffffff' });
+  await chrome.action.setBadgeText({ text: `${percent}%` });
+}
+
+/**
  * Deliver a finished capture the way the user asked for. Every path stashes the
  * capture first, so the popup's "Reopen last" link still works after a quick
  * capture. Settings are read here rather than passed down: a full-page capture
@@ -529,6 +578,10 @@ async function deliverCapture(
 
   if (action === 'editor') {
     await chrome.tabs.create({ url: EDITOR_URL });
+    // The editor tab is the confirmation, so any progress badge left by a
+    // full-page stitch hands the badge back here. The clipboard and download
+    // branches below end on their own tick instead.
+    await restoreRecBadge();
     return true;
   }
 
@@ -588,20 +641,36 @@ function onCaptureError(err: unknown): void {
 }
 
 function broadcast(msg: PopupMessage): void {
-  // Context menu and delayed captures have no popup to show a toast in, so
-  // errors also flash the action badge.
-  if (msg.type === 'CAPTURE_ERROR') void flashErrorBadge();
+  // Context menu, express and delayed captures have no popup to show a toast
+  // in, so errors also flash the action badge.
+  if (msg.type === 'CAPTURE_ERROR') void flashErrorBadge(msg.message);
   // The popup may already be closed (e.g. region mode); ignore delivery failures.
   void chrome.runtime.sendMessage(msg).catch(() => {
     /* popup not listening */
   });
 }
 
-async function flashErrorBadge(): Promise<void> {
+/** How long an error badge and its tooltip stay up before the badge is handed back. */
+const ERROR_BADGE_MS = 6000;
+
+/**
+ * A bare '!' says something went wrong and nothing about what. Express mode
+ * has no popup to read the reason in, and the commonest express failure — a
+ * chrome:// or Web Store tab that cannot be captured — is one users otherwise
+ * repeat. The reason goes on the action's tooltip for as long as the badge
+ * stands; `setTitle('')` then puts the manifest title back.
+ */
+async function flashErrorBadge(message: string): Promise<void> {
   await chrome.action.setBadgeBackgroundColor({ color: '#e8503a' });
   await chrome.action.setBadgeTextColor({ color: '#ffffff' });
   await chrome.action.setBadgeText({ text: '!' });
-  await delay(4000);
+  // Read the title back rather than restoring '': an empty title is its own
+  // state, and Chrome answers it with the extension's (localized) name instead
+  // of the manifest's default_title. Put back exactly what was there.
+  const previousTitle = message ? await chrome.action.getTitle({}) : null;
+  if (message) await chrome.action.setTitle({ title: message });
+  await delay(ERROR_BADGE_MS);
+  if (previousTitle !== null) await chrome.action.setTitle({ title: previousTitle });
   await restoreRecBadge();
 }
 

@@ -57,12 +57,13 @@ export function sanitizeFilename(name: string): string {
 /** True for URLs the extension is not allowed to capture. */
 export function isProtectedUrl(url: string | undefined): boolean {
   if (!url) return true;
-  // The extension's own pages (the welcome page above all — its whole job is
-  // to be the first one-click capture) are ours to inject into and capture.
-  // Every other chrome-extension:// origin stays protected below.
-  if (typeof chrome !== 'undefined' && chrome.runtime?.id) {
-    if (url.startsWith(`chrome-extension://${chrome.runtime.id}/`)) return false;
-  }
+  // Our own pages are protected too, and no permission changes that: a probe
+  // against the packed build (2026-09-01) showed chrome.scripting.executeScript
+  // refusing a chrome-extension:// target even with <all_urls> granted, which
+  // is every step of a full-page capture bar the tile grab. An earlier carve-out
+  // here let the bundled welcome page through and the first capture a new user
+  // ever took died on "Cannot access contents of the page". The welcome page is
+  // hosted on the site now — an ordinary https page a capture can actually read.
   return (
     url.startsWith('chrome://') ||
     url.startsWith('chrome-extension://') ||

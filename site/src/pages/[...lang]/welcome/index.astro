@@ -1,0 +1,323 @@
+---
+/**
+ * First-run page (rating funnel Surface A). `chrome.runtime.onInstalled` opens
+ * this with ?v=<version>&hl=<locale> — the same two values the uninstall URL
+ * carries, and nothing else.
+ *
+ * It is hosted rather than bundled for one hard reason: Chrome refuses script
+ * injection into a chrome-extension:// tab whatever the manifest asks for, so
+ * an extension page is the one page a full-page capture can never read. This
+ * page's whole job is to be that first capture, which makes an ordinary https
+ * page the only shape it can take. It is also deliberately tall and varied, so
+ * a stitched capture of it has something to show.
+ */
+import Base from '../../../layouts/Base.astro';
+import LocaleRedirect from '../../../components/LocaleRedirect.astro';
+import { ICON_PATHS } from '../../../lib/icons';
+import { t, localePaths, localeFromParams, DEFAULT_LOCALE } from '../../../i18n';
+
+export const getStaticPaths = localePaths;
+
+const locale = localeFromParams(Astro.params.lang);
+const d = t(locale, 'welcome');
+// The tall body reuses the homepage's own claims and privacy receipt. They are
+// already written and already translated in all eleven locales; a second set
+// saying the same thing would only drift away from it.
+const home = t(locale, 'home');
+
+const quartet = [
+  { icon: ICON_PATHS.capture, tone: 'tone-blue' },
+  { icon: ICON_PATHS.pen, tone: 'tone-green' },
+  { icon: ICON_PATHS.record, tone: 'tone-red' },
+  { icon: ICON_PATHS.lock, tone: 'tone-yellow' },
+].map((meta, i) => ({ ...meta, ...home.quartet[i] }));
+---
+
+<Base title={d.meta.title} description={d.meta.description} path="/welcome/" locale={locale}>
+  <Fragment slot="head">
+    {/* A landing the browser opens once, on install. It has no business in search. */}
+    <meta name="robots" content="noindex, follow" />
+    {locale === DEFAULT_LOCALE && <LocaleRedirect path="/welcome/" />}
+  </Fragment>
+
+  <section class="hero">
+    <div class="container">
+      <p class="eyebrow">{d.eyebrow}</p>
+      <h1>{d.headline}</h1>
+      <p class="lede">{d.body}</p>
+
+      {/*
+        The icon and the shortcut are peers. Chrome hides a new extension
+        behind the puzzle menu, so a page that only teaches "click the icon"
+        strands everyone who never finds one. Neither chip is a control —
+        the thing to press is in the browser chrome, not on this page.
+      */}
+      <div class="chips">
+        <p class="chip chip-go">{d.primary}</p>
+        <p class="chip">{d.secondary}</p>
+      </div>
+      <p class="pin"><strong>{d.pinTitle}</strong> <span>{d.pinSub}</span></p>
+    </div>
+  </section>
+
+  <section class="section band">
+    <div class="container">
+      <h2>{d.bandHeading}</h2>
+      <p>{d.bandBody}</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container-wide">
+      <h2>{d.quartetHeading}</h2>
+      <ul class="trio">
+        {
+          quartet.map((item) => (
+            <li>
+              <svg
+                class:list={['icon', item.tone]}
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d={item.icon} />
+              </svg>
+              <h3>{item.title}</h3>
+              <p class="trio-body">{item.body}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section slab">
+    <div class="container-wide split">
+      <div>
+        <p class="eyebrow">{home.privacy.eyebrow}</p>
+        <h2>{d.receiptHeading}</h2>
+        <p class="lede">{home.privacy.lede}</p>
+      </div>
+      <dl class="card receipt">
+        {
+          home.privacy.receipt.map((row: { k: string; v: string }) => (
+            <div>
+              <dt>{row.k}</dt>
+              <dd>{row.v}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  <section class="section band band-end">
+    <div class="container">
+      <h2>{d.endHeading}</h2>
+      <p>{d.endBody}</p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero {
+    padding-block: clamp(48px, 7vw, 96px);
+    text-align: center;
+  }
+
+  .hero h1 {
+    max-width: 16ch;
+    margin-inline: auto;
+    margin-bottom: var(--s-5);
+    font-size: var(--fs-hero);
+    letter-spacing: var(--tr-tight);
+  }
+
+  .hero .eyebrow {
+    color: var(--chrome-green);
+  }
+
+  .hero .lede {
+    margin-inline: auto;
+    margin-bottom: var(--s-6);
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--s-3);
+    margin-bottom: var(--s-4);
+  }
+
+  /* Same pill twice: filled for the icon, outlined for the shortcut. Reading
+   * one as the real answer and the other as fine print is the failure this
+   * page exists to avoid. */
+  .chip {
+    margin: 0;
+    padding: 12px 22px;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-full);
+    background: var(--paper-raised);
+    color: var(--ink);
+    font-size: var(--fs-md);
+    font-weight: 600;
+  }
+
+  .chip-go {
+    border-color: transparent;
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .pin {
+    margin: 0;
+    color: var(--ink-3);
+    font-size: var(--fs-sm);
+  }
+
+  .pin strong {
+    color: var(--ink);
+  }
+
+  .section {
+    padding-block: clamp(56px, 8vw, 112px);
+  }
+
+  .section h2 {
+    max-width: 26ch;
+    margin-bottom: var(--s-6);
+    font-size: var(--fs-title);
+  }
+
+  .slab {
+    background: var(--paper-dim);
+  }
+
+  /* The two full-bleed colour blocks. They break the white shell twice, which
+   * is what gives a stitched capture of this page a visible top and bottom. */
+  .band {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .band-end {
+    background: var(--ink);
+  }
+
+  .band h2 {
+    margin-bottom: var(--s-4);
+  }
+
+  .band p {
+    max-width: var(--max-w);
+    margin: 0;
+    font-size: var(--fs-lg);
+    opacity: 0.92;
+  }
+
+  .trio {
+    display: grid;
+    gap: var(--s-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .icon {
+    width: 24px;
+    height: 24px;
+    margin-bottom: var(--s-4);
+    fill: none;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* One Chrome brand color per card, as on the homepage quartet. */
+  .tone-blue {
+    stroke: var(--chrome-blue);
+  }
+
+  .tone-red {
+    stroke: var(--chrome-red);
+  }
+
+  .tone-yellow {
+    stroke: var(--chrome-yellow);
+  }
+
+  .tone-green {
+    stroke: var(--chrome-green);
+  }
+
+  .trio h3 {
+    margin-bottom: var(--s-2);
+    font-size: var(--fs-lg);
+    letter-spacing: var(--tr-tight);
+  }
+
+  .trio-body {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: var(--fs-md);
+  }
+
+  .split {
+    display: grid;
+    gap: var(--s-6);
+    align-items: start;
+  }
+
+  .split .lede {
+    margin: 0;
+  }
+
+  .receipt {
+    margin: 0;
+    padding: var(--s-3) var(--s-6);
+  }
+
+  .receipt > div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-4);
+    padding-block: var(--s-3);
+    border-top: 1px solid var(--rule);
+  }
+
+  .receipt > div:first-child {
+    border-top: 0;
+  }
+
+  .receipt dt {
+    color: var(--ink-2);
+    font-size: var(--fs-md);
+  }
+
+  .receipt dd {
+    margin: 0;
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+  }
+
+  @media (min-width: 720px) {
+    .trio {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-7);
+    }
+  }
+
+  @media (min-width: 960px) {
+    .trio {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .split {
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: var(--s-8);
+    }
+  }
+</style>

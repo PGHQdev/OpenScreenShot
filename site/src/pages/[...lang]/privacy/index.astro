@@ -46,6 +46,14 @@ const d = t(locale, 'privacy');
     <p>{d.thirdParty.body}</p>
   </section>
 
+  {/* Web Store reviewers read this page, not PRIVACY.md. The welcome and
+      uninstall pages are the extension's only outbound addresses, so they are
+      described here too. The id stays "uninstall" — it is a linked anchor. */}
+  <section class="doc-section" id="uninstall">
+    <h2>{d.uninstall.heading}</h2>
+    <p>{d.uninstall.body}</p>
+  </section>
+
   <section class="doc-section" id="changes">
     <h2>{d.changes.heading}</h2>
     <p set:html={d.changes.body} />

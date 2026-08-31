@@ -12,7 +12,7 @@
     },
     {
       "q": "Perché la cattura a pagina intera richiede qualche secondo?",
-      "a": "<p>Chrome limita <code>captureVisibleTab</code> a circa 2 chiamate al secondo. Ogni porzione alta quanto la finestra costa una chiamata, più una breve pausa perché la pagina si ridisegni. Una pagina tipica da 10 porzioni richiede 5–6 secondi, e una pagina più lunga richiede un tempo proporzionale. La barra di avanzamento nel popup ti dice a che punto è.</p>",
+      "a": "<p>Chrome limita <code>captureVisibleTab</code> a circa 2 chiamate al secondo. Ogni porzione alta quanto la finestra costa una chiamata, più una breve pausa perché la pagina si ridisegni. Una pagina tipica da 10 porzioni richiede 5–6 secondi, e una pagina più lunga richiede un tempo proporzionale. Il badge sulla barra degli strumenti conta la percentuale mentre lavora.</p>",
       "home": true
     },
     {

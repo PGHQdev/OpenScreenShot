@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "title": "Bienvenida — OpenScreenShot",
+    "description": "OpenScreenShot está instalado. Haz clic en el icono de la barra de herramientas y toma tu primera captura de página completa, aquí mismo."
+  },
+  "eyebrow": "Instalado",
+  "headline": "Listo. Haz clic en el icono.",
+  "body": "OpenScreenShot captura la página completa con un clic. Sin cuenta. Nada sale de este equipo. Pruébalo ahora mismo en esta página.",
+  "primary": "Haz clic en el icono de OpenScreenShot en la barra de herramientas.",
+  "secondary": "O pulsa Ctrl+Mayús+S (Cmd+Mayús+S en Mac).",
+  "pinTitle": "Fija OpenScreenShot",
+  "pinSub": "Haz clic en el 🧩 de arriba y luego en el 📌 junto a OpenScreenShot.",
+  "quartetHeading": "Lo que acabas de añadir.",
+  "bandHeading": "La página completa.",
+  "bandBody": "Las páginas largas se recorren y se unen en una sola imagen. Las cabeceras fijas aparecen una vez, los contenedores anidados se resuelven y el pie de página entra.",
+  "receiptHeading": "Nada de esto llega hasta nosotros.",
+  "endHeading": "Hasta aquí.",
+  "endBody": "Si tu captura llegó a esta franja, tiene la página entera. De eso se trata."
+}

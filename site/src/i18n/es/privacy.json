@@ -25,6 +25,10 @@
     "heading": "Servicios de terceros",
     "body": "OpenScreenShot no usa servicios de terceros de analítica, publicidad ni tratamiento de datos. La exportación a PDF la hace un pequeño generador integrado en la extensión, así que exportar un PDF tampoco hace ninguna petición de red."
   },
+  "uninstall": {
+    "heading": "Instalación y desinstalación",
+    "body": "La extensión no hace ninguna petición de red por su cuenta, pero tu navegador abre una página en cada extremo: openscreenshot.app/welcome al instalarla y openscreenshot.app/uninstall al quitarla. Ambas direcciones llevan dos valores y nada más: la versión de la extensión y el idioma de la interfaz de tu navegador. No incluyen la URL de ninguna página, ni títulos, ni capturas, ni identificadores. Ninguna de las dos usa cookies ni analítica, y el cuadro de comentarios de la página de desinstalación no envía nada hasta que pulsas Enviar, lo que abre tu propio cliente de correo con el texto que escribiste."
+  },
   "changes": {
     "heading": "Cambios en esta política",
     "body": "Si esta política cambia, la versión actualizada se publica en esta página con una nueva fecha de <em>Última actualización</em>."

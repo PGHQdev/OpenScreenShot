@@ -1529,6 +1529,10 @@
     "message": "마크업",
     "description": "Editor topbar (View mode): button that opens the Markup chrome."
   },
+  "editorFitHint": {
+    "message": "창 크기에 맞춰 표시했습니다. 스크롤하거나 확대해 실제 크기로 보세요.",
+    "description": "Editor: one-time note when a capture opens fitted well below actual size."
+  },
   "editorDone": {
     "message": "완료",
     "description": "Editor topbar (Markup mode): button that returns to View."
@@ -2288,26 +2292,6 @@
   "settingsSupport": {
     "message": "후원",
     "description": "Popup settings: label for the row holding the Ko-fi and cool-stuff links."
-  },
-  "welcomeTitle": {
-    "message": "환영합니다",
-    "description": "Welcome page: browser tab title."
-  },
-  "welcomeHeadline": {
-    "message": "준비 완료. 아이콘을 클릭하세요.",
-    "description": "Welcome page: headline inviting the first icon click."
-  },
-  "welcomeBody": {
-    "message": "OpenScreenShot은 한 번의 클릭으로 전체 페이지를 캡처합니다. 계정이 필요 없고, 이 컴퓨터 밖으로 아무것도 나가지 않습니다. 지금 이 페이지에서 바로 사용해 보세요.",
-    "description": "Welcome page: one-paragraph pitch under the headline."
-  },
-  "welcomePrimary": {
-    "message": "툴바에서 OpenScreenShot 아이콘을 클릭하세요.",
-    "description": "Welcome page: the primary instruction line."
-  },
-  "welcomeSecondary": {
-    "message": "또는 Ctrl+Shift+S(Mac에서는 Cmd+Shift+S)를 누르세요.",
-    "description": "Welcome page: the keyboard-shortcut alternative line."
   },
   "editorRateLabel": {
     "message": "평가",

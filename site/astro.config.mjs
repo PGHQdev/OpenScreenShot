@@ -54,6 +54,10 @@ export default defineConfig({
   },
   integrations: [
     sitemap({
+      // /welcome/ is the tab the browser opens once, at install. It carries a
+      // noindex meta for the same reason: it is a moment in a session, not a
+      // page anyone should arrive at from search.
+      filter: (page) => !/\/welcome\/$/.test(page),
       i18n: {
         defaultLocale: 'en',
         locales: {

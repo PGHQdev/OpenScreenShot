@@ -1,0 +1,38 @@
+---
+/**
+ * Send an English page to the visitor's own locale when the extension asked
+ * for one.
+ *
+ * `chrome.runtime.setUninstallURL` and the install-time welcome tab both
+ * carry `?hl=<browser UI language>`, and Chrome opens the English page
+ * whatever it says. Neither moment leaves an extension running that could do
+ * the hop itself — an uninstall has already removed it, and an install has
+ * not bound anything yet — so the English page redirecting itself is the only
+ * place it can happen.
+ *
+ * Render this in the `head` slot, and only on the English render: the path
+ * check is what stops a redirected page redirecting again, and it reads the
+ * page's own locale-less path from `path`.
+ */
+interface Props {
+  /** The page's locale-less path, leading and trailing slash: '/uninstall/'. */
+  path: string;
+}
+
+const { path } = Astro.props;
+
+// Locale segments this site serves, keyed by what getUILanguage() returns.
+// Exact tags first, then the bare language; anything else stays on English.
+const SCRIPT = `(() => {
+  var here = ${JSON.stringify(path.replace(/\/+$/, ''))};
+  if (location.pathname.replace(/\\/+$/, '') !== here) return;
+  var hl = (new URLSearchParams(location.search).get('hl') || '').toLowerCase();
+  if (!hl) return;
+  var exact = { 'pt-br': 'pt-br', 'zh-cn': 'zh-cn', 'zh-tw': 'zh-tw', 'zh-hk': 'zh-tw' };
+  var base = { de: 'de', es: 'es', fr: 'fr', it: 'it', ja: 'ja', ko: 'ko', pt: 'pt-br', ru: 'ru', zh: 'zh-cn' };
+  var to = exact[hl] || base[hl.split('-')[0]];
+  if (to) location.replace('/' + to + here + '/' + location.search);
+})();`;
+---
+
+<script is:inline set:html={SCRIPT} />

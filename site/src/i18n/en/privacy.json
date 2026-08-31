@@ -25,6 +25,10 @@
     "heading": "Third-party services",
     "body": "OpenScreenShot uses no third-party analytics, advertising, or data-processing services. PDF export is handled by a small writer built into the extension, so exporting a PDF makes no network request either."
   },
+  "uninstall": {
+    "heading": "Install and uninstall",
+    "body": "The extension makes no network request of its own, but your browser opens one page at each end of its life: openscreenshot.app/welcome when you install it, and openscreenshot.app/uninstall when you remove it. Both addresses carry two values and nothing else — the extension version and your browser’s interface language. No page URL, title, capture, or identifier goes with them. Neither page sets cookies or runs analytics, and the feedback box on the uninstall page sends nothing until you press Send, which opens your own mail client with the text you wrote."
+  },
   "changes": {
     "heading": "Changes to this policy",
     "body": "If this policy changes, the updated version is published on this page with a new <em>Last updated</em> date."

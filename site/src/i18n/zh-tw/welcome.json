@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "title": "歡迎 — OpenScreenShot",
+    "description": "OpenScreenShot 已安裝。點一下工具列圖示，就在本頁拍下你的第一張整頁擷取。"
+  },
+  "eyebrow": "已安裝",
+  "headline": "就緒。點一下圖示。",
+  "body": "OpenScreenShot 一鍵擷取整個網頁。無需帳號，任何資料都不會離開這台電腦。現在就在本頁試試看。",
+  "primary": "點一下工具列中的 OpenScreenShot 圖示。",
+  "secondary": "或按 Ctrl+Shift+S（Mac 為 Cmd+Shift+S）。",
+  "pinTitle": "釘選 OpenScreenShot",
+  "pinSub": "點上方的 🧩，再點 OpenScreenShot 旁的 📌。",
+  "quartetHeading": "你剛剛加了什麼。",
+  "bandHeading": "整個網頁。",
+  "bandBody": "長網頁會自動捲動並拼接成一張圖。固定頁首只出現一次，巢狀捲動區域也能處理，頁尾同樣收得進來。",
+  "receiptHeading": "這裡的任何內容都不會到我們手上。",
+  "endHeading": "到此為止。",
+  "endBody": "如果你的擷取拍到了這一條，它就拍到了整個網頁。這正是重點。"
+}

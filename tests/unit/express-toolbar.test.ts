@@ -31,6 +31,9 @@ function makeFakeChrome() {
       setBadgeBackgroundColor: vi.fn(() => Promise.resolve()),
       setBadgeTextColor: vi.fn(() => Promise.resolve()),
       setBadgeText: vi.fn(() => Promise.resolve()),
+      setTitle: vi.fn(() => Promise.resolve()),
+      getTitle: vi.fn(() => Promise.resolve('OpenScreenShot')),
+      openPopup: vi.fn(() => Promise.resolve()),
     },
     contextMenus: {
       removeAll: vi.fn(() => Promise.resolve()),
@@ -126,6 +129,21 @@ describe('toolbar-click branching', () => {
     expect(fakeChrome.runtime.sendMessage).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'CAPTURE_ERROR' }),
     );
+  });
+
+  it('express off: a click that still reaches the listener opens the picker, not a capture', async () => {
+    // The manifest declares no default_popup, so an action Chrome has not yet
+    // let the worker bind is unbound — and `onClicked` fires. Capturing there
+    // would take a screenshot a non-express user never asked for.
+    store.set(SETTINGS_KEY, { expressMode: false });
+    await importBackground();
+    fakeChrome.tabs.query.mockClear();
+    const listener = fakeChrome.action.onClicked.addListener.mock.calls[0]?.[0] as () => void;
+    listener();
+    await flushMicrotasks();
+    expect(fakeChrome.tabs.query).not.toHaveBeenCalled();
+    expect(lastPopupBinding()).toBe('src/popup/index.html');
+    expect(fakeChrome.action.openPopup).toHaveBeenCalled();
   });
 });
 

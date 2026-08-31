@@ -31,13 +31,13 @@
     "message": "انقر واسحب للتحديد",
     "description": "Subtitle for the Selected Region capture mode."
   },
-  "repeatLastRegion": {
-    "message": "تكرار آخر منطقة",
-    "description": "Footer link and context menu item that re-captures the previous region selection."
-  },
   "settingsTitle": {
     "message": "الإعدادات",
     "description": "Settings panel heading."
+  },
+  "repeatLastRegion": {
+    "message": "تكرار آخر منطقة",
+    "description": "Footer link and context menu item that re-captures the previous region selection."
   },
   "expressLabel": {
     "message": "النقر على أيقونة شريط الأدوات يلتقط الصفحة الكاملة",
@@ -50,6 +50,34 @@
   "expressMigratedNote": {
     "message": "النقر على الأيقونة يلتقط الآن الصفحة الكاملة. انقر بزر الفأرة الأيمن للأوضاع الأخرى.",
     "description": "One-time editor note after the update that made a toolbar click capture the full page."
+  },
+  "setupPinTitle": {
+    "message": "ثبّت OpenScreenShot",
+    "description": "Popup: nudge to pin the extension, shown while it is not on the toolbar."
+  },
+  "setupPinSub": {
+    "message": "انقر على 🧩 في الأعلى، ثم على 📌 بجوار OpenScreenShot.",
+    "description": "Popup: how to pin — the puzzle menu sits directly above the popup."
+  },
+  "editorCopyIdle": {
+    "message": "نسخ",
+    "description": "Editor topbar: the Copy button’s resting label."
+  },
+  "editorMarkup": {
+    "message": "تعليق",
+    "description": "Editor topbar (View mode): button that opens the Markup chrome."
+  },
+  "editorFitHint": {
+    "message": "تم ملاءمتها للنافذة. مرّر أو كبّر لعرضها بالحجم الكامل.",
+    "description": "Editor: one-time note when a capture opens fitted well below actual size."
+  },
+  "editorSaveImage": {
+    "message": "حفظ الصورة",
+    "description": "Editor topbar: label on the primary Save image button (opens the export dialog)."
+  },
+  "editorPdfLabel": {
+    "message": "PDF",
+    "description": "Editor topbar: label on the one-click PDF export button."
   },
   "editorRateLabel": {
     "message": "قيّم",

@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "title": "Benvenuto — OpenScreenShot",
+    "description": "OpenScreenShot è installato. Fai clic sull’icona nella barra degli strumenti e scatta la tua prima cattura a pagina intera, proprio qui."
+  },
+  "eyebrow": "Installato",
+  "headline": "Fatto. Fai clic sull’icona.",
+  "body": "OpenScreenShot cattura la pagina intera con un clic. Nessun account. Niente lascia questo computer. Provalo subito su questa pagina.",
+  "primary": "Fai clic sull’icona di OpenScreenShot nella barra degli strumenti.",
+  "secondary": "Oppure premi Ctrl+Maiusc+S (Cmd+Maiusc+S su Mac).",
+  "pinTitle": "Fissa OpenScreenShot",
+  "pinSub": "Clicca il 🧩 qui sopra, poi il 📌 accanto a OpenScreenShot.",
+  "quartetHeading": "Cosa hai appena aggiunto.",
+  "bandHeading": "La pagina intera.",
+  "bandBody": "Le pagine lunghe scorrono e si uniscono in una sola immagine. Le intestazioni fisse compaiono una volta, i contenitori annidati sono gestiti, e il piè di pagina c’è.",
+  "receiptHeading": "Niente di tutto questo arriva a noi.",
+  "endHeading": "Non si va oltre.",
+  "endBody": "Se la tua cattura è arrivata a questa fascia, ha preso tutta la pagina. È questo il punto."
+}

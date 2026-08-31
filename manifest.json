@@ -6,7 +6,6 @@
   "default_locale": "en",
   "minimum_chrome_version": "116",
   "action": {
-    "default_popup": "src/popup/index.html",
     "default_title": "OpenScreenShot",
     "default_icon": {
       "16": "icons/icon16.png",

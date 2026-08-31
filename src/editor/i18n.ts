@@ -5,5 +5,8 @@
  * of redefining it per file.
  */
 export function t(id: string, subs?: string | string[]): string {
-  return chrome.i18n.getMessage(id, subs) ?? id;
+  // `getMessage` answers '' — never null — for an id no catalog has, so `??`
+  // would hand back a blank label rather than the id. Chrome already falls
+  // back to `en` per key, which leaves the id visible only for a typo.
+  return chrome.i18n.getMessage(id, subs) || id;
 }

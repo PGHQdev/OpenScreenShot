@@ -31,13 +31,13 @@
     "message": "Nhấp và kéo để chọn",
     "description": "Subtitle for the Selected Region capture mode."
   },
-  "repeatLastRegion": {
-    "message": "Lặp lại vùng chọn trước",
-    "description": "Footer link and context menu item that re-captures the previous region selection."
-  },
   "settingsTitle": {
     "message": "Cài đặt",
     "description": "Settings panel heading."
+  },
+  "repeatLastRegion": {
+    "message": "Lặp lại vùng chọn trước",
+    "description": "Footer link and context menu item that re-captures the previous region selection."
   },
   "expressLabel": {
     "message": "Nhấp vào biểu tượng trên thanh công cụ sẽ chụp toàn trang",
@@ -50,6 +50,34 @@
   "expressMigratedNote": {
     "message": "Nhấp vào biểu tượng giờ sẽ chụp toàn trang. Nhấp chuột phải để chọn chế độ khác.",
     "description": "One-time editor note after the update that made a toolbar click capture the full page."
+  },
+  "setupPinTitle": {
+    "message": "Ghim OpenScreenShot",
+    "description": "Popup: nudge to pin the extension, shown while it is not on the toolbar."
+  },
+  "setupPinSub": {
+    "message": "Nhấp vào 🧩 ở trên, rồi nhấp 📌 bên cạnh OpenScreenShot.",
+    "description": "Popup: how to pin — the puzzle menu sits directly above the popup."
+  },
+  "editorCopyIdle": {
+    "message": "Sao chép",
+    "description": "Editor topbar: the Copy button’s resting label."
+  },
+  "editorMarkup": {
+    "message": "Chú thích",
+    "description": "Editor topbar (View mode): button that opens the Markup chrome."
+  },
+  "editorFitHint": {
+    "message": "Đã thu vừa cửa sổ. Cuộn hoặc phóng to để xem kích thước thật.",
+    "description": "Editor: one-time note when a capture opens fitted well below actual size."
+  },
+  "editorSaveImage": {
+    "message": "Lưu ảnh",
+    "description": "Editor topbar: label on the primary Save image button (opens the export dialog)."
+  },
+  "editorPdfLabel": {
+    "message": "PDF",
+    "description": "Editor topbar: label on the one-click PDF export button."
   },
   "editorRateLabel": {
     "message": "Đánh giá",

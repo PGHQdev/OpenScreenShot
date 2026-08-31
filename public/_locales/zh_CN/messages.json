@@ -1529,6 +1529,10 @@
     "message": "标注",
     "description": "Editor topbar (View mode): button that opens the Markup chrome."
   },
+  "editorFitHint": {
+    "message": "已缩放以适应窗口。滚动或放大可查看实际大小。",
+    "description": "Editor: one-time note when a capture opens fitted well below actual size."
+  },
   "editorDone": {
     "message": "完成",
     "description": "Editor topbar (Markup mode): button that returns to View."
@@ -2288,26 +2292,6 @@
   "settingsSupport": {
     "message": "支持",
     "description": "Popup settings: label for the row holding the Ko-fi and cool-stuff links."
-  },
-  "welcomeTitle": {
-    "message": "欢迎",
-    "description": "Welcome page: browser tab title."
-  },
-  "welcomeHeadline": {
-    "message": "就绪。点击图标。",
-    "description": "Welcome page: headline inviting the first icon click."
-  },
-  "welcomeBody": {
-    "message": "OpenScreenShot 一键截取整页。无需账号，任何数据都不会离开这台电脑。现在就在本页试试吧。",
-    "description": "Welcome page: one-paragraph pitch under the headline."
-  },
-  "welcomePrimary": {
-    "message": "点击工具栏中的 OpenScreenShot 图标。",
-    "description": "Welcome page: the primary instruction line."
-  },
-  "welcomeSecondary": {
-    "message": "或按 Ctrl+Shift+S（Mac 上为 Cmd+Shift+S）。",
-    "description": "Welcome page: the keyboard-shortcut alternative line."
   },
   "editorRateLabel": {
     "message": "评分",

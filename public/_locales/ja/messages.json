@@ -1529,6 +1529,10 @@
     "message": "マークアップ",
     "description": "Editor topbar (View mode): button that opens the Markup chrome."
   },
+  "editorFitHint": {
+    "message": "ウィンドウに合わせて表示しています。スクロールまたはズームで実寸を確認できます。",
+    "description": "Editor: one-time note when a capture opens fitted well below actual size."
+  },
   "editorDone": {
     "message": "完了",
     "description": "Editor topbar (Markup mode): button that returns to View."
@@ -2288,26 +2292,6 @@
   "settingsSupport": {
     "message": "サポート",
     "description": "Popup settings: label for the row holding the Ko-fi and cool-stuff links."
-  },
-  "welcomeTitle": {
-    "message": "ようこそ",
-    "description": "Welcome page: browser tab title."
-  },
-  "welcomeHeadline": {
-    "message": "準備完了。アイコンをクリック。",
-    "description": "Welcome page: headline inviting the first icon click."
-  },
-  "welcomeBody": {
-    "message": "OpenScreenShot はワンクリックでページ全体をキャプチャします。アカウント不要。このマシンから何も送信されません。今すぐこのページで試してみてください。",
-    "description": "Welcome page: one-paragraph pitch under the headline."
-  },
-  "welcomePrimary": {
-    "message": "ツールバーの OpenScreenShot アイコンをクリックしてください。",
-    "description": "Welcome page: the primary instruction line."
-  },
-  "welcomeSecondary": {
-    "message": "または Ctrl+Shift+S（Mac では Cmd+Shift+S）を押してください。",
-    "description": "Welcome page: the keyboard-shortcut alternative line."
   },
   "editorRateLabel": {
     "message": "評価",

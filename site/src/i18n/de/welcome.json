@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "title": "Willkommen — OpenScreenShot",
+    "description": "OpenScreenShot ist installiert. Klicke auf das Symbol in der Symbolleiste und mach deine erste Aufnahme der ganzen Seite, direkt hier."
+  },
+  "eyebrow": "Installiert",
+  "headline": "Fertig. Klicke auf das Symbol.",
+  "body": "OpenScreenShot nimmt die ganze Seite mit einem Klick auf. Kein Konto. Nichts verlässt diesen Rechner. Probiere es gleich auf dieser Seite.",
+  "primary": "Klicke auf das OpenScreenShot-Symbol in der Symbolleiste.",
+  "secondary": "Oder drücke Strg+Umschalt+S (Cmd+Umschalt+S auf dem Mac).",
+  "pinTitle": "OpenScreenShot anpinnen",
+  "pinSub": "Klicke oben auf 🧩, dann auf 📌 neben OpenScreenShot.",
+  "quartetHeading": "Was du gerade hinzugefügt hast.",
+  "bandHeading": "Die ganze Seite.",
+  "bandBody": "Lange Seiten werden gescrollt und zu einem Bild zusammengesetzt. Klebende Kopfzeilen erscheinen einmal, verschachtelte Bereiche werden behandelt, und die Fußzeile ist dabei.",
+  "receiptHeading": "Nichts davon erreicht uns.",
+  "endHeading": "Weiter geht es nicht.",
+  "endBody": "Wenn deine Aufnahme dieses Band erreicht hat, hat sie die ganze Seite. Genau darum geht es."
+}

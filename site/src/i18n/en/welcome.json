@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "title": "Welcome — OpenScreenShot",
+    "description": "OpenScreenShot is installed. Click the toolbar icon to take your first full-page capture, right here on this page."
+  },
+  "eyebrow": "Installed",
+  "headline": "You're in. Click the icon.",
+  "body": "OpenScreenShot captures the whole page in one click. No account. Nothing leaves this machine. Try it on this page right now.",
+  "primary": "Click the OpenScreenShot icon in the toolbar.",
+  "secondary": "Or press Ctrl+Shift+S (Cmd+Shift+S on Mac).",
+  "pinTitle": "Pin OpenScreenShot",
+  "pinSub": "Click the 🧩 up there, then the 📌 next to OpenScreenShot.",
+  "quartetHeading": "What you just added.",
+  "bandHeading": "The whole page.",
+  "bandBody": "Long pages scroll and stitch into one image. Sticky headers appear once, nested scrollers are handled, and the footer makes it in.",
+  "receiptHeading": "Nothing here reaches us.",
+  "endHeading": "Scroll no further.",
+  "endBody": "If your capture reached this band, it got the whole page. That is the point."
+}

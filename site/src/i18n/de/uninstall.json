@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "title": "Bevor du gehst — OpenScreenShot",
+    "description": "Du hast OpenScreenShot deinstalliert. Wenn es funktioniert hat, hilft eine Bewertung anderen, ein privates Werkzeug zu finden. Wenn nicht, sag uns, was passiert ist."
+  },
+  "label": "OpenScreenShot",
+  "heading": "Bevor du gehst.",
+  "lead": "Wenn es funktioniert hat, ist eine Bewertung der ganze Antrieb. Wenn nicht, sag es uns. Wir lesen mit.",
+  "happy": {
+    "heading": "Es hat funktioniert, ich brauche es nur nicht.",
+    "body": "Dann ist eine öffentliche Bewertung das Wirksamste, was du für ein Open-Source-Werkzeug tun kannst. Es dauert 30 Sekunden.",
+    "cta": "OpenScreenShot bewerten"
+  },
+  "broken": {
+    "heading": "Etwas hat nicht gestimmt.",
+    "body": "Was ist passiert? Was hattest du erwartet?",
+    "placeholder": "Beispiel: Die ganze Seite hat die Fußzeile eines Dashboards verpasst. Oder: Die Aufnahme blieb auf einer Seite leer, die ich täglich nutze.",
+    "cta": "Feedback senden",
+    "mailFallback": "Wenn sich dein E-Mail-Programm nicht öffnet, schreib an",
+    "thanks": "Danke. Wenn du magst, hilft eine Bewertung weiterhin allen, die eine private Lösung brauchen.",
+    "rateAnyway": "Trotzdem bewerten"
+  },
+  "footer": "Der Quellcode bleibt öffentlich."
+}

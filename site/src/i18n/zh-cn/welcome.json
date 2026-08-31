@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "title": "欢迎 — OpenScreenShot",
+    "description": "OpenScreenShot 已安装。点击工具栏图标，就在本页拍下你的第一张整页截图。"
+  },
+  "eyebrow": "已安装",
+  "headline": "就绪。点击图标。",
+  "body": "OpenScreenShot 一键截取整页。无需账号，任何数据都不会离开这台电脑。现在就在本页试试吧。",
+  "primary": "点击工具栏中的 OpenScreenShot 图标。",
+  "secondary": "或按 Ctrl+Shift+S（Mac 上为 Cmd+Shift+S）。",
+  "pinTitle": "固定 OpenScreenShot",
+  "pinSub": "点击上方的 🧩，再点击 OpenScreenShot 旁边的 📌。",
+  "quartetHeading": "你刚刚添加了什么。",
+  "bandHeading": "整个页面。",
+  "bandBody": "长页面会自动滚动并拼接成一张图。固定页头只出现一次，嵌套滚动区域也能处理，页脚同样收进来。",
+  "receiptHeading": "这里的任何内容都不会到我们手上。",
+  "endHeading": "到此为止。",
+  "endBody": "如果你的截图拍到了这一条，它就拍到了整个页面。这正是重点。"
+}
