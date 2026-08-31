@@ -57,6 +57,8 @@ const OUT_DIR = join(ROOT, 'site/src/assets');
 // README hero.
 const LOCALE = process.env.OSS_LOCALE || 'en';
 const STORE_DIR = join(ROOT, 'media/store', LOCALE === 'en' ? '' : LOCALE);
+// The five store gallery billboards (slide-1..5), uploaded in order.
+const SLIDES_DIR = join(ROOT, 'store/screenshots');
 // Poster marketing copy, one file per locale, filled into the `{{key}}`
 // slots of marquee.html and promo-tile.html before they are screenshotted.
 const COPY_DIR = join(SHOTS_DIR, 'copy');
@@ -871,6 +873,25 @@ async function renderPosters(browser) {
         .png({ palette: true, compressionLevel: 9, effort: 10 })
         .toFile(out);
       console.log(`✓ ${rel(out)} (${w}x${h})`);
+    }
+
+    // Store gallery billboards (P0.4): five 1280x800 statements in huge type
+    // on saturated fields, no UI captures. English only — the founder uploads
+    // one global set. 24-bit PNG with no alpha, as the store requires.
+    if (LOCALE === 'en') {
+      await mkdir(SLIDES_DIR, { recursive: true });
+      for (let i = 1; i <= 5; i++) {
+        const name = `slide-${i}`;
+        await assertPosterImagesLoad(browser, name);
+        const png = await screenshotPoster(name, STORE_SIZE.w, STORE_SIZE.h, work);
+        const out = join(SLIDES_DIR, `${name}.png`);
+        await sharp(png)
+          .resize(STORE_SIZE.w, STORE_SIZE.h)
+          .flatten({ background: '#ffffff' })
+          .png({ compressionLevel: 9 })
+          .toFile(out);
+        console.log(`✓ ${rel(out)} (${STORE_SIZE.w}x${STORE_SIZE.h})`);
+      }
     }
 
     // Store promo images and the popup store screenshot: exact sizes, JPEG.
