@@ -217,8 +217,8 @@ export function App() {
   const [settings, setSettingsState] = useState<Settings>(DEFAULT_SETTINGS);
   // The context menus' "Capture settings" items open this page as a tab with
   // ?settings=1 — the settings pane is unreachable by icon click in express mode.
-  const [showSettings, setShowSettings] = useState(
-    () => new URLSearchParams(location.search).has('settings'),
+  const [showSettings, setShowSettings] = useState(() =>
+    new URLSearchParams(location.search).has('settings'),
   );
   const [busy, setBusy] = useState<CaptureMode | null>(null);
   const [progress, setProgress] = useState<number | null>(null);

@@ -269,7 +269,11 @@ chrome.runtime.onMessage.addListener((message: unknown) => {
 async function handleCapture(mode: CaptureMode, repeatRegion = false): Promise<void> {
   const tab = await getActiveTab();
   if (!tab || tab.id == null) {
-    broadcast({ type: 'CAPTURE_ERROR', code: 'unknown', message: chrome.i18n.getMessage('errNoTab') });
+    broadcast({
+      type: 'CAPTURE_ERROR',
+      code: 'unknown',
+      message: chrome.i18n.getMessage('errNoTab'),
+    });
     return;
   }
   if (isProtectedUrl(tab.url)) {
@@ -576,7 +580,11 @@ function commandToMode(command: string): CaptureMode | null {
 
 function onCaptureError(err: unknown): void {
   console.error('[OpenScreenShot] capture failed', err);
-  broadcast({ type: 'CAPTURE_ERROR', code: 'unknown', message: chrome.i18n.getMessage('errUnknown') });
+  broadcast({
+    type: 'CAPTURE_ERROR',
+    code: 'unknown',
+    message: chrome.i18n.getMessage('errUnknown'),
+  });
 }
 
 function broadcast(msg: PopupMessage): void {

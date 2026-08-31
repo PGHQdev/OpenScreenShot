@@ -37,12 +37,12 @@ The full tour, every shortcut, and the settings reference live in the
 
 ## How it compares
 
-|                      | OpenScreenShot   | FullPage Capture | GoFullPage                  |
-| -------------------- | ---------------- | ---------------- | --------------------------- |
-| Open source          | Yes — MIT        | No               | Privately forked since 2018 |
-| Standing site access | None             | Every site       | None at install             |
-| Annotate, blur, PDF  | Free             | Free             | Paid                        |
-| Tab recording        | Free             | No               | No                          |
+|                      | OpenScreenShot | FullPage Capture | GoFullPage                  |
+| -------------------- | -------------- | ---------------- | --------------------------- |
+| Open source          | Yes — MIT      | No               | Privately forked since 2018 |
+| Standing site access | None           | Every site       | None at install             |
+| Annotate, blur, PDF  | Free           | Free             | Paid                        |
+| Tab recording        | Free           | No               | No                          |
 
 The full table, with store status and sources, is at
 [openscreenshot.app/compare](https://openscreenshot.app/compare/).

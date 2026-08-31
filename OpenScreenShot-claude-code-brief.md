@@ -20,7 +20,6 @@ You are implementing a positioning and packaging change, not a new product.
 
 If a path in this brief is slightly off, search the repo. The flags and files named below were confirmed on main at v1.5.0.
 
-
 ---
 
 ## 1. What we are trying to win
@@ -38,7 +37,6 @@ OpenScreenShot is the one-click full page screenshot you can actually audit.
 Same job as GoFullPage. The only listing still in the store that is really open source (MIT, public, linked) and really permissionless (host_permissions empty at install). FullPage Capture says the same privacy words while requesting standing access to every website and shipping a closed binary.
 
 CWS search is one query: full page screenshot. One-click is the product. Annotate is why they stay. Source plus zero host permissions is why they trust you over the clone. Recording, CLI, and MCP are GitHub and the website, not the store hero.
-
 
 ### What happened in the market (do not recode this, just do not fight it)
 
@@ -71,7 +69,6 @@ Tests: default true, migration, and toolbar-click branching. Manual: fresh profi
 
 Do not make region or visible the default. Full page is the CWS job.
 
-
 ### P0.2 Locale plus store name and short description
 
 Chrome listing name max 45 characters. Short description max 132 characters.
@@ -87,7 +84,6 @@ Also put these exact strings in store/STORE_LISTING.md (create that file) so the
 Translate extName and extDesc in every locale. Keep the English keyword "Full Page Screenshot" in the English name. In other languages, use the natural equivalent of "full page screenshot" first, then OpenScreenShot.
 
 Leave the manifest name and description pointing at those message keys. The toolbar tooltip can stay OpenScreenShot.
-
 
 ### P0.3 Store long description (paste-ready)
 
@@ -106,12 +102,14 @@ Click the icon. Get the entire scrolling page. Annotate, export PNG or PDF, done
 OpenScreenShot is MIT-licensed, 100 percent private, and asks for no standing access to the sites you visit. No account, no watermark, no uploads, no telemetry. It works with Wi-Fi off. Read the source: https://github.com/pghqdev/OpenScreenShot
 
 HOW IT WORKS
+
 - Click the OpenScreenShot icon. The page scrolls and stitches itself into one image.
 - Annotate with arrows, boxes, text, numbered steps, blur, and crop. All free.
 - Export PNG, JPEG, WebP, or PDF, or copy to the clipboard.
 - Right-click the page for visible-area or region capture, or to record the tab.
 
 WHY THIS ONE
+
 - One click. No mode menu in the way of a full page screenshot.
 - Open source (MIT). You can read every line.
 - No standing site access at install. Access is only the tab you just captured.
@@ -120,6 +118,7 @@ WHY THIS ONE
 - Annotate, blur, crop, and PDF are free.
 
 MORE (when you need it)
+
 - Visible area and selected-region capture from the right-click menu or shortcuts.
 - Tab recording with auto-zoom, trim, and WebM export. Optional, local, no account.
 - Keyboard: Ctrl or Cmd Shift S full page. Other shortcuts stay as they are today.
@@ -130,7 +129,6 @@ Source: https://github.com/pghqdev/OpenScreenShot
 Privacy: https://openscreenshot.app/privacy/
 
 Do not put CLI, MCP, a who-it-is-for list, or sister-product cross-promos in the first screen.
-
 
 ### P0.4 Store gallery slides
 
@@ -144,7 +142,6 @@ Five marketing slides, not raw UI captures. Extend the existing shots script. Pu
 
 Huge type on a saturated field. Founder uploads them in that order.
 
-
 ### P0.5 Review prompt
 
 We have four ratings. That is why the listing looks empty next to hundreds of reviews.
@@ -155,6 +152,7 @@ If OpenScreenShot saved you a minute, a rating on the Chrome Web Store helps oth
 Buttons: Rate on Chrome Web Store. Not now.
 
 Rules:
+
 - Only after 3 successful exports or copies on that install.
 - Once per install. If they click either button, never show again (a storage flag).
 - Link the official listing reviews tab.
@@ -172,7 +170,6 @@ Do not machine-translate the privacy policy in this PR.
 
 Lower priority than the gallery. Only if time: a mark that reads at 16 pixels. The search tile matters more.
 
-
 ---
 
 ## 5. P1 — this month (second PR)
@@ -184,6 +181,7 @@ Files: the Astro homepage plus site i18n strings.
 Keep the H1 energy. Put "one click" in the subhead so it matches the store query.
 
 English:
+
 - Eyebrow: Free · Open source · MIT licensed
 - H1: Click. Captured. Done.
 - Subhead: Full page screenshot in one click. So private it works with Wi-Fi off. No account, no watermark, no cloud.
@@ -193,7 +191,6 @@ English:
 Move CLI, MCP, and Record below the privacy/trust grid. Do not delete them. Demote them.
 
 Update the capture feature tile so the first sentence is: Click the icon. Get the whole page.
-
 
 ### P1.2 Comparison page
 
@@ -235,7 +232,6 @@ Keep badges, install, the permissions table, and dev docs. Add a short compare t
 
 First recipe: click the icon to capture the full page. Document the settings toggle.
 
-
 ---
 
 ## 6. P2 — do not implement now
@@ -260,12 +256,12 @@ Claude Code cannot publish the store.
 5. After it is live: install on a clean Chrome profile and time click-icon-to-full-page. If a picker appears, P0.1 failed.
 6. Ask current users for a store review. Four ratings is the social-proof bug.
 
-
 ---
 
 ## 8. Acceptance criteria
 
 Extension:
+
 - Fresh install: toolbar click starts a full-page capture. No mode menu.
 - Upgraded install: same, unless the user turned the setting off.
 - Setting off: popup picker restored.
@@ -276,6 +272,7 @@ Extension:
 - Unit tests cover expressMode default, migration, and toolbar-click branching.
 
 Listing assets:
+
 - extName is Full Page Screenshot - OpenScreenShot (45 character max).
 - extDesc is the one-click / open source / private line (132 character max).
 - store/STORE_LISTING.md exists with paste-ready copy.
@@ -283,6 +280,7 @@ Listing assets:
 - New locales exist with name, short desc, and UI chrome.
 
 Site / GitHub if P1 is included:
+
 - Homepage subhead contains "one click" and still says Wi-Fi off / MIT.
 - /compare/ renders the table and does not accuse anyone of malware.
 - README lede is one-click plus MIT, not a feature dump.
@@ -309,7 +307,6 @@ Do not mix a recorder rewrite, a new capture engine, or a rebrand into these PRs
 - Site subhead: Full page screenshot in one click. So private it works with Wi-Fi off. No account, no watermark, no cloud.
 
 That is the whole job. Default the icon. Billboards not UI shots. Tell the truth they cannot copy: MIT, no extra site access, Wi-Fi off.
-
 
 ---
 
@@ -406,4 +403,3 @@ Uninstall copy must not guilt, dark-pattern, or claim they will lose files (capt
 - Uninstall of a loaded unpacked or store build opens openscreenshot.app/uninstall.
 - The uninstall URL contains no page URLs.
 - Privacy page mentions: uninstall opens a local-to-us feedback page. We do not receive your browsing history.
-
