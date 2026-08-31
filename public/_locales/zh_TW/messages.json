@@ -2300,5 +2300,43 @@
   "ratePromptLater": {
     "message": "暫時不要",
     "description": "One-time post-export rate prompt: dismiss button."
+  },
+  "errNoTab": {
+    "message": "找不到使用中的分頁。",
+    "description": "Capture error: no active tab."
+  },
+  "errProtectedPage": {
+    "message": "無法擷取此受保護的網頁。",
+    "description": "Capture error: browser-protected page."
+  },
+  "errBlankPage": {
+    "message": "此網頁沒有可捲動的內容。",
+    "description": "Capture error: nothing scrollable to capture."
+  },
+  "errTooLarge": {
+    "message": "網頁太長，無法合成一張圖片（$PX$px）。請改用可見範圍或選取區域。",
+    "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
+    "placeholders": {
+      "px": {
+        "content": "$1",
+        "example": "35000"
+      }
+    }
+  },
+  "errNoRegion": {
+    "message": "儲存的區域不符合目前螢幕，請先重新選取。",
+    "description": "Capture error: repeat-last-region with no region that fits."
+  },
+  "errClipboard": {
+    "message": "無法將截圖複製到剪貼簿。",
+    "description": "Quick-action error: clipboard write failed."
+  },
+  "errSave": {
+    "message": "無法將截圖儲存到磁碟。",
+    "description": "Quick-action error: disk save failed."
+  },
+  "errUnknown": {
+    "message": "擷取意外失敗。",
+    "description": "Capture error: unexpected failure."
   }
 }

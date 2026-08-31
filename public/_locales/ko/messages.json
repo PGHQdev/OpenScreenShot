@@ -2300,5 +2300,43 @@
   "ratePromptLater": {
     "message": "나중에",
     "description": "One-time post-export rate prompt: dismiss button."
+  },
+  "errNoTab": {
+    "message": "활성 탭을 찾을 수 없습니다.",
+    "description": "Capture error: no active tab."
+  },
+  "errProtectedPage": {
+    "message": "보호된 페이지는 캡처할 수 없습니다.",
+    "description": "Capture error: browser-protected page."
+  },
+  "errBlankPage": {
+    "message": "이 페이지에는 스크롤할 콘텐츠가 없습니다.",
+    "description": "Capture error: nothing scrollable to capture."
+  },
+  "errTooLarge": {
+    "message": "이 페이지는 너무 길어 한 이미지에 담을 수 없습니다($PX$px). 보이는 영역이나 선택 영역을 사용해 보세요.",
+    "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
+    "placeholders": {
+      "px": {
+        "content": "$1",
+        "example": "35000"
+      }
+    }
+  },
+  "errNoRegion": {
+    "message": "저장된 영역이 이 화면에 맞지 않습니다. 먼저 영역을 선택하세요.",
+    "description": "Capture error: repeat-last-region with no region that fits."
+  },
+  "errClipboard": {
+    "message": "스크린샷을 클립보드에 복사하지 못했습니다.",
+    "description": "Quick-action error: clipboard write failed."
+  },
+  "errSave": {
+    "message": "스크린샷을 디스크에 저장하지 못했습니다.",
+    "description": "Quick-action error: disk save failed."
+  },
+  "errUnknown": {
+    "message": "캡처가 예기치 않게 실패했습니다.",
+    "description": "Capture error: unexpected failure."
   }
 }

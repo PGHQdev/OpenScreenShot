@@ -2300,5 +2300,43 @@
   "ratePromptLater": {
     "message": "Nicht jetzt",
     "description": "One-time post-export rate prompt: dismiss button."
+  },
+  "errNoTab": {
+    "message": "Kein aktiver Tab gefunden.",
+    "description": "Capture error: no active tab."
+  },
+  "errProtectedPage": {
+    "message": "Diese geschützte Seite kann nicht aufgenommen werden.",
+    "description": "Capture error: browser-protected page."
+  },
+  "errBlankPage": {
+    "message": "Diese Seite hat keinen scrollbaren Inhalt.",
+    "description": "Capture error: nothing scrollable to capture."
+  },
+  "errTooLarge": {
+    "message": "Diese Seite ist zu hoch für ein einzelnes Bild ($PX$ px). Versuche Sichtbarer Bereich oder Ausschnitt.",
+    "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
+    "placeholders": {
+      "px": {
+        "content": "$1",
+        "example": "35000"
+      }
+    }
+  },
+  "errNoRegion": {
+    "message": "Kein gespeicherter Ausschnitt passt auf diesen Bildschirm — wähle zuerst einen aus.",
+    "description": "Capture error: repeat-last-region with no region that fits."
+  },
+  "errClipboard": {
+    "message": "Der Screenshot konnte nicht in die Zwischenablage kopiert werden.",
+    "description": "Quick-action error: clipboard write failed."
+  },
+  "errSave": {
+    "message": "Der Screenshot konnte nicht gespeichert werden.",
+    "description": "Quick-action error: disk save failed."
+  },
+  "errUnknown": {
+    "message": "Die Aufnahme ist unerwartet fehlgeschlagen.",
+    "description": "Capture error: unexpected failure."
   }
 }

@@ -1,0 +1,116 @@
+{
+  "extName": {
+    "message": "Tam Sayfa Ekran Görüntüsü - OpenScreenShot",
+    "description": "Extension name shown in Chrome UI."
+  },
+  "extDesc": {
+    "message": "Tek tıkla tam sayfa ekran görüntüsü. Açık kaynak, %100 gizli, hesap yok, yükleme yok.",
+    "description": "Extension description shown in the Chrome Web Store and extensions page."
+  },
+  "modeFullPage": {
+    "message": "Tam sayfa",
+    "description": "Capture mode: capture the entire scrolling page."
+  },
+  "modeFullPageSub": {
+    "message": "Kaydırılan sayfanın tamamını yakala",
+    "description": "Subtitle for the Full Page capture mode."
+  },
+  "modeVisible": {
+    "message": "Görünen alan",
+    "description": "Capture mode: capture what is currently visible."
+  },
+  "modeVisibleSub": {
+    "message": "Şu anda gördüğünüz",
+    "description": "Subtitle for the Visible Area capture mode."
+  },
+  "modeRegion": {
+    "message": "Seçili bölge",
+    "description": "Capture mode: capture a user-dragged region."
+  },
+  "modeRegionSub": {
+    "message": "Seçmek için tıklayıp sürükleyin",
+    "description": "Subtitle for the Selected Region capture mode."
+  },
+  "repeatLastRegion": {
+    "message": "Son bölgeyi tekrarla",
+    "description": "Footer link and context menu item that re-captures the previous region selection."
+  },
+  "settingsTitle": {
+    "message": "Ayarlar",
+    "description": "Settings panel heading."
+  },
+  "expressLabel": {
+    "message": "Araç çubuğu simgesine tıklamak tam sayfayı yakalar",
+    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+  },
+  "expressHint": {
+    "message": "Her seferinde Tam sayfa, Görünen alan veya Seçili bölge seçmek için kapatın.",
+    "description": "Hint shown under the express row when express mode is on."
+  },
+  "expressMigratedNote": {
+    "message": "Simgeye tıklamak artık tam sayfayı yakalıyor. Diğer modlar için sağ tıklayın.",
+    "description": "One-time editor note after the update that made a toolbar click capture the full page."
+  },
+  "editorRateLabel": {
+    "message": "Değerlendir",
+    "description": "Editor topbar: label on the always-visible Rate star."
+  },
+  "editorRateTooltip": {
+    "message": "30 saniye. Başkaları gizli bir ekran görüntüsü aracını böyle buluyor.",
+    "description": "Editor topbar: tooltip on the Rate star."
+  },
+  "ratePromptHeadline": {
+    "message": "Zaman kazandırıyor mu?",
+    "description": "One-time post-export rate prompt: headline."
+  },
+  "ratePromptBody": {
+    "message": "Chrome Web Mağazası'nda kısa bir değerlendirme, gizli bir aracın bulunmasının ana yoludur. 30 saniye sürer.",
+    "description": "One-time post-export rate prompt: body."
+  },
+  "ratePromptRate": {
+    "message": "Chrome Web Mağazası'nda değerlendir",
+    "description": "One-time post-export rate prompt: button that opens the reviews tab."
+  },
+  "ratePromptLater": {
+    "message": "Şimdi değil",
+    "description": "One-time post-export rate prompt: dismiss button."
+  },
+  "errNoTab": {
+    "message": "Etkin sekme bulunamadı.",
+    "description": "Capture error: no active tab."
+  },
+  "errProtectedPage": {
+    "message": "Bu korumalı sayfanın ekran görüntüsü alınamaz.",
+    "description": "Capture error: browser-protected page."
+  },
+  "errBlankPage": {
+    "message": "Bu sayfada kaydırılabilir içerik yok.",
+    "description": "Capture error: nothing scrollable to capture."
+  },
+  "errTooLarge": {
+    "message": "Bu sayfa tek bir görüntü için çok uzun ($PX$ px). Görünen alanı veya bölge modunu deneyin.",
+    "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
+    "placeholders": {
+      "px": {
+        "content": "$1",
+        "example": "35000"
+      }
+    }
+  },
+  "errNoRegion": {
+    "message": "Kayıtlı bölge bu ekrana sığmıyor — önce bir bölge seçin.",
+    "description": "Capture error: repeat-last-region with no region that fits."
+  },
+  "errClipboard": {
+    "message": "Ekran görüntüsü panoya kopyalanamadı.",
+    "description": "Quick-action error: clipboard write failed."
+  },
+  "errSave": {
+    "message": "Ekran görüntüsü diske kaydedilemedi.",
+    "description": "Quick-action error: disk save failed."
+  },
+  "errUnknown": {
+    "message": "Yakalama beklenmedik şekilde başarısız oldu.",
+    "description": "Capture error: unexpected failure."
+  }
+}

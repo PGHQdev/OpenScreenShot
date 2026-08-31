@@ -2300,5 +2300,43 @@
   "ratePromptLater": {
     "message": "Pas maintenant",
     "description": "One-time post-export rate prompt: dismiss button."
+  },
+  "errNoTab": {
+    "message": "Aucun onglet actif trouvé.",
+    "description": "Capture error: no active tab."
+  },
+  "errProtectedPage": {
+    "message": "Impossible de capturer cette page protégée.",
+    "description": "Capture error: browser-protected page."
+  },
+  "errBlankPage": {
+    "message": "Cette page n’a pas de contenu défilant.",
+    "description": "Capture error: nothing scrollable to capture."
+  },
+  "errTooLarge": {
+    "message": "Cette page est trop haute pour une seule image ($PX$ px). Essayez la zone visible ou une zone sélectionnée.",
+    "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
+    "placeholders": {
+      "px": {
+        "content": "$1",
+        "example": "35000"
+      }
+    }
+  },
+  "errNoRegion": {
+    "message": "Aucune zone enregistrée ne tient sur cet écran — sélectionnez-en une d’abord.",
+    "description": "Capture error: repeat-last-region with no region that fits."
+  },
+  "errClipboard": {
+    "message": "Impossible de copier la capture dans le presse-papiers.",
+    "description": "Quick-action error: clipboard write failed."
+  },
+  "errSave": {
+    "message": "Impossible d’enregistrer la capture sur le disque.",
+    "description": "Quick-action error: disk save failed."
+  },
+  "errUnknown": {
+    "message": "La capture a échoué de manière inattendue.",
+    "description": "Capture error: unexpected failure."
   }
 }

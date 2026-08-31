@@ -2300,5 +2300,43 @@
   "ratePromptLater": {
     "message": "あとで",
     "description": "One-time post-export rate prompt: dismiss button."
+  },
+  "errNoTab": {
+    "message": "アクティブなタブが見つかりません。",
+    "description": "Capture error: no active tab."
+  },
+  "errProtectedPage": {
+    "message": "この保護されたページはスクリーンショットできません。",
+    "description": "Capture error: browser-protected page."
+  },
+  "errBlankPage": {
+    "message": "このページにはスクロール可能なコンテンツがありません。",
+    "description": "Capture error: nothing scrollable to capture."
+  },
+  "errTooLarge": {
+    "message": "このページは高すぎて 1 枚の画像に収まりません（$PX$px）。表示領域か選択範囲をお試しください。",
+    "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
+    "placeholders": {
+      "px": {
+        "content": "$1",
+        "example": "35000"
+      }
+    }
+  },
+  "errNoRegion": {
+    "message": "保存された範囲がこの画面に収まりません。先に範囲を選択してください。",
+    "description": "Capture error: repeat-last-region with no region that fits."
+  },
+  "errClipboard": {
+    "message": "スクリーンショットをクリップボードにコピーできませんでした。",
+    "description": "Quick-action error: clipboard write failed."
+  },
+  "errSave": {
+    "message": "スクリーンショットをディスクに保存できませんでした。",
+    "description": "Quick-action error: disk save failed."
+  },
+  "errUnknown": {
+    "message": "キャプチャが予期せず失敗しました。",
+    "description": "Capture error: unexpected failure."
   }
 }

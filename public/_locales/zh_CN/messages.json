@@ -2300,5 +2300,43 @@
   "ratePromptLater": {
     "message": "暂不",
     "description": "One-time post-export rate prompt: dismiss button."
+  },
+  "errNoTab": {
+    "message": "未找到活动标签页。",
+    "description": "Capture error: no active tab."
+  },
+  "errProtectedPage": {
+    "message": "无法截取此受保护的页面。",
+    "description": "Capture error: browser-protected page."
+  },
+  "errBlankPage": {
+    "message": "此页面没有可滚动的内容。",
+    "description": "Capture error: nothing scrollable to capture."
+  },
+  "errTooLarge": {
+    "message": "页面太长，无法合成一张图片（$PX$px）。请尝试可见区域或选定区域。",
+    "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
+    "placeholders": {
+      "px": {
+        "content": "$1",
+        "example": "35000"
+      }
+    }
+  },
+  "errNoRegion": {
+    "message": "保存的区域不适合当前屏幕，请先重新选择。",
+    "description": "Capture error: repeat-last-region with no region that fits."
+  },
+  "errClipboard": {
+    "message": "无法将截图复制到剪贴板。",
+    "description": "Quick-action error: clipboard write failed."
+  },
+  "errSave": {
+    "message": "无法将截图保存到磁盘。",
+    "description": "Quick-action error: disk save failed."
+  },
+  "errUnknown": {
+    "message": "截图意外失败。",
+    "description": "Capture error: unexpected failure."
   }
 }

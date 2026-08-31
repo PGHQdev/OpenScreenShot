@@ -1,0 +1,116 @@
+{
+  "extName": {
+    "message": "لقطة شاشة للصفحة الكاملة - OpenScreenShot",
+    "description": "Extension name shown in Chrome UI."
+  },
+  "extDesc": {
+    "message": "لقطة شاشة للصفحة الكاملة بنقرة واحدة. مفتوح المصدر، خصوصية 100%، بلا حساب، بلا رفع.",
+    "description": "Extension description shown in the Chrome Web Store and extensions page."
+  },
+  "modeFullPage": {
+    "message": "الصفحة الكاملة",
+    "description": "Capture mode: capture the entire scrolling page."
+  },
+  "modeFullPageSub": {
+    "message": "التقاط الصفحة القابلة للتمرير بأكملها",
+    "description": "Subtitle for the Full Page capture mode."
+  },
+  "modeVisible": {
+    "message": "المنطقة المرئية",
+    "description": "Capture mode: capture what is currently visible."
+  },
+  "modeVisibleSub": {
+    "message": "ما تراه الآن",
+    "description": "Subtitle for the Visible Area capture mode."
+  },
+  "modeRegion": {
+    "message": "منطقة محددة",
+    "description": "Capture mode: capture a user-dragged region."
+  },
+  "modeRegionSub": {
+    "message": "انقر واسحب للتحديد",
+    "description": "Subtitle for the Selected Region capture mode."
+  },
+  "repeatLastRegion": {
+    "message": "تكرار آخر منطقة",
+    "description": "Footer link and context menu item that re-captures the previous region selection."
+  },
+  "settingsTitle": {
+    "message": "الإعدادات",
+    "description": "Settings panel heading."
+  },
+  "expressLabel": {
+    "message": "النقر على أيقونة شريط الأدوات يلتقط الصفحة الكاملة",
+    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+  },
+  "expressHint": {
+    "message": "أوقفه لاختيار الصفحة الكاملة أو المنطقة المرئية أو منطقة محددة في كل مرة.",
+    "description": "Hint shown under the express row when express mode is on."
+  },
+  "expressMigratedNote": {
+    "message": "النقر على الأيقونة يلتقط الآن الصفحة الكاملة. انقر بزر الفأرة الأيمن للأوضاع الأخرى.",
+    "description": "One-time editor note after the update that made a toolbar click capture the full page."
+  },
+  "editorRateLabel": {
+    "message": "قيّم",
+    "description": "Editor topbar: label on the always-visible Rate star."
+  },
+  "editorRateTooltip": {
+    "message": "30 ثانية. هكذا يجد الآخرون أداة لقطات شاشة تحترم الخصوصية.",
+    "description": "Editor topbar: tooltip on the Rate star."
+  },
+  "ratePromptHeadline": {
+    "message": "هل توفر لك هذه الأداة الوقت؟",
+    "description": "One-time post-export rate prompt: headline."
+  },
+  "ratePromptBody": {
+    "message": "تقييم قصير في متجر Chrome الإلكتروني هو الطريقة الأساسية لاكتشاف أداة تحترم الخصوصية. يستغرق 30 ثانية.",
+    "description": "One-time post-export rate prompt: body."
+  },
+  "ratePromptRate": {
+    "message": "قيّم في متجر Chrome الإلكتروني",
+    "description": "One-time post-export rate prompt: button that opens the reviews tab."
+  },
+  "ratePromptLater": {
+    "message": "ليس الآن",
+    "description": "One-time post-export rate prompt: dismiss button."
+  },
+  "errNoTab": {
+    "message": "لم يتم العثور على علامة تبويب نشطة.",
+    "description": "Capture error: no active tab."
+  },
+  "errProtectedPage": {
+    "message": "يتعذر التقاط هذه الصفحة المحمية.",
+    "description": "Capture error: browser-protected page."
+  },
+  "errBlankPage": {
+    "message": "لا تحتوي هذه الصفحة على محتوى قابل للتمرير.",
+    "description": "Capture error: nothing scrollable to capture."
+  },
+  "errTooLarge": {
+    "message": "هذه الصفحة أطول من أن تلتقط في صورة واحدة ($PX$ بكسل). جرّب المنطقة المرئية أو منطقة محددة.",
+    "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
+    "placeholders": {
+      "px": {
+        "content": "$1",
+        "example": "35000"
+      }
+    }
+  },
+  "errNoRegion": {
+    "message": "المنطقة المحفوظة لا تناسب هذه الشاشة — حدد منطقة أولاً.",
+    "description": "Capture error: repeat-last-region with no region that fits."
+  },
+  "errClipboard": {
+    "message": "تعذر نسخ لقطة الشاشة إلى الحافظة.",
+    "description": "Quick-action error: clipboard write failed."
+  },
+  "errSave": {
+    "message": "تعذر حفظ لقطة الشاشة على القرص.",
+    "description": "Quick-action error: disk save failed."
+  },
+  "errUnknown": {
+    "message": "فشل الالتقاط بشكل غير متوقع.",
+    "description": "Capture error: unexpected failure."
+  }
+}

@@ -2300,5 +2300,43 @@
   "ratePromptLater": {
     "message": "Не сейчас",
     "description": "One-time post-export rate prompt: dismiss button."
+  },
+  "errNoTab": {
+    "message": "Активная вкладка не найдена.",
+    "description": "Capture error: no active tab."
+  },
+  "errProtectedPage": {
+    "message": "Нельзя снять эту защищённую страницу.",
+    "description": "Capture error: browser-protected page."
+  },
+  "errBlankPage": {
+    "message": "На этой странице нет прокручиваемого содержимого.",
+    "description": "Capture error: nothing scrollable to capture."
+  },
+  "errTooLarge": {
+    "message": "Страница слишком высокая для одного изображения ($PX$ px). Попробуйте видимую часть или область.",
+    "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
+    "placeholders": {
+      "px": {
+        "content": "$1",
+        "example": "35000"
+      }
+    }
+  },
+  "errNoRegion": {
+    "message": "Сохранённая область не помещается на этом экране — сначала выделите новую.",
+    "description": "Capture error: repeat-last-region with no region that fits."
+  },
+  "errClipboard": {
+    "message": "Не удалось скопировать скриншот в буфер обмена.",
+    "description": "Quick-action error: clipboard write failed."
+  },
+  "errSave": {
+    "message": "Не удалось сохранить скриншот на диск.",
+    "description": "Quick-action error: disk save failed."
+  },
+  "errUnknown": {
+    "message": "Захват неожиданно завершился ошибкой.",
+    "description": "Capture error: unexpected failure."
   }
 }

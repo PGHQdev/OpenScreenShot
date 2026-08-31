@@ -2300,5 +2300,43 @@
   "ratePromptLater": {
     "message": "Not now",
     "description": "One-time post-export rate prompt: dismiss button."
+  },
+  "errNoTab": {
+    "message": "No active tab found.",
+    "description": "Capture error: no active tab."
+  },
+  "errProtectedPage": {
+    "message": "Can't screenshot this protected page.",
+    "description": "Capture error: browser-protected page."
+  },
+  "errBlankPage": {
+    "message": "This page has no scrollable content.",
+    "description": "Capture error: nothing scrollable to capture."
+  },
+  "errTooLarge": {
+    "message": "This page is too tall to capture in one image ($PX$px). Try visible or region mode.",
+    "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
+    "placeholders": {
+      "px": {
+        "content": "$1",
+        "example": "35000"
+      }
+    }
+  },
+  "errNoRegion": {
+    "message": "No saved region fits this screen — select one first.",
+    "description": "Capture error: repeat-last-region with no region that fits."
+  },
+  "errClipboard": {
+    "message": "Could not copy the screenshot to the clipboard.",
+    "description": "Quick-action error: clipboard write failed."
+  },
+  "errSave": {
+    "message": "Could not save the screenshot to disk.",
+    "description": "Quick-action error: disk save failed."
+  },
+  "errUnknown": {
+    "message": "Capture failed unexpectedly.",
+    "description": "Capture error: unexpected failure."
   }
 }

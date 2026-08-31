@@ -1,0 +1,116 @@
+{
+  "extName": {
+    "message": "Screenshot Halaman Penuh - OpenScreenShot",
+    "description": "Extension name shown in Chrome UI."
+  },
+  "extDesc": {
+    "message": "Screenshot halaman penuh sekali klik. Open source, 100% privat, tanpa akun, tanpa unggahan.",
+    "description": "Extension description shown in the Chrome Web Store and extensions page."
+  },
+  "modeFullPage": {
+    "message": "Halaman penuh",
+    "description": "Capture mode: capture the entire scrolling page."
+  },
+  "modeFullPageSub": {
+    "message": "Tangkap seluruh halaman yang bergulir",
+    "description": "Subtitle for the Full Page capture mode."
+  },
+  "modeVisible": {
+    "message": "Area terlihat",
+    "description": "Capture mode: capture what is currently visible."
+  },
+  "modeVisibleSub": {
+    "message": "Yang Anda lihat sekarang",
+    "description": "Subtitle for the Visible Area capture mode."
+  },
+  "modeRegion": {
+    "message": "Area pilihan",
+    "description": "Capture mode: capture a user-dragged region."
+  },
+  "modeRegionSub": {
+    "message": "Klik dan seret untuk memilih",
+    "description": "Subtitle for the Selected Region capture mode."
+  },
+  "repeatLastRegion": {
+    "message": "Ulangi area terakhir",
+    "description": "Footer link and context menu item that re-captures the previous region selection."
+  },
+  "settingsTitle": {
+    "message": "Setelan",
+    "description": "Settings panel heading."
+  },
+  "expressLabel": {
+    "message": "Mengklik ikon bilah alat menangkap halaman penuh",
+    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+  },
+  "expressHint": {
+    "message": "Matikan untuk memilih Halaman penuh, Area terlihat, atau Area pilihan setiap kali.",
+    "description": "Hint shown under the express row when express mode is on."
+  },
+  "expressMigratedNote": {
+    "message": "Klik ikon kini menangkap halaman penuh. Klik kanan untuk mode lain.",
+    "description": "One-time editor note after the update that made a toolbar click capture the full page."
+  },
+  "editorRateLabel": {
+    "message": "Beri nilai",
+    "description": "Editor topbar: label on the always-visible Rate star."
+  },
+  "editorRateTooltip": {
+    "message": "30 detik. Begitulah orang lain menemukan alat screenshot yang privat.",
+    "description": "Editor topbar: tooltip on the Rate star."
+  },
+  "ratePromptHeadline": {
+    "message": "Apakah ini menghemat waktu Anda?",
+    "description": "One-time post-export rate prompt: headline."
+  },
+  "ratePromptBody": {
+    "message": "Penilaian singkat di Chrome Web Store adalah cara utama alat privat ditemukan. Hanya 30 detik.",
+    "description": "One-time post-export rate prompt: body."
+  },
+  "ratePromptRate": {
+    "message": "Beri nilai di Chrome Web Store",
+    "description": "One-time post-export rate prompt: button that opens the reviews tab."
+  },
+  "ratePromptLater": {
+    "message": "Nanti saja",
+    "description": "One-time post-export rate prompt: dismiss button."
+  },
+  "errNoTab": {
+    "message": "Tab aktif tidak ditemukan.",
+    "description": "Capture error: no active tab."
+  },
+  "errProtectedPage": {
+    "message": "Tidak dapat menangkap halaman yang dilindungi ini.",
+    "description": "Capture error: browser-protected page."
+  },
+  "errBlankPage": {
+    "message": "Halaman ini tidak memiliki konten yang dapat digulir.",
+    "description": "Capture error: nothing scrollable to capture."
+  },
+  "errTooLarge": {
+    "message": "Halaman ini terlalu tinggi untuk satu gambar ($PX$ px). Coba area terlihat atau area pilihan.",
+    "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
+    "placeholders": {
+      "px": {
+        "content": "$1",
+        "example": "35000"
+      }
+    }
+  },
+  "errNoRegion": {
+    "message": "Area tersimpan tidak muat di layar ini — pilih dulu area baru.",
+    "description": "Capture error: repeat-last-region with no region that fits."
+  },
+  "errClipboard": {
+    "message": "Tidak dapat menyalin screenshot ke papan klip.",
+    "description": "Quick-action error: clipboard write failed."
+  },
+  "errSave": {
+    "message": "Tidak dapat menyimpan screenshot ke disk.",
+    "description": "Quick-action error: disk save failed."
+  },
+  "errUnknown": {
+    "message": "Penangkapan gagal secara tak terduga.",
+    "description": "Capture error: unexpected failure."
+  }
+}

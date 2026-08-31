@@ -1,0 +1,116 @@
+{
+  "extName": {
+    "message": "Volledige pagina screenshot - OpenScreenShot",
+    "description": "Extension name shown in Chrome UI."
+  },
+  "extDesc": {
+    "message": "Screenshot van de volledige pagina met één klik. Open source, 100% privé, geen account, geen uploads.",
+    "description": "Extension description shown in the Chrome Web Store and extensions page."
+  },
+  "modeFullPage": {
+    "message": "Volledige pagina",
+    "description": "Capture mode: capture the entire scrolling page."
+  },
+  "modeFullPageSub": {
+    "message": "Leg de hele scrollende pagina vast",
+    "description": "Subtitle for the Full Page capture mode."
+  },
+  "modeVisible": {
+    "message": "Zichtbaar gebied",
+    "description": "Capture mode: capture what is currently visible."
+  },
+  "modeVisibleSub": {
+    "message": "Wat je nu ziet",
+    "description": "Subtitle for the Visible Area capture mode."
+  },
+  "modeRegion": {
+    "message": "Geselecteerd gebied",
+    "description": "Capture mode: capture a user-dragged region."
+  },
+  "modeRegionSub": {
+    "message": "Klik en sleep om te selecteren",
+    "description": "Subtitle for the Selected Region capture mode."
+  },
+  "repeatLastRegion": {
+    "message": "Laatste gebied herhalen",
+    "description": "Footer link and context menu item that re-captures the previous region selection."
+  },
+  "settingsTitle": {
+    "message": "Instellingen",
+    "description": "Settings panel heading."
+  },
+  "expressLabel": {
+    "message": "Een klik op het werkbalkpictogram legt de volledige pagina vast",
+    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+  },
+  "expressHint": {
+    "message": "Zet uit om elke keer te kiezen tussen Volledige pagina, Zichtbaar gebied of Geselecteerd gebied.",
+    "description": "Hint shown under the express row when express mode is on."
+  },
+  "expressMigratedNote": {
+    "message": "Een klik op het pictogram legt nu de volledige pagina vast. Rechtsklik voor andere modi.",
+    "description": "One-time editor note after the update that made a toolbar click capture the full page."
+  },
+  "editorRateLabel": {
+    "message": "Beoordelen",
+    "description": "Editor topbar: label on the always-visible Rate star."
+  },
+  "editorRateTooltip": {
+    "message": "30 seconden. Zo vinden anderen een privé screenshot-tool.",
+    "description": "Editor topbar: tooltip on the Rate star."
+  },
+  "ratePromptHeadline": {
+    "message": "Bespaart dit je tijd?",
+    "description": "One-time post-export rate prompt: headline."
+  },
+  "ratePromptBody": {
+    "message": "Een korte beoordeling in de Chrome Web Store is de belangrijkste manier waarop een privé tool gevonden wordt. Het duurt 30 seconden.",
+    "description": "One-time post-export rate prompt: body."
+  },
+  "ratePromptRate": {
+    "message": "Beoordelen in de Chrome Web Store",
+    "description": "One-time post-export rate prompt: button that opens the reviews tab."
+  },
+  "ratePromptLater": {
+    "message": "Niet nu",
+    "description": "One-time post-export rate prompt: dismiss button."
+  },
+  "errNoTab": {
+    "message": "Geen actief tabblad gevonden.",
+    "description": "Capture error: no active tab."
+  },
+  "errProtectedPage": {
+    "message": "Deze beveiligde pagina kan niet worden vastgelegd.",
+    "description": "Capture error: browser-protected page."
+  },
+  "errBlankPage": {
+    "message": "Deze pagina heeft geen scrollbare inhoud.",
+    "description": "Capture error: nothing scrollable to capture."
+  },
+  "errTooLarge": {
+    "message": "Deze pagina is te hoog voor één afbeelding ($PX$ px). Probeer het zichtbare of een geselecteerd gebied.",
+    "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
+    "placeholders": {
+      "px": {
+        "content": "$1",
+        "example": "35000"
+      }
+    }
+  },
+  "errNoRegion": {
+    "message": "Geen opgeslagen gebied past op dit scherm — selecteer er eerst een.",
+    "description": "Capture error: repeat-last-region with no region that fits."
+  },
+  "errClipboard": {
+    "message": "Kon de screenshot niet naar het klembord kopiëren.",
+    "description": "Quick-action error: clipboard write failed."
+  },
+  "errSave": {
+    "message": "Kon de screenshot niet op schijf opslaan.",
+    "description": "Quick-action error: disk save failed."
+  },
+  "errUnknown": {
+    "message": "Vastleggen is onverwacht mislukt.",
+    "description": "Capture error: unexpected failure."
+  }
+}

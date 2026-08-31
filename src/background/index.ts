@@ -269,14 +269,14 @@ chrome.runtime.onMessage.addListener((message: unknown) => {
 async function handleCapture(mode: CaptureMode, repeatRegion = false): Promise<void> {
   const tab = await getActiveTab();
   if (!tab || tab.id == null) {
-    broadcast({ type: 'CAPTURE_ERROR', code: 'unknown', message: 'No active tab found.' });
+    broadcast({ type: 'CAPTURE_ERROR', code: 'unknown', message: chrome.i18n.getMessage('errNoTab') });
     return;
   }
   if (isProtectedUrl(tab.url)) {
     broadcast({
       type: 'CAPTURE_ERROR',
       code: 'protected-page',
-      message: "Can't screenshot this protected page.",
+      message: chrome.i18n.getMessage('errProtectedPage'),
     });
     return;
   }
@@ -383,7 +383,7 @@ async function captureRegion(tab: chrome.tabs.Tab, repeat = false): Promise<void
       broadcast({
         type: 'CAPTURE_ERROR',
         code: 'no-region',
-        message: 'No saved region fits this screen — select one first.',
+        message: chrome.i18n.getMessage('errNoRegion'),
       });
       return;
     }
@@ -420,7 +420,7 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
     broadcast({
       type: 'CAPTURE_ERROR',
       code: 'blank-page',
-      message: 'This page has no scrollable content.',
+      message: chrome.i18n.getMessage('errBlankPage'),
     });
     return;
   }
@@ -430,7 +430,7 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
     broadcast({
       type: 'CAPTURE_ERROR',
       code: 'too-large',
-      message: `This page is too tall to capture in one image (${canvasHeight}px). Try visible or region mode.`,
+      message: chrome.i18n.getMessage('errTooLarge', String(canvasHeight)),
     });
     return;
   }
@@ -534,7 +534,7 @@ async function deliverCapture(
       broadcast({
         type: 'CAPTURE_ERROR',
         code: 'quick-action',
-        message: 'Could not copy the screenshot to the clipboard.',
+        message: chrome.i18n.getMessage('errClipboard'),
       });
       return false;
     }
@@ -552,7 +552,7 @@ async function deliverCapture(
     broadcast({
       type: 'CAPTURE_ERROR',
       code: 'quick-action',
-      message: 'Could not save the screenshot to disk.',
+      message: chrome.i18n.getMessage('errSave'),
     });
     return false;
   }
@@ -576,7 +576,7 @@ function commandToMode(command: string): CaptureMode | null {
 
 function onCaptureError(err: unknown): void {
   console.error('[OpenScreenShot] capture failed', err);
-  broadcast({ type: 'CAPTURE_ERROR', code: 'unknown', message: 'Capture failed unexpectedly.' });
+  broadcast({ type: 'CAPTURE_ERROR', code: 'unknown', message: chrome.i18n.getMessage('errUnknown') });
 }
 
 function broadcast(msg: PopupMessage): void {
