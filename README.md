@@ -4,7 +4,7 @@
 
 # OpenScreenShot
 
-**Screenshots and tab recording for Chrome. Everything stays on your device.**
+**One-click full page screenshots for Chrome. MIT licensed. Nothing leaves your machine.**
 
 [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/hdabbojjccojlapnfjpdppcpfcnhgmdp?label=Chrome%20Web%20Store&logo=googlechrome&logoColor=white&color=E8503A)](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp)
 [![Users](https://img.shields.io/chrome-web-store/users/hdabbojjccojlapnfjpdppcpfcnhgmdp?label=users&color=F5A623)](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp)
@@ -17,16 +17,16 @@
 
 </div>
 
-Most screenshot extensions want an account, your browsing history, or a logo in the
-corner of your image. This one runs on your machine and wants nothing: no server, no
-telemetry, works offline.
-
-Capture a full page, the visible area, or a region, then annotate and export.
-Record the current tab when a still image is not enough.
+Most screenshot extensions want an account, every site you visit, or money to draw an
+arrow. This one captures the whole scrolling page when you click the icon, lets you
+annotate for free, and publishes every line.
 
 ## Features
 
-- **Capture whole pages**, even behind sticky headers and inside nested scrollers
+- **One click, whole page** — the toolbar icon captures the entire scrolling page,
+  even behind sticky headers and inside nested scrollers (a settings toggle restores
+  the mode picker)
+- **Visible area and region capture** from the right-click menu or shortcuts
 - **Annotate** with arrows, text, numbered steps, spotlight, and crop, with full undo
 - **Blur or redact secrets** before you share
 - **Record the tab** with auto-zoom at your clicks, mic and webcam, and trim
@@ -34,6 +34,18 @@ Record the current tab when a still image is not enough.
 
 The full tour, every shortcut, and the settings reference live in the
 [docs](https://openscreenshot.app/docs/).
+
+## How it compares
+
+|                      | OpenScreenShot   | FullPage Capture | GoFullPage                  |
+| -------------------- | ---------------- | ---------------- | --------------------------- |
+| Open source          | Yes — MIT        | No               | Privately forked since 2018 |
+| Standing site access | None             | Every site       | None at install             |
+| Annotate, blur, PDF  | Free             | Free             | Paid                        |
+| Tab recording        | Free             | No               | No                          |
+
+The full table, with store status and sources, is at
+[openscreenshot.app/compare](https://openscreenshot.app/compare/).
 
 ## Install
 

@@ -21,11 +21,11 @@
   },
   "capture": {
     "heading": "截取截图",
-    "intro": "点击工具栏中的 OpenScreenShot 图标，从三种截图模式中选择一种。一切都在你的浏览器本地运行。发起截图有四种方式：",
+    "intro": "点击工具栏中的 OpenScreenShot 图标，整页截图立即开始，无需经过菜单。一切都在浏览器本地运行。开始截图有四种方式：",
     "ways": [
-      "<strong>弹出窗口</strong>——点击某个模式，或按 <kbd>1</kbd>–<kbd>3</kbd>。",
+      "<strong>工具栏图标</strong> — 一键截取整页。在设置中关闭<strong>点击图标即截取整页</strong>可恢复模式选择弹窗；右键点击图标可选择其他模式和设置。",
       "<strong>键盘快捷键</strong>——整页 <kbd>Ctrl+Shift+S</kbd>，可见区域 <kbd>Alt+Shift+V</kbd>，区域 <kbd>Ctrl+Shift+E</kbd>。macOS 上分别是 <kbd>⌘⇧S</kbd>、<kbd>⌘⇧V</kbd> 和 <kbd>⌘⇧E</kbd>。可在 <code>chrome://extensions/shortcuts</code> 重新绑定。",
-      "<strong>右键菜单</strong>——任意页面上的 OpenScreenShot 子菜单提供同样的三种模式。",
+      "<strong>右键菜单</strong> — 任意页面上的 OpenScreenShot 子菜单提供相同的三种模式和设置。",
       "<strong>重复区域</strong>——弹出窗口底部和右键菜单可重新截取上一次的区域矩形。这两项在你选择过一次区域后出现。"
     ],
     "delay": "弹出窗口中的<strong>延时</strong>一行可将截图推迟 3、5 或 10 秒，工具栏徽章会倒计时。用它截取悬停状态、下拉菜单，以及你一点别处就会关闭的工具提示。"
