@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "title": "Before you go — OpenScreenShot",
+    "description": "You uninstalled OpenScreenShot. If it worked, a rating helps other people find a private tool. If it failed, tell us what happened."
+  },
+  "label": "OpenScreenShot",
+  "heading": "Before you go.",
+  "lead": "If it worked, a rating is the whole growth engine. If it failed, tell us. We read it.",
+  "happy": {
+    "heading": "It worked, I just don't need it.",
+    "body": "Then a public rating is the highest-leverage thing you can do for an open-source tool. It takes 30 seconds.",
+    "cta": "Rate OpenScreenShot"
+  },
+  "broken": {
+    "heading": "Something was wrong.",
+    "body": "What happened? What did you expect?",
+    "placeholder": "Example: full page missed the footer on a dashboard. Or: I wanted region capture on first click.",
+    "cta": "Send feedback",
+    "thanks": "Thanks. If you are willing, a rating still helps people who need a private option.",
+    "rateAnyway": "Rate anyway"
+  },
+  "footer": "Source is still public."
+}
