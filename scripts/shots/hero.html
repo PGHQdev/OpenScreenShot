@@ -6,14 +6,7 @@
     <link rel="stylesheet" href="poster-site.css" />
     <style>
       /* The homepage's top shot, 1200x720: the real popup, whole, hanging
-         from the toolbar icon of a browser window that runs off the bottom
-         of the frame. */
-      .window {
-        left: 72px;
-        right: 72px;
-        top: 64px;
-        height: 720px;
-      }
+         from the toolbar icon of a full-bleed browser window. */
       .window-top {
         height: 48px;
         padding: 0 18px;
@@ -27,19 +20,18 @@
         height: 672px;
       }
       .window-body iframe {
-        width: 1056px;
+        width: 1200px;
         height: 1100px;
       }
       /* Chrome opens the popup under the toolbar icon it belongs to, flush
          with the window's right edge. */
       .popup {
-        right: 84px;
-        top: 118px;
+        right: 14px;
+        top: 56px;
       }
     </style>
   </head>
   <body>
-    <div class="ground"></div>
     <div class="window">
       <div class="window-top">
         <span class="lights"><i></i><i></i><i></i></span>
@@ -56,6 +48,19 @@
             <path d="M8 11V7a4 4 0 0 1 8 0v4" />
           </svg>
           opentechcheck.com
+        </span>
+        <span class="install-link">
+          Add to Chrome
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path d="M7 17 17 7M9 7h8v8" />
+          </svg>
         </span>
         <span class="ext-icon"><img src="brand-mark.svg" width="20" height="20" alt="" /></span>
       </div>

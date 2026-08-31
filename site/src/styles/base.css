@@ -232,26 +232,6 @@ samp {
   box-shadow: var(--sh-card);
 }
 
-/* ---- Gradient frame ----
- * The coral-to-amber border around hero-grade screenshots, drawn as a padded
- * gradient ground behind a clipped white tile.
- */
-
-.frame-grad {
-  padding: 8px;
-  border-radius: calc(var(--r-xl) + 8px);
-  background: var(--grad-frame);
-  box-shadow: var(--sh-card);
-}
-
-/* Concentric corners: the inner radius is the outer radius minus the padding,
- * so the gradient band keeps one visual thickness around the bend. */
-.frame-grad > * {
-  border-radius: var(--r-xl);
-  overflow: hidden;
-  background: var(--paper);
-}
-
 /* The second, quieter half of a two-tone heading. */
 .muted {
   color: var(--ink-3);

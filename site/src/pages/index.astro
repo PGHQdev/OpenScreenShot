@@ -39,24 +39,28 @@ const heroTabs = [
   {
     id: 'capture',
     label: 'Capture',
+    icon: icons.capture,
     image: hero,
     alt: 'The OpenScreenShot popup open over a web page in Chrome, with Full Page, Visible Area, Selected Region and Record options.',
   },
   {
     id: 'annotate',
     label: 'Annotate',
+    icon: icons.pen,
     image: shotEditor,
     alt: 'The OpenScreenShot editor with its tool rail, color palette and stroke controls, showing a full page capture of opentechcheck.com with a box and an arrow drawn on it.',
   },
   {
     id: 'export',
     label: 'Export',
+    icon: icons.export,
     image: shotExport,
     alt: 'The export dialog in the OpenScreenShot editor, with PNG selected, JPEG, WebP and PDF beside it, a scale row, a width field and a filename field.',
   },
   {
     id: 'record',
     label: 'Record',
+    icon: icons.record,
     image: shotRecorder,
     alt: 'The OpenScreenShot recorder with a recorded page in the preview, cursor and tab volume controls, and a timeline with two 2x zoom blocks.',
   },
@@ -253,6 +257,9 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
                 aria-controls={`hero-panel-${tab.id}`}
                 tabindex={i === 0 ? undefined : -1}
               >
+                <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d={tab.icon} />
+                </svg>
                 {tab.label}
               </button>
             ))
@@ -624,35 +631,60 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
     font-size: var(--fs-lg);
   }
 
+  /* The stage: panels inset on a luminous coral-to-amber ground, the way the
+   * reference floats its window on the blue gradient — a lit corner top-left,
+   * a deeper wine shade sinking bottom-right. */
   .hero-frame {
-    padding: 8px;
-    border-radius: calc(var(--r-xl) + 8px);
-    background: var(--grad-frame);
-    box-shadow: var(--sh-card);
+    padding: 10px 14px 14px;
+    border-radius: 28px;
+    background:
+      radial-gradient(120% 90% at 12% 0%, rgba(255, 255, 255, 0.34), transparent 55%),
+      radial-gradient(110% 90% at 100% 100%, rgba(96, 18, 51, 0.4), transparent 62%),
+      linear-gradient(125deg, #f47b4d 0%, #e8503a 42%, #ef7132 72%, #f5a623 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      0 2px 4px rgba(23, 23, 26, 0.06),
+      0 32px 64px -32px rgba(120, 30, 20, 0.45);
   }
 
   .hero-tabs {
     position: relative;
     display: flex;
-    margin: 2px 2px 8px;
+    margin: 2px 0 10px;
   }
 
   .hero-tab {
     position: relative;
     z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-2);
     flex: 1;
     min-width: 0;
-    padding: 10px 12px;
+    padding: 11px 12px;
     border: 0;
     border-radius: var(--r-full);
     background: none;
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255, 255, 255, 0.88);
     font: inherit;
     font-size: var(--fs-md);
     font-weight: 600;
     white-space: nowrap;
     cursor: pointer;
     transition: color var(--dur-fast) var(--ease);
+  }
+
+  .tab-icon {
+    width: 15px;
+    height: 15px;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.9;
   }
 
   .hero-tab:hover,
@@ -687,9 +719,10 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
   }
 
   .hero-panel {
-    border-radius: var(--r-xl);
+    border-radius: 18px;
     overflow: hidden;
     background: var(--paper);
+    box-shadow: 0 12px 40px -18px rgba(60, 10, 8, 0.5);
   }
 
   .hero-panel img {
@@ -707,6 +740,10 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
     .hero-tab {
       padding-inline: 6px;
       font-size: var(--fs-sm);
+    }
+
+    .tab-icon {
+      display: none;
     }
   }
 

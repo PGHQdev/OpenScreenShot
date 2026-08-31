@@ -104,9 +104,6 @@
   /* the raised-card edge and shadow every tile shares */
   --sh-card: 0 1px 2px rgba(23, 23, 26, 0.04), 0 16px 40px -24px rgba(23, 23, 26, 0.22);
 
-  /* the coral-to-amber frame around hero-grade screenshots */
-  --grad-frame: linear-gradient(135deg, #e8503a 0%, #ef7132 55%, #f5a623 100%);
-
   /* deep-ink slabs hold code */
   --slab: #17171a;
   --slab-ink: #f7f7f8;

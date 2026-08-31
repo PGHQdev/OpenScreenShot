@@ -9,25 +9,19 @@
          src/content/region-select.ts draws: a 40% mask, a dashed black
          border with a white halo, four round corner handles, the live W×H
          readout, and the Capture / Cancel bar. */
-      .window {
-        left: 80px;
-        right: 80px;
-        top: 64px;
-        height: 700px;
-      }
       .window-body {
-        height: 656px;
+        height: 676px;
       }
       .window-body iframe {
-        width: 1040px;
+        width: 1200px;
         height: 1000px;
       }
       .sel {
         position: absolute;
-        left: 548px;
-        top: 108px;
-        width: 420px;
-        height: 300px;
+        left: 648px;
+        top: 118px;
+        width: 452px;
+        height: 310px;
         border: 2px dashed #000;
         outline: 1px solid #fff;
         outline-offset: 1px;
@@ -88,7 +82,6 @@
     </style>
   </head>
   <body>
-    <div class="ground"></div>
     <div class="window">
       <div class="window-top">
         <span class="lights"><i></i><i></i><i></i></span>
@@ -102,7 +95,7 @@
           <span class="h" style="right: -7px; top: -7px"></span>
           <span class="h" style="left: -7px; bottom: -7px"></span>
           <span class="h" style="right: -7px; bottom: -7px"></span>
-          <span class="readout">420 × 300</span>
+          <span class="readout">452 × 310</span>
           <span class="bar"><b>Capture</b><span>Cancel</span></span>
         </div>
       </div>
