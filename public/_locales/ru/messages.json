@@ -222,12 +222,16 @@
     "description": "Hint shown under the after-capture row when Download is selected."
   },
   "expressLabel": {
-    "message": "Снимать по клику на значок",
+    "message": "Клик по значку снимает всю страницу",
     "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
   },
   "expressHint": {
-    "message": "Теперь значок снимает всю страницу. Чтобы отключить, нажмите его правой кнопкой.",
+    "message": "Отключите, чтобы каждый раз выбирать: Вся страница, Видимая часть или Выделенная область.",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "expressMigratedNote": {
+    "message": "Теперь клик по значку снимает всю страницу. Другие режимы — по правому клику.",
+    "description": "One-time editor note after the update that made a toolbar click capture the full page."
   },
   "recOverlayPause": {
     "message": "Пауза",

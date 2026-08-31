@@ -222,12 +222,16 @@
     "description": "Hint shown under the after-capture row when Download is selected."
   },
   "expressLabel": {
-    "message": "Capturar ao clicar no ícone",
+    "message": "Clicar no ícone captura a página inteira",
     "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
   },
   "expressHint": {
-    "message": "O ícone agora captura a página inteira. Clique com o botão direito no ícone para desativar.",
+    "message": "Desative para escolher a cada vez entre Página inteira, Área visível ou Região selecionada.",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "expressMigratedNote": {
+    "message": "Agora clicar no ícone captura a página inteira. Outros modos com o clique direito.",
+    "description": "One-time editor note after the update that made a toolbar click capture the full page."
   },
   "recOverlayPause": {
     "message": "Pausar",

@@ -222,12 +222,16 @@
     "description": "Hint shown under the after-capture row when Download is selected."
   },
   "expressLabel": {
-    "message": "아이콘 클릭 시 캡처",
+    "message": "아이콘을 클릭하면 전체 페이지를 캡처",
     "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
   },
   "expressHint": {
-    "message": "이제 아이콘을 클릭하면 전체 페이지를 캡처해요. 끄려면 아이콘을 마우스 오른쪽 버튼으로 클릭하세요.",
+    "message": "끄면 매번 전체 페이지, 보이는 영역, 선택 영역 중에서 선택할 수 있습니다.",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "expressMigratedNote": {
+    "message": "이제 아이콘을 클릭하면 전체 페이지가 캡처됩니다. 다른 모드는 마우스 오른쪽 버튼으로 선택하세요.",
+    "description": "One-time editor note after the update that made a toolbar click capture the full page."
   },
   "recOverlayPause": {
     "message": "일시중지",

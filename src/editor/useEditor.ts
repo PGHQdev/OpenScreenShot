@@ -110,6 +110,7 @@ import {
   setDraftImage,
   setLastCapture,
   setSettings,
+  takeExpressNote,
 } from '../shared/storage';
 import { formatFilename } from '../shared/utils';
 import { applyTheme, watchSystemTheme } from '../shared/theme';
@@ -986,6 +987,14 @@ export function useEditor() {
 
   // Live-update a "system" theme setting when the OS preference flips.
   useEffect(() => watchSystemTheme(() => void getSettings().then((s) => applyTheme(s.theme))), []);
+
+  // One-time note after the express-default migration changed what the icon
+  // does. `takeExpressNote` clears the flag, so this shows exactly once.
+  useEffect(() => {
+    void takeExpressNote().then((pending) => {
+      if (pending) setStageNotice(t('expressMigratedNote'));
+    });
+  }, []);
 
   // Wheel zoom (non-passive so we can preventDefault trackpad scroll).
   useEffect(() => {

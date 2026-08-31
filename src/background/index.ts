@@ -16,6 +16,7 @@ import type { CaptureMode, CaptureRequest, PopupMessage, TileSpec } from '../sha
 import {
   getLastRegion,
   getSettings,
+  migrateExpressDefault,
   onSettingsChanged,
   setLastCapture,
   setLastRegion,
@@ -46,8 +47,24 @@ import { restoreRecBadge } from './recording';
 
 const EDITOR_URL = chrome.runtime.getURL('src/editor/index.html');
 const POPUP_URL = 'src/popup/index.html';
+/** The popup page opened as a tab, straight into its settings pane. */
+const SETTINGS_TAB_URL = chrome.runtime.getURL('src/popup/index.html?settings=1');
 /** Icon context-menu checkbox that toggles express mode. */
 const MENU_EXPRESS_ID = 'oss-express';
+/** Page-menu and icon-menu items that open the settings pane in a tab. */
+const MENU_SETTINGS_ID = 'oss-settings';
+const MENU_ICON_SETTINGS_ID = 'oss-icon-settings';
+/**
+ * Icon context-menu capture items. With express mode hijacking the icon
+ * click, the icon's right-click menu is where the other modes stay one
+ * gesture away. Separate ids from MENU_IDS: a menu item cannot sit both
+ * under the page parent and on the action context.
+ */
+const ICON_MENU_IDS: Record<CaptureMode, string> = {
+  'full-page': 'oss-icon-full-page',
+  visible: 'oss-icon-visible',
+  region: 'oss-icon-region',
+};
 
 /** Minimum gap between `captureVisibleTab` calls — Chrome throttles to ~2/sec. */
 const CAPTURE_THROTTLE_MS = 500;
@@ -56,8 +73,10 @@ const PAINT_SETTLE_MS = 60;
 
 // No tab opens on install: the one grant a recording needs is asked for from
 // the Record click itself, so first run has nothing to walk through.
-chrome.runtime.onInstalled.addListener(() => {
-  void createContextMenus();
+// The express migration runs before the menus so the checkbox reads the
+// post-migration value.
+chrome.runtime.onInstalled.addListener((details) => {
+  void migrateExpressDefault(details.reason).then(() => createContextMenus());
 });
 
 /** Contexts the capture menu appears in — everywhere on a page. */
@@ -120,7 +139,23 @@ async function createContextMenusOnce(): Promise<void> {
       title: titles[mode],
       contexts: MENU_CONTEXTS,
     });
+    chrome.contextMenus.create({
+      id: ICON_MENU_IDS[mode],
+      title: titles[mode],
+      contexts: ['action'],
+    });
   }
+  chrome.contextMenus.create({
+    id: MENU_SETTINGS_ID,
+    parentId: 'oss-parent',
+    title: chrome.i18n.getMessage('settingsTitle'),
+    contexts: MENU_CONTEXTS,
+  });
+  chrome.contextMenus.create({
+    id: MENU_ICON_SETTINGS_ID,
+    title: chrome.i18n.getMessage('settingsTitle'),
+    contexts: ['action'],
+  });
   // Express lives on the icon's right-click menu: once it hijacks the icon
   // click, this checkbox is the only remaining surface that can turn it off.
   chrome.contextMenus.create(
@@ -192,7 +227,14 @@ chrome.contextMenus.onClicked.addListener((info) => {
     void handleCapture('region', true).catch(onCaptureError);
     return;
   }
-  const mode = menuIdToMode(id);
+  if (id === MENU_SETTINGS_ID || id === MENU_ICON_SETTINGS_ID) {
+    void chrome.tabs.create({ url: SETTINGS_TAB_URL });
+    return;
+  }
+  const iconMode = (Object.entries(ICON_MENU_IDS) as [CaptureMode, string][]).find(
+    ([, menuId]) => menuId === id,
+  )?.[0];
+  const mode = iconMode ?? menuIdToMode(id);
   if (mode) void handleCapture(mode).catch(onCaptureError);
 });
 

@@ -20,6 +20,48 @@ export async function setSettings(patch: Partial<Settings>): Promise<Settings> {
   return next;
 }
 
+const EXPRESS_MIGRATED_KEY = 'openscreenshot:express-default-migrated';
+const EXPRESS_NOTE_KEY = 'openscreenshot:express-note-pending';
+
+/**
+ * One-shot flip of `expressMode` to the new default. Stored settings persist
+ * the whole object, so an install that ever wrote settings holds
+ * `expressMode: false` even when the user never touched the toggle — merely
+ * changing DEFAULT_SETTINGS would leave every such install on the picker.
+ * Runs from `onInstalled`; the flag makes later runs no-ops, so a user who
+ * turns express off afterwards stays off. An update also queues the one-time
+ * editor note (see `takeExpressNote`) when the flip changed behavior.
+ */
+export async function migrateExpressDefault(reason: string): Promise<void> {
+  const stored = await chrome.storage.local.get([EXPRESS_MIGRATED_KEY, SETTINGS_KEY]);
+  if (stored[EXPRESS_MIGRATED_KEY]) return;
+  if (reason === 'install') {
+    // Fresh install: the default already applies; write nothing but the flag
+    // so stored settings stay empty and future default changes flow through.
+    await chrome.storage.local.set({ [EXPRESS_MIGRATED_KEY]: true });
+    return;
+  }
+  const partial = (stored[SETTINGS_KEY] ?? {}) as Partial<Settings>;
+  const write: Record<string, unknown> = {
+    [SETTINGS_KEY]: { ...partial, expressMode: true },
+    [EXPRESS_MIGRATED_KEY]: true,
+  };
+  if (partial.expressMode !== true) write[EXPRESS_NOTE_KEY] = true;
+  await chrome.storage.local.set(write);
+}
+
+/**
+ * Read-and-clear the pending "toolbar click now captures the full page"
+ * note. True at most once per install, on the first editor open after the
+ * express migration changed what the icon does.
+ */
+export async function takeExpressNote(): Promise<boolean> {
+  const stored = await chrome.storage.local.get(EXPRESS_NOTE_KEY);
+  if (!stored[EXPRESS_NOTE_KEY]) return false;
+  await chrome.storage.local.remove(EXPRESS_NOTE_KEY);
+  return true;
+}
+
 /** Run `callback` whenever the stored settings change (any writer, any context). */
 export function onSettingsChanged(callback: () => void): void {
   chrome.storage.onChanged.addListener((changes, area) => {

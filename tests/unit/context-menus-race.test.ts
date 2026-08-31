@@ -16,7 +16,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
  */
 
 /** Every id `createContextMenus()` creates, in no particular order. */
-const ALL_MENU_IDS = ['oss-parent', 'oss-full-page', 'oss-visible', 'oss-region', 'oss-express'];
+const ALL_MENU_IDS = [
+  'oss-parent',
+  'oss-full-page',
+  'oss-visible',
+  'oss-region',
+  'oss-icon-full-page',
+  'oss-icon-visible',
+  'oss-icon-region',
+  'oss-settings',
+  'oss-icon-settings',
+  'oss-express',
+];
 
 /** Ids actually handed to `chrome.contextMenus.create` across both runs. */
 let createdIds: string[];
@@ -111,6 +122,19 @@ async function flushMicrotasks(times = 10): Promise<void> {
   for (let i = 0; i < times; i++) await Promise.resolve();
 }
 
+/**
+ * Release storage reads until no new one appears: a released read can queue
+ * another (the express migration reads, writes, then the menu build reads
+ * settings), so a single drain pass is not enough.
+ */
+async function releaseAllReads(rounds = 10): Promise<void> {
+  for (let i = 0; i < rounds; i++) {
+    await flushMicrotasks();
+    while (getResolvers.length > 0) getResolvers.shift()?.({});
+  }
+  await flushMicrotasks();
+}
+
 let fakeChrome: ReturnType<typeof makeFakeChrome>;
 
 describe('createContextMenus concurrency', () => {
@@ -137,9 +161,7 @@ describe('createContextMenus concurrency', () => {
     // Release every pending settings read (however many runs actually made
     // one — a fixed, single-flight implementation makes only one) and let
     // both calls run to completion.
-    while (getResolvers.length > 0) getResolvers.shift()?.({});
-    await flushMicrotasks();
-    while (getResolvers.length > 0) getResolvers.shift()?.({});
+    await releaseAllReads();
     await Promise.all([runA, runB]);
 
     const counts = Object.fromEntries(
@@ -178,11 +200,9 @@ describe('onInstalled', () => {
     );
 
     listener({ reason: 'install' });
-    // Let the menu build get as far as its settings read, then release it, so
-    // a tab created after that await would still be caught below.
-    await flushMicrotasks();
-    while (getResolvers.length > 0) getResolvers.shift()?.({});
-    await flushMicrotasks();
+    // Let the migration and the menu build run every read they queue, so a
+    // tab created after any of those awaits would still be caught below.
+    await releaseAllReads();
 
     expect(
       fakeChrome.tabs.create.mock.calls.map(([opts]) => (opts as { url: string }).url),

@@ -195,7 +195,9 @@ export const DEFAULT_SETTINGS: Settings = {
   recentColors: [],
   captureDelay: 0,
   captureAction: 'editor',
-  expressMode: false,
+  // True since 1.6.0: the toolbar icon is the one-click full-page capture.
+  // Existing installs are flipped once by migrateExpressDefault (storage.ts).
+  expressMode: true,
   beautifyEnabled: false,
   beautifyPadding: 40,
   beautifyRadius: 30,

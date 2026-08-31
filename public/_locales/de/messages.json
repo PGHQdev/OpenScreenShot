@@ -222,12 +222,16 @@
     "description": "Hint shown under the after-capture row when Download is selected."
   },
   "expressLabel": {
-    "message": "Screenshot per Symbolklick",
+    "message": "Klick auf das Symbol nimmt die ganze Seite auf",
     "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
   },
   "expressHint": {
-    "message": "Das Symbol nimmt jetzt die ganze Seite auf. Rechtsklick auf das Symbol schaltet das aus.",
+    "message": "Deaktivieren, um jedes Mal zwischen Ganze Seite, Sichtbarer Bereich oder Ausschnitt zu wählen.",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "expressMigratedNote": {
+    "message": "Ein Klick auf das Symbol nimmt jetzt die ganze Seite auf. Andere Modi per Rechtsklick.",
+    "description": "One-time editor note after the update that made a toolbar click capture the full page."
   },
   "recOverlayPause": {
     "message": "Pause",
