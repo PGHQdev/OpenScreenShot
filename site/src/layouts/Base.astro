@@ -226,8 +226,10 @@ const isHome = path === '/';
     font-size: var(--fs-sm);
   }
 
+  /* The plain-link hover above would ink the label; the pill stays white. */
   .nav-links .nav-cta:hover {
     background: color-mix(in srgb, var(--ink) 85%, #fff);
+    color: #fff;
   }
 
   .site-foot {
