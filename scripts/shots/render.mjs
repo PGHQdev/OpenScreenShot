@@ -874,9 +874,15 @@ async function renderPosters(browser) {
     // Store promo images and the popup store screenshot: exact sizes, JPEG.
     // Rendered at 2x like the shots, then downscaled straight into the store
     // directory.
+    // The store's promo tiles cannot be localized (the dashboard takes one
+    // global pair), so a non-en run renders only its cws-3 screenshot.
     for (const { name, out: outName = name, w, h } of [
-      { name: 'promo-tile', w: 440, h: 280 },
-      { name: 'marquee', w: 1400, h: 560 },
+      ...(LOCALE === 'en'
+        ? [
+            { name: 'promo-tile', w: 440, h: 280 },
+            { name: 'marquee', w: 1400, h: 560 },
+          ]
+        : []),
       { name: 'store-popup', out: 'cws-3', w: STORE_SIZE.w, h: STORE_SIZE.h },
     ]) {
       await assertPosterImagesLoad(browser, name);
