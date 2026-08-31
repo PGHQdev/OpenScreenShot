@@ -11,6 +11,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* Anchored sections land below the sticky nav. */
+  scroll-padding-top: 88px;
   -webkit-text-size-adjust: 100%;
 }
 

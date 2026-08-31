@@ -8,7 +8,6 @@ import { homeFaq } from '../data/faq';
 import { installPermissions, recordingPermissions } from '../data/permissions';
 import { ld } from '../lib/json-ld';
 import hero from '../assets/hero.webp';
-import shotCapture from '../assets/shot-2.webp';
 import shotEditor from '../assets/shot-3.webp';
 import shotExport from '../assets/shot-4.webp';
 import shotRecorder from '../assets/shot-5.webp';
@@ -34,7 +33,8 @@ const icons = {
   terminal: 'm5 7 5 5-5 5M12.5 17H19',
 };
 
-// The hero's tabbed showcase: one framed stage, four screens.
+// The hero's tabbed showcase: one framed stage, four screens and a terminal.
+// The CLI tab has no image; the panel renders the terminal markup below.
 const heroTabs = [
   {
     id: 'capture',
@@ -64,85 +64,43 @@ const heroTabs = [
     image: shotRecorder,
     alt: 'The OpenScreenShot recorder with a recorded page in the preview, cursor and tab volume controls, and a timeline with two 2x zoom blocks.',
   },
+  {
+    id: 'cli',
+    label: 'CLI & MCP',
+    short: 'CLI',
+    icon: icons.terminal,
+    image: null,
+    alt: '',
+  },
 ];
 
-// The trio under the hero: the three reasons to install, benefit first.
-const trio = [
+// The quartet under the hero: the reasons to install, benefit first. The hero
+// tabs above already show each screen, so these carry no screenshots. Each
+// card wears one Chrome brand color.
+const quartet = [
   {
     icon: icons.capture,
+    tone: 'tone-blue',
     title: 'Capture anything',
     body: 'The whole page, the visible area, or a region you drag. One click, a shortcut, or the right-click menu.',
   },
   {
     icon: icons.pen,
+    tone: 'tone-green',
     title: 'Edit before you share',
     body: 'Arrows, boxes and text to make your point. Blur for the parts nobody else should see.',
   },
   {
+    icon: icons.record,
+    tone: 'tone-red',
+    title: 'Record the tab',
+    body: 'One click records, with auto zoom at every click. Trim on a timeline, then export WebM.',
+  },
+  {
     icon: icons.lock,
+    tone: 'tone-yellow',
     title: 'Private by default',
     body: 'No account, no upload, no telemetry. It works with your Wi-Fi off.',
-  },
-];
-
-// The four alternating feature sections. Every image is a real screenshot of
-// the built extension, rendered by scripts/shots/render.mjs.
-const features = [
-  {
-    id: 'features',
-    kicker: 'Capture',
-    icon: icons.capture,
-    title: 'Grab exactly what you need.',
-    items: [
-      'Full page, scrolled and stitched for you',
-      'Visible area, in one click',
-      'A region you drag, with handles on every corner',
-      'A 3, 5 or 10 second delay for menus and hover states',
-    ],
-    image: shotCapture,
-    alt: 'A region selection in progress on opentechcheck.com in Chrome: a dashed rectangle with corner handles, a 420 by 300 size readout, and Capture and Cancel buttons.',
-  },
-  {
-    id: 'editor',
-    kicker: 'Annotate',
-    icon: icons.pen,
-    title: 'Make your point before you share.',
-    items: [
-      'Arrows, boxes, lines, freehand, highlighter and text',
-      'Blur, mosaic or an opaque fill over anything private',
-      'Step numbers that count up, and a spotlight',
-      'Crop, with undo that goes all the way back',
-    ],
-    image: shotEditor,
-    alt: 'The OpenScreenShot editor with its tool rail, color palette and stroke controls, showing a full page capture of opentechcheck.com with a box and an arrow drawn on it.',
-  },
-  {
-    id: 'export',
-    kicker: 'Export',
-    icon: icons.export,
-    title: 'Leave in the format you need.',
-    items: [
-      'PNG, JPEG or WebP, with a quality slider',
-      'PDF, on A4 or Letter, one page or many',
-      'Scale to 25, 50, 100 or 200 %, or an exact width',
-      'Or copy straight to the clipboard',
-    ],
-    image: shotExport,
-    alt: 'The export dialog in the OpenScreenShot editor, with PNG selected, JPEG, WebP and PDF beside it, a scale row, a width field and a filename field.',
-  },
-  {
-    id: 'recorder',
-    kicker: 'Record',
-    icon: icons.record,
-    title: 'When a picture is not enough, record it.',
-    items: [
-      'One click starts a tab recording',
-      'Auto zoom at every click you make',
-      'Your mic and a webcam bubble, if you want them',
-      'Trim on a timeline, then export WebM',
-    ],
-    image: shotRecorder,
-    alt: 'The OpenScreenShot recorder with a recorded page in the preview, cursor and tab volume controls, and a timeline with two 2x zoom blocks.',
   },
 ];
 
@@ -255,12 +213,24 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
                 role="tab"
                 aria-selected={i === 0 ? 'true' : 'false'}
                 aria-controls={`hero-panel-${tab.id}`}
+                aria-label={'short' in tab ? tab.label : undefined}
                 tabindex={i === 0 ? undefined : -1}
               >
                 <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                   <path d={tab.icon} />
                 </svg>
-                {tab.label}
+                {
+                  'short' in tab ? (
+                    <>
+                      <span class="tab-long">{tab.label}</span>
+                      <span class="tab-short" aria-hidden="true">
+                        {tab.short}
+                      </span>
+                    </>
+                  ) : (
+                    tab.label
+                  )
+                }
               </button>
             ))
           }
@@ -274,17 +244,47 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
               aria-labelledby={`hero-tab-${tab.id}`}
               hidden={i !== 0}
             >
-              <Picture
-                src={tab.image}
-                alt={tab.alt}
-                formats={['avif', 'webp']}
-                fallbackFormat="webp"
-                widths={[640, 960, 1280, 1800, 2400]}
-                sizes="(min-width: 1248px) 1200px, 100vw"
-                fetchpriority={i === 0 ? 'high' : undefined}
-                loading={i === 0 ? 'eager' : 'lazy'}
-                decoding="async"
-              />
+              {
+                tab.image ? (
+                  <Picture
+                    src={tab.image}
+                    alt={tab.alt}
+                    formats={['avif', 'webp']}
+                    fallbackFormat="webp"
+                    widths={[640, 960, 1280, 1800, 2400]}
+                    sizes="(min-width: 1248px) 1200px, 100vw"
+                    fetchpriority={i === 0 ? 'high' : undefined}
+                    loading={i === 0 ? 'eager' : 'lazy'}
+                    decoding="async"
+                  />
+                ) : (
+                  <div class="term">
+                    <div class="term-bar">
+                      <span class="term-dot" />
+                      <span class="term-dot" />
+                      <span class="term-dot" />
+                      <p class="term-title">openscreenshot — zsh</p>
+                    </div>
+                    <div class="term-body">
+                      <p class="term-comment"># One screenshot, straight from your terminal</p>
+                      <p class="term-cmd">
+                        <span class="term-prompt">$</span> npx openscreenshot shot
+                        https://example.com --out shot.png --full
+                      </p>
+                      <p class="term-out">Saved shot.png · full page · 1440×3120</p>
+                      <p class="term-comment"># Or an MCP server for your AI agent</p>
+                      <p class="term-cmd">
+                        <span class="term-prompt">$</span> npx openscreenshot serve
+                      </p>
+                      <p class="term-out">MCP server ready · tool: capture_screenshot</p>
+                      <p class="term-comment"># Any MCP client config</p>
+                      <p class="term-cmd">
+                        {'{ "command": "npx", "args": ["openscreenshot", "serve"] }'}
+                      </p>
+                    </div>
+                  </div>
+                )
+              }
             </div>
           ))
         }
@@ -308,14 +308,19 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
     </ul>
   </section>
 
-  <!-- Trio -->
-  <section class="section trio-section">
+  <!-- Quartet -->
+  <section id="features" class="section trio-section">
     <div class="container-wide">
       <ul class="trio">
         {
-          trio.map((t) => (
+          quartet.map((t) => (
             <li>
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <svg
+                class:list={['icon', t.tone]}
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
                 <path d={t.icon} />
               </svg>
               <h2>{t.title}</h2>
@@ -326,42 +331,6 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
       </ul>
     </div>
   </section>
-
-  <!-- Alternating features -->
-  {
-    features.map((f, i) => (
-      <section id={f.id} class="section feature">
-        <div class:list={['container-wide', 'feature-grid', i % 2 === 1 && 'feature-flip']}>
-          <div class="feature-copy">
-            <p class="eyebrow">
-              <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d={f.icon} />
-              </svg>
-              {f.kicker}
-            </p>
-            <h2>{f.title}</h2>
-            <ul class="feature-list">
-              {f.items.map((item) => (
-                <li>{item}</li>
-              ))}
-            </ul>
-          </div>
-          <figure class="card feature-shot">
-            <Picture
-              src={f.image}
-              alt={f.alt}
-              formats={['avif', 'webp']}
-              fallbackFormat="webp"
-              widths={[480, 900, 1350, 1800]}
-              sizes="(min-width: 900px) 580px, 100vw"
-              loading="lazy"
-              decoding="async"
-            />
-          </figure>
-        </div>
-      </section>
-    ))
-  }
 
   <!-- Privacy -->
   <section id="privacy" class="section slab">
@@ -387,15 +356,30 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
       </dl>
     </div>
     <div class="container-wide">
-      <h3 class="sub-head">What it asks for at install</h3>
-      <PermissionTable rows={installPermissions} />
-
-      <h3 class="sub-head">What recording adds, only when you record</h3>
-      <PermissionTable rows={recordingPermissions} />
-
+      <details class="card perm-fold">
+        <summary>
+          What it asks for at install
+          <span class="fold-mark" aria-hidden="true"></span>
+        </summary>
+        <div class="fold-body">
+          <PermissionTable rows={installPermissions} />
+        </div>
+      </details>
+      <details class="card perm-fold">
+        <summary>
+          What recording adds, only when you record
+          <span class="fold-mark" aria-hidden="true"></span>
+        </summary>
+        <div class="fold-body">
+          <PermissionTable rows={recordingPermissions} />
+          <p class="fine">
+            The microphone and camera, when you enable them, are opened by your browser’s own
+            permission prompt. The stream never leaves your device.
+          </p>
+        </div>
+      </details>
       <p class="fine">
-        The microphone and camera, when you enable them, are opened by your browser’s own permission
-        prompt. The stream never leaves your device.
+        The same tables, with the full policy, on the <a href="/privacy/">Privacy page</a>.
       </p>
     </div>
   </section>
@@ -462,7 +446,7 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
       <p class="cta-row">
         <a class="btn btn-ink btn-install" href={STORE_URL} target="_blank" rel="noopener">
           <ChromeIcon size={22} />
-          Install in browser
+          Add to Chrome
         </a>
       </p>
       <p class="fine">Works on Chrome, Edge, Brave, Arc and other Chromium browsers.</p>
@@ -578,6 +562,23 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
     height: 16px;
   }
 
+  /* One Chrome brand color per quartet card. */
+  .tone-blue {
+    stroke: var(--chrome-blue);
+  }
+
+  .tone-red {
+    stroke: var(--chrome-red);
+  }
+
+  .tone-yellow {
+    stroke: var(--chrome-yellow);
+  }
+
+  .tone-green {
+    stroke: var(--chrome-green);
+  }
+
   .eyebrow {
     display: inline-flex;
     align-items: center;
@@ -631,26 +632,31 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
     font-size: var(--fs-lg);
   }
 
-  /* The stage: panels inset on a luminous coral-to-amber ground, the way the
-   * reference floats its window on the blue gradient — a lit corner top-left,
-   * a deeper wine shade sinking bottom-right. */
+  /* The stage: panels inset on a Chrome-colored aurora wallpaper, the way the
+   * reference floats its window on the Big Sur gradient. The color fallback
+   * sits under the image for the moment before it loads. */
   .hero-frame {
-    padding: 10px 14px 14px;
-    border-radius: 28px;
-    background:
-      radial-gradient(120% 90% at 12% 0%, rgba(255, 255, 255, 0.34), transparent 55%),
-      radial-gradient(110% 90% at 100% 100%, rgba(96, 18, 51, 0.4), transparent 62%),
-      linear-gradient(125deg, #f47b4d 0%, #e8503a 42%, #ef7132 72%, #f5a623 100%);
+    padding: 16px 20px 20px;
+    border-radius: 32px;
+    background: #4285f4 url('/assets/wallpaper.svg') center / cover no-repeat;
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.25),
       0 2px 4px rgba(23, 23, 26, 0.06),
-      0 32px 64px -32px rgba(120, 30, 20, 0.45);
+      0 32px 64px -32px rgba(20, 45, 110, 0.45);
   }
 
+  /* The frosted dock the tabs sit in, per the reference: translucent white
+   * over the wallpaper, blurred, a hairline light edge. */
   .hero-tabs {
     position: relative;
     display: flex;
-    margin: 2px 0 10px;
+    margin: 0 0 14px;
+    padding: 6px;
+    border-radius: var(--r-full);
+    background: rgba(255, 255, 255, 0.18);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(14px) saturate(1.4);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
   }
 
   .hero-tab {
@@ -698,7 +704,7 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
 
   .hero-tabs-thumb {
     position: absolute;
-    inset-block: 0;
+    inset-block: 6px;
     left: 0;
     width: 0;
     border-radius: var(--r-full);
@@ -712,9 +718,11 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
   }
 
   /* Until the script measures the tabs (or without JS at all), the thumb
-   * spans the first quarter, which is the first of the four equal tabs. */
+   * spans the first fifth, which is the first of the five equal tabs.
+   * The 6px shift and the 2.4px trim mirror the dock's inner padding. */
   .hero-tabs:not([data-ready='true']) .hero-tabs-thumb {
-    width: 25%;
+    width: calc(20% - 2.4px);
+    transform: translateX(6px);
     transition: none;
   }
 
@@ -729,11 +737,93 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
     width: 100%;
   }
 
+  /* The CLI & MCP panel: a terminal window on the same 5:3 stage as the
+   * screenshots, so the frame does not jump between tabs. Content may
+   * stretch it taller on narrow screens. */
+  .term {
+    display: flex;
+    flex-direction: column;
+    aspect-ratio: 5 / 3;
+    background: var(--slab);
+    color: var(--slab-ink);
+  }
+
+  .term-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+    padding: 14px 18px;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .term-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ff5f57;
+  }
+
+  .term-dot:nth-child(2) {
+    background: #febc2e;
+  }
+
+  .term-dot:nth-child(3) {
+    background: #28c840;
+  }
+
+  .term-title {
+    flex: 1;
+    margin: 0 36px 0 0;
+    color: var(--slab-ink-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    text-align: center;
+  }
+
+  .term-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+    padding: clamp(16px, 3.5vw, 48px) clamp(16px, 4vw, 56px);
+    font-family: var(--font-mono);
+    font-size: clamp(0.75rem, 0.55rem + 0.9vw, 1rem);
+    line-height: 1.7;
+  }
+
+  .term-body p {
+    margin: 0;
+    overflow-wrap: break-word;
+  }
+
+  .term-comment {
+    color: var(--slab-ink-2);
+  }
+
+  .term-cmd + .term-comment,
+  .term-out + .term-comment {
+    margin-top: 1.4em;
+  }
+
+  .term-prompt {
+    color: var(--chrome-green);
+  }
+
+  .term-out {
+    color: var(--slab-ink-2);
+  }
+
   .hero-credit {
     margin: var(--s-3) 0 0;
     color: var(--ink-3);
     font-size: var(--fs-sm);
     text-align: center;
+  }
+
+  /* The narrow-screen short label ("CLI") swaps in below 620px. */
+  .tab-short {
+    display: none;
   }
 
   @media (max-width: 620px) {
@@ -744,6 +834,14 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
 
     .tab-icon {
       display: none;
+    }
+
+    .tab-long {
+      display: none;
+    }
+
+    .tab-short {
+      display: inline;
     }
   }
 
@@ -802,44 +900,23 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
 
   @media (min-width: 720px) {
     .trio {
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: var(--s-7);
     }
   }
 
-  /* ---- Alternating features ---- */
-
-  .feature {
-    padding-block: clamp(40px, 6vw, 80px);
+  @media (min-width: 1000px) {
+    .trio {
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--s-6);
+    }
   }
 
-  .feature-grid {
-    display: grid;
-    gap: var(--s-6);
-    align-items: center;
-  }
-
-  .feature h2 {
-    margin-bottom: var(--s-5);
-  }
-
-  .feature-list {
-    display: grid;
-    gap: var(--s-3);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    color: var(--ink-2);
-    font-size: var(--fs-md);
-  }
-
-  .feature-list li,
   .cli-about li {
     position: relative;
     padding-left: var(--s-5);
   }
 
-  .feature-list li::before,
   .cli-about li::before {
     content: '';
     position: absolute;
@@ -849,30 +926,6 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
     height: 6px;
     border-radius: 50%;
     background: var(--accent);
-  }
-
-  .feature-shot {
-    margin: 0;
-    overflow: hidden;
-  }
-
-  .feature-shot img {
-    width: 100%;
-  }
-
-  @media (min-width: 900px) {
-    .feature-grid {
-      grid-template-columns: 5fr 6fr;
-      gap: clamp(40px, 6vw, 88px);
-    }
-
-    .feature-flip .feature-copy {
-      order: 2;
-    }
-
-    .feature-flip .feature-shot {
-      order: 1;
-    }
   }
 
   /* ---- Privacy slab ---- */
@@ -924,8 +977,61 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
     font-weight: 500;
   }
 
-  .sub-head {
-    margin-top: var(--s-6);
+  /* The permission tables fold away; the headline claim above them stands
+   * on its own. Same disclosure pattern as the FAQ rows. */
+  .perm-fold {
+    margin-bottom: var(--s-3);
+    border-radius: var(--r-lg);
+  }
+
+  .perm-fold summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+    padding: var(--s-4) var(--s-5);
+    border-radius: var(--r-lg);
+    color: var(--ink);
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .perm-fold summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .fold-mark {
+    position: relative;
+    flex: none;
+    width: 13px;
+    height: 13px;
+  }
+
+  .fold-mark::before,
+  .fold-mark::after {
+    content: '';
+    position: absolute;
+    inset: 50% 0 auto;
+    height: 1.5px;
+    background: var(--accent);
+    transition: transform var(--dur-fast) var(--ease);
+  }
+
+  .fold-mark::after {
+    transform: rotate(90deg);
+  }
+
+  .perm-fold[open] .fold-mark::after {
+    transform: rotate(0deg);
+  }
+
+  .fold-body {
+    padding: 0 var(--s-5) var(--s-4);
+  }
+
+  .fold-body .fine {
+    margin-bottom: 0;
   }
 
   @media (min-width: 860px) {
@@ -1033,6 +1139,15 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
     font-weight: var(--fw-display);
     letter-spacing: var(--tr-display);
     line-height: 1;
+  }
+
+  /* One Chrome brand color per step. */
+  .step:nth-child(2) .step-n {
+    color: var(--chrome-red);
+  }
+
+  .step:nth-child(3) .step-n {
+    color: var(--chrome-green);
   }
 
   .step h3 {

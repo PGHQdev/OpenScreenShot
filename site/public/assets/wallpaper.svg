@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1200" preserveAspectRatio="xMidYMid slice">
+  <!-- The hero stage wallpaper: a macOS-style aurora in the Chrome brand
+       colors. Blue carries the field; red, yellow and green glow through
+       as soft ridges, the way the reference floats its window on the
+       Big Sur gradient. -->
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#69a2ff"/>
+      <stop offset="0.45" stop-color="#4285f4"/>
+      <stop offset="1" stop-color="#2f63d8"/>
+    </linearGradient>
+    <linearGradient id="ridge-red" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#ea4335" stop-opacity="0"/>
+      <stop offset="0.55" stop-color="#ea4335" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#d93025" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="ridge-green" x1="0" y1="0" x2="1" y2="0.6">
+      <stop offset="0" stop-color="#3fba62" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#3fba62" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow-yellow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fbbc04" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#fbbc04" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="light" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="70"/>
+    </filter>
+    <filter id="softer" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="120"/>
+    </filter>
+  </defs>
+
+  <rect width="1920" height="1200" fill="url(#base)"/>
+
+  <!-- Green sweep rising from the left edge. -->
+  <path d="M-100 780 C 360 620, 620 900, 980 860 C 1240 830, 1300 1050, 1100 1240 L -100 1240 Z"
+        fill="url(#ridge-green)" filter="url(#soft)"/>
+
+  <!-- Yellow warmth, low center, between the green and red ridges — the
+       logo's ring order along the bottom edge. -->
+  <ellipse cx="1050" cy="1220" rx="520" ry="330" fill="url(#glow-yellow)" filter="url(#soft)"/>
+
+  <!-- Red ridge sinking into the lower right corner. -->
+  <path d="M 900 1240 C 1050 940, 1420 820, 1700 900 C 1860 950, 1960 1050, 2020 1160 L 2020 1240 Z"
+        fill="url(#ridge-red)" filter="url(#soft)"/>
+  <path d="M 1250 1240 C 1400 1040, 1700 990, 2020 1080 L 2020 1240 Z"
+        fill="#d93025" opacity="0.5" filter="url(#soft)"/>
+
+  <!-- The lit corner, top left. -->
+  <ellipse cx="260" cy="60" rx="900" ry="560" fill="url(#light)" filter="url(#softer)"/>
+
+  <!-- A faint white crest for the Big Sur ridge line. -->
+  <path d="M-100 700 C 420 560, 760 760, 1120 700 C 1480 640, 1720 720, 2020 640 L 2020 760 C 1720 840, 1480 760, 1120 820 C 760 880, 420 680, -100 820 Z"
+        fill="#ffffff" opacity="0.1" filter="url(#soft)"/>
+</svg>

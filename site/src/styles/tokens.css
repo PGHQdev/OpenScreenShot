@@ -1,16 +1,22 @@
 /*
  * openscreenshot.app design tokens.
  *
- * One naming scheme for the whole site. Names and values that overlap the
- * extension's src/shared/tokens.css are identical there and here: --s-1..--s-6,
+ * One naming scheme for the whole site. Names that overlap the extension's
+ * src/shared/tokens.css are the same there and here: --s-1..--s-6,
  * --r-sm/--r-md/--r-lg/--r-full, --sh-sm/--sh-md/--sh-lg, --accent, --accent-ink
  * and --font-mono. Site-only tokens (grounds, type scale, motion) have no
  * extension counterpart.
  *
  * The 2026-08 rewrite (agent_docs/plans/2026-08-31-site-atlas-rewrite-design.md)
- * made the site light-only: white ground, Inter throughout, coral as the single
- * accent. The old paper/ink names stay so page-level styles did not have to
- * move: --paper is now plain white, --paper-dim the alternate section slab.
+ * made the site light-only: white ground, Inter throughout. The old paper/ink
+ * names stay so page-level styles did not have to move: --paper is now plain
+ * white, --paper-dim the alternate section slab.
+ *
+ * 2026-08-31: the site accent moved from the extension's coral to the Chrome
+ * brand palette. Blue is the working accent (--accent/--accent-ink/--focus);
+ * red, yellow and green carry decorative marks only, through the --chrome-*
+ * tokens. The extension keeps its coral --accent; the shared-name contract
+ * with src/shared/tokens.css now covers names, not values.
  *
  * Colour contract. --accent carries non-text marks and large display type only.
  * --accent-ink is the darkened coral for links, button labels and body-size
@@ -94,12 +100,19 @@
   --ink-2: #55555c;
   --ink-3: #6e6e76;
 
-  --accent: #e8503a;
-  --accent-ink: #bd3722;
+  /* the Chrome brand palette; yellow is the darker amber so marks stay
+   * visible on white, the logo yellow lives only in the hero wallpaper */
+  --chrome-blue: #4285f4;
+  --chrome-red: #ea4335;
+  --chrome-yellow: #f9ab00;
+  --chrome-green: #34a853;
+
+  --accent: var(--chrome-blue);
+  --accent-ink: #1967d2;
 
   --border: #898992;
   --rule: #e9e9ec;
-  --focus: #bd3722;
+  --focus: #1967d2;
 
   /* the raised-card edge and shadow every tile shares */
   --sh-card: 0 1px 2px rgba(23, 23, 26, 0.04), 0 16px 40px -24px rgba(23, 23, 26, 0.22);

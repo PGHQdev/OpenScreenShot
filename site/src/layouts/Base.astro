@@ -130,7 +130,7 @@ const isHome = path === '/';
           <li>
             <a class="btn nav-cta" href={STORE_URL} target="_blank" rel="noopener">
               <ChromeIcon size={18} />
-              Install in browser
+              Add to Chrome
             </a>
           </li>
         </ul>
@@ -149,7 +149,10 @@ const isHome = path === '/';
             OpenScreenShot
           </p>
           <p class="foot-tag">Screenshots that never leave your machine.</p>
-          <p class="foot-bottom">© {year} OpenScreenShot @PGHQdev</p>
+          <p class="foot-bottom">
+            © {year} OpenScreenShot
+            <a href="https://x.com/PGHQdev" target="_blank" rel="noopener">@PGHQdev</a>
+          </p>
         </div>
         <nav class="foot-col" aria-label="Product">
           <p class="foot-head">Product</p>
@@ -165,34 +168,99 @@ const isHome = path === '/';
         </nav>
         <nav class="foot-col" aria-label="More by PGHQdev">
           <p class="foot-head">More by @PGHQdev</p>
-          <a href="/cool-stuff/">Cool stuff</a>
-          <a href="https://opentechcheck.com" target="_blank" rel="noopener">OpenTechCheck</a>
-          <a href="https://hnterminal.com" target="_blank" rel="noopener">HN Terminal</a>
-          <a href="https://minimalistnotes.com" target="_blank" rel="noopener">Minimalist Notes</a>
-          <a href="https://musing.wiki" target="_blank" rel="noopener">Musing</a>
-          <a href="https://ko-fi.com/T7A624DAY7" target="_blank" rel="noopener">Buy me a coffee</a>
+          {
+            [
+              { href: 'https://opentechcheck.com', icon: 'opentechcheck', label: 'OpenTechCheck' },
+              { href: 'https://hnterminal.com', icon: 'hnterminal', label: 'HN Terminal' },
+              {
+                href: 'https://minimalistnotes.com',
+                icon: 'minimalistnotes',
+                label: 'Minimalist Notes',
+              },
+              { href: 'https://musing.wiki', icon: 'musing', label: 'Musing' },
+              {
+                href: 'https://ko-fi.com/T7A624DAY7',
+                icon: 'ko-fi',
+                label: 'Support Open-Source',
+              },
+            ].map((link) => (
+              <a class="foot-site" href={link.href} target="_blank" rel="noopener">
+                <img
+                  src={`/assets/favicons/${link.icon}.png`}
+                  alt=""
+                  width="16"
+                  height="16"
+                  loading="lazy"
+                />
+                {link.label}
+              </a>
+            ))
+          }
         </nav>
       </div>
     </footer>
 
     <slot name="body-end" />
+
+    <script>
+      // The sticky nav's scrolled state: past 24px the bar frosts and the
+      // brand and CTA glide from the container edge to the viewport edge
+      // (the .nav padding transition below).
+      const head = document.querySelector('.site-head');
+      if (head) {
+        const onScroll = () => head.toggleAttribute('data-scrolled', window.scrollY > 24);
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+      }
+    </script>
   </body>
 </html>
 
 <style>
   .site-head {
-    position: relative;
+    position: sticky;
+    top: 0;
     z-index: 10;
     background: var(--paper);
+    box-shadow: inset 0 -1px 0 transparent;
+    backdrop-filter: blur(14px) saturate(1.5);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5);
+    transition:
+      background-color var(--dur-slow) var(--ease),
+      box-shadow var(--dur-slow) var(--ease);
   }
 
+  .site-head[data-scrolled] {
+    background: rgba(255, 255, 255, 0.82);
+    box-shadow: inset 0 -1px 0 var(--rule);
+  }
+
+  /* At rest the row hugs the content column; scrolled, its inline padding
+   * eases down to the page gutter, so the brand and the CTA glide out to
+   * the viewport edges. Overrides .container-wide's max-width for that.
+   * The at-rest gutter is a plain calc(), not max(): a max() expression
+   * does not interpolate against a plain length, so the transition would
+   * snap. Below 1089px the two gutters are equal and nothing moves. */
   .nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--s-4);
     flex-wrap: wrap;
+    max-width: none;
     padding-block: var(--s-4);
+    padding-inline: var(--s-5);
+    transition: padding var(--dur-slow) var(--ease);
+  }
+
+  @media (min-width: 1089px) {
+    .site-head:not([data-scrolled]) .nav {
+      padding-inline: calc((100% - var(--max-w-wide)) / 2 + var(--s-5));
+    }
+  }
+
+  .site-head[data-scrolled] .nav {
+    padding-block: var(--s-3);
   }
 
   .nav-brand {
@@ -277,6 +345,25 @@ const isHome = path === '/';
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
     letter-spacing: 0.04em;
+  }
+
+  .foot-bottom a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .foot-bottom a:hover {
+    color: var(--ink);
+  }
+
+  .foot-site {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+
+  .foot-site img {
+    border-radius: 4px;
   }
 
   .foot-col {
