@@ -1,0 +1,233 @@
+---
+import Doc from '../../../layouts/Doc.astro';
+import { t, localePaths, localeFromParams } from '../../../i18n';
+
+export const getStaticPaths = localePaths;
+
+const locale = localeFromParams(Astro.params.lang);
+const d = t(locale, 'docs');
+const c = t(locale, 'common');
+
+const STORE_URL = 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp';
+const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
+
+// Dictionary strings carry {storeUrl}/{repoUrl} so the URLs live once, here.
+const fill = (s: string) => s.replaceAll('{storeUrl}', STORE_URL).replaceAll('{repoUrl}', REPO_URL);
+
+// The contents list. Every label is its section's own h2 (so the two cannot
+// drift), and every id is an anchor the live site already serves, so no id
+// may be renamed.
+const toc = [
+  { id: 'install', label: d.install.heading },
+  { id: 'capture', label: d.capture.heading },
+  { id: 'modes', label: d.modes.heading },
+  { id: 'after-capture', label: d.afterCapture.heading },
+  { id: 'annotate', label: d.annotate.heading },
+  { id: 'beautify', label: d.beautify.heading },
+  { id: 'import', label: d.import.heading },
+  { id: 'export', label: d.export.heading },
+  { id: 'record', label: d.record.heading },
+  { id: 'drafts', label: d.drafts.heading },
+  { id: 'shortcuts', label: d.shortcuts.heading },
+  { id: 'settings', label: d.settings.heading },
+  { id: 'agents-cli', label: d.agentsCli.heading },
+  { id: 'privacy', label: d.privacy.heading },
+  { id: 'support', label: d.support.heading },
+];
+---
+
+<Doc
+  title={d.meta.title}
+  description={d.meta.description}
+  path="/docs/"
+  locale={locale}
+  label={d.doc.label}
+  heading={d.doc.heading}
+  lead={d.doc.lead}
+>
+  <nav class="toc" aria-labelledby="toc-head">
+    <h2 id="toc-head">{d.tocHead}</h2>
+    <ul>
+      {toc.map((entry) => <li><a href={`#${entry.id}`}>{entry.label}</a></li>)}
+    </ul>
+  </nav>
+
+  <section class="doc-section" id="install">
+    <h2>{d.install.heading}</h2>
+    <p>{d.install.intro}</p>
+    <ol>
+      {d.install.steps.map((step: string) => <li set:html={fill(step)} />)}
+    </ol>
+  </section>
+
+  <section class="doc-section" id="capture">
+    <h2>{d.capture.heading}</h2>
+    <p>{d.capture.intro}</p>
+    <ul>
+      {d.capture.ways.map((way: string) => <li set:html={way} />)}
+    </ul>
+    <p set:html={d.capture.delay} />
+  </section>
+
+  <section class="doc-section" id="modes">
+    <h2>{d.modes.heading}</h2>
+
+    <h3>{d.modes.full.title}</h3>
+    <p set:html={d.modes.full.body} />
+
+    <h3>{d.modes.visible.title}</h3>
+    <p set:html={d.modes.visible.body} />
+
+    <h3>{d.modes.region.title}</h3>
+    <p set:html={d.modes.region.body} />
+  </section>
+
+  <section class="doc-section" id="after-capture">
+    <h2>{d.afterCapture.heading}</h2>
+    <p set:html={d.afterCapture.intro} />
+    <ul>
+      {d.afterCapture.options.map((option: string) => <li set:html={option} />)}
+    </ul>
+    <p set:html={d.afterCapture.outro} />
+  </section>
+
+  <section class="doc-section" id="annotate">
+    <h2>{d.annotate.heading}</h2>
+    <p>{d.annotate.intro}</p>
+    <ul>
+      {d.annotate.tools.map((tool: string) => <li set:html={tool} />)}
+    </ul>
+    <p set:html={d.annotate.outro} />
+  </section>
+
+  <section class="doc-section" id="beautify">
+    <h2>{d.beautify.heading}</h2>
+    <p set:html={d.beautify.body} />
+  </section>
+
+  <section class="doc-section" id="import">
+    <h2>{d.import.heading}</h2>
+    <p set:html={d.import.body} />
+  </section>
+
+  <section class="doc-section" id="export">
+    <h2>{d.export.heading}</h2>
+    <p set:html={d.export.intro} />
+    <ul>
+      {d.export.formats.map((format: string) => <li set:html={format} />)}
+    </ul>
+    <p set:html={d.export.scale} />
+    <p set:html={d.export.clipboard} />
+  </section>
+
+  <section class="doc-section" id="record">
+    <h2>{d.record.heading}</h2>
+    <p set:html={d.record.intro} />
+
+    <h3>{d.record.start.title}</h3>
+    <p set:html={d.record.start.p1} />
+    <p set:html={d.record.start.p2} />
+
+    <h3>{d.record.bar.title}</h3>
+    <p set:html={d.record.bar.p1} />
+    <p set:html={d.record.bar.p2} />
+
+    <h3>{d.record.editor.title}</h3>
+    <p set:html={d.record.editor.body} />
+
+    <h3>{d.record.export.title}</h3>
+    <p set:html={d.record.export.body} />
+  </section>
+
+  <section class="doc-section" id="drafts">
+    <h2>{d.drafts.heading}</h2>
+    <p set:html={d.drafts.body} />
+  </section>
+
+  <section class="doc-section" id="shortcuts">
+    <h2>{d.shortcuts.heading}</h2>
+    <p set:html={d.shortcuts.intro} />
+    <ul>
+      {d.shortcuts.items.map((item: string) => <li set:html={item} />)}
+    </ul>
+    <p set:html={d.shortcuts.outro} />
+  </section>
+
+  <section class="doc-section" id="settings">
+    <h2>{d.settings.heading}</h2>
+    <p>{d.settings.intro}</p>
+    <ul>
+      {d.settings.items.map((item: string) => <li set:html={item} />)}
+    </ul>
+    <p set:html={d.settings.storage} />
+    <p set:html={d.settings.recordAcrossSites} />
+  </section>
+
+  <section class="doc-section" id="agents-cli">
+    <h2>{d.agentsCli.heading}</h2>
+    <p set:html={d.agentsCli.intro} />
+    <pre><code>npx openscreenshot shot https://example.com --out shot.png --full</code></pre>
+    <p>{d.agentsCli.mcpIntro}</p>
+    <pre><code>{'{ "command": "npx", "args": ["openscreenshot", "serve"] }'}</code></pre>
+    <p set:html={d.agentsCli.callOutro} />
+  </section>
+
+  <section class="doc-section" id="privacy">
+    <h2>{d.privacy.heading}</h2>
+    <p>{d.privacy.body1}</p>
+    <p set:html={d.privacy.body2} />
+  </section>
+
+  <section class="doc-section" id="support">
+    <h2>{d.support.heading}</h2>
+    <p set:html={fill(d.support.body)} />
+  </section>
+
+  <section class="doc-cta">
+    <div class="card doc-cta-card">
+      <h2>{d.cta.heading}</h2>
+      <p>{d.cta.body}</p>
+      <a class="btn btn-ink" href={STORE_URL} target="_blank" rel="noopener">{c.nav.addToChrome}</a>
+    </div>
+  </section>
+</Doc>
+
+<style>
+  .toc {
+    max-width: var(--max-w);
+    padding: var(--s-5);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    background: var(--paper-raised);
+  }
+
+  .toc h2 {
+    margin-bottom: var(--s-3);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: var(--fs-xs);
+    letter-spacing: var(--tr-label);
+    text-transform: uppercase;
+  }
+
+  .toc ul {
+    columns: 2;
+    column-gap: var(--s-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--fs-md);
+  }
+
+  .toc li {
+    margin-bottom: var(--s-2);
+    break-inside: avoid;
+  }
+
+  @media (max-width: 620px) {
+    .toc ul {
+      columns: 1;
+    }
+  }
+</style>

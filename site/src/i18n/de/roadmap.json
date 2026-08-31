@@ -1,0 +1,197 @@
+{
+  "meta": {
+    "title": "Roadmap — OpenScreenShot",
+    "description": "OpenScreenShot-Roadmap — geplante Funktionen und Ideen für die Open-Source-Screenshot-Erweiterung für Chrome. Alles bleibt 100 % lokal: keine Server, keine Konten."
+  },
+  "doc": {
+    "label": "Ausgeliefert und in Prüfung",
+    "heading": "Roadmap",
+    "lead": "Was ausgeliefert ist, was geprüft wird und was außerhalb des Rahmens bleibt."
+  },
+  "callout": "<strong>Das Versprechen:</strong> Alles auf dieser Seite bleibt 100 % lokal. Keine Server, keine Konten, keine neue Datensammlung — niemals. Roadmap-Einträge tragen keine Termine. Feedback und Pull Requests bestimmen, was ausgeliefert wird. Aktuelle Version: <strong>v1.5.0</strong>.",
+  "legend": {
+    "srLabel": "Status-Legende:",
+    "exploring": "In Prüfung",
+    "shipped": "Ausgeliefert",
+    "out": "Außerhalb des Rahmens"
+  },
+  "groups": [
+    {
+      "id": "capture",
+      "heading": "Screenshot",
+      "items": [
+        {
+          "name": "Ausschnitt-Lupe & Einrasten an Elementen",
+          "status": "exploring",
+          "note": "Eine Lupe am Fadenkreuz während du ziehst, mit Kanten, die an Elementgrenzen einrasten."
+        },
+        {
+          "name": "Stapelaufnahme: URL-Liste → ein PDF",
+          "status": "exploring",
+          "note": "Mehrere Seiten scrollen, zusammensetzen und als ein mehrseitiges PDF exportieren. Es kombiniert zwei Teile, die schon existieren."
+        }
+      ]
+    },
+    {
+      "id": "recording",
+      "heading": "Aufnahme",
+      "items": [
+        {
+          "name": "MP4-Export",
+          "status": "exploring",
+          "note": "WebCodecs plus ein Muxer, neben dem bestehenden WebM-Export."
+        },
+        {
+          "name": "Zoom, der dem Cursor folgt",
+          "status": "exploring",
+          "note": "Ein Zoom, der mitschwenkt und den Cursor verfolgt, statt auf festen Zoom-Blöcken zu sitzen."
+        },
+        {
+          "name": "Größen-Presets für Plattformen",
+          "status": "exploring",
+          "note": "Export in einem Ziel-Seitenverhältnis — YouTube, Shorts, quadratisch — statt im Format des Tabs."
+        },
+        {
+          "name": "Teilen und Löschen innerhalb eines Segments",
+          "status": "exploring",
+          "note": "Ein Segment auf der Zeitleiste in zwei Teile schneiden und den unerwünschten verwerfen, statt nur von einem Ende zu trimmen."
+        }
+      ]
+    },
+    {
+      "id": "power",
+      "heading": "Power-Funktionen",
+      "items": [
+        {
+          "name": "Lokale OCR — Text aus einem Screenshot kopieren",
+          "status": "exploring",
+          "note": "Texterkennung in WASM, geladen bei der ersten Nutzung und ausgeführt auf deinem Gerät. Engine und eine Sprachdatei wiegen 10–15 MB, ein Vielfaches der ganzen Erweiterung; die Größe entscheidet."
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "heading": "Performance & Feinschliff",
+      "items": [
+        {
+          "name": "Zusammensetzen im Worker",
+          "status": "exploring",
+          "note": "Das Zusammensetzen der ganzen Seite in einen Web Worker mit OffscreenCanvas verlagern, damit die Oberfläche auf sehr langen Seiten reaktionsfähig bleibt."
+        },
+        {
+          "name": "Editor sofort öffnen",
+          "status": "exploring",
+          "note": "Das Editor-Bundle schon während der Aufnahme vorwärmen, damit sich der Tab fast sofort öffnet."
+        }
+      ]
+    },
+    {
+      "id": "out-of-scope",
+      "heading": "Außerhalb des Rahmens",
+      "items": [
+        {
+          "name": "Desktop-Fenster oder den ganzen Bildschirm aufnehmen",
+          "status": "out",
+          "note": "Dafür braucht es die <code>desktopCapture</code>-Berechtigung, die eine Installationswarnung „Bildschirminhalte aufnehmen“ und bei jedem Shot einen Chrome-Auswahldialog mitbringt. OpenScreenShot wird mit leeren <code>host_permissions</code> ausgeliefert, und das so zu halten ist mehr wert als die Funktion."
+        }
+      ]
+    }
+  ],
+  "shipped": {
+    "heading": "Ausgeliefert",
+    "currentTag": "aktuelle Version",
+    "releases": [
+      {
+        "version": "v1.5.0",
+        "current": true,
+        "items": [
+          "<strong>Volle Tastaturbedienung und Screenreader-Unterstützung</strong> — eine fokussierbare Leinwand mit Ebenenwechsel, Platzieren, Verschieben, Skalieren und Zuschneiden per Tastatur; Live-Region-Ansagen für jede Änderung; Roving Tabindex auf beiden Werkzeugleisten; sichtbare Fokusringe und Mindest-Zielgrößen von 24×24; Unterstützung für <code>forced-colors</code> und <code>prefers-contrast</code>; und die UI-Texte des Editors hinter <code>chrome.i18n</code>.",
+          "<strong>Cut-Werkzeug</strong> — markiere einen oder mehrere horizontale Streifen auf einer Ganzseiten-Aufnahme und entferne sie mit Live-Vorschau. Cuts sind nicht destruktiv und lassen sich wie jede andere Bearbeitung rückgängig machen.",
+          "<strong>Benannte Beautify-Presets</strong> — Looks mit einem Klick, die Abstand, Eckenradius, Schatten und Hintergrund gemeinsam setzen, über den bestehenden Beautify-Reglern.",
+          "<strong>Verstellbare Zuschnitt-Griffe, mit Rückgängig</strong> — acht Griffe am Zuschnitt-Rechteck, und ein angewendeter Zuschnitt leert den Rückgängig-Verlauf nicht mehr.",
+          "<strong>Mehrfachauswahl, Duplizieren und Verschieben per Pfeiltaste</strong> — Shift-Klick wählt mehrere Anmerkungen, <code>Alt+D</code> dupliziert, und die Pfeiltasten verschieben die Auswahl.",
+          "<strong>Screenshot-Verlauf</strong> — die letzten zwölf Aufnahmen statt einer, aus dem Editor wieder zu öffnen.",
+          "<strong>Screenshot in schwebendem Fenster anheften</strong> — über Document Picture-in-Picture, die einzige Immer-im-Vordergrund-Fläche, die Chrome bietet.",
+          "<strong>Unschärfe-Stärke pro Ebene</strong> — ein Regler am Unschärfe-Werkzeug statt einer festen Stärke.",
+          "<strong>Aufnahme-Einrichtung in zwei Klicks</strong> — <code>tabCapture</code> wird beim ersten Klick direkt vom Aufnehmen-Button angefragt.",
+          "<strong>Rückgängig im Rekorder und eine vereinfachte Leiste</strong> — Rückgängig/Wiederholen für den Aufnahme-Editor, Beautify hinter einem Popover zusammengefasst und „Zoom hinzufügen“ auf die Zeitleiste verlegt.",
+          "<strong>Aufnahmen, erreichbar aus dem Popup</strong> — ein Aufnahmen-Link neben „Letzten öffnen“ öffnet die Liste des Rekorders, die vorher kein Button irgendwo erreichte. Jede Zeile zeigt Datum, Dauer, Dateigröße, Quelle und welche Spuren (Mikro, Tab-Audio, Webcam) sie enthält.",
+          "<strong>Neu gestaltete Editor-Oberfläche</strong> — eine stabile Stilleiste, eine gruppierte Werkzeugleiste, ein korallfarbener Schieberegler und eine Leinwand-Bühne für Hell und Dunkel, ein einheitlicher Gedrückt-Zustand und echte Lade- und Fehlerzustände beim Export."
+        ]
+      },
+      {
+        "version": "v1.3.0",
+        "items": [
+          "<strong>Selbst ausblendende Aufnahmesteuerung</strong> — die Steuerleiste blendet sich etwa drei Sekunden, nachdem dein Zeiger sie verlässt, aus und bleibt so aus dem Video. Bewege den Cursor an die untere Mitte der Seite, um sie zurückzuholen. Sie bleibt sichtbar, solange der Mauszeiger darüber liegt und solange die Aufnahme pausiert.",
+          "<strong>Synthetische Cursor-Anzeige</strong> — ein Schalter „Cursor anzeigen“ in der Einstellungsleiste des Editors, standardmäßig an, zeichnet aus dem aufgezeichneten Cursor-Pfad einen weichen Zeiger in Vorschau und WebM-Export, weil <code>tabCapture</code> den Betriebssystem-Cursor nie aufnimmt."
+        ]
+      },
+      {
+        "version": "v1.2.0",
+        "items": [
+          "<strong>Bildschirmrekorder mit Auto-Zoom</strong> — nimm den aktuellen Tab auf, mit einer <code>tabCapture</code>-Berechtigung, die einmal bei deiner ersten Aufnahme angefragt wird. Der Editor spielt den Take auf einer Zeitleiste ab, mit automatischem Zoom bei Cursor-Klicks, manuellen Zoom-Blöcken und Trimmen pro Segment, und rendert den Export dann über Canvas neu, mit Mikro- und Tab-Audio, Klick-Effekten und einer optionalen Webcam-Bubble. 1-Sekunden-Chunks landen während der Aufnahme in IndexedDB, damit die Aufnahme einen Absturz oder eine beendete Hintergrundseite übersteht."
+        ]
+      },
+      {
+        "version": "v1.1.0",
+        "items": [
+          "<strong>Schnellaufnahme</strong> — eine Zeile „Nach Screenshot“ im Popup schickt eine Aufnahme in den Editor, die Zwischenablage oder deinen Download-Ordner. Sie gilt für die Popup-Buttons, die Tastenkürzel und das Kontextmenü.",
+          "<strong>Pipette (<code>I</code>)</strong> — sie tastet die gerenderte Leinwand ab, sodass eine Farbe in einem Spotlight oder auf einem Beautify-Verlauf so gewählt wird, wie sie aussieht. Ein Feld in der Farbzeile öffnet Chromes bildschirmweiten Farbwähler.",
+          "<strong>Jedes Bild ziehen, ablegen oder einfügen</strong> — kommentiere ein Bild, das du schon hast. Ein Import nimmt denselben Platz ein wie ein Screenshot, also funktionieren jedes Werkzeug und jeder Exportweg weiter.",
+          "<strong>Absturzsichere Editor-Entwürfe</strong> — Bearbeitungen werden während der Arbeit lokal gespeichert und beim nächsten Öffnen des Editors wieder angeboten. Wiederherstellen ist immer ein Klick."
+        ]
+      },
+      {
+        "version": "v0.7.0",
+        "items": [
+          "<strong>Beautify-Modus</strong> — Abstand, abgerundete Ecken, Schatten und sechs Verlaufs-Presets, eine Farbe oder transparent. Er zeigt eine Live-Vorschau und wandert in jeden Export.",
+          "<strong>Export in jeder Skalierung</strong> — 25 / 50 / 100 / 200 % oder eine exakte Pixelbreite. Größen über Chromes Canvas-Limits werden abgelehnt und nie als leere Datei geschrieben."
+        ]
+      },
+      {
+        "version": "v0.6.1",
+        "items": [
+          "<strong>Verzögerte Aufnahme</strong> — Aus / 3s / 5s / 10s im Popup, mit Countdown auf dem Badge, für Hover-Zustände, Dropdowns und Tooltips.",
+          "<strong>Aufnahme aus dem Rechtsklick-Menü</strong> — ganze Seite, sichtbarer Bereich oder Ausschnitt aus dem Menü der Seite selbst. Es hält sich an die Timer-Einstellung.",
+          "<strong>Ausschnitt erneut</strong> — das vorherige Auswahl-Rechteck aus der Popup-Fußzeile oder dem Kontextmenü noch einmal aufnehmen."
+        ]
+      },
+      {
+        "version": "v0.6.0",
+        "items": [
+          "<strong>Deckende und Mosaik-Schwärzung</strong> — ein Modus am Unschärfe-Werkzeug: weiche Unschärfe, grobes Mosaik oder eine deckende Füllung, die erneutes Komprimieren übersteht.",
+          "<strong>Spotlight-Werkzeug (<code>O</code>)</strong> — Rechteck-, abgerundete oder Ellipsen-Ausschnitte, die zu einer abgedunkelten Ebene verschmelzen.",
+          "<strong>Jeden Anmerkungstyp skalieren</strong> — Stift und Textmarker skalieren über ihren Rahmen; Text und Schrittnummern skalieren über die Eckgriffe."
+        ]
+      },
+      {
+        "version": "v0.5.0",
+        "items": [
+          "<strong>Linien-Werkzeug (<code>L</code>)</strong> — der Pfeil ohne Spitze.",
+          "<strong>Shift-Beschränkungen</strong> — quadratische Rechtecke und Unschärfe-Bereiche, Linien und Pfeile auf 45° eingerastet.",
+          "<strong>Zifferntasten <code>1</code>–<code>8</code></strong> setzen die Farbe.",
+          "<strong>Doppelklick auf eine Textebene</strong> zum erneuten Bearbeiten."
+        ]
+      },
+      {
+        "version": "v0.4.0 und früher",
+        "items": [
+          "<code>{domain}</code>-Dateinamen-Token, neben <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{w}</code> und <code>{h}</code> (v0.4.0).",
+          "Schrittnummern und das Textmarker-Werkzeug (v0.3.0).",
+          "Tastenkürzel-Übersicht im Editor, mit Export auf ⌘S (v0.3.0).",
+          "Ein Zoom-Menü, mit Zoom-Steuerung per Tastatur (v0.3.0).",
+          "Benannte Farbfelder, eine eigene Farbe und zuletzt genutzte Farben (v0.3.0).",
+          "Der Export-Dialog kann seine Einstellungen als neue Standards speichern (v0.3.0).",
+          "Klickbare Dateinamen-Tokens mit Live-Vorschau (v0.3.0).",
+          "Ko-fi-Spendenlinks in README, Website und Popup-Fußzeile (v0.2.7)."
+        ]
+      }
+    ]
+  },
+  "cta": {
+    "heading": "Bestimme mit, was als Nächstes kommt.",
+    "body": "Gebaut wird, wonach Leute fragen.",
+    "button": "Funktion vorschlagen",
+    "fine": "Du willst eine davon selbst bauen? Pull Requests sind willkommen. Siehe den <a href=\"https://github.com/pghqdev/OpenScreenShot/blob/main/CONTRIBUTING.md\" target=\"_blank\" rel=\"noopener\">Leitfaden zum Mitwirken</a>."
+  }
+}

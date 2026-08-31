@@ -1,0 +1,34 @@
+{
+  "nav": {
+    "ariaPrimary": "Navegação principal",
+    "skipToContent": "Pular para o conteúdo",
+    "addToChrome": "Adicionar ao Chrome",
+    "docs": "Docs",
+    "support": "Suporte",
+    "roadmap": "Roadmap",
+    "github": "GitHub"
+  },
+  "footer": {
+    "tagline": "Capturas de tela que nunca saem do seu computador.",
+    "productHead": "Produto",
+    "projectHead": "Projeto",
+    "moreHead": "Mais de @PGHQdev",
+    "docs": "Docs",
+    "roadmap": "Roadmap",
+    "supportFaq": "Suporte e FAQ",
+    "github": "GitHub",
+    "mitLicense": "Licença MIT",
+    "privacy": "Privacidade",
+    "supportOpenSource": "Apoie o código aberto",
+    "languageLabel": "Idioma"
+  },
+  "meta": {
+    "ogDefaultAlt": "OpenScreenShot: captura de página inteira e anotações para o Chrome. Grátis, de código aberto e 100% local."
+  },
+  "breadcrumbHome": "Início",
+  "permissionTable": {
+    "permission": "Permissão",
+    "why": "Por que é necessária",
+    "when": "Quando é solicitada"
+  }
+}

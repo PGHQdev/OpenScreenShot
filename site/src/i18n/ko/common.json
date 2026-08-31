@@ -1,0 +1,34 @@
+{
+  "nav": {
+    "ariaPrimary": "주 메뉴",
+    "skipToContent": "본문으로 건너뛰기",
+    "addToChrome": "Chrome에 추가",
+    "docs": "문서",
+    "support": "지원",
+    "roadmap": "로드맵",
+    "github": "GitHub"
+  },
+  "footer": {
+    "tagline": "기기 밖으로 절대 나가지 않는 스크린샷.",
+    "productHead": "제품",
+    "projectHead": "프로젝트",
+    "moreHead": "@PGHQdev의 다른 도구",
+    "docs": "문서",
+    "roadmap": "로드맵",
+    "supportFaq": "지원 및 FAQ",
+    "github": "GitHub",
+    "mitLicense": "MIT 라이선스",
+    "privacy": "개인정보 처리방침",
+    "supportOpenSource": "오픈 소스 후원",
+    "languageLabel": "언어"
+  },
+  "meta": {
+    "ogDefaultAlt": "OpenScreenShot: Chrome용 전체 페이지 스크린샷과 주석 도구. 무료, 오픈 소스, 100% 로컬."
+  },
+  "breadcrumbHome": "홈",
+  "permissionTable": {
+    "permission": "권한",
+    "why": "필요한 이유",
+    "when": "요청 시점"
+  }
+}

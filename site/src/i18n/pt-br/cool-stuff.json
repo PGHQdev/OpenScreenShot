@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "title": "Coisas legais — OpenScreenShot",
+    "description": "Outras ferramentas pequenas e grátis do criador do OpenScreenShot: Minimalist Notes, um lugar tranquilo para pensar, e Musing, uma nova aba com uma citação que vale guardar."
+  },
+  "label": "Também de @PGHQdev",
+  "heading": "Coisas legais",
+  "lead": "Ferramentas pequenas das mesmas mãos que fizeram o OpenScreenShot. Cada uma é grátis, privada e feita para fazer bem uma coisa só.",
+  "tools": [
+    {
+      "name": "Minimalist Notes",
+      "tag": "Um lugar tranquilo para pensar.",
+      "body": "Abra a página e escreva. Suas notas ficam salvas no seu dispositivo, funcionam offline e não pedem conta. Não há nada para configurar nem para pagar."
+    },
+    {
+      "name": "Musing",
+      "tag": "Deixe a sabedoria do passado guiar o seu presente.",
+      "body": "Uma nova aba que recebe você com uma citação que vale guardar — escolhida conforme o que você anda pensando, com a análise feita no seu dispositivo. Nada é enviado a um servidor."
+    }
+  ],
+  "thanks": "Tudo isso é dado de graça, por inteiro. Se você quiser retribuir, <a href=\"https://ko-fi.com/T7A624DAY7\" target=\"_blank\" rel=\"noopener\">um café</a> já é o bastante."
+}

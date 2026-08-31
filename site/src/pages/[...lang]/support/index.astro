@@ -1,0 +1,77 @@
+---
+import Doc from '../../../layouts/Doc.astro';
+import FaqList from '../../../components/FaqList.astro';
+import { getFaq } from '../../../data/faq';
+import { ld } from '../../../lib/json-ld';
+import { t, localePaths, localeFromParams } from '../../../i18n';
+
+export const getStaticPaths = localePaths;
+
+const locale = localeFromParams(Astro.params.lang);
+const d = t(locale, 'support');
+const faq = getFaq(locale);
+
+const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
+
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faq.map((item) => ({
+    '@type': 'Question',
+    name: item.q,
+    acceptedAnswer: { '@type': 'Answer', text: item.a },
+  })),
+};
+
+// The list below and mainEntity above both read `faq`, so they cannot drift.
+// This guard fails the build if a later edit gives either its own source.
+if (faqLd.mainEntity.length !== faq.length) {
+  throw new Error(
+    `FAQ drift: ${faqLd.mainEntity.length} structured answers for ${faq.length} rendered questions.`,
+  );
+}
+---
+
+<Doc
+  title={d.meta.title}
+  description={d.meta.description}
+  path="/support/"
+  locale={locale}
+  label={d.label}
+  heading={d.heading}
+  lead={d.lead}
+>
+  <Fragment slot="head">
+    <script type="application/ld+json" set:html={ld(faqLd)} />
+  </Fragment>
+
+  <section class="doc-section" id="faq">
+    <h2>{d.faq.heading}</h2>
+    <FaqList items={faq} />
+  </section>
+
+  <section class="doc-section" id="limitations">
+    <h2>{d.limitations.heading}</h2>
+    <ul>
+      {d.limitations.items.map((item: string) => <li set:html={item} />)}
+    </ul>
+  </section>
+
+  <section class="doc-section" id="get-help">
+    <h2>{d.help.heading}</h2>
+    <p>{d.help.intro}</p>
+    <ul>
+      {d.help.items.map((item: string) => <li set:html={item} />)}
+    </ul>
+  </section>
+
+  <section class="doc-cta">
+    <div class="card doc-cta-card">
+      <h2>{d.cta.heading}</h2>
+      <p>{d.cta.body}</p>
+      <a class="btn btn-ink" href={`${REPO_URL}/issues/new`} target="_blank" rel="noopener">
+        {d.cta.button}
+      </a>
+    </div>
+  </section>
+</Doc>

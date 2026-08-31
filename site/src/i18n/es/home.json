@@ -1,0 +1,140 @@
+{
+  "meta": {
+    "title": "Captura de página completa y editor para Chrome — OpenScreenShot",
+    "description": "Extensión de Chrome gratuita y de código abierto para capturas de página completa, área visible o región, con editor de anotaciones, exportación a PNG, JPEG, WebP o PDF y grabadora de pestañas. Nada sale de tu dispositivo."
+  },
+  "hero": {
+    "note": "Gratis · Código abierto · Licencia MIT",
+    "title1": "Clic. Capturado. Listo.",
+    "title2": "Tan privado que funciona sin Wi-Fi.",
+    "sub": "Página completa, anotaciones, exportación y grabación de pestaña — todo en Chrome. Sin cuenta, sin marca de agua, sin nube.",
+    "viewOnGithub": "Ver en GitHub",
+    "tablistLabel": "Las pantallas de la extensión",
+    "credit": "El sitio de estas capturas es OpenTechCheck, también nuestro: descubre con qué está hecho cualquier sitio web.",
+    "creditCta": "Pruébalo ahora"
+  },
+  "tabs": {
+    "capture": {
+      "label": "Captura",
+      "alt": "El menú de OpenScreenShot abierto sobre una página web en Chrome, con las opciones Página completa, Área visible, Región y Grabar."
+    },
+    "annotate": {
+      "label": "Anota",
+      "alt": "El editor de OpenScreenShot con su barra de herramientas, la paleta de colores y los controles de trazo, mostrando una captura de página completa de opentechcheck.com con un recuadro y una flecha dibujados encima."
+    },
+    "export": {
+      "label": "Exporta",
+      "alt": "El diálogo de exportación del editor de OpenScreenShot, con PNG seleccionado, JPEG, WebP y PDF al lado, una fila de escala, un campo de ancho y un campo de nombre de archivo."
+    },
+    "record": {
+      "label": "Graba",
+      "alt": "La grabadora de OpenScreenShot con una página grabada en la vista previa, controles de cursor y de volumen de pestaña, y una línea de tiempo con dos bloques de zoom 2x."
+    },
+    "cli": {
+      "label": "CLI y MCP",
+      "short": "CLI"
+    }
+  },
+  "term": {
+    "commentShot": "# Una captura, directa desde tu terminal",
+    "commentServe": "# O un servidor MCP para tu agente de IA",
+    "commentConfig": "# Cualquier configuración de cliente MCP"
+  },
+  "proof": {
+    "ariaLabel": "En cifras",
+    "users": "{n} usuarios en la Chrome Web Store",
+    "stars": "{n} estrellas en GitHub",
+    "mit": "Licencia MIT",
+    "offline": "Funciona sin conexión"
+  },
+  "quartet": [
+    {
+      "title": "Captura lo que quieras",
+      "body": "La página entera, el área visible o una región que arrastras. Un clic, un atajo o el menú del clic derecho."
+    },
+    {
+      "title": "Edita antes de compartir",
+      "body": "Flechas, recuadros y texto para dejar clara tu idea. Desenfoque para lo que nadie más debería ver."
+    },
+    {
+      "title": "Graba la pestaña",
+      "body": "Un clic graba, con zoom automático en cada clic. Recorta en una línea de tiempo y exporta WebM."
+    },
+    {
+      "title": "Privado por defecto",
+      "body": "Sin cuenta, sin subidas, sin telemetría. Funciona con el Wi-Fi apagado."
+    }
+  ],
+  "privacy": {
+    "eyebrow": "Privacidad",
+    "heading": "Nadie puede ver lo que capturas. Ni siquiera nosotros.",
+    "lede": "Las capturas de pantalla suelen ser las imágenes más sensibles de tu equipo. La captura, la edición, la exportación, el PDF y la grabación se ejecutan en tu navegador. La extensión no hace ninguna petición de red propia y no tiene acceso permanente a ningún sitio que visites.",
+    "receipt": [
+      {
+        "k": "Cuenta",
+        "v": "Ninguna"
+      },
+      {
+        "k": "Subidas",
+        "v": "Ninguna"
+      },
+      {
+        "k": "Telemetría",
+        "v": "Ninguna"
+      },
+      {
+        "k": "Marca de agua",
+        "v": "Ninguna"
+      },
+      {
+        "k": "Permisos de host al instalar",
+        "v": "Ninguno"
+      },
+      {
+        "k": "Licencia",
+        "v": "MIT"
+      }
+    ],
+    "installFold": "Qué pide al instalarse",
+    "recordFold": "Qué añade la grabación, solo cuando grabas",
+    "micFine": "El micrófono y la cámara, cuando los activas, se abren con el propio aviso de permiso de tu navegador. El flujo nunca sale de tu dispositivo.",
+    "moreFine": "Las mismas tablas, con la política completa, en la <a href=\"/privacy/\">página de privacidad</a>."
+  },
+  "cli": {
+    "eyebrow": "Agentes y CLI",
+    "heading": "Automatizable desde tu terminal.",
+    "headingMuted": "Igual de local.",
+    "name": "<code>openscreenshot</code> en npm",
+    "bullets": [
+      "Una herramienta aparte y opcional para scripts y agentes de IA",
+      "Usa el Chrome que ya tienes en tu equipo",
+      "Sin descargar navegadores, sin servicio alojado",
+      "También un servidor MCP, con una herramienta <code>capture_screenshot</code>"
+    ],
+    "labelShot": "Una captura",
+    "labelConfig": "Configuración de cliente MCP"
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "heading": "Preguntas, respondidas.",
+    "moreFine": "Todas las preguntas, más los límites conocidos, en la <a href=\"/support/\">página de soporte</a>."
+  },
+  "cta": {
+    "heading": "Listo en diez segundos.",
+    "steps": [
+      {
+        "title": "Añádelo a Chrome",
+        "body": "Un clic en la Chrome Web Store. Gratis y sin registro."
+      },
+      {
+        "title": "Haz clic en el icono",
+        "body": "O pulsa el atajo. Elige página completa, área visible o una región."
+      },
+      {
+        "title": "Captura",
+        "body": "Anota, exporta o copia. Nunca sale de tu dispositivo."
+      }
+    ],
+    "browsersFine": "Funciona en Chrome, Edge, Brave, Arc y otros navegadores Chromium."
+  }
+}

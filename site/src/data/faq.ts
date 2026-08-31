@@ -1,14 +1,18 @@
 /**
- * Every question the site answers, in one array.
+ * Every question the site answers, in one list per locale.
  *
- * The homepage renders the items flagged `home`; the Support page renders all
- * of them. Each page derives its FAQPage JSON-LD from the same list it renders,
- * so the rendered count and the structured-data count cannot drift apart.
+ * The text lives in `src/i18n/<locale>/faq.json` (en is the source of truth);
+ * this module is the typed accessor. The homepage renders the items flagged
+ * `home`; the Support page renders all of them. Each page derives its FAQPage
+ * JSON-LD from the same list it renders, so the rendered count and the
+ * structured-data count cannot drift apart.
  *
  * `a` is a fragment of HTML. It is rendered with `set:html` and passed verbatim
- * into the JSON-LD answer text, which schema.org permits. Keep links
- * site-relative.
+ * into the JSON-LD answer text, which schema.org permits. Write links
+ * site-relative and locale-less in the JSON; `t()` prefixes them per locale.
  */
+import { t, DEFAULT_LOCALE, type Locale } from '../i18n';
+
 export type FaqItem = {
   q: string;
   a: string;
@@ -16,80 +20,13 @@ export type FaqItem = {
   home?: boolean;
 };
 
-export const faq: FaqItem[] = [
-  {
-    q: 'Is my data sent to a server?',
-    a: '<p>No. <strong>Zero data leaves your device.</strong> All capture, annotation, and export processing runs locally in your browser. The extension has no analytics, no telemetry, and no third-party services. See the <a href="/privacy/">Privacy Policy</a> for details.</p>',
-    home: true,
-  },
-  {
-    q: 'Does it work on chrome:// and extension pages?',
-    a: '<p>No. Chrome blocks extensions from capturing <code>chrome://</code>, <code>chrome-extension://</code>, the Chrome Web Store, and <code>about:</code> pages. That block is a Chrome security rule, and no extension can lift it. The extension shows an error if you try.</p>',
-    home: true,
-  },
-  {
-    q: 'Why does full-page capture take a few seconds?',
-    a: '<p>Chrome limits <code>captureVisibleTab</code> to about 2 calls per second. Every viewport-height tile costs one call, plus a short pause for the page to repaint. A typical 10-tile page takes 5–6 seconds, and a longer page takes proportionally longer. The progress bar in the popup tells you where it is.</p>',
-    home: true,
-  },
-  {
-    q: 'Why is my site header missing from the full-page screenshot?',
-    a: '<p>Fixed headers <em>do</em> appear — they are captured on the first tile and composited once at the top. A few rare <code>position: sticky</code> setups still slip past that. If you hit one, open a <a href="https://github.com/pghqdev/OpenScreenShot/issues">GitHub issue</a> with the page URL.</p>',
-  },
-  {
-    q: 'Can I scroll while selecting a region?',
-    a: '<p>No. Region selection is viewport-only — it locks scrolling while you drag. To grab an area that extends below the fold, capture the full page and crop it in the editor.</p>',
-  },
-  {
-    q: 'How do I open the editor after a capture?',
-    a: '<p>By default the editor opens in a new tab after every capture — you do not need to do anything. Export your annotated screenshot from the editor’s “Export” button in the top bar, or press <code>Ctrl+S</code> / <code>⌘S</code>.</p><p>If the <strong>After capture</strong> row in the popup is set to Clipboard or Download, no tab opens. <strong>Reopen last</strong> in the popup footer loads that capture into the editor whenever you want it.</p>',
-  },
-  {
-    q: 'Can I skip the editor and copy or save a screenshot straight away?',
-    a: '<p>Yes. The <strong>After capture</strong> row in the popup picks Editor, Clipboard, or Download. The setting applies to every entry point — the popup buttons, the keyboard shortcuts, and the right-click menu. Quick saves are written as PNG, and the toolbar badge is the confirmation since no tab opens.</p>',
-    home: true,
-  },
-  {
-    q: 'How do I capture a menu or a hover state that closes when I click?',
-    a: '<p>Set the <strong>Delay</strong> row in the popup to 3s, 5s, or 10s, then trigger the capture and open the menu. The toolbar badge counts down, and a region capture shows its overlay only after the delay. The right-click menu honors the same setting.</p>',
-  },
-  {
-    q: 'What happens to my edits if the editor tab closes?',
-    a: '<p>They are saved locally as you work. The next editor tab offers the draft back, and restoring it is always a click — a stale draft never replaces a capture you meant to start fresh. A cropped image gets its own draft, so annotations never restore against the wrong picture.</p>',
-  },
-  {
-    q: 'Can I use the editor without capturing a new screenshot?',
-    a: '<p>Yes. Drop an image file onto the editor stage, or paste one with <code>Ctrl+V</code> / <code>⌘V</code> outside a text field. The import takes the same seat a capture takes, so every tool, the beautify frame, and every export path keep working. It replaces the canvas, so the editor asks first when there are annotations to lose.</p><p><strong>Reopen last</strong> in the popup footer also loads the most recent capture back into the editor.</p>',
-  },
-  {
-    q: 'Does PDF export bundle a heavy library?',
-    a: '<p>No. PDF export runs on a small writer built into the extension (<code>src/editor/pdf-writer.ts</code>). It places each page’s image and compresses it with the browser’s own <code>CompressionStream</code>, so exporting a PDF makes no network request and adds no third-party code. Earlier versions used jsPDF, which pulled in <code>html2canvas</code> and <code>dompurify</code> for a feature the extension never called.</p>',
-    home: true,
-  },
-  {
-    q: 'Can I make a screenshot bigger, smaller, or nicer to share?',
-    a: '<p>The export dialog carries a <strong>Scale</strong> control: 25, 50, 100, or 200 %, or an exact pixel width. It is hidden for PDF, which sizes to the page. A size past Chrome’s canvas limit is refused rather than written as an empty file.</p><p>The <strong>Beautify</strong> panel adds padding, rounded corners, a drop shadow, and a gradient, solid, or transparent background. The frame travels into every export, the clipboard, and PDF.</p>',
-  },
-  {
-    q: 'Can I change the keyboard shortcuts?',
-    a: '<p>Yes. Open <code>chrome://extensions/shortcuts</code>, or use the <strong>Shortcuts</strong> link in the popup footer. The defaults are <code>Ctrl+Shift+S</code> for the full page, <code>Alt+Shift+V</code> for the visible area, and <code>Ctrl+Shift+E</code> for a region; on macOS they are <code>⌘⇧S</code>, <code>⌘⇧V</code>, and <code>⌘⇧E</code>. Chrome may leave a command unbound if another extension already claims the combination.</p>',
-    home: true,
-  },
-  {
-    q: 'Why does Chrome ask for tab capture access?',
-    a: '<p><code>tabCapture</code> is an optional permission, not one the extension asks for at install. Chrome shows the prompt once, the first time you click Record; every recording after that starts in one click, with no further prompt. Declaring it optional means it carries no install-time warning and never appears unless you actually start a recording.</p>',
-    home: true,
-  },
-  {
-    q: 'Where are my recordings stored?',
-    a: '<p>On your device, and nowhere else. Video chunks, the cursor log, and any mic or tab audio are written to IndexedDB as you record, in 1-second pieces, so a crash or a killed background page never loses the take. They stay there until you export or delete the session — nothing is ever uploaded.</p>',
-    home: true,
-  },
-  {
-    q: 'Why WebM and not MP4?',
-    a: '<p>The recorder exports through <code>MediaRecorder</code>, which writes WebM natively in every browser that supports tab capture. MP4 export is on the <a href="/roadmap/">roadmap</a>, via WebCodecs and a muxer, alongside the WebM path this version ships.</p>',
-  },
-];
+export const getFaq = (locale: Locale = DEFAULT_LOCALE): FaqItem[] =>
+  t(locale, 'faq').items as FaqItem[];
 
 /** The eight the homepage renders, and the source of its FAQPage JSON-LD. */
-export const homeFaq: FaqItem[] = faq.filter((item) => item.home);
+export const getHomeFaq = (locale: Locale = DEFAULT_LOCALE): FaqItem[] =>
+  getFaq(locale).filter((item) => item.home);
+
+/** English lists, for pages not yet localized. */
+export const faq: FaqItem[] = getFaq();
+export const homeFaq: FaqItem[] = getHomeFaq();

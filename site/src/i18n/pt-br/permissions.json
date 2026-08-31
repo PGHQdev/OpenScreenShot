@@ -1,0 +1,44 @@
+{
+  "install": [
+    {
+      "name": "activeTab",
+      "why": "Captura a aba que você está vendo, quando você clica no botão da barra de ferramentas, pressiona um atalho de teclado ou escolhe uma captura no menu do botão direito. O acesso vale para aquela aba, para aquela captura."
+    },
+    {
+      "name": "scripting",
+      "why": "Injeta funções pequenas e independentes na aba capturada: medir a altura da página e rolá-la durante uma captura de página inteira, desenhar a sobreposição de seleção por arraste em uma captura de região e gravar uma imagem na área de transferência no modo rápido. Todos os scripts vêm dentro do pacote. Nenhum código remoto é carregado."
+    },
+    {
+      "name": "storage e unlimitedStorage",
+      "why": "Guarda suas configurações no dispositivo, mantém a captura que a página do editor carrega, lembra o último retângulo de região para poder repeti-lo e salva um rascunho de edição em andamento, para que uma aba fechada ou travada não perca suas anotações. Uma captura de página inteira pode passar da cota padrão de armazenamento, e é isso que o unlimitedStorage amplia."
+    },
+    {
+      "name": "downloads",
+      "why": "Salva uma exportação do editor, ou uma captura do modo rápido, na sua pasta de downloads. A extensão nunca lê, pesquisa ou abre seu histórico de downloads."
+    },
+    {
+      "name": "contextMenus",
+      "why": "Adiciona um submenu do OpenScreenShot ao menu do botão direito da página, como uma segunda forma de iniciar uma captura. A extensão lê apenas qual item do menu você clicou."
+    },
+    {
+      "name": "clipboardWrite",
+      "why": "Copia uma captura para a sua área de transferência, pelo botão Copiar do editor ou pelo modo rápido. A extensão só grava a captura que você acabou de fazer ou exportar. Ela nunca lê o que já está na sua área de transferência."
+    },
+    {
+      "name": "offscreen",
+      "why": "Executa o mecanismo de gravação de tela em um documento oculto. A captura com MediaRecorder e as gravações de trechos no IndexedDB, à prova de falhas, precisam de um contexto de página que um service worker não tem. Está sempre presente; não adiciona aviso na instalação."
+    }
+  ],
+  "recording": [
+    {
+      "name": "tabCapture",
+      "why": "Captura o vídeo da aba atual, e o áudio dela se você ativar a trilha de som da aba, para a gravação.",
+      "when": "Uma única vez, na primeira vez que você clica em Gravar — um único aviso de permissão do Chrome."
+    },
+    {
+      "name": "<all_urls>",
+      "why": "A permissão de host opcional. Ela mantém a sobreposição do cursor e a barra de controle na página quando a aba de uma gravação navega para outra origem.",
+      "when": "Só se você ativar “Gravar em todos os sites” nas configurações."
+    }
+  ]
+}

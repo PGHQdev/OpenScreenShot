@@ -1,0 +1,197 @@
+{
+  "meta": {
+    "title": "路線圖 — OpenScreenShot",
+    "description": "OpenScreenShot 路線圖——這個開放原始碼 Chrome 截圖擴充功能規劃中的功能與構想。一切保持 100% 本機：沒有伺服器、沒有帳號。"
+  },
+  "doc": {
+    "label": "已推出與探索中",
+    "heading": "路線圖",
+    "lead": "已經推出什麼、正在探索什麼，以及什麼不在範圍內。"
+  },
+  "callout": "<strong>我們的承諾：</strong>本頁的一切都保持 100% 本機。沒有伺服器、沒有帳號、沒有新的資料收集——永遠如此。路線圖項目不標日期。回饋和 pull request 決定什麼會推出。目前版本：<strong>v1.5.0</strong>。",
+  "legend": {
+    "srLabel": "狀態圖例：",
+    "exploring": "探索中",
+    "shipped": "已推出",
+    "out": "不在範圍內"
+  },
+  "groups": [
+    {
+      "id": "capture",
+      "heading": "擷取",
+      "items": [
+        {
+          "name": "區域放大鏡與元素吸附",
+          "status": "exploring",
+          "note": "拖曳時在十字準星處顯示放大鏡，邊緣會吸附到元素邊界。"
+        },
+        {
+          "name": "批次擷取：一串網址 → 一份 PDF",
+          "status": "exploring",
+          "note": "捲動拼接多個頁面，匯出成單一份多頁 PDF。它組合的是兩個已經存在的部分。"
+        }
+      ]
+    },
+    {
+      "id": "recording",
+      "heading": "錄影",
+      "items": [
+        {
+          "name": "MP4 匯出",
+          "status": "exploring",
+          "note": "WebCodecs 加上封裝器，與現有的 WebM 匯出並存。"
+        },
+        {
+          "name": "跟隨游標的縮放模式",
+          "status": "exploring",
+          "note": "會平移追蹤游標的縮放，而非停在固定的縮放區塊上。"
+        },
+        {
+          "name": "平台尺寸預設",
+          "status": "exploring",
+          "note": "以目標長寬比匯出——YouTube、Shorts、正方形——而非分頁本身的比例。"
+        },
+        {
+          "name": "在片段中分割並刪除",
+          "status": "exploring",
+          "note": "在時間軸上把片段一分為二，捨棄不要的那段，而非只能從頭尾修剪。"
+        }
+      ]
+    },
+    {
+      "id": "power",
+      "heading": "進階功能",
+      "items": [
+        {
+          "name": "本機 OCR——從截圖複製文字",
+          "status": "exploring",
+          "note": "以 WASM 執行文字辨識，首次使用時載入並在你的裝置上運作。引擎加一個語言檔重達 10–15 MB，是整個擴充功能的好幾倍，所以體積是關鍵。"
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "heading": "效能與打磨",
+      "items": [
+        {
+          "name": "以 Worker 進行拼接合成",
+          "status": "exploring",
+          "note": "把整頁拼接移到 Web Worker 加 OffscreenCanvas，讓 UI 在超長頁面上保持流暢。"
+        },
+        {
+          "name": "編輯器即時開啟",
+          "status": "exploring",
+          "note": "在擷取進行時預熱編輯器套件，讓分頁近乎立即開啟。"
+        }
+      ]
+    },
+    {
+      "id": "out-of-scope",
+      "heading": "不在範圍內",
+      "items": [
+        {
+          "name": "擷取桌面視窗或整個螢幕",
+          "status": "out",
+          "note": "它需要 <code>desktopCapture</code> 權限，會加上「擷取螢幕內容」的安裝警告，而且每次擷取都要經過 Chrome 的選取器。OpenScreenShot 的 <code>host_permissions</code> 是空的，維持這一點比這個功能更有價值。"
+        }
+      ]
+    }
+  ],
+  "shipped": {
+    "heading": "已推出",
+    "currentTag": "目前版本",
+    "releases": [
+      {
+        "version": "v1.5.0",
+        "current": true,
+        "items": [
+          "<strong>完整鍵盤操作與螢幕閱讀器支援</strong>——可聚焦的畫布支援鍵盤圖層循環、放置、移動、調整大小和裁切；每次變動都有即時區域播報；兩條工具列都有 roving tabindex；可見的焦點框和 24×24 最小目標尺寸；支援 <code>forced-colors</code> 和 <code>prefers-contrast</code>；編輯器的 UI 字串也移到 <code>chrome.i18n</code> 之後。",
+          "<strong>Cut（剪除）工具</strong>——在整頁擷取上標出一段或多段水平區帶，即時預覽移除效果。剪除是非破壞性的，和其他編輯一樣可以復原。",
+          "<strong>具名的 Beautify（美化）預設</strong>——一鍵套用的風格，同時設定邊距、圓角、陰影和背景，建立在既有的美化滑桿之上。",
+          "<strong>可調整的裁切控點，支援復原</strong>——裁切矩形有八個調整控點，套用裁切也不再清空復原/重做堆疊。",
+          "<strong>多選、複製與方向鍵微調</strong>——Shift 點擊可選取多個註解，<code>Alt+D</code> 複製，方向鍵微調所選項目。",
+          "<strong>擷取記錄架</strong>——保留最近十二次擷取而非一次，可從編輯器重新開啟。",
+          "<strong>把擷取釘選到浮動視窗</strong>——透過 Document Picture-in-Picture，Chrome 唯一提供的永遠置頂介面。",
+          "<strong>逐層模糊強度控制</strong>——模糊工具上有滑桿，而非單一固定強度。",
+          "<strong>兩步完成錄影設定</strong>——第一次按錄影按鈕時，就地要求 <code>tabCapture</code>。",
+          "<strong>錄影工具的復原，以及簡化的側欄</strong>——錄影編輯器支援復原/重做，美化收進一個彈出面板，「新增縮放」移到時間軸上。",
+          "<strong>從彈出式視窗直達錄影</strong>——「重開上一張」旁的「錄影」連結可開啟錄影工具的清單，先前沒有任何按鈕能到達那裡。每列顯示日期、長度、檔案大小、來源，以及包含哪些音軌（麥克風、分頁音訊、視訊鏡頭）。",
+          "<strong>重新設計的編輯器介面</strong>——穩定的樣式列、分組的工具列、隨淺色深色調整的珊瑚色滑桿與畫布、一致的按下狀態，以及匯出時真正的載入與錯誤狀態。"
+        ]
+      },
+      {
+        "version": "v1.3.0",
+        "items": [
+          "<strong>自動隱藏的控制列</strong>——錄影控制列會在游標離開約三秒後自動隱藏，避免出現在影片裡。把游標移到頁面底部中央就能叫回它。游標懸停在上面時，以及錄影暫停時，它會保持顯示。",
+          "<strong>合成游標圖層</strong>——編輯器設定欄的「顯示游標」開關（預設開啟），會依錄下的游標路徑在預覽和 WebM 匯出中畫出平滑的指標，因為 <code>tabCapture</code> 從不錄下作業系統的游標。"
+        ]
+      },
+      {
+        "version": "v1.2.0",
+        "items": [
+          "<strong>附自動縮放的螢幕錄影</strong>——錄製目前的分頁，<code>tabCapture</code> 權限只在你第一次錄影時要求一次。編輯器把錄影放上時間軸，游標點擊處自動縮放，可加手動縮放區塊並逐段修剪，再透過畫布重新算繪匯出，混入麥克風和分頁音訊、點擊漣漪，以及選用的視訊鏡頭泡泡。錄影時每 1 秒的區塊即寫入 IndexedDB，所以當機或背景頁面被終止都能復原。"
+        ]
+      },
+      {
+        "version": "v1.1.0",
+        "items": [
+          "<strong>快速擷取</strong>——彈出式視窗的「擷取後」列可把擷取送到編輯器、剪貼簿或下載資料夾。涵蓋彈出式視窗按鈕、鍵盤快速鍵和右鍵選單。",
+          "<strong>滴管取色器（<code>I</code>）</strong>——取樣算繪後的畫布，所以聚光範圍內或美化漸層上的顏色都照所見取色。顏色列上的色票可開啟 Chrome 的全螢幕取色器。",
+          "<strong>拖放或貼上任何圖片</strong>——為你已有的圖片加註解。匯入的圖片和擷取享有同樣的位置，所以每個工具和匯出路徑都照常運作。",
+          "<strong>防當機的編輯器草稿</strong>——編輯過程即時存在本機，編輯器重開時會把草稿還給你。還原永遠只是一個點擊。"
+        ]
+      },
+      {
+        "version": "v0.7.0",
+        "items": [
+          "<strong>美化模式</strong>——邊距、圓角、陰影，加上六種漸層預設、單色或透明。即時預覽，並帶進每次匯出。",
+          "<strong>任意縮放匯出</strong>——25 / 50 / 100 / 200% 或精確的像素寬度。超過 Chrome 畫布上限時直接拒絕，而非寫出空檔案。"
+        ]
+      },
+      {
+        "version": "v0.6.1",
+        "items": [
+          "<strong>延遲擷取</strong>——彈出式視窗裡的關閉 / 3 秒 / 5 秒 / 10 秒，徽章會倒數，適合懸停狀態、下拉選單和提示框。",
+          "<strong>右鍵選單擷取</strong>——從頁面自己的選單擷取整個網頁、可見範圍或選取區域。它遵守延遲設定。",
+          "<strong>重複上次區域</strong>——從彈出式視窗底部或右鍵選單重新擷取上次的選取矩形。"
+        ]
+      },
+      {
+        "version": "v0.6.0",
+        "items": [
+          "<strong>實色與馬賽克遮蔽</strong>——模糊工具的模式：柔和模糊、粗馬賽克，或重新壓縮後仍有效的不透明填滿。",
+          "<strong>Spotlight（聚光）工具（<code>O</code>）</strong>——矩形、圓角矩形或橢圓挖空，會合併成同一層變暗遮罩。",
+          "<strong>每種註解都能調整大小</strong>——畫筆和螢光筆依外框縮放；文字和步驟編號從角落控點縮放。"
+        ]
+      },
+      {
+        "version": "v0.5.0",
+        "items": [
+          "<strong>直線工具（<code>L</code>）</strong>——沒有尖端的箭頭。",
+          "<strong>Shift 約束</strong>——正方形的矩形和模糊區域，以及對齊 45° 的直線和箭頭。",
+          "<strong>數字鍵 <code>1</code>–<code>8</code></strong> 設定顏色。",
+          "<strong>雙擊文字圖層</strong>即可重新編輯。"
+        ]
+      },
+      {
+        "version": "v0.4.0 與更早",
+        "items": [
+          "<code>{domain}</code> 檔名代碼，與 <code>{date}</code>、<code>{time}</code>、<code>{title}</code>、<code>{w}</code> 和 <code>{h}</code> 並列（v0.4.0）。",
+          "步驟編號標記和螢光筆工具（v0.3.0）。",
+          "編輯器內的快速鍵表，匯出綁定 ⌘S（v0.3.0）。",
+          "整合的縮放選單，附鍵盤縮放控制（v0.3.0）。",
+          "具名色票、自訂顏色和最近使用的顏色（v0.3.0）。",
+          "匯出對話框可把設定存為新的預設值（v0.3.0）。",
+          "可點擊的檔名代碼附即時預覽（v0.3.0）。",
+          "README、網站和彈出式視窗底部的 Ko-fi 贊助連結（v0.2.7）。"
+        ]
+      }
+    ]
+  },
+  "cta": {
+    "heading": "決定接下來推出什麼。",
+    "body": "大家要求什麼，就打造什麼。",
+    "button": "建議一個功能",
+    "fine": "想自己動手做其中一項？歡迎 pull request。請見<a href=\"https://github.com/pghqdev/OpenScreenShot/blob/main/CONTRIBUTING.md\" target=\"_blank\" rel=\"noopener\">貢獻指南</a>。"
+  }
+}

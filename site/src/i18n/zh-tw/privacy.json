@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "title": "隱私權政策 — OpenScreenShot",
+    "description": "OpenScreenShot 不收集任何資料。沒有分析、沒有遙測、沒有帳號、沒有伺服器。每一次擷取、註解和匯出都在你的瀏覽器本機執行。"
+  },
+  "label": "零資料收集",
+  "heading": "隱私權政策",
+  "lead": "OpenScreenShot 不收集任何資料。沒有伺服器、沒有帳號，也沒有分析。",
+  "updated": "最後更新：2026 年 8 月",
+  "callout": "<strong>零資料收集。</strong>OpenScreenShot 不收集、儲存、傳輸或分享使用者的任何個人資料、使用資料或其他資訊。",
+  "howItWorks": {
+    "heading": "運作方式",
+    "body": "擴充功能的每個部分都在你的瀏覽器本機執行：頁面擷取、圖片合成、註解編輯、螢幕錄影和匯出。任何資料都不會離開你的裝置。擴充功能自己不發出任何網路請求，也不宣告任何常駐主機權限，所以它對你造訪的任何網站都沒有背景存取權。"
+  },
+  "permissions": {
+    "heading": "權限",
+    "body": "擴充功能要求的每個權限都只有一個明確用途。"
+  },
+  "recording": {
+    "heading": "螢幕錄影",
+    "body": "錄影、游標記錄和麥克風或視訊鏡頭串流，處理方式與截圖相同：完全在你的裝置上。影片區塊、游標記錄和任何音訊會在錄影時寫入 IndexedDB，並留在那裡直到你刪除該工作階段；任何內容都不會上傳。錄影另外使用兩個權限，皆為選用，且只在你使用錄影工具時才會要求。",
+    "streams": "啟用麥克風和攝影機時，是由你瀏覽器自己的權限提示直接開啟。在你授權之前，擴充功能看不到任何串流，而串流也永遠不會離開你的裝置。"
+  },
+  "thirdParty": {
+    "heading": "第三方服務",
+    "body": "OpenScreenShot 不使用任何第三方分析、廣告或資料處理服務。PDF 匯出由內建在擴充功能裡的小型寫入器處理，所以匯出 PDF 也不會發出網路請求。"
+  },
+  "changes": {
+    "heading": "政策變更",
+    "body": "如果本政策有變更，更新後的版本會發布在本頁面，並附上新的<em>最後更新</em>日期。"
+  },
+  "contact": {
+    "heading": "聯絡方式",
+    "body": "關於本政策的問題，請到 <a href=\"https://github.com/pghqdev/OpenScreenShot/issues\" target=\"_blank\" rel=\"noopener\">GitHub 儲存庫</a>開一個 issue。"
+  }
+}

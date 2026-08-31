@@ -1,0 +1,197 @@
+{
+  "meta": {
+    "title": "路线图 — OpenScreenShot",
+    "description": "OpenScreenShot 路线图——这款开源 Chrome 截图扩展计划中的功能与想法。一切保持 100% 本地：没有服务器，没有账号。"
+  },
+  "doc": {
+    "label": "已发布与探索中",
+    "heading": "路线图",
+    "lead": "已经发布了什么、正在探索什么、什么不在范围之内。"
+  },
+  "callout": "<strong>我们的承诺：</strong>本页的一切都保持 100% 本地。没有服务器、没有账号、没有新的数据收集——永远如此。路线图条目不带日期。反馈和 Pull Request 决定什么会发布。当前版本：<strong>v1.5.0</strong>。",
+  "legend": {
+    "srLabel": "状态图例：",
+    "exploring": "探索中",
+    "shipped": "已发布",
+    "out": "不在范围内"
+  },
+  "groups": [
+    {
+      "id": "capture",
+      "heading": "截图",
+      "items": [
+        {
+          "name": "区域放大镜与元素吸附",
+          "status": "exploring",
+          "note": "拖动时在十字光标处显示放大镜，边缘可吸附到元素边界。"
+        },
+        {
+          "name": "批量截图：URL 列表 → 一份 PDF",
+          "status": "exploring",
+          "note": "滚动拼接多个页面，并导出为一份多页 PDF。它把两个已有的部分组合到一起。"
+        }
+      ]
+    },
+    {
+      "id": "recording",
+      "heading": "录屏",
+      "items": [
+        {
+          "name": "MP4 导出",
+          "status": "exploring",
+          "note": "WebCodecs 加封装器，与现有的 WebM 导出并存。"
+        },
+        {
+          "name": "跟随光标的缩放模式",
+          "status": "exploring",
+          "note": "缩放画面平移跟随光标，而不是停在固定的缩放块上。"
+        },
+        {
+          "name": "平台尺寸预设",
+          "status": "exploring",
+          "note": "按目标宽高比导出——YouTube、Shorts、正方形——而不是标签页自身的比例。"
+        },
+        {
+          "name": "在片段内部拆分并删除",
+          "status": "exploring",
+          "note": "在时间轴上把片段一分为二并丢弃不要的那段，而不是只能从两端修剪。"
+        }
+      ]
+    },
+    {
+      "id": "power",
+      "heading": "高级功能",
+      "items": [
+        {
+          "name": "本地 OCR——从截图中复制文字",
+          "status": "exploring",
+          "note": "基于 WASM 的文字识别，首次使用时加载，在你的设备上运行。引擎加一个语言文件重 10–15 MB，是整个扩展的许多倍，因此体积决定它的去留。"
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "heading": "性能与打磨",
+      "items": [
+        {
+          "name": "基于 Worker 的拼接合成",
+          "status": "exploring",
+          "note": "把整页拼接移到带 OffscreenCanvas 的 Web Worker 中，超长页面上界面也保持流畅。"
+        },
+        {
+          "name": "编辑器即时打开",
+          "status": "exploring",
+          "note": "在截图进行时预热编辑器包，让标签页几乎立刻打开。"
+        }
+      ]
+    },
+    {
+      "id": "out-of-scope",
+      "heading": "不在范围内",
+      "items": [
+        {
+          "name": "截取桌面窗口或整个屏幕",
+          "status": "out",
+          "note": "它需要 <code>desktopCapture</code> 权限，会在安装时增加“捕获屏幕内容”的警告，并在每次截图时弹出 Chrome 的选择器。OpenScreenShot 的 <code>host_permissions</code> 是空的，保持这一点比这个功能更有价值。"
+        }
+      ]
+    }
+  ],
+  "shipped": {
+    "heading": "已发布",
+    "currentTag": "当前版本",
+    "releases": [
+      {
+        "version": "v1.5.0",
+        "current": true,
+        "items": [
+          "<strong>完整的键盘操作与屏幕阅读器支持</strong>——可聚焦的画布支持用键盘循环图层、放置、移动、调整大小和裁剪；每次变更都有实时区域播报；两条工具栏都采用 roving tabindex；可见的焦点环和 24×24 的最小目标尺寸；支持 <code>forced-colors</code> 和 <code>prefers-contrast</code>；编辑器的界面文案也已迁移到 <code>chrome.i18n</code>。",
+          "<strong>Cut（裁切）工具</strong>——在整页截图上标记一条或多条水平横带，实时预览并移除。裁切是非破坏性的，可以像其他编辑一样撤销。",
+          "<strong>命名的 Beautify 预设</strong>——一键样式，在现有 Beautify 滑块之上同时设定内边距、圆角、阴影和背景。",
+          "<strong>可调节的裁剪控制点，支持撤销</strong>——裁剪矩形有八个调整大小的控制点，应用裁剪不再清空撤销/重做栈。",
+          "<strong>多选、复制和方向键微调</strong>——按住 Shift 点击可选中多个标注，<code>Alt+D</code> 复制，方向键微调所选内容。",
+          "<strong>截图历史架</strong>——保留最近十二次截图而不只是一次，可从编辑器重新打开。",
+          "<strong>把截图固定在浮动窗口中</strong>——通过文档画中画实现，这是 Chrome 提供的唯一置顶界面。",
+          "<strong>逐图层的模糊强度控制</strong>——模糊工具带上滑块，取代单一固定强度。",
+          "<strong>两次点击完成录屏设置</strong>——<code>tabCapture</code> 在“录屏”按钮第一次点击时内联请求。",
+          "<strong>录屏器撤销与简化的侧栏</strong>——录屏编辑器支持撤销/重做，Beautify 收进一个弹出面板，“添加缩放”移到时间轴上。",
+          "<strong>从弹出窗口直达录像</strong>——“重新打开上一张”旁的“录像”链接打开录屏器的会话列表，此前没有任何按钮能到达那里。每行显示日期、时长、文件大小、来源，以及包含哪些轨道（麦克风、标签页音频、摄像头）。",
+          "<strong>重新设计的编辑器界面</strong>——稳定的样式栏、分组的工具栏、适配浅色和深色的珊瑚色滑块与画布区域、一致的按下状态，以及导出时真实的加载和错误状态。"
+        ]
+      },
+      {
+        "version": "v1.3.0",
+        "items": [
+          "<strong>自动隐藏的控制栏</strong>——录制控制栏会在指针离开约三秒后自行隐藏，从而不出现在视频里。把光标移到页面底部中央即可让它回来。悬停在它上面时，以及录制暂停时，它保持可见。",
+          "<strong>合成光标叠加层</strong>——编辑器设置栏中的“显示光标”开关（默认开启）根据录下的光标轨迹，在预览和 WebM 导出中绘制平滑的指针，因为 <code>tabCapture</code> 从不录制系统光标。"
+        ]
+      },
+      {
+        "version": "v1.2.0",
+        "items": [
+          "<strong>带自动缩放的录屏器</strong>——录制当前标签页，<code>tabCapture</code> 权限只在你第一次录制时请求一次。编辑器在时间轴上回放素材：光标点击处自动缩放，还有手动缩放块和逐片段修剪；然后通过画布重新渲染导出，混入麦克风和标签页音频、点击波纹以及可选的摄像头气泡。录制时以 1 秒分块写入 IndexedDB，崩溃或后台页面被终止也能恢复。"
+        ]
+      },
+      {
+        "version": "v1.1.0",
+        "items": [
+          "<strong>快速截图</strong>——弹出窗口中的“截图后”一行把截图发送到编辑器、剪贴板或下载文件夹。它覆盖弹出窗口按钮、键盘快捷键和右键菜单。",
+          "<strong>吸管取色器（<code>I</code>）</strong>——从渲染后的画布取样，因此聚光内或 Beautify 渐变上的颜色所见即所得。颜色行上的色块可打开 Chrome 的全屏取色器。",
+          "<strong>拖放或粘贴任意图片</strong>——标注你已有的图片。导入的图片与截图完全同等对待，因此每个工具和导出路径都照常工作。",
+          "<strong>防崩溃的编辑器草稿</strong>——编辑内容随时本地保存，编辑器重新打开时会还给你。恢复始终只需一次点击。"
+        ]
+      },
+      {
+        "version": "v0.7.0",
+        "items": [
+          "<strong>Beautify 模式</strong>——内边距、圆角、阴影，加上六种渐变预设、纯色或透明背景。实时预览，并进入每次导出。",
+          "<strong>任意缩放比例导出</strong>——25 / 50 / 100 / 200 %，或精确的像素宽度。超过 Chrome 画布上限的尺寸会被拒绝，而不是写出空文件。"
+        ]
+      },
+      {
+        "version": "v0.6.1",
+        "items": [
+          "<strong>延时截图</strong>——弹出窗口中的关 / 3 秒 / 5 秒 / 10 秒，徽章上有倒计时，适合悬停状态、下拉菜单和工具提示。",
+          "<strong>右键菜单截图</strong>——从页面自己的菜单截取整页、可见区域或区域。它遵循延时设置。",
+          "<strong>重复上次区域</strong>——从弹出窗口底部或右键菜单重新截取上一次的选择矩形。"
+        ]
+      },
+      {
+        "version": "v0.6.0",
+        "items": [
+          "<strong>纯色与马赛克遮盖</strong>——模糊工具新增模式：柔和模糊、粗块马赛克，或经重新压缩仍有效的不透明填充。",
+          "<strong>Spotlight（聚光）工具（<code>O</code>）</strong>——矩形、圆角矩形或椭圆挖空区域，合并成一个变暗图层。",
+          "<strong>每种标注都能调整大小</strong>——画笔和荧光笔按边界框缩放；文字和步骤编号从角部控制点缩放。"
+        ]
+      },
+      {
+        "version": "v0.5.0",
+        "items": [
+          "<strong>直线工具（<code>L</code>）</strong>——不带箭头的直线。",
+          "<strong>Shift 约束</strong>——矩形和模糊区域保持正方形，直线和箭头吸附到 45°。",
+          "<strong>数字键 <code>1</code>–<code>8</code></strong> 设置颜色。",
+          "<strong>双击文字图层</strong>即可重新编辑。"
+        ]
+      },
+      {
+        "version": "v0.4.0 及更早版本",
+        "items": [
+          "<code>{domain}</code> 文件名占位符，与 <code>{date}</code>、<code>{time}</code>、<code>{title}</code>、<code>{w}</code> 和 <code>{h}</code> 并列（v0.4.0）。",
+          "步骤编号徽章和荧光笔工具（v0.3.0）。",
+          "编辑器内的快捷键表，导出绑定到 ⌘S（v0.3.0）。",
+          "统一的缩放菜单，带键盘缩放控制（v0.3.0）。",
+          "命名色块、自定义颜色和最近使用的颜色（v0.3.0）。",
+          "导出对话框可以把当前设置保存为新的默认值（v0.3.0）。",
+          "可点击的文件名占位符，带实时预览（v0.3.0）。",
+          "README、网站和弹出窗口底部的 Ko-fi 捐赠链接（v0.2.7）。"
+        ]
+      }
+    ]
+  },
+  "cta": {
+    "heading": "决定下一个发布什么。",
+    "body": "大家要什么，就做什么。",
+    "button": "提出功能建议",
+    "fine": "想亲手实现其中一个？欢迎 Pull Request。参见<a href=\"https://github.com/pghqdev/OpenScreenShot/blob/main/CONTRIBUTING.md\" target=\"_blank\" rel=\"noopener\">贡献指南</a>。"
+  }
+}

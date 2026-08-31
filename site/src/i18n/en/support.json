@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "title": "Support & FAQ — OpenScreenShot",
+    "description": "OpenScreenShot support — FAQ, troubleshooting, known limitations, and how to get help with the open-source Chrome screenshot extension."
+  },
+  "label": "Answers and known limits",
+  "heading": "Support & FAQ",
+  "lead": "Answers to common questions, known limitations, and how to get help.",
+  "faq": {
+    "heading": "Frequently asked questions"
+  },
+  "limitations": {
+    "heading": "Known limitations",
+    "items": [
+      "<strong>Region selection is viewport-only</strong> — the page locks while you drag, so a region cannot reach below the fold. Capture the full page and crop it in the editor.",
+      "<strong>Dynamic and infinite-scroll pages</strong> — the capture engine measures the page height once, at the start. A page that grows while you scroll comes out at the height it had when the capture began. Images that load late can come out blank too: each tile gets a short pause to repaint, not time for a fresh fetch.",
+      "<strong>No settings sync</strong> — your theme, export format, and filename template live in local storage and do not sync across devices or profiles.",
+      "<strong>The recording overlays sit on the page</strong> — the webcam preview and the control bar are elements on the page itself, so the raw tab video contains them. On export the editor composites its own webcam bubble as a second overlay, on top of the one the page captured. The control bar hides itself about three seconds after your pointer leaves it, so it stays out of the video; move your cursor to the bottom center of the page to bring it back. It stays visible while you hover it, and while the recording is paused."
+    ]
+  },
+  "help": {
+    "heading": "Get help",
+    "intro": "If you hit a bug, have a feature request, or need help with anything not covered here:",
+    "items": [
+      "<strong>Open a GitHub issue</strong> — <a href=\"https://github.com/pghqdev/OpenScreenShot/issues\" target=\"_blank\" rel=\"noopener\">github.com/pghqdev/OpenScreenShot/issues</a>",
+      "<strong>Leave a review</strong> on the <a href=\"https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp\" target=\"_blank\" rel=\"noopener\">Chrome Web Store</a> — it helps other people find the extension.",
+      "<strong>Contribute</strong> — the extension is MIT licensed. Pull requests are welcome. See <a href=\"https://github.com/pghqdev/OpenScreenShot/blob/main/CONTRIBUTING.md\" target=\"_blank\" rel=\"noopener\">CONTRIBUTING.md</a>."
+    ]
+  },
+  "cta": {
+    "heading": "Still stuck?",
+    "body": "Bugs, feature requests, and questions all go to the same tracker.",
+    "button": "Open a GitHub issue"
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "items": [
+    {
+      "q": "Werden meine Daten an einen Server geschickt?",
+      "a": "<p>Nein. <strong>Null Daten verlassen dein Gerät.</strong> Aufnahme, Anmerkungen und Export laufen komplett lokal in deinem Browser. Die Erweiterung hat keine Analytics, keine Telemetrie und keine Drittanbieterdienste. Details stehen in der <a href=\"/privacy/\">Datenschutzerklärung</a>.</p>",
+      "home": true
+    },
+    {
+      "q": "Funktioniert es auf chrome://- und Erweiterungsseiten?",
+      "a": "<p>Nein. Chrome verbietet Erweiterungen die Aufnahme von <code>chrome://</code>, <code>chrome-extension://</code>, dem Chrome Web Store und <code>about:</code>-Seiten. Das ist eine Sicherheitsregel von Chrome, die keine Erweiterung umgehen kann. Die Erweiterung zeigt einen Fehler, wenn du es versuchst.</p>",
+      "home": true
+    },
+    {
+      "q": "Warum dauert die Ganzseiten-Aufnahme ein paar Sekunden?",
+      "a": "<p>Chrome begrenzt <code>captureVisibleTab</code> auf etwa 2 Aufrufe pro Sekunde. Jede Kachel in Viewport-Höhe kostet einen Aufruf, plus eine kurze Pause, damit die Seite neu zeichnen kann. Eine typische Seite mit 10 Kacheln braucht 5–6 Sekunden, eine längere Seite entsprechend länger. Der Fortschrittsbalken im Popup zeigt dir, wo sie gerade steht.</p>",
+      "home": true
+    },
+    {
+      "q": "Warum fehlt der Seitenkopf in meinem Ganzseiten-Screenshot?",
+      "a": "<p>Fixierte Kopfzeilen erscheinen <em>doch</em> — sie werden auf der ersten Kachel aufgenommen und einmal oben eingefügt. Ein paar seltene <code>position: sticky</code>-Konstruktionen rutschen trotzdem noch durch. Wenn du auf eine triffst, öffne ein <a href=\"https://github.com/pghqdev/OpenScreenShot/issues\">GitHub-Issue</a> mit der URL der Seite.</p>"
+    },
+    {
+      "q": "Kann ich beim Auswählen eines Ausschnitts scrollen?",
+      "a": "<p>Nein. Die Ausschnittwahl gilt nur für den sichtbaren Bereich — beim Ziehen ist das Scrollen gesperrt. Für einen Bereich, der weiter unten liegt, nimm die ganze Seite auf und schneide sie im Editor zu.</p>"
+    },
+    {
+      "q": "Wie öffne ich den Editor nach einer Aufnahme?",
+      "a": "<p>Standardmäßig öffnet sich der Editor nach jedem Screenshot in einem neuen Tab — du musst nichts tun. Exportiere deinen kommentierten Screenshot über den Button „Exportieren“ in der oberen Leiste des Editors oder mit <code>Ctrl+S</code> / <code>⌘S</code>.</p><p>Steht die Zeile <strong>Nach Screenshot</strong> im Popup auf Kopieren oder Speichern, öffnet sich kein Tab. <strong>Letzten öffnen</strong> in der Fußzeile des Popups lädt diese Aufnahme jederzeit in den Editor.</p>"
+    },
+    {
+      "q": "Kann ich den Editor überspringen und einen Screenshot sofort kopieren oder speichern?",
+      "a": "<p>Ja. Die Zeile <strong>Nach Screenshot</strong> im Popup wählt Editor, Kopieren oder Speichern. Die Einstellung gilt für jeden Einstieg — die Popup-Buttons, die Tastenkürzel und das Rechtsklick-Menü. Schnelle Speicherungen werden als PNG geschrieben, und das Symbol-Badge ist die Bestätigung, weil sich kein Tab öffnet.</p>",
+      "home": true
+    },
+    {
+      "q": "Wie nehme ich ein Menü oder einen Hover-Zustand auf, der sich beim Klicken schließt?",
+      "a": "<p>Stelle die Zeile <strong>Timer</strong> im Popup auf 3, 5 oder 10 Sekunden, starte dann die Aufnahme und öffne das Menü. Das Symbol-Badge zählt herunter, und ein Ausschnitt zeigt sein Overlay erst nach der Wartezeit. Das Rechtsklick-Menü hält sich an dieselbe Einstellung.</p>"
+    },
+    {
+      "q": "Was passiert mit meinen Bearbeitungen, wenn sich der Editor-Tab schließt?",
+      "a": "<p>Sie werden während der Arbeit lokal gespeichert. Der nächste Editor-Tab bietet den Entwurf wieder an, und das Wiederherstellen ist immer ein Klick — ein alter Entwurf ersetzt nie eine Aufnahme, die du frisch beginnen wolltest. Ein zugeschnittenes Bild bekommt einen eigenen Entwurf, damit Anmerkungen nie auf dem falschen Bild landen.</p>"
+    },
+    {
+      "q": "Kann ich den Editor nutzen, ohne einen neuen Screenshot aufzunehmen?",
+      "a": "<p>Ja. Ziehe eine Bilddatei auf die Editor-Fläche oder füge eine mit <code>Ctrl+V</code> / <code>⌘V</code> außerhalb eines Textfelds ein. Der Import nimmt denselben Platz ein wie ein Screenshot, also funktionieren jedes Werkzeug, der Beautify-Rahmen und jeder Exportweg weiter. Er ersetzt die Leinwand, deshalb fragt der Editor vorher nach, wenn Anmerkungen verloren gingen.</p><p><strong>Letzten öffnen</strong> in der Fußzeile des Popups lädt außerdem die letzte Aufnahme zurück in den Editor.</p>"
+    },
+    {
+      "q": "Bündelt der PDF-Export eine schwere Bibliothek?",
+      "a": "<p>Nein. Der PDF-Export läuft über einen kleinen Writer, der in die Erweiterung eingebaut ist (<code>src/editor/pdf-writer.ts</code>). Er platziert das Bild jeder Seite und komprimiert es mit dem browsereigenen <code>CompressionStream</code>. Ein PDF-Export stellt also keine Netzwerkanfrage und lädt keinen Fremdcode. Frühere Versionen nutzten jsPDF, das <code>html2canvas</code> und <code>dompurify</code> für eine Funktion mitbrachte, die die Erweiterung nie aufrief.</p>",
+      "home": true
+    },
+    {
+      "q": "Kann ich einen Screenshot größer, kleiner oder schöner zum Teilen machen?",
+      "a": "<p>Der Export-Dialog hat einen <strong>Skalierung</strong>-Regler: 25, 50, 100 oder 200 % oder eine exakte Pixelbreite. Für PDF ist er ausgeblendet, weil PDF auf die Seite skaliert. Eine Größe über Chromes Canvas-Limit wird abgelehnt und nie als leere Datei geschrieben.</p><p>Das <strong>Beautify</strong>-Panel fügt Abstand, abgerundete Ecken, einen Schatten und einen Verlauf, eine Farbe oder einen transparenten Hintergrund hinzu. Der Rahmen wandert in jeden Export, in die Zwischenablage und ins PDF.</p>"
+    },
+    {
+      "q": "Kann ich die Tastenkürzel ändern?",
+      "a": "<p>Ja. Öffne <code>chrome://extensions/shortcuts</code> oder nutze den Link <strong>Kürzel</strong> in der Fußzeile des Popups. Die Standards sind <code>Ctrl+Shift+S</code> für die ganze Seite, <code>Alt+Shift+V</code> für den sichtbaren Bereich und <code>Ctrl+Shift+E</code> für einen Ausschnitt; auf macOS sind es <code>⌘⇧S</code>, <code>⌘⇧V</code> und <code>⌘⇧E</code>. Chrome lässt ein Kommando womöglich unbelegt, wenn eine andere Erweiterung die Kombination schon beansprucht.</p>",
+      "home": true
+    },
+    {
+      "q": "Warum fragt Chrome nach Zugriff auf die Tab-Aufnahme?",
+      "a": "<p><code>tabCapture</code> ist eine optionale Berechtigung, keine, die die Erweiterung bei der Installation anfragt. Chrome zeigt die Abfrage einmal, beim ersten Klick auf Aufnehmen; jede Aufnahme danach startet mit einem Klick, ohne weitere Abfrage. Als optional deklariert trägt sie keine Warnung bei der Installation und erscheint nie, solange du keine Aufnahme startest.</p>",
+      "home": true
+    },
+    {
+      "q": "Wo werden meine Aufnahmen gespeichert?",
+      "a": "<p>Auf deinem Gerät, und nirgendwo sonst. Video-Chunks, das Cursor-Protokoll und jedes Mikro- oder Tab-Audio werden während der Aufnahme in 1-Sekunden-Stücken in IndexedDB geschrieben, damit ein Absturz oder eine beendete Hintergrundseite den Take nie verliert. Sie bleiben dort, bis du die Aufnahme exportierst oder löschst — nichts wird jemals hochgeladen.</p>",
+      "home": true
+    },
+    {
+      "q": "Warum WebM und nicht MP4?",
+      "a": "<p>Der Rekorder exportiert über <code>MediaRecorder</code>, der WebM in jedem Browser mit Tab-Aufnahme nativ schreibt. MP4-Export steht auf der <a href=\"/roadmap/\">Roadmap</a>, über WebCodecs und einen Muxer, neben dem WebM-Weg dieser Version.</p>"
+    }
+  ]
+}

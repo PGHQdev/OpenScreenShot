@@ -9,27 +9,32 @@ import Base from './Base.astro';
 import type { NavLink } from './Base.astro';
 import '../styles/doc.css';
 import { ld } from '../lib/json-ld';
+import { t, localizePath, DEFAULT_LOCALE, type Locale } from '../i18n';
 
 interface Props {
   title: string;
   description: string;
-  /** Canonical path, leading and trailing slash included: '/docs/'. */
+  /** Canonical path, locale-less, leading and trailing slash included: '/docs/'. */
   path: string;
+  /** URL locale of this render. Defaults to en for pages not yet localized. */
+  locale?: Locale;
   /** Monospace eyebrow above the heading. */
   label: string;
   heading: string;
   lead: string;
 }
 
+const { title, description, path, locale = DEFAULT_LOCALE, label, heading, lead } = Astro.props;
+
+const c = t(locale, 'common');
+
 // The full nav, with cross-page links. Only the homepage nav is anchors-only.
 const navLinks: NavLink[] = [
-  { href: '/docs/', label: 'Docs' },
-  { href: '/support/', label: 'Support' },
-  { href: '/roadmap/', label: 'Roadmap' },
-  { href: 'https://github.com/pghqdev/OpenScreenShot', label: 'GitHub', external: true },
+  { href: localizePath(locale, '/docs/'), label: c.nav.docs },
+  { href: localizePath(locale, '/support/'), label: c.nav.support },
+  { href: localizePath(locale, '/roadmap/'), label: c.nav.roadmap },
+  { href: 'https://github.com/pghqdev/OpenScreenShot', label: c.nav.github, external: true },
 ];
-
-const { title, description, path, label, heading, lead } = Astro.props;
 
 // Every sub-page is one level below Home, so the trail is always Home > this
 // page. `heading` is each page's own h1 text, which is also the plainest
@@ -38,14 +43,24 @@ const breadcrumbLd = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: new URL('/', Astro.site).href },
-    { '@type': 'ListItem', position: 2, name: heading, item: new URL(path, Astro.site).href },
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: c.breadcrumbHome,
+      item: new URL(localizePath(locale, '/'), Astro.site).href,
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: heading,
+      item: new URL(localizePath(locale, path), Astro.site).href,
+    },
   ],
 };
 
 ---
 
-<Base title={title} description={description} path={path} navLinks={navLinks}>
+<Base title={title} description={description} path={path} locale={locale} navLinks={navLinks}>
   <Fragment slot="head">
     <script type="application/ld+json" set:html={ld(breadcrumbLd)} />
     <slot name="head" />

@@ -1,0 +1,168 @@
+{
+  "meta": {
+    "title": "文档 — OpenScreenShot",
+    "description": "OpenScreenShot 文档。如何安装这款开源 Chrome 扩展，以及如何截取、标注和导出截图。"
+  },
+  "doc": {
+    "label": "安装 · 截图 · 标注 · 导出",
+    "heading": "文档",
+    "lead": "如何安装和使用 OpenScreenShot——开源的 Chrome 截图与标注扩展。"
+  },
+  "tocHead": "本页目录",
+  "install": {
+    "heading": "安装",
+    "intro": "OpenScreenShot 已上架 Chrome 应用商店。",
+    "steps": [
+      "在 Chrome 中打开 <a href=\"{storeUrl}\" target=\"_blank\" rel=\"noopener\">OpenScreenShot 商店页面</a>。",
+      "点击<strong>添加至 Chrome</strong>。",
+      "接受权限。扩展需要访问当前标签页，并获准在其中运行截图脚本。",
+      "OpenScreenShot 图标出现在你的工具栏。点击它打开弹出窗口。"
+    ]
+  },
+  "capture": {
+    "heading": "截取截图",
+    "intro": "点击工具栏中的 OpenScreenShot 图标，从三种截图模式中选择一种。一切都在你的浏览器本地运行。发起截图有四种方式：",
+    "ways": [
+      "<strong>弹出窗口</strong>——点击某个模式，或按 <kbd>1</kbd>–<kbd>3</kbd>。",
+      "<strong>键盘快捷键</strong>——整页 <kbd>Ctrl+Shift+S</kbd>，可见区域 <kbd>Alt+Shift+V</kbd>，区域 <kbd>Ctrl+Shift+E</kbd>。macOS 上分别是 <kbd>⌘⇧S</kbd>、<kbd>⌘⇧V</kbd> 和 <kbd>⌘⇧E</kbd>。可在 <code>chrome://extensions/shortcuts</code> 重新绑定。",
+      "<strong>右键菜单</strong>——任意页面上的 OpenScreenShot 子菜单提供同样的三种模式。",
+      "<strong>重复区域</strong>——弹出窗口底部和右键菜单可重新截取上一次的区域矩形。这两项在你选择过一次区域后出现。"
+    ],
+    "delay": "弹出窗口中的<strong>延时</strong>一行可将截图推迟 3、5 或 10 秒，工具栏徽章会倒计时。用它截取悬停状态、下拉菜单，以及你一点别处就会关闭的工具提示。"
+  },
+  "modes": {
+    "heading": "截图模式",
+    "full": {
+      "title": "整页",
+      "body": "截取整个可滚动页面并拼接成一张图片。扩展逐视口滚动页面，截取每个分块，再合成到一起。固定页头在第一个分块中截取，只在顶部合成一次。滚动内部元素而非窗口的页面同样适用。"
+    },
+    "visible": {
+      "title": "可见区域",
+      "body": "立即截取当前视口。不滚动。想快速截下屏幕上此刻的内容就用它。"
+    },
+    "region": {
+      "title": "选定区域",
+      "body": "点击并拖动画出一个矩形。每条边和每个角都有调整大小的控制点。用方向键将选区一次移动一个像素，按住 <kbd>Shift</kbd> 一次移动十个像素。按 <kbd>Enter</kbd> 确认，按 <kbd>Esc</kbd> 取消。"
+    }
+  },
+  "afterCapture": {
+    "heading": "截图之后",
+    "intro": "弹出窗口中的<strong>截图后</strong>一行决定截图完成后做什么。它作用于每个入口：弹出窗口按钮、键盘快捷键和右键菜单。",
+    "options": [
+      "<strong>编辑器</strong>——在新标签页打开标注编辑器。这是默认选项。",
+      "<strong>剪贴板</strong>——复制截图并跳过编辑器。直接粘贴到聊天、文档或 issue 里。",
+      "<strong>下载</strong>——把截图保存到下载文件夹并跳过编辑器。快速保存会生成 PNG。"
+    ],
+    "outro": "剪贴板和下载不打开标签页，因此工具栏徽章就是完成确认。截图失败时徽章会闪烁 <kbd>!</kbd>。弹出窗口底部的<strong>重新打开上一张</strong>可随时在编辑器中打开最近一次截图。"
+  },
+  "annotate": {
+    "heading": "标注",
+    "intro": "编辑器在完整标签页中打开，并从本地存储加载最近一次截图。每个工具都有一个单字母快捷键。",
+    "tools": [
+      "<strong>选择</strong> <kbd>V</kbd>——移动、调整大小或删除任何标注。双击文字图层可重新编辑。",
+      "<strong>矩形</strong> <kbd>R</kbd>——绘制边框矩形。",
+      "<strong>箭头</strong> <kbd>A</kbd>——绘制方向箭头。",
+      "<strong>直线</strong> <kbd>L</kbd>——不带箭头的直线。",
+      "<strong>画笔</strong> <kbd>P</kbd>——自由绘制。",
+      "<strong>荧光笔</strong> <kbd>H</kbd>——半透明的自由笔迹。",
+      "<strong>文字</strong> <kbd>T</kbd>——添加文本框，大小由字号控件决定。",
+      "<strong>步骤编号</strong> <kbd>S</kbd>——自动递增的编号徽章，删除一个后其余会重新编号。",
+      "<strong>模糊</strong> <kbd>B</kbd>——用柔和模糊、粗块马赛克或不透明填充遮住敏感内容。不透明填充经重新压缩仍有效。",
+      "<strong>Spotlight（聚光）</strong> <kbd>O</kbd>——矩形、圆角矩形或椭圆挖空区域，合并成一个变暗图层。",
+      "<strong>吸管</strong> <kbd>I</kbd>——从截图中取色。它取样的是你看到的画面，因此聚光内或 Beautify 渐变上的颜色所见即所得。颜色行上的色块按钮可打开 Chrome 的全屏取色器，取画布之外的颜色。",
+      "<strong>裁剪</strong> <kbd>C</kbd>——把图片修剪到选定区域。"
+    ],
+    "outro": "绘制时按住 <kbd>Shift</kbd> 可得到正方形，以及吸附到 45° 的直线和箭头。样式栏提供绑定在 <kbd>1</kbd>–<kbd>8</kbd> 上的 8 色调色板、自定义颜色、最近使用的颜色、三种线宽和一个字号控件。你的选择会跨会话记住。撤销和重做是 <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>，macOS 上是 <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd>。"
+  },
+  "beautify": {
+    "heading": "Beautify",
+    "body": "顶栏中的 <strong>Beautify</strong> 面板为分享装点截图：内边距、圆角和阴影滑块，外加六种渐变预设、自定义纯色或透明背景。边框实时预览，并进入每次导出、剪贴板和 PDF。"
+  },
+  "import": {
+    "heading": "标注已有的图片",
+    "body": "把图片文件拖到编辑器画布上，或在文本框以外用 <kbd>Ctrl+V</kbd> / <kbd>⌘V</kbd> 粘贴。导入的图片与截图完全同等对待，因此每个工具、Beautify 边框和每条导出路径都照常工作，顶栏会显示<strong>已导入</strong>。导入会替换画布，因此在有标注会丢失时编辑器会先询问。"
+  },
+  "export": {
+    "heading": "导出",
+    "intro": "点击编辑器顶栏的<strong>导出</strong>，或按 <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>。选择格式：",
+    "formats": [
+      "<strong>PNG</strong>——无损，保留透明。",
+      "<strong>JPEG</strong>——文件更小，质量可调。",
+      "<strong>WebP</strong>——质量像 JPEG 一样可调，透明像 PNG 一样保留。",
+      "<strong>PDF</strong>——导出为一张整图页面、适配 A4/Letter，或拆分为多页并带 5mm 重叠，避免内容被从行中间截断。"
+    ],
+    "scale": "<strong>缩放比例</strong>可按 25%、50%、100%、200% 或精确像素宽度导出。PDF 按页面定尺寸，因此不显示该控件。超过 Chrome 画布上限的尺寸会被拒绝，而不是写出空文件。",
+    "clipboard": "<kbd>Ctrl+C</kbd> / <kbd>⌘C</kbd> 把成品图片直接复制到剪贴板。导出对话框也能把当前设置保存为新的默认值。"
+  },
+  "record": {
+    "heading": "录制标签页",
+    "intro": "点击弹出窗口中的<strong>录屏</strong>；录制进行时按 <kbd>Alt+Shift+X</kbd> 停止。第一次录制时，Chrome 会为标签页录制显示一次权限提示；之后每次录制都一键开始。",
+    "start": {
+      "title": "开始录制",
+      "p1": "弹出窗口的录屏一行有三个开关——<strong>麦克风</strong>、<strong>标签页音频</strong>和<strong>摄像头</strong>——点击“录屏”前先打开需要的那些。开启麦克风或摄像头后，采集开始前，浏览器自己的权限提示会从页面上的一个小气泡弹出。",
+      "p2": "如果录制中的页面跳转到其他网站，控制栏需要可选的“跨网站录制”权限（见<a href=\"#settings\">设置</a>）才能跟过去。没有该权限时，工具栏徽章会变成琥珀色；点击工具栏图标或再与页面交互一次，即可重新附加叠加层。"
+    },
+    "bar": {
+      "title": "控制栏",
+      "p1": "录制时页面底部有一个小控制栏：计时器、每条已启用轨道的标签，以及暂停/继续、停止和取消按钮。开启摄像头后，一个可拖动的圆形预览浮在页面上——拖到哪里，它就在余下的录制中留在哪里。",
+      "p2": "指针离开约三秒后，控制栏会自行隐藏，从而不出现在你的录像里。把光标移到页面底部中央即可让它回来。悬停在它上面时，以及录制暂停时，它保持可见。"
+    },
+    "editor": {
+      "title": "编辑器",
+      "body": "点击停止后会打开录屏编辑器，把你的素材放在时间轴上。编辑器会在你光标点击过的每个位置加入平滑的 2x 缩放——可以调整或删除其中任何一个，也可以按 1.5x、2x 或 3x 添加自己的手动缩放块。拖动片段两端的控制点修剪起点或终点。点击波纹标出你点击过的位置；摄像头气泡、Beautify 边框和麦克风/标签页音频音量滑块都在侧栏里。“显示光标”按录下的光标轨迹绘制平滑的指针，可在设置栏中关闭。"
+    },
+    "export": {
+      "title": "导出",
+      "body": "导出会通过画布重新渲染素材，混入你设置的轨道和效果，并下载一个 WebM 文件。"
+    }
+  },
+  "drafts": {
+    "heading": "草稿",
+    "body": "编辑内容随时本地保存。如果编辑器标签页关闭或崩溃，下一个编辑器标签页会把草稿还给你。恢复始终只需一次点击，因此过期的草稿永远不会覆盖你想重新开始的截图。裁剪后的图片有自己的草稿，标注永远不会恢复到错误的图片上。"
+  },
+  "shortcuts": {
+    "heading": "键盘快捷键",
+    "intro": "在编辑器中按 <kbd>?</kbd> 查看完整快捷键表。除上面的工具字母外还有：",
+    "items": [
+      "<kbd>1</kbd>–<kbd>8</kbd>——设置标注颜色。",
+      "<kbd>Ctrl+C</kbd> / <kbd>⌘C</kbd>——复制到剪贴板。",
+      "<kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>——导出。",
+      "<kbd>Backspace</kbd>——删除所选标注。",
+      "<kbd>Esc</kbd>——取消选择，或取消裁剪。",
+      "<kbd>Ctrl</kbd> / <kbd>⌘</kbd> 加 <kbd>+</kbd>、<kbd>−</kbd> 或 <kbd>0</kbd>——放大、缩小、实际大小。<kbd>F</kbd> 适应屏幕。",
+      "<kbd>Space</kbd> + 拖动——平移画布。"
+    ],
+    "outro": "<kbd>Alt+Shift+X</kbd> 可在任何地方停止当前录制——不需要打开编辑器或弹出窗口。"
+  },
+  "settings": {
+    "heading": "设置",
+    "intro": "打开弹出窗口中的齿轮图标可设置：",
+    "items": [
+      "<strong>主题</strong>——浅色、深色或跟随系统。",
+      "<strong>默认格式</strong>——PNG、JPEG、WebP 或 PDF。",
+      "<strong>质量</strong>——用于 JPEG、WebP 和 PDF。",
+      "<strong>文件名模板</strong>——点击占位符即可插入 <code>{date}</code>、<code>{time}</code>、<code>{title}</code>、<code>{domain}</code>、<code>{w}</code> 或 <code>{h}</code>。实时预览会显示结果。"
+    ],
+    "storage": "设置保存在这台设备的本地存储中。面板底部的<strong>恢复默认设置</strong>需要点击两次。",
+    "recordAcrossSites": "<strong>跨网站录制</strong>——默认关闭。开启后会请求可选的 <code>&lt;all_urls&gt;</code> 主机权限，这样录制控制栏和光标叠加层就能跟随录制途中跳转到新网站的标签页。"
+  },
+  "agentsCli": {
+    "heading": "智能体与 CLI",
+    "intro": "<code>openscreenshot</code>（npm）是一个独立、可选、本地的工具，用于从命令行或 AI 智能体编程截图。它驱动你机器上已有的 Chrome——无需下载浏览器，没有托管服务。如果无法自动找到你的 Chrome，请设置 <code>CHROME_PATH</code>。",
+    "mcpIntro": "作为 MCP 服务器使用时，把以下内容加入你的 MCP 客户端配置：",
+    "callOutro": "然后用 <code>{ \"url\": \"https://example.com\" }</code> 调用 <code>capture_screenshot</code> 工具。"
+  },
+  "privacy": {
+    "heading": "隐私",
+    "body1": "OpenScreenShot 的一切处理都在你的浏览器本地进行。截图保存在 Chrome 本地存储中，不会上传到任何服务器。录像、光标日志和麦克风/摄像头媒体流保留在你设备的 IndexedDB 中，直到你删除它们。扩展没有分析、没有遥测，也没有第三方服务。",
+    "body2": "完整细节见<a href=\"/privacy/\">隐私政策</a>。"
+  },
+  "support": {
+    "heading": "获取帮助",
+    "body": "常见问题和已知限制见<a href=\"/support/\">支持与常见问题</a>页面。如需更多帮助，请在 <a href=\"{repoUrl}/issues\" target=\"_blank\" rel=\"noopener\">GitHub</a> 提交 issue。"
+  },
+  "cta": {
+    "heading": "安装 OpenScreenShot",
+    "body": "免费、开源、私密。已上架 Chrome 应用商店。"
+  }
+}

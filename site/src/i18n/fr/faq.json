@@ -1,0 +1,76 @@
+{
+  "items": [
+    {
+      "q": "Mes données sont-elles envoyées à un serveur ?",
+      "a": "<p>Non. <strong>Aucune donnée ne quitte votre appareil.</strong> La capture, l’annotation et l’export s’exécutent entièrement en local, dans votre navigateur. L’extension n’a ni analytics, ni télémétrie, ni service tiers. Voir la <a href=\"/privacy/\">politique de confidentialité</a> pour les détails.</p>",
+      "home": true
+    },
+    {
+      "q": "Fonctionne-t-elle sur les pages chrome:// et les pages d’extensions ?",
+      "a": "<p>Non. Chrome interdit aux extensions de capturer <code>chrome://</code>, <code>chrome-extension://</code>, le Chrome Web Store et les pages <code>about:</code>. C’est une règle de sécurité de Chrome, et aucune extension ne peut la contourner. L’extension affiche une erreur si vous essayez.</p>",
+      "home": true
+    },
+    {
+      "q": "Pourquoi la capture de page entière prend-elle quelques secondes ?",
+      "a": "<p>Chrome limite <code>captureVisibleTab</code> à environ 2 appels par seconde. Chaque tuile de la hauteur de l’écran coûte un appel, plus une courte pause pour laisser la page se redessiner. Une page typique de 10 tuiles prend 5 à 6 secondes, et une page plus longue prend proportionnellement plus. La barre de progression du popup vous indique où elle en est.</p>",
+      "home": true
+    },
+    {
+      "q": "Pourquoi l’en-tête de mon site manque-t-il dans la capture de page entière ?",
+      "a": "<p>Les en-têtes fixes apparaissent <em>bien</em> — ils sont capturés sur la première tuile et composités une seule fois en haut. Quelques rares configurations en <code>position: sticky</code> passent encore entre les mailles du filet. Si vous en rencontrez un, ouvrez un <a href=\"https://github.com/pghqdev/OpenScreenShot/issues\">ticket GitHub</a> avec l’URL de la page.</p>"
+    },
+    {
+      "q": "Puis-je faire défiler la page pendant la sélection d’une zone ?",
+      "a": "<p>Non. La sélection de zone se limite à l’écran visible — le défilement se bloque pendant que vous glissez. Pour saisir une zone qui dépasse sous la ligne de flottaison, capturez la page entière puis recadrez-la dans l’éditeur.</p>"
+    },
+    {
+      "q": "Comment ouvrir l’éditeur après une capture ?",
+      "a": "<p>Par défaut, l’éditeur s’ouvre dans un nouvel onglet après chaque capture — vous n’avez rien à faire. Exportez votre capture annotée depuis le bouton « Exporter » de la barre du haut, ou appuyez sur <code>Ctrl+S</code> / <code>⌘S</code>.</p><p>Si la ligne <strong>Après capture</strong> du popup est réglée sur Presse-papiers ou Télécharger, aucun onglet ne s’ouvre. <strong>Rouvrir</strong>, dans le pied du popup, recharge cette capture dans l’éditeur quand vous le souhaitez.</p>"
+    },
+    {
+      "q": "Puis-je sauter l’éditeur et copier ou enregistrer directement une capture ?",
+      "a": "<p>Oui. La ligne <strong>Après capture</strong> du popup choisit Éditeur, Presse-papiers ou Télécharger. Le réglage s’applique à chaque point d’entrée — les boutons du popup, les raccourcis clavier et le menu du clic droit. Les sauvegardes rapides sont écrites en PNG, et le badge de la barre d’outils sert de confirmation puisque aucun onglet ne s’ouvre.</p>",
+      "home": true
+    },
+    {
+      "q": "Comment capturer un menu ou un état de survol qui se ferme dès que je clique ?",
+      "a": "<p>Réglez la ligne <strong>Délai</strong> du popup sur 3 s, 5 s ou 10 s, puis lancez la capture et ouvrez le menu. Le badge de la barre d’outils affiche le compte à rebours, et une capture de zone n’affiche sa surimpression qu’après le délai. Le menu du clic droit respecte le même réglage.</p>"
+    },
+    {
+      "q": "Qu’arrive-t-il à mes modifications si l’onglet de l’éditeur se ferme ?",
+      "a": "<p>Elles sont sauvegardées en local au fil de votre travail. L’onglet d’éditeur suivant vous propose de reprendre le brouillon, et le restaurer reste toujours un clic — un brouillon obsolète ne remplace jamais une capture que vous vouliez reprendre à zéro. Une image recadrée reçoit son propre brouillon, pour que les annotations ne se restaurent jamais sur la mauvaise image.</p>"
+    },
+    {
+      "q": "Puis-je utiliser l’éditeur sans capturer une nouvelle image ?",
+      "a": "<p>Oui. Déposez un fichier image sur la scène de l’éditeur, ou collez-en un avec <code>Ctrl+V</code> / <code>⌘V</code> hors d’un champ de texte. L’import prend la même place qu’une capture : chaque outil, le cadre Beautify et chaque chemin d’export continuent de fonctionner. Il remplace le canevas, donc l’éditeur demande d’abord confirmation s’il y a des annotations à perdre.</p><p><strong>Rouvrir</strong>, dans le pied du popup, recharge aussi la capture la plus récente dans l’éditeur.</p>"
+    },
+    {
+      "q": "L’export PDF embarque-t-il une grosse bibliothèque ?",
+      "a": "<p>Non. L’export PDF repose sur un petit générateur intégré à l’extension (<code>src/editor/pdf-writer.ts</code>). Il place l’image de chaque page et la compresse avec le <code>CompressionStream</code> du navigateur : exporter un PDF ne fait aucune requête réseau et n’ajoute aucun code tiers. Les versions précédentes utilisaient jsPDF, qui embarquait <code>html2canvas</code> et <code>dompurify</code> pour une fonction que l’extension n’appelait jamais.</p>",
+      "home": true
+    },
+    {
+      "q": "Puis-je agrandir, réduire ou embellir une capture avant de la partager ?",
+      "a": "<p>La boîte d’export comporte un contrôle <strong>Échelle</strong> : 25, 50, 100 ou 200 %, ou une largeur exacte en pixels. Il est masqué pour le PDF, qui s’ajuste à la page. Une taille au-delà de la limite de canevas de Chrome est refusée plutôt qu’écrite en fichier vide.</p><p>Le panneau <strong>Beautify</strong> ajoute des marges, des coins arrondis, une ombre portée et un fond en dégradé, uni ou transparent. Le cadre suit dans chaque export, le presse-papiers et le PDF.</p>"
+    },
+    {
+      "q": "Puis-je changer les raccourcis clavier ?",
+      "a": "<p>Oui. Ouvrez <code>chrome://extensions/shortcuts</code>, ou utilisez le lien <strong>Raccourcis</strong> dans le pied du popup. Par défaut : <code>Ctrl+Shift+S</code> pour la page entière, <code>Alt+Shift+V</code> pour la zone visible et <code>Ctrl+Shift+E</code> pour une zone ; sur macOS, ce sont <code>⌘⇧S</code>, <code>⌘⇧V</code> et <code>⌘⇧E</code>. Chrome peut laisser une commande sans raccourci si une autre extension revendique déjà la combinaison.</p>",
+      "home": true
+    },
+    {
+      "q": "Pourquoi Chrome demande-t-il l’accès à la capture d’onglet ?",
+      "a": "<p><code>tabCapture</code> est une autorisation facultative, que l’extension ne demande pas à l’installation. Chrome affiche l’invite une seule fois, au premier clic sur Enregistrer ; chaque enregistrement suivant démarre en un clic, sans nouvelle invite. La déclarer facultative signifie qu’elle n’ajoute aucun avertissement à l’installation et n’apparaît jamais tant que vous ne lancez pas un enregistrement.</p>",
+      "home": true
+    },
+    {
+      "q": "Où mes enregistrements sont-ils stockés ?",
+      "a": "<p>Sur votre appareil, et nulle part ailleurs. Les segments vidéo, le journal du curseur et l’audio du micro ou de l’onglet sont écrits dans IndexedDB pendant l’enregistrement, par tranches d’une seconde : un plantage ou une page d’arrière-plan fermée de force ne perd jamais la prise. Ils y restent jusqu’à ce que vous exportiez ou supprimiez la session — rien n’est jamais téléversé.</p>",
+      "home": true
+    },
+    {
+      "q": "Pourquoi WebM plutôt que MP4 ?",
+      "a": "<p>L’enregistreur exporte via <code>MediaRecorder</code>, qui écrit du WebM nativement dans chaque navigateur qui gère la capture d’onglet. L’export MP4 figure sur la <a href=\"/roadmap/\">feuille de route</a>, via WebCodecs et un muxeur, en complément de l’export WebM livré dans cette version.</p>"
+    }
+  ]
+}

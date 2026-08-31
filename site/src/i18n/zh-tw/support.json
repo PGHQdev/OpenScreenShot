@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "title": "支援與常見問題 — OpenScreenShot",
+    "description": "OpenScreenShot 支援——常見問題、疑難排解、已知限制，以及如何取得這個開放原始碼 Chrome 截圖擴充功能的協助。"
+  },
+  "label": "解答與已知限制",
+  "heading": "支援與常見問題",
+  "lead": "常見問題的解答、已知限制，以及取得協助的方式。",
+  "faq": {
+    "heading": "常見問題"
+  },
+  "limitations": {
+    "heading": "已知限制",
+    "items": [
+      "<strong>區域選取只限可見範圍</strong>——拖曳時頁面會鎖住，所以區域無法延伸到畫面以下。請先擷取整個網頁，再到編輯器裡裁切。",
+      "<strong>動態與無限捲動頁面</strong>——擷取引擎只在開始時測量一次頁面高度。捲動時還在增長的頁面，會以擷取開始當下的高度輸出。太晚載入的圖片也可能是空白：每個圖塊只有短暫停頓讓頁面重繪，來不及重新抓取。",
+      "<strong>設定不同步</strong>——你的主題、匯出格式和檔名範本存在本機儲存空間，不會跨裝置或跨設定檔同步。",
+      "<strong>錄影覆蓋層位在頁面上</strong>——視訊鏡頭預覽和控制列都是頁面本身的元素，所以原始分頁影像會包含它們。匯出時編輯器會把自己的視訊鏡頭泡泡當作第二層覆蓋，疊在頁面錄到的那一層之上。控制列會在游標離開約三秒後自動隱藏，避免出現在影片裡；把游標移到頁面底部中央就能叫回它。游標懸停在上面時，以及錄影暫停時，它會保持顯示。"
+    ]
+  },
+  "help": {
+    "heading": "取得協助",
+    "intro": "遇到錯誤、有功能建議，或需要這裡沒涵蓋的協助時：",
+    "items": [
+      "<strong>開一個 GitHub issue</strong>——<a href=\"https://github.com/pghqdev/OpenScreenShot/issues\" target=\"_blank\" rel=\"noopener\">github.com/pghqdev/OpenScreenShot/issues</a>",
+      "在 <a href=\"https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp\" target=\"_blank\" rel=\"noopener\">Chrome 線上應用程式商店</a><strong>留下評論</strong>——這能幫其他人找到這個擴充功能。",
+      "<strong>參與貢獻</strong>——擴充功能採 MIT 授權，歡迎 pull request。請見 <a href=\"https://github.com/pghqdev/OpenScreenShot/blob/main/CONTRIBUTING.md\" target=\"_blank\" rel=\"noopener\">CONTRIBUTING.md</a>。"
+    ]
+  },
+  "cta": {
+    "heading": "還是卡住了？",
+    "body": "錯誤回報、功能建議和問題，都送到同一個追蹤系統。",
+    "button": "開一個 GitHub issue"
+  }
+}

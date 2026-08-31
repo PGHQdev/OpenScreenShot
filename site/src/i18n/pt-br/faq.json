@@ -1,0 +1,76 @@
+{
+  "items": [
+    {
+      "q": "Meus dados são enviados para algum servidor?",
+      "a": "<p>Não. <strong>Nenhum dado sai do seu dispositivo.</strong> Toda a captura, a anotação e a exportação são processadas localmente no seu navegador. A extensão não tem análise de uso, telemetria nem serviços de terceiros. Veja a <a href=\"/privacy/\">Política de Privacidade</a> para mais detalhes.</p>",
+      "home": true
+    },
+    {
+      "q": "Funciona em páginas chrome:// e de extensões?",
+      "a": "<p>Não. O Chrome impede que extensões capturem páginas <code>chrome://</code>, <code>chrome-extension://</code>, a Chrome Web Store e páginas <code>about:</code>. Esse bloqueio é uma regra de segurança do Chrome, e nenhuma extensão consegue contorná-lo. A extensão mostra um erro se você tentar.</p>",
+      "home": true
+    },
+    {
+      "q": "Por que a captura de página inteira leva alguns segundos?",
+      "a": "<p>O Chrome limita <code>captureVisibleTab</code> a cerca de 2 chamadas por segundo. Cada bloco da altura da janela custa uma chamada, mais uma pequena pausa para a página redesenhar. Uma página típica de 10 blocos leva de 5 a 6 segundos, e uma página mais longa leva proporcionalmente mais. A barra de progresso no popup mostra em que ponto a captura está.</p>",
+      "home": true
+    },
+    {
+      "q": "Por que o cabeçalho do site sumiu da captura de página inteira?",
+      "a": "<p>Cabeçalhos fixos <em>aparecem</em>, sim — eles são capturados no primeiro bloco e compostos uma única vez no topo. Alguns casos raros de <code>position: sticky</code> ainda escapam disso. Se você encontrar um, abra uma <a href=\"https://github.com/pghqdev/OpenScreenShot/issues\">issue no GitHub</a> com a URL da página.</p>"
+    },
+    {
+      "q": "Posso rolar a página enquanto seleciono uma região?",
+      "a": "<p>Não. A seleção de região é limitada à área visível — a rolagem trava enquanto você arrasta. Para pegar uma área que continua abaixo da dobra, capture a página inteira e recorte no editor.</p>"
+    },
+    {
+      "q": "Como abro o editor depois de uma captura?",
+      "a": "<p>Por padrão o editor abre em uma nova aba após cada captura — você não precisa fazer nada. Exporte a captura anotada pelo botão “Exportar” na barra superior do editor, ou pressione <code>Ctrl+S</code> / <code>⌘S</code>.</p><p>Se a linha <strong>Após capturar</strong> no popup estiver em Copiar ou Baixar, nenhuma aba abre. <strong>Reabrir última</strong> no rodapé do popup carrega essa captura no editor quando você quiser.</p>"
+    },
+    {
+      "q": "Posso pular o editor e copiar ou salvar a captura na hora?",
+      "a": "<p>Sim. A linha <strong>Após capturar</strong> no popup escolhe entre Editor, Copiar e Baixar. A configuração vale para todos os pontos de entrada — os botões do popup, os atalhos de teclado e o menu do botão direito. Os salvamentos rápidos saem em PNG, e o selo no ícone da barra de ferramentas é a confirmação, já que nenhuma aba abre.</p>",
+      "home": true
+    },
+    {
+      "q": "Como capturo um menu ou um estado de hover que fecha quando eu clico?",
+      "a": "<p>Defina a linha <strong>Atraso</strong> no popup para 3s, 5s ou 10s, dispare a captura e abra o menu. O selo na barra de ferramentas faz a contagem regressiva, e uma captura de região só mostra a sobreposição depois do atraso. O menu do botão direito respeita a mesma configuração.</p>"
+    },
+    {
+      "q": "O que acontece com minhas edições se a aba do editor fechar?",
+      "a": "<p>Elas são salvas localmente enquanto você trabalha. A próxima aba do editor oferece o rascunho de volta, e restaurá-lo é sempre um clique — um rascunho antigo nunca substitui uma captura que você quis começar do zero. Uma imagem recortada ganha o próprio rascunho, então as anotações nunca são restauradas sobre a imagem errada.</p>"
+    },
+    {
+      "q": "Posso usar o editor sem fazer uma nova captura?",
+      "a": "<p>Sim. Solte um arquivo de imagem sobre a área do editor, ou cole um com <code>Ctrl+V</code> / <code>⌘V</code> fora de um campo de texto. A importação ocupa o mesmo lugar de uma captura, então todas as ferramentas, o quadro Beautify e todos os caminhos de exportação continuam funcionando. Ela substitui a tela, então o editor pergunta antes quando há anotações a perder.</p><p><strong>Reabrir última</strong> no rodapé do popup também carrega a captura mais recente de volta no editor.</p>"
+    },
+    {
+      "q": "A exportação em PDF embute uma biblioteca pesada?",
+      "a": "<p>Não. A exportação em PDF usa um pequeno gerador embutido na extensão (<code>src/editor/pdf-writer.ts</code>). Ele posiciona a imagem de cada página e a comprime com o próprio <code>CompressionStream</code> do navegador, então exportar um PDF não faz nenhuma requisição de rede e não adiciona código de terceiros. Versões anteriores usavam jsPDF, que trazia <code>html2canvas</code> e <code>dompurify</code> para um recurso que a extensão nunca chamava.</p>",
+      "home": true
+    },
+    {
+      "q": "Posso deixar uma captura maior, menor ou mais bonita para compartilhar?",
+      "a": "<p>O diálogo de exportação tem um controle de <strong>Escala</strong>: 25, 50, 100 ou 200%, ou uma largura exata em pixels. Ele fica oculto para PDF, que se ajusta à página. Um tamanho acima do limite de canvas do Chrome é recusado em vez de gravado como um arquivo vazio.</p><p>O painel <strong>Beautify</strong> adiciona margem interna, cantos arredondados, sombra e um fundo em gradiente, sólido ou transparente. O quadro acompanha todas as exportações, a área de transferência e o PDF.</p>"
+    },
+    {
+      "q": "Posso mudar os atalhos de teclado?",
+      "a": "<p>Sim. Abra <code>chrome://extensions/shortcuts</code>, ou use o link <strong>Atalhos</strong> no rodapé do popup. Os padrões são <code>Ctrl+Shift+S</code> para a página inteira, <code>Alt+Shift+V</code> para a área visível e <code>Ctrl+Shift+E</code> para uma região; no macOS são <code>⌘⇧S</code>, <code>⌘⇧V</code> e <code>⌘⇧E</code>. O Chrome pode deixar um comando sem atalho se outra extensão já usa a combinação.</p>",
+      "home": true
+    },
+    {
+      "q": "Por que o Chrome pede acesso à captura de abas?",
+      "a": "<p><code>tabCapture</code> é uma permissão opcional, e não uma que a extensão pede na instalação. O Chrome mostra o aviso uma única vez, na primeira vez que você clica em Gravar; depois disso toda gravação começa em um clique, sem novos avisos. Declará-la como opcional significa que ela não gera aviso na instalação e nunca aparece a menos que você realmente inicie uma gravação.</p>",
+      "home": true
+    },
+    {
+      "q": "Onde minhas gravações ficam armazenadas?",
+      "a": "<p>No seu dispositivo, e em nenhum outro lugar. Os trechos de vídeo, o registro do cursor e qualquer áudio do microfone ou da aba são gravados no IndexedDB enquanto você grava, em pedaços de 1 segundo, então uma falha ou uma página em segundo plano encerrada nunca perde a tomada. Eles ficam lá até você exportar ou excluir a sessão — nada é enviado para lugar nenhum.</p>",
+      "home": true
+    },
+    {
+      "q": "Por que WebM e não MP4?",
+      "a": "<p>O gravador exporta pelo <code>MediaRecorder</code>, que grava WebM nativamente em todo navegador com suporte à captura de abas. A exportação em MP4 está no <a href=\"/roadmap/\">roadmap</a>, via WebCodecs e um muxer, ao lado do caminho WebM desta versão.</p>"
+    }
+  ]
+}

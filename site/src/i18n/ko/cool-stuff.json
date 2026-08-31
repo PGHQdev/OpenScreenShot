@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "title": "더 많은 도구 — OpenScreenShot",
+    "description": "OpenScreenShot 제작자가 만든 작고 무료인 다른 도구들: 조용히 생각을 담는 Minimalist Notes, 간직할 만한 명언과 함께하는 새 탭 Musing."
+  },
+  "label": "@PGHQdev의 다른 도구",
+  "heading": "더 많은 도구",
+  "lead": "OpenScreenShot을 만든 같은 손에서 나온 작은 도구들이에요. 하나같이 무료이고, 프라이버시를 지키고, 한 가지 일을 잘하도록 만들어졌어요.",
+  "tools": [
+    {
+      "name": "Minimalist Notes",
+      "tag": "조용히 생각에 잠길 수 있는 곳.",
+      "body": "페이지를 열고 그냥 쓰세요. 노트는 기기에 저장되고, 오프라인에서도 동작하고, 계정도 필요 없어요. 설정할 것도, 결제할 것도 없어요."
+    },
+    {
+      "name": "Musing",
+      "tag": "과거의 지혜가 지금의 나를 이끌게 하세요.",
+      "body": "간직할 만한 명언으로 맞아 주는 새 탭이에요. 요즘 생각하고 있는 주제에 맞춰 고르고, 분석은 기기 안에서 이뤄져요. 서버로는 아무것도 전송되지 않아요."
+    }
+  ],
+  "thanks": "이 도구들은 전부 통째로 무료예요. 무언가 돌려주고 싶다면 <a href=\"https://ko-fi.com/T7A624DAY7\" target=\"_blank\" rel=\"noopener\">커피 한 잔</a>이면 충분해요."
+}

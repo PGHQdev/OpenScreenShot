@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "title": "好东西 — OpenScreenShot",
+    "description": "OpenScreenShot 作者的其他免费小工具：Minimalist Notes，一个安静的思考之地；Musing，一个带着值得留存的名言的新标签页。"
+  },
+  "label": "同样出自 @PGHQdev",
+  "heading": "好东西",
+  "lead": "与 OpenScreenShot 出自同一双手的小工具。每一款都免费、私密，只把一件事做好。",
+  "tools": [
+    {
+      "name": "Minimalist Notes",
+      "tag": "一个安静的思考之地。",
+      "body": "打开页面就能写。笔记保存在你的设备上，支持离线，无需账号。无需任何设置，也无需任何付费。"
+    },
+    {
+      "name": "Musing",
+      "tag": "让过往的智慧指引你的当下。",
+      "body": "一个新标签页，用一句值得留存的名言迎接你——根据你最近的所思所想匹配，在你的设备上分析。任何内容都不会发送到服务器。"
+    }
+  ],
+  "thanks": "这些工具全都完整奉上。如果你想有所回馈，<a href=\"https://ko-fi.com/T7A624DAY7\" target=\"_blank\" rel=\"noopener\">一杯咖啡</a>就足够了。"
+}

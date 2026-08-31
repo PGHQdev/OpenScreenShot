@@ -1,0 +1,140 @@
+{
+  "meta": {
+    "title": "Chrome 全頁截圖與編輯器 — OpenScreenShot",
+    "description": "免費開放原始碼的 Chrome 擴充功能：整頁、可見範圍與選取區域截圖，內建註解編輯器，可匯出 PNG、JPEG、WebP 或 PDF，還有分頁錄影工具。任何內容都不會離開你的裝置。"
+  },
+  "hero": {
+    "note": "免費 · 開放原始碼 · MIT 授權",
+    "title1": "一按。截好。完成。",
+    "title2": "私密到離線也能用。",
+    "sub": "整頁截圖、標註、匯出、分頁錄製，全部在 Chrome 裡。免帳號、無浮水印、無雲端。",
+    "viewOnGithub": "在 GitHub 上查看",
+    "tablistLabel": "擴充功能的畫面",
+    "credit": "截圖裡的網站是我們的另一個作品 OpenTechCheck，可以查出任何網站用了哪些技術。",
+    "creditCta": "立即試用"
+  },
+  "tabs": {
+    "capture": {
+      "label": "擷取",
+      "alt": "OpenScreenShot 的彈出式視窗開在 Chrome 的網頁上，顯示整個網頁、可見範圍、選取區域與錄影選項。"
+    },
+    "annotate": {
+      "label": "註解",
+      "alt": "OpenScreenShot 編輯器的工具列、調色盤與線寬控制項，畫面是 opentechcheck.com 的整頁擷取，上面畫了一個方框和一個箭頭。"
+    },
+    "export": {
+      "label": "匯出",
+      "alt": "OpenScreenShot 編輯器的匯出對話框，已選 PNG，旁邊還有 JPEG、WebP 和 PDF，以及縮放比例列、寬度欄位和檔名欄位。"
+    },
+    "record": {
+      "label": "錄影",
+      "alt": "OpenScreenShot 錄影工具的預覽裡是一段錄好的網頁，附游標與分頁音量控制項，時間軸上有兩個 2x 縮放區塊。"
+    },
+    "cli": {
+      "label": "CLI 與 MCP",
+      "short": "CLI"
+    }
+  },
+  "term": {
+    "commentShot": "# 一張截圖，直接從終端機來",
+    "commentServe": "# 也可以當你 AI 代理的 MCP 伺服器",
+    "commentConfig": "# 任何 MCP 用戶端設定"
+  },
+  "proof": {
+    "ariaLabel": "數字會說話",
+    "users": "Chrome 線上應用程式商店 {n} 位使用者",
+    "stars": "GitHub 上 {n} 顆星",
+    "mit": "MIT 授權",
+    "offline": "可離線使用"
+  },
+  "quartet": [
+    {
+      "title": "什麼都能擷取",
+      "body": "整個網頁、可見範圍，或拖曳選取的區域。一個點擊、一組快速鍵，或右鍵選單。"
+    },
+    {
+      "title": "分享前先編輯",
+      "body": "用箭頭、方框和文字說清楚重點。不該給別人看的部分，用模糊遮起來。"
+    },
+    {
+      "title": "錄下這個分頁",
+      "body": "一鍵開錄，每次點擊都自動縮放。在時間軸上修剪，再匯出 WebM。"
+    },
+    {
+      "title": "預設就很私密",
+      "body": "不用帳號、不上傳、不遙測。關掉 Wi-Fi 也照常運作。"
+    }
+  ],
+  "privacy": {
+    "eyebrow": "隱私",
+    "heading": "沒有人看得到你擷取的內容，包括我們。",
+    "lede": "截圖往往是你裝置上最敏感的圖片。擷取、編輯、匯出、PDF 和錄影全部在你的瀏覽器裡執行。擴充功能自己不發出任何網路請求，也沒有你造訪網站的常駐存取權。",
+    "receipt": [
+      {
+        "k": "帳號",
+        "v": "無"
+      },
+      {
+        "k": "上傳",
+        "v": "無"
+      },
+      {
+        "k": "遙測",
+        "v": "無"
+      },
+      {
+        "k": "浮水印",
+        "v": "無"
+      },
+      {
+        "k": "安裝時的主機權限",
+        "v": "無"
+      },
+      {
+        "k": "授權",
+        "v": "MIT"
+      }
+    ],
+    "installFold": "安裝時要求哪些權限",
+    "recordFold": "錄影才會加上的權限，只在你錄影時要求",
+    "micFine": "啟用麥克風和攝影機時，是由瀏覽器自己的權限提示開啟。串流永遠不會離開你的裝置。",
+    "moreFine": "同樣的表格加上完整政策，請見<a href=\"/privacy/\">隱私權頁面</a>。"
+  },
+  "cli": {
+    "eyebrow": "AI 代理與 CLI",
+    "heading": "可以從終端機腳本操作。",
+    "headingMuted": "一樣在本機。",
+    "name": "npm 上的 <code>openscreenshot</code>",
+    "bullets": [
+      "獨立、選用的工具，給腳本和 AI 代理使用",
+      "驅動你機器上現有的 Chrome",
+      "不用下載瀏覽器，也沒有託管服務",
+      "同時是 MCP 伺服器，內建 <code>capture_screenshot</code> 工具"
+    ],
+    "labelShot": "單張截圖",
+    "labelConfig": "MCP 用戶端設定"
+  },
+  "faq": {
+    "eyebrow": "常見問題",
+    "heading": "疑問，一次解答。",
+    "moreFine": "所有問題加上已知限制，請見<a href=\"/support/\">支援頁面</a>。"
+  },
+  "cta": {
+    "heading": "十秒就能開始。",
+    "steps": [
+      {
+        "title": "加到 Chrome",
+        "body": "在 Chrome 線上應用程式商店點一下即可。免費，不用註冊。"
+      },
+      {
+        "title": "點圖示",
+        "body": "或按快速鍵。選整個網頁、可見範圍或選取區域。"
+      },
+      {
+        "title": "擷取",
+        "body": "註解、匯出或複製。內容永遠不離開你的裝置。"
+      }
+    ],
+    "browsersFine": "適用於 Chrome、Edge、Brave、Arc 及其他 Chromium 瀏覽器。"
+  }
+}

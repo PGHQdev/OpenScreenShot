@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "title": "Suporte e FAQ — OpenScreenShot",
+    "description": "Suporte do OpenScreenShot — FAQ, solução de problemas, limitações conhecidas e como obter ajuda com a extensão de captura de tela de código aberto para Chrome."
+  },
+  "label": "Respostas e limites conhecidos",
+  "heading": "Suporte e FAQ",
+  "lead": "Respostas às perguntas comuns, limitações conhecidas e como obter ajuda.",
+  "faq": {
+    "heading": "Perguntas frequentes"
+  },
+  "limitations": {
+    "heading": "Limitações conhecidas",
+    "items": [
+      "<strong>A seleção de região é limitada à área visível</strong> — a página trava enquanto você arrasta, então uma região não alcança abaixo da dobra. Capture a página inteira e recorte no editor.",
+      "<strong>Páginas dinâmicas e de rolagem infinita</strong> — o mecanismo de captura mede a altura da página uma única vez, no início. Uma página que cresce enquanto você rola sai com a altura que tinha quando a captura começou. Imagens que carregam tarde também podem sair em branco: cada bloco ganha uma pequena pausa para redesenhar, não tempo para uma nova busca.",
+      "<strong>Sem sincronização de configurações</strong> — seu tema, formato de exportação e modelo de nome de arquivo ficam no armazenamento local e não sincronizam entre dispositivos ou perfis.",
+      "<strong>As sobreposições de gravação ficam na página</strong> — a prévia da webcam e a barra de controle são elementos da própria página, então o vídeo bruto da aba os contém. Na exportação o editor compõe a própria bolha de webcam como uma segunda sobreposição, por cima da que a página capturou. A barra de controle se esconde cerca de três segundos depois que o ponteiro sai dela, para ficar fora do vídeo; mova o cursor até o centro inferior da página para trazê-la de volta. Ela fica visível enquanto você passa o mouse sobre ela e enquanto a gravação está pausada."
+    ]
+  },
+  "help": {
+    "heading": "Obter ajuda",
+    "intro": "Se você encontrar um bug, tiver um pedido de recurso ou precisar de ajuda com algo que não está aqui:",
+    "items": [
+      "<strong>Abra uma issue no GitHub</strong> — <a href=\"https://github.com/pghqdev/OpenScreenShot/issues\" target=\"_blank\" rel=\"noopener\">github.com/pghqdev/OpenScreenShot/issues</a>",
+      "<strong>Deixe uma avaliação</strong> na <a href=\"https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp\" target=\"_blank\" rel=\"noopener\">Chrome Web Store</a> — isso ajuda outras pessoas a encontrar a extensão.",
+      "<strong>Contribua</strong> — a extensão tem licença MIT. Pull requests são bem-vindos. Veja o <a href=\"https://github.com/pghqdev/OpenScreenShot/blob/main/CONTRIBUTING.md\" target=\"_blank\" rel=\"noopener\">CONTRIBUTING.md</a>."
+    ]
+  },
+  "cta": {
+    "heading": "Ainda com dúvida?",
+    "body": "Bugs, pedidos de recurso e perguntas vão todos para o mesmo lugar.",
+    "button": "Abrir uma issue no GitHub"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "title": "Autres outils — OpenScreenShot",
+    "description": "D’autres petits outils gratuits du créateur d’OpenScreenShot : Minimalist Notes, un endroit calme pour réfléchir, et Musing, un nouvel onglet avec une citation qui mérite d’être gardée."
+  },
+  "label": "Aussi par @PGHQdev",
+  "heading": "Autres outils",
+  "lead": "De petits outils nés des mêmes mains qu’OpenScreenShot. Chacun est gratuit, privé et conçu pour bien faire une seule chose.",
+  "tools": [
+    {
+      "name": "Minimalist Notes",
+      "tag": "Un endroit calme pour réfléchir.",
+      "body": "Ouvrez la page et écrivez. Vos notes sont sauvegardées sur votre appareil, fonctionnent hors ligne et n’exigent aucun compte. Rien à configurer, rien à payer."
+    },
+    {
+      "name": "Musing",
+      "tag": "Laissez la sagesse du passé guider votre présent.",
+      "body": "Un nouvel onglet qui vous accueille avec une citation qui mérite d’être gardée — choisie selon vos réflexions du moment, analysées sur votre appareil. Rien n’est envoyé à un serveur."
+    }
+  ],
+  "thanks": "Tout cela est offert en entier. Si vous voulez rendre la pareille, <a href=\"https://ko-fi.com/T7A624DAY7\" target=\"_blank\" rel=\"noopener\">un café</a> suffit amplement."
+}

@@ -1,0 +1,44 @@
+{
+  "install": [
+    {
+      "name": "activeTab",
+      "why": "Captura la pestaña que estás viendo cuando haces clic en el botón de la barra de herramientas, pulsas un atajo de teclado o eliges una captura en el menú del clic derecho. El acceso se concede para esa pestaña y esa captura, nada más."
+    },
+    {
+      "name": "scripting",
+      "why": "Inyecta pequeñas funciones autónomas en la pestaña capturada: medir la altura de la página y desplazarla durante una captura de página completa, dibujar la superposición de selección para una captura de región y escribir una imagen en el portapapeles en el modo rápido. Todos los scripts van dentro del paquete. No se carga código remoto."
+    },
+    {
+      "name": "storage y unlimitedStorage",
+      "why": "Guarda tus ajustes en el dispositivo, conserva la captura que carga la página del editor, recuerda el último rectángulo de región para poder repetirlo y almacena un borrador de edición en curso para que una pestaña cerrada o caída no pierda tus anotaciones. Una captura de página completa puede superar la cuota de almacenamiento por defecto, y eso es lo que amplía unlimitedStorage."
+    },
+    {
+      "name": "downloads",
+      "why": "Guarda una exportación del editor, o una captura en modo rápido, en tu carpeta de descargas. La extensión nunca lee, busca ni abre tu historial de descargas."
+    },
+    {
+      "name": "contextMenus",
+      "why": "Añade un submenú de OpenScreenShot al menú del clic derecho de la página, como segunda forma de iniciar una captura. La extensión solo lee en qué elemento del menú hiciste clic."
+    },
+    {
+      "name": "clipboardWrite",
+      "why": "Copia una captura a tu portapapeles, desde el botón Copiar del editor o desde el modo rápido. La extensión solo escribe la captura que acabas de tomar o exportar. Nunca lee lo que ya hay en tu portapapeles."
+    },
+    {
+      "name": "offscreen",
+      "why": "Ejecuta el motor de grabación de pantalla en un documento oculto. La captura con MediaRecorder y las escrituras de fragmentos en IndexedDB a prueba de fallos necesitan un contexto de página que un service worker no tiene. Siempre está presente; no añade ninguna advertencia en la instalación."
+    }
+  ],
+  "recording": [
+    {
+      "name": "tabCapture",
+      "why": "Captura el vídeo de la pestaña actual, y su audio si activas la pista de audio de pestaña, para la grabación.",
+      "when": "Una vez, la primera vez que haces clic en Grabar: un único aviso de permiso de Chrome."
+    },
+    {
+      "name": "<all_urls>",
+      "why": "El permiso de host opcional. Mantiene vivos el cursor superpuesto y la barra de controles cuando la pestaña de una grabación navega a otro origen.",
+      "when": "Solo si activas «Grabar entre sitios» en los ajustes."
+    }
+  ]
+}

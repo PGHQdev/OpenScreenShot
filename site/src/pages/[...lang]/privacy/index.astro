@@ -1,0 +1,70 @@
+---
+import Doc from '../../../layouts/Doc.astro';
+import PermissionTable from '../../../components/PermissionTable.astro';
+import { getInstallPermissions, getRecordingPermissions } from '../../../data/permissions';
+import { t, localePaths, localeFromParams } from '../../../i18n';
+
+export const getStaticPaths = localePaths;
+
+const locale = localeFromParams(Astro.params.lang);
+const d = t(locale, 'privacy');
+---
+
+<Doc
+  title={d.meta.title}
+  description={d.meta.description}
+  path="/privacy/"
+  locale={locale}
+  label={d.label}
+  heading={d.heading}
+  lead={d.lead}
+>
+  <p class="updated">{d.updated}</p>
+
+  <p class="doc-callout" set:html={d.callout} />
+
+  <section class="doc-section" id="how-it-works">
+    <h2>{d.howItWorks.heading}</h2>
+    <p>{d.howItWorks.body}</p>
+  </section>
+
+  <section class="doc-section" id="permissions">
+    <h2>{d.permissions.heading}</h2>
+    <p>{d.permissions.body}</p>
+    <PermissionTable rows={getInstallPermissions(locale)} locale={locale} />
+  </section>
+
+  <section class="doc-section" id="recording">
+    <h2>{d.recording.heading}</h2>
+    <p>{d.recording.body}</p>
+    <PermissionTable rows={getRecordingPermissions(locale)} locale={locale} />
+    <p>{d.recording.streams}</p>
+  </section>
+
+  <section class="doc-section" id="third-party">
+    <h2>{d.thirdParty.heading}</h2>
+    <p>{d.thirdParty.body}</p>
+  </section>
+
+  <section class="doc-section" id="changes">
+    <h2>{d.changes.heading}</h2>
+    <p set:html={d.changes.body} />
+  </section>
+
+  <section class="doc-section" id="contact">
+    <h2>{d.contact.heading}</h2>
+    <p set:html={d.contact.body} />
+  </section>
+</Doc>
+
+<style>
+  .updated {
+    margin-bottom: var(--s-5);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: var(--fs-xs);
+    letter-spacing: var(--tr-label);
+    text-transform: uppercase;
+  }
+</style>

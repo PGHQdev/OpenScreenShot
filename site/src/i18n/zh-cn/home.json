@@ -1,0 +1,140 @@
+{
+  "meta": {
+    "title": "Chrome 整页截图与编辑器 — OpenScreenShot",
+    "description": "免费开源的 Chrome 扩展：整页、可见区域和区域截图，自带标注编辑器，可导出 PNG、JPEG、WebP 或 PDF，还有标签页录屏。任何内容都不会离开你的设备。"
+  },
+  "hero": {
+    "note": "免费 · 开源 · MIT 许可",
+    "title1": "一点。截好。完成。",
+    "title2": "私密到断网也能用。",
+    "sub": "整页截图、标注、导出、标签页录制，全部在 Chrome 里。无账号、无水印、无云端。",
+    "viewOnGithub": "在 GitHub 上查看",
+    "tablistLabel": "扩展的各个界面",
+    "credit": "截图中的网站是我们的另一款作品 OpenTechCheck——查看任何网站是用什么技术构建的。",
+    "creditCta": "立即试试"
+  },
+  "tabs": {
+    "capture": {
+      "label": "截图",
+      "alt": "Chrome 中网页上方打开的 OpenScreenShot 弹出窗口，显示整页、可见区域、选定区域和录屏选项。"
+    },
+    "annotate": {
+      "label": "标注",
+      "alt": "OpenScreenShot 编辑器，带工具栏、调色板和线宽控件，画布上是 opentechcheck.com 的整页截图，绘有一个方框和一个箭头。"
+    },
+    "export": {
+      "label": "导出",
+      "alt": "OpenScreenShot 编辑器的导出对话框，已选中 PNG，旁边是 JPEG、WebP 和 PDF，还有缩放比例行、宽度输入框和文件名输入框。"
+    },
+    "record": {
+      "label": "录屏",
+      "alt": "OpenScreenShot 录屏器，预览中是已录制的页面，带光标和标签页音量控件，时间轴上有两个 2x 缩放块。"
+    },
+    "cli": {
+      "label": "CLI 与 MCP",
+      "short": "CLI"
+    }
+  },
+  "term": {
+    "commentShot": "# 一张截图，直接来自你的终端",
+    "commentServe": "# 也可以作为 AI 智能体的 MCP 服务器",
+    "commentConfig": "# 任意 MCP 客户端配置"
+  },
+  "proof": {
+    "ariaLabel": "数据一览",
+    "users": "Chrome 应用商店 {n} 位用户",
+    "stars": "GitHub {n} 颗星标",
+    "mit": "MIT 许可",
+    "offline": "支持离线使用"
+  },
+  "quartet": [
+    {
+      "title": "想截什么都行",
+      "body": "整页、可见区域，或拖选一块区域。一次点击、一个快捷键，或右键菜单。"
+    },
+    {
+      "title": "分享前先编辑",
+      "body": "箭头、方框和文字帮你说清重点。不想让别人看到的部分，用模糊遮住。"
+    },
+    {
+      "title": "录制标签页",
+      "body": "一键开始录制，每次点击自动缩放。在时间轴上修剪，然后导出 WebM。"
+    },
+    {
+      "title": "默认私密",
+      "body": "无账号、无上传、无遥测。关掉 Wi-Fi 也能用。"
+    }
+  ],
+  "privacy": {
+    "eyebrow": "隐私",
+    "heading": "没人能看到你截了什么。包括我们。",
+    "lede": "截图往往是你设备上最敏感的图片。截取、编辑、导出、PDF 和录屏全部在你的浏览器里运行。扩展自身不发出任何网络请求，也没有对你访问的任何网站的常驻访问权限。",
+    "receipt": [
+      {
+        "k": "账号",
+        "v": "无"
+      },
+      {
+        "k": "上传",
+        "v": "无"
+      },
+      {
+        "k": "遥测",
+        "v": "无"
+      },
+      {
+        "k": "水印",
+        "v": "无"
+      },
+      {
+        "k": "安装时的主机权限",
+        "v": "无"
+      },
+      {
+        "k": "许可证",
+        "v": "MIT"
+      }
+    ],
+    "installFold": "安装时请求哪些权限",
+    "recordFold": "录屏新增哪些权限（仅在你录制时）",
+    "micFine": "麦克风和摄像头在你启用时，由浏览器自己的权限提示打开。媒体流永远不会离开你的设备。",
+    "moreFine": "同样的表格和完整政策，见<a href=\"/privacy/\">隐私页面</a>。"
+  },
+  "cli": {
+    "eyebrow": "智能体与 CLI",
+    "heading": "可以在终端里编程调用。",
+    "headingMuted": "依然本地。",
+    "name": "npm 上的 <code>openscreenshot</code>",
+    "bullets": [
+      "独立的可选工具，供脚本和 AI 智能体使用",
+      "驱动你机器上已有的 Chrome",
+      "无需下载浏览器，没有托管服务",
+      "也是一个 MCP 服务器，提供 <code>capture_screenshot</code> 工具"
+    ],
+    "labelShot": "一张截图",
+    "labelConfig": "MCP 客户端配置"
+  },
+  "faq": {
+    "eyebrow": "常见问题",
+    "heading": "常见疑问，都有答案。",
+    "moreFine": "全部问题和已知限制，见<a href=\"/support/\">支持页面</a>。"
+  },
+  "cta": {
+    "heading": "十秒即可就绪。",
+    "steps": [
+      {
+        "title": "添加至 Chrome",
+        "body": "在 Chrome 应用商店点一下即可。免费，无需注册。"
+      },
+      {
+        "title": "点击图标",
+        "body": "或按快捷键。选择整页、可见区域或区域。"
+      },
+      {
+        "title": "截图",
+        "body": "标注、导出或复制。它永远不会离开你的设备。"
+      }
+    ],
+    "browsersFine": "适用于 Chrome、Edge、Brave、Arc 及其他 Chromium 内核浏览器。"
+  }
+}

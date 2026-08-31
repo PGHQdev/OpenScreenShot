@@ -1,0 +1,34 @@
+{
+  "nav": {
+    "ariaPrimary": "Основная",
+    "skipToContent": "Перейти к содержимому",
+    "addToChrome": "Добавить в Chrome",
+    "docs": "Документация",
+    "support": "Поддержка",
+    "roadmap": "Дорожная карта",
+    "github": "GitHub"
+  },
+  "footer": {
+    "tagline": "Скриншоты, которые никогда не покидают ваш компьютер.",
+    "productHead": "Продукт",
+    "projectHead": "Проект",
+    "moreHead": "Ещё от @PGHQdev",
+    "docs": "Документация",
+    "roadmap": "Дорожная карта",
+    "supportFaq": "Поддержка и FAQ",
+    "github": "GitHub",
+    "mitLicense": "Лицензия MIT",
+    "privacy": "Конфиденциальность",
+    "supportOpenSource": "Поддержать открытый код",
+    "languageLabel": "Язык"
+  },
+  "meta": {
+    "ogDefaultAlt": "OpenScreenShot: скриншот всей страницы и аннотации для Chrome. Бесплатно, с открытым кодом и 100% локально."
+  },
+  "breadcrumbHome": "Главная",
+  "permissionTable": {
+    "permission": "Разрешение",
+    "why": "Зачем оно нужно",
+    "when": "Когда запрашивается"
+  }
+}

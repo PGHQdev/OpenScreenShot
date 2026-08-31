@@ -1,0 +1,34 @@
+{
+  "nav": {
+    "ariaPrimary": "主要導覽",
+    "skipToContent": "跳至主要內容",
+    "addToChrome": "加到 Chrome",
+    "docs": "文件",
+    "support": "支援",
+    "roadmap": "路線圖",
+    "github": "GitHub"
+  },
+  "footer": {
+    "tagline": "截圖永遠不離開你的裝置。",
+    "productHead": "產品",
+    "projectHead": "專案",
+    "moreHead": "@PGHQdev 的更多作品",
+    "docs": "文件",
+    "roadmap": "路線圖",
+    "supportFaq": "支援與常見問題",
+    "github": "GitHub",
+    "mitLicense": "MIT 授權",
+    "privacy": "隱私權",
+    "supportOpenSource": "支持開放原始碼",
+    "languageLabel": "語言"
+  },
+  "meta": {
+    "ogDefaultAlt": "OpenScreenShot：Chrome 的全頁截圖與註解工具。免費、開放原始碼、100% 本機處理。"
+  },
+  "breadcrumbHome": "首頁",
+  "permissionTable": {
+    "permission": "權限",
+    "why": "用途",
+    "when": "要求時機"
+  }
+}

@@ -1,0 +1,168 @@
+{
+  "meta": {
+    "title": "Dokumentation — OpenScreenShot",
+    "description": "OpenScreenShot-Dokumentation. Installation und Anleitung: Screenshots aufnehmen, kommentieren und exportieren mit der Open-Source-Erweiterung für Chrome."
+  },
+  "doc": {
+    "label": "Installieren · Aufnehmen · Anmerken · Exportieren",
+    "heading": "Dokumentation",
+    "lead": "So installierst und nutzt du OpenScreenShot, die Open-Source-Erweiterung für Screenshots und Anmerkungen in Chrome."
+  },
+  "tocHead": "Auf dieser Seite",
+  "install": {
+    "heading": "Installieren",
+    "intro": "OpenScreenShot ist im Chrome Web Store verfügbar.",
+    "steps": [
+      "Öffne den <a href=\"{storeUrl}\" target=\"_blank\" rel=\"noopener\">OpenScreenShot-Eintrag</a> in Chrome.",
+      "Klicke auf <strong>Zu Chrome hinzufügen</strong>.",
+      "Bestätige die Berechtigungen. Die Erweiterung braucht den aktiven Tab und die Erlaubnis, dort ihr Aufnahme-Skript auszuführen.",
+      "Das OpenScreenShot-Symbol erscheint in deiner Symbolleiste. Klicke darauf, um das Popup zu öffnen."
+    ]
+  },
+  "capture": {
+    "heading": "Einen Screenshot aufnehmen",
+    "intro": "Klicke auf das OpenScreenShot-Symbol in deiner Symbolleiste und wähle einen der drei Aufnahmemodi. Alles läuft lokal in deinem Browser. Es gibt vier Wege, eine Aufnahme zu starten:",
+    "ways": [
+      "<strong>Das Popup</strong> — klicke einen Modus an oder drücke <kbd>1</kbd>–<kbd>3</kbd>.",
+      "<strong>Ein Tastenkürzel</strong> — <kbd>Ctrl+Shift+S</kbd> für die ganze Seite, <kbd>Alt+Shift+V</kbd> für den sichtbaren Bereich, <kbd>Ctrl+Shift+E</kbd> für einen Ausschnitt. Auf macOS sind es <kbd>⌘⇧S</kbd>, <kbd>⌘⇧V</kbd> und <kbd>⌘⇧E</kbd>. Ändere sie unter <code>chrome://extensions/shortcuts</code>.",
+      "<strong>Das Rechtsklick-Menü</strong> — das OpenScreenShot-Untermenü auf jeder Seite bietet dieselben drei Modi.",
+      "<strong>Ausschnitt erneut</strong> — die Popup-Fußzeile und das Rechtsklick-Menü nehmen das letzte Ausschnitt-Rechteck noch einmal auf. Beide Einträge erscheinen, sobald du einmal einen Ausschnitt gewählt hast."
+    ],
+    "delay": "Die Zeile <strong>Timer</strong> im Popup hält eine Aufnahme 3, 5 oder 10 Sekunden zurück, und das Symbol-Badge zählt herunter. Nutze sie für Hover-Zustände, Dropdown-Menüs und Tooltips, die sich schließen, sobald du woanders klickst."
+  },
+  "modes": {
+    "heading": "Aufnahmemodi",
+    "full": {
+      "title": "Ganze Seite",
+      "body": "Nimmt die ganze scrollbare Seite auf und setzt sie zu einem Bild zusammen. Die Erweiterung scrollt die Seite Viewport für Viewport, nimmt jede Kachel auf und fügt sie zusammen. Fixierte Kopfzeilen werden auf der ersten Kachel aufgenommen und einmal oben eingefügt. Seiten, die ein inneres Element statt des Fensters scrollen, funktionieren auch."
+    },
+    "visible": {
+      "title": "Sichtbarer Bereich",
+      "body": "Nimmt den aktuellen Viewport sofort auf. Kein Scrollen. Nutze das für einen schnellen Screenshot von dem, was gerade auf dem Bildschirm ist."
+    },
+    "region": {
+      "title": "Ausschnitt",
+      "body": "Klicke und ziehe, um ein Rechteck aufzuziehen. An jeder Kante und Ecke erscheinen Griffe zum Skalieren. Mit den Pfeiltasten verschiebst du die Auswahl pixelweise, mit gedrückter <kbd>Shift</kbd>-Taste in Schritten von zehn Pixeln. <kbd>Enter</kbd> bestätigt, <kbd>Esc</kbd> bricht ab."
+    }
+  },
+  "afterCapture": {
+    "heading": "Nach einer Aufnahme",
+    "intro": "Die Zeile <strong>Nach Screenshot</strong> im Popup legt fest, was mit einer fertigen Aufnahme passiert. Sie gilt für jeden Einstieg: die Popup-Buttons, die Tastenkürzel und das Rechtsklick-Menü.",
+    "options": [
+      "<strong>Editor</strong> — öffnet den Anmerkungs-Editor in einem neuen Tab. Das ist der Standard.",
+      "<strong>Kopieren</strong> — kopiert den Screenshot und überspringt den Editor. Füge ihn direkt in einen Chat, ein Dokument oder ein Issue ein.",
+      "<strong>Speichern</strong> — speichert den Screenshot in deinem Download-Ordner und überspringt den Editor. Schnelle Speicherungen werden als PNG geschrieben."
+    ],
+    "outro": "Kopieren und Speichern öffnen keinen Tab, das Symbol-Badge ist also die Bestätigung. Bei einer fehlgeschlagenen Aufnahme blinkt <kbd>!</kbd> auf dem Badge. <strong>Letzten öffnen</strong> in der Popup-Fußzeile öffnet die letzte Aufnahme jederzeit im Editor."
+  },
+  "annotate": {
+    "heading": "Anmerken",
+    "intro": "Der Editor öffnet sich in einem vollen Tab und lädt die letzte Aufnahme aus dem lokalen Speicher. Jedes Werkzeug hat ein Kürzel aus einem Buchstaben.",
+    "tools": [
+      "<strong>Auswählen</strong> <kbd>V</kbd> — jede Anmerkung verschieben, skalieren oder löschen. Doppelklick auf eine Textebene bearbeitet sie erneut.",
+      "<strong>Rechteck</strong> <kbd>R</kbd> — ein Rahmen-Rechteck zeichnen.",
+      "<strong>Pfeil</strong> <kbd>A</kbd> — einen Richtungspfeil zeichnen.",
+      "<strong>Linie</strong> <kbd>L</kbd> — der Pfeil ohne Spitze.",
+      "<strong>Stift</strong> <kbd>P</kbd> — Freihandzeichnen.",
+      "<strong>Textmarker</strong> <kbd>H</kbd> — ein durchscheinender Freihandstrich.",
+      "<strong>Text</strong> <kbd>T</kbd> — ein Textfeld hinzufügen; die Größe bestimmt der Schriftgrößen-Regler.",
+      "<strong>Schrittnummer</strong> <kbd>S</kbd> — nummerierte Markierungen, die von selbst hochzählen und beim Löschen neu nummerieren.",
+      "<strong>Unschärfe</strong> <kbd>B</kbd> — sensible Inhalte verbergen: weiche Unschärfe, grobes Mosaik oder eine deckende Füllung. Die deckende Füllung übersteht erneutes Komprimieren.",
+      "<strong>Spotlight</strong> <kbd>O</kbd> — Rechteck-, abgerundete oder Ellipsen-Ausschnitte, die zu einer abgedunkelten Ebene verschmelzen.",
+      "<strong>Pipette</strong> <kbd>I</kbd> — eine Farbe aus der Aufnahme übernehmen. Sie tastet ab, was du siehst, sodass eine Farbe in einem Spotlight oder auf einem Beautify-Verlauf so gewählt wird, wie sie aussieht. Das Farbfeld in der Farbzeile öffnet Chromes bildschirmweiten Wähler für alles außerhalb der Leinwand.",
+      "<strong>Zuschneiden</strong> <kbd>C</kbd> — das Bild auf einen gewählten Bereich beschneiden."
+    ],
+    "outro": "Halte <kbd>Shift</kbd> beim Zeichnen für quadratische Rechtecke und für Linien und Pfeile auf 45°. Die Stilleiste trägt eine 8-Farben-Palette auf <kbd>1</kbd>–<kbd>8</kbd>, eine eigene Farbe, zuletzt genutzte Farben, drei Linienstärken und einen Schriftgrößen-Regler. Deine Wahl bleibt über Sitzungen erhalten. Rückgängig und Wiederholen sind <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>, auf macOS <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd>."
+  },
+  "beautify": {
+    "heading": "Beautify",
+    "body": "Das <strong>Beautify</strong>-Panel in der oberen Leiste rahmt den Screenshot fürs Teilen: Regler für Abstand, Eckenradius und Schatten, dazu sechs Verlaufs-Presets, eine eigene Farbe oder ein transparenter Hintergrund. Der Rahmen zeigt eine Live-Vorschau und wandert in jeden Export, die Zwischenablage und ins PDF."
+  },
+  "import": {
+    "heading": "Ein vorhandenes Bild kommentieren",
+    "body": "Ziehe eine Bilddatei auf die Editor-Fläche oder füge eine mit <kbd>Ctrl+V</kbd> / <kbd>⌘V</kbd> außerhalb eines Textfelds ein. Der Import nimmt denselben Platz ein wie ein Screenshot, also funktionieren jedes Werkzeug, der Beautify-Rahmen und jeder Exportweg weiter, und die obere Leiste zeigt <strong>Importiert</strong>. Ein Import ersetzt die Leinwand, deshalb fragt der Editor vorher nach, wenn Anmerkungen verloren gingen."
+  },
+  "export": {
+    "heading": "Exportieren",
+    "intro": "Klicke auf <strong>Exportieren</strong> in der oberen Leiste des Editors oder drücke <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>. Wähle ein Format:",
+    "formats": [
+      "<strong>PNG</strong> — verlustfrei, behält Transparenz.",
+      "<strong>JPEG</strong> — kleinere Dateien, einstellbare Qualität.",
+      "<strong>WebP</strong> — einstellbare Qualität wie JPEG, Transparenz wie PNG.",
+      "<strong>PDF</strong> — als eine Bildseite exportieren, auf A4/Letter einpassen oder mit 5 mm Überlappung auf mehrere Seiten aufteilen, damit kein Inhalt mitten in der Zeile abgeschnitten wird."
+    ],
+    "scale": "<strong>Skalierung</strong> exportiert mit 25, 50, 100 oder 200 % oder mit einer exakten Pixelbreite. Für PDF ist sie ausgeblendet, weil PDF auf die Seite skaliert. Eine Größe über Chromes Canvas-Limit wird abgelehnt und nie als leere Datei geschrieben.",
+    "clipboard": "<kbd>Ctrl+C</kbd> / <kbd>⌘C</kbd> kopiert das fertige Bild direkt in die Zwischenablage. Der Export-Dialog kann seine aktuellen Einstellungen auch als deine neuen Standards speichern."
+  },
+  "record": {
+    "heading": "Einen Tab aufnehmen",
+    "intro": "Klicke im Popup auf <strong>Aufnehmen</strong>, oder drücke <kbd>Alt+Shift+X</kbd>, um eine laufende Aufnahme zu stoppen. Bei deiner ersten Aufnahme zeigt Chrome eine Berechtigungsabfrage für die Tab-Aufnahme; jede Aufnahme danach startet mit einem Klick.",
+    "start": {
+      "title": "Eine Aufnahme starten",
+      "p1": "Die Aufnehmen-Zeile im Popup hat drei Schalter — <strong>Mikro</strong>, <strong>Tab-Audio</strong> und <strong>Webcam</strong> — schalte davon ein, was du willst, bevor du auf Aufnehmen klickst. Mit Mikro oder Webcam an erscheint die Berechtigungsabfrage deines Browsers aus einer kleinen Bubble auf der Seite, bevor die Aufnahme startet.",
+      "p2": "Wechselt eine Aufnahme zu einer anderen Website, braucht die Steuerleiste die optionale Berechtigung „Auf allen Websites aufnehmen“ (siehe <a href=\"#settings\">Einstellungen</a>), um ihr dorthin zu folgen. Ohne diese Berechtigung wird das Symbol-Badge gelb; klicke auf das Symbol oder interagiere wieder mit der Seite, um das Overlay neu zu verbinden."
+    },
+    "bar": {
+      "title": "Die Steuerleiste",
+      "p1": "Während du aufnimmst, sitzt eine kleine Leiste am unteren Rand der Seite: ein Timer, ein Chip für jede aktivierte Spur und Buttons für Pause/Weiter, Stopp und Abbrechen. Mit aktiver Webcam schwebt eine verschiebbare runde Vorschau über der Seite — ziehe sie irgendwohin, und sie bleibt dort für den Rest der Aufnahme.",
+      "p2": "Die Leiste blendet sich etwa drei Sekunden, nachdem dein Zeiger sie verlässt, aus und bleibt so aus deiner Aufnahme. Bewege den Cursor an die untere Mitte der Seite, um sie zurückzuholen. Sie bleibt sichtbar, solange der Mauszeiger darüber liegt und solange die Aufnahme pausiert."
+    },
+    "editor": {
+      "title": "Der Editor",
+      "body": "Stopp öffnet den Aufnahme-Editor mit deinem Take auf einer Zeitleiste. Der Editor setzt einen weichen 2x-Zoom bei jedem Klick deines Cursors — passe sie an, lösche sie oder setze eigene manuelle Zoom-Blöcke mit 1,5x, 2x oder 3x. Trimme Anfang oder Ende jedes Segments über seine Griffe. Klick-Effekte markieren, wo du geklickt hast, und Webcam-Bubble, Beautify-Rahmen und die Lautstärkeregler für Mikro und Tab-Audio sitzen im Seitenpanel. „Cursor anzeigen“ zeichnet einen weichen Zeiger entlang deines aufgezeichneten Cursor-Pfads; schalte ihn in der Einstellungsleiste aus."
+    },
+    "export": {
+      "title": "Exportieren",
+      "body": "Der Export rendert den Take über Canvas neu, mischt die gewählten Spuren und Effekte hinein und lädt eine WebM-Datei herunter."
+    }
+  },
+  "drafts": {
+    "heading": "Entwürfe",
+    "body": "Deine Bearbeitungen werden während der Arbeit lokal gespeichert. Schließt sich der Editor-Tab oder stürzt er ab, bietet der nächste Editor-Tab den Entwurf wieder an. Wiederherstellen ist immer ein Klick, ein alter Entwurf ersetzt also nie eine Aufnahme, die du frisch beginnen wolltest. Ein zugeschnittenes Bild bekommt einen eigenen Entwurf, damit Anmerkungen nie auf dem falschen Bild landen."
+  },
+  "shortcuts": {
+    "heading": "Tastenkürzel",
+    "intro": "Drücke <kbd>?</kbd> im Editor für die vollständige Übersicht. Neben den Werkzeug-Buchstaben oben:",
+    "items": [
+      "<kbd>1</kbd>–<kbd>8</kbd> — die Anmerkungsfarbe setzen.",
+      "<kbd>Ctrl+C</kbd> / <kbd>⌘C</kbd> — in die Zwischenablage kopieren.",
+      "<kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd> — exportieren.",
+      "<kbd>Backspace</kbd> — die ausgewählte Anmerkung löschen.",
+      "<kbd>Esc</kbd> — Auswahl aufheben oder Zuschnitt abbrechen.",
+      "<kbd>Ctrl</kbd> / <kbd>⌘</kbd> mit <kbd>+</kbd>, <kbd>−</kbd> oder <kbd>0</kbd> — vergrößern, verkleinern, Originalgröße. <kbd>F</kbd> passt an den Bildschirm an.",
+      "<kbd>Space</kbd> + Ziehen — die Ansicht verschieben."
+    ],
+    "outro": "<kbd>Alt+Shift+X</kbd> stoppt die laufende Aufnahme von überall — Editor oder Popup müssen dafür nicht offen sein."
+  },
+  "settings": {
+    "heading": "Einstellungen",
+    "intro": "Öffne das Zahnrad im Popup, um Folgendes einzustellen:",
+    "items": [
+      "<strong>Design</strong> — hell, dunkel oder System.",
+      "<strong>Format</strong> — PNG, JPEG, WebP oder PDF.",
+      "<strong>Qualität</strong> — für JPEG, WebP und PDF.",
+      "<strong>Dateinamen-Vorlage</strong> — klicke auf einen Token-Chip, um <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code> oder <code>{h}</code> einzufügen. Eine Live-Vorschau zeigt das Ergebnis."
+    ],
+    "storage": "Einstellungen liegen im lokalen Speicher dieses Geräts. <strong>Zurücksetzen</strong> ganz unten im Panel braucht zwei Klicks.",
+    "recordAcrossSites": "<strong>Auf allen Websites aufnehmen</strong> — standardmäßig aus. Beim Einschalten wird die optionale Host-Berechtigung <code>&lt;all_urls&gt;</code> angefragt, damit Steuerleiste und Cursor-Anzeige einem Tab folgen können, der mitten in der Aufnahme zu einer neuen Website wechselt."
+  },
+  "agentsCli": {
+    "heading": "Agenten & CLI",
+    "intro": "<code>openscreenshot</code> (npm) ist ein separates, optionales, lokales Tool, um Screenshots aus der Kommandozeile oder von einem KI-Agenten aus zu skripten. Es steuert das Chrome, das schon auf deinem Gerät ist — kein Browser-Download, kein gehosteter Dienst. Setze <code>CHROME_PATH</code>, wenn dein Chrome nicht automatisch gefunden wird.",
+    "mcpIntro": "Als MCP-Server: füge das deiner MCP-Client-Konfiguration hinzu:",
+    "callOutro": "Rufe dann das Tool <code>capture_screenshot</code> mit <code>{ \"url\": \"https://example.com\" }</code> auf."
+  },
+  "privacy": {
+    "heading": "Datenschutz",
+    "body1": "OpenScreenShot verarbeitet alles lokal in deinem Browser. Screenshots liegen im lokalen Chrome-Speicher und werden auf keinen Server hochgeladen. Aufnahmen, Cursor-Protokolle und Mikro-/Webcam-Streams bleiben in IndexedDB auf deinem Gerät, bis du sie löschst. Die Erweiterung hat keine Analytics, keine Telemetrie und keine Drittanbieterdienste.",
+    "body2": "Alle Details stehen in der <a href=\"/privacy/\">Datenschutzerklärung</a>."
+  },
+  "support": {
+    "heading": "Hilfe bekommen",
+    "body": "Auf der Seite <a href=\"/support/\">Support &amp; FAQ</a> findest du häufige Fragen und bekannte Grenzen. Brauchst du mehr Hilfe, öffne ein Issue auf <a href=\"{repoUrl}/issues\" target=\"_blank\" rel=\"noopener\">GitHub</a>."
+  },
+  "cta": {
+    "heading": "OpenScreenShot installieren",
+    "body": "Kostenlos, Open Source und privat. Verfügbar im Chrome Web Store."
+  }
+}

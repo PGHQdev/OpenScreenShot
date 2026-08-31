@@ -1,0 +1,140 @@
+{
+  "meta": {
+    "title": "Chrome용 전체 페이지 스크린샷 및 편집기 — OpenScreenShot",
+    "description": "전체 페이지, 보이는 영역, 선택 영역 스크린샷과 주석 편집기, PNG·JPEG·WebP·PDF 내보내기, 탭 레코더까지 담은 무료 오픈 소스 Chrome 확장 프로그램. 그 무엇도 기기 밖으로 나가지 않아요."
+  },
+  "hero": {
+    "note": "무료 · 오픈 소스 · MIT 라이선스",
+    "title1": "클릭. 캡처. 끝.",
+    "title2": "Wi-Fi를 꺼도 작동할 만큼 프라이빗.",
+    "sub": "전체 페이지, 주석, 내보내기, 탭 녹화 — 전부 Chrome 안에서. 계정 없음, 워터마크 없음, 클라우드 없음.",
+    "viewOnGithub": "GitHub에서 보기",
+    "tablistLabel": "확장 프로그램 화면",
+    "credit": "이 스크린샷 속 사이트는 저희가 만든 OpenTechCheck예요 — 어떤 웹사이트가 무엇으로 만들어졌는지 확인해 보세요.",
+    "creditCta": "지금 사용해 보기"
+  },
+  "tabs": {
+    "capture": {
+      "label": "캡처",
+      "alt": "Chrome의 웹 페이지 위에 열린 OpenScreenShot 팝업. 전체 페이지, 보이는 영역, 선택 영역, 녹화 옵션이 보여요."
+    },
+    "annotate": {
+      "label": "주석",
+      "alt": "도구 레일, 색상 팔레트, 선 굵기 컨트롤이 있는 OpenScreenShot 편집기. opentechcheck.com의 전체 페이지 캡처 위에 사각형과 화살표가 그려져 있어요."
+    },
+    "export": {
+      "label": "내보내기",
+      "alt": "OpenScreenShot 편집기의 내보내기 대화상자. PNG가 선택되어 있고 옆에 JPEG, WebP, PDF가 있으며, 배율 행, 너비 입력란, 파일 이름 입력란이 보여요."
+    },
+    "record": {
+      "label": "녹화",
+      "alt": "미리보기에 녹화된 페이지가 있는 OpenScreenShot 레코더. 커서와 탭 볼륨 컨트롤, 2배 줌 블록 두 개가 있는 타임라인이 보여요."
+    },
+    "cli": {
+      "label": "CLI & MCP",
+      "short": "CLI"
+    }
+  },
+  "term": {
+    "commentShot": "# 터미널에서 바로 스크린샷 한 장",
+    "commentServe": "# 또는 AI 에이전트를 위한 MCP 서버",
+    "commentConfig": "# 어떤 MCP 클라이언트 설정에서도"
+  },
+  "proof": {
+    "ariaLabel": "숫자로 보기",
+    "users": "Chrome 웹 스토어 사용자 {n}명",
+    "stars": "GitHub 스타 {n}개",
+    "mit": "MIT 라이선스",
+    "offline": "오프라인에서도 동작"
+  },
+  "quartet": [
+    {
+      "title": "무엇이든 캡처",
+      "body": "페이지 전체, 보이는 영역, 드래그한 영역까지. 클릭 한 번, 단축키, 또는 마우스 오른쪽 버튼 메뉴로 시작하세요."
+    },
+    {
+      "title": "공유 전에 편집",
+      "body": "화살표, 사각형, 텍스트로 요점을 짚으세요. 남에게 보이면 안 되는 부분은 블러로 가리세요."
+    },
+    {
+      "title": "탭 녹화",
+      "body": "클릭 한 번으로 녹화하고, 클릭할 때마다 자동 줌이 들어가요. 타임라인에서 트리밍한 뒤 WebM으로 내보내세요."
+    },
+    {
+      "title": "기본이 프라이버시",
+      "body": "계정도, 업로드도, 데이터 수집도 없어요. Wi-Fi를 꺼도 동작해요."
+    }
+  ],
+  "privacy": {
+    "eyebrow": "프라이버시",
+    "heading": "캡처한 내용은 아무도 볼 수 없어요. 저희조차도.",
+    "lede": "스크린샷은 흔히 기기에서 가장 민감한 이미지예요. 캡처, 편집, 내보내기, PDF, 녹화가 모두 브라우저 안에서 실행돼요. 확장 프로그램은 자체 네트워크 요청을 전혀 보내지 않고, 방문하는 어떤 사이트에도 상시 접근 권한을 갖지 않아요.",
+    "receipt": [
+      {
+        "k": "계정",
+        "v": "없음"
+      },
+      {
+        "k": "업로드",
+        "v": "없음"
+      },
+      {
+        "k": "데이터 수집",
+        "v": "없음"
+      },
+      {
+        "k": "워터마크",
+        "v": "없음"
+      },
+      {
+        "k": "설치 시 호스트 권한",
+        "v": "없음"
+      },
+      {
+        "k": "라이선스",
+        "v": "MIT"
+      }
+    ],
+    "installFold": "설치 시 요청하는 권한",
+    "recordFold": "녹화할 때만 추가되는 권한",
+    "micFine": "마이크와 카메라는 사용 설정할 때 브라우저 자체 권한 요청으로 열려요. 스트림은 절대 기기 밖으로 나가지 않아요.",
+    "moreFine": "같은 표와 전체 정책은 <a href=\"/privacy/\">개인정보 처리방침 페이지</a>에 있어요."
+  },
+  "cli": {
+    "eyebrow": "에이전트 & CLI",
+    "heading": "터미널에서 스크립트로.",
+    "headingMuted": "여전히 로컬로.",
+    "name": "npm의 <code>openscreenshot</code>",
+    "bullets": [
+      "스크립트와 AI 에이전트를 위한 별도의 선택형 도구",
+      "이미 기기에 설치된 Chrome을 그대로 사용해요",
+      "브라우저 다운로드도, 호스팅 서비스도 없어요",
+      "<code>capture_screenshot</code> 도구를 갖춘 MCP 서버로도 동작해요"
+    ],
+    "labelShot": "스크린샷 한 장",
+    "labelConfig": "MCP 클라이언트 설정"
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "heading": "궁금한 점에 답해 드려요.",
+    "moreFine": "모든 질문과 알려진 제한 사항은 <a href=\"/support/\">지원 페이지</a>에 있어요."
+  },
+  "cta": {
+    "heading": "10초면 준비 완료.",
+    "steps": [
+      {
+        "title": "Chrome에 추가",
+        "body": "Chrome 웹 스토어에서 클릭 한 번. 무료이고 가입도 필요 없어요."
+      },
+      {
+        "title": "아이콘 클릭",
+        "body": "또는 단축키를 누르세요. 전체 페이지, 보이는 영역, 선택 영역 중에서 고르세요."
+      },
+      {
+        "title": "캡처",
+        "body": "주석을 달고, 내보내고, 복사하세요. 기기 밖으로는 절대 나가지 않아요."
+      }
+    ],
+    "browsersFine": "Chrome, Edge, Brave, Arc 등 Chromium 기반 브라우저에서 동작해요."
+  }
+}

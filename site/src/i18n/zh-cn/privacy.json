@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "title": "隐私政策 — OpenScreenShot",
+    "description": "OpenScreenShot 不收集任何数据。没有分析、没有遥测、没有账号、没有服务器。每次截取、标注和导出都在你的浏览器本地运行。"
+  },
+  "label": "零数据收集",
+  "heading": "隐私政策",
+  "lead": "OpenScreenShot 不收集任何数据。没有服务器、没有账号、没有分析。",
+  "updated": "最后更新：2026 年 8 月",
+  "callout": "<strong>零数据收集。</strong>OpenScreenShot 不收集、不存储、不传输、不共享用户的任何个人数据、使用数据或其他信息。",
+  "howItWorks": {
+    "heading": "工作方式",
+    "body": "扩展的每个部分都在你的浏览器本地运行：页面截取、图像合成、标注编辑、录屏和导出。任何数据都不会离开你的设备。扩展自身不发出任何网络请求，也不声明任何常驻主机权限，因此对你访问的任何网站都没有后台访问权。"
+  },
+  "permissions": {
+    "heading": "权限",
+    "body": "扩展请求的每项权限都只有一个明确而有限的用途。"
+  },
+  "recording": {
+    "heading": "录屏",
+    "body": "录像、光标日志以及麦克风或摄像头媒体流的处理方式与截图相同：完全在你的设备上。视频分块、光标日志和任何音频在录制时写入 IndexedDB，并保留到你删除该会话为止；任何内容都不会上传。录屏使用另外两项权限，均为可选，且仅在你使用录屏器时请求。",
+    "streams": "麦克风和摄像头在你启用时，直接由浏览器自己的权限提示打开。在你授权之前扩展看不到媒体流，媒体流也永远不会离开你的设备。"
+  },
+  "thirdParty": {
+    "heading": "第三方服务",
+    "body": "OpenScreenShot 不使用任何第三方分析、广告或数据处理服务。PDF 导出由扩展内置的小型写入器完成，因此导出 PDF 也不发出网络请求。"
+  },
+  "changes": {
+    "heading": "政策变更",
+    "body": "如果本政策发生变更，更新后的版本会发布在本页面，并附上新的<em>最后更新</em>日期。"
+  },
+  "contact": {
+    "heading": "联系方式",
+    "body": "如对本政策有疑问，请在 <a href=\"https://github.com/pghqdev/OpenScreenShot/issues\" target=\"_blank\" rel=\"noopener\">GitHub 仓库</a>提交 issue。"
+  }
+}

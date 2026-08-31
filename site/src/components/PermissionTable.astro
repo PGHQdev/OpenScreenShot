@@ -7,21 +7,25 @@
  * which are the rows that carry a `when`.
  */
 import type { Permission } from '../data/permissions';
+import { t, DEFAULT_LOCALE, type Locale } from '../i18n';
 
 interface Props {
   rows: Permission[];
+  /** URL locale of this render. Defaults to en for pages not yet localized. */
+  locale?: Locale;
 }
 
-const { rows } = Astro.props;
+const { rows, locale = DEFAULT_LOCALE } = Astro.props;
+const c = t(locale, 'common').permissionTable;
 const hasWhen = rows.some((row) => row.when);
 ---
 
 <table class="perms">
   <thead>
     <tr>
-      <th scope="col">Permission</th>
-      <th scope="col">Why it is needed</th>
-      {hasWhen && <th scope="col">When it is requested</th>}
+      <th scope="col">{c.permission}</th>
+      <th scope="col">{c.why}</th>
+      {hasWhen && <th scope="col">{c.when}</th>}
     </tr>
   </thead>
   <tbody>

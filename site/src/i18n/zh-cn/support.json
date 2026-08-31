@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "title": "支持与常见问题 — OpenScreenShot",
+    "description": "OpenScreenShot 支持——常见问题、故障排查、已知限制，以及如何为这款开源 Chrome 截图扩展获取帮助。"
+  },
+  "label": "答案与已知限制",
+  "heading": "支持与常见问题",
+  "lead": "常见问题的答案、已知限制，以及获取帮助的途径。",
+  "faq": {
+    "heading": "常见问题"
+  },
+  "limitations": {
+    "heading": "已知限制",
+    "items": [
+      "<strong>区域选择仅限当前视口</strong>——拖动时页面会锁定，因此区域无法伸到首屏以下。请先截取整页，再在编辑器中裁剪。",
+      "<strong>动态和无限滚动页面</strong>——截图引擎只在开始时测量一次页面高度。滚动过程中变长的页面，会按截图开始时的高度输出。延迟加载的图片也可能是空白：每个分块只有短暂的重绘停顿，来不及完成新的加载。",
+      "<strong>设置不同步</strong>——你的主题、导出格式和文件名模板保存在本地存储中，不会在设备或用户配置之间同步。",
+      "<strong>录制叠加层位于页面上</strong>——摄像头预览和控制栏是页面上的元素，因此原始标签页视频会包含它们。导出时，编辑器会在页面截到的那一层之上，再合成自己的摄像头气泡作为第二层叠加。控制栏会在指针离开约三秒后自行隐藏，从而不出现在视频里；把光标移到页面底部中央即可让它回来。悬停在它上面时，以及录制暂停时，它保持可见。"
+    ]
+  },
+  "help": {
+    "heading": "获取帮助",
+    "intro": "遇到 bug、有功能需求，或需要本页未涵盖的帮助：",
+    "items": [
+      "<strong>提交 GitHub issue</strong>——<a href=\"https://github.com/pghqdev/OpenScreenShot/issues\" target=\"_blank\" rel=\"noopener\">github.com/pghqdev/OpenScreenShot/issues</a>",
+      "<strong>留下评价</strong>——在 <a href=\"https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp\" target=\"_blank\" rel=\"noopener\">Chrome 应用商店</a>写下评价，帮助更多人发现这款扩展。",
+      "<strong>参与贡献</strong>——扩展采用 MIT 许可。欢迎 Pull Request。参见 <a href=\"https://github.com/pghqdev/OpenScreenShot/blob/main/CONTRIBUTING.md\" target=\"_blank\" rel=\"noopener\">CONTRIBUTING.md</a>。"
+    ]
+  },
+  "cta": {
+    "heading": "还是没解决？",
+    "body": "Bug、功能需求和疑问都汇集到同一个跟踪器。",
+    "button": "提交 GitHub issue"
+  }
+}

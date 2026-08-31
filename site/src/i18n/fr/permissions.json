@@ -1,0 +1,44 @@
+{
+  "install": [
+    {
+      "name": "activeTab",
+      "why": "Capturer l’onglet que vous regardez, quand vous cliquez sur le bouton de la barre d’outils, appuyez sur un raccourci clavier ou choisissez une capture dans le menu du clic droit. L’accès est accordé pour cet onglet-là, pour cette capture-là."
+    },
+    {
+      "name": "scripting",
+      "why": "Injecter de petites fonctions autonomes dans l’onglet capturé : mesurer la hauteur de la page et la faire défiler pendant une capture de page entière, dessiner le calque de sélection par glissement pour une capture de zone, et écrire une image dans le presse-papiers en mode rapide. Chaque script est livré dans le paquet. Aucun code distant n’est chargé."
+    },
+    {
+      "name": "storage et unlimitedStorage",
+      "why": "Garder vos réglages sur l’appareil, conserver la capture que la page de l’éditeur charge, mémoriser le dernier rectangle de zone pour pouvoir le répéter, et sauvegarder un brouillon d’édition en cours pour qu’un onglet fermé ou planté ne perde pas vos annotations. Une capture de page entière peut dépasser le quota de stockage par défaut, et c’est ce quota qu’unlimitedStorage relève."
+    },
+    {
+      "name": "downloads",
+      "why": "Enregistrer un export de l’éditeur, ou une capture en mode rapide, dans votre dossier de téléchargements. L’extension ne lit, ne fouille et n’ouvre jamais votre historique de téléchargements."
+    },
+    {
+      "name": "contextMenus",
+      "why": "Ajouter un sous-menu OpenScreenShot au menu du clic droit de la page, comme second moyen de lancer une capture. L’extension lit seulement l’élément de menu sur lequel vous avez cliqué."
+    },
+    {
+      "name": "clipboardWrite",
+      "why": "Copier une capture d’écran dans votre presse-papiers, depuis le bouton Copier de l’éditeur ou depuis le mode rapide. L’extension n’écrit jamais que la capture que vous venez de prendre ou d’exporter. Elle ne lit jamais ce qui se trouve déjà dans votre presse-papiers."
+    },
+    {
+      "name": "offscreen",
+      "why": "Exécuter le moteur d’enregistrement d’écran dans un document caché. La capture MediaRecorder et les écritures de segments dans IndexedDB, résistantes aux plantages, ont besoin d’un contexte de page qu’un service worker n’a pas. Toujours présente ; elle n’ajoute aucun avertissement à l’installation."
+    }
+  ],
+  "recording": [
+    {
+      "name": "tabCapture",
+      "why": "Capture la vidéo de l’onglet actuel, et son audio si vous activez la piste audio de l’onglet, pour l’enregistrement.",
+      "when": "Une seule fois, au premier clic sur Enregistrer — une unique invite d’autorisation Chrome."
+    },
+    {
+      "name": "<all_urls>",
+      "why": "L’autorisation d’hôte facultative. Elle maintient le calque du curseur et la barre de commandes sur la page quand l’onglet enregistré navigue vers une autre origine.",
+      "when": "Seulement si vous activez « Enregistrer partout » dans les paramètres."
+    }
+  ]
+}

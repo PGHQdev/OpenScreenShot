@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "title": "Política de Privacidade — OpenScreenShot",
+    "description": "O OpenScreenShot não coleta nada. Sem análise de uso, sem telemetria, sem contas, sem servidores. Toda captura, anotação e exportação roda localmente no seu navegador."
+  },
+  "label": "Zero coleta de dados",
+  "heading": "Política de Privacidade",
+  "lead": "O OpenScreenShot não coleta nada. Não há servidores, contas nem análise de uso.",
+  "updated": "Última atualização: agosto de 2026",
+  "callout": "<strong>Zero coleta de dados.</strong> O OpenScreenShot não coleta, armazena, transmite nem compartilha nenhum dado pessoal, dado de uso ou qualquer outra informação dos seus usuários.",
+  "howItWorks": {
+    "heading": "Como funciona",
+    "body": "Cada parte da extensão roda localmente no seu navegador: captura de página, composição de imagem, edição de anotações, gravação de tela e exportação. Nenhum dado sai do seu dispositivo. A extensão não faz requisições de rede próprias e não declara permissões de host permanentes, então não tem acesso em segundo plano a nenhum site que você visita."
+  },
+  "permissions": {
+    "heading": "Permissões",
+    "body": "Cada permissão que a extensão solicita tem um único propósito bem definido."
+  },
+  "recording": {
+    "heading": "Gravação de tela",
+    "body": "Gravações, registros do cursor e streams de microfone ou webcam são tratados da mesma forma que as capturas de tela: inteiramente no seu dispositivo. Os trechos de vídeo, o registro do cursor e qualquer áudio são gravados no IndexedDB enquanto você grava e ficam lá até você excluir a sessão; nada é enviado para lugar nenhum. A gravação usa duas permissões adicionais, ambas opcionais e solicitadas apenas quando você usa o gravador.",
+    "streams": "O microfone e a câmera, quando você os ativa, são abertos diretamente pelo aviso de permissão do próprio navegador. A extensão só vê um stream depois que você o concede, e o stream nunca sai do seu dispositivo."
+  },
+  "thirdParty": {
+    "heading": "Serviços de terceiros",
+    "body": "O OpenScreenShot não usa serviços de terceiros de análise, publicidade ou processamento de dados. A exportação em PDF é feita por um pequeno gerador embutido na extensão, então exportar um PDF também não faz nenhuma requisição de rede."
+  },
+  "changes": {
+    "heading": "Alterações nesta política",
+    "body": "Se esta política mudar, a versão atualizada será publicada nesta página com uma nova data de <em>Última atualização</em>."
+  },
+  "contact": {
+    "heading": "Contato",
+    "body": "Para dúvidas sobre esta política, abra uma issue no <a href=\"https://github.com/pghqdev/OpenScreenShot/issues\" target=\"_blank\" rel=\"noopener\">repositório do GitHub</a>."
+  }
+}

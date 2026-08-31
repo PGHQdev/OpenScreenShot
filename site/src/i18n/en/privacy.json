@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "title": "Privacy Policy — OpenScreenShot",
+    "description": "OpenScreenShot collects nothing. No analytics, no telemetry, no accounts, no servers. Every capture, annotation, and export runs locally in your browser."
+  },
+  "label": "Zero data collection",
+  "heading": "Privacy Policy",
+  "lead": "OpenScreenShot collects nothing. There are no servers, no accounts, and no analytics.",
+  "updated": "Last updated: August 2026",
+  "callout": "<strong>Zero data collection.</strong> OpenScreenShot does not collect, store, transmit, or share any personal data, usage data, or any other information from its users.",
+  "howItWorks": {
+    "heading": "How it works",
+    "body": "Every part of the extension runs locally in your browser: page capture, image compositing, annotation editing, screen recording, and export. No data ever leaves your device. The extension makes no network requests of its own and declares no standing host permissions, so it has no background access to any website you visit."
+  },
+  "permissions": {
+    "heading": "Permissions",
+    "body": "Each permission the extension requests has one narrow purpose."
+  },
+  "recording": {
+    "heading": "Screen recording",
+    "body": "Recordings, cursor logs, and microphone or webcam streams are handled the same way as screenshots: entirely on your device. Video chunks, the cursor log, and any audio are written to IndexedDB as you record and stay there until you delete the session; nothing is ever uploaded. Recording uses two further permissions, both optional and requested only when you use the recorder.",
+    "streams": "The microphone and camera, when you enable them, are opened directly by your browser’s own permission prompt. The extension never sees a stream until you grant it, and the stream never leaves your device."
+  },
+  "thirdParty": {
+    "heading": "Third-party services",
+    "body": "OpenScreenShot uses no third-party analytics, advertising, or data-processing services. PDF export is handled by a small writer built into the extension, so exporting a PDF makes no network request either."
+  },
+  "changes": {
+    "heading": "Changes to this policy",
+    "body": "If this policy changes, the updated version is published on this page with a new <em>Last updated</em> date."
+  },
+  "contact": {
+    "heading": "Contact",
+    "body": "For questions about this policy, open an issue on the <a href=\"https://github.com/pghqdev/OpenScreenShot/issues\" target=\"_blank\" rel=\"noopener\">GitHub repository</a>."
+  }
+}

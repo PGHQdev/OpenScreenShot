@@ -1,0 +1,44 @@
+{
+  "install": [
+    {
+      "name": "activeTab",
+      "why": "Cattura la scheda che stai guardando, quando clicchi il pulsante nella barra degli strumenti, premi una scorciatoia da tastiera o scegli una cattura dal menu del tasto destro. L'accesso vale per quella sola scheda, per quella sola cattura."
+    },
+    {
+      "name": "scripting",
+      "why": "Inserisce piccole funzioni autonome nella scheda catturata: misurare l'altezza della pagina e farla scorrere durante una cattura a pagina intera, disegnare l'overlay di selezione per una cattura di regione e scrivere un'immagine negli appunti in modalità rapida. Ogni script è dentro il pacchetto. Nessun codice remoto viene caricato."
+    },
+    {
+      "name": "storage e unlimitedStorage",
+      "why": "Tiene le tue impostazioni sul dispositivo, conserva la cattura che la pagina dell'editor carica, ricorda l'ultimo rettangolo di regione per poterlo ripetere e salva una bozza di modifica in corso, così una scheda chiusa o in crash non fa perdere le annotazioni. Uno screenshot a pagina intera può superare la quota di archiviazione predefinita, ed è quello che unlimitedStorage alza."
+    },
+    {
+      "name": "downloads",
+      "why": "Salva un'esportazione dall'editor, o una cattura in modalità rapida, nella tua cartella dei download. L'estensione non legge, non cerca e non apre mai la cronologia dei download."
+    },
+    {
+      "name": "contextMenus",
+      "why": "Aggiunge un sottomenu OpenScreenShot al menu del tasto destro della pagina, come secondo modo per avviare una cattura. L'estensione legge solo quale voce di menu hai cliccato."
+    },
+    {
+      "name": "clipboardWrite",
+      "why": "Copia uno screenshot negli appunti, dal pulsante Copia dell'editor o dalla modalità rapida. L'estensione scrive solo lo screenshot che hai appena catturato o esportato. Non legge mai quello che è già negli appunti."
+    },
+    {
+      "name": "offscreen",
+      "why": "Esegue il motore di registrazione dello schermo in un documento nascosto. La cattura con MediaRecorder e le scritture dei blocchi in IndexedDB, sicure in caso di crash, richiedono un contesto di pagina che un service worker non ha. È sempre presente e non aggiunge avvisi all'installazione."
+    }
+  ],
+  "recording": [
+    {
+      "name": "tabCapture",
+      "why": "Cattura il video della scheda corrente, e il suo audio se attivi la traccia dell'audio della scheda, per la registrazione.",
+      "when": "Una sola volta, al primo clic su Registra: una singola richiesta di permesso di Chrome."
+    },
+    {
+      "name": "<all_urls>",
+      "why": "Il permesso host opzionale. Mantiene attivi l'overlay del cursore e la barra di controllo nella pagina quando la scheda registrata passa a un'altra origine.",
+      "when": "Solo se attivi «Registra su tutti i siti» nelle impostazioni."
+    }
+  ]
+}

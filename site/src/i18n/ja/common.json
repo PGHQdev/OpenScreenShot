@@ -1,0 +1,34 @@
+{
+  "nav": {
+    "ariaPrimary": "メイン",
+    "skipToContent": "本文へスキップ",
+    "addToChrome": "Chrome に追加",
+    "docs": "ドキュメント",
+    "support": "サポート",
+    "roadmap": "ロードマップ",
+    "github": "GitHub"
+  },
+  "footer": {
+    "tagline": "スクリーンショットがデバイスの外に出ることはありません。",
+    "productHead": "プロダクト",
+    "projectHead": "プロジェクト",
+    "moreHead": "@PGHQdev のその他のツール",
+    "docs": "ドキュメント",
+    "roadmap": "ロードマップ",
+    "supportFaq": "サポート & FAQ",
+    "github": "GitHub",
+    "mitLicense": "MIT ライセンス",
+    "privacy": "プライバシー",
+    "supportOpenSource": "オープンソースを支援",
+    "languageLabel": "言語"
+  },
+  "meta": {
+    "ogDefaultAlt": "OpenScreenShot: Chrome 向けのフルページ スクリーンショットと注釈。無料、オープンソース、100% ローカル。"
+  },
+  "breadcrumbHome": "ホーム",
+  "permissionTable": {
+    "permission": "権限",
+    "why": "必要な理由",
+    "when": "リクエストされるタイミング"
+  }
+}

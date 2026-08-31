@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "title": "Datenschutzerklärung — OpenScreenShot",
+    "description": "OpenScreenShot sammelt nichts. Keine Analytics, keine Telemetrie, keine Konten, keine Server. Jede Aufnahme, jede Anmerkung und jeder Export läuft lokal in deinem Browser."
+  },
+  "label": "Null Datensammlung",
+  "heading": "Datenschutzerklärung",
+  "lead": "OpenScreenShot sammelt nichts. Es gibt keine Server, keine Konten und keine Analytics.",
+  "updated": "Zuletzt aktualisiert: August 2026",
+  "callout": "<strong>Null Datensammlung.</strong> OpenScreenShot sammelt, speichert, überträgt oder teilt keinerlei personenbezogene Daten, Nutzungsdaten oder sonstige Informationen seiner Nutzer.",
+  "howItWorks": {
+    "heading": "So funktioniert es",
+    "body": "Jeder Teil der Erweiterung läuft lokal in deinem Browser: Seitenaufnahme, Bildmontage, Anmerkungen, Bildschirmaufnahme und Export. Keine Daten verlassen jemals dein Gerät. Die Erweiterung stellt keine eigenen Netzwerkanfragen und deklariert keine dauerhaften Host-Berechtigungen, sie hat also keinen Hintergrundzugriff auf die Websites, die du besuchst."
+  },
+  "permissions": {
+    "heading": "Berechtigungen",
+    "body": "Jede Berechtigung, die die Erweiterung anfragt, hat einen einzigen, eng umrissenen Zweck."
+  },
+  "recording": {
+    "heading": "Bildschirmaufnahme",
+    "body": "Aufnahmen, Cursor-Protokolle und Mikrofon- oder Webcam-Streams werden genauso behandelt wie Screenshots: vollständig auf deinem Gerät. Video-Chunks, das Cursor-Protokoll und jedes Audio werden während der Aufnahme in IndexedDB geschrieben und bleiben dort, bis du die Aufnahme löschst; nichts wird jemals hochgeladen. Die Aufnahme nutzt zwei weitere Berechtigungen, beide optional und nur angefragt, wenn du den Rekorder verwendest.",
+    "streams": "Mikrofon und Kamera werden, wenn du sie aktivierst, direkt über die Berechtigungsabfrage deines Browsers geöffnet. Die Erweiterung sieht einen Stream erst, wenn du ihn erlaubst, und der Stream verlässt nie dein Gerät."
+  },
+  "thirdParty": {
+    "heading": "Drittanbieterdienste",
+    "body": "OpenScreenShot nutzt keine Analytics-, Werbe- oder Datenverarbeitungsdienste von Drittanbietern. Den PDF-Export übernimmt ein kleiner Writer, der in die Erweiterung eingebaut ist; auch ein PDF-Export stellt keine Netzwerkanfrage."
+  },
+  "changes": {
+    "heading": "Änderungen an dieser Richtlinie",
+    "body": "Wenn sich diese Richtlinie ändert, erscheint die aktualisierte Fassung auf dieser Seite mit neuem <em>Zuletzt aktualisiert</em>-Datum."
+  },
+  "contact": {
+    "heading": "Kontakt",
+    "body": "Bei Fragen zu dieser Richtlinie öffne ein Issue im <a href=\"https://github.com/pghqdev/OpenScreenShot/issues\" target=\"_blank\" rel=\"noopener\">GitHub-Repository</a>."
+  }
+}

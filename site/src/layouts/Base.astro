@@ -2,6 +2,15 @@
 import BrandMark from '../components/BrandMark.astro';
 import ChromeIcon from '../components/ChromeIcon.astro';
 import ogCard from '../assets/og-card.png';
+import {
+  t,
+  localizePath,
+  LOCALES,
+  LANG_TAGS,
+  LOCALE_LABELS,
+  DEFAULT_LOCALE,
+  type Locale,
+} from '../i18n';
 import '../styles/tokens.css';
 import '../styles/fonts.css';
 import '../styles/base.css';
@@ -16,8 +25,14 @@ export type NavLink = {
 export interface Props {
   title: string;
   description: string;
-  /** Canonical path, leading and trailing slash included: '/', '/docs/'. */
+  /**
+   * Canonical path, locale-less, leading and trailing slash included: '/',
+   * '/docs/'. The layout adds the locale prefix itself, for the canonical
+   * URL and for every hreflang alternate.
+   */
   path: string;
+  /** URL locale of this render. Defaults to en for pages not yet localized. */
+  locale?: Locale;
   /** Site-absolute path to the social card. Pairs with ogImageAlt. */
   ogImage?: string;
   /** Alt text for ogImage. Required by og:image:alt whenever ogImage is overridden. */
@@ -32,37 +47,49 @@ export interface Props {
 
 const STORE_URL = 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp';
 const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
-const OG_DEFAULT = {
-  src: ogCard.src,
-  width: String(ogCard.width),
-  height: String(ogCard.height),
-  alt: 'OpenScreenShot: full page screenshot and annotation for Chrome. Free, open source, and 100% local.',
-};
 
 const {
   title,
   description,
   path,
-  ogImage = OG_DEFAULT.src,
-  ogImageAlt = OG_DEFAULT.alt,
+  locale = DEFAULT_LOCALE,
   pageType = 'website',
   navLinks = [],
 } = Astro.props;
 
-const canonical = new URL(path, Astro.site).href;
+const c = t(locale, 'common');
+
+const OG_DEFAULT = {
+  src: ogCard.src,
+  width: String(ogCard.width),
+  height: String(ogCard.height),
+  alt: c.meta.ogDefaultAlt,
+};
+const ogImage = Astro.props.ogImage ?? OG_DEFAULT.src;
+const ogImageAlt = Astro.props.ogImageAlt ?? OG_DEFAULT.alt;
+
+const canonical = new URL(localizePath(locale, path), Astro.site).href;
 const ogImageUrl = new URL(ogImage, Astro.site).href;
 const year = new Date().getFullYear();
 const isHome = path === '/';
+
+// One alternate per locale, plus x-default on the unprefixed English URL.
+const alternates = LOCALES.map((l) => ({
+  hreflang: LANG_TAGS[l],
+  href: new URL(localizePath(l, path), Astro.site).href,
+}));
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={LANG_TAGS[locale]}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    {alternates.map((alt) => <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />)}
+    <link rel="alternate" hreflang="x-default" href={new URL(path, Astro.site).href} />
 
     <meta name="theme-color" content="#ffffff" />
 
@@ -105,11 +132,11 @@ const isHome = path === '/';
   </head>
 
   <body>
-    <a class="skip-link" href="#main">Skip to content</a>
+    <a class="skip-link" href="#main">{c.nav.skipToContent}</a>
 
     <header class="site-head">
-      <nav class="container-wide nav" aria-label="Primary">
-        <a class="nav-brand" href={isHome ? '#top' : '/'}>
+      <nav class="container-wide nav" aria-label={c.nav.ariaPrimary}>
+        <a class="nav-brand" href={isHome ? '#top' : localizePath(locale, '/')}>
           <BrandMark size={24} />
           OpenScreenShot
         </a>
@@ -130,7 +157,7 @@ const isHome = path === '/';
           <li>
             <a class="btn nav-cta" href={STORE_URL} target="_blank" rel="noopener">
               <ChromeIcon size={18} />
-              Add to Chrome
+              {c.nav.addToChrome}
             </a>
           </li>
         </ul>
@@ -148,26 +175,28 @@ const isHome = path === '/';
             <BrandMark size={22} />
             OpenScreenShot
           </p>
-          <p class="foot-tag">Screenshots that never leave your machine.</p>
+          <p class="foot-tag">{c.footer.tagline}</p>
           <p class="foot-bottom">
             © {year} OpenScreenShot
             <a href="https://x.com/PGHQdev" target="_blank" rel="noopener">@PGHQdev</a>
           </p>
         </div>
-        <nav class="foot-col" aria-label="Product">
-          <p class="foot-head">Product</p>
-          <a href="/docs/">Docs</a>
-          <a href="/roadmap/">Roadmap</a>
-          <a href="/support/">Support & FAQ</a>
+        <nav class="foot-col" aria-label={c.footer.productHead}>
+          <p class="foot-head">{c.footer.productHead}</p>
+          <a href={localizePath(locale, '/docs/')}>{c.footer.docs}</a>
+          <a href={localizePath(locale, '/roadmap/')}>{c.footer.roadmap}</a>
+          <a href={localizePath(locale, '/support/')}>{c.footer.supportFaq}</a>
         </nav>
-        <nav class="foot-col" aria-label="Project">
-          <p class="foot-head">Project</p>
-          <a href={REPO_URL} target="_blank" rel="noopener">GitHub</a>
-          <a href={`${REPO_URL}/blob/main/LICENSE`} target="_blank" rel="noopener">MIT License</a>
-          <a href="/privacy/">Privacy</a>
+        <nav class="foot-col" aria-label={c.footer.projectHead}>
+          <p class="foot-head">{c.footer.projectHead}</p>
+          <a href={REPO_URL} target="_blank" rel="noopener">{c.footer.github}</a>
+          <a href={`${REPO_URL}/blob/main/LICENSE`} target="_blank" rel="noopener">
+            {c.footer.mitLicense}
+          </a>
+          <a href={localizePath(locale, '/privacy/')}>{c.footer.privacy}</a>
         </nav>
-        <nav class="foot-col" aria-label="More by PGHQdev">
-          <p class="foot-head">More by @PGHQdev</p>
+        <nav class="foot-col" aria-label={c.footer.moreHead}>
+          <p class="foot-head">{c.footer.moreHead}</p>
           {
             [
               { href: 'https://opentechcheck.com', icon: 'opentechcheck', label: 'OpenTechCheck' },
@@ -181,7 +210,7 @@ const isHome = path === '/';
               {
                 href: 'https://ko-fi.com/T7A624DAY7',
                 icon: 'ko-fi',
-                label: 'Support Open-Source',
+                label: c.footer.supportOpenSource,
               },
             ].map((link) => (
               <a class="foot-site" href={link.href} target="_blank" rel="noopener">
@@ -198,6 +227,20 @@ const isHome = path === '/';
           }
         </nav>
       </div>
+      <nav class="container-wide foot-lang" aria-label={c.footer.languageLabel}>
+        {
+          LOCALES.map((l) => (
+            <a
+              href={localizePath(l, path)}
+              hreflang={LANG_TAGS[l]}
+              lang={LANG_TAGS[l]}
+              aria-current={l === locale ? 'true' : undefined}
+            >
+              {LOCALE_LABELS[l]}
+            </a>
+          ))
+        }
+      </nav>
     </footer>
 
     <slot name="body-end" />
@@ -390,6 +433,27 @@ const isHome = path === '/';
   }
 
   .foot-col a:hover {
+    color: var(--ink);
+  }
+
+  .foot-lang {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-4);
+    margin-top: var(--s-6);
+    padding-top: var(--s-5);
+    border-top: 1px solid var(--rule);
+    font-size: var(--fs-xs);
+  }
+
+  .foot-lang a {
+    color: var(--ink-3);
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .foot-lang a:hover,
+  .foot-lang a[aria-current] {
     color: var(--ink);
   }
 

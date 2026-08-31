@@ -1,0 +1,34 @@
+{
+  "nav": {
+    "ariaPrimary": "主导航",
+    "skipToContent": "跳到正文",
+    "addToChrome": "添加至 Chrome",
+    "docs": "文档",
+    "support": "支持",
+    "roadmap": "路线图",
+    "github": "GitHub"
+  },
+  "footer": {
+    "tagline": "截图永远不离开你的设备。",
+    "productHead": "产品",
+    "projectHead": "项目",
+    "moreHead": "@PGHQdev 的更多作品",
+    "docs": "文档",
+    "roadmap": "路线图",
+    "supportFaq": "支持与常见问题",
+    "github": "GitHub",
+    "mitLicense": "MIT 许可证",
+    "privacy": "隐私",
+    "supportOpenSource": "支持开源",
+    "languageLabel": "语言"
+  },
+  "meta": {
+    "ogDefaultAlt": "OpenScreenShot：Chrome 整页截图与标注扩展。免费、开源、100% 本地。"
+  },
+  "breadcrumbHome": "首页",
+  "permissionTable": {
+    "permission": "权限",
+    "why": "用途",
+    "when": "何时请求"
+  }
+}

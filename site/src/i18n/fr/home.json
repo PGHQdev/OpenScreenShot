@@ -1,0 +1,140 @@
+{
+  "meta": {
+    "title": "Capture d’écran pleine page et éditeur pour Chrome — OpenScreenShot",
+    "description": "Extension Chrome gratuite et open source : captures de page entière, de zone visible et de zone sélectionnée, éditeur d’annotations, export PNG, JPEG, WebP ou PDF, et enregistreur d’onglet. Rien ne quitte votre machine."
+  },
+  "hero": {
+    "note": "Gratuit · Open source · Licence MIT",
+    "title1": "Clic. Capturé. Terminé.",
+    "title2": "Si privé que ça marche sans Wi-Fi.",
+    "sub": "Page entière, annotations, export, enregistrement d'onglet — directement dans Chrome. Pas de compte, pas de filigrane, pas de cloud.",
+    "viewOnGithub": "Voir sur GitHub",
+    "tablistLabel": "Les écrans de l’extension",
+    "credit": "Le site sur ces captures est OpenTechCheck, lui aussi créé par nous — découvrez avec quoi un site est construit.",
+    "creditCta": "Essayez-le"
+  },
+  "tabs": {
+    "capture": {
+      "label": "Capturer",
+      "alt": "Le popup OpenScreenShot ouvert sur une page web dans Chrome, avec les options Page entière, Zone visible, Zone sélectionnée et Enregistrer."
+    },
+    "annotate": {
+      "label": "Annoter",
+      "alt": "L’éditeur OpenScreenShot avec sa barre d’outils, sa palette de couleurs et ses réglages de trait, montrant une capture de page entière d’opentechcheck.com avec un cadre et une flèche dessinés dessus."
+    },
+    "export": {
+      "label": "Exporter",
+      "alt": "La boîte d’export de l’éditeur OpenScreenShot, avec PNG sélectionné, JPEG, WebP et PDF à côté, une ligne d’échelle, un champ de largeur et un champ de nom de fichier."
+    },
+    "record": {
+      "label": "Enregistrer",
+      "alt": "L’enregistreur OpenScreenShot avec une page enregistrée dans l’aperçu, les réglages de curseur et de volume de l’onglet, et une chronologie avec deux blocs de zoom 2x."
+    },
+    "cli": {
+      "label": "CLI & MCP",
+      "short": "CLI"
+    }
+  },
+  "term": {
+    "commentShot": "# Une capture, directement depuis votre terminal",
+    "commentServe": "# Ou un serveur MCP pour votre agent IA",
+    "commentConfig": "# N’importe quelle config de client MCP"
+  },
+  "proof": {
+    "ariaLabel": "En chiffres",
+    "users": "{n} utilisateurs sur le Chrome Web Store",
+    "stars": "{n} étoiles sur GitHub",
+    "mit": "Licence MIT",
+    "offline": "Fonctionne hors ligne"
+  },
+  "quartet": [
+    {
+      "title": "Capturez tout",
+      "body": "La page entière, la zone visible ou une zone que vous délimitez. Un clic, un raccourci ou le menu du clic droit."
+    },
+    {
+      "title": "Retouchez avant de partager",
+      "body": "Flèches, cadres et texte pour appuyer votre propos. Du flou pour ce que personne d’autre ne doit voir."
+    },
+    {
+      "title": "Enregistrez l’onglet",
+      "body": "Un clic enregistre, avec un zoom automatique à chaque clic. Rognez sur une chronologie, puis exportez en WebM."
+    },
+    {
+      "title": "Privé par défaut",
+      "body": "Pas de compte, pas de téléversement, pas de télémétrie. Tout fonctionne même sans Wi-Fi."
+    }
+  ],
+  "privacy": {
+    "eyebrow": "Confidentialité",
+    "heading": "Personne ne voit ce que vous capturez. Pas même nous.",
+    "lede": "Les captures d’écran sont souvent les images les plus sensibles de votre machine. Capture, édition, export, PDF et enregistrement s’exécutent tous dans votre navigateur. L’extension ne fait aucune requête réseau d’elle-même et n’a aucun accès permanent aux sites que vous visitez.",
+    "receipt": [
+      {
+        "k": "Compte",
+        "v": "Aucun"
+      },
+      {
+        "k": "Téléversement",
+        "v": "Aucun"
+      },
+      {
+        "k": "Télémétrie",
+        "v": "Aucune"
+      },
+      {
+        "k": "Filigrane",
+        "v": "Aucun"
+      },
+      {
+        "k": "Autorisations d’hôte à l’installation",
+        "v": "Aucune"
+      },
+      {
+        "k": "Licence",
+        "v": "MIT"
+      }
+    ],
+    "installFold": "Ce qu’elle demande à l’installation",
+    "recordFold": "Ce que l’enregistrement ajoute, seulement quand vous enregistrez",
+    "micFine": "Le micro et la caméra, quand vous les activez, sont ouverts par l’invite d’autorisation de votre propre navigateur. Le flux ne quitte jamais votre appareil.",
+    "moreFine": "Les mêmes tableaux, avec la politique complète, sur la <a href=\"/privacy/\">page Confidentialité</a>."
+  },
+  "cli": {
+    "eyebrow": "Agents & CLI",
+    "heading": "Scriptable depuis votre terminal.",
+    "headingMuted": "Toujours local.",
+    "name": "<code>openscreenshot</code> sur npm",
+    "bullets": [
+      "Un outil séparé et facultatif pour les scripts et les agents IA",
+      "Pilote le Chrome déjà présent sur votre machine",
+      "Aucun navigateur à télécharger, aucun service hébergé",
+      "Aussi un serveur MCP, avec un outil <code>capture_screenshot</code>"
+    ],
+    "labelShot": "Une capture",
+    "labelConfig": "Config de client MCP"
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "heading": "Vos questions, nos réponses.",
+    "moreFine": "Toutes les questions, plus les limites connues, sur la <a href=\"/support/\">page Support</a>."
+  },
+  "cta": {
+    "heading": "Prêt en dix secondes.",
+    "steps": [
+      {
+        "title": "Ajoutez-la à Chrome",
+        "body": "Un clic sur le Chrome Web Store. Gratuit, sans inscription."
+      },
+      {
+        "title": "Cliquez sur l’icône",
+        "body": "Ou appuyez sur le raccourci. Choisissez page entière, zone visible ou zone."
+      },
+      {
+        "title": "Capturez",
+        "body": "Annotez, exportez ou copiez. Rien ne quitte votre machine."
+      }
+    ],
+    "browsersFine": "Fonctionne sur Chrome, Edge, Brave, Arc et les autres navigateurs Chromium."
+  }
+}

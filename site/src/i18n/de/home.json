@@ -1,0 +1,140 @@
+{
+  "meta": {
+    "title": "Ganzseiten-Screenshot & Editor für Chrome — OpenScreenShot",
+    "description": "Kostenlose Open-Source-Erweiterung für Chrome: Screenshots der ganzen Seite, des sichtbaren Bereichs oder eines Ausschnitts, mit Anmerkungs-Editor, Export als PNG, JPEG, WebP oder PDF und einem Tab-Rekorder. Nichts verlässt dein Gerät."
+  },
+  "hero": {
+    "note": "Kostenlos · Open Source · MIT-lizenziert",
+    "title1": "Klick. Aufgenommen. Fertig.",
+    "title2": "So privat, dass es ohne WLAN funktioniert.",
+    "sub": "Ganze Seite, Markierungen, Export, Tab-Aufnahme — direkt in Chrome. Kein Konto, kein Wasserzeichen, keine Cloud.",
+    "viewOnGithub": "Auf GitHub ansehen",
+    "tablistLabel": "Die Ansichten der Erweiterung",
+    "credit": "Die Website in diesen Screenshots ist OpenTechCheck, ebenfalls von uns — sieh nach, womit eine Website gebaut ist.",
+    "creditCta": "Jetzt ausprobieren"
+  },
+  "tabs": {
+    "capture": {
+      "label": "Aufnehmen",
+      "alt": "Das OpenScreenShot-Popup über einer Webseite in Chrome, mit den Optionen Ganze Seite, Sichtbarer Bereich, Ausschnitt und Aufnehmen."
+    },
+    "annotate": {
+      "label": "Anmerken",
+      "alt": "Der OpenScreenShot-Editor mit Werkzeugleiste, Farbpalette und Linienstärke-Reglern, mit einer Ganzseiten-Aufnahme von opentechcheck.com samt Rechteck und Pfeil darauf."
+    },
+    "export": {
+      "label": "Exportieren",
+      "alt": "Der Export-Dialog im OpenScreenShot-Editor, mit ausgewähltem PNG, daneben JPEG, WebP und PDF, einer Skalierungszeile, einem Breitenfeld und einem Dateinamensfeld."
+    },
+    "record": {
+      "label": "Aufnahme",
+      "alt": "Der OpenScreenShot-Rekorder mit einer aufgenommenen Seite in der Vorschau, Cursor- und Tab-Lautstärkereglern und einer Zeitleiste mit zwei 2x-Zoom-Blöcken."
+    },
+    "cli": {
+      "label": "CLI & MCP",
+      "short": "CLI"
+    }
+  },
+  "term": {
+    "commentShot": "# Ein Screenshot, direkt aus deinem Terminal",
+    "commentServe": "# Oder ein MCP-Server für deinen KI-Agenten",
+    "commentConfig": "# Beliebige MCP-Client-Konfiguration"
+  },
+  "proof": {
+    "ariaLabel": "In Zahlen",
+    "users": "{n} Nutzer im Chrome Web Store",
+    "stars": "{n} Sterne auf GitHub",
+    "mit": "MIT-lizenziert",
+    "offline": "Funktioniert offline"
+  },
+  "quartet": [
+    {
+      "title": "Alles aufnehmen",
+      "body": "Die ganze Seite, der sichtbare Bereich oder ein aufgezogener Ausschnitt. Ein Klick, ein Tastenkürzel oder das Rechtsklick-Menü."
+    },
+    {
+      "title": "Bearbeiten vor dem Teilen",
+      "body": "Pfeile, Rechtecke und Text bringen es auf den Punkt. Unschärfe für alles, was niemand sonst sehen soll."
+    },
+    {
+      "title": "Den Tab aufnehmen",
+      "body": "Ein Klick startet die Aufnahme, mit Auto-Zoom bei jedem Klick. Auf der Zeitleiste trimmen, dann als WebM exportieren."
+    },
+    {
+      "title": "Privat ab Werk",
+      "body": "Kein Konto, kein Upload, keine Telemetrie. Funktioniert auch ohne WLAN."
+    }
+  ],
+  "privacy": {
+    "eyebrow": "Datenschutz",
+    "heading": "Niemand sieht, was du aufnimmst. Auch wir nicht.",
+    "lede": "Screenshots gehören oft zu den sensibelsten Bildern auf deinem Gerät. Aufnahme, Bearbeitung, Export, PDF und Bildschirmaufnahme laufen komplett in deinem Browser. Die Erweiterung stellt keine eigenen Netzwerkanfragen und hat keinen dauerhaften Zugriff auf die Websites, die du besuchst.",
+    "receipt": [
+      {
+        "k": "Konto",
+        "v": "Keins"
+      },
+      {
+        "k": "Upload",
+        "v": "Keiner"
+      },
+      {
+        "k": "Telemetrie",
+        "v": "Keine"
+      },
+      {
+        "k": "Wasserzeichen",
+        "v": "Keins"
+      },
+      {
+        "k": "Host-Berechtigungen bei der Installation",
+        "v": "Keine"
+      },
+      {
+        "k": "Lizenz",
+        "v": "MIT"
+      }
+    ],
+    "installFold": "Was bei der Installation angefragt wird",
+    "recordFold": "Was die Aufnahme dazunimmt — nur wenn du aufnimmst",
+    "micFine": "Mikrofon und Kamera werden, wenn du sie aktivierst, über die Berechtigungsabfrage deines Browsers geöffnet. Der Stream verlässt nie dein Gerät.",
+    "moreFine": "Dieselben Tabellen, mit der vollständigen Richtlinie, auf der <a href=\"/privacy/\">Datenschutzseite</a>."
+  },
+  "cli": {
+    "eyebrow": "Agenten & CLI",
+    "heading": "Skriptbar aus deinem Terminal.",
+    "headingMuted": "Weiterhin lokal.",
+    "name": "<code>openscreenshot</code> auf npm",
+    "bullets": [
+      "Ein separates, optionales Tool für Skripte und KI-Agenten",
+      "Steuert das Chrome, das schon auf deinem Gerät ist",
+      "Kein Browser-Download, kein gehosteter Dienst",
+      "Auch ein MCP-Server, mit einem <code>capture_screenshot</code>-Tool"
+    ],
+    "labelShot": "Ein Screenshot",
+    "labelConfig": "MCP-Client-Konfiguration"
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "heading": "Fragen, beantwortet.",
+    "moreFine": "Alle Fragen, samt bekannter Grenzen, auf der <a href=\"/support/\">Support-Seite</a>."
+  },
+  "cta": {
+    "heading": "In zehn Sekunden startklar.",
+    "steps": [
+      {
+        "title": "Zu Chrome hinzufügen",
+        "body": "Ein Klick im Chrome Web Store. Kostenlos, ohne Registrierung."
+      },
+      {
+        "title": "Auf das Symbol klicken",
+        "body": "Oder Tastenkürzel drücken. Ganze Seite, sichtbarer Bereich oder Ausschnitt wählen."
+      },
+      {
+        "title": "Aufnehmen",
+        "body": "Anmerken, exportieren oder kopieren. Es verlässt nie dein Gerät."
+      }
+    ],
+    "browsersFine": "Funktioniert mit Chrome, Edge, Brave, Arc und anderen Chromium-Browsern."
+  }
+}

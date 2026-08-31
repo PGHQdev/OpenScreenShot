@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "title": "サポート & FAQ — OpenScreenShot",
+    "description": "OpenScreenShot のサポート — FAQ、トラブルシューティング、既知の制限と、オープンソースの Chrome スクリーンショット拡張機能に関するサポートの受け方。"
+  },
+  "label": "回答と既知の制限",
+  "heading": "サポート & FAQ",
+  "lead": "よくある質問への回答、既知の制限、サポートの受け方。",
+  "faq": {
+    "heading": "よくある質問"
+  },
+  "limitations": {
+    "heading": "既知の制限",
+    "items": [
+      "<strong>範囲選択はビューポート内のみ</strong> — ドラッグ中はページがロックされるため、画面より下に範囲を広げることはできません。ページ全体をキャプチャして、エディタで切り抜いてください。",
+      "<strong>動的ページと無限スクロールのページ</strong> — キャプチャ エンジンはページの高さを開始時に 1 回だけ測定します。スクロール中に伸びるページは、キャプチャ開始時点の高さで出力されます。遅れて読み込まれる画像も空白になることがあります。各タイルの待機は再描画のための短い時間だけで、新たな取得を待つ時間はありません。",
+      "<strong>設定は同期されません</strong> — テーマ、書き出し形式、ファイル名テンプレートはローカル ストレージに保存され、デバイスやプロファイルの間で同期されません。",
+      "<strong>録画のオーバーレイはページ上に置かれます</strong> — ウェブカメラのプレビューとコントロール バーはページ自体の要素なので、タブの生の映像に映り込みます。書き出し時には、エディタが独自のウェブカメラ バブルを 2 つ目のオーバーレイとして、ページに映り込んだものの上に合成します。コントロール バーはポインターが離れて約 3 秒で自動的に隠れるため、映像の邪魔になりません。カーソルをページ下部中央に移動すると再表示されます。ホバー中と録画の一時停止中は表示されたままになります。"
+    ]
+  },
+  "help": {
+    "heading": "サポートを受ける",
+    "intro": "バグを見つけたとき、機能をリクエストしたいとき、ここに載っていないことで助けが必要なときは:",
+    "items": [
+      "<strong>GitHub issue を開く</strong> — <a href=\"https://github.com/pghqdev/OpenScreenShot/issues\" target=\"_blank\" rel=\"noopener\">github.com/pghqdev/OpenScreenShot/issues</a>",
+      "<strong>レビューを書く</strong> — <a href=\"https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp\" target=\"_blank\" rel=\"noopener\">Chrome ウェブストア</a>へのレビューは、ほかの人がこの拡張機能を見つける助けになります。",
+      "<strong>コントリビュート</strong> — この拡張機能は MIT ライセンスです。プル リクエストを歓迎します。<a href=\"https://github.com/pghqdev/OpenScreenShot/blob/main/CONTRIBUTING.md\" target=\"_blank\" rel=\"noopener\">CONTRIBUTING.md</a> をご覧ください。"
+    ]
+  },
+  "cta": {
+    "heading": "まだお困りですか？",
+    "body": "バグ、機能リクエスト、質問は、すべて同じトラッカーで受け付けています。",
+    "button": "GitHub issue を開く"
+  }
+}

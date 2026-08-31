@@ -1,0 +1,140 @@
+{
+  "meta": {
+    "title": "Full Page Screenshot & Editor for Chrome — OpenScreenShot",
+    "description": "Free, open-source Chrome extension for full page, visible area and region screenshots, with an annotation editor, export to PNG, JPEG, WebP or PDF, and a tab recorder. Nothing leaves your machine."
+  },
+  "hero": {
+    "note": "Free · Open source · MIT licensed",
+    "title1": "Click. Captured. Done.",
+    "title2": "So private it works with Wi-Fi off.",
+    "sub": "Full page, markup, export, tab recording — right in Chrome. No account, no watermark, no cloud.",
+    "viewOnGithub": "View on GitHub",
+    "tablistLabel": "The extension's screens",
+    "credit": "The site in these screenshots is OpenTechCheck, also by us — see what any website is built with.",
+    "creditCta": "Try it now"
+  },
+  "tabs": {
+    "capture": {
+      "label": "Capture",
+      "alt": "The OpenScreenShot popup open over a web page in Chrome, with Full Page, Visible Area, Selected Region and Record options."
+    },
+    "annotate": {
+      "label": "Annotate",
+      "alt": "The OpenScreenShot editor with its tool rail, color palette and stroke controls, showing a full page capture of opentechcheck.com with a box and an arrow drawn on it."
+    },
+    "export": {
+      "label": "Export",
+      "alt": "The export dialog in the OpenScreenShot editor, with PNG selected, JPEG, WebP and PDF beside it, a scale row, a width field and a filename field."
+    },
+    "record": {
+      "label": "Record",
+      "alt": "The OpenScreenShot recorder with a recorded page in the preview, cursor and tab volume controls, and a timeline with two 2x zoom blocks."
+    },
+    "cli": {
+      "label": "CLI & MCP",
+      "short": "CLI"
+    }
+  },
+  "term": {
+    "commentShot": "# One screenshot, straight from your terminal",
+    "commentServe": "# Or an MCP server for your AI agent",
+    "commentConfig": "# Any MCP client config"
+  },
+  "proof": {
+    "ariaLabel": "In numbers",
+    "users": "{n} users on the Chrome Web Store",
+    "stars": "{n} stars on GitHub",
+    "mit": "MIT licensed",
+    "offline": "Works offline"
+  },
+  "quartet": [
+    {
+      "title": "Capture anything",
+      "body": "The whole page, the visible area, or a region you drag. One click, a shortcut, or the right-click menu."
+    },
+    {
+      "title": "Edit before you share",
+      "body": "Arrows, boxes and text to make your point. Blur for the parts nobody else should see."
+    },
+    {
+      "title": "Record the tab",
+      "body": "One click records, with auto zoom at every click. Trim on a timeline, then export WebM."
+    },
+    {
+      "title": "Private by default",
+      "body": "No account, no upload, no telemetry. It works with your Wi-Fi off."
+    }
+  ],
+  "privacy": {
+    "eyebrow": "Privacy",
+    "heading": "Nobody can see what you capture. Not even us.",
+    "lede": "Screenshots are often the most sensitive images on your machine. Capture, editing, export, PDF and recording all run in your browser. The extension makes no network request of its own, and it has no standing access to any site you visit.",
+    "receipt": [
+      {
+        "k": "Account",
+        "v": "None"
+      },
+      {
+        "k": "Upload",
+        "v": "None"
+      },
+      {
+        "k": "Telemetry",
+        "v": "None"
+      },
+      {
+        "k": "Watermark",
+        "v": "None"
+      },
+      {
+        "k": "Host permissions at install",
+        "v": "None"
+      },
+      {
+        "k": "License",
+        "v": "MIT"
+      }
+    ],
+    "installFold": "What it asks for at install",
+    "recordFold": "What recording adds, only when you record",
+    "micFine": "The microphone and camera, when you enable them, are opened by your browser’s own permission prompt. The stream never leaves your device.",
+    "moreFine": "The same tables, with the full policy, on the <a href=\"/privacy/\">Privacy page</a>."
+  },
+  "cli": {
+    "eyebrow": "Agents & CLI",
+    "heading": "Scriptable from your terminal.",
+    "headingMuted": "Still local.",
+    "name": "<code>openscreenshot</code> on npm",
+    "bullets": [
+      "A separate, optional tool for scripts and AI agents",
+      "Drives the Chrome already on your machine",
+      "No browser download, no hosted service",
+      "Also an MCP server, with a <code>capture_screenshot</code> tool"
+    ],
+    "labelShot": "One screenshot",
+    "labelConfig": "MCP client config"
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "heading": "Questions, answered.",
+    "moreFine": "Every question, plus the known limits, on the <a href=\"/support/\">Support page</a>."
+  },
+  "cta": {
+    "heading": "Ready in ten seconds.",
+    "steps": [
+      {
+        "title": "Add it to Chrome",
+        "body": "One click on the Chrome Web Store. Free, and no sign-up."
+      },
+      {
+        "title": "Click the icon",
+        "body": "Or press the shortcut. Pick full page, visible area, or a region."
+      },
+      {
+        "title": "Capture",
+        "body": "Annotate, export, or copy. It never leaves your machine."
+      }
+    ],
+    "browsersFine": "Works on Chrome, Edge, Brave, Arc and other Chromium browsers."
+  }
+}

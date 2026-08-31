@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "title": "Coole Sachen — OpenScreenShot",
+    "description": "Weitere kleine, kostenlose Tools vom Macher von OpenScreenShot: Minimalist Notes, ein ruhiger Ort zum Denken, und Musing, ein neuer Tab mit einem Zitat, das bleibt."
+  },
+  "label": "Ebenfalls von @PGHQdev",
+  "heading": "Coole Sachen",
+  "lead": "Kleine Tools aus derselben Hand wie OpenScreenShot. Jedes ist kostenlos, privat und dafür gemacht, eine Sache gut zu machen.",
+  "tools": [
+    {
+      "name": "Minimalist Notes",
+      "tag": "Ein ruhiger Ort zum Denken.",
+      "body": "Seite öffnen und schreiben. Deine Notizen werden auf deinem Gerät gespeichert, funktionieren offline und brauchen kein Konto. Es gibt nichts einzurichten und nichts zu bezahlen."
+    },
+    {
+      "name": "Musing",
+      "tag": "Lass die Weisheit der Vergangenheit deine Gegenwart leiten.",
+      "body": "Ein neuer Tab, der dich mit einem Zitat empfängt, das bleibt — passend zu dem, worüber du zuletzt nachgedacht hast, ausgewertet auf deinem Gerät. Nichts wird an einen Server geschickt."
+    }
+  ],
+  "thanks": "Alle diese Tools sind komplett geschenkt. Wenn du etwas zurückgeben willst, reicht <a href=\"https://ko-fi.com/T7A624DAY7\" target=\"_blank\" rel=\"noopener\">ein Kaffee</a> völlig."
+}

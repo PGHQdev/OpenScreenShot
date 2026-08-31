@@ -1,0 +1,168 @@
+{
+  "meta": {
+    "title": "說明文件 — OpenScreenShot",
+    "description": "OpenScreenShot 說明文件。如何安裝這個開放原始碼 Chrome 擴充功能，以及如何擷取、註解與匯出截圖。"
+  },
+  "doc": {
+    "label": "安裝 · 擷取 · 註解 · 匯出",
+    "heading": "說明文件",
+    "lead": "如何安裝與使用 OpenScreenShot——開放原始碼的 Chrome 截圖與註解擴充功能。"
+  },
+  "tocHead": "本頁內容",
+  "install": {
+    "heading": "安裝",
+    "intro": "OpenScreenShot 可在 Chrome 線上應用程式商店取得。",
+    "steps": [
+      "在 Chrome 開啟 <a href=\"{storeUrl}\" target=\"_blank\" rel=\"noopener\">OpenScreenShot 的商店頁面</a>。",
+      "點「<strong>加到 Chrome</strong>」。",
+      "接受權限。擴充功能需要使用中的分頁，以及在該分頁執行擷取指令碼的權限。",
+      "OpenScreenShot 圖示會出現在你的工具列。點它即可開啟彈出式視窗。"
+    ]
+  },
+  "capture": {
+    "heading": "擷取截圖",
+    "intro": "點工具列上的 OpenScreenShot 圖示，從三種擷取模式中挑一種。一切都在你的瀏覽器本機執行。啟動擷取有四種方式：",
+    "ways": [
+      "<strong>彈出式視窗</strong>——點一個模式，或按 <kbd>1</kbd>–<kbd>3</kbd>。",
+      "<strong>鍵盤快速鍵</strong>——整個網頁 <kbd>Ctrl+Shift+S</kbd>、可見範圍 <kbd>Alt+Shift+V</kbd>、選取區域 <kbd>Ctrl+Shift+E</kbd>。macOS 上是 <kbd>⌘⇧S</kbd>、<kbd>⌘⇧V</kbd> 和 <kbd>⌘⇧E</kbd>。可到 <code>chrome://extensions/shortcuts</code> 重新綁定。",
+      "<strong>右鍵選單</strong>——任何頁面上的 OpenScreenShot 子選單都提供同樣的三種模式。",
+      "<strong>重複區域</strong>——彈出式視窗底部和右鍵選單可重新擷取上次的區域矩形。這兩個項目在你選取過區域後才會出現。"
+    ],
+    "delay": "彈出式視窗的「<strong>延遲</strong>」列可讓擷取等 3、5 或 10 秒，工具列徽章會倒數。適合用在懸停狀態、下拉選單，以及一點別處就關閉的提示框。"
+  },
+  "modes": {
+    "heading": "擷取模式",
+    "full": {
+      "title": "整個網頁",
+      "body": "擷取整個可捲動的網頁並拼接成一張圖片。擴充功能逐個視窗高度捲動頁面，擷取每個圖塊，再合成在一起。固定式頁首在第一個圖塊被擷取，並且只在頂端合成一次。捲動的是內部元素而非視窗的頁面也可以。"
+    },
+    "visible": {
+      "title": "可見範圍",
+      "body": "立即擷取目前的可視區域，不捲動。想快速截下畫面上正在顯示的內容，就用這個。"
+    },
+    "region": {
+      "title": "選取區域",
+      "body": "按住拖曳畫出矩形。每個邊和角都會出現調整控點。用方向鍵一次微調 1 像素，按住 <kbd>Shift</kbd> 一次移動 10 像素。按 <kbd>Enter</kbd> 確認，按 <kbd>Esc</kbd> 取消。"
+    }
+  },
+  "afterCapture": {
+    "heading": "擷取之後",
+    "intro": "彈出式視窗的「<strong>擷取後</strong>」列決定完成的擷取要做什麼。它套用到每個入口：彈出式視窗按鈕、鍵盤快速鍵和右鍵選單。",
+    "options": [
+      "<strong>編輯器</strong>——在新分頁開啟註解編輯器。這是預設值。",
+      "<strong>剪貼簿</strong>——複製截圖並跳過編輯器。可以直接貼到聊天、文件或 issue 裡。",
+      "<strong>下載</strong>——把截圖存到下載資料夾並跳過編輯器。快速儲存會存成 PNG。"
+    ],
+    "outro": "剪貼簿和下載不會開分頁，所以工具列徽章就是完成的確認。擷取失敗時徽章會閃 <kbd>!</kbd>。彈出式視窗底部的「<strong>重開上一張</strong>」隨時可在編輯器開啟最近一次擷取。"
+  },
+  "annotate": {
+    "heading": "註解",
+    "intro": "編輯器在完整分頁開啟，並從本機儲存空間載入最近一次擷取。每個工具都有一個字母快速鍵。",
+    "tools": [
+      "<strong>選取</strong> <kbd>V</kbd>——移動、調整大小或刪除任何註解。雙擊文字圖層可重新編輯。",
+      "<strong>矩形</strong> <kbd>R</kbd>——畫一個框線矩形。",
+      "<strong>箭頭</strong> <kbd>A</kbd>——畫一個有方向的箭頭。",
+      "<strong>直線</strong> <kbd>L</kbd>——沒有尖端的箭頭。",
+      "<strong>畫筆</strong> <kbd>P</kbd>——自由手繪。",
+      "<strong>螢光筆</strong> <kbd>H</kbd>——半透明的自由筆畫。",
+      "<strong>文字</strong> <kbd>T</kbd>——加入文字方塊，大小由字級控制項決定。",
+      "<strong>步驟編號</strong> <kbd>S</kbd>——會自動遞增的編號標記，刪掉一個時其餘會重新編號。",
+      "<strong>模糊</strong> <kbd>B</kbd>——用柔和模糊、粗馬賽克或不透明填滿遮住敏感內容。不透明填滿在重新壓縮後仍然有效。",
+      "<strong>Spotlight（聚光）</strong> <kbd>O</kbd>——矩形、圓角矩形或橢圓挖空，會合併成同一層變暗遮罩。",
+      "<strong>滴管</strong> <kbd>I</kbd>——從擷取取色。它取樣的是你看到的畫面，所以聚光範圍內或美化漸層上的顏色都照所見取色。顏色列上的色票按鈕會開啟 Chrome 的全螢幕取色器，可取畫布以外的任何顏色。",
+      "<strong>裁切</strong> <kbd>C</kbd>——把圖片修剪成選取的範圍。"
+    ],
+    "outro": "繪製時按住 <kbd>Shift</kbd> 可畫正方形，以及對齊 45° 的直線和箭頭。樣式列有對應 <kbd>1</kbd>–<kbd>8</kbd> 的 8 色調色盤、自訂顏色、最近使用的顏色、三種線寬和字級控制項。你的選擇會跨工作階段記住。復原和重做是 <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>，macOS 上是 <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd>。"
+  },
+  "beautify": {
+    "heading": "Beautify（美化）",
+    "body": "頂欄的「<strong>Beautify（美化）</strong>」面板為截圖加上分享用的外框：邊距、圓角和陰影滑桿，加上六種漸層預設、自訂單色或透明背景。外框即時預覽，並帶進每次匯出、剪貼簿和 PDF。"
+  },
+  "import": {
+    "heading": "註解你已有的圖片",
+    "body": "把圖片檔拖放到編輯器畫面上，或在文字欄位以外用 <kbd>Ctrl+V</kbd> / <kbd>⌘V</kbd> 貼上。匯入的圖片和擷取享有同樣的位置，所以每個工具、美化外框和每條匯出路徑都照常運作，頂欄會顯示「<strong>已匯入</strong>」。匯入會取代畫布，所以有註解會遺失時，編輯器會先詢問。"
+  },
+  "export": {
+    "heading": "匯出",
+    "intro": "點編輯器頂欄的「<strong>匯出</strong>」，或按 <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>。選擇格式：",
+    "formats": [
+      "<strong>PNG</strong>——無損，保留透明。",
+      "<strong>JPEG</strong>——檔案較小，品質可調。",
+      "<strong>WebP</strong>——品質可調如 JPEG，透明如 PNG。",
+      "<strong>PDF</strong>——匯出成單頁圖片、符合 A4/Letter，或分成多頁並保留 5mm 重疊，避免內容被攔腰切斷。"
+    ],
+    "scale": "「<strong>縮放比例</strong>」可用 25、50、100 或 200% 匯出，也可以指定精確的像素寬度。PDF 依頁面調整大小，所以此控制項在 PDF 隱藏。超過 Chrome 畫布上限的尺寸會被拒絕，而非寫出空檔案。",
+    "clipboard": "<kbd>Ctrl+C</kbd> / <kbd>⌘C</kbd> 把完成的圖片直接複製到剪貼簿。匯出對話框也可以把目前設定存為新的預設值。"
+  },
+  "record": {
+    "heading": "錄製分頁",
+    "intro": "點彈出式視窗的「<strong>錄影</strong>」；錄影進行中可按 <kbd>Alt+Shift+X</kbd> 停止。第一次錄影時，Chrome 會顯示一次分頁擷取的權限提示；之後每次錄影都是一鍵開始。",
+    "start": {
+      "title": "開始錄影",
+      "p1": "彈出式視窗的錄影列有三個開關——「<strong>麥克風</strong>」、「<strong>分頁音訊</strong>」和「<strong>視訊鏡頭</strong>」——在按錄影前開啟任何一個即可。開啟麥克風或視訊鏡頭時，擷取開始前，你瀏覽器自己的權限提示會從頁面上的小泡泡出現。",
+      "p2": "如果錄影中跳轉到不同網站，控制列需要選用的「跨網站錄影」權限（見<a href=\"#settings\">設定</a>）才能跟過去。沒有該權限時，工具列徽章會變成琥珀色；點工具列圖示或再與頁面互動，即可重新掛上覆蓋層。"
+    },
+    "bar": {
+      "title": "控制列",
+      "p1": "錄影時頁面底部有一條小控制列：計時器、每個已啟用音軌的標籤，以及暫停/繼續、停止和取消按鈕。開啟視訊鏡頭時，一個可拖曳的圓形預覽會浮在頁面上——拖到哪裡，它整段錄影就停在哪裡。",
+      "p2": "控制列會在游標離開約三秒後自動隱藏，避免出現在錄影裡。把游標移到頁面底部中央就能叫回它。游標懸停在上面時，以及錄影暫停時，它會保持顯示。"
+    },
+    "editor": {
+      "title": "編輯器",
+      "body": "按停止後，錄影編輯器會把你的錄影放上時間軸。編輯器在游標的每次點擊自動加入平滑的 2x 縮放——可以調整或刪除任何一個，也可以手動加入 1.5x、2x 或 3x 的縮放區塊。拖曳控點即可修剪任何片段的開頭或結尾。點擊漣漪標出你點擊的位置；視訊鏡頭泡泡、Beautify（美化）外框和麥克風/分頁音訊音量滑桿都在側邊面板。「顯示游標」會沿著錄下的游標路徑畫出平滑的指標，可在設定欄關閉。"
+    },
+    "export": {
+      "title": "匯出",
+      "body": "匯出會透過畫布重新算繪整段錄影，混入你設定的音軌和效果，並下載一個 WebM 檔案。"
+    }
+  },
+  "drafts": {
+    "heading": "草稿",
+    "body": "編輯過程會即時儲存在本機。如果編輯器分頁關閉或當機，下一個編輯器分頁會把草稿還給你。還原永遠只是一個點擊，所以過期的草稿絕不會蓋掉你想重新開始的擷取。裁切過的圖片有自己的草稿，所以註解絕不會還原到錯的圖片上。"
+  },
+  "shortcuts": {
+    "heading": "鍵盤快速鍵",
+    "intro": "在編輯器按 <kbd>?</kbd> 可看完整的快速鍵表。除了上面的工具字母以外：",
+    "items": [
+      "<kbd>1</kbd>–<kbd>8</kbd>——設定註解顏色。",
+      "<kbd>Ctrl+C</kbd> / <kbd>⌘C</kbd>——複製到剪貼簿。",
+      "<kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>——匯出。",
+      "<kbd>Backspace</kbd>——刪除所選的註解。",
+      "<kbd>Esc</kbd>——取消選取，或取消裁切。",
+      "<kbd>Ctrl</kbd> / <kbd>⌘</kbd> 加 <kbd>+</kbd>、<kbd>−</kbd> 或 <kbd>0</kbd>——放大、縮小、實際大小。<kbd>F</kbd> 符合螢幕。",
+      "<kbd>Space</kbd> + 拖曳——平移畫布。"
+    ],
+    "outro": "<kbd>Alt+Shift+X</kbd> 可在任何地方停止目前的錄影——不需要開著編輯器或彈出式視窗。"
+  },
+  "settings": {
+    "heading": "設定",
+    "intro": "開啟彈出式視窗的齒輪圖示即可設定：",
+    "items": [
+      "<strong>主題</strong>——淺色、深色或系統。",
+      "<strong>預設格式</strong>——PNG、JPEG、WebP 或 PDF。",
+      "<strong>品質</strong>——適用於 JPEG、WebP 和 PDF。",
+      "<strong>檔名範本</strong>——點代碼標籤即可插入 <code>{date}</code>、<code>{time}</code>、<code>{title}</code>、<code>{domain}</code>、<code>{w}</code> 或 <code>{h}</code>。即時預覽會顯示結果。"
+    ],
+    "storage": "設定存在這台裝置的本機儲存空間。面板底部的「<strong>恢復預設值</strong>」需要按兩次。",
+    "recordAcrossSites": "<strong>跨網站錄影</strong>——預設關閉。開啟時會要求選用的 <code>&lt;all_urls&gt;</code> 主機權限，讓錄影控制列和游標圖層能跟著錄影中跳轉到新網站的分頁。"
+  },
+  "agentsCli": {
+    "heading": "AI 代理與 CLI",
+    "intro": "<code>openscreenshot</code>（npm）是獨立、選用的本機工具，讓你從命令列或 AI 代理腳本化截圖。它驅動你機器上現有的 Chrome——不用下載瀏覽器，也沒有託管服務。如果自動找不到你的 Chrome，請設定 <code>CHROME_PATH</code>。",
+    "mcpIntro": "作為 MCP 伺服器時，把這段加入你的 MCP 用戶端設定：",
+    "callOutro": "然後用 <code>{ \"url\": \"https://example.com\" }</code> 呼叫 <code>capture_screenshot</code> 工具。"
+  },
+  "privacy": {
+    "heading": "隱私",
+    "body1": "OpenScreenShot 的所有處理都在你的瀏覽器本機執行。擷取存在 Chrome 本機儲存空間，不會上傳到任何伺服器。錄影、游標記錄和麥克風/視訊鏡頭串流留在你裝置的 IndexedDB 裡，直到你刪除為止。擴充功能沒有分析、沒有遙測，也沒有第三方服務。",
+    "body2": "完整細節請見<a href=\"/privacy/\">隱私權政策</a>。"
+  },
+  "support": {
+    "heading": "取得協助",
+    "body": "常見問題與已知限制請見<a href=\"/support/\">支援與常見問題</a>頁面。如需更多協助，請到 <a href=\"{repoUrl}/issues\" target=\"_blank\" rel=\"noopener\">GitHub</a> 開一個 issue。"
+  },
+  "cta": {
+    "heading": "安裝 OpenScreenShot",
+    "body": "免費、開放原始碼、私密。可在 Chrome 線上應用程式商店取得。"
+  }
+}

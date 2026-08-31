@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "title": "Support & FAQ — OpenScreenShot",
+    "description": "OpenScreenShot-Support — FAQ, Fehlerbehebung, bekannte Grenzen und wie du Hilfe zur Open-Source-Screenshot-Erweiterung für Chrome bekommst."
+  },
+  "label": "Antworten und bekannte Grenzen",
+  "heading": "Support & FAQ",
+  "lead": "Antworten auf häufige Fragen, bekannte Grenzen und wie du Hilfe bekommst.",
+  "faq": {
+    "heading": "Häufig gestellte Fragen"
+  },
+  "limitations": {
+    "heading": "Bekannte Grenzen",
+    "items": [
+      "<strong>Die Ausschnittwahl gilt nur für den sichtbaren Bereich</strong> — die Seite ist beim Ziehen gesperrt, ein Ausschnitt reicht also nicht unter den sichtbaren Bereich. Nimm die ganze Seite auf und schneide sie im Editor zu.",
+      "<strong>Dynamische und endlos scrollende Seiten</strong> — die Aufnahme-Engine misst die Seitenhöhe einmal, am Anfang. Eine Seite, die beim Scrollen wächst, kommt in der Höhe heraus, die sie beim Start der Aufnahme hatte. Spät ladende Bilder können auch leer bleiben: Jede Kachel bekommt eine kurze Pause zum Neuzeichnen, keine Zeit für einen frischen Abruf.",
+      "<strong>Kein Einstellungs-Sync</strong> — Design, Exportformat und Dateinamen-Vorlage liegen im lokalen Speicher und synchronisieren nicht über Geräte oder Profile.",
+      "<strong>Die Aufnahme-Overlays liegen auf der Seite</strong> — die Webcam-Vorschau und die Steuerleiste sind Elemente auf der Seite selbst, das rohe Tab-Video enthält sie also. Beim Export setzt der Editor eine eigene Webcam-Bubble als zweites Overlay über die, die die Seite aufgenommen hat. Die Steuerleiste blendet sich etwa drei Sekunden, nachdem dein Zeiger sie verlässt, aus und bleibt so aus dem Video; bewege den Cursor an die untere Mitte der Seite, um sie zurückzuholen. Sie bleibt sichtbar, solange der Mauszeiger darüber liegt und solange die Aufnahme pausiert."
+    ]
+  },
+  "help": {
+    "heading": "Hilfe bekommen",
+    "intro": "Wenn du auf einen Fehler triffst, dir eine Funktion wünschst oder Hilfe zu etwas brauchst, das hier nicht steht:",
+    "items": [
+      "<strong>Öffne ein GitHub-Issue</strong> — <a href=\"https://github.com/pghqdev/OpenScreenShot/issues\" target=\"_blank\" rel=\"noopener\">github.com/pghqdev/OpenScreenShot/issues</a>",
+      "<strong>Hinterlasse eine Bewertung</strong> im <a href=\"https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp\" target=\"_blank\" rel=\"noopener\">Chrome Web Store</a> — sie hilft anderen, die Erweiterung zu finden.",
+      "<strong>Wirke mit</strong> — die Erweiterung ist MIT-lizenziert. Pull Requests sind willkommen. Siehe <a href=\"https://github.com/pghqdev/OpenScreenShot/blob/main/CONTRIBUTING.md\" target=\"_blank\" rel=\"noopener\">CONTRIBUTING.md</a>."
+    ]
+  },
+  "cta": {
+    "heading": "Kommst du nicht weiter?",
+    "body": "Fehler, Funktionswünsche und Fragen landen alle im selben Tracker.",
+    "button": "GitHub-Issue öffnen"
+  }
+}

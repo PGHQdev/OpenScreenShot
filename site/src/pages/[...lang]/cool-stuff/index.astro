@@ -1,0 +1,105 @@
+---
+import Doc from '../../../layouts/Doc.astro';
+import { t, localePaths, localeFromParams } from '../../../i18n';
+
+export const getStaticPaths = localePaths;
+
+const locale = localeFromParams(Astro.params.lang);
+const d = t(locale, 'cool-stuff');
+
+// Links and link labels stay here; the dictionary carries the copy. The two
+// lists zip by index, so their order must match.
+const toolsMeta = [
+  { href: 'https://minimalistnotes.com', label: 'minimalistnotes.com' },
+  { href: 'https://musing.wiki', label: 'musing.wiki' },
+];
+const tools = toolsMeta.map((meta, i) => ({ ...meta, ...d.tools[i] }));
+---
+
+<Doc
+  title={d.meta.title}
+  description={d.meta.description}
+  path="/cool-stuff/"
+  locale={locale}
+  label={d.label}
+  heading={d.heading}
+  lead={d.lead}
+>
+  <ul class="tools">
+    {
+      tools.map((tool) => (
+        <li class="tool">
+          <h2>
+            <a href={tool.href} target="_blank" rel="noopener">
+              {tool.name}
+            </a>
+          </h2>
+          <p class="tool-tag">{tool.tag}</p>
+          <p class="tool-body">{tool.body}</p>
+          <p class="tool-go">{tool.label} →</p>
+        </li>
+      ))
+    }
+  </ul>
+
+  <p class="doc-fine thanks" set:html={d.thanks} />
+</Doc>
+
+<style>
+  .tools {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    gap: var(--s-5);
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .tool {
+    margin-bottom: 0;
+    padding: var(--s-5);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    background: var(--paper-raised);
+  }
+
+  .tool h2 {
+    margin-bottom: var(--s-2);
+    font-size: var(--fs-xl);
+  }
+
+  .tool h2 a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .tool h2 a:hover {
+    color: var(--accent-ink);
+  }
+
+  .tool-tag {
+    margin-bottom: var(--s-3);
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: var(--fs-lg);
+  }
+
+  .tool-body {
+    font-size: var(--fs-md);
+  }
+
+  .tool-go {
+    margin: 0;
+    color: var(--accent-ink);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: var(--fs-xs);
+    letter-spacing: var(--tr-label);
+    text-transform: uppercase;
+  }
+
+  .thanks {
+    margin-top: var(--s-8);
+  }
+</style>

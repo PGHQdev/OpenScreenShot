@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "title": "Chicche — OpenScreenShot",
+    "description": "Altri piccoli strumenti gratuiti dall'autore di OpenScreenShot: Minimalist Notes, un posto tranquillo per pensare, e Musing, una nuova scheda con una citazione che vale la pena tenere."
+  },
+  "label": "Sempre di @PGHQdev",
+  "heading": "Chicche",
+  "lead": "Piccoli strumenti dalle stesse mani di OpenScreenShot. Ognuno è gratuito, privato e fatto per fare bene una cosa sola.",
+  "tools": [
+    {
+      "name": "Minimalist Notes",
+      "tag": "Un posto tranquillo per pensare.",
+      "body": "Apri la pagina e scrivi. Le tue note vengono salvate sul tuo dispositivo, funzionano offline e non richiedono account. Non c'è nulla da configurare e nulla da pagare."
+    },
+    {
+      "name": "Musing",
+      "tag": "Lascia che la saggezza del passato guidi il tuo presente.",
+      "body": "Una nuova scheda che ti accoglie con una citazione che vale la pena tenere, scelta in base a ciò su cui stai riflettendo e analizzata sul tuo dispositivo. Nulla viene inviato a un server."
+    }
+  ],
+  "thanks": "Tutti questi strumenti sono regalati per intero. Se vuoi ricambiare, <a href=\"https://ko-fi.com/T7A624DAY7\" target=\"_blank\" rel=\"noopener\">un caffè</a> basta e avanza."
+}

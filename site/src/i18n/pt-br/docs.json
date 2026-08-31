@@ -1,0 +1,168 @@
+{
+  "meta": {
+    "title": "Documentação — OpenScreenShot",
+    "description": "Documentação do OpenScreenShot. Como instalar a extensão de código aberto para Chrome e capturar, anotar e exportar capturas de tela."
+  },
+  "doc": {
+    "label": "Instalar · Capturar · Anotar · Exportar",
+    "heading": "Documentação",
+    "lead": "Como instalar e usar o OpenScreenShot, a extensão de código aberto de captura de tela e anotações para Chrome."
+  },
+  "tocHead": "Nesta página",
+  "install": {
+    "heading": "Instalar",
+    "intro": "O OpenScreenShot está disponível na Chrome Web Store.",
+    "steps": [
+      "Abra a <a href=\"{storeUrl}\" target=\"_blank\" rel=\"noopener\">página do OpenScreenShot</a> no Chrome.",
+      "Clique em <strong>Usar no Chrome</strong>.",
+      "Aceite as permissões. A extensão precisa da aba ativa e de permissão para executar o script de captura nela.",
+      "O ícone do OpenScreenShot aparece na barra de ferramentas. Clique nele para abrir o popup."
+    ]
+  },
+  "capture": {
+    "heading": "Fazer uma captura de tela",
+    "intro": "Clique no ícone do OpenScreenShot na barra de ferramentas e escolha um dos três modos de captura. Tudo roda localmente no seu navegador. Há quatro formas de iniciar uma captura:",
+    "ways": [
+      "<strong>O popup</strong> — clique em um modo, ou pressione <kbd>1</kbd>–<kbd>3</kbd>.",
+      "<strong>Um atalho de teclado</strong> — <kbd>Ctrl+Shift+S</kbd> para a página inteira, <kbd>Alt+Shift+V</kbd> para a área visível, <kbd>Ctrl+Shift+E</kbd> para uma região. No macOS são <kbd>⌘⇧S</kbd>, <kbd>⌘⇧V</kbd> e <kbd>⌘⇧E</kbd>. Reatribua em <code>chrome://extensions/shortcuts</code>.",
+      "<strong>O menu do botão direito</strong> — o submenu do OpenScreenShot em qualquer página oferece os mesmos três modos.",
+      "<strong>Repetir região</strong> — o rodapé do popup e o menu do botão direito recapturam o último retângulo de região. Os dois itens aparecem depois que você seleciona uma região."
+    ],
+    "delay": "A linha <strong>Atraso</strong> no popup segura a captura por 3, 5 ou 10 segundos, e o selo na barra de ferramentas faz a contagem regressiva. Use para estados de hover, menus suspensos e tooltips que fecham no momento em que você clica em outro lugar."
+  },
+  "modes": {
+    "heading": "Modos de captura",
+    "full": {
+      "title": "Página inteira",
+      "body": "Captura toda a página com rolagem e a costura em uma única imagem. A extensão rola a página janela por janela, captura cada bloco e os compõe juntos. Cabeçalhos fixos são capturados no primeiro bloco e compostos uma única vez no topo. Páginas que rolam um elemento interno em vez da janela também funcionam."
+    },
+    "visible": {
+      "title": "Área visível",
+      "body": "Captura a área visível atual na hora. Sem rolagem. Use para uma captura rápida do que está na tela agora."
+    },
+    "region": {
+      "title": "Região selecionada",
+      "body": "Clique e arraste para desenhar um retângulo. Alças de redimensionamento aparecem em cada borda e canto. Use as teclas de seta para mover a seleção um pixel por vez, ou segure <kbd>Shift</kbd> para mover dez pixels por vez. Pressione <kbd>Enter</kbd> para confirmar ou <kbd>Esc</kbd> para cancelar."
+    }
+  },
+  "afterCapture": {
+    "heading": "Depois de uma captura",
+    "intro": "A linha <strong>Após capturar</strong> no popup escolhe o que uma captura concluída faz. Vale para todos os pontos de entrada: os botões do popup, os atalhos de teclado e o menu do botão direito.",
+    "options": [
+      "<strong>Editor</strong> — abre o editor de anotações em uma nova aba. Este é o padrão.",
+      "<strong>Copiar</strong> — copia a captura e pula o editor. Cole direto em um chat, um documento ou uma issue.",
+      "<strong>Baixar</strong> — salva a captura na sua pasta de downloads e pula o editor. Os salvamentos rápidos saem em PNG."
+    ],
+    "outro": "Copiar e Baixar não abrem aba, então o selo na barra de ferramentas é a confirmação. Uma captura com falha pisca <kbd>!</kbd> no selo. <strong>Reabrir última</strong> no rodapé do popup abre a captura mais recente no editor a qualquer momento."
+  },
+  "annotate": {
+    "heading": "Anotar",
+    "intro": "O editor abre em uma aba inteira e carrega a captura mais recente do armazenamento local. Cada ferramenta tem um atalho de uma letra.",
+    "tools": [
+      "<strong>Selecionar</strong> <kbd>V</kbd> — mova, redimensione ou exclua qualquer anotação. Clique duas vezes em uma camada de texto para editá-la de novo.",
+      "<strong>Retângulo</strong> <kbd>R</kbd> — desenha um retângulo de contorno.",
+      "<strong>Seta</strong> <kbd>A</kbd> — desenha uma seta direcional.",
+      "<strong>Linha</strong> <kbd>L</kbd> — a seta sem ponta.",
+      "<strong>Caneta</strong> <kbd>P</kbd> — desenho à mão livre.",
+      "<strong>Marca-texto</strong> <kbd>H</kbd> — um traço translúcido à mão livre.",
+      "<strong>Texto</strong> <kbd>T</kbd> — adiciona uma caixa de texto, com tamanho definido pelo controle de fonte.",
+      "<strong>Número do passo</strong> <kbd>S</kbd> — números que contam sozinhos e se renumeram quando você exclui um.",
+      "<strong>Desfoque</strong> <kbd>B</kbd> — oculta conteúdo sensível como desfoque suave, mosaico grosso ou preenchimento opaco. O preenchimento opaco sobrevive à recompressão.",
+      "<strong>Spotlight</strong> <kbd>O</kbd> — recortes em retângulo, retângulo arredondado ou elipse que se fundem em uma única camada escurecida.",
+      "<strong>Conta-gotas</strong> <kbd>I</kbd> — pega uma cor da captura. Ele amostra o que você vê, então uma cor dentro de um spotlight ou em um gradiente do Beautify é capturada como aparece. O botão de amostra na linha de cores abre o seletor de tela inteira do Chrome para qualquer coisa fora do canvas.",
+      "<strong>Recortar</strong> <kbd>C</kbd> — apara a imagem para uma área selecionada."
+    ],
+    "outro": "Segure <kbd>Shift</kbd> enquanto desenha para retângulos quadrados e linhas e setas a 45°. A barra de estilo traz uma paleta de 8 cores em <kbd>1</kbd>–<kbd>8</kbd>, uma cor personalizada, cores recentes, três espessuras de traço e um controle de tamanho de fonte. Suas escolhas são lembradas entre sessões. Desfazer e refazer são <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>, ou <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd> no macOS."
+  },
+  "beautify": {
+    "heading": "Beautify",
+    "body": "O painel <strong>Beautify</strong> na barra superior emoldura a captura para compartilhar: controles de margem interna, raio dos cantos e sombra, mais seis predefinições de gradiente, uma cor sólida personalizada ou um fundo transparente. O quadro tem prévia ao vivo e acompanha todas as exportações, a área de transferência e o PDF."
+  },
+  "import": {
+    "heading": "Anotar uma imagem que você já tem",
+    "body": "Solte um arquivo de imagem sobre a área do editor, ou cole um com <kbd>Ctrl+V</kbd> / <kbd>⌘V</kbd> fora de um campo de texto. A importação ocupa o mesmo lugar de uma captura, então todas as ferramentas, o quadro Beautify e todos os caminhos de exportação continuam funcionando, e a barra superior mostra <strong>Importada</strong>. Importar substitui a tela, então o editor pergunta antes quando há anotações a perder."
+  },
+  "export": {
+    "heading": "Exportar",
+    "intro": "Clique em <strong>Exportar</strong> na barra superior do editor, ou pressione <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>. Escolha um formato:",
+    "formats": [
+      "<strong>PNG</strong> — sem perdas, mantém a transparência.",
+      "<strong>JPEG</strong> — arquivos menores, qualidade ajustável.",
+      "<strong>WebP</strong> — qualidade ajustável como JPEG, transparência como PNG.",
+      "<strong>PDF</strong> — exporte como uma única página de imagem, ajustada a A4/Letter, ou dividida em várias páginas com sobreposição de 5 mm para o conteúdo não ser cortado no meio de uma linha."
+    ],
+    "scale": "<strong>Escala</strong> exporta a 25, 50, 100 ou 200%, ou em uma largura exata em pixels. Fica oculta para PDF, que se ajusta à página. Um tamanho acima do limite de canvas do Chrome é recusado em vez de gravado como um arquivo vazio.",
+    "clipboard": "<kbd>Ctrl+C</kbd> / <kbd>⌘C</kbd> copia a imagem final direto para a área de transferência. O diálogo de exportação também pode salvar as configurações atuais como seus novos padrões."
+  },
+  "record": {
+    "heading": "Gravar uma aba",
+    "intro": "Clique em <strong>Gravar</strong> no popup, ou pressione <kbd>Alt+Shift+X</kbd> para parar quando uma gravação estiver em andamento. Na primeira gravação, o Chrome mostra um único aviso de permissão para a captura de abas; depois disso toda gravação começa em um clique.",
+    "start": {
+      "title": "Iniciar uma gravação",
+      "p1": "A linha Gravar no popup tem três interruptores — <strong>Mic</strong>, <strong>Som da aba</strong> e <strong>Webcam</strong> — ative os que quiser antes de clicar em Gravar. Com o mic ou a webcam ativos, o aviso de permissão do próprio navegador aparece em uma pequena bolha na página antes de a captura começar.",
+      "p2": "Se uma gravação navega para outro site, a barra de controle precisa da permissão opcional “Gravar em todos os sites” (veja <a href=\"#settings\">Configurações</a>) para acompanhá-la. Sem essa permissão o selo da barra de ferramentas fica âmbar; clique no ícone da barra de ferramentas ou interaja com a página de novo para reanexar a sobreposição."
+    },
+    "bar": {
+      "title": "A barra de controle",
+      "p1": "Uma pequena barra fica na parte de baixo da página enquanto você grava: um cronômetro, um chip para cada trilha ativada e os botões Pausar/Retomar, Parar e Cancelar. Com a webcam ativa, uma prévia circular arrastável flutua sobre a página — arraste para onde quiser e ela fica lá pelo resto da gravação.",
+      "p2": "A barra se esconde cerca de três segundos depois que o ponteiro sai dela, para ficar fora da gravação. Mova o cursor até o centro inferior da página para trazê-la de volta. Ela fica visível enquanto você passa o mouse sobre ela e enquanto a gravação está pausada."
+    },
+    "editor": {
+      "title": "O editor",
+      "body": "Parar abre o editor de gravação com a sua tomada em uma linha do tempo. O editor adiciona um zoom suave de 2x a cada clique do seu cursor — ajuste ou exclua qualquer um deles, ou adicione seus próprios blocos de zoom manuais em 1,5x, 2x ou 3x. Apare o início ou o fim de qualquer segmento arrastando as alças. Ondas de clique marcam onde você clicou, e a bolha da webcam, o quadro Beautify e os controles de volume do mic e da aba ficam no painel lateral. Mostrar cursor desenha um ponteiro suave que segue o trajeto gravado do seu cursor; desative nas configurações."
+    },
+    "export": {
+      "title": "Exportar",
+      "body": "Exportar renderiza a tomada de novo via canvas, misturando as trilhas e os efeitos que você definiu, e baixa um arquivo WebM."
+    }
+  },
+  "drafts": {
+    "heading": "Rascunhos",
+    "body": "Suas edições são salvas localmente enquanto você trabalha. Se a aba do editor fechar ou travar, a próxima aba do editor oferece o rascunho de volta. Restaurar é sempre um clique, então um rascunho antigo nunca substitui uma captura que você quis começar do zero. Uma imagem recortada ganha o próprio rascunho, então as anotações nunca são restauradas sobre a imagem errada."
+  },
+  "shortcuts": {
+    "heading": "Atalhos de teclado",
+    "intro": "Pressione <kbd>?</kbd> no editor para a folha completa. Além das letras das ferramentas acima:",
+    "items": [
+      "<kbd>1</kbd>–<kbd>8</kbd> — definem a cor da anotação.",
+      "<kbd>Ctrl+C</kbd> / <kbd>⌘C</kbd> — copia para a área de transferência.",
+      "<kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd> — exporta.",
+      "<kbd>Backspace</kbd> — exclui a anotação selecionada.",
+      "<kbd>Esc</kbd> — limpa a seleção, ou cancela um recorte.",
+      "<kbd>Ctrl</kbd> / <kbd>⌘</kbd> com <kbd>+</kbd>, <kbd>−</kbd> ou <kbd>0</kbd> — aproxima, afasta, tamanho real. <kbd>F</kbd> ajusta à tela.",
+      "<kbd>Espaço</kbd> + arrastar — desloca o canvas."
+    ],
+    "outro": "<kbd>Alt+Shift+X</kbd> interrompe a gravação atual de qualquer lugar — não precisa do editor nem do popup abertos."
+  },
+  "settings": {
+    "heading": "Configurações",
+    "intro": "Abra o ícone de engrenagem no popup para definir:",
+    "items": [
+      "<strong>Tema</strong> — claro, escuro ou sistema.",
+      "<strong>Formato padrão</strong> — PNG, JPEG, WebP ou PDF.",
+      "<strong>Qualidade</strong> — para JPEG, WebP e PDF.",
+      "<strong>Modelo de nome de arquivo</strong> — clique em um chip de token para inserir <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code> ou <code>{h}</code>. Uma prévia ao vivo mostra o resultado."
+    ],
+    "storage": "As configurações ficam no armazenamento local deste dispositivo. <strong>Restaurar padrões</strong> no fim do painel pede dois cliques.",
+    "recordAcrossSites": "<strong>Gravar em todos os sites</strong> — desativado por padrão. Ativá-lo solicita a permissão de host opcional <code>&lt;all_urls&gt;</code>, para que a barra de controle da gravação e a sobreposição do cursor possam seguir uma aba que navega para um novo site no meio da gravação."
+  },
+  "agentsCli": {
+    "heading": "Agentes e CLI",
+    "intro": "<code>openscreenshot</code> (npm) é uma ferramenta local, separada e opcional para automatizar capturas pela linha de comando ou por um agente de IA. Ela usa o Chrome que já está no seu computador — sem download de navegador, sem serviço hospedado. Defina <code>CHROME_PATH</code> se o seu Chrome não for encontrado automaticamente.",
+    "mcpIntro": "Como servidor MCP, adicione isto à configuração do seu cliente MCP:",
+    "callOutro": "Depois chame a ferramenta <code>capture_screenshot</code> com <code>{ \"url\": \"https://example.com\" }</code>."
+  },
+  "privacy": {
+    "heading": "Privacidade",
+    "body1": "O OpenScreenShot processa tudo localmente no seu navegador. As capturas ficam no armazenamento local do Chrome e não são enviadas a nenhum servidor. Gravações, registros do cursor e streams de mic/webcam ficam no IndexedDB do seu dispositivo até você excluí-los. A extensão não tem análise de uso, telemetria nem serviços de terceiros.",
+    "body2": "Veja a <a href=\"/privacy/\">Política de Privacidade</a> para todos os detalhes."
+  },
+  "support": {
+    "heading": "Obter ajuda",
+    "body": "Veja a página de <a href=\"/support/\">Suporte e FAQ</a> para perguntas comuns e limitações conhecidas. Se precisar de mais ajuda, abra uma issue no <a href=\"{repoUrl}/issues\" target=\"_blank\" rel=\"noopener\">GitHub</a>."
+  },
+  "cta": {
+    "heading": "Instale o OpenScreenShot",
+    "body": "Grátis, de código aberto e privado. Disponível na Chrome Web Store."
+  }
+}

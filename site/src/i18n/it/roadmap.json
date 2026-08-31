@@ -1,0 +1,197 @@
+{
+  "meta": {
+    "title": "Roadmap — OpenScreenShot",
+    "description": "Roadmap di OpenScreenShot: funzionalità pianificate e idee per l'estensione Chrome open source per screenshot. Tutto resta 100% locale: nessun server, nessun account."
+  },
+  "doc": {
+    "label": "Rilasciato e in valutazione",
+    "heading": "Roadmap",
+    "lead": "Cosa è stato rilasciato, cosa è in valutazione e cosa resta fuori dagli obiettivi."
+  },
+  "callout": "<strong>La promessa:</strong> tutto su questa pagina resta 100% locale. Nessun server, nessun account, nessuna nuova raccolta di dati, mai. Le voci della roadmap non hanno date. Feedback e pull request decidono cosa viene rilasciato. Versione corrente: <strong>v1.5.0</strong>.",
+  "legend": {
+    "srLabel": "Legenda degli stati:",
+    "exploring": "In valutazione",
+    "shipped": "Rilasciato",
+    "out": "Fuori obiettivo"
+  },
+  "groups": [
+    {
+      "id": "capture",
+      "heading": "Cattura",
+      "items": [
+        {
+          "name": "Lente per la regione e aggancio agli elementi",
+          "status": "exploring",
+          "note": "Una lente di ingrandimento sul mirino mentre trascini, con bordi che si agganciano ai confini degli elementi."
+        },
+        {
+          "name": "Cattura in serie: elenco di URL → un solo PDF",
+          "status": "exploring",
+          "note": "Scorrere e unire più pagine ed esportarle come un unico PDF multipagina. Combina due parti che esistono già."
+        }
+      ]
+    },
+    {
+      "id": "recording",
+      "heading": "Registrazione",
+      "items": [
+        {
+          "name": "Esportazione MP4",
+          "status": "exploring",
+          "note": "WebCodecs più un muxer, accanto all'esportazione WebM esistente."
+        },
+        {
+          "name": "Zoom che segue il cursore",
+          "status": "exploring",
+          "note": "Uno zoom che si sposta per seguire il cursore, invece di restare su blocchi di zoom fissi."
+        },
+        {
+          "name": "Formati predefiniti per piattaforma",
+          "status": "exploring",
+          "note": "Esportare a un rapporto d'aspetto scelto — YouTube, Shorts, quadrato — invece di quello della scheda."
+        },
+        {
+          "name": "Dividi ed elimina dentro un segmento",
+          "status": "exploring",
+          "note": "Tagliare un segmento in due sulla timeline ed eliminare la parte che non vuoi, invece di poter tagliare solo dalle estremità."
+        }
+      ]
+    },
+    {
+      "id": "power",
+      "heading": "Funzioni avanzate",
+      "items": [
+        {
+          "name": "OCR locale: copia il testo da uno screenshot",
+          "status": "exploring",
+          "note": "Riconoscimento del testo in WASM, caricato al primo uso ed eseguito sul tuo dispositivo. Il motore e un file di lingua pesano 10–15 MB, molte volte l'intera estensione, quindi è la dimensione a decidere."
+        }
+      ]
+    },
+    {
+      "id": "performance",
+      "heading": "Prestazioni e rifiniture",
+      "items": [
+        {
+          "name": "Composizione delle porzioni in un worker",
+          "status": "exploring",
+          "note": "Spostare l'unione a pagina intera in un Web Worker con OffscreenCanvas, così l'interfaccia resta reattiva su pagine molto lunghe."
+        },
+        {
+          "name": "Apertura istantanea dell'editor",
+          "status": "exploring",
+          "note": "Precaricare il bundle dell'editor mentre la cattura è in corso, così la scheda si apre quasi all'istante."
+        }
+      ]
+    },
+    {
+      "id": "out-of-scope",
+      "heading": "Fuori obiettivo",
+      "items": [
+        {
+          "name": "Cattura di finestre del desktop o dell'intero schermo",
+          "status": "out",
+          "note": "Richiede il permesso <code>desktopCapture</code>, che aggiunge un avviso all'installazione («cattura il contenuto dello schermo») e un selettore di Chrome a ogni scatto. OpenScreenShot viene distribuito con <code>host_permissions</code> vuoto, e mantenerlo così vale più della funzione."
+        }
+      ]
+    }
+  ],
+  "shipped": {
+    "heading": "Rilasciato",
+    "currentTag": "versione corrente",
+    "releases": [
+      {
+        "version": "v1.5.0",
+        "current": true,
+        "items": [
+          "<strong>Uso completo da tastiera e supporto per screen reader</strong> — un canvas focalizzabile con scorrimento dei livelli, posizionamento, spostamento, ridimensionamento e ritaglio da tastiera; annunci in live region per ogni modifica; roving tabindex su entrambe le barre degli strumenti; indicatori di focus visibili e bersagli di almeno 24×24; supporto per <code>forced-colors</code> e <code>prefers-contrast</code>; e le stringhe dell'interfaccia dell'editor spostate dietro <code>chrome.i18n</code>.",
+          "<strong>Strumento Cut</strong> — segna una o più fasce orizzontali su una cattura a pagina intera e rimuovile con un'anteprima dal vivo. I tagli non sono distruttivi e si annullano come ogni altra modifica.",
+          "<strong>Preset Beautify con nome</strong> — look a un clic che impostano insieme spaziatura, raggio degli angoli, ombra e sfondo, sopra i cursori Beautify esistenti.",
+          "<strong>Maniglie di ritaglio regolabili, con annulla</strong> — otto maniglie di ridimensionamento sul rettangolo di ritaglio, e applicare un ritaglio non svuota più la cronologia di annulla/ripeti.",
+          "<strong>Selezione multipla, duplicazione e spostamento con i tasti freccia</strong> — Shift+clic per selezionare più annotazioni, <code>Alt+D</code> per duplicare e i tasti freccia per spostare la selezione.",
+          "<strong>Cronologia catture</strong> — le ultime dodici catture invece di una, riapribili dall'editor.",
+          "<strong>Fissa una cattura in una finestra flottante</strong> — via Document Picture-in-Picture, l'unica superficie sempre in primo piano offerta da Chrome.",
+          "<strong>Intensità di sfocatura per livello</strong> — un cursore sullo strumento sfocatura invece di un'unica intensità fissa.",
+          "<strong>Configurazione della registrazione in due clic</strong> — <code>tabCapture</code> viene richiesto direttamente dal pulsante Registra al suo primo clic.",
+          "<strong>Annulla nel registratore e barra semplificata</strong> — annulla/ripeti per l'editor di registrazione, Beautify raccolto in un solo popover e «Aggiungi zoom» spostato sulla timeline.",
+          "<strong>Registrazioni raggiungibili dal popup</strong> — un link Registrazioni accanto a Riapri ultima apre l'elenco delle sessioni del registratore, prima irraggiungibile da qualsiasi pulsante. Ogni riga mostra data, durata, dimensione del file, sorgente e quali tracce (mic, audio scheda, webcam) contiene.",
+          "<strong>Interfaccia dell'editor ridisegnata</strong> — una barra degli stili stabile, una barra degli strumenti raggruppata, un cursore e un'area canvas in tema corallo che si adattano a chiaro e scuro, uno stato premuto coerente e veri stati di caricamento ed errore all'esportazione."
+        ]
+      },
+      {
+        "version": "v1.3.0",
+        "items": [
+          "<strong>Barra di controllo a scomparsa</strong> — la barra di controllo della registrazione si nasconde circa tre secondi dopo che il puntatore la lascia, così resta fuori dal video. Sposta il cursore in basso al centro della pagina per farla riapparire. Resta visibile mentre ci passi sopra e mentre la registrazione è in pausa.",
+          "<strong>Cursore sintetico in overlay</strong> — un interruttore «Mostra cursore» nella barra delle impostazioni dell'editor, attivo per impostazione predefinita, disegna un puntatore fluido dal percorso registrato del cursore sia nell'anteprima sia nell'esportazione WebM, perché <code>tabCapture</code> non registra mai il cursore del sistema."
+        ]
+      },
+      {
+        "version": "v1.2.0",
+        "items": [
+          "<strong>Registratore dello schermo con zoom automatico</strong> — registra la scheda corrente, con un permesso <code>tabCapture</code> richiesto una sola volta, alla prima registrazione. L'editor riproduce la ripresa su una timeline con zoom automatico ai clic del cursore, blocchi di zoom manuali e taglio per segmento, poi ricompone l'esportazione tramite canvas, mescolando mic e audio della scheda, effetti clic e una bolla webcam opzionale. Blocchi da 1 secondo arrivano in IndexedDB mentre registri, così un crash o una pagina in background terminata si recuperano."
+        ]
+      },
+      {
+        "version": "v1.1.0",
+        "items": [
+          "<strong>Cattura rapida</strong> — una riga «Dopo la cattura» nel popup manda una cattura all'editor, agli appunti o alla cartella dei download. Copre i pulsanti del popup, le scorciatoie da tastiera e il menu contestuale.",
+          "<strong>Contagocce (<code>I</code>)</strong> — campiona il canvas così com'è disegnato, quindi un colore dentro uno spotlight o su una sfumatura Beautify viene preso come appare. Un campione nella riga colore apre il selettore di Chrome per tutto lo schermo.",
+          "<strong>Trascina, rilascia o incolla qualsiasi immagine</strong> — annota un'immagine che hai già. Un'importazione prende il posto di una cattura, quindi ogni strumento e percorso di esportazione continua a funzionare.",
+          "<strong>Bozze dell'editor sicure in caso di crash</strong> — le modifiche vengono salvate in locale mentre lavori e offerte quando l'editor riapre. Il ripristino è sempre un clic."
+        ]
+      },
+      {
+        "version": "v0.7.0",
+        "items": [
+          "<strong>Modalità Beautify</strong> — spaziatura, angoli arrotondati, ombra e sei sfumature predefinite, una tinta unita o trasparente. Si vede in anteprima dal vivo e arriva in ogni esportazione.",
+          "<strong>Esportazione a qualsiasi scala</strong> — 25 / 50 / 100 / 200% o una larghezza esatta in pixel. Rifiuta le dimensioni oltre i limiti del canvas di Chrome invece di scrivere un file vuoto."
+        ]
+      },
+      {
+        "version": "v0.6.1",
+        "items": [
+          "<strong>Cattura ritardata</strong> — No / 3s / 5s / 10s nel popup, con conto alla rovescia sul badge, per stati hover, menu a discesa e tooltip.",
+          "<strong>Cattura dal menu del tasto destro</strong> — pagina intera, area visibile o regione dal menu della pagina stessa. Rispetta l'impostazione del ritardo.",
+          "<strong>Ripeti regione</strong> — ricattura il rettangolo di selezione precedente dal footer del popup o dal menu contestuale."
+        ]
+      },
+      {
+        "version": "v0.6.0",
+        "items": [
+          "<strong>Oscuramento pieno e a mosaico</strong> — una modalità sullo strumento sfocatura: sfocatura morbida, mosaico a blocchi grossi o un riempimento opaco che resiste alla ricompressione.",
+          "<strong>Strumento Spotlight (<code>O</code>)</strong> — ritagli a rettangolo, rettangolo arrotondato o ellisse che si fondono in un solo livello scurito.",
+          "<strong>Ridimensiona ogni tipo di annotazione</strong> — penna ed evidenziatore scalano sul loro riquadro; testo e badge dei passi scalano dalle maniglie degli angoli."
+        ]
+      },
+      {
+        "version": "v0.5.0",
+        "items": [
+          "<strong>Strumento linea retta (<code>L</code>)</strong> — la freccia senza punta.",
+          "<strong>Vincoli con Shift</strong> — rettangoli e regioni di sfocatura quadrati, e linee e frecce agganciate a 45°.",
+          "<strong>Tasti numerici <code>1</code>–<code>8</code></strong> impostano il colore.",
+          "<strong>Doppio clic su un livello di testo</strong> per modificarlo di nuovo."
+        ]
+      },
+      {
+        "version": "v0.4.0 e precedenti",
+        "items": [
+          "Token nome file <code>{domain}</code>, accanto a <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{w}</code> e <code>{h}</code> (v0.4.0).",
+          "Badge numerati dei passi e strumento evidenziatore (v0.3.0).",
+          "Elenco delle scorciatoie nell'editor, con Esporta su ⌘S (v0.3.0).",
+          "Un solo menu di zoom, con controlli di zoom da tastiera (v0.3.0).",
+          "Campioni con nome, un colore personalizzato e i colori recenti (v0.3.0).",
+          "La finestra di esportazione può salvare le impostazioni come nuovi predefiniti (v0.3.0).",
+          "Token nome file cliccabili con anteprima dal vivo (v0.3.0).",
+          "Link per donazioni Ko-fi nel README, nel sito e nel footer del popup (v0.2.7)."
+        ]
+      }
+    ]
+  },
+  "cta": {
+    "heading": "Decidi cosa arriva dopo.",
+    "body": "Quello che le persone chiedono è quello che viene costruito.",
+    "button": "Suggerisci una funzionalità",
+    "fine": "Vuoi costruirne una tu? Le pull request sono benvenute. Vedi la <a href=\"https://github.com/pghqdev/OpenScreenShot/blob/main/CONTRIBUTING.md\" target=\"_blank\" rel=\"noopener\">guida per contribuire</a>."
+  }
+}

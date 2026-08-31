@@ -1,0 +1,44 @@
+{
+  "install": [
+    {
+      "name": "activeTab",
+      "why": "Nimmt den Tab auf, den du gerade ansiehst, wenn du auf das Symbol klickst, ein Tastenkürzel drückst oder eine Aufnahme aus dem Rechtsklick-Menü wählst. Der Zugriff gilt für diesen einen Tab, für diese eine Aufnahme."
+    },
+    {
+      "name": "scripting",
+      "why": "Injiziert kleine, in sich geschlossene Funktionen in den aufgenommenen Tab: die Seitenhöhe messen und die Seite bei einer Ganzseiten-Aufnahme scrollen, das Overlay zum Aufziehen eines Ausschnitts zeichnen und im Schnellmodus ein Bild in die Zwischenablage schreiben. Jedes Skript steckt im Paket. Kein Remote-Code wird geladen."
+    },
+    {
+      "name": "storage und unlimitedStorage",
+      "why": "Behält deine Einstellungen auf dem Gerät, hält den Screenshot, den die Editor-Seite lädt, merkt sich das letzte Ausschnitt-Rechteck zum Wiederholen und speichert einen laufenden Bearbeitungsentwurf, damit ein geschlossener oder abgestürzter Tab deine Anmerkungen nicht verliert. Ein Ganzseiten-Screenshot kann das Standard-Speicherkontingent überschreiten; genau das hebt unlimitedStorage an."
+    },
+    {
+      "name": "downloads",
+      "why": "Speichert einen Export aus dem Editor oder eine Schnellmodus-Aufnahme in deinem Download-Ordner. Die Erweiterung liest, durchsucht oder öffnet deinen Download-Verlauf nie."
+    },
+    {
+      "name": "contextMenus",
+      "why": "Fügt dem Rechtsklick-Menü der Seite ein OpenScreenShot-Untermenü hinzu, als zweiten Weg, eine Aufnahme zu starten. Die Erweiterung liest nur, welchen Menüpunkt du angeklickt hast."
+    },
+    {
+      "name": "clipboardWrite",
+      "why": "Kopiert einen Screenshot in deine Zwischenablage, über den Kopieren-Button des Editors oder im Schnellmodus. Die Erweiterung schreibt immer nur den Screenshot, den du gerade aufgenommen oder exportiert hast. Sie liest nie, was schon in deiner Zwischenablage liegt."
+    },
+    {
+      "name": "offscreen",
+      "why": "Lässt die Aufnahme-Engine in einem versteckten Dokument laufen. Die MediaRecorder-Aufnahme und die absturzsicheren IndexedDB-Chunk-Schreibvorgänge brauchen einen Seitenkontext, den ein Service Worker nicht hat. Immer vorhanden; sie fügt keine Warnung bei der Installation hinzu."
+    }
+  ],
+  "recording": [
+    {
+      "name": "tabCapture",
+      "why": "Erfasst das Video des aktuellen Tabs, und sein Audio, wenn du die Tab-Audio-Spur aktivierst, für die Aufnahme.",
+      "when": "Einmal, beim ersten Klick auf Aufnehmen — eine einzige Chrome-Berechtigungsabfrage."
+    },
+    {
+      "name": "<all_urls>",
+      "why": "Die optionale Host-Berechtigung. Sie hält die Cursor-Anzeige und die Aufnahmesteuerung auf der Seite am Leben, wenn der Tab einer Aufnahme zu einer anderen Origin wechselt.",
+      "when": "Nur wenn du „Auf allen Websites aufnehmen“ in den Einstellungen aktivierst."
+    }
+  ]
+}

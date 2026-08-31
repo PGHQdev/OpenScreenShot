@@ -1,0 +1,189 @@
+---
+import Doc from '../../../layouts/Doc.astro';
+import { t, localePaths, localeFromParams } from '../../../i18n';
+
+export const getStaticPaths = localePaths;
+
+const locale = localeFromParams(Astro.params.lang);
+const d = t(locale, 'roadmap');
+
+const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
+
+// Roadmap groups and the release log live in the dictionary; `id`, `status`
+// ('exploring' | 'out'), `version`, and `current` are machine fields that stay
+// identical across locales. Notes and release items are HTML fragments.
+type Item = { name: string; status: string; note: string };
+type Group = { id: string; heading: string; items: Item[] };
+type Release = { version: string; current?: boolean; items: string[] };
+---
+
+<Doc
+  title={d.meta.title}
+  description={d.meta.description}
+  path="/roadmap/"
+  locale={locale}
+  label={d.doc.label}
+  heading={d.doc.heading}
+  lead={d.doc.lead}
+>
+  <p class="doc-callout" set:html={d.callout} />
+
+  <p class="legend">
+    <span class="visually-hidden">{d.legend.srLabel}</span>
+    <span class="status is-exploring">{d.legend.exploring}</span>
+    <span class="status is-shipped">{d.legend.shipped}</span>
+    <span class="status is-out">{d.legend.out}</span>
+  </p>
+
+  {
+    d.groups.map((group: Group) => (
+      <section class="doc-section" id={group.id}>
+        <h2>{group.heading}</h2>
+        <ul class="items">
+          {group.items.map((item) => (
+            <li>
+              <p class="item-head">
+                <strong>{item.name}</strong>
+                <span
+                  class:list={[
+                    'status',
+                    item.status === 'exploring' ? 'is-exploring' : 'is-out',
+                  ]}
+                >
+                  {item.status === 'exploring' ? d.legend.exploring : d.legend.out}
+                </span>
+              </p>
+              <p class="item-note" set:html={item.note} />
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+
+  <section class="doc-section" id="shipped">
+    <h2>{d.shipped.heading}</h2>
+    {
+      d.shipped.releases.map((release: Release) => (
+        <div class="release">
+          <p class="release-ver">
+            {release.version}
+            {release.current && <span class="release-tag">{d.shipped.currentTag}</span>}
+          </p>
+          <ul>
+            {release.items.map((item) => (
+              <li set:html={item} />
+            ))}
+          </ul>
+        </div>
+      ))
+    }
+  </section>
+
+  <section class="doc-cta">
+    <div class="card doc-cta-card">
+      <h2>{d.cta.heading}</h2>
+      <p>{d.cta.body}</p>
+      <a class="btn btn-ink" href={`${REPO_URL}/issues/new`} target="_blank" rel="noopener">
+        {d.cta.button}
+      </a>
+      <p class="doc-fine" set:html={d.cta.fine} />
+    </div>
+  </section>
+</Doc>
+
+<style>
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    margin-bottom: 0;
+  }
+
+  .status {
+    display: inline-block;
+    padding: 0.15em 0.7em;
+    border: 1px solid var(--border);
+    border-radius: var(--r-full);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: var(--fs-xs);
+    letter-spacing: var(--tr-label);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .is-exploring {
+    color: var(--ink-2);
+  }
+
+  .is-shipped {
+    color: var(--accent-ink);
+    border-color: var(--accent-ink);
+  }
+
+  .is-out {
+    color: var(--ink-3);
+  }
+
+  /* ---- Not built yet ---- */
+
+  .items {
+    padding: 0;
+    list-style: none;
+  }
+
+  .items > li {
+    margin-bottom: 0;
+    padding: var(--s-4) 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .item-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-2) var(--s-4);
+    margin-bottom: var(--s-2);
+  }
+
+  .item-head strong {
+    font-size: var(--fs-md);
+  }
+
+  .item-note {
+    margin: 0;
+    font-size: var(--fs-md);
+  }
+
+  /* ---- Release log ---- */
+
+  .release {
+    margin-top: var(--s-6);
+  }
+
+  .release-ver {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--s-3);
+    margin-bottom: var(--s-3);
+    color: var(--ink);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: var(--fs-sm);
+    letter-spacing: var(--tr-label);
+  }
+
+  .release-tag {
+    color: var(--accent-ink);
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+  }
+
+  .release ul {
+    margin: 0;
+    font-size: var(--fs-md);
+  }
+</style>

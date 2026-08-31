@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "title": "Politique de confidentialité — OpenScreenShot",
+    "description": "OpenScreenShot ne collecte rien. Ni analytics, ni télémétrie, ni comptes, ni serveurs. Chaque capture, annotation et export s’exécute en local dans votre navigateur."
+  },
+  "label": "Zéro collecte de données",
+  "heading": "Politique de confidentialité",
+  "lead": "OpenScreenShot ne collecte rien. Il n’y a ni serveurs, ni comptes, ni analytics.",
+  "updated": "Dernière mise à jour : août 2026",
+  "callout": "<strong>Zéro collecte de données.</strong> OpenScreenShot ne collecte, ne stocke, ne transmet et ne partage aucune donnée personnelle, aucune donnée d’usage, ni aucune autre information de ses utilisateurs.",
+  "howItWorks": {
+    "heading": "Comment ça marche",
+    "body": "Chaque partie de l’extension s’exécute en local dans votre navigateur : capture de page, assemblage d’images, édition d’annotations, enregistrement d’écran et export. Aucune donnée ne quitte jamais votre appareil. L’extension ne fait aucune requête réseau d’elle-même et ne déclare aucune autorisation d’hôte permanente : elle n’a donc aucun accès en arrière-plan aux sites que vous visitez."
+  },
+  "permissions": {
+    "heading": "Autorisations",
+    "body": "Chaque autorisation que l’extension demande a un objectif unique et précis."
+  },
+  "recording": {
+    "heading": "Enregistrement d’écran",
+    "body": "Les enregistrements, les journaux de curseur et les flux du micro ou de la webcam sont traités comme les captures d’écran : entièrement sur votre appareil. Les segments vidéo, le journal du curseur et l’audio éventuel sont écrits dans IndexedDB pendant l’enregistrement et y restent jusqu’à ce que vous supprimiez la session ; rien n’est jamais téléversé. L’enregistrement utilise deux autorisations supplémentaires, toutes deux facultatives et demandées seulement quand vous utilisez l’enregistreur.",
+    "streams": "Le micro et la caméra, quand vous les activez, sont ouverts directement par l’invite d’autorisation de votre propre navigateur. L’extension ne voit aucun flux avant votre accord, et le flux ne quitte jamais votre appareil."
+  },
+  "thirdParty": {
+    "heading": "Services tiers",
+    "body": "OpenScreenShot n’utilise aucun service tiers d’analytics, de publicité ou de traitement de données. L’export PDF repose sur un petit générateur intégré à l’extension : exporter un PDF ne fait donc aucune requête réseau non plus."
+  },
+  "changes": {
+    "heading": "Modifications de cette politique",
+    "body": "Si cette politique change, la version mise à jour est publiée sur cette page avec une nouvelle date de <em>Dernière mise à jour</em>."
+  },
+  "contact": {
+    "heading": "Contact",
+    "body": "Pour toute question sur cette politique, ouvrez un ticket sur le <a href=\"https://github.com/pghqdev/OpenScreenShot/issues\" target=\"_blank\" rel=\"noopener\">dépôt GitHub</a>."
+  }
+}
