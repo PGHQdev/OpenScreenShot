@@ -224,6 +224,10 @@ async function testEditor(browser, base, messages) {
   await page.goto(`${base}/src/editor/index.html`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900)); // controller's initial fit, see editor-keyboard-smoke
+  // The editor opens in View mode (no rail, no style bar); Markup is the
+  // chrome this file measures.
+  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar');
   // The Rectangle tool has a style bar (color, stroke, shape); Select does not.
   await page.click(`.tool-btn[title^="${messages.editorToolRectangle.message}"]`);
   await page.waitForSelector('.stylebar');
@@ -251,21 +255,41 @@ async function testEditor(browser, base, messages) {
     `toolbar does not need to scroll at 1280px (${wideEditor.toolbarScrollH}px content in ${wideEditor.toolbarClientH}px box)`,
   );
 
-  step('EDITOR — 320px width: no horizontal overflow, every tool present');
+  step('EDITOR — 320px width: no horizontal overflow, every tool reachable');
   await page.setViewport({ width: 320, height: 800 });
   await new Promise((r) => setTimeout(r, 150));
   const overflow320 = await noHorizontalOverflow(page, 320);
   assert(overflow320.ok, `document.scrollWidth ${overflow320.scrollWidth} <= 320`);
-  // Counted out of TOOL_LIST rather than written down here, so adding a tool
-  // does not turn this into a check of a number nobody updated.
-  const expectedTools = (
-    readFileSync(join(ROOT, 'src/editor/tools.ts'), 'utf8').match(/\{ id: '[a-z]+', label: /g) ?? []
+  // Counted out of tools.ts rather than written down here, so moving a tool
+  // between the rail and the More overflow does not turn this into a check
+  // of a number nobody updated.
+  const toolsSource = readFileSync(join(ROOT, 'src/editor/tools.ts'), 'utf8');
+  const expectedTools = (toolsSource.match(/\{ id: '[a-z]+', label: /g) ?? []).length;
+  const expectedPrimary = (
+    toolsSource.match(/PRIMARY_TOOLS: readonly Tool\[\] = \[([^\]]+)\]/)?.[1].match(/'[a-z]+'/g) ??
+    []
   ).length;
-  const toolCount = await page.$$eval('.tool-btn', (els) => els.length);
+  // The rail: the primary tools plus the More trigger.
+  const toolCount = await page.$$eval('.toolbar .tool-btn', (els) => els.length);
   assert(
-    expectedTools > 0 && toolCount === expectedTools,
-    `toolbar renders all ${expectedTools} tools at 320px width (${toolCount} found)`,
+    expectedPrimary > 0 && toolCount === expectedPrimary + 1,
+    `toolbar renders ${expectedPrimary} primary tools plus More at 320px width (${toolCount} found)`,
   );
+  // ...and the overflow: everything else, inside the More popover.
+  await page.click(`.toolbar .tool-btn[title="${messages.editorMoreTools.message}"]`);
+  await page.waitForSelector('.more-popover');
+  const overflowCount = await page.$$eval('.more-item', (els) => els.length);
+  assert(
+    expectedTools > expectedPrimary && overflowCount === expectedTools - expectedPrimary,
+    `More popover lists the ${expectedTools - expectedPrimary} overflow tools (${overflowCount} found)`,
+  );
+  const popoverFits = await page.evaluate(() => {
+    const r = document.querySelector('.more-popover').getBoundingClientRect();
+    return r.left >= 0 && r.right <= 320 && r.top >= 0 && r.bottom <= 800;
+  });
+  assert(popoverFits, 'More popover stays inside a 320x800 viewport');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('.more-popover'));
   const stylebarWraps = await page.$eval('.stylebar', (el) => el.scrollHeight > 40);
   assert(stylebarWraps, 'stylebar wraps to more than one row rather than clipping horizontally');
 

@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { isTypingTarget, useEditor } from './useEditor';
-import { TOOL_DIVIDER_AFTER, TOOL_LIST, type Tool } from './tools';
+import {
+  OVERFLOW_TOOLS,
+  PRIMARY_TOOLS,
+  TOOL_DIVIDER_AFTER,
+  TOOL_LIST,
+  type Tool,
+  type ToolDef,
+} from './tools';
 import { IMAGE_FORMATS, type ImageFormat } from './export';
 import { clampPdfMargin, MAX_PDF_MARGIN_MM, MIN_PDF_MARGIN_MM, type PdfOptions } from './pdf';
 import {
@@ -29,6 +36,7 @@ import {
   IconImage,
   IconLayers,
   IconLine,
+  IconMore,
   IconPen,
   IconPictureInPicture,
   IconRectangle,
@@ -160,12 +168,13 @@ export function App() {
     !!ed.draftPrompt,
   );
 
-  // TOOL_LIST is fixed, so the tool rail's members never change: one sync at
-  // mount is enough to seed the roving tabindex (member 0 starts as the tab
-  // stop). The focusin handler on the toolbar keeps it in sync after that.
+  // The rail's members are fixed while it is on screen, so one sync when
+  // Markup mounts it is enough to seed the roving tabindex (member 0 starts
+  // as the tab stop). The focusin handler on the toolbar keeps it in sync
+  // after that. Keyed to the mode: the rail does not exist in View.
   useEffect(() => {
     if (toolbarRef.current) syncRovingTabIndex(toolbarRef.current);
-  }, []);
+  }, [ed.mode]);
 
   // The one post-success rate prompt (Surface C). Marked shown the moment it
   // renders, so it appears at most once per install however it is answered.
@@ -198,6 +207,30 @@ export function App() {
       })
       .catch(() => setCopyState('failed'))
       .finally(() => setTimeout(() => setCopyState('idle'), 1500));
+  }
+
+  const [pdfFailed, setPdfFailed] = useState(false);
+
+  // The header's one-click PDF: the stored PDF preferences, the default
+  // filename, no dialog. The export dialog stays the place to change them.
+  async function exportPdfDirect() {
+    // ed.settings is a mount-time snapshot; a "Remember these settings" from
+    // an earlier export dialog lives only in storage. Same re-read as
+    // ExportDialog's own effect.
+    const s = await getSettings().catch(() => ed.settings);
+    const opts: PdfOptions = {
+      pageSize: s?.pdfPageSize ?? 'a4',
+      orientation: s?.pdfOrientation ?? 'portrait',
+      multiPage: s?.pdfMultiPage ?? true,
+      marginMm: s?.pdfMarginMm ?? 8,
+    };
+    try {
+      await ed.exportPdf(opts, ed.defaultFilename());
+      void recordSuccess();
+    } catch {
+      setPdfFailed(true);
+      setTimeout(() => setPdfFailed(false), 1500);
+    }
   }
 
   // Cmd/Ctrl+C copies the composed image, unless the user is typing or has
@@ -256,13 +289,16 @@ export function App() {
     return () => window.removeEventListener('paste', onPaste);
   }, [ed.importFromFile]);
 
-  const cursor = ed.spaceHeld
-    ? 'grab'
-    : ed.tool === 'text'
-      ? 'text'
-      : ed.tool === 'select'
-        ? 'default'
-        : 'crosshair';
+  const inMarkup = ed.mode === 'markup';
+  // View mode drags always pan (see onCanvasMouseDown), so the cursor says so.
+  const cursor =
+    ed.spaceHeld || !inMarkup
+      ? 'grab'
+      : ed.tool === 'text'
+        ? 'text'
+        : ed.tool === 'select'
+          ? 'default'
+          : 'crosshair';
 
   return (
     <div class="editor">
@@ -274,35 +310,40 @@ export function App() {
           <span class="brand-name">OpenScreenShot</span>
           {ed.capture ? <span class="brand-mode">{labelForSource(ed.capture.mode)}</span> : null}
         </div>
-        <div class="topbar-actions" role="group" aria-label={t('editorAriaDocumentActions')}>
-          <button
-            class="icon-btn"
-            title={t('editorUndoTitle')}
-            disabled={!ed.canUndo}
-            onClick={ed.undo}
-            aria-label={t('editorUndoLabel')}
-          >
-            <IconUndo />
-          </button>
-          <button
-            class="icon-btn"
-            title={t('editorRedoTitle')}
-            disabled={!ed.canRedo}
-            onClick={ed.redo}
-            aria-label={t('editorRedoLabel')}
-          >
-            <IconRedo />
-          </button>
-          <button
-            class="icon-btn icon-btn-danger"
-            title={t('editorDeleteSelectedTitle')}
-            disabled={!ed.hasSelection}
-            onClick={ed.deleteSelection}
-            aria-label={t('editorDeleteSelectedLabel')}
-          >
-            <IconTrash />
-          </button>
-        </div>
+        {inMarkup ? (
+          <div class="topbar-actions" role="group" aria-label={t('editorAriaDocumentActions')}>
+            <button class="btn-secondary" onClick={ed.exitMarkup}>
+              {t('editorDone')}
+            </button>
+            <button
+              class="icon-btn"
+              title={t('editorUndoTitle')}
+              disabled={!ed.canUndo}
+              onClick={ed.undo}
+              aria-label={t('editorUndoLabel')}
+            >
+              <IconUndo />
+            </button>
+            <button
+              class="icon-btn"
+              title={t('editorRedoTitle')}
+              disabled={!ed.canRedo}
+              onClick={ed.redo}
+              aria-label={t('editorRedoLabel')}
+            >
+              <IconRedo />
+            </button>
+            <button
+              class="icon-btn icon-btn-danger"
+              title={t('editorDeleteSelectedTitle')}
+              disabled={!ed.hasSelection}
+              onClick={ed.deleteSelection}
+              aria-label={t('editorDeleteSelectedLabel')}
+            >
+              <IconTrash />
+            </button>
+          </div>
+        ) : null}
         <div class="topbar-controls">
           <button
             class="icon-btn"
@@ -338,24 +379,26 @@ export function App() {
             onZoomOut={ed.zoomOut}
             onFit={ed.fit}
             onActualSize={ed.resetZoom}
+            onZoomTo={ed.zoomTo}
           />
-          <BeautifyMenu
-            frame={ed.frame}
-            disabled={!ed.hasImage}
-            imageSize={ed.imageSize}
-            onChange={ed.setFrame}
-          />
+          {inMarkup ? (
+            <BeautifyMenu
+              frame={ed.frame}
+              disabled={!ed.hasImage}
+              imageSize={ed.imageSize}
+              onChange={ed.setFrame}
+            />
+          ) : (
+            <button
+              class="btn-secondary markup-btn"
+              disabled={!ed.hasImage}
+              onClick={ed.enterMarkup}
+            >
+              {t('editorMarkup')}
+            </button>
+          )}
           <button
-            class="icon-btn rate-btn"
-            title={t('editorRateTooltip')}
-            aria-label={t('editorRateLabel')}
-            onClick={openReviews}
-          >
-            <IconStar size={16} />
-            {t('editorRateLabel')}
-          </button>
-          <button
-            class="btn-primary btn-fixed"
+            class="btn-secondary btn-fixed"
             title={t('editorCopyTitle')}
             disabled={!ed.hasImage}
             onClick={copyToClipboard}
@@ -368,53 +411,73 @@ export function App() {
           </button>
           <button
             class="btn-secondary"
-            title={t('editorExportTitle')}
+            title={t('editorPdfTitle')}
+            disabled={!ed.hasImage || ed.exporting}
+            onClick={() => void exportPdfDirect()}
+          >
+            {pdfFailed ? t('editorPdfFailed') : t('editorPdfLabel')}
+          </button>
+          <button
+            class="btn-primary"
+            title={t('editorSaveImageTitle')}
             disabled={!ed.hasImage}
             onClick={() => setExportOpen(true)}
           >
-            {t('editorExport')}
+            {t('editorSaveImage')}
+          </button>
+          <button
+            class="icon-btn rate-btn"
+            title={t('editorRateTooltip')}
+            aria-label={t('editorRateLabel')}
+            onClick={openReviews}
+          >
+            <IconStar size={16} />
+            {t('editorRateLabel')}
           </button>
         </div>
       </header>
 
-      <StyleBar ed={ed} />
+      {inMarkup ? <StyleBar ed={ed} /> : null}
 
       <div class="workspace">
-        <aside
-          class="toolbar"
-          role="toolbar"
-          aria-orientation="vertical"
-          aria-label={t('editorAriaAnnotationTools')}
-          ref={toolbarRef}
-          onKeyDown={(e) => arrowNav(e.currentTarget as HTMLElement, e)}
-          onFocusIn={(e) =>
-            syncRovingTabIndex(e.currentTarget as HTMLElement, e.target as HTMLElement)
-          }
-        >
-          {TOOL_LIST.map((t) => (
-            <>
-              <button
-                key={t.id}
-                class={`tool-btn${ed.tool === t.id ? ' is-active' : ''}`}
-                title={`${t.label} (${t.shortcut})`}
-                aria-pressed={ed.tool === t.id}
-                onClick={() => ed.setTool(t.id)}
-              >
-                <ToolIcon id={t.id} />
-              </button>
-              {TOOL_DIVIDER_AFTER.has(t.id) ? (
-                <div class="toolbar-divider" role="separator" aria-orientation="horizontal" />
-              ) : null}
-            </>
-          ))}
+        {inMarkup ? (
+          <aside
+            class="toolbar"
+            role="toolbar"
+            aria-orientation="vertical"
+            aria-label={t('editorAriaAnnotationTools')}
+            ref={toolbarRef}
+            onKeyDown={(e) => arrowNav(e.currentTarget as HTMLElement, e)}
+            onFocusIn={(e) =>
+              syncRovingTabIndex(e.currentTarget as HTMLElement, e.target as HTMLElement)
+            }
+          >
+            {PRIMARY_TOOLS.map((id) => TOOL_LIST.find((x) => x.id === id)!).map((t) => (
+              <>
+                <button
+                  key={t.id}
+                  class={`tool-btn${ed.tool === t.id ? ' is-active' : ''}`}
+                  title={`${t.label} (${t.shortcut})`}
+                  aria-pressed={ed.tool === t.id}
+                  onClick={() => ed.setTool(t.id)}
+                >
+                  <ToolIcon id={t.id} />
+                </button>
+                {TOOL_DIVIDER_AFTER.has(t.id) ? (
+                  <div class="toolbar-divider" role="separator" aria-orientation="horizontal" />
+                ) : null}
+              </>
+            ))}
+            <MoreTools ed={ed} />
 
-          {ed.annotations.length > 0 ? (
-            <div class="toolbar-count" title={annotationCount(ed.annotations.length)}>
-              <IconLayers size={14} />
-              <span>{ed.annotations.length}</span>
-            </div>
-          ) : null}
-        </aside>
+            {ed.annotations.length > 0 ? (
+              <div class="toolbar-count" title={annotationCount(ed.annotations.length)}>
+                <IconLayers size={14} />
+                <span>{ed.annotations.length}</span>
+              </div>
+            ) : null}
+          </aside>
+        ) : null}
 
         <div
           class="stage"
@@ -542,7 +605,7 @@ export function App() {
       <footer class="statusbar">
         <span>{ed.imageSize ? `${ed.imageSize.w} × ${ed.imageSize.h}px` : '—'}</span>
         <span class="status-spacer" />
-        <span class="status-hint">{hintForTool(ed.tool)}</span>
+        <span class="status-hint">{inMarkup ? hintForTool(ed.tool) : t('editorViewHint')}</span>
       </footer>
 
       {/*
@@ -1446,6 +1509,121 @@ function EmptyState() {
         </button>
         {failed ? <p class="empty-fallback">{t('editorOpenExtensionIcon')}</p> : null}
       </div>
+    </div>
+  );
+}
+
+/**
+ * The tool rail's overflow: every TOOL_LIST member not in PRIMARY_TOOLS
+ * (OVERFLOW_TOOLS). Popover mechanics mirror ZoomMenu's: capture-phase keys so
+ * the editor's window shortcuts stay out, Escape restores the trigger, Tab
+ * closes and moves on.
+ */
+function MoreTools({ ed }: { ed: ReturnType<typeof useEditor> }) {
+  const [open, setOpen] = useState(false);
+  const { mounted, closing } = useExitDelay(open, DUR_MID);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  const overflow: ToolDef[] = OVERFLOW_TOOLS.map((id) => TOOL_LIST.find((x) => x.id === id)!);
+  const active = overflow.find((x) => x.id === ed.tool) ?? null;
+
+  useEffect(() => {
+    if (!open) return;
+    const popover = popoverRef.current;
+    // position: fixed, placed beside the trigger by hand: the rail scrolls,
+    // and its overflow would clip an absolutely positioned child at the
+    // rail's 48px edge (see .more-popover in editor.css). Clamped so a short
+    // window still shows the whole menu.
+    const trig = triggerRef.current;
+    if (popover && trig) {
+      const r = trig.getBoundingClientRect();
+      const top = Math.max(8, Math.min(r.top, window.innerHeight - popover.offsetHeight - 8));
+      popover.style.top = `${top}px`;
+      popover.style.left = `${r.right + 10}px`;
+    }
+    const items = popover ? getFocusable(popover) : [];
+    items[0]?.focus();
+    if (popover) syncRovingTabIndex(popover, items[0]);
+
+    const onDown = (e: MouseEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onFocusIn = () => {
+      if (popover) syncRovingTabIndex(popover, document.activeElement as HTMLElement | null);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      e.stopPropagation();
+      if (e.key === 'Escape') {
+        setOpen(false);
+        triggerRef.current?.focus();
+        return;
+      }
+      if (e.key === 'Tab') {
+        setOpen(false);
+        return;
+      }
+      if (
+        popover &&
+        (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Home' || e.key === 'End')
+      ) {
+        arrowNav(popover, e);
+      }
+    };
+    window.addEventListener('mousedown', onDown);
+    window.addEventListener('keydown', onKey, true);
+    popover?.addEventListener('focusin', onFocusIn);
+    return () => {
+      window.removeEventListener('mousedown', onDown);
+      window.removeEventListener('keydown', onKey, true);
+      popover?.removeEventListener('focusin', onFocusIn);
+    };
+  }, [open]);
+
+  return (
+    <div class="more-tools" ref={wrapRef}>
+      <button
+        ref={triggerRef}
+        class={`tool-btn${active ? ' is-active' : ''}`}
+        title={t('editorMoreTools')}
+        aria-label={t('editorMoreTools')}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        {/* An armed overflow tool shows itself here, so the rail never hides
+            the active tool behind three dots. */}
+        {active ? <ToolIcon id={active.id} /> : <IconMore />}
+      </button>
+      {mounted ? (
+        <div
+          class={`more-popover${closing ? ' is-closing' : ''}`}
+          role="menu"
+          aria-orientation="vertical"
+          ref={popoverRef}
+          inert={closing}
+        >
+          {overflow.map((x) => (
+            <button
+              key={x.id}
+              class="more-item"
+              role="menuitemradio"
+              aria-checked={ed.tool === x.id}
+              tabIndex={-1}
+              onClick={() => {
+                ed.setTool(x.id);
+                setOpen(false);
+                triggerRef.current?.focus();
+              }}
+            >
+              <ToolIcon id={x.id} />
+              <span>{x.label}</span>
+              <kbd>{x.shortcut}</kbd>
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

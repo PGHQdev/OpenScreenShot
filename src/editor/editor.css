@@ -605,6 +605,79 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* ---- More tools (the rail's overflow popover) ---- */
+/* position: fixed, coordinates set from the trigger at open (App.tsx):
+   .toolbar scrolls, and a scroll container clips an absolutely positioned
+   child, so anchoring inside the rail would cut the popover off at 48px. */
+.more-popover {
+  position: fixed;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 190px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  box-shadow: var(--sh-md);
+  animation: oss-pop-in var(--dur-mid) var(--ease-out);
+  transition:
+    opacity var(--dur-mid) var(--ease-out),
+    transform var(--dur-mid) var(--ease-out);
+}
+
+/* Applied by transition.ts's useExitDelay — see .zoom-popover.is-closing. */
+.more-popover.is-closing {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+  pointer-events: none;
+}
+
+.more-item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 30px;
+  padding: 0 8px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-1);
+  font-size: var(--fs-base);
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.more-item:hover {
+  background: var(--hover-overlay);
+}
+
+.more-item:active {
+  transform: scale(0.98);
+}
+
+.more-item:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: -2px;
+}
+
+.more-item[aria-checked='true'] {
+  background: var(--accent-subtle);
+  color: var(--accent-ink);
+}
+
+.more-item span {
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+/* Same hover-contrast reasoning as .zoom-item kbd above. */
+.more-item kbd {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+
 .btn-sm {
   height: 28px;
   padding: 0 10px;
@@ -1437,6 +1510,7 @@ body {
   .width-btn,
   .zoom-trigger,
   .zoom-item,
+  .more-item,
   .text-btn,
   .btn-primary,
   .tool-btn,
@@ -1450,6 +1524,7 @@ body {
      what stops the *unmount* from waiting on a duration these declarations
      no longer produce — see that hook's doc comment. */
   .zoom-popover,
+  .more-popover,
   .beautify-popover,
   .modal-backdrop,
   .modal,

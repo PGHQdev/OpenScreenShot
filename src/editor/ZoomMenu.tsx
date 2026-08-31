@@ -11,6 +11,7 @@ export interface ZoomMenuProps {
   onZoomOut: () => void;
   onFit: () => void;
   onActualSize: () => void;
+  onZoomTo: (zoom: number) => void;
 }
 
 /**
@@ -167,6 +168,24 @@ export function ZoomMenu(props: ZoomMenuProps) {
           >
             <span>{t('editorActualSize')}</span>
             <kbd>⌘0</kbd>
+          </button>
+          {/* Fixed steps for the long full-page shots: half and quarter size
+              between Fit and 100%, no letters so no i18n entries. */}
+          <button
+            class="zoom-item"
+            role="menuitem"
+            tabIndex={-1}
+            onClick={() => run(() => props.onZoomTo(0.5))}
+          >
+            <span>50%</span>
+          </button>
+          <button
+            class="zoom-item"
+            role="menuitem"
+            tabIndex={-1}
+            onClick={() => run(() => props.onZoomTo(0.25))}
+          >
+            <span>25%</span>
           </button>
         </div>
       ) : null}

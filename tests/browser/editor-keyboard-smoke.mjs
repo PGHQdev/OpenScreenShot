@@ -331,7 +331,7 @@ async function testExportButtonWidthFloor(browser, base, messages) {
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
 
-  await page.click('header .btn-secondary[title^="Export"]');
+  await page.click('header .btn-primary[title^="Save image"]');
   await page.waitForSelector('.modal', { timeout: 5000 });
 
   // Stable across the negative control below, which strips the very class
@@ -413,7 +413,7 @@ async function testPdfRealProgress(browser, base, messages) {
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
 
-  await page.click('header .btn-secondary[title^="Export"]');
+  await page.click('header .btn-primary[title^="Save image"]');
   await page.waitForSelector('.modal', { timeout: 5000 });
   // waitForSelector resolves on insertion, mid-way through the modal's own
   // real (now that no-preference is forced) entrance animation — a pixel
@@ -763,16 +763,18 @@ async function testStageErrorRetryAndDismiss(browser, base, messages) {
     'Copy is disabled with no image decoded',
   );
   assert(
-    (await page.$eval('header .btn-secondary[title^="Export"]', (el) => el.disabled)) === true,
+    (await page.$eval('header .btn-primary[title^="Save image"]', (el) => el.disabled)) === true,
     'Export is disabled with no image decoded',
   );
   assert(
     (await page.$eval('button[title="Zoom"]', (el) => el.disabled)) === true,
     'Zoom is disabled with no image decoded',
   );
+  // Beautify lives in the Markup chrome now; in View the equivalent gate is
+  // the Markup button itself.
   assert(
-    (await page.$eval('button[title^="Beautify"]', (el) => el.disabled)) === true,
-    'Beautify is disabled with no image decoded',
+    (await page.$eval('header .markup-btn', (el) => el.disabled)) === true,
+    'Markup is disabled with no image decoded',
   );
   await page.keyboard.down('Meta');
   await page.keyboard.press('s');
@@ -796,7 +798,7 @@ async function testStageErrorRetryAndDismiss(browser, base, messages) {
   await page.waitForFunction(() => !document.querySelector('.overlay-msg'), { timeout: 5000 });
   await page.waitForSelector('.stage-canvas[aria-label*="800 by 600"]', { timeout: 5000 });
   assert(
-    (await page.$eval('header .btn-secondary[title^="Export"]', (el) => el.disabled)) === false,
+    (await page.$eval('header .btn-primary[title^="Save image"]', (el) => el.disabled)) === false,
     'Export re-enables once a real capture is decoded onto the canvas',
   );
   assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
@@ -822,7 +824,7 @@ async function testStageErrorRetryAndDismiss(browser, base, messages) {
     'Dismiss lands on the empty state, not a blank stage',
   );
   assert(
-    (await page2.$eval('header .btn-secondary[title^="Export"]', (el) => el.disabled)) === true,
+    (await page2.$eval('header .btn-primary[title^="Save image"]', (el) => el.disabled)) === true,
     'Export disables again — dismiss cleared capture, not just the message',
   );
   assert((await page2.$eval('.btn-fixed', (el) => el.disabled)) === true, 'Copy disables too');
@@ -857,7 +859,7 @@ async function testStageErrorRetryAndDismiss(browser, base, messages) {
   await page3.waitForFunction(() => !document.querySelector('.overlay-msg'), { timeout: 5000 });
   await page3.waitForSelector('.stage-canvas[aria-label*="800 by 600"]', { timeout: 5000 });
   assert(
-    (await page3.$eval('header .btn-secondary[title^="Export"]', (el) => el.disabled)) === false,
+    (await page3.$eval('header .btn-primary[title^="Save image"]', (el) => el.disabled)) === false,
     'Retry after a storage failure still lands on the real capture once the read stops failing',
   );
   assert(crashes.length === 0, `no page errors (${crashes.join(' | ') || 'none'})`);
@@ -940,7 +942,10 @@ async function testPopoverTabDuringExit(browser, base, messages) {
   );
 
   // BeautifyMenu: every control is a real tab stop (no tabIndex=-1 guard at
-  // all), the more direct case of the same trap.
+  // all), the more direct case of the same trap. It lives in the Markup
+  // chrome, so enter Markup first — the editor opens in View.
+  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar');
   const beautifyTrigger = '.beautify-menu > .btn-secondary';
   await page.$eval(beautifyTrigger, (el) => el.focus());
   await page.keyboard.press('Enter');
@@ -995,7 +1000,7 @@ async function testModalFastReopen(browser, base, messages) {
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
 
-  await page.click('header .btn-secondary[title^="Export"]');
+  await page.click('header .btn-primary[title^="Save image"]');
   await page.waitForSelector('.modal', { timeout: 5000 });
   // A marker on the live DOM node, outside Preact's own bookkeeping — the
   // one thing that proves this test actually hit the "same instance
@@ -1017,7 +1022,7 @@ async function testModalFastReopen(browser, base, messages) {
   await new Promise((r) => setTimeout(r, 60));
   await page.keyboard.press('Escape');
   // No further wait: reopen immediately, well inside the 150ms exit window.
-  await page.click('header .btn-secondary[title^="Export"]');
+  await page.click('header .btn-primary[title^="Save image"]');
   // Long enough that, if the bug were present, the stray unmount timer would
   // already have fired and left the reopened dialog visibly broken.
   await new Promise((r) => setTimeout(r, 250));
@@ -1078,7 +1083,7 @@ async function testPdfExportInBackgroundTab(browser, base, messages) {
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
 
-  await page.click('header .btn-secondary[title^="Export"]');
+  await page.click('header .btn-primary[title^="Save image"]');
   await page.waitForSelector('.modal', { timeout: 5000 });
   await page.click('.format-grid .format-card:last-child');
   await page.waitForSelector('.field-label');
@@ -1255,6 +1260,12 @@ async function testMultiSelection(browser, base, messages) {
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
+  // The editor opens in View; this section drives the Markup chrome. Enter
+  // it up front and let the mode-change refit and the canvas resize land
+  // before any geometry is read or driven.
+  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar');
+  await new Promise((r) => setTimeout(r, 350));
 
   const say = () =>
     page.evaluate(() =>
@@ -2138,6 +2149,12 @@ async function testCutTool(browser, base, messages) {
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
+  // The editor opens in View; this section drives the Markup chrome. Enter
+  // it up front and let the mode-change refit and the canvas resize land
+  // before any geometry is read or driven.
+  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar');
+  await new Promise((r) => setTimeout(r, 350));
 
   const settle = (ms = 120) => new Promise((r) => setTimeout(r, ms));
   const say = () =>
@@ -2624,6 +2641,12 @@ async function testCutSelectionRules(browser, base, messages) {
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
+  // The editor opens in View; this section drives the Markup chrome. Enter
+  // it up front and let the mode-change refit and the canvas resize land
+  // before any geometry is read or driven.
+  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar');
+  await new Promise((r) => setTimeout(r, 350));
 
   const settle = (ms = 130) => new Promise((r) => setTimeout(r, ms));
   const say = () =>
@@ -2673,6 +2696,7 @@ async function testCutSelectionRules(browser, base, messages) {
   await settle();
   const placed = (await say()).match(/Rectangle added at (-?\d+), (-?\d+)\./);
   assert(placed !== null, `a rectangle was placed ("${await say()}")`);
+  const markX = Number(placed[1]);
   const markY = Number(placed[2]);
   await page.keyboard.press('Escape');
   await settle();
@@ -2723,7 +2747,10 @@ async function testCutSelectionRules(browser, base, messages) {
   assert((await size()) === '800 × 600px', 'the picture is whole again');
 
   step('task 25 fix 2: a mark nudged onto cut rows leaves the selection instead of moving unseen');
-  await cutExactly(100, 100);
+  // Placed relative to the mark rather than at literal row 100: the mark's
+  // own placement row follows the canvas centre, which moves with the chrome
+  // (the Markup rail and style bar were not there at View-mode placement).
+  await cutExactly(markY - 130, 100);
   await page.$eval('.stage-canvas', (el) => el.focus());
   await page.keyboard.press(']');
   await settle();
@@ -2731,12 +2758,12 @@ async function testCutSelectionRules(browser, base, messages) {
     (await say()) === 'Rectangle selected, layer 1 of 1.',
     `the mark is selected before it is nudged ("${await say()}")`,
   );
-  // The band covers rows 100 to 199, and the mark's top starts at 230. Three
-  // coarse nudges put it on row 200, the last row above the band.
+  // The band ends 30 rows above the mark's top. Three coarse nudges put the
+  // mark on the last surviving row under the band.
   for (let i = 0; i < 3; i++) await chord(['Shift'], 'ArrowUp');
   await settle();
   assert(
-    (await say()) === `Rectangle moved to 330, ${markY - 30}.`,
+    (await say()) === `Rectangle moved to ${markX}, ${markY - 30}.`,
     `three nudges leave it on the last row above the band ("${await say()}")`,
   );
   // The fourth takes its top onto a cut row. It was in the picture when the
@@ -2744,7 +2771,7 @@ async function testCutSelectionRules(browser, base, messages) {
   await chord(['Shift'], 'ArrowUp');
   await settle();
   assert(
-    (await say()) === `Rectangle moved to 330, ${markY - 40}.`,
+    (await say()) === `Rectangle moved to ${markX}, ${markY - 40}.`,
     `the press that hides it still reports the move it made ("${await say()}")`,
   );
   await chord(['Shift'], 'ArrowUp');
@@ -2805,6 +2832,12 @@ async function testCutGroupFrame(browser, base, messages) {
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
+  // The editor opens in View; this section drives the Markup chrome. Enter
+  // it up front and let the mode-change refit and the canvas resize land
+  // before any geometry is read or driven.
+  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar');
+  await new Promise((r) => setTimeout(r, 350));
 
   const settle = (ms = 130) => new Promise((r) => setTimeout(r, ms));
   const say = () =>
@@ -2980,6 +3013,12 @@ async function testCutMixedSelectionGrab(browser, base, messages) {
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
+  // The editor opens in View; this section drives the Markup chrome. Enter
+  // it up front and let the mode-change refit and the canvas resize land
+  // before any geometry is read or driven.
+  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar');
+  await new Promise((r) => setTimeout(r, 350));
 
   const settle = (ms = 130) => new Promise((r) => setTimeout(r, ms));
   const say = () =>
@@ -3120,6 +3159,12 @@ async function testCutInPdfExport(browser, base, messages) {
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
+  // The editor opens in View; this section drives the Markup chrome. Enter
+  // it up front and let the mode-change refit and the canvas resize land
+  // before any geometry is read or driven.
+  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar');
+  await new Promise((r) => setTimeout(r, 350));
   const settle = (ms = 150) => new Promise((r) => setTimeout(r, ms));
   const say = () =>
     page.evaluate(() =>
@@ -3133,7 +3178,7 @@ async function testCutInPdfExport(browser, base, messages) {
    * ten seconds) instead of being decoded from what the stub recorded.
    */
   const pdfPages = async () => {
-    await page.click('header .btn-secondary[title^="Export"]');
+    await page.click('header .btn-primary[title^="Save image"]');
     await page.waitForSelector('.modal', { timeout: 5000 });
     await settle(220);
     await page.click('.format-grid .format-card:last-child');
@@ -3257,6 +3302,9 @@ async function testCutDraftRestore(browser, base, messages) {
   );
   await legacy.page.click('.draft-restore .btn-primary');
   await settle(400);
+  // The layer count sits in the rail, which is Markup chrome.
+  await legacy.page.click('header .markup-btn');
+  await legacy.page.waitForSelector('.toolbar');
   const count = await legacy.page.$eval('.toolbar-count span', (el) => el.textContent);
   assert(count === '1', `and it restores its annotation (${count})`);
   const legacySize = await legacy.page.$eval('.statusbar > span', (el) => el.textContent.trim());
@@ -3282,6 +3330,8 @@ async function testBeautifyLooks(browser, base, messages) {
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
+  await page.click('header .markup-btn'); // Beautify lives in the Markup chrome
+  await page.waitForSelector('.toolbar');
 
   const settle = (ms = 150) => new Promise((r) => setTimeout(r, ms));
   const looks = (p = page) =>
@@ -3478,6 +3528,8 @@ async function testBeautifyLooks(browser, base, messages) {
   await back.waitForSelector('.draft-restore', { timeout: 5000 });
   await back.click('.draft-restore .btn-primary');
   await settle(400);
+  await back.click('header .markup-btn');
+  await back.waitForSelector('.toolbar');
   await back.click('.beautify-menu > .btn-secondary');
   await back.waitForSelector('.beautify-popover', { timeout: 5000 });
   await settle();
@@ -3530,6 +3582,8 @@ async function testBeautifyLooks(browser, base, messages) {
     (await fresh.$('.draft-restore')) === null,
     'no draft is offered on this page — the settings are carrying it alone',
   );
+  await fresh.click('header .markup-btn');
+  await fresh.waitForSelector('.toolbar');
   await fresh.click('.beautify-menu > .btn-secondary');
   await fresh.waitForSelector('.beautify-popover', { timeout: 5000 });
   await settle();
@@ -3563,6 +3617,12 @@ async function testCropHandlesAndUndo(browser, base, messages) {
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
+  // The editor opens in View; this section drives the Markup chrome. Enter
+  // it up front and let the mode-change refit and the canvas resize land
+  // before any geometry is read or driven.
+  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar');
+  await new Promise((r) => setTimeout(r, 350));
 
   const sharp = createRequire(join(ROOT, 'package.json'))('sharp');
   const say = () =>
@@ -4259,6 +4319,10 @@ async function testPinToFloatingWindow(browser, base, messages) {
   );
 
   step('task 29: the pinned window redraws live as the capture is edited');
+  // The tool rail is Markup chrome; the pin itself was driven from View.
+  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar');
+  await new Promise((r) => setTimeout(r, 350)); // mode-change refit
   await page.click('button[title^="Rectangle"]');
   const box = await page.$eval('.stage-canvas', (el) => {
     const r = el.getBoundingClientRect();
@@ -4343,6 +4407,12 @@ async function testBlurStrength(browser, base, messages) {
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
+  // The editor opens in View; this section drives the Markup chrome. Enter
+  // it up front and let the mode-change refit and the canvas resize land
+  // before any geometry is read or driven.
+  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar');
+  await new Promise((r) => setTimeout(r, 350));
 
   const sharp = createRequire(join(ROOT, 'package.json'))('sharp');
   const settle = (ms = 120) => new Promise((r) => setTimeout(r, ms));
@@ -4409,7 +4479,7 @@ async function testBlurStrength(browser, base, messages) {
     return Math.sqrt(Math.max(0, sumSq / n - mean * mean));
   };
   const exportPng = async () => {
-    await page.click('header .btn-secondary[title^="Export"]');
+    await page.click('header .btn-primary[title^="Save image"]');
     await page.waitForSelector('.modal-actions .btn-primary');
     await page.click('.modal-actions .btn-primary');
     await page.waitForFunction(() => !document.querySelector('.modal'), { timeout: 5000 });
@@ -4489,6 +4559,12 @@ async function testAnnotationClipMatchesExport(browser, base, messages) {
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
+  // The editor opens in View; this section drives the Markup chrome. Enter
+  // it up front and let the mode-change refit and the canvas resize land
+  // before any geometry is read or driven.
+  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar');
+  await new Promise((r) => setTimeout(r, 350));
 
   const snap = () =>
     page.evaluate(() => {
@@ -4596,6 +4672,12 @@ async function testStrokeWidthPreviewDistinct(browser, base, messages) {
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
+  // The editor opens in View; this section drives the Markup chrome. Enter
+  // it up front and let the mode-change refit and the canvas resize land
+  // before any geometry is read or driven.
+  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar');
+  await new Promise((r) => setTimeout(r, 350));
 
   await page.$eval('.stage-canvas', (el) => el.focus());
   await page.keyboard.press('r'); // Rect tool — brings up the Stroke group
@@ -5652,10 +5734,7 @@ async function main() {
     await settle();
     await page.keyboard.press('ArrowUp');
     await settle();
-    assert(
-      (await itemText()) === 'Actual size',
-      'ArrowUp on the closed trigger opens on the last item',
-    );
+    assert((await itemText()) === '25%', 'ArrowUp on the closed trigger opens on the last item');
 
     step('a real mouse click opens the zoom menu the same as keyboard activation');
     // The previous step ends with the menu open (ArrowUp landed on the last
@@ -5679,13 +5758,13 @@ async function main() {
     assert((await itemText()) === 'Zoom in', 'Down from the last item wraps to the first');
     await page.keyboard.press('ArrowUp');
     await settle();
-    assert((await itemText()) === 'Actual size', 'Up from the first item wraps to the last');
+    assert((await itemText()) === '25%', 'Up from the first item wraps to the last');
     await page.keyboard.press('Home');
     await settle();
     assert((await itemText()) === 'Zoom in', 'Home jumps to the first item');
     await page.keyboard.press('End');
     await settle();
-    assert((await itemText()) === 'Actual size', 'End jumps to the last item');
+    assert((await itemText()) === '25%', 'End jumps to the last item');
 
     step('Escape closes the zoom menu and returns focus to the trigger');
     await page.keyboard.press('Escape');
@@ -5741,7 +5820,7 @@ async function main() {
     await page.$eval(zoomTrigger, (el) => el.focus());
     await page.keyboard.press('ArrowUp'); // opens on the last item
     await settle();
-    assert((await itemText()) === 'Actual size', 'opened on the last item, as ArrowUp promises');
+    assert((await itemText()) === '25%', 'opened on the last item, as ArrowUp promises');
     await page.keyboard.press('Tab');
     await settle();
     assert(await closed('.zoom-popover'), 'Tab off the last item closed the menu');

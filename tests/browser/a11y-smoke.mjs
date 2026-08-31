@@ -434,13 +434,27 @@ async function testEditor(browser, base, messages) {
   });
   await page.setViewport({ width: 1280, height: 860 });
 
-  step('EDITOR — main surface with a seeded capture and the Rectangle tool active');
+  step('EDITOR — View mode first screen with a seeded capture');
   await page.goto(`${base}/src/editor/index.html`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900)); // controller's initial fit, see editor-keyboard-smoke
+  await scan(page, 'editor view mode');
+
+  step('EDITOR — Markup chrome with the Rectangle tool active');
+  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar');
   await page.click('.tool-btn[title^="Rectangle"]');
   await page.waitForSelector('.stylebar');
   await scan(page, 'editor main surface');
+
+  step('EDITOR — More tools popover');
+  await page.click(`.toolbar .tool-btn[title="${messages.editorMoreTools.message}"]`);
+  await page.waitForSelector('.more-popover', { timeout: 5000 });
+  await settle(220); // see the export dialog step below
+  await scan(page, 'editor More tools popover');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !document.querySelector('.more-popover'), { timeout: 5000 });
+  await settle();
 
   step('EDITOR — the only live region is the status region, outside every control');
   // A live region inside a control's own accessible name announces the

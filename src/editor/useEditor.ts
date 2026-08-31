@@ -146,6 +146,13 @@ import { exportPdf as exportPdfFile, type PdfExportProgress, type PdfOptions } f
 import { resampleToWidth } from './scale';
 import { t } from './i18n';
 
+/**
+ * The editor's two chrome states. View is the first screen — the fitted
+ * capture with Copy/PDF/Save alone — and Markup is the full annotation
+ * chrome. Edits persist across the switch; only the chrome changes.
+ */
+export type EditorMode = 'view' | 'markup';
+
 export interface TextOverlayPos {
   x: number;
   y: number;
@@ -250,8 +257,12 @@ export function useEditor() {
   // permanently mounted node, so every write here is a text change inside a
   // region assistive tech is already watching.
   const [announcement, setAnnouncement] = useState('');
+  // View is the first screen: the capture fitted, no tool rail, no style bar.
+  // Markup is opt-in via the header button, a tool shortcut, or Escape back.
+  const [mode, setMode] = useState<EditorMode>('view');
 
   // Refs for use inside stable event handlers (avoid stale closures).
+  const modeRef = useRef<EditorMode>('view');
   const toolRef = useRef(tool);
   const spaceRef = useRef(false);
   const draftRef = useRef<Annotation | null>(null);
@@ -507,6 +518,14 @@ export function useEditor() {
   useEffect(() => {
     controllerRef.current?.setAnnotations(annotations);
   }, [annotations]);
+
+  // Re-fit whenever the chrome changes shape: Markup adds the rail and the
+  // style bar, View takes them away, and a view carried across that resize
+  // is neither fitted nor centred any more. Runs after the commit, so the
+  // canvas rect it reads is the new layout's.
+  useEffect(() => {
+    controllerRef.current?.fit();
+  }, [mode]);
 
   const frameRef = useRef(frame);
   // Sync the beautify frame to the controller, and to a ref for the draft flush.
@@ -1023,6 +1042,14 @@ export function useEditor() {
   const zoomOut = useCallback(() => zoomAtCenter(1 / 1.25), [zoomAtCenter]);
   const fit = useCallback(() => controllerRef.current?.fit(), []);
   const resetZoom = useCallback(() => controllerRef.current?.resetZoom(), []);
+  // Absolute zoom about the viewport centre — the zoom menu's 50%/25% presets.
+  const zoomTo = useCallback((z: number) => {
+    const c = controllerRef.current;
+    const canvas = canvasRef.current;
+    if (!c || !canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    c.setZoom(z, rect.width / 2, rect.height / 2);
+  }, []);
 
   // Space = temporary pan; tool shortcuts; undo/redo; delete; Esc.
   useEffect(() => {
@@ -1099,7 +1126,8 @@ export function useEditor() {
           return;
         }
       }
-      // Escape: cancel a crop or a cut, else deselect.
+      // Escape backs out one level at a time: cancel a crop or a cut, else
+      // deselect, else put a drawing tool down, else leave Markup for View.
       if (e.key === 'Escape') {
         if (cropDraftRef.current) {
           cancelCrop();
@@ -1111,11 +1139,19 @@ export function useEditor() {
           selectAnnotations([]);
           sayAboutSelection([]);
           e.preventDefault();
+        } else if (toolRef.current !== 'select') {
+          selectTool('select');
+          e.preventDefault();
+        } else if (modeRef.current === 'markup') {
+          exitMarkup();
+          e.preventDefault();
         }
         return;
       }
       if (isMod(e) || e.altKey) return;
-      // Number keys pick a palette colour, in swatch order.
+      // Number keys pick a palette colour, in swatch order. Not gated to
+      // Markup: the colour is only read when a drawing tool is used, and the
+      // tool letters that arm one open Markup themselves.
       if (/^[1-9]$/.test(e.key)) {
         const color = COLOR_PALETTE[Number(e.key) - 1];
         if (color) {
@@ -1124,9 +1160,14 @@ export function useEditor() {
           return;
         }
       }
-      // Tool shortcuts.
+      // Tool shortcuts. A tool letter in View is an explicit ask to annotate,
+      // so it brings the Markup chrome with it.
       const t = TOOL_LIST.find((x) => x.shortcut === e.key.toUpperCase());
       if (t) {
+        if (modeRef.current === 'view') {
+          modeRef.current = 'markup';
+          setMode('markup');
+        }
         selectTool(t.id);
         e.preventDefault();
       }
@@ -1545,8 +1586,9 @@ export function useEditor() {
       const rect = c.canvas.getBoundingClientRect();
       const sx = e.clientX - rect.left;
       const sy = e.clientY - rect.top;
-      // Middle button or Space+left = pan.
-      if (e.button === 1 || (e.button === 0 && spaceRef.current)) {
+      // Middle button or Space+left = pan. In View mode every left drag pans:
+      // the capture is the product there, and nothing on it is selectable.
+      if (e.button === 1 || (e.button === 0 && (spaceRef.current || modeRef.current === 'view'))) {
         e.preventDefault();
         interactionRef.current = { kind: 'pan', lastX: e.clientX, lastY: e.clientY };
         window.addEventListener('mousemove', onDragMove);
@@ -1769,7 +1811,7 @@ export function useEditor() {
   const onCanvasDoubleClick = useCallback(
     (e: MouseEvent) => {
       const c = controllerRef.current;
-      if (!c || !c.image || toolRef.current !== 'select') return;
+      if (!c || !c.image || modeRef.current === 'view' || toolRef.current !== 'select') return;
       const rect = c.canvas.getBoundingClientRect();
       const hit = hitTestAnnotation(
         c,
@@ -1992,6 +2034,9 @@ export function useEditor() {
     (e: KeyboardEvent) => {
       const c = controllerRef.current;
       if (!c || !c.image) return;
+      // View mode: the canvas is a picture, not a document. A tool letter
+      // (window handler above) is the keyboard way into Markup.
+      if (modeRef.current === 'view') return;
       const mode: CanvasMode = cropDraftRef.current
         ? 'crop'
         : cutDraftRef.current
@@ -2391,6 +2436,29 @@ export function useEditor() {
   const cancelImport = useCallback(() => setPendingImport(null), []);
   const dismissStageNotice = useCallback(() => setStageNotice(null), []);
 
+  // --- View / Markup ---
+  /** Open the Markup chrome with the pointer tool armed. */
+  const enterMarkup = useCallback(() => {
+    modeRef.current = 'markup';
+    setMode('markup');
+    selectTool('select');
+  }, [selectTool]);
+
+  /**
+   * Done: back to View. Open drafts go with the chrome that shows them — a
+   * crop rect or cut band left pending would keep a confirm pill over a
+   * screen that no longer offers the tool — and the selection clears because
+   * View paints no handles.
+   */
+  const exitMarkup = useCallback(() => {
+    if (cropDraftRef.current) cancelCrop();
+    if (cutDraftRef.current) cancelCut();
+    if (selectedIdsRef.current.length > 0) selectAnnotations([]);
+    selectTool('select');
+    modeRef.current = 'view';
+    setMode('view');
+  }, [cancelCrop, cancelCut, selectAnnotations, selectTool]);
+
   const defaultFilename = useCallback(() => {
     const tmpl = settings?.filenameTemplate ?? 'screenshot_{date}_{time}';
     return formatFilename(tmpl, {
@@ -2553,6 +2621,9 @@ export function useEditor() {
   return {
     canvasRef,
     annotations,
+    mode,
+    enterMarkup,
+    exitMarkup,
     tool,
     setTool: selectTool,
     selectedIds,
@@ -2590,6 +2661,7 @@ export function useEditor() {
     zoomOut,
     fit,
     resetZoom,
+    zoomTo,
     onCanvasMouseDown,
     onCanvasDoubleClick,
     onCanvasKeyDown,

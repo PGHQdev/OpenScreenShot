@@ -59,14 +59,31 @@ export const TOOL_LIST: ToolDef[] = [
 ];
 
 /**
- * Tool rail dividers: rendered after the tool whose id is a member, splitting
- * the thirteen-tool column into Select / the drawing and glyph tools / the
- * colour and redaction tools / Crop and Cut. Select, Crop and Cut are the
- * tools with no style-bar fields (see stylebar.ts) — every tool between them
- * draws something onto the canvas, and the last two reshape the picture
- * itself.
+ * The tool rail's first paint: Select, the four most-used drawing tools, and
+ * the two redaction tools. Everything else stays reachable behind the rail's
+ * More button ({@link OVERFLOW_TOOLS}) and through its shortcut letter.
  */
-export const TOOL_DIVIDER_AFTER: ReadonlySet<Tool> = new Set(['select', 'step', 'eyedropper']);
+export const PRIMARY_TOOLS: readonly Tool[] = [
+  'select',
+  'arrow',
+  'rect',
+  'text',
+  'pen',
+  'blur',
+  'crop',
+];
+
+/** The rest of TOOL_LIST, in TOOL_LIST order — the More button's menu. */
+export const OVERFLOW_TOOLS: readonly Tool[] = TOOL_LIST.map((t) => t.id).filter(
+  (id) => !PRIMARY_TOOLS.includes(id),
+);
+
+/**
+ * Tool rail dividers: rendered after the tool whose id is a member, splitting
+ * the primary column into Select / the drawing tools / the redaction tools.
+ * The More button sits after the last divider's group.
+ */
+export const TOOL_DIVIDER_AFTER: ReadonlySet<Tool> = new Set(['select', 'pen']);
 
 /** Per-tool options for {@link createShapeDraft} beyond the shared stroke style. */
 export interface ShapeDraftOptions {

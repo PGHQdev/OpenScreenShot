@@ -6,10 +6,13 @@ import {
   DUPLICATE_OFFSET,
   duplicateAnnotations,
   extendDraft,
+  OVERFLOW_TOOLS,
+  PRIMARY_TOOLS,
   renumberSteps,
   shouldCommit,
   snapTo45,
   squareDelta,
+  TOOL_DIVIDER_AFTER,
   TOOL_LIST,
 } from '../../src/editor/tools';
 import { bbox, type Annotation } from '../../src/editor/annotations';
@@ -297,5 +300,23 @@ describe('cut tool', () => {
     expect(claimed).not.toContain('D');
     const letters = new Set(TOOL_LIST.map((t) => t.shortcut));
     expect(claimed.filter((letter) => letters.has(letter))).toEqual([]);
+  });
+});
+
+describe('tool rail grouping', () => {
+  it('splits TOOL_LIST into primary and overflow with nothing lost or doubled', () => {
+    const all = TOOL_LIST.map((t) => t.id).sort();
+    const grouped = [...PRIMARY_TOOLS, ...OVERFLOW_TOOLS].sort();
+    expect(grouped).toEqual(all);
+    expect(new Set(grouped).size).toBe(grouped.length);
+  });
+
+  it('keeps the overflow in TOOL_LIST order', () => {
+    const listOrder = TOOL_LIST.map((t) => t.id).filter((id) => OVERFLOW_TOOLS.includes(id));
+    expect([...OVERFLOW_TOOLS]).toEqual(listOrder);
+  });
+
+  it('draws every divider after a tool the rail actually shows', () => {
+    for (const id of TOOL_DIVIDER_AFTER) expect(PRIMARY_TOOLS).toContain(id);
   });
 });

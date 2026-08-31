@@ -1521,13 +1521,45 @@
     "message": "Copiar al portapapeles como PNG (⌘C)",
     "description": "Editor topbar: tooltip for the Copy button."
   },
-  "editorExportTitle": {
-    "message": "Exportar (⌘S)",
-    "description": "Editor topbar: tooltip for the Export button."
-  },
   "editorExport": {
     "message": "Exportar",
     "description": "Editor: the Export button/dialog title, and its name in the shortcut sheet."
+  },
+  "editorMarkup": {
+    "message": "Anotar",
+    "description": "Editor topbar (View mode): button that opens the Markup chrome."
+  },
+  "editorDone": {
+    "message": "Listo",
+    "description": "Editor topbar (Markup mode): button that returns to View."
+  },
+  "editorViewHint": {
+    "message": "Anotar para marcar. Copia, PDF o Guardar cuando termines.",
+    "description": "Editor status bar (View mode): the one-line hint under the fitted capture."
+  },
+  "editorSaveImage": {
+    "message": "Guardar imagen",
+    "description": "Editor topbar: label on the primary Save image button (opens the export dialog)."
+  },
+  "editorSaveImageTitle": {
+    "message": "Guardar imagen (⌘S)",
+    "description": "Editor topbar: tooltip for the Save image button."
+  },
+  "editorPdfLabel": {
+    "message": "PDF",
+    "description": "Editor topbar: label on the one-click PDF export button."
+  },
+  "editorPdfTitle": {
+    "message": "Guardar como PDF",
+    "description": "Editor topbar: tooltip for the PDF button."
+  },
+  "editorPdfFailed": {
+    "message": "Error",
+    "description": "Editor topbar: the PDF button’s label after a failed export."
+  },
+  "editorMoreTools": {
+    "message": "Más herramientas",
+    "description": "Editor tool rail: accessible label and tooltip on the More overflow button."
   },
   "editorExporting": {
     "message": "Exportando…",

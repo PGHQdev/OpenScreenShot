@@ -1521,13 +1521,45 @@
     "message": "PNG로 클립보드에 복사 (⌘C)",
     "description": "Editor topbar: tooltip for the Copy button."
   },
-  "editorExportTitle": {
-    "message": "내보내기 (⌘S)",
-    "description": "Editor topbar: tooltip for the Export button."
-  },
   "editorExport": {
     "message": "내보내기",
     "description": "Editor: the Export button/dialog title, and its name in the shortcut sheet."
+  },
+  "editorMarkup": {
+    "message": "마크업",
+    "description": "Editor topbar (View mode): button that opens the Markup chrome."
+  },
+  "editorDone": {
+    "message": "완료",
+    "description": "Editor topbar (Markup mode): button that returns to View."
+  },
+  "editorViewHint": {
+    "message": "주석은 마크업에서. 끝나면 복사, PDF 또는 저장.",
+    "description": "Editor status bar (View mode): the one-line hint under the fitted capture."
+  },
+  "editorSaveImage": {
+    "message": "이미지 저장",
+    "description": "Editor topbar: label on the primary Save image button (opens the export dialog)."
+  },
+  "editorSaveImageTitle": {
+    "message": "이미지 저장 (⌘S)",
+    "description": "Editor topbar: tooltip for the Save image button."
+  },
+  "editorPdfLabel": {
+    "message": "PDF",
+    "description": "Editor topbar: label on the one-click PDF export button."
+  },
+  "editorPdfTitle": {
+    "message": "PDF로 저장",
+    "description": "Editor topbar: tooltip for the PDF button."
+  },
+  "editorPdfFailed": {
+    "message": "실패",
+    "description": "Editor topbar: the PDF button’s label after a failed export."
+  },
+  "editorMoreTools": {
+    "message": "도구 더 보기",
+    "description": "Editor tool rail: accessible label and tooltip on the More overflow button."
   },
   "editorExporting": {
     "message": "내보내는 중…",

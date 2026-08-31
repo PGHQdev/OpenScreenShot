@@ -1521,13 +1521,45 @@
     "message": "以 PNG 复制到剪贴板 (⌘C)",
     "description": "Editor topbar: tooltip for the Copy button."
   },
-  "editorExportTitle": {
-    "message": "导出 (⌘S)",
-    "description": "Editor topbar: tooltip for the Export button."
-  },
   "editorExport": {
     "message": "导出",
     "description": "Editor: the Export button/dialog title, and its name in the shortcut sheet."
+  },
+  "editorMarkup": {
+    "message": "标注",
+    "description": "Editor topbar (View mode): button that opens the Markup chrome."
+  },
+  "editorDone": {
+    "message": "完成",
+    "description": "Editor topbar (Markup mode): button that returns to View."
+  },
+  "editorViewHint": {
+    "message": "点击“标注”添加注释。完成后复制、PDF 或保存。",
+    "description": "Editor status bar (View mode): the one-line hint under the fitted capture."
+  },
+  "editorSaveImage": {
+    "message": "保存图片",
+    "description": "Editor topbar: label on the primary Save image button (opens the export dialog)."
+  },
+  "editorSaveImageTitle": {
+    "message": "保存图片 (⌘S)",
+    "description": "Editor topbar: tooltip for the Save image button."
+  },
+  "editorPdfLabel": {
+    "message": "PDF",
+    "description": "Editor topbar: label on the one-click PDF export button."
+  },
+  "editorPdfTitle": {
+    "message": "另存为 PDF",
+    "description": "Editor topbar: tooltip for the PDF button."
+  },
+  "editorPdfFailed": {
+    "message": "失败",
+    "description": "Editor topbar: the PDF button’s label after a failed export."
+  },
+  "editorMoreTools": {
+    "message": "更多工具",
+    "description": "Editor tool rail: accessible label and tooltip on the More overflow button."
   },
   "editorExporting": {
     "message": "正在导出…",
