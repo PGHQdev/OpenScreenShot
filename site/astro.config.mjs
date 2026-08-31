@@ -50,7 +50,7 @@ export default defineConfig({
   // Content fidelity on these pages is worth the few hundred gzipped bytes.
   compressHTML: false,
   build: {
-    inlineStylesheets: 'auto',
+    inlineStylesheets: 'always',
   },
   integrations: [
     sitemap({

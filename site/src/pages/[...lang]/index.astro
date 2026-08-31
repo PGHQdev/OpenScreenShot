@@ -180,7 +180,7 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
                     formats={['avif', 'webp']}
                     fallbackFormat="webp"
                     widths={[640, 960, 1280, 1800, 2400]}
-                    sizes="(min-width: 1248px) 1200px, 100vw"
+                    sizes="(min-width: 1248px) 1200px, calc(100vw - 88px)"
                     fetchpriority={i === 0 ? 'high' : undefined}
                     loading={i === 0 ? 'eager' : 'lazy'}
                     decoding="async"
