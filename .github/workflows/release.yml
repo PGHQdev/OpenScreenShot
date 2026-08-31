@@ -6,7 +6,56 @@ on:
       - 'v*' # v0.1.0, v0.2.0, etc.
 
 jobs:
+  # A release tagged while the previous submission is still in review would
+  # do a full build and then die at the Chrome Web Store upload step. This
+  # asks the store first (API v2 fetchStatus: submittedItemRevisionStatus is
+  # PENDING_REVIEW while a version sits in the queue) and fails fast with a
+  # clear message instead. If the check itself cannot run — missing
+  # CWS_PUBLISHER_ID, expired token, API change — it warns and lets the
+  # release proceed: that is the status quo, a late failure at the upload
+  # step, which must stay possible so a broken gate never blocks releases.
+  review-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for a version already in review
+        env:
+          CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+          PUBLISHER_ID: ${{ secrets.CWS_PUBLISHER_ID }}
+          EXTENSION_ID: hdabbojjccojlapnfjpdppcpfcnhgmdp
+        run: |
+          if [ -z "$PUBLISHER_ID" ]; then
+            echo "::warning::CWS_PUBLISHER_ID secret is not set; skipping the review-status check."
+            exit 0
+          fi
+
+          TOKEN=$(curl -sf https://oauth2.googleapis.com/token \
+            -d client_id="$CLIENT_ID" \
+            -d client_secret="$CLIENT_SECRET" \
+            -d refresh_token="$REFRESH_TOKEN" \
+            -d grant_type=refresh_token | jq -r '.access_token // empty')
+          if [ -z "$TOKEN" ]; then
+            echo "::warning::Could not get a Chrome Web Store access token; skipping the review-status check."
+            exit 0
+          fi
+
+          STATE=$(curl -sf \
+            -H "Authorization: Bearer $TOKEN" \
+            "https://chromewebstore.googleapis.com/v2/publishers/$PUBLISHER_ID/items/$EXTENSION_ID:fetchStatus" \
+            | jq -r '.submittedItemRevisionStatus.state // empty') || {
+            echo "::warning::fetchStatus request failed; skipping the review-status check."
+            exit 0
+          }
+
+          echo "Submitted revision state: ${STATE:-none}"
+          if [ "$STATE" = "PENDING_REVIEW" ]; then
+            echo "::error::A version is already in review on the Chrome Web Store. Re-run this workflow after the review completes."
+            exit 1
+          fi
+
   build:
+    needs: review-gate
     runs-on: ubuntu-latest
     permissions:
       contents: write # to create a GitHub release
