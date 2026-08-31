@@ -480,6 +480,13 @@ async function renderRealCaptures(browser, base, messages) {
     await page.waitForSelector('.stage-canvas');
     await settle(500);
 
+    // The editor opens in View; the shot shows the Markup chrome. Enter it
+    // before measuring the canvas — the rail and style bar move it, and the
+    // mode change re-fits the view.
+    await page.click('header .markup-btn');
+    await page.waitForSelector('.toolbar');
+    await settle(400);
+
     const box = await page.$eval('.stage-canvas', (el) => el.getBoundingClientRect().toJSON());
     await page.$eval('.stage-canvas', (el) => el.focus());
     await page.keyboard.press('r');
@@ -535,8 +542,9 @@ async function renderRealCaptures(browser, base, messages) {
       );
       btn?.click();
       return !!btn;
-    }, messages.editorExport.message);
-    if (!exportOpened) throw new Error('editor-export capture: no "Export" button in the header');
+    }, messages.editorSaveImage.message);
+    if (!exportOpened)
+      throw new Error('editor-export capture: no "Save image" button in the header');
     await page.waitForSelector('.modal[role="dialog"]');
     // The dialog fades in over --dur-mid; wait it out so the capture is not
     // mid-animation.
@@ -559,6 +567,11 @@ async function renderRealCaptures(browser, base, messages) {
     await page.goto(`${base}/src/editor/index.html`, { waitUntil: 'networkidle0' });
     await page.waitForSelector('.stage-canvas');
     await settle(500);
+
+    // Same View-to-Markup entry as the annotation shot above.
+    await page.click('header .markup-btn');
+    await page.waitForSelector('.toolbar');
+    await settle(400);
 
     await page.$eval('.stage-canvas', (el) => el.focus());
     await page.keyboard.press('c');
