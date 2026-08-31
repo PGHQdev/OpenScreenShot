@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "Скриншот всей страницы и аннотации - OpenScreenShot",
+    "message": "Скриншот всей страницы - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
   },
   "extDesc": {
-    "message": "Скриншот всей страницы, области и экрана с редактором аннотаций. Экспорт PNG, JPEG, WebP, PDF. 100% приватно, офлайн, без загрузок.",
+    "message": "Скриншот всей страницы в один клик. Открытый код, 100% приватно, без аккаунта, без загрузок.",
     "description": "Extension description shown in the Chrome Web Store and extensions page."
   },
   "modeFullPage": {

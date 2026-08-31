@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "Screenshot pagina intera e annotazioni - OpenScreenShot",
+    "message": "Screenshot pagina intera - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
   },
   "extDesc": {
-    "message": "Screenshot a pagina intera, regione o schermo con editor di annotazioni. PNG, JPEG, WebP, PDF. 100% privato, offline, senza upload.",
+    "message": "Screenshot a pagina intera in un clic. Open source, 100% privato, senza account, senza upload.",
     "description": "Extension description shown in the Chrome Web Store and extensions page."
   },
   "modeFullPage": {

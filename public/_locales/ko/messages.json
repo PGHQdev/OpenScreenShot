@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "전체 페이지 스크린샷 및 주석 - OpenScreenShot",
+    "message": "전체 페이지 스크린샷 - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
   },
   "extDesc": {
-    "message": "전체 페이지, 선택 영역, 보이는 영역 스크린샷과 주석 편집기. PNG, JPEG, WebP, PDF 내보내기. 100% 비공개, 오프라인, 업로드 없음.",
+    "message": "한 번의 클릭으로 전체 페이지 스크린샷. 오픈 소스, 100% 비공개, 계정 불필요, 업로드 없음.",
     "description": "Extension description shown in the Chrome Web Store and extensions page."
   },
   "modeFullPage": {

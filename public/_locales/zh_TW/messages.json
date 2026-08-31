@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "全頁截圖與註解 - OpenScreenShot",
+    "message": "整頁截圖 - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
   },
   "extDesc": {
-    "message": "整頁、選取區域與可見範圍截圖，內建註解編輯器。可匯出 PNG、JPEG、WebP、PDF。100% 私密、離線、不上傳。",
+    "message": "一鍵擷取整頁截圖。開放原始碼，100% 私密，無需帳號，不上傳。",
     "description": "Extension description shown in the Chrome Web Store and extensions page."
   },
   "modeFullPage": {

@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "Capture d’écran pleine page et annotations - OpenScreenShot",
+    "message": "Capture pleine page - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
   },
   "extDesc": {
-    "message": "Captures pleine page, zone ou visible + éditeur d’annotations. Export PNG, JPEG, WebP, PDF. 100 % privé, hors ligne, sans envoi.",
+    "message": "Capture d’écran pleine page en un clic. Open source, 100 % privé, sans compte, sans envoi.",
     "description": "Extension description shown in the Chrome Web Store and extensions page."
   },
   "modeFullPage": {

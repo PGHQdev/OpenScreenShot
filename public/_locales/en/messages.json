@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "Full Page Screenshot & Annotate - OpenScreenShot",
+    "message": "Full Page Screenshot - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
   },
   "extDesc": {
-    "message": "Full page, region & visible screenshots with an annotation editor. Export PNG, JPEG, WebP, PDF. 100% private, offline, no uploads.",
+    "message": "Full page screenshot in one click. Open source, 100% private, no account, no uploads.",
     "description": "Extension description shown in the Chrome Web Store and extensions page."
   },
   "modeFullPage": {

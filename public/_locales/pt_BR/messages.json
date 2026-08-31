@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "Captura de Página Inteira e Anotações - OpenScreenShot",
+    "message": "Captura de página inteira - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
   },
   "extDesc": {
-    "message": "Capture a página inteira, uma região ou a área visível e anote. Exporte PNG, JPEG, WebP, PDF. 100% privado, offline, sem uploads.",
+    "message": "Captura de página inteira em um clique. Código aberto, 100% privado, sem conta, sem uploads.",
     "description": "Extension description shown in the Chrome Web Store and extensions page."
   },
   "modeFullPage": {

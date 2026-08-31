@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "网页整页截图与标注 - OpenScreenShot",
+    "message": "网页整页截图 - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
   },
   "extDesc": {
-    "message": "整页、区域和可见区域截图，自带标注编辑器。导出 PNG、JPEG、WebP、PDF。100% 私密，离线运行，不上传。",
+    "message": "一键截取整页截图。开源，100% 私密，无需账号，不上传。",
     "description": "Extension description shown in the Chrome Web Store and extensions page."
   },
   "modeFullPage": {

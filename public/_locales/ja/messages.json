@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "フルページ スクリーンショット＆注釈 - OpenScreenShot",
+    "message": "フルページ スクリーンショット - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
   },
   "extDesc": {
-    "message": "ページ全体・選択範囲・表示領域のスクリーンショットと注釈エディタ。PNG、JPEG、WebP、PDF で書き出し。100% プライベート、オフライン、アップロードなし。",
+    "message": "ワンクリックでページ全体をスクリーンショット。オープンソース、100% プライベート、アカウント不要、アップロードなし。",
     "description": "Extension description shown in the Chrome Web Store and extensions page."
   },
   "modeFullPage": {
