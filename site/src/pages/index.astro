@@ -1,6 +1,7 @@
 ---
 import { Picture } from 'astro:assets';
 import Base from '../layouts/Base.astro';
+import ChromeIcon from '../components/ChromeIcon.astro';
 import FaqList from '../components/FaqList.astro';
 import PermissionTable from '../components/PermissionTable.astro';
 import { homeFaq } from '../data/faq';
@@ -15,14 +16,9 @@ import shotRecorder from '../assets/shot-5.webp';
 const STORE_URL = 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp';
 const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
 
-// Anchors only. A cross-page link here would cost the page its One Page Love
-// eligibility; Docs, Roadmap, Support, Privacy and Cool stuff live in the footer.
-const navLinks = [
-  { href: '#features', label: 'Features' },
-  { href: '#privacy', label: 'Privacy' },
-  { href: '#cli', label: 'CLI' },
-  { href: '#faq', label: 'FAQ' },
-];
+// The homepage nav is the reference's minimal pair: brand left, install pill
+// right, nothing between. Cross-page links live in the footer, which also
+// keeps the page's One Page Love eligibility. Section ids stay for deep links.
 
 const DESCRIPTION =
   'Free, open-source Chrome extension for full page, visible area and region screenshots, with an annotation editor, export to PNG, JPEG, WebP or PDF, and a tab recorder. Nothing leaves your machine.';
@@ -184,7 +180,6 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
   title="Full Page Screenshot & Editor for Chrome — OpenScreenShot"
   description={DESCRIPTION}
   path="/"
-  navLinks={navLinks}
 >
   <Fragment slot="head">
     <script type="application/ld+json" set:html={ld(softwareLd)} />
@@ -385,7 +380,10 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
         }
       </ol>
       <p class="cta-row">
-        <a class="btn btn-ink" href={STORE_URL} target="_blank" rel="noopener">Add to Chrome</a>
+        <a class="btn btn-ink btn-install" href={STORE_URL} target="_blank" rel="noopener">
+          <ChromeIcon size={22} />
+          Install in browser
+        </a>
       </p>
       <p class="fine">Works on Chrome, Edge, Brave, Arc and other Chromium browsers.</p>
     </div>
@@ -792,6 +790,12 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
 
   .cta-final .cta-row {
     margin-bottom: var(--s-4);
+  }
+
+  .btn-install {
+    min-height: 56px;
+    padding: 0 28px 0 22px;
+    font-size: var(--fs-base);
   }
 
   .cta-final .fine {

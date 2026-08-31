@@ -1,0 +1,27 @@
+---
+/**
+ * The multicolor Chrome glyph that sits inside the black install pills, the
+ * way the reference nav pill carries its product logo. Drawn as three 120°
+ * ring arcs and the blue lens, which stays legible at pill sizes.
+ */
+interface Props {
+  size?: number;
+  class?: string;
+}
+
+const { size = 18, class: className } = Astro.props;
+---
+
+<svg
+  class={className}
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  aria-hidden="true"
+  focusable="false"
+>
+  <path d="M5.94 8.5A7 7 0 0 1 18.06 8.5" fill="none" stroke="#EA4335" stroke-width="5"></path>
+  <path d="M18.06 8.5A7 7 0 0 1 12 19" fill="none" stroke="#FBBC05" stroke-width="5"></path>
+  <path d="M12 19A7 7 0 0 1 5.94 8.5" fill="none" stroke="#34A853" stroke-width="5"></path>
+  <circle cx="12" cy="12" r="4.4" fill="#4285F4" stroke="#fff" stroke-width="1.5"></circle>
+</svg>

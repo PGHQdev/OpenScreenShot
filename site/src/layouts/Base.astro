@@ -1,5 +1,6 @@
 ---
 import BrandMark from '../components/BrandMark.astro';
+import ChromeIcon from '../components/ChromeIcon.astro';
 import ogCard from '../assets/og-card.png';
 import '../styles/tokens.css';
 import '../styles/fonts.css';
@@ -127,7 +128,10 @@ const isHome = path === '/';
             ))
           }
           <li>
-            <a class="btn nav-cta" href={STORE_URL} target="_blank" rel="noopener">Add to Chrome</a>
+            <a class="btn nav-cta" href={STORE_URL} target="_blank" rel="noopener">
+              <ChromeIcon size={18} />
+              Install in browser
+            </a>
           </li>
         </ul>
       </nav>
@@ -139,20 +143,19 @@ const isHome = path === '/';
 
     <footer class="site-foot">
       <div class="container-wide">
-        <div class="foot-brand">
-          <BrandMark size={22} />
-          OpenScreenShot
+        <div class="foot-row">
+          <p class="foot-bottom">© {year} OpenScreenShot @PGHQdev</p>
+          <nav class="foot-links" aria-label="Footer">
+            <a href="/docs/">Docs</a>
+            <a href="/support/">Support & FAQ</a>
+            <a href="/roadmap/">Roadmap</a>
+            <a href="/privacy/">Privacy</a>
+            <a href="/cool-stuff/">Cool stuff</a>
+            <a href={REPO_URL} target="_blank" rel="noopener">GitHub</a>
+            <a href={`${REPO_URL}/blob/main/LICENSE`} target="_blank" rel="noopener">MIT License</a>
+            <a href="https://ko-fi.com/T7A624DAY7" target="_blank" rel="noopener">Buy me a coffee</a>
+          </nav>
         </div>
-        <nav class="foot-links" aria-label="Footer">
-          <a href="/docs/">Docs</a>
-          <a href="/support/">Support & FAQ</a>
-          <a href="/roadmap/">Roadmap</a>
-          <a href="/privacy/">Privacy</a>
-          <a href="/cool-stuff/">Cool stuff</a>
-          <a href={REPO_URL} target="_blank" rel="noopener">GitHub</a>
-          <a href={`${REPO_URL}/blob/main/LICENSE`} target="_blank" rel="noopener">MIT License</a>
-          <a href="https://ko-fi.com/T7A624DAY7" target="_blank" rel="noopener">Buy me a coffee</a>
-        </nav>
         <p class="foot-also">
           Also by @PGHQdev:{' '}
           <a href="https://minimalistnotes.com" target="_blank" rel="noopener">Minimalist Notes</a>,
@@ -160,7 +163,6 @@ const isHome = path === '/';
           <a href="https://musing.wiki" target="_blank" rel="noopener">Musing</a>, a quote on every
           new tab
         </p>
-        <p class="foot-bottom">© {year} OpenScreenShot @PGHQdev</p>
       </div>
     </footer>
 
@@ -172,7 +174,6 @@ const isHome = path === '/';
   .site-head {
     position: relative;
     z-index: 10;
-    border-bottom: 1px solid var(--rule);
     background: var(--paper);
   }
 
@@ -218,8 +219,8 @@ const isHome = path === '/';
   }
 
   .nav-links .nav-cta {
-    min-height: 38px;
-    padding: 0 var(--s-4);
+    min-height: 40px;
+    padding: 0 var(--s-4) 0 var(--s-3);
     background: var(--ink);
     color: #fff;
     font-size: var(--fs-sm);
@@ -229,30 +230,32 @@ const isHome = path === '/';
     background: var(--accent-ink);
   }
 
+  .nav-cta-chrome {
+    width: 18px;
+    height: 18px;
+  }
+
   .site-foot {
     margin-top: var(--s-8);
-    padding-block: var(--s-7) var(--s-6);
-    border-top: 1px solid var(--rule);
-    background: var(--paper-dim);
+    padding-block: var(--s-6) var(--s-6);
+    background: var(--paper);
     color: var(--ink-3);
     font-size: var(--fs-sm);
   }
 
-  .foot-brand {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--s-2);
-    margin-bottom: var(--s-4);
-    color: var(--ink);
-    font-weight: 800;
-    letter-spacing: var(--tr-tight);
+  .foot-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-3) var(--s-6);
+    margin-bottom: var(--s-3);
   }
 
   .foot-links {
     display: flex;
     flex-wrap: wrap;
     gap: var(--s-2) var(--s-5);
-    margin-bottom: var(--s-4);
   }
 
   .foot-links a {
@@ -266,14 +269,13 @@ const isHome = path === '/';
     text-decoration: underline;
   }
 
-  .foot-also,
-  .foot-bottom {
-    margin: 0 0 var(--s-2);
+  .foot-also {
+    margin: 0;
     max-width: var(--max-w);
   }
 
   .foot-bottom {
-    margin-bottom: 0;
+    margin: 0;
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
     letter-spacing: 0.04em;
