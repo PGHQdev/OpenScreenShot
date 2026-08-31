@@ -222,7 +222,7 @@
     "description": "Hint shown under the after-capture row when Download is selected."
   },
   "expressLabel": {
-    "message": "Clicking the toolbar icon captures the full page",
+    "message": "Icon click captures the full page",
     "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
   },
   "expressHint": {
