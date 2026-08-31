@@ -35,12 +35,20 @@ import {
   IconRedo,
   IconSelect,
   IconSpotlight,
+  IconStar,
   IconStep,
   IconText,
   IconTrash,
   IconUndo,
 } from '../shared/icons';
 import { getSettings, setSettings } from '../shared/storage';
+import {
+  CWS_REVIEWS_URL,
+  markRatedOrDismissed,
+  markRatePromptShown,
+  recordExportSuccess,
+  shouldShowRatePrompt,
+} from '../shared/rating';
 import { labelForSource } from './capture-label';
 import { ZoomMenu } from './ZoomMenu';
 import { BeautifyMenu } from './BeautifyMenu';
@@ -159,9 +167,35 @@ export function App() {
     if (toolbarRef.current) syncRovingTabIndex(toolbarRef.current);
   }, []);
 
+  // The one post-success rate prompt (Surface C). Marked shown the moment it
+  // renders, so it appears at most once per install however it is answered.
+  const [ratePrompt, setRatePrompt] = useState(false);
+
+  async function recordSuccess() {
+    await recordExportSuccess();
+    if (await shouldShowRatePrompt()) {
+      await markRatePromptShown();
+      setRatePrompt(true);
+    }
+  }
+
+  function openReviews() {
+    void markRatedOrDismissed();
+    setRatePrompt(false);
+    window.open(CWS_REVIEWS_URL, '_blank', 'noopener');
+  }
+
+  function dismissRatePrompt() {
+    void markRatedOrDismissed();
+    setRatePrompt(false);
+  }
+
   function copyToClipboard() {
     ed.copyImage()
-      .then(() => setCopyState('copied'))
+      .then(() => {
+        setCopyState('copied');
+        void recordSuccess();
+      })
       .catch(() => setCopyState('failed'))
       .finally(() => setTimeout(() => setCopyState('idle'), 1500));
   }
@@ -311,6 +345,15 @@ export function App() {
             imageSize={ed.imageSize}
             onChange={ed.setFrame}
           />
+          <button
+            class="icon-btn rate-btn"
+            title={t('editorRateTooltip')}
+            aria-label={t('editorRateLabel')}
+            onClick={openReviews}
+          >
+            <IconStar size={16} />
+            {t('editorRateLabel')}
+          </button>
           <button
             class="btn-primary btn-fixed"
             title={t('editorCopyTitle')}
@@ -512,7 +555,26 @@ export function App() {
       </div>
 
       {exportT.mounted ? (
-        <ExportDialog ed={ed} onClose={() => setExportOpen(false)} closing={exportT.closing} />
+        <ExportDialog
+          ed={ed}
+          onClose={() => setExportOpen(false)}
+          onSuccess={() => void recordSuccess()}
+          closing={exportT.closing}
+        />
+      ) : null}
+      {ratePrompt ? (
+        <div class="rate-prompt" role="region" aria-label={t('ratePromptHeadline')}>
+          <p class="rate-prompt-headline">{t('ratePromptHeadline')}</p>
+          <p class="rate-prompt-body">{t('ratePromptBody')}</p>
+          <div class="rate-prompt-actions">
+            <button class="btn-primary" onClick={openReviews}>
+              {t('ratePromptRate')}
+            </button>
+            <button class="btn-secondary" onClick={dismissRatePrompt}>
+              {t('ratePromptLater')}
+            </button>
+          </div>
+        </div>
       ) : null}
       {sheetT.mounted ? (
         <ShortcutSheet onClose={() => setSheetOpen(false)} closing={sheetT.closing} />
@@ -760,10 +822,12 @@ function isLight(hex: string): boolean {
 function ExportDialog({
   ed,
   onClose,
+  onSuccess,
   closing,
 }: {
   ed: ReturnType<typeof useEditor>;
   onClose: () => void;
+  onSuccess: () => void;
   closing: boolean;
 }) {
   const df = ed.settings?.defaultFormat ?? 'png';
@@ -877,6 +941,7 @@ function ExportDialog({
           // Swallowed: see comment above.
         }
       }
+      onSuccess();
       onClose();
     } catch {
       // Keep the dialog open on failure — there is no other surface for this

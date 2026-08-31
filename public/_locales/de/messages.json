@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "Ganzseiten-Screenshot & Anmerkungen - OpenScreenShot",
+    "message": "Ganzseiten-Screenshot - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
   },
   "extDesc": {
-    "message": "Screenshots: ganze Seite, Ausschnitt, Sichtbares. Mit Anmerkungs-Editor. PNG, JPEG, WebP, PDF. 100 % privat, offline, kein Upload.",
+    "message": "Ganzseiten-Screenshot mit einem Klick. Open Source, 100 % privat, kein Konto, kein Upload.",
     "description": "Extension description shown in the Chrome Web Store and extensions page."
   },
   "modeFullPage": {
@@ -222,12 +222,16 @@
     "description": "Hint shown under the after-capture row when Download is selected."
   },
   "expressLabel": {
-    "message": "Screenshot per Symbolklick",
+    "message": "Klick auf das Symbol nimmt die ganze Seite auf",
     "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
   },
   "expressHint": {
-    "message": "Das Symbol nimmt jetzt die ganze Seite auf. Rechtsklick auf das Symbol schaltet das aus.",
+    "message": "Deaktivieren, um jedes Mal zwischen Ganze Seite, Sichtbarer Bereich oder Ausschnitt zu wählen.",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "expressMigratedNote": {
+    "message": "Ein Klick auf das Symbol nimmt jetzt die ganze Seite auf. Andere Modi per Rechtsklick.",
+    "description": "One-time editor note after the update that made a toolbar click capture the full page."
   },
   "recOverlayPause": {
     "message": "Pause",
@@ -2252,5 +2256,87 @@
   "settingsSupport": {
     "message": "Unterstützen",
     "description": "Popup settings: label for the row holding the Ko-fi and cool-stuff links."
+  },
+  "welcomeTitle": {
+    "message": "Willkommen",
+    "description": "Welcome page: browser tab title."
+  },
+  "welcomeHeadline": {
+    "message": "Fertig. Klicke auf das Symbol.",
+    "description": "Welcome page: headline inviting the first icon click."
+  },
+  "welcomeBody": {
+    "message": "OpenScreenShot nimmt die ganze Seite mit einem Klick auf. Kein Konto. Nichts verlässt diesen Rechner. Probiere es gleich auf dieser Seite.",
+    "description": "Welcome page: one-paragraph pitch under the headline."
+  },
+  "welcomePrimary": {
+    "message": "Klicke auf das OpenScreenShot-Symbol in der Symbolleiste.",
+    "description": "Welcome page: the primary instruction line."
+  },
+  "welcomeSecondary": {
+    "message": "Oder drücke Strg+Umschalt+S (Cmd+Umschalt+S auf dem Mac).",
+    "description": "Welcome page: the keyboard-shortcut alternative line."
+  },
+  "editorRateLabel": {
+    "message": "Bewerten",
+    "description": "Editor topbar: label on the always-visible Rate star."
+  },
+  "editorRateTooltip": {
+    "message": "30 Sekunden. So finden andere ein privates Screenshot-Tool.",
+    "description": "Editor topbar: tooltip on the Rate star."
+  },
+  "ratePromptHeadline": {
+    "message": "Spart dir das Zeit?",
+    "description": "One-time post-export rate prompt: headline."
+  },
+  "ratePromptBody": {
+    "message": "Eine kurze Bewertung im Chrome Web Store ist der wichtigste Weg, wie ein privates Tool gefunden wird. Sie dauert 30 Sekunden.",
+    "description": "One-time post-export rate prompt: body."
+  },
+  "ratePromptRate": {
+    "message": "Im Chrome Web Store bewerten",
+    "description": "One-time post-export rate prompt: button that opens the reviews tab."
+  },
+  "ratePromptLater": {
+    "message": "Nicht jetzt",
+    "description": "One-time post-export rate prompt: dismiss button."
+  },
+  "errNoTab": {
+    "message": "Kein aktiver Tab gefunden.",
+    "description": "Capture error: no active tab."
+  },
+  "errProtectedPage": {
+    "message": "Diese geschützte Seite kann nicht aufgenommen werden.",
+    "description": "Capture error: browser-protected page."
+  },
+  "errBlankPage": {
+    "message": "Diese Seite hat keinen scrollbaren Inhalt.",
+    "description": "Capture error: nothing scrollable to capture."
+  },
+  "errTooLarge": {
+    "message": "Diese Seite ist zu hoch für ein einzelnes Bild ($PX$ px). Versuche Sichtbarer Bereich oder Ausschnitt.",
+    "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
+    "placeholders": {
+      "px": {
+        "content": "$1",
+        "example": "35000"
+      }
+    }
+  },
+  "errNoRegion": {
+    "message": "Kein gespeicherter Ausschnitt passt auf diesen Bildschirm — wähle zuerst einen aus.",
+    "description": "Capture error: repeat-last-region with no region that fits."
+  },
+  "errClipboard": {
+    "message": "Der Screenshot konnte nicht in die Zwischenablage kopiert werden.",
+    "description": "Quick-action error: clipboard write failed."
+  },
+  "errSave": {
+    "message": "Der Screenshot konnte nicht gespeichert werden.",
+    "description": "Quick-action error: disk save failed."
+  },
+  "errUnknown": {
+    "message": "Die Aufnahme ist unerwartet fehlgeschlagen.",
+    "description": "Capture error: unexpected failure."
   }
 }

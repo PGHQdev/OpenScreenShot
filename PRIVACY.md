@@ -45,6 +45,14 @@ The microphone and camera, when you enable them, are opened directly by your bro
 permission prompt — the extension never sees a stream until you grant it, and the stream
 never leaves your device.
 
+## Uninstall
+
+If you uninstall the extension, your browser opens a feedback page at
+<https://openscreenshot.app/uninstall>. The page's address carries only the extension
+version and your UI language. We do not receive your browsing history, any page you
+visited, or any capture — the extension has none of that to send. The page itself sets no
+cookies and runs no analytics; nothing is sent unless you type feedback and press Send.
+
 ## Third-party services
 
 OpenScreenShot does not use any third-party analytics, advertising, or data-processing services. PDF export is handled by a small writer built into the extension (`src/editor/pdf-writer.ts`), so exporting a PDF makes no network request either.

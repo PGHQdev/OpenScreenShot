@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "全頁截圖與註解 - OpenScreenShot",
+    "message": "整頁截圖 - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
   },
   "extDesc": {
-    "message": "整頁、選取區域與可見範圍截圖，內建註解編輯器。可匯出 PNG、JPEG、WebP、PDF。100% 私密、離線、不上傳。",
+    "message": "一鍵擷取整頁截圖。開放原始碼，100% 私密，無需帳號，不上傳。",
     "description": "Extension description shown in the Chrome Web Store and extensions page."
   },
   "modeFullPage": {
@@ -222,12 +222,16 @@
     "description": "Hint shown under the after-capture row when Download is selected."
   },
   "expressLabel": {
-    "message": "點圖示即擷取",
+    "message": "點一下圖示即擷取整個網頁",
     "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
   },
   "expressHint": {
-    "message": "點圖示即擷取整個網頁。在圖示上按右鍵可關閉。",
+    "message": "關閉後，每次可選擇整個網頁、可見範圍或選取區域。",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "expressMigratedNote": {
+    "message": "現在點一下圖示即可擷取整個網頁。其他模式請按右鍵選擇。",
+    "description": "One-time editor note after the update that made a toolbar click capture the full page."
   },
   "recOverlayPause": {
     "message": "暫停",
@@ -2252,5 +2256,87 @@
   "settingsSupport": {
     "message": "支持",
     "description": "Popup settings: label for the row holding the Ko-fi and cool-stuff links."
+  },
+  "welcomeTitle": {
+    "message": "歡迎",
+    "description": "Welcome page: browser tab title."
+  },
+  "welcomeHeadline": {
+    "message": "就緒。點一下圖示。",
+    "description": "Welcome page: headline inviting the first icon click."
+  },
+  "welcomeBody": {
+    "message": "OpenScreenShot 一鍵擷取整個網頁。無需帳號，任何資料都不會離開這台電腦。現在就在本頁試試看。",
+    "description": "Welcome page: one-paragraph pitch under the headline."
+  },
+  "welcomePrimary": {
+    "message": "點一下工具列中的 OpenScreenShot 圖示。",
+    "description": "Welcome page: the primary instruction line."
+  },
+  "welcomeSecondary": {
+    "message": "或按 Ctrl+Shift+S（Mac 為 Cmd+Shift+S）。",
+    "description": "Welcome page: the keyboard-shortcut alternative line."
+  },
+  "editorRateLabel": {
+    "message": "評分",
+    "description": "Editor topbar: label on the always-visible Rate star."
+  },
+  "editorRateTooltip": {
+    "message": "只要 30 秒。這是其他人發現私密截圖工具的方式。",
+    "description": "Editor topbar: tooltip on the Rate star."
+  },
+  "ratePromptHeadline": {
+    "message": "有幫你節省時間嗎？",
+    "description": "One-time post-export rate prompt: headline."
+  },
+  "ratePromptBody": {
+    "message": "在 Chrome 線上應用程式商店留下簡短評分，是私密工具被看見的主要方式。只要 30 秒。",
+    "description": "One-time post-export rate prompt: body."
+  },
+  "ratePromptRate": {
+    "message": "前往 Chrome 線上應用程式商店評分",
+    "description": "One-time post-export rate prompt: button that opens the reviews tab."
+  },
+  "ratePromptLater": {
+    "message": "暫時不要",
+    "description": "One-time post-export rate prompt: dismiss button."
+  },
+  "errNoTab": {
+    "message": "找不到使用中的分頁。",
+    "description": "Capture error: no active tab."
+  },
+  "errProtectedPage": {
+    "message": "無法擷取此受保護的網頁。",
+    "description": "Capture error: browser-protected page."
+  },
+  "errBlankPage": {
+    "message": "此網頁沒有可捲動的內容。",
+    "description": "Capture error: nothing scrollable to capture."
+  },
+  "errTooLarge": {
+    "message": "網頁太長，無法合成一張圖片（$PX$px）。請改用可見範圍或選取區域。",
+    "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
+    "placeholders": {
+      "px": {
+        "content": "$1",
+        "example": "35000"
+      }
+    }
+  },
+  "errNoRegion": {
+    "message": "儲存的區域不符合目前螢幕，請先重新選取。",
+    "description": "Capture error: repeat-last-region with no region that fits."
+  },
+  "errClipboard": {
+    "message": "無法將截圖複製到剪貼簿。",
+    "description": "Quick-action error: clipboard write failed."
+  },
+  "errSave": {
+    "message": "無法將截圖儲存到磁碟。",
+    "description": "Quick-action error: disk save failed."
+  },
+  "errUnknown": {
+    "message": "擷取意外失敗。",
+    "description": "Capture error: unexpected failure."
   }
 }

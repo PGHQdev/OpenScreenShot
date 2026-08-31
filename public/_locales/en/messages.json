@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "Full Page Screenshot & Annotate - OpenScreenShot",
+    "message": "Full Page Screenshot - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
   },
   "extDesc": {
-    "message": "Full page, region & visible screenshots with an annotation editor. Export PNG, JPEG, WebP, PDF. 100% private, offline, no uploads.",
+    "message": "Full page screenshot in one click. Open source, 100% private, no account, no uploads.",
     "description": "Extension description shown in the Chrome Web Store and extensions page."
   },
   "modeFullPage": {
@@ -222,12 +222,16 @@
     "description": "Hint shown under the after-capture row when Download is selected."
   },
   "expressLabel": {
-    "message": "Capture on icon click",
+    "message": "Icon click captures the full page",
     "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
   },
   "expressHint": {
-    "message": "The icon now captures the full page. Right-click the icon to turn this off.",
+    "message": "Turn off to choose Full Page, Visible Area, or Selected Region each time.",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "expressMigratedNote": {
+    "message": "Toolbar click now captures the full page. Right-click for other modes.",
+    "description": "One-time editor note after the update that made a toolbar click capture the full page."
   },
   "recOverlayPause": {
     "message": "Pause",
@@ -302,7 +306,7 @@
     "description": "Popup: toggle chip for the webcam track."
   },
   "recWebcamNoPreview": {
-    "message": "Added to the export \u2014 no live preview while you record.",
+    "message": "Added to the export — no live preview while you record.",
     "description": "Popup: one-line disclosure shown under the Webcam toggle once it is on, before Record is pressed (task 40: the recorded page never shows a live self-view)."
   },
   "recWebcamDenied": {
@@ -318,47 +322,47 @@
     "description": "Popup button shown after the user refuses the inline tabCapture prompt."
   },
   "recFailStartUnreachable": {
-    "message": "Recording didn\u2019t start \u2014 the extension didn\u2019t answer. Try again.",
+    "message": "Recording didn’t start — the extension didn’t answer. Try again.",
     "description": "Popup: error toast when REC_START never reached the service worker."
   },
   "recFailStartBlocked": {
-    "message": "Recording didn\u2019t start \u2014 this page can\u2019t be recorded. Switch to a normal tab and try again.",
+    "message": "Recording didn’t start — this page can’t be recorded. Switch to a normal tab and try again.",
     "description": "Popup: error toast when the start found no recordable tab (gone, or a protected URL)."
   },
   "recFailStartBusy": {
-    "message": "A recording is already running \u2014 stop it before starting another.",
+    "message": "A recording is already running — stop it before starting another.",
     "description": "Popup: error toast when a start arrives while a recording is live."
   },
   "recFailStartFailed": {
-    "message": "Recording didn\u2019t start \u2014 the tab couldn\u2019t be prepared. Reload the tab and try again.",
+    "message": "Recording didn’t start — the tab couldn’t be prepared. Reload the tab and try again.",
     "description": "Popup: error toast when the worker's start threw before the engine was asked to capture."
   },
   "recFailCleanup": {
-    "message": "A failed recording is still stored \u2014 delete it on the Recorder page.",
+    "message": "A failed recording is still stored — delete it on the Recorder page.",
     "description": "Popup: error toast when a failed session could not be tidied up."
   },
   "recFailEngine": {
-    "message": "Recording stopped before it began \u2014 the tab couldn\u2019t be captured. Try again.",
+    "message": "Recording stopped before it began — the tab couldn’t be captured. Try again.",
     "description": "Popup: error toast when the offscreen engine failed to open its streams."
   },
   "recFailEngineUnreachable": {
-    "message": "Nothing is being recorded \u2014 the recorder never started. Stop and try again.",
+    "message": "Nothing is being recorded — the recorder never started. Stop and try again.",
     "description": "Popup: error toast when OFFSCREEN_START never reached the offscreen engine, so the badge and control bar claim a recording that is not happening."
   },
   "recFailEngineStalled": {
-    "message": "Recording didn\u2019t start, and stopping it got no answer. Nothing was saved \u2014 try again.",
+    "message": "Recording didn’t start, and stopping it got no answer. Nothing was saved — try again.",
     "description": "Popup: the user pressed Stop on a recording that had not begun, and the offscreen recorder never answered. The run was torn down."
   },
   "popupOpenFailed": {
-    "message": "That page couldn\u2019t be opened. Try again.",
+    "message": "That page couldn’t be opened. Try again.",
     "description": "Popup: error toast when chrome.tabs.create fails for the setup page, the editor or the recorder."
   },
   "recFailChunkWrite": {
-    "message": "Part of this recording isn\u2019t being saved. Stop it and check what you have on the Recorder page.",
+    "message": "Part of this recording isn’t being saved. Stop it and check what you have on the Recorder page.",
     "description": "Popup: error toast when a chunk write to IndexedDB failed mid-recording, so the file is shorter than the clock says."
   },
   "recFailEventsWrite": {
-    "message": "The cursor track isn\u2019t being saved. The video is fine; zoom and click effects will be missing.",
+    "message": "The cursor track isn’t being saved. The video is fine; zoom and click effects will be missing.",
     "description": "Popup: error toast when cursor-event writes to IndexedDB failed mid-recording, leaving the video intact."
   },
   "recOverlayStarting": {
@@ -374,35 +378,35 @@
     "description": "Recording control bar: warning chip shown when a requested camera was declined or unavailable. Keep it short; it sits in a row of three-letter track chips."
   },
   "recFailRecorderOpen": {
-    "message": "Your recording is saved \u2014 the Recorder page didn\u2019t open. Use Recover last recording below.",
+    "message": "Your recording is saved — the Recorder page didn’t open. Use Recover last recording below.",
     "description": "Popup: error toast when chrome.tabs.create for the recorder page failed after a recording finished."
   },
   "recFailQuery": {
-    "message": "Recording status is unavailable \u2014 open the Recorder page to check.",
+    "message": "Recording status is unavailable — open the Recorder page to check.",
     "description": "Popup: error toast when REC_QUERY threw, so \"not recording\" cannot be trusted."
   },
   "recFailOverlayBlocked": {
-    "message": "The recording controls couldn\u2019t open on this page \u2014 stop the recording from here.",
+    "message": "The recording controls couldn’t open on this page — stop the recording from here.",
     "description": "Popup: error toast when the in-page control bar could not be injected."
   },
   "recFailOverlayLost": {
-    "message": "The recording controls were lost on this page \u2014 stop the recording from here.",
+    "message": "The recording controls were lost on this page — stop the recording from here.",
     "description": "Popup: error toast when the in-page control bar stopped reporting mid-recording."
   },
   "recFailControlUnreachable": {
-    "message": "That didn\u2019t reach the recorder \u2014 the extension didn\u2019t answer. Try again.",
+    "message": "That didn’t reach the recorder — the extension didn’t answer. Try again.",
     "description": "Popup: error toast when stop/cancel never reached the service worker."
   },
   "recFailSessionLoad": {
-    "message": "That recording couldn\u2019t be opened \u2014 it may be incomplete.",
+    "message": "That recording couldn’t be opened — it may be incomplete.",
     "description": "Recorder page: error toast when a session could not be read out of IndexedDB."
   },
   "recFailSegmentSkipped": {
-    "message": "Part of this recording wouldn\u2019t play and was left out of the export.",
+    "message": "Part of this recording wouldn’t play and was left out of the export.",
     "description": "Recorder page: error toast when one or more segments were skipped during an export."
   },
   "recFailExport": {
-    "message": "Export failed \u2014 no file was saved. Try again.",
+    "message": "Export failed — no file was saved. Try again.",
     "description": "Recorder page: error toast when the export threw."
   },
   "recFailSaveInterrupted": {
@@ -784,7 +788,7 @@
     "description": "Setup page: row title for the camera permission."
   },
   "setupCameraDesc": {
-    "message": "Adds a bubble to the export \u2014 no live preview while recording.",
+    "message": "Adds a bubble to the export — no live preview while recording.",
     "description": "Setup page: row description for the camera permission."
   },
   "setupMic": {
@@ -2252,5 +2256,87 @@
   "settingsSupport": {
     "message": "Support",
     "description": "Popup settings: label for the row holding the Ko-fi and cool-stuff links."
+  },
+  "welcomeTitle": {
+    "message": "Welcome",
+    "description": "Welcome page: browser tab title."
+  },
+  "welcomeHeadline": {
+    "message": "You're in. Click the icon.",
+    "description": "Welcome page: headline inviting the first icon click."
+  },
+  "welcomeBody": {
+    "message": "OpenScreenShot captures the whole page in one click. No account. Nothing leaves this machine. Try it on this page right now.",
+    "description": "Welcome page: one-paragraph pitch under the headline."
+  },
+  "welcomePrimary": {
+    "message": "Click the OpenScreenShot icon in the toolbar.",
+    "description": "Welcome page: the primary instruction line."
+  },
+  "welcomeSecondary": {
+    "message": "Or press Ctrl+Shift+S (Cmd+Shift+S on Mac).",
+    "description": "Welcome page: the keyboard-shortcut alternative line."
+  },
+  "editorRateLabel": {
+    "message": "Rate",
+    "description": "Editor topbar: label on the always-visible Rate star."
+  },
+  "editorRateTooltip": {
+    "message": "30 seconds. It is how other people find a private screenshot tool.",
+    "description": "Editor topbar: tooltip on the Rate star."
+  },
+  "ratePromptHeadline": {
+    "message": "Is this saving you time?",
+    "description": "One-time post-export rate prompt: headline."
+  },
+  "ratePromptBody": {
+    "message": "A short rating on the Chrome Web Store is the main reason a private tool gets found. It takes 30 seconds.",
+    "description": "One-time post-export rate prompt: body."
+  },
+  "ratePromptRate": {
+    "message": "Rate on Chrome Web Store",
+    "description": "One-time post-export rate prompt: button that opens the reviews tab."
+  },
+  "ratePromptLater": {
+    "message": "Not now",
+    "description": "One-time post-export rate prompt: dismiss button."
+  },
+  "errNoTab": {
+    "message": "No active tab found.",
+    "description": "Capture error: no active tab."
+  },
+  "errProtectedPage": {
+    "message": "Can't screenshot this protected page.",
+    "description": "Capture error: browser-protected page."
+  },
+  "errBlankPage": {
+    "message": "This page has no scrollable content.",
+    "description": "Capture error: nothing scrollable to capture."
+  },
+  "errTooLarge": {
+    "message": "This page is too tall to capture in one image ($PX$px). Try visible or region mode.",
+    "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
+    "placeholders": {
+      "px": {
+        "content": "$1",
+        "example": "35000"
+      }
+    }
+  },
+  "errNoRegion": {
+    "message": "No saved region fits this screen — select one first.",
+    "description": "Capture error: repeat-last-region with no region that fits."
+  },
+  "errClipboard": {
+    "message": "Could not copy the screenshot to the clipboard.",
+    "description": "Quick-action error: clipboard write failed."
+  },
+  "errSave": {
+    "message": "Could not save the screenshot to disk.",
+    "description": "Quick-action error: disk save failed."
+  },
+  "errUnknown": {
+    "message": "Capture failed unexpectedly.",
+    "description": "Capture error: unexpected failure."
   }
 }

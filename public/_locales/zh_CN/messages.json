@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "网页整页截图与标注 - OpenScreenShot",
+    "message": "网页整页截图 - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
   },
   "extDesc": {
-    "message": "整页、区域和可见区域截图，自带标注编辑器。导出 PNG、JPEG、WebP、PDF。100% 私密，离线运行，不上传。",
+    "message": "一键截取整页截图。开源，100% 私密，无需账号，不上传。",
     "description": "Extension description shown in the Chrome Web Store and extensions page."
   },
   "modeFullPage": {
@@ -222,12 +222,16 @@
     "description": "Hint shown under the after-capture row when Download is selected."
   },
   "expressLabel": {
-    "message": "点击图标即截图",
+    "message": "点击图标即截取整页",
     "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
   },
   "expressHint": {
-    "message": "现在点击图标会直接截取整页。右键点击图标可关闭。",
+    "message": "关闭后，每次可选择整页、可见区域或选定区域。",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "expressMigratedNote": {
+    "message": "现在点击图标即截取整页。其他模式请右键选择。",
+    "description": "One-time editor note after the update that made a toolbar click capture the full page."
   },
   "recOverlayPause": {
     "message": "暂停",
@@ -2252,5 +2256,87 @@
   "settingsSupport": {
     "message": "支持",
     "description": "Popup settings: label for the row holding the Ko-fi and cool-stuff links."
+  },
+  "welcomeTitle": {
+    "message": "欢迎",
+    "description": "Welcome page: browser tab title."
+  },
+  "welcomeHeadline": {
+    "message": "就绪。点击图标。",
+    "description": "Welcome page: headline inviting the first icon click."
+  },
+  "welcomeBody": {
+    "message": "OpenScreenShot 一键截取整页。无需账号，任何数据都不会离开这台电脑。现在就在本页试试吧。",
+    "description": "Welcome page: one-paragraph pitch under the headline."
+  },
+  "welcomePrimary": {
+    "message": "点击工具栏中的 OpenScreenShot 图标。",
+    "description": "Welcome page: the primary instruction line."
+  },
+  "welcomeSecondary": {
+    "message": "或按 Ctrl+Shift+S（Mac 上为 Cmd+Shift+S）。",
+    "description": "Welcome page: the keyboard-shortcut alternative line."
+  },
+  "editorRateLabel": {
+    "message": "评分",
+    "description": "Editor topbar: label on the always-visible Rate star."
+  },
+  "editorRateTooltip": {
+    "message": "只需 30 秒。这是其他人发现私密截图工具的方式。",
+    "description": "Editor topbar: tooltip on the Rate star."
+  },
+  "ratePromptHeadline": {
+    "message": "它帮你节省时间了吗？",
+    "description": "One-time post-export rate prompt: headline."
+  },
+  "ratePromptBody": {
+    "message": "在 Chrome 应用商店留下简短评分，是私密工具被发现的主要途径。只需 30 秒。",
+    "description": "One-time post-export rate prompt: body."
+  },
+  "ratePromptRate": {
+    "message": "去 Chrome 应用商店评分",
+    "description": "One-time post-export rate prompt: button that opens the reviews tab."
+  },
+  "ratePromptLater": {
+    "message": "暂不",
+    "description": "One-time post-export rate prompt: dismiss button."
+  },
+  "errNoTab": {
+    "message": "未找到活动标签页。",
+    "description": "Capture error: no active tab."
+  },
+  "errProtectedPage": {
+    "message": "无法截取此受保护的页面。",
+    "description": "Capture error: browser-protected page."
+  },
+  "errBlankPage": {
+    "message": "此页面没有可滚动的内容。",
+    "description": "Capture error: nothing scrollable to capture."
+  },
+  "errTooLarge": {
+    "message": "页面太长，无法合成一张图片（$PX$px）。请尝试可见区域或选定区域。",
+    "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
+    "placeholders": {
+      "px": {
+        "content": "$1",
+        "example": "35000"
+      }
+    }
+  },
+  "errNoRegion": {
+    "message": "保存的区域不适合当前屏幕，请先重新选择。",
+    "description": "Capture error: repeat-last-region with no region that fits."
+  },
+  "errClipboard": {
+    "message": "无法将截图复制到剪贴板。",
+    "description": "Quick-action error: clipboard write failed."
+  },
+  "errSave": {
+    "message": "无法将截图保存到磁盘。",
+    "description": "Quick-action error: disk save failed."
+  },
+  "errUnknown": {
+    "message": "截图意外失败。",
+    "description": "Capture error: unexpected failure."
   }
 }

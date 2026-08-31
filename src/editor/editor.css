@@ -1356,6 +1356,50 @@ body {
   pointer-events: none;
 }
 
+/* The always-visible Rate star in the topbar — an icon-btn with a word,
+   so it widens past the square the base rule assumes. */
+.rate-btn {
+  width: auto;
+  padding: 0 10px;
+  gap: 6px;
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--fs-sm);
+}
+
+/* The one post-success rate prompt (Surface C): a non-blocking card in the
+   bottom corner. It never covers the export controls and never blocks. */
+.rate-prompt {
+  position: fixed;
+  right: var(--s-4);
+  bottom: var(--s-4);
+  width: 320px;
+  padding: var(--s-4);
+  border: 1px solid var(--border-1);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  box-shadow: var(--sh-md);
+  z-index: 7;
+  animation: oss-notice-in var(--dur-mid) var(--ease-out);
+}
+
+.rate-prompt-headline {
+  margin: 0 0 var(--s-2);
+  font-weight: 600;
+  font-size: var(--fs-base);
+}
+
+.rate-prompt-body {
+  margin: 0 0 var(--s-3);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.rate-prompt-actions {
+  display: flex;
+  gap: var(--s-2);
+}
+
 .modal-text {
   margin: 0 0 var(--s-4);
   color: var(--text-2);

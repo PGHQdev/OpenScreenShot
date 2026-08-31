@@ -16,6 +16,7 @@ import type { CaptureMode, CaptureRequest, PopupMessage, TileSpec } from '../sha
 import {
   getLastRegion,
   getSettings,
+  migrateExpressDefault,
   onSettingsChanged,
   setLastCapture,
   setLastRegion,
@@ -31,6 +32,7 @@ import {
   normalizeCaptureDelay,
 } from '../shared/utils';
 import { clampRegionRect, computeScrollPositions, MAX_CANVAS_HEIGHT_PX } from '../shared/geometry';
+import { recordExportSuccess } from '../shared/rating';
 import {
   cropTile,
   getMetrics,
@@ -46,19 +48,52 @@ import { restoreRecBadge } from './recording';
 
 const EDITOR_URL = chrome.runtime.getURL('src/editor/index.html');
 const POPUP_URL = 'src/popup/index.html';
+/** First-run page: a tall dummy article that invites the first capture. */
+const WELCOME_URL = chrome.runtime.getURL('src/welcome/index.html');
+/**
+ * Where an uninstall lands (Surface D of the rating funnel). Query carries
+ * the extension version and UI locale only — never a page URL, title, or
+ * capture.
+ */
+const UNINSTALL_URL = 'https://openscreenshot.app/uninstall';
+/** The popup page opened as a tab, straight into its settings pane. */
+const SETTINGS_TAB_URL = chrome.runtime.getURL('src/popup/index.html?settings=1');
 /** Icon context-menu checkbox that toggles express mode. */
 const MENU_EXPRESS_ID = 'oss-express';
+/** Page-menu and icon-menu items that open the settings pane in a tab. */
+const MENU_SETTINGS_ID = 'oss-settings';
+const MENU_ICON_SETTINGS_ID = 'oss-icon-settings';
+/**
+ * Icon context-menu capture items. With express mode hijacking the icon
+ * click, the icon's right-click menu is where the other modes stay one
+ * gesture away. Separate ids from MENU_IDS: a menu item cannot sit both
+ * under the page parent and on the action context.
+ */
+const ICON_MENU_IDS: Record<CaptureMode, string> = {
+  'full-page': 'oss-icon-full-page',
+  visible: 'oss-icon-visible',
+  region: 'oss-icon-region',
+};
 
 /** Minimum gap between `captureVisibleTab` calls — Chrome throttles to ~2/sec. */
 const CAPTURE_THROTTLE_MS = 500;
 /** Time to let the page paint/composite after each scroll before capturing. */
 const PAINT_SETTLE_MS = 60;
 
-// No tab opens on install: the one grant a recording needs is asked for from
-// the Record click itself, so first run has nothing to walk through.
-chrome.runtime.onInstalled.addListener(() => {
-  void createContextMenus();
+// A fresh install opens the welcome page — a tall article built to make the
+// first one-click capture look good. Updates open nothing. The express
+// migration runs before the menus so the checkbox reads the post-migration
+// value.
+chrome.runtime.onInstalled.addListener((details) => {
+  void migrateExpressDefault(details.reason).then(() => createContextMenus());
+  if (details.reason === 'install') void chrome.tabs.create({ url: WELCOME_URL });
 });
+
+// Registered on every worker start so it survives service-worker restarts.
+// Version and locale only — see UNINSTALL_URL.
+void chrome.runtime.setUninstallURL(
+  `${UNINSTALL_URL}?v=${chrome.runtime.getManifest().version}&hl=${chrome.i18n.getUILanguage()}`,
+);
 
 /** Contexts the capture menu appears in — everywhere on a page. */
 const MENU_CONTEXTS: NonNullable<chrome.contextMenus.CreateProperties['contexts']> = [
@@ -120,7 +155,23 @@ async function createContextMenusOnce(): Promise<void> {
       title: titles[mode],
       contexts: MENU_CONTEXTS,
     });
+    chrome.contextMenus.create({
+      id: ICON_MENU_IDS[mode],
+      title: titles[mode],
+      contexts: ['action'],
+    });
   }
+  chrome.contextMenus.create({
+    id: MENU_SETTINGS_ID,
+    parentId: 'oss-parent',
+    title: chrome.i18n.getMessage('settingsTitle'),
+    contexts: MENU_CONTEXTS,
+  });
+  chrome.contextMenus.create({
+    id: MENU_ICON_SETTINGS_ID,
+    title: chrome.i18n.getMessage('settingsTitle'),
+    contexts: ['action'],
+  });
   // Express lives on the icon's right-click menu: once it hijacks the icon
   // click, this checkbox is the only remaining surface that can turn it off.
   chrome.contextMenus.create(
@@ -192,7 +243,14 @@ chrome.contextMenus.onClicked.addListener((info) => {
     void handleCapture('region', true).catch(onCaptureError);
     return;
   }
-  const mode = menuIdToMode(id);
+  if (id === MENU_SETTINGS_ID || id === MENU_ICON_SETTINGS_ID) {
+    void chrome.tabs.create({ url: SETTINGS_TAB_URL });
+    return;
+  }
+  const iconMode = (Object.entries(ICON_MENU_IDS) as [CaptureMode, string][]).find(
+    ([, menuId]) => menuId === id,
+  )?.[0];
+  const mode = iconMode ?? menuIdToMode(id);
   if (mode) void handleCapture(mode).catch(onCaptureError);
 });
 
@@ -211,14 +269,14 @@ chrome.runtime.onMessage.addListener((message: unknown) => {
 async function handleCapture(mode: CaptureMode, repeatRegion = false): Promise<void> {
   const tab = await getActiveTab();
   if (!tab || tab.id == null) {
-    broadcast({ type: 'CAPTURE_ERROR', code: 'unknown', message: 'No active tab found.' });
+    broadcast({ type: 'CAPTURE_ERROR', code: 'unknown', message: chrome.i18n.getMessage('errNoTab') });
     return;
   }
   if (isProtectedUrl(tab.url)) {
     broadcast({
       type: 'CAPTURE_ERROR',
       code: 'protected-page',
-      message: "Can't screenshot this protected page.",
+      message: chrome.i18n.getMessage('errProtectedPage'),
     });
     return;
   }
@@ -325,7 +383,7 @@ async function captureRegion(tab: chrome.tabs.Tab, repeat = false): Promise<void
       broadcast({
         type: 'CAPTURE_ERROR',
         code: 'no-region',
-        message: 'No saved region fits this screen — select one first.',
+        message: chrome.i18n.getMessage('errNoRegion'),
       });
       return;
     }
@@ -362,7 +420,7 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
     broadcast({
       type: 'CAPTURE_ERROR',
       code: 'blank-page',
-      message: 'This page has no scrollable content.',
+      message: chrome.i18n.getMessage('errBlankPage'),
     });
     return;
   }
@@ -372,7 +430,7 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
     broadcast({
       type: 'CAPTURE_ERROR',
       code: 'too-large',
-      message: `This page is too tall to capture in one image (${canvasHeight}px). Try visible or region mode.`,
+      message: chrome.i18n.getMessage('errTooLarge', String(canvasHeight)),
     });
     return;
   }
@@ -476,10 +534,11 @@ async function deliverCapture(
       broadcast({
         type: 'CAPTURE_ERROR',
         code: 'quick-action',
-        message: 'Could not copy the screenshot to the clipboard.',
+        message: chrome.i18n.getMessage('errClipboard'),
       });
       return false;
     }
+    void recordExportSuccess();
     void flashDoneBadge();
     return true;
   }
@@ -493,10 +552,11 @@ async function deliverCapture(
     broadcast({
       type: 'CAPTURE_ERROR',
       code: 'quick-action',
-      message: 'Could not save the screenshot to disk.',
+      message: chrome.i18n.getMessage('errSave'),
     });
     return false;
   }
+  void recordExportSuccess();
   void flashDoneBadge();
   return true;
 }
@@ -516,7 +576,7 @@ function commandToMode(command: string): CaptureMode | null {
 
 function onCaptureError(err: unknown): void {
   console.error('[OpenScreenShot] capture failed', err);
-  broadcast({ type: 'CAPTURE_ERROR', code: 'unknown', message: 'Capture failed unexpectedly.' });
+  broadcast({ type: 'CAPTURE_ERROR', code: 'unknown', message: chrome.i18n.getMessage('errUnknown') });
 }
 
 function broadcast(msg: PopupMessage): void {

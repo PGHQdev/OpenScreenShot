@@ -1,0 +1,94 @@
+---
+/**
+ * Uninstall landing (rating funnel Surface D). chrome.runtime.setUninstallURL
+ * points here with ?v=<version>&hl=<locale> — nothing else. No analytics, no
+ * cookies; the feedback textarea sends only if the visitor presses Send, and
+ * it sends by opening their own mail client (there is no backend).
+ */
+import Doc from '../../../layouts/Doc.astro';
+import { t, localePaths, localeFromParams } from '../../../i18n';
+
+export const getStaticPaths = localePaths;
+
+const locale = localeFromParams(Astro.params.lang);
+const d = t(locale, 'uninstall');
+
+const REVIEWS_URL =
+  'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp/reviews';
+const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
+---
+
+<Doc
+  title={d.meta.title}
+  description={d.meta.description}
+  path="/uninstall/"
+  locale={locale}
+  label={d.label}
+  heading={d.heading}
+  lead={d.lead}
+>
+  <section class="doc-section" id="worked">
+    <h2>{d.happy.heading}</h2>
+    <p>{d.happy.body}</p>
+    <p>
+      <a class="btn btn-ink" href={REVIEWS_URL} target="_blank" rel="noopener">{d.happy.cta}</a>
+    </p>
+  </section>
+
+  <section class="doc-section" id="broken">
+    <h2>{d.broken.heading}</h2>
+    <p>{d.broken.body}</p>
+    <form id="feedback-form">
+      <textarea
+        id="feedback-text"
+        rows="5"
+        placeholder={d.broken.placeholder}
+        aria-label={d.broken.heading}></textarea>
+      <p>
+        <button class="btn btn-quiet" type="submit">{d.broken.cta}</button>
+      </p>
+    </form>
+    <p id="feedback-thanks" hidden>
+      {d.broken.thanks}
+      <a class="btn btn-quiet" href={REVIEWS_URL} target="_blank" rel="noopener"
+        >{d.broken.rateAnyway}</a
+      >
+    </p>
+  </section>
+
+  <p class="doc-section">
+    {d.footer}
+    <a href={REPO_URL}>github.com/pghqdev/OpenScreenShot</a>
+  </p>
+</Doc>
+
+<style>
+  #feedback-text {
+    width: 100%;
+    max-width: 560px;
+    padding: 12px;
+    border: 1px solid var(--border, #d9d4c8);
+    border-radius: 10px;
+    font: inherit;
+    resize: vertical;
+  }
+</style>
+
+<script>
+  // Feedback goes out as an email the visitor sends themselves — no backend,
+  // nothing collected. The extension version rides along from ?v; no page
+  // URLs, titles, or captures exist here to send.
+  const form = document.getElementById('feedback-form') as HTMLFormElement;
+  const text = document.getElementById('feedback-text') as HTMLTextAreaElement;
+  const thanks = document.getElementById('feedback-thanks') as HTMLElement;
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const version = new URLSearchParams(location.search).get('v') ?? 'unknown';
+    const body = `${text?.value ?? ''}\n\n—\nExtension version: ${version}`;
+    location.href = `mailto:support@minimalistprojects.com?subject=${encodeURIComponent(
+      'Uninstall feedback',
+    )}&body=${encodeURIComponent(body)}`;
+    form.hidden = true;
+    thanks.hidden = false;
+  });
+</script>

@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "Скриншот всей страницы и аннотации - OpenScreenShot",
+    "message": "Скриншот всей страницы - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
   },
   "extDesc": {
-    "message": "Скриншот всей страницы, области и экрана с редактором аннотаций. Экспорт PNG, JPEG, WebP, PDF. 100% приватно, офлайн, без загрузок.",
+    "message": "Скриншот всей страницы в один клик. Открытый код, 100% приватно, без аккаунта, без загрузок.",
     "description": "Extension description shown in the Chrome Web Store and extensions page."
   },
   "modeFullPage": {
@@ -222,12 +222,16 @@
     "description": "Hint shown under the after-capture row when Download is selected."
   },
   "expressLabel": {
-    "message": "Снимать по клику на значок",
+    "message": "Клик по значку снимает всю страницу",
     "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
   },
   "expressHint": {
-    "message": "Теперь значок снимает всю страницу. Чтобы отключить, нажмите его правой кнопкой.",
+    "message": "Отключите, чтобы каждый раз выбирать: Вся страница, Видимая часть или Выделенная область.",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "expressMigratedNote": {
+    "message": "Теперь клик по значку снимает всю страницу. Другие режимы — по правому клику.",
+    "description": "One-time editor note after the update that made a toolbar click capture the full page."
   },
   "recOverlayPause": {
     "message": "Пауза",
@@ -2252,5 +2256,87 @@
   "settingsSupport": {
     "message": "Поддержка",
     "description": "Popup settings: label for the row holding the Ko-fi and cool-stuff links."
+  },
+  "welcomeTitle": {
+    "message": "Добро пожаловать",
+    "description": "Welcome page: browser tab title."
+  },
+  "welcomeHeadline": {
+    "message": "Готово. Нажмите на значок.",
+    "description": "Welcome page: headline inviting the first icon click."
+  },
+  "welcomeBody": {
+    "message": "OpenScreenShot снимает всю страницу в один клик. Без аккаунта. Ничего не покидает этот компьютер. Попробуйте прямо на этой странице.",
+    "description": "Welcome page: one-paragraph pitch under the headline."
+  },
+  "welcomePrimary": {
+    "message": "Нажмите на значок OpenScreenShot на панели инструментов.",
+    "description": "Welcome page: the primary instruction line."
+  },
+  "welcomeSecondary": {
+    "message": "Или нажмите Ctrl+Shift+S (Cmd+Shift+S на Mac).",
+    "description": "Welcome page: the keyboard-shortcut alternative line."
+  },
+  "editorRateLabel": {
+    "message": "Оценить",
+    "description": "Editor topbar: label on the always-visible Rate star."
+  },
+  "editorRateTooltip": {
+    "message": "30 секунд. Так другие находят приватный инструмент для скриншотов.",
+    "description": "Editor topbar: tooltip on the Rate star."
+  },
+  "ratePromptHeadline": {
+    "message": "Экономит ли это ваше время?",
+    "description": "One-time post-export rate prompt: headline."
+  },
+  "ratePromptBody": {
+    "message": "Короткий отзыв в Chrome Web Store — главный способ, которым находят приватный инструмент. Это занимает 30 секунд.",
+    "description": "One-time post-export rate prompt: body."
+  },
+  "ratePromptRate": {
+    "message": "Оценить в Chrome Web Store",
+    "description": "One-time post-export rate prompt: button that opens the reviews tab."
+  },
+  "ratePromptLater": {
+    "message": "Не сейчас",
+    "description": "One-time post-export rate prompt: dismiss button."
+  },
+  "errNoTab": {
+    "message": "Активная вкладка не найдена.",
+    "description": "Capture error: no active tab."
+  },
+  "errProtectedPage": {
+    "message": "Нельзя снять эту защищённую страницу.",
+    "description": "Capture error: browser-protected page."
+  },
+  "errBlankPage": {
+    "message": "На этой странице нет прокручиваемого содержимого.",
+    "description": "Capture error: nothing scrollable to capture."
+  },
+  "errTooLarge": {
+    "message": "Страница слишком высокая для одного изображения ($PX$ px). Попробуйте видимую часть или область.",
+    "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
+    "placeholders": {
+      "px": {
+        "content": "$1",
+        "example": "35000"
+      }
+    }
+  },
+  "errNoRegion": {
+    "message": "Сохранённая область не помещается на этом экране — сначала выделите новую.",
+    "description": "Capture error: repeat-last-region with no region that fits."
+  },
+  "errClipboard": {
+    "message": "Не удалось скопировать скриншот в буфер обмена.",
+    "description": "Quick-action error: clipboard write failed."
+  },
+  "errSave": {
+    "message": "Не удалось сохранить скриншот на диск.",
+    "description": "Quick-action error: disk save failed."
+  },
+  "errUnknown": {
+    "message": "Захват неожиданно завершился ошибкой.",
+    "description": "Capture error: unexpected failure."
   }
 }

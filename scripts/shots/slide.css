@@ -1,0 +1,64 @@
+/* Store gallery billboards (P0.4): huge type on a saturated field, one
+ * statement per slide. The winning tiles in CWS search are color blocks
+ * readable at thumbnail size — these are deliberately not UI captures.
+ * Each slide-N.html sets --field and --type; everything else is shared. */
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+html,
+body {
+  width: 1280px;
+  height: 800px;
+  overflow: hidden;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--field);
+  color: var(--type);
+  position: relative;
+}
+/* A slight corner falloff plus grain, so the field never reads as a flat
+ * vector fill at gallery size. */
+.ground {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(140% 110% at 18% 12%, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.12));
+}
+.ground::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+h1 {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  top: 50%;
+  transform: translateY(-54%);
+  font-size: 118px;
+  line-height: 1.02;
+  font-weight: 900;
+  letter-spacing: -0.022em;
+  text-wrap: balance;
+}
+h1 span {
+  display: block;
+}
+.wordmark {
+  position: absolute;
+  left: 96px;
+  bottom: 72px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.wordmark img {
+  width: 44px;
+  height: 44px;
+}

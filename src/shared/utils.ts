@@ -57,6 +57,12 @@ export function sanitizeFilename(name: string): string {
 /** True for URLs the extension is not allowed to capture. */
 export function isProtectedUrl(url: string | undefined): boolean {
   if (!url) return true;
+  // The extension's own pages (the welcome page above all — its whole job is
+  // to be the first one-click capture) are ours to inject into and capture.
+  // Every other chrome-extension:// origin stays protected below.
+  if (typeof chrome !== 'undefined' && chrome.runtime?.id) {
+    if (url.startsWith(`chrome-extension://${chrome.runtime.id}/`)) return false;
+  }
   return (
     url.startsWith('chrome://') ||
     url.startsWith('chrome-extension://') ||
