@@ -1,10 +1,7 @@
 ---
 import { Picture } from 'astro:assets';
 import Base from '../layouts/Base.astro';
-import BrandMark from '../components/BrandMark.astro';
-import CropMarks from '../components/CropMarks.astro';
 import FaqList from '../components/FaqList.astro';
-import FrameLabel from '../components/FrameLabel.astro';
 import PermissionTable from '../components/PermissionTable.astro';
 import { homeFaq } from '../data/faq';
 import { installPermissions, recordingPermissions } from '../data/permissions';
@@ -22,89 +19,101 @@ const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
 // eligibility; Docs, Roadmap, Support, Privacy and Cool stuff live in the footer.
 const navLinks = [
   { href: '#features', label: 'Features' },
-  { href: '#screens', label: 'Screens' },
   { href: '#privacy', label: 'Privacy' },
+  { href: '#cli', label: 'CLI' },
   { href: '#faq', label: 'FAQ' },
 ];
 
 const DESCRIPTION =
   'Free, open-source Chrome extension for full page, visible area and region screenshots, with an annotation editor, export to PNG, JPEG, WebP or PDF, and a tab recorder. Nothing leaves your machine.';
 
-// The four feature tiles. `glyph` is a decorative line drawing in each tile's
-// corner; the list is the content.
+// The in-house line icon set: one 24px grid, one stroke, coral only.
+const icons = {
+  capture:
+    'M8 4H6a2 2 0 0 0-2 2v2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M14.4 12a2.4 2.4 0 1 1-4.8 0 2.4 2.4 0 0 1 4.8 0Z',
+  pen: 'm4 20 1.2-4.2L16.7 4.3a2.05 2.05 0 0 1 2.9 2.9L8.2 18.8 4 20ZM13.5 6.5l3 3',
+  export: 'M12 4v11M7 10.5l5 5 5-5M4.5 19.5h15',
+  record: 'M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',
+  lock: 'M7 11V8a5 5 0 0 1 10 0v3M6.5 11h11a1.5 1.5 0 0 1 1.5 1.5v6A1.5 1.5 0 0 1 17.5 20h-11A1.5 1.5 0 0 1 5 18.5v-6A1.5 1.5 0 0 1 6.5 11Z',
+  terminal: 'm5 7 5 5-5 5M12.5 17H19',
+};
+
+// The trio under the hero: the three reasons to install, benefit first.
+const trio = [
+  {
+    icon: icons.capture,
+    title: 'Capture anything',
+    body: 'The whole page, the visible area, or a region you drag. One click, a shortcut, or the right-click menu.',
+  },
+  {
+    icon: icons.pen,
+    title: 'Edit before you share',
+    body: 'Arrows, boxes and text to make your point. Blur for the parts nobody else should see.',
+  },
+  {
+    icon: icons.lock,
+    title: 'Private by default',
+    body: 'No account, no upload, no telemetry. It works with your Wi-Fi off.',
+  },
+];
+
+// The four alternating feature sections. Every image is a real screenshot of
+// the built extension, rendered by scripts/shots/render.mjs.
 const features = [
   {
+    id: 'features',
     kicker: 'Capture',
-    title: 'The whole page, or a piece of it.',
+    icon: icons.capture,
+    title: 'Grab exactly what you need.',
     items: [
       'Full page, scrolled and stitched for you',
       'Visible area, in one click',
       'A region you drag, with handles on every corner',
       'A 3, 5 or 10 second delay for menus and hover states',
     ],
-    glyph:
-      'M14 30v-8a8 8 0 0 1 8-8h8M50 14h8a8 8 0 0 1 8 8v8M66 50v8a8 8 0 0 1-8 8h-8M30 66h-8a8 8 0 0 1-8-8v-8',
+    image: shotCapture,
+    alt: 'A region selection in progress on a web page in Chrome: a dashed rectangle with corner handles, a 516 by 300 size readout, and Capture and Cancel buttons.',
   },
   {
+    id: 'editor',
     kicker: 'Annotate',
-    title: 'Draw on it before you share it.',
+    icon: icons.pen,
+    title: 'Make your point before you share.',
     items: [
       'Arrows, boxes, lines, freehand, highlighter and text',
       'Blur, mosaic or an opaque fill over anything private',
       'Step numbers that count up, and a spotlight',
       'Crop, with undo that goes all the way back',
     ],
-    glyph: 'M18 62 54 26M48 20l12 12M18 62l4-14 10 10ZM40 60h22',
+    image: shotEditor,
+    alt: 'The OpenScreenShot editor with its tool rail, color palette and stroke controls, showing a full page screenshot with a box and an arrow drawn on it.',
   },
   {
+    id: 'export',
     kicker: 'Export',
-    title: 'Keep it in the format you need.',
+    icon: icons.export,
+    title: 'Leave in the format you need.',
     items: [
       'PNG, JPEG or WebP, with a quality slider',
       'PDF, on A4 or Letter, one page or many',
       'Scale to 25, 50, 100 or 200 %, or an exact width',
       'Or copy straight to the clipboard',
     ],
-    glyph: 'M40 16v34M26 38l14 14 14-14M18 58v6a4 4 0 0 0 4 4h36a4 4 0 0 0 4-4v-6',
+    image: shotExport,
+    alt: 'The export dialog in the OpenScreenShot editor, with PNG selected, JPEG, WebP and PDF beside it, a scale row, a width field and a filename field.',
   },
   {
+    id: 'recorder',
     kicker: 'Record',
-    title: 'Record the tab when a still image is not enough.',
+    icon: icons.record,
+    title: 'When a picture is not enough, record it.',
     items: [
       'One click starts a tab recording',
       'Auto zoom at every click you make',
       'Your mic and a webcam bubble, if you want them',
       'Trim on a timeline, then export WebM',
     ],
-    glyph: 'M40 62a22 22 0 1 0 0-44 22 22 0 0 0 0 44ZM40 48a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z',
-  },
-];
-
-// The gallery. Every image is a real screenshot of the built extension,
-// rendered by scripts/shots/render.mjs.
-const screens = [
-  {
-    image: shotCapture,
-    title: 'Region capture',
-    caption: 'Drag a region. Handles on every corner, and the size shown live.',
-    alt: 'A region selection in progress on a web page in Chrome: a dashed rectangle with corner handles, a 516 by 300 size readout, and Capture and Cancel buttons.',
-  },
-  {
-    image: shotEditor,
-    title: 'The editor',
-    caption: 'A box and an arrow on a full page capture, with the Poster look applied.',
-    alt: 'The OpenScreenShot editor with its tool rail, color palette and stroke controls, showing a full page screenshot with a box and an arrow drawn on it.',
-  },
-  {
-    image: shotExport,
-    title: 'Export',
-    caption: 'Four formats, a scale control, and a filename you set once.',
-    alt: 'The export dialog in the OpenScreenShot editor, with PNG selected, JPEG, WebP and PDF beside it, a scale row, a width field and a filename field.',
-  },
-  {
     image: shotRecorder,
-    title: 'The recorder',
-    caption: 'Two auto zoom blocks on the timeline, cursor options, and Export WebM.',
     alt: 'The OpenScreenShot recorder with a recorded page in the preview, cursor and tab volume controls, and a timeline with two 2x zoom blocks.',
   },
 ];
@@ -118,6 +127,22 @@ const receipt = [
   { k: 'Watermark', v: 'None' },
   { k: 'Host permissions at install', v: 'None' },
   { k: 'License', v: 'MIT' },
+];
+
+// The closing three steps.
+const steps = [
+  {
+    title: 'Add it to Chrome',
+    body: 'One click on the Chrome Web Store. Free, and no sign-up.',
+  },
+  {
+    title: 'Click the icon',
+    body: 'Or press the shortcut. Pick full page, visible area, or a region.',
+  },
+  {
+    title: 'Capture',
+    body: 'Annotate, export, or copy. It never leaves your machine.',
+  },
 ];
 
 const softwareLd = {
@@ -153,7 +178,6 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
     `FAQ drift: ${faqLd.mainEntity.length} structured answers for ${homeFaq.length} rendered questions.`,
   );
 }
-
 ---
 
 <Base
@@ -169,39 +193,33 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
 
   <!-- Hero -->
   <section id="top" class="hero">
-    <div class="container-wide">
-      <p class="pill"><span class="pill-dot" aria-hidden="true"></span>Free and open source · MIT</p>
-      <h1>
-        Full page screenshots for Chrome.<br />
-        <span class="muted">Nothing leaves your machine.</span>
-      </h1>
-      <div class="hero-row">
-        <p class="cta-row">
-          <a class="btn btn-ink" href={STORE_URL} target="_blank" rel="noopener">Add to Chrome</a>
-          <a class="btn btn-quiet" href={REPO_URL} target="_blank" rel="noopener">
-            View on GitHub ↗
-          </a>
-        </p>
-        <p class="sub">
-          Capture the whole page, the visible area, or a region. Draw on it, then export PNG, JPEG,
-          WebP or PDF. Record the tab when a still image is not enough. No account, no upload, no
-          watermark.
-        </p>
-      </div>
+    <div class="container-wide hero-copy">
+      <p class="hero-note">Free · Open source · MIT licensed</p>
+      <h1>Capture the whole page.<br />Keep it to yourself.</h1>
+      <p class="sub">
+        Screenshots, markup, export, and tab recording — all inside Chrome. Nothing is ever
+        uploaded.
+      </p>
+      <p class="cta-row">
+        <a class="btn btn-ink" href={STORE_URL} target="_blank" rel="noopener">Add to Chrome</a>
+        <a class="btn btn-quiet" href={REPO_URL} target="_blank" rel="noopener">View on GitHub ↗</a>
+      </p>
     </div>
     <div class="container-hero">
-      <figure class="hero-shot">
-        <Picture
-          src={hero}
-          alt="The OpenScreenShot popup open over a web page in Chrome, with Full Page, Visible Area, Selected Region and Record options."
-          formats={['avif', 'webp']}
-          fallbackFormat="webp"
-          widths={[640, 960, 1280, 1800, 2400]}
-          sizes="(min-width: 1248px) 1200px, 100vw"
-          fetchpriority="high"
-          loading="eager"
-          decoding="async"
-        />
+      <figure class="hero-shot frame-grad">
+        <div>
+          <Picture
+            src={hero}
+            alt="The OpenScreenShot popup open over a web page in Chrome, with Full Page, Visible Area, Selected Region and Record options."
+            formats={['avif', 'webp']}
+            fallbackFormat="webp"
+            widths={[640, 960, 1280, 1800, 2400]}
+            sizes="(min-width: 1248px) 1200px, 100vw"
+            fetchpriority="high"
+            loading="eager"
+            decoding="async"
+          />
+        </div>
       </figure>
     </div>
   </section>
@@ -217,76 +235,69 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
     </ul>
   </section>
 
-  <!-- Features -->
-  <section id="features" class="section">
-    <div class="container-wide">
-      <FrameLabel label="What it does" />
-      <h2>Capture, annotate, export, record. <span class="muted">All of it in your browser.</span></h2>
-      <ul class="features">
-        {
-          features.map((f) => (
-            <li class="card feature">
-              <svg class="feature-glyph" viewBox="0 0 80 80" aria-hidden="true" focusable="false">
-                <path d={f.glyph} />
-              </svg>
-              <p class="feature-kicker">{f.kicker}</p>
-              <h3>{f.title}</h3>
-              <ul class="feature-list">
-                {f.items.map((item) => (
-                  <li>{item}</li>
-                ))}
-              </ul>
-            </li>
-          ))
-        }
-      </ul>
-    </div>
+  <!-- Trio -->
+  <section class="section">
+    <ul class="container-wide trio">
+      {
+        trio.map((t) => (
+          <li>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d={t.icon} />
+            </svg>
+            <h2>{t.title}</h2>
+            <p class="trio-body">{t.body}</p>
+          </li>
+        ))
+      }
+    </ul>
   </section>
 
-  <!-- Screens -->
-  <section id="screens" class="section">
-    <div class="container-wide">
-      <FrameLabel label="In use" />
-      <h2>The extension at work. <span class="muted">Real screenshots of the build.</span></h2>
-      <ul class="gallery">
-        {
-          screens.map((s) => (
-            <li>
-              <figure class="screen">
-                <div class="card screen-tile">
-                  <Picture
-                    src={s.image}
-                    alt={s.alt}
-                    formats={['avif', 'webp']}
-                    fallbackFormat="webp"
-                    widths={[480, 900, 1350, 1800]}
-                    sizes="(min-width: 900px) 520px, 100vw"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </div>
-                <figcaption>
-                  <b>{s.title}</b>
-                  <span>{s.caption}</span>
-                </figcaption>
-              </figure>
-            </li>
-          ))
-        }
-      </ul>
-    </div>
-  </section>
+  <!-- Alternating features -->
+  {
+    features.map((f, i) => (
+      <section id={f.id} class="section feature">
+        <div class:list={['container-wide', 'feature-grid', i % 2 === 1 && 'feature-flip']}>
+          <div class="feature-copy">
+            <p class="eyebrow">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d={f.icon} />
+              </svg>
+              {f.kicker}
+            </p>
+            <h2>{f.title}</h2>
+            <ul class="feature-list">
+              {f.items.map((item) => (
+                <li>{item}</li>
+              ))}
+            </ul>
+          </div>
+          <figure class="card feature-shot">
+            <Picture
+              src={f.image}
+              alt={f.alt}
+              formats={['avif', 'webp']}
+              fallbackFormat="webp"
+              widths={[480, 900, 1350, 1800]}
+              sizes="(min-width: 900px) 580px, 100vw"
+              loading="lazy"
+              decoding="async"
+            />
+          </figure>
+        </div>
+      </section>
+    ))
+  }
 
   <!-- Privacy -->
-  <section id="privacy" class="section">
+  <section id="privacy" class="section slab">
     <div class="container-wide split">
       <div>
-        <FrameLabel label="Privacy" />
-        <h2>Everything stays on your device.</h2>
+        <p class="eyebrow">Privacy</p>
+        <h2>Nobody can see what you capture. Not even us.</h2>
         <p class="lede">
           Screenshots are often the most sensitive images on your machine. Capture, editing, export,
           PDF and recording all run in your browser. The extension makes no network request of its
-          own. Its host permissions are empty, so it has no standing access to any site you visit.
+          own, and it has no standing access to any site you visit.
         </p>
       </div>
       <dl class="card receipt">
@@ -315,10 +326,15 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
   </section>
 
   <!-- Agents & CLI -->
-  <section id="agents-cli" class="section">
+  <section id="cli" class="section">
     <div class="container-wide">
-      <FrameLabel label="Agents & CLI" />
-      <h2>Scriptable, from a terminal. <span class="muted">Still local.</span></h2>
+      <p class="eyebrow">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d={icons.terminal} />
+        </svg>
+        Agents & CLI
+      </p>
+      <h2>Scriptable from your terminal. <span class="muted">Still local.</span></h2>
       <div class="card cli">
         <div class="cli-about">
           <p class="cli-name"><code>openscreenshot</code> on npm</p>
@@ -342,8 +358,8 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
   <!-- FAQ -->
   <section id="faq" class="section">
     <div class="container-wide">
-      <FrameLabel label="FAQ" />
-      <h2>Questions.</h2>
+      <p class="eyebrow">FAQ</p>
+      <h2>Questions, answered.</h2>
       <FaqList items={homeFaq} />
       <p class="fine">
         Every question, plus the known limits, on the <a href="/support/">Support page</a>.
@@ -353,16 +369,25 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
 
   <!-- Final CTA -->
   <section id="download" class="section cta-final">
-    <div class="container">
-      <CropMarks arm="30px" inset="22px">
-        <div class="cta-mark"><BrandMark size={44} /></div>
-        <h2>Add it to Chrome.</h2>
-        <p class="lede">Free, open source and offline. Installed in seconds.</p>
-        <p class="cta-row">
-          <a class="btn btn-ink" href={STORE_URL} target="_blank" rel="noopener">Add to Chrome</a>
-        </p>
-        <p class="fine">Works on Chrome, Edge, Brave, Arc and other Chromium browsers.</p>
-      </CropMarks>
+    <div class="container-wide">
+      <h2>Ready in ten seconds.</h2>
+      <ol class="steps">
+        {
+          steps.map((step, i) => (
+            <li class="card step">
+              <p class="step-n" aria-hidden="true">
+                {i + 1}
+              </p>
+              <h3>{step.title}</h3>
+              <p>{step.body}</p>
+            </li>
+          ))
+        }
+      </ol>
+      <p class="cta-row">
+        <a class="btn btn-ink" href={STORE_URL} target="_blank" rel="noopener">Add to Chrome</a>
+      </p>
+      <p class="fine">Works on Chrome, Edge, Brave, Arc and other Chromium browsers.</p>
     </div>
   </section>
 
@@ -375,11 +400,11 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
   /* ---- Rhythm ---- */
 
   .section {
-    padding-block: clamp(64px, 9vw, 128px);
+    padding-block: clamp(56px, 8vw, 112px);
   }
 
   .section h2 {
-    max-width: 30ch;
+    max-width: 26ch;
     margin-bottom: var(--s-6);
     font-size: var(--fs-title);
   }
@@ -396,90 +421,89 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
     padding-inline: var(--s-5);
   }
 
-  /* ---- Hero ---- */
-
-  .hero {
-    padding-top: clamp(40px, 7vw, 96px);
+  .icon {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
-  .pill {
+  .icon-sm {
+    width: 16px;
+    height: 16px;
+  }
+
+  .eyebrow {
     display: inline-flex;
     align-items: center;
     gap: var(--s-2);
-    margin-bottom: var(--s-5);
-    padding: 6px 14px 6px 10px;
-    border: 1px solid var(--rule);
-    border-radius: var(--r-full);
-    background: var(--paper-raised);
-    color: var(--ink-2);
-    font-size: var(--fs-sm);
-    font-weight: 500;
-  }
-
-  .pill-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--accent);
-  }
-
-  .hero h1 {
-    margin-bottom: var(--s-6);
-    font-size: var(--fs-hero);
-    line-height: 1.04;
-  }
-
-  .hero-row {
-    display: grid;
-    gap: var(--s-5);
-    align-items: start;
-    margin-bottom: clamp(40px, 6vw, 72px);
   }
 
   .cta-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
     gap: var(--s-3);
     margin: 0;
   }
 
+  /* ---- Hero ---- */
+
+  .hero {
+    padding-top: clamp(48px, 8vw, 104px);
+  }
+
+  .hero-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: clamp(40px, 6vw, 64px);
+    text-align: center;
+  }
+
+  .hero-note {
+    margin-bottom: var(--s-5);
+    color: var(--ink-3);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+  }
+
+  .hero h1 {
+    margin-bottom: var(--s-5);
+    font-size: var(--fs-hero);
+  }
+
   .sub {
-    max-width: 44ch;
-    margin: 0;
+    max-width: 52ch;
+    margin: 0 0 var(--s-6);
     color: var(--ink-2);
     font-size: var(--fs-lg);
   }
 
   .hero-shot {
     margin: 0;
-    border: 1px solid var(--rule);
-    border-radius: var(--r-xl);
-    overflow: hidden;
-    box-shadow: var(--sh-card);
   }
 
   .hero-shot img {
     width: 100%;
   }
 
-  @media (min-width: 760px) {
-    .hero-row {
-      grid-template-columns: auto 1fr;
-      gap: var(--s-7);
-    }
-  }
-
   /* ---- Proof strip ---- */
 
   .proof-strip {
-    margin-top: clamp(32px, 5vw, 64px);
+    margin-top: clamp(32px, 5vw, 56px);
     border-block: 1px solid var(--rule);
+    background: var(--paper-dim);
   }
 
   .proof {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: var(--s-2) var(--s-6);
     margin-block: 0;
     padding-block: var(--s-4);
@@ -493,55 +517,60 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
     font-weight: 600;
   }
 
-  /* ---- Features ---- */
+  /* ---- Trio ---- */
 
-  .features {
+  .trio {
     display: grid;
-    gap: var(--s-5);
+    gap: var(--s-6);
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
-  .feature {
-    position: relative;
-    padding: var(--s-6);
-    overflow: hidden;
-  }
-
-  .feature-glyph {
-    position: absolute;
-    top: -10px;
-    right: -6px;
-    width: 128px;
-    height: 128px;
-    fill: none;
-    stroke: var(--accent);
-    stroke-width: 3;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    opacity: 0.16;
-  }
-
-  .feature-kicker {
-    margin-bottom: var(--s-3);
-    color: var(--ink-3);
-    font-family: var(--font-mono);
-    font-size: var(--fs-xs);
-    font-weight: 500;
-    letter-spacing: var(--tr-label);
-    text-transform: uppercase;
-  }
-
-  .feature h3 {
-    max-width: 18ch;
+  .trio .icon {
     margin-bottom: var(--s-4);
-    font-size: var(--fs-xl);
+  }
+
+  /* Outranks the .section h2 defaults above. */
+  .trio h2 {
+    max-width: none;
+    margin-bottom: var(--s-2);
+    font-size: var(--fs-lg);
+    letter-spacing: var(--tr-tight);
+  }
+
+  .trio-body {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: var(--fs-md);
+  }
+
+  @media (min-width: 720px) {
+    .trio {
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: var(--s-7);
+    }
+  }
+
+  /* ---- Alternating features ---- */
+
+  .feature {
+    padding-block: clamp(40px, 6vw, 80px);
+  }
+
+  .feature-grid {
+    display: grid;
+    gap: var(--s-6);
+    align-items: center;
+  }
+
+  .feature h2 {
+    margin-bottom: var(--s-5);
   }
 
   .feature-list {
     display: grid;
-    gap: var(--s-2);
+    gap: var(--s-3);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -567,54 +596,37 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
     background: var(--accent);
   }
 
-  @media (min-width: 720px) {
-    .features {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-
-  /* ---- Gallery ---- */
-
-  .gallery {
-    display: grid;
-    gap: var(--s-6) var(--s-5);
+  .feature-shot {
     margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .screen {
-    margin: 0;
-  }
-
-  .screen-tile {
     overflow: hidden;
   }
 
-  .screen-tile img {
+  .feature-shot img {
     width: 100%;
   }
 
-  .screen figcaption {
-    display: grid;
-    gap: 2px;
-    margin-top: var(--s-4);
-    color: var(--ink-3);
-    font-size: var(--fs-md);
-  }
+  @media (min-width: 900px) {
+    .feature-grid {
+      grid-template-columns: 5fr 6fr;
+      gap: clamp(40px, 6vw, 88px);
+    }
 
-  .screen figcaption b {
-    color: var(--ink);
-    font-weight: 600;
-  }
+    .feature-flip .feature-copy {
+      order: 2;
+    }
 
-  @media (min-width: 720px) {
-    .gallery {
-      grid-template-columns: 1fr 1fr;
+    .feature-flip .feature-shot {
+      order: 1;
     }
   }
 
-  /* ---- Privacy ---- */
+  /* ---- Privacy slab ---- */
+
+  .slab {
+    margin-top: clamp(24px, 4vw, 48px);
+    border-block: 1px solid var(--rule);
+    background: var(--paper-dim);
+  }
 
   .split {
     display: grid;
@@ -744,21 +756,51 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
     margin-inline: auto;
   }
 
-  .cta-final .lede,
+  .steps {
+    display: grid;
+    gap: var(--s-5);
+    margin: 0 0 var(--s-7);
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+    text-align: left;
+  }
+
+  .step {
+    padding: var(--s-6);
+  }
+
+  .step-n {
+    margin-bottom: var(--s-3);
+    color: var(--accent);
+    font-size: var(--fs-2xl);
+    font-weight: var(--fw-display);
+    letter-spacing: var(--tr-display);
+    line-height: 1;
+  }
+
+  .step h3 {
+    margin-bottom: var(--s-2);
+    font-size: var(--fs-lg);
+  }
+
+  .step p:last-child {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: var(--fs-md);
+  }
+
+  .cta-final .cta-row {
+    margin-bottom: var(--s-4);
+  }
+
   .cta-final .fine {
     margin-inline: auto;
   }
 
-  .cta-final .cta-row {
-    justify-content: center;
-    margin-bottom: var(--s-4);
-  }
-
-  /* The mark is a child component's root, out of reach of a scoped selector,
-   * so the wrapper centres it. */
-  .cta-mark {
-    display: flex;
-    justify-content: center;
-    margin-bottom: var(--s-4);
+  @media (min-width: 720px) {
+    .steps {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
   }
 </style>

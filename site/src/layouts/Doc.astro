@@ -7,7 +7,6 @@
  */
 import Base from './Base.astro';
 import type { NavLink } from './Base.astro';
-import FrameLabel from '../components/FrameLabel.astro';
 import '../styles/doc.css';
 import { ld } from '../lib/json-ld';
 
@@ -55,7 +54,7 @@ const breadcrumbLd = {
 
   <div class="doc container">
     <header class="doc-head">
-      <FrameLabel label={label} />
+      <p class="eyebrow">{label}</p>
       <h1>{heading}</h1>
       <p class="doc-lead">{lead}</p>
     </header>

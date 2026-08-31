@@ -20,9 +20,7 @@ body {
   min-height: 100vh;
   min-height: 100svh;
   margin: 0;
-  /* paper, with a fine diagonal hatch that reads as texture, not as lines */
   background-color: var(--paper);
-  background-image: repeating-linear-gradient(-45deg, transparent 0 7px, var(--hatch) 7px 8px);
   color: var(--ink);
   font-family: var(--font);
   font-size: var(--fs-base);
@@ -48,9 +46,9 @@ h2,
 h3 {
   margin: 0 0 var(--s-4);
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: var(--fw-display);
   line-height: var(--lh-tight);
-  letter-spacing: var(--tr-tight);
+  letter-spacing: var(--tr-display);
   text-wrap: balance;
 }
 
@@ -64,6 +62,7 @@ h2 {
 
 h3 {
   font-size: var(--fs-xl);
+  letter-spacing: var(--tr-tight);
 }
 
 p {
@@ -118,15 +117,25 @@ samp {
   padding-inline: var(--s-5);
 }
 
-/* ---- Prose ----
- * Shared by the homepage's lede paragraphs (the four remaining inline
- * sections and every Frame).
- */
+/* ---- Prose ---- */
 
 .lede {
   max-width: var(--max-w);
   color: var(--ink-2);
   font-size: var(--fs-lg);
+}
+
+/* The small uppercase label above a heading. The homepage sections and every
+ * sub-page header wear it. */
+.eyebrow {
+  margin: 0 0 var(--s-3);
+  color: var(--accent-ink);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: var(--tr-label);
+  text-transform: uppercase;
 }
 
 /* ---- Accessibility ---- */
@@ -150,7 +159,7 @@ samp {
   padding: var(--s-2) var(--s-4);
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
-  background: var(--paper-raised);
+  background: var(--paper);
   color: var(--ink);
   font-size: var(--fs-md);
   font-weight: 600;
@@ -169,8 +178,8 @@ samp {
   align-items: center;
   justify-content: center;
   gap: var(--s-2);
-  min-height: 46px;
-  padding: 0 22px;
+  min-height: 48px;
+  padding: 0 24px;
   border: 1px solid transparent;
   border-radius: var(--r-full);
   font: inherit;
@@ -187,27 +196,26 @@ samp {
 
 .btn-ink {
   background: var(--ink);
-  color: var(--paper);
+  color: #fff;
 }
 
 .btn-ink:hover {
   background: var(--accent-ink);
-  color: var(--paper-raised);
 }
 
 .btn-quiet {
-  border-color: var(--border);
+  border-color: var(--rule);
+  background: var(--paper);
   color: var(--ink);
 }
 
 .btn-quiet:hover {
-  border-color: var(--ink);
-  background: var(--paper-raised);
+  border-color: var(--border);
 }
 
 /* ---- Cards ----
- * The raised paper card every page's tiles share: the homepage feature and
- * gallery tiles, the privacy receipt, and the FAQ rows.
+ * The white tile every page shares: the homepage trio and step tiles, the
+ * privacy receipt, and the FAQ rows.
  */
 
 .card {
@@ -215,6 +223,24 @@ samp {
   border-radius: var(--r-xl);
   background: var(--paper-raised);
   box-shadow: var(--sh-card);
+}
+
+/* ---- Gradient frame ----
+ * The coral-to-amber border around hero-grade screenshots, drawn as a padded
+ * gradient ground behind a clipped white tile.
+ */
+
+.frame-grad {
+  padding: 8px;
+  border-radius: calc(var(--r-xl) + 8px);
+  background: var(--grad-frame);
+  box-shadow: var(--sh-card);
+}
+
+.frame-grad > * {
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--paper);
 }
 
 /* The second, quieter half of a two-tone heading. */
@@ -250,7 +276,7 @@ samp {
 }
 
 /* ---- Motion off ----
- * Catches everything a page adds later, the marquee ticker included.
+ * Catches everything a page adds later.
  */
 
 @media (prefers-reduced-motion: reduce) {

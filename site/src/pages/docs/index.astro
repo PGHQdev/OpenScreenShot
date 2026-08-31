@@ -1,6 +1,5 @@
 ---
 import Doc from '../../layouts/Doc.astro';
-import CropMarks from '../../components/CropMarks.astro';
 
 const STORE_URL = 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp';
 const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
@@ -375,11 +374,11 @@ const toc = [
   </section>
 
   <section class="doc-cta">
-    <CropMarks arm="26px" inset="18px">
+    <div class="card doc-cta-card">
       <h2>Install OpenScreenShot</h2>
       <p>Free, open-source, and private. Available on the Chrome Web Store.</p>
       <a class="btn btn-ink" href={STORE_URL} target="_blank" rel="noopener">Add to Chrome</a>
-    </CropMarks>
+    </div>
   </section>
 </Doc>
 

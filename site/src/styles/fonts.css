@@ -1,42 +1,50 @@
 /*
  * Self-hosted faces. Woff2 only, latin only, font-display: swap.
  *
- * Instrument Serif (display) and JetBrains Mono (labels) are both SIL OFL 1.1;
- * the licence ships beside the binaries at /fonts/OFL.txt.
+ * Inter and JetBrains Mono are both SIL OFL 1.1; the licence ships beside the
+ * binaries at /fonts/OFL.txt.
  *
- * How the files were made, so the next person can redo them. Sources are the
- * upstream TTFs in github.com/google/fonts under ofl/instrumentserif and
- * ofl/jetbrainsmono. Both subsets run through:
- *   pyftsubset <in> --output-file=<out> --flavor=woff2 --desubroutinize
- *     --no-hinting --layout-features=<f> --unicodes=<set>
- *   1. Instrument Serif roman and italic, --layout-features='kern,liga',
- *      --unicodes=U+0020-007E,U+00A0,U+00A9,U+00B7,U+2013,U+2014,U+2018,U+2019,
- *      U+201C,U+201D,U+2026
- *   2. JetBrains Mono: pin the wght axis at 500 with fontTools.varLib.instancer
- *      first, then --layout-features='' and the set above plus U+00B0,U+00D7,
- *      U+2192,U+2197.
- * Instrument Serif carries no arrow glyphs, so the arrows are mono-only and
- * anything else falls back to the system face.
+ * The Inter files are the latin static subsets published by Fontsource
+ * (npm @fontsource/inter, files/inter-latin-<weight>-normal.woff2). Four
+ * weights: 400 body, 500 labels, 600 emphasis, 800 display. JetBrains Mono is
+ * the same pinned-500 subset as before (pyftsubset over the upstream TTF; the
+ * recipe is in git history if it ever needs redoing).
  *
- * Only the display roman is preloaded on every page; Base.astro's preloadItalic
- * prop adds the italic on pages whose above-fold type uses it. The mono face
- * sets small labels whose fallback is metrically close, so it swaps in.
+ * Base.astro preloads only the 800 display weight: it sets the hero and every
+ * heading, so it is the face whose swap the reader would notice. The body
+ * weights swap in against a metrically close system fallback.
  */
 
 @font-face {
-  font-family: 'Instrument Serif';
+  font-family: 'Inter';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('/fonts/instrument-serif-latin-400-normal.woff2') format('woff2');
+  src: url('/fonts/inter-latin-400-normal.woff2') format('woff2');
 }
 
 @font-face {
-  font-family: 'Instrument Serif';
-  font-style: italic;
-  font-weight: 400;
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
   font-display: swap;
-  src: url('/fonts/instrument-serif-latin-400-italic.woff2') format('woff2');
+  src: url('/fonts/inter-latin-500-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/inter-latin-600-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/inter-latin-800-normal.woff2') format('woff2');
 }
 
 @font-face {

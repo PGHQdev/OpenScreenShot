@@ -27,8 +27,6 @@ export interface Props {
    * same-page anchors only; sub-pages pass cross-page links.
    */
   navLinks?: NavLink[];
-  /** Preloads the display italic. Set it on pages whose hero type uses it. */
-  preloadItalic?: boolean;
 }
 
 const STORE_URL = 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp';
@@ -48,24 +46,12 @@ const {
   ogImageAlt = OG_DEFAULT.alt,
   pageType = 'website',
   navLinks = [],
-  preloadItalic = false,
 } = Astro.props;
 
 const canonical = new URL(path, Astro.site).href;
 const ogImageUrl = new URL(ogImage, Astro.site).href;
 const year = new Date().getFullYear();
 const isHome = path === '/';
-
-const footLinks: NavLink[] = [
-  { href: '/docs/', label: 'Docs' },
-  { href: '/support/', label: 'Support & FAQ' },
-  { href: '/roadmap/', label: 'Roadmap' },
-  { href: '/privacy/', label: 'Privacy' },
-  { href: '/cool-stuff/', label: 'Cool stuff' },
-  { href: REPO_URL, label: 'GitHub', external: true },
-  { href: `${REPO_URL}/blob/main/LICENSE`, label: 'MIT License', external: true },
-  { href: 'https://ko-fi.com/T7A624DAY7', label: 'Buy me a coffee', external: true },
-];
 ---
 
 <!doctype html>
@@ -77,8 +63,7 @@ const footLinks: NavLink[] = [
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
 
-    <meta name="theme-color" content="#f5f3ee" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#141414" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" />
 
     <meta property="og:type" content={pageType} />
     <meta property="og:site_name" content="OpenScreenShot" />
@@ -109,22 +94,11 @@ const footLinks: NavLink[] = [
 
     <link
       rel="preload"
-      href="/fonts/instrument-serif-latin-400-normal.woff2"
+      href="/fonts/inter-latin-800-normal.woff2"
       as="font"
       type="font/woff2"
       crossorigin
     />
-    {
-      preloadItalic && (
-        <link
-          rel="preload"
-          href="/fonts/instrument-serif-latin-400-italic.woff2"
-          as="font"
-          type="font/woff2"
-          crossorigin
-        />
-      )
-    }
 
     <slot name="head" />
   </head>
@@ -135,7 +109,7 @@ const footLinks: NavLink[] = [
     <header class="site-head">
       <nav class="container-wide nav" aria-label="Primary">
         <a class="nav-brand" href={isHome ? '#top' : '/'}>
-          <BrandMark size={26} />
+          <BrandMark size={24} />
           OpenScreenShot
         </a>
         <ul class="nav-links">
@@ -153,7 +127,7 @@ const footLinks: NavLink[] = [
             ))
           }
           <li>
-            <a class="btn nav-cta" href={STORE_URL} target="_blank" rel="noopener">Install</a>
+            <a class="btn nav-cta" href={STORE_URL} target="_blank" rel="noopener">Add to Chrome</a>
           </li>
         </ul>
       </nav>
@@ -165,18 +139,19 @@ const footLinks: NavLink[] = [
 
     <footer class="site-foot">
       <div class="container-wide">
+        <div class="foot-brand">
+          <BrandMark size={22} />
+          OpenScreenShot
+        </div>
         <nav class="foot-links" aria-label="Footer">
-          {
-            footLinks.map((link) => (
-              <a
-                href={link.href}
-                target={link.external ? '_blank' : undefined}
-                rel={link.external ? 'noopener' : undefined}
-              >
-                {link.label}
-              </a>
-            ))
-          }
+          <a href="/docs/">Docs</a>
+          <a href="/support/">Support & FAQ</a>
+          <a href="/roadmap/">Roadmap</a>
+          <a href="/privacy/">Privacy</a>
+          <a href="/cool-stuff/">Cool stuff</a>
+          <a href={REPO_URL} target="_blank" rel="noopener">GitHub</a>
+          <a href={`${REPO_URL}/blob/main/LICENSE`} target="_blank" rel="noopener">MIT License</a>
+          <a href="https://ko-fi.com/T7A624DAY7" target="_blank" rel="noopener">Buy me a coffee</a>
         </nav>
         <p class="foot-also">
           Also by @PGHQdev:{' '}
@@ -197,6 +172,8 @@ const footLinks: NavLink[] = [
   .site-head {
     position: relative;
     z-index: 10;
+    border-bottom: 1px solid var(--rule);
+    background: var(--paper);
   }
 
   .nav {
@@ -213,8 +190,8 @@ const footLinks: NavLink[] = [
     align-items: center;
     gap: var(--s-2);
     color: var(--ink);
-    font-size: var(--fs-md);
-    font-weight: 700;
+    font-size: var(--fs-base);
+    font-weight: 800;
     letter-spacing: var(--tr-tight);
     text-decoration: none;
   }
@@ -241,24 +218,34 @@ const footLinks: NavLink[] = [
   }
 
   .nav-links .nav-cta {
-    min-height: 36px;
+    min-height: 38px;
     padding: 0 var(--s-4);
     background: var(--ink);
-    color: var(--paper);
+    color: #fff;
     font-size: var(--fs-sm);
   }
 
   .nav-links .nav-cta:hover {
     background: var(--accent-ink);
-    color: var(--paper-raised);
   }
 
   .site-foot {
     margin-top: var(--s-8);
-    padding-block: var(--s-6);
+    padding-block: var(--s-7) var(--s-6);
     border-top: 1px solid var(--rule);
+    background: var(--paper-dim);
     color: var(--ink-3);
     font-size: var(--fs-sm);
+  }
+
+  .foot-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    margin-bottom: var(--s-4);
+    color: var(--ink);
+    font-weight: 800;
+    letter-spacing: var(--tr-tight);
   }
 
   .foot-links {

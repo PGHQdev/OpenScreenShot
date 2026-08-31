@@ -3,13 +3,51 @@
   <head>
     <meta charset="UTF-8" />
     <title>og card — 1200x630</title>
-    <link rel="stylesheet" href="poster.css" />
+    <!--
+      Self-contained on purpose: poster.css styles the store shots, which keep
+      the paper-era look, while this card follows the 2026-08 white site brand
+      (agent_docs/plans/2026-08-31-site-atlas-rewrite-design.md).
+    -->
     <style>
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 400;
+        src: url('../../site/public/fonts/inter-latin-400-normal.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 500;
+        src: url('../../site/public/fonts/inter-latin-500-normal.woff2') format('woff2');
+      }
+      @font-face {
+        font-family: 'Inter';
+        font-style: normal;
+        font-weight: 800;
+        src: url('../../site/public/fonts/inter-latin-800-normal.woff2') format('woff2');
+      }
+
+      * {
+        margin: 0;
+        box-sizing: border-box;
+      }
+
       html,
       body {
         width: 1200px;
         height: 630px;
+        overflow: hidden;
+        background: #ffffff;
+        color: #17171a;
+        font-family: 'Inter', system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
       }
+
+      body {
+        position: relative;
+      }
+
       .copy {
         position: absolute;
         left: 72px;
@@ -17,50 +55,141 @@
         transform: translateY(-50%);
         width: 470px;
       }
-      .copy .wordmark {
-        font-size: 18px;
+
+      .wordmark {
+        display: flex;
+        align-items: center;
+        gap: 10px;
         margin-bottom: 30px;
+        font-size: 19px;
+        font-weight: 800;
+        letter-spacing: -0.025em;
       }
-      .copy h1 {
-        font-size: 52px;
-        margin-bottom: 18px;
+
+      h1 {
+        margin-bottom: 20px;
+        font-size: 54px;
+        font-weight: 800;
+        line-height: 1.05;
+        letter-spacing: -0.033em;
       }
-      .copy .sub {
-        font-size: 17px;
-        margin-bottom: 26px;
+
+      h1 .muted {
+        color: #6e6e76;
+      }
+
+      .sub {
         max-width: 430px;
+        margin-bottom: 28px;
+        color: #55555c;
+        font-size: 17px;
+        line-height: 1.5;
       }
-      .copy .chip {
-        font-size: 13px;
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
         padding: 6px 13px;
+        border: 1px solid #e9e9ec;
+        border-radius: 999px;
+        background: #f6f6f7;
+        color: #55555c;
+        font-size: 13px;
+        font-weight: 500;
       }
-      /* the editor, running off the right and bottom edges */
-      .window {
+
+      .chip .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #e8503a;
+      }
+
+      /* the editor in a gradient frame, running off the right and bottom edges */
+      .frame {
+        position: absolute;
         left: 600px;
         top: 96px;
+        padding: 8px;
+        border-radius: 26px;
+        background: linear-gradient(135deg, #e8503a 0%, #ef7132 55%, #f5a623 100%);
+        box-shadow: 0 24px 60px -30px rgba(23, 23, 26, 0.35);
+      }
+
+      .window {
         width: 720px;
         height: 600px;
+        border-radius: 18px;
+        overflow: hidden;
+        background: #ffffff;
       }
+
+      .window-top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        height: 44px;
+        padding: 0 16px;
+        border-bottom: 1px solid #e9e9ec;
+        background: #f6f6f7;
+      }
+
+      .lights {
+        display: flex;
+        gap: 7px;
+      }
+
+      .lights i {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: #d9d9de;
+      }
+
+      .urlbar {
+        flex: 1;
+        padding: 5px 14px;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #6e6e76;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
       .window-body img {
+        display: block;
         width: 1280px;
         height: 800px;
         transform: scale(0.5625);
+        transform-origin: top left;
       }
     </style>
   </head>
   <body>
-    <div class="ground"></div>
     <div class="copy">
       <div class="wordmark">
-        <img src="brand-mark.svg" width="30" height="30" alt="" />
+        <svg width="30" height="30" viewBox="0 0 128 128" aria-hidden="true">
+          <g stroke="#E8503A" stroke-width="12" stroke-linecap="round" fill="none">
+            <path d="M26 44 v-10 a8 8 0 0 1 8 -8 h10" />
+            <path d="M84 26 h10 a8 8 0 0 1 8 8 v10" />
+            <path d="M102 84 v10 a8 8 0 0 1 -8 8 h-10" />
+            <path d="M44 102 h-10 a8 8 0 0 1 -8 -8 v-10" />
+          </g>
+          <circle cx="64" cy="64" r="15" fill="#E8503A" />
+        </svg>
         OpenScreenShot
       </div>
-      <h1>
-        Full page screenshots for Chrome. <span class="muted">Nothing leaves your machine.</span>
-      </h1>
+      <h1>Capture the whole page. <span class="muted">Keep it to yourself.</span></h1>
       <p class="sub">
-        Capture the whole page, draw on it, and export PNG, JPEG, WebP or PDF. Record the tab when a
-        still image is not enough.
+        Screenshots, markup, export, and tab recording — all inside Chrome. Nothing is ever
+        uploaded.
       </p>
       <div class="chips">
         <span class="chip"><span class="dot"></span>Free</span>
@@ -69,13 +198,15 @@
         <span class="chip"><span class="dot"></span>No upload</span>
       </div>
     </div>
-    <div class="window">
-      <div class="window-top">
-        <span class="lights"><i></i><i></i><i></i></span>
-        <span class="urlbar">OpenScreenShot — Editor</span>
-      </div>
-      <div class="window-body">
-        <img src="captures/editor.png" alt="" />
+    <div class="frame">
+      <div class="window">
+        <div class="window-top">
+          <span class="lights"><i></i><i></i><i></i></span>
+          <span class="urlbar">OpenScreenShot — Editor</span>
+        </div>
+        <div class="window-body">
+          <img src="captures/editor.png" alt="" />
+        </div>
       </div>
     </div>
   </body>

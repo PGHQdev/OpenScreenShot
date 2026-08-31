@@ -1,6 +1,5 @@
 ---
 import Doc from '../../layouts/Doc.astro';
-import CropMarks from '../../components/CropMarks.astro';
 import FaqList from '../../components/FaqList.astro';
 import { faq } from '../../data/faq';
 import { ld } from '../../lib/json-ld';
@@ -102,12 +101,12 @@ if (faqLd.mainEntity.length !== faq.length) {
   </section>
 
   <section class="doc-cta">
-    <CropMarks arm="26px" inset="18px">
+    <div class="card doc-cta-card">
       <h2>Still stuck?</h2>
       <p>Bugs, feature requests, and questions all go to the same tracker.</p>
       <a class="btn btn-ink" href={`${REPO_URL}/issues/new`} target="_blank" rel="noopener">
         Open a GitHub issue
       </a>
-    </CropMarks>
+    </div>
   </section>
 </Doc>

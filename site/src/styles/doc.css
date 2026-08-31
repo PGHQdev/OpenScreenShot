@@ -122,7 +122,7 @@
   max-width: var(--max-w);
   padding: var(--s-4) var(--s-5);
   border-left: 2px solid var(--accent);
-  background: var(--paper-raised);
+  background: var(--paper-dim);
   font-size: var(--fs-md);
 }
 
@@ -131,6 +131,10 @@
 .doc-cta {
   margin-top: var(--s-8);
   text-align: center;
+}
+
+.doc-cta-card {
+  padding: var(--s-7) var(--s-6);
 }
 
 .doc-cta h2 {

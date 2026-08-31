@@ -25,6 +25,25 @@ function svg() {
 </svg>`;
 }
 
+/**
+ * The site's flat variant, used for the web icons only: coral brackets and
+ * shutter dot on a plain white tile with a hairline keyline. Same artwork as
+ * site/src/components/BrandMark.astro, which renders it without the tile.
+ */
+function siteSvg() {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <rect x="6" y="6" width="116" height="116" rx="30" fill="#FFFFFF"/>
+  <rect x="7.5" y="7.5" width="113" height="113" rx="28.5" fill="none" stroke="#17171A" stroke-width="3" opacity="0.1"/>
+  <g stroke="#E8503A" stroke-width="11" stroke-linecap="round" fill="none">
+    <path d="M30 46 v-8 a8 8 0 0 1 8 -8 h8"/>
+    <path d="M82 30 h8 a8 8 0 0 1 8 8 v8"/>
+    <path d="M98 82 v8 a8 8 0 0 1 -8 8 h-8"/>
+    <path d="M46 98 h-8 a8 8 0 0 1 -8 -8 v-8"/>
+  </g>
+  <circle cx="64" cy="64" r="13" fill="#E8503A"/>
+</svg>`;
+}
+
 await mkdir(outDir, { recursive: true });
 
 for (const size of [16, 48, 128]) {
@@ -41,7 +60,7 @@ await mkdir(webDir, { recursive: true });
 
 const icoSizes = [16, 32, 48];
 const pngs = await Promise.all(
-  icoSizes.map((size) => sharp(Buffer.from(svg())).resize(size, size).png().toBuffer()),
+  icoSizes.map((size) => sharp(Buffer.from(siteSvg())).resize(size, size).png().toBuffer()),
 );
 
 // ICO container: header + per-image directory + PNG payloads.
@@ -70,13 +89,13 @@ header.writeUInt16LE(pngs.length, 4); // image count
 await writeFile(`${webDir}/favicon.ico`, Buffer.concat([header, dir, ...parts]));
 console.log(`✓ generated ${webDir}/favicon.ico`);
 
-await sharp(Buffer.from(svg())).resize(180, 180).png().toFile(`${webDir}/apple-touch-icon.png`);
+await sharp(Buffer.from(siteSvg())).resize(180, 180).png().toFile(`${webDir}/apple-touch-icon.png`);
 console.log(`✓ generated ${webDir}/apple-touch-icon.png`);
 
 // site.webmanifest icons — Android's "Add to Home Screen" and Base.astro's
 // <link rel="manifest">.
 for (const size of [192, 512]) {
-  await sharp(Buffer.from(svg())).resize(size, size).png().toFile(`${webDir}/icon-${size}.png`);
+  await sharp(Buffer.from(siteSvg())).resize(size, size).png().toFile(`${webDir}/icon-${size}.png`);
   console.log(`✓ generated ${webDir}/icon-${size}.png`);
 }
 
@@ -85,8 +104,8 @@ const manifest = {
   short_name: 'OpenScreenShot',
   start_url: '/',
   display: 'standalone',
-  background_color: '#f5f3ee',
-  theme_color: '#f5f3ee',
+  background_color: '#ffffff',
+  theme_color: '#ffffff',
   icons: [
     { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
     { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },

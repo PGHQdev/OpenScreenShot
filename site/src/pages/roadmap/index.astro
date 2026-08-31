@@ -1,6 +1,5 @@
 ---
 import Doc from '../../layouts/Doc.astro';
-import CropMarks from '../../components/CropMarks.astro';
 
 const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
 
@@ -249,7 +248,7 @@ const shipped: { version: string; current?: boolean; items: string[] }[] = [
   </section>
 
   <section class="doc-cta">
-    <CropMarks arm="26px" inset="18px">
+    <div class="card doc-cta-card">
       <h2>Shape what ships next.</h2>
       <p>What people ask for is what gets built.</p>
       <a class="btn btn-ink" href={`${REPO_URL}/issues/new`} target="_blank" rel="noopener">
@@ -262,7 +261,7 @@ const shipped: { version: string; current?: boolean; items: string[] }[] = [
           rel="noopener">contributing guide</a
         >.
       </p>
-    </CropMarks>
+    </div>
   </section>
 </Doc>
 
