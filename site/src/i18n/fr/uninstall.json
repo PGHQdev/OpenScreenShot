@@ -15,7 +15,9 @@
     "heading": "Quelque chose n’allait pas.",
     "body": "Que s’est-il passé ? À quoi vous attendiez-vous ?",
     "placeholder": "Exemple : la page entière a raté le pied de page d’un tableau de bord. Ou : la capture est sortie vide sur un site que j’utilise tous les jours.",
+    "contactLabel": "Votre e-mail, si vous voulez une réponse (facultatif)",
     "cta": "Envoyer un retour",
+    "failed": "L’envoi a échoué. Écrivez à",
     "mailFallback": "Si votre logiciel de messagerie ne s’ouvre pas, écrivez à",
     "thanks": "Merci. Si vous le voulez bien, une note aide encore ceux qui cherchent une option privée.",
     "rateAnyway": "Noter quand même"

@@ -128,9 +128,109 @@ async function withInjectedStats(assetPromise) {
     .transform(response);
 }
 
+/*
+ * Uninstall feedback (rating funnel Surface D).
+ *
+ * This is the site's only write endpoint and the only place the project stores
+ * anything a person typed. It takes what they wrote plus the two values the
+ * uninstall URL already carried, and deliberately records nothing else — no
+ * IP, no user agent, no referrer, no cookie, no id that outlives the request.
+ * That is a promise made in PRIVACY.md and on the privacy page, so keep it:
+ * anything added to this INSERT has to be disclosed there first.
+ *
+ * It replaced a mailto: link, which asked the sender to have a mail client,
+ * find the send button in it, and hand over their own address to say "the
+ * footer was missing". Most did not. The link stays on the page under the
+ * form, for anyone who would rather write than type into a box.
+ */
+const FEEDBACK_MAX_MESSAGE = 4000;
+const FEEDBACK_MAX_CONTACT = 200;
+/** Submissions one IP may make per window. The IP is used here and never stored. */
+const FEEDBACK_RATE_LIMIT = 5;
+const FEEDBACK_WINDOW_MS = 10 * 60 * 1000;
+const feedbackHits = new Map();
+
+/** Shape-check a value the client controls, and bound it. '' when it fails. */
+function boundedField(value, max, shape) {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim().slice(0, max);
+  return shape && !shape.test(trimmed) ? '' : trimmed;
+}
+
+/**
+ * Per-isolate, per-window submission cap. A Worker isolate is neither shared
+ * nor durable, so this is a speed bump against a stuck retry loop or one
+ * bored visitor — not a defence against a distributed flood. D1 write limits
+ * are the real backstop, and the endpoint stores too little to be worth
+ * flooding. A Durable Object would make it exact, at the cost of a stateful
+ * dependency for a form that sees a handful of writes a day.
+ */
+function rateLimited(ip) {
+  if (!ip) return false;
+  const now = Date.now();
+  for (const [key, hits] of feedbackHits) {
+    const live = hits.filter((t) => now - t < FEEDBACK_WINDOW_MS);
+    if (live.length === 0) feedbackHits.delete(key);
+    else feedbackHits.set(key, live);
+  }
+  const mine = feedbackHits.get(ip) ?? [];
+  if (mine.length >= FEEDBACK_RATE_LIMIT) return true;
+  feedbackHits.set(ip, [...mine, now]);
+  return false;
+}
+
+function feedbackJson(status, body) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
+  });
+}
+
+async function submitFeedback(request, env) {
+  if (request.method !== 'POST') return feedbackJson(405, { error: 'method' });
+  // The form is same-origin; a cross-origin POST has no business here and the
+  // endpoint sends no CORS headers, so a browser would not surface the answer
+  // anyway. This makes the refusal explicit rather than incidental.
+  const origin = request.headers.get('Origin');
+  if (origin && new URL(origin).host !== new URL(request.url).host) {
+    return feedbackJson(403, { error: 'origin' });
+  }
+  if (!env.FEEDBACK_DB) return feedbackJson(503, { error: 'unavailable' });
+  if (rateLimited(request.headers.get('CF-Connecting-IP'))) {
+    return feedbackJson(429, { error: 'rate' });
+  }
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return feedbackJson(400, { error: 'json' });
+  }
+
+  const message = boundedField(payload?.message, FEEDBACK_MAX_MESSAGE);
+  if (!message) return feedbackJson(400, { error: 'empty' });
+  const version = boundedField(payload?.version, 32, /^[\w.+-]*$/) || 'unknown';
+  const locale = boundedField(payload?.locale, 8, /^[a-z-]*$/) || 'en';
+  const contact = boundedField(payload?.contact, FEEDBACK_MAX_CONTACT);
+
+  try {
+    await env.FEEDBACK_DB.prepare(
+      'INSERT INTO feedback (version, locale, message, contact) VALUES (?, ?, ?, ?)',
+    )
+      .bind(version, locale, message, contact)
+      .run();
+  } catch {
+    // The page keeps the mail link visible, so a failure here costs the sender
+    // a second route rather than their words.
+    return feedbackJson(500, { error: 'write' });
+  }
+  return feedbackJson(201, { ok: true });
+}
+
 async function route(url, request, env) {
   const accept = request.headers.get('Accept') ?? '';
 
+  if (url.pathname === '/api/feedback') return submitFeedback(request, env);
   if (url.pathname === '/api/stats.json') return siteStats();
   if (url.pathname === '/kofi-widget.js') return proxyKofiWidget();
   if (url.pathname.startsWith('/kofi-cdn/')) return proxyKofiAsset(url.pathname);

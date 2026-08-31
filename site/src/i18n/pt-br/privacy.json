@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "Política de Privacidade — OpenScreenShot",
-    "description": "O OpenScreenShot não coleta nada. Sem análise de uso, sem telemetria, sem contas, sem servidores. Toda captura, anotação e exportação roda localmente no seu navegador."
+    "description": "O OpenScreenShot não coleta nada. Sem análise de uso, sem telemetria, sem contas. Toda captura, anotação e exportação roda localmente no seu navegador."
   },
   "label": "Zero coleta de dados",
   "heading": "Política de Privacidade",
-  "lead": "O OpenScreenShot não coleta nada. Não há servidores, contas nem análise de uso.",
+  "lead": "O OpenScreenShot não coleta nada. A extensão não tem servidores, contas nem análise de uso.",
   "updated": "Última atualização: agosto de 2026",
-  "callout": "<strong>Zero coleta de dados.</strong> O OpenScreenShot não coleta, armazena, transmite nem compartilha nenhum dado pessoal, dado de uso ou qualquer outra informação dos seus usuários.",
+  "callout": "<strong>Zero coleta de dados.</strong> O OpenScreenShot não coleta, armazena, transmite nem compartilha nenhum dado pessoal, dado de uso ou qualquer outra informação dos seus usuários. A única exceção é o feedback que você escolhe escrever e enviar na página de desinstalação, descrito abaixo.",
   "howItWorks": {
     "heading": "Como funciona",
     "body": "Cada parte da extensão roda localmente no seu navegador: captura de página, composição de imagem, edição de anotações, gravação de tela e exportação. Nenhum dado sai do seu dispositivo. A extensão não faz requisições de rede próprias e não declara permissões de host permanentes, então não tem acesso em segundo plano a nenhum site que você visita."
@@ -27,7 +27,7 @@
   },
   "uninstall": {
     "heading": "Instalação e desinstalação",
-    "body": "A extensão não faz nenhuma requisição de rede por conta própria, mas o navegador abre uma página em cada ponta: openscreenshot.app/welcome quando você a instala e openscreenshot.app/uninstall quando você a remove. Os dois endereços levam dois valores e nada mais: a versão da extensão e o idioma da interface do seu navegador. Nenhuma URL de página, título, captura ou identificador vai junto. Nenhuma das páginas usa cookies ou análise, e a caixa de feedback da página de desinstalação não envia nada até você pressionar Enviar — o que abre o seu próprio cliente de e-mail com o texto que você escreveu."
+    "body": "A extensão não faz nenhuma requisição de rede por conta própria, mas o navegador abre uma página em cada ponta: openscreenshot.app/welcome quando você a instala e openscreenshot.app/uninstall quando você a remove. Os dois endereços levam dois valores e nada mais: a versão da extensão e o idioma da interface do seu navegador. Nenhuma URL de página, título, captura ou identificador vai junto. Nenhuma das páginas usa cookies ou análise. A página de desinstalação tem uma caixa de feedback: nada é enviado até você pressionar Enviar, e o que fica guardado é exatamente o que você escreveu, a versão da extensão, o idioma da página e um e-mail apenas se você escolher informar um. Seu endereço IP, seu navegador e a página de origem nunca são guardados."
   },
   "changes": {
     "heading": "Alterações nesta política",

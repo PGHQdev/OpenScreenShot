@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "Privacy Policy — OpenScreenShot",
-    "description": "OpenScreenShot collects nothing. No analytics, no telemetry, no accounts, no servers. Every capture, annotation, and export runs locally in your browser."
+    "description": "OpenScreenShot collects nothing. No analytics, no telemetry, no accounts. Every capture, annotation, and export runs locally in your browser."
   },
   "label": "Zero data collection",
   "heading": "Privacy Policy",
-  "lead": "OpenScreenShot collects nothing. There are no servers, no accounts, and no analytics.",
+  "lead": "OpenScreenShot collects nothing. The extension has no servers, no accounts, and no analytics.",
   "updated": "Last updated: August 2026",
-  "callout": "<strong>Zero data collection.</strong> OpenScreenShot does not collect, store, transmit, or share any personal data, usage data, or any other information from its users.",
+  "callout": "<strong>Zero data collection.</strong> OpenScreenShot does not collect, store, transmit, or share any personal data, usage data, or any other information from its users. The one exception is feedback you choose to type and send on the uninstall page — described below.",
   "howItWorks": {
     "heading": "How it works",
     "body": "Every part of the extension runs locally in your browser: page capture, image compositing, annotation editing, screen recording, and export. No data ever leaves your device. The extension makes no network requests of its own and declares no standing host permissions, so it has no background access to any website you visit."
@@ -27,7 +27,7 @@
   },
   "uninstall": {
     "heading": "Install and uninstall",
-    "body": "The extension makes no network request of its own, but your browser opens one page at each end of its life: openscreenshot.app/welcome when you install it, and openscreenshot.app/uninstall when you remove it. Both addresses carry two values and nothing else — the extension version and your browser’s interface language. No page URL, title, capture, or identifier goes with them. Neither page sets cookies or runs analytics, and the feedback box on the uninstall page sends nothing until you press Send, which opens your own mail client with the text you wrote."
+    "body": "The extension makes no network request of its own, but your browser opens one page at each end of its life: openscreenshot.app/welcome when you install it, and openscreenshot.app/uninstall when you remove it. Both addresses carry two values and nothing else — the extension version and your browser’s interface language. No page URL, title, capture, or identifier goes with them. Neither page sets cookies or runs analytics. The uninstall page has a feedback box: nothing is sent until you press Send, and what is stored is exactly what you typed, the extension version, the page’s language, and an email address only if you chose to give one. Your IP address, browser, and referring page are never stored."
   },
   "changes": {
     "heading": "Changes to this policy",

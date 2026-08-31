@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "Privacy Policy — OpenScreenShot",
-    "description": "OpenScreenShot non raccoglie nulla. Nessuna analytics, nessuna telemetria, nessun account, nessun server. Ogni cattura, annotazione ed esportazione avviene in locale nel tuo browser."
+    "description": "OpenScreenShot non raccoglie nulla. Nessuna analytics, nessuna telemetria, nessun account. Ogni cattura, annotazione ed esportazione avviene in locale nel tuo browser."
   },
   "label": "Zero raccolta dati",
   "heading": "Privacy Policy",
-  "lead": "OpenScreenShot non raccoglie nulla. Non ci sono server, account né analytics.",
+  "lead": "OpenScreenShot non raccoglie nulla. L’estensione non ha server, account né analytics.",
   "updated": "Ultimo aggiornamento: agosto 2026",
-  "callout": "<strong>Zero raccolta dati.</strong> OpenScreenShot non raccoglie, conserva, trasmette né condivide alcun dato personale, dato di utilizzo o altra informazione dei suoi utenti.",
+  "callout": "<strong>Zero raccolta dati.</strong> OpenScreenShot non raccoglie, conserva, trasmette né condivide alcun dato personale, dato di utilizzo o altra informazione dei suoi utenti. L’unica eccezione è il riscontro che scegli di scrivere e inviare dalla pagina di disinstallazione, descritto qui sotto.",
   "howItWorks": {
     "heading": "Come funziona",
     "body": "Ogni parte dell'estensione viene eseguita in locale nel tuo browser: cattura della pagina, composizione dell'immagine, annotazioni, registrazione dello schermo ed esportazione. Nessun dato lascia mai il tuo dispositivo. L'estensione non fa richieste di rete di propria iniziativa e non dichiara permessi host permanenti, quindi non ha accesso in background ad alcun sito che visiti."
@@ -27,7 +27,7 @@
   },
   "uninstall": {
     "heading": "Installazione e disinstallazione",
-    "body": "L’estensione non fa richieste di rete per conto proprio, ma il browser apre una pagina a ciascun capo: openscreenshot.app/welcome quando la installi e openscreenshot.app/uninstall quando la rimuovi. Entrambi gli indirizzi portano con sé due soli valori: la versione dell’estensione e la lingua dell’interfaccia del browser. Nessun URL di pagina, nessun titolo, nessuna cattura, nessun identificatore. Nessuna delle due pagine usa cookie o analisi, e il campo di feedback sulla pagina di disinstallazione non invia nulla finché non premi Invia, che apre il tuo client di posta con il testo che hai scritto."
+    "body": "L’estensione non fa richieste di rete per conto proprio, ma il browser apre una pagina a ciascun capo: openscreenshot.app/welcome quando la installi e openscreenshot.app/uninstall quando la rimuovi. Entrambi gli indirizzi portano con sé due soli valori: la versione dell’estensione e la lingua dell’interfaccia del browser. Nessun URL di pagina, nessun titolo, nessuna cattura, nessun identificatore. Nessuna delle due pagine usa cookie o analisi. La pagina di disinstallazione ha un campo di riscontro: non viene inviato nulla finché non premi Invia, e viene conservato esattamente quello che hai scritto, la versione dell’estensione, la lingua della pagina e un indirizzo email solo se scegli di darlo. Il tuo indirizzo IP, il browser e la pagina di provenienza non vengono mai conservati."
   },
   "changes": {
     "heading": "Modifiche a questa policy",

@@ -15,7 +15,9 @@
     "heading": "Qualcosa non andava.",
     "body": "Cosa è successo? Cosa ti aspettavi?",
     "placeholder": "Esempio: la pagina intera ha perso il piè di pagina di una dashboard. Oppure: la cattura è uscita vuota su un sito che uso ogni giorno.",
+    "contactLabel": "La tua email, se vuoi una risposta (facoltativo)",
     "cta": "Invia un riscontro",
+    "failed": "Non è stato inviato. Scrivi a",
     "mailFallback": "Se il client di posta non si apre, scrivi a",
     "thanks": "Grazie. Se ti va, una valutazione aiuta ancora chi cerca un’opzione privata.",
     "rateAnyway": "Valuta comunque"

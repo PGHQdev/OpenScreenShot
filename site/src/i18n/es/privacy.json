@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "Política de privacidad — OpenScreenShot",
-    "description": "OpenScreenShot no recopila nada. Sin analíticas, sin telemetría, sin cuentas, sin servidores. Cada captura, anotación y exportación se ejecuta localmente en tu navegador."
+    "description": "OpenScreenShot no recopila nada. Sin analíticas, sin telemetría, sin cuentas. Cada captura, anotación y exportación se ejecuta localmente en tu navegador."
   },
   "label": "Cero recopilación de datos",
   "heading": "Política de privacidad",
-  "lead": "OpenScreenShot no recopila nada. No hay servidores, ni cuentas, ni analíticas.",
+  "lead": "OpenScreenShot no recopila nada. La extensión no tiene servidores, ni cuentas, ni analíticas.",
   "updated": "Última actualización: agosto de 2026",
-  "callout": "<strong>Cero recopilación de datos.</strong> OpenScreenShot no recopila, almacena, transmite ni comparte ningún dato personal, dato de uso ni ninguna otra información de sus usuarios.",
+  "callout": "<strong>Cero recopilación de datos.</strong> OpenScreenShot no recopila, almacena, transmite ni comparte ningún dato personal, dato de uso ni ninguna otra información de sus usuarios. La única excepción son los comentarios que decides escribir y enviar en la página de desinstalación, descritos más abajo.",
   "howItWorks": {
     "heading": "Cómo funciona",
     "body": "Cada parte de la extensión se ejecuta localmente en tu navegador: la captura de páginas, la composición de imágenes, la edición de anotaciones, la grabación de pantalla y la exportación. Ningún dato sale de tu dispositivo. La extensión no hace peticiones de red propias y no declara permisos de host permanentes, así que no tiene acceso en segundo plano a ningún sitio web que visites."
@@ -27,7 +27,7 @@
   },
   "uninstall": {
     "heading": "Instalación y desinstalación",
-    "body": "La extensión no hace ninguna petición de red por su cuenta, pero tu navegador abre una página en cada extremo: openscreenshot.app/welcome al instalarla y openscreenshot.app/uninstall al quitarla. Ambas direcciones llevan dos valores y nada más: la versión de la extensión y el idioma de la interfaz de tu navegador. No incluyen la URL de ninguna página, ni títulos, ni capturas, ni identificadores. Ninguna de las dos usa cookies ni analítica, y el cuadro de comentarios de la página de desinstalación no envía nada hasta que pulsas Enviar, lo que abre tu propio cliente de correo con el texto que escribiste."
+    "body": "La extensión no hace ninguna petición de red por su cuenta, pero tu navegador abre una página en cada extremo: openscreenshot.app/welcome al instalarla y openscreenshot.app/uninstall al quitarla. Ambas direcciones llevan dos valores y nada más: la versión de la extensión y el idioma de la interfaz de tu navegador. No incluyen la URL de ninguna página, ni títulos, ni capturas, ni identificadores. Ninguna de las dos usa cookies ni analítica. La página de desinstalación tiene un cuadro de comentarios: no se envía nada hasta que pulsas Enviar, y se guarda exactamente lo que escribiste, la versión de la extensión, el idioma de la página y un correo solo si decides darlo. Tu dirección IP, tu navegador y la página de origen nunca se guardan."
   },
   "changes": {
     "heading": "Cambios en esta política",

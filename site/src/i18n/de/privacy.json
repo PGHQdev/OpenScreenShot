@@ -1,13 +1,13 @@
 {
   "meta": {
     "title": "Datenschutzerklärung — OpenScreenShot",
-    "description": "OpenScreenShot sammelt nichts. Keine Analytics, keine Telemetrie, keine Konten, keine Server. Jede Aufnahme, jede Anmerkung und jeder Export läuft lokal in deinem Browser."
+    "description": "OpenScreenShot sammelt nichts. Keine Analytics, keine Telemetrie, keine Konten. Jede Aufnahme, jede Anmerkung und jeder Export läuft lokal in deinem Browser."
   },
   "label": "Null Datensammlung",
   "heading": "Datenschutzerklärung",
-  "lead": "OpenScreenShot sammelt nichts. Es gibt keine Server, keine Konten und keine Analytics.",
+  "lead": "OpenScreenShot sammelt nichts. Die Erweiterung hat keine Server, keine Konten und keine Analytics.",
   "updated": "Zuletzt aktualisiert: August 2026",
-  "callout": "<strong>Null Datensammlung.</strong> OpenScreenShot sammelt, speichert, überträgt oder teilt keinerlei personenbezogene Daten, Nutzungsdaten oder sonstige Informationen seiner Nutzer.",
+  "callout": "<strong>Null Datensammlung.</strong> OpenScreenShot sammelt, speichert, überträgt oder teilt keinerlei personenbezogene Daten, Nutzungsdaten oder sonstige Informationen seiner Nutzer. Die einzige Ausnahme ist Feedback, das du auf der Deinstallationsseite selbst schreibst und absendest — unten beschrieben.",
   "howItWorks": {
     "heading": "So funktioniert es",
     "body": "Jeder Teil der Erweiterung läuft lokal in deinem Browser: Seitenaufnahme, Bildmontage, Anmerkungen, Bildschirmaufnahme und Export. Keine Daten verlassen jemals dein Gerät. Die Erweiterung stellt keine eigenen Netzwerkanfragen und deklariert keine dauerhaften Host-Berechtigungen, sie hat also keinen Hintergrundzugriff auf die Websites, die du besuchst."
@@ -27,7 +27,7 @@
   },
   "uninstall": {
     "heading": "Installation und Deinstallation",
-    "body": "Die Erweiterung stellt selbst keine Netzwerkanfrage, aber dein Browser öffnet je eine Seite am Anfang und am Ende: openscreenshot.app/welcome bei der Installation und openscreenshot.app/uninstall beim Entfernen. Beide Adressen enthalten genau zwei Werte: die Version der Erweiterung und die Oberflächensprache deines Browsers. Keine Seiten-URL, kein Titel, keine Aufnahme, keine Kennung. Keine der beiden Seiten setzt Cookies oder nutzt Analyse, und das Feedback-Feld auf der Deinstallationsseite sendet nichts, bis du auf Senden drückst — das öffnet dein eigenes E-Mail-Programm mit dem geschriebenen Text."
+    "body": "Die Erweiterung stellt selbst keine Netzwerkanfrage, aber dein Browser öffnet je eine Seite am Anfang und am Ende: openscreenshot.app/welcome bei der Installation und openscreenshot.app/uninstall beim Entfernen. Beide Adressen enthalten genau zwei Werte: die Version der Erweiterung und die Oberflächensprache deines Browsers. Keine Seiten-URL, kein Titel, keine Aufnahme, keine Kennung. Keine der beiden Seiten setzt Cookies oder nutzt Analyse. Die Deinstallationsseite hat ein Feedback-Feld: nichts wird gesendet, bis du auf Senden drückst, und gespeichert wird genau das, was du geschrieben hast, die Version der Erweiterung, die Sprache der Seite und eine E-Mail-Adresse nur dann, wenn du eine angibst. Deine IP-Adresse, dein Browser und die verweisende Seite werden nie gespeichert."
   },
   "changes": {
     "heading": "Änderungen an dieser Richtlinie",

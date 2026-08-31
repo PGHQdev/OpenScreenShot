@@ -8,7 +8,7 @@ Web Store, because it does not depend on GitHub being up.
 
 ## Data collection
 
-OpenScreenShot does **not** collect, store, transmit, or share any personal data, usage data, or any other information from its users.
+OpenScreenShot does **not** collect, store, transmit, or share any personal data, usage data, or any other information from its users. The one exception is feedback you choose to type and send on the uninstall page — see [Install and uninstall](#install-and-uninstall) below.
 
 ## How it works
 
@@ -52,8 +52,16 @@ end of its life: a welcome page at <https://openscreenshot.app/welcome> when you
 it, and a feedback page at <https://openscreenshot.app/uninstall> when you remove it. Both
 addresses carry only the extension version and your UI language. We do not receive your
 browsing history, any page you visited, or any capture — the extension has none of that to
-send. Neither page sets cookies or runs analytics; nothing is sent unless you type feedback
-on the uninstall page and press Send.
+send. Neither page sets cookies or runs analytics.
+
+The uninstall page has a feedback box. Nothing is sent until you press Send. What is stored
+is exactly four things: the text you wrote, the extension version from the address above,
+the language the page was shown in, and an email address only if you chose to type one so
+we can reply. Your IP address, browser, and referring page are never stored. The rows live
+in a Cloudflare D1 database owned by the project and are read only to find out what broke;
+the schema and this promise are in
+[`site/migrations/0001_feedback.sql`](site/migrations/0001_feedback.sql). If you would
+rather write to us directly, the page shows <support@minimalistprojects.com>.
 
 ## Third-party services
 

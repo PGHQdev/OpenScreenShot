@@ -15,7 +15,9 @@
     "heading": "Etwas hat nicht gestimmt.",
     "body": "Was ist passiert? Was hattest du erwartet?",
     "placeholder": "Beispiel: Die ganze Seite hat die Fußzeile eines Dashboards verpasst. Oder: Die Aufnahme blieb auf einer Seite leer, die ich täglich nutze.",
+    "contactLabel": "Deine E-Mail-Adresse, falls du eine Antwort möchtest (optional)",
     "cta": "Feedback senden",
+    "failed": "Das ging nicht raus. Schreib bitte an",
     "mailFallback": "Wenn sich dein E-Mail-Programm nicht öffnet, schreib an",
     "thanks": "Danke. Wenn du magst, hilft eine Bewertung weiterhin allen, die eine private Lösung brauchen.",
     "rateAnyway": "Trotzdem bewerten"

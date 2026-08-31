@@ -1,9 +1,15 @@
 ---
 /**
  * Uninstall landing (rating funnel Surface D). chrome.runtime.setUninstallURL
- * points here with ?v=<version>&hl=<locale> — nothing else. No analytics, no
- * cookies; the feedback textarea sends only if the visitor presses Send, and
- * it sends by opening their own mail client (there is no backend).
+ * points here with ?v=<version>&hl=<locale> — nothing else.
+ *
+ * Send posts to /api/feedback, which writes one row to D1: what was typed,
+ * the version from ?v, this page's locale, and an optional reply address. No
+ * IP, no user agent, no cookie, no analytics. It used to open the visitor's
+ * mail client instead, which asked someone mid-uninstall to own a mail app and
+ * hand over their address to report a missing footer. The mail link stays
+ * under the form for anyone who prefers it, and it is also the way through
+ * when the endpoint is down.
  */
 import Doc from '../../../layouts/Doc.astro';
 import LocaleRedirect from '../../../components/LocaleRedirect.astro';
@@ -48,17 +54,27 @@ const SUPPORT_EMAIL = 'support@minimalistprojects.com';
   <section class="doc-section" id="broken">
     <h2>{d.broken.heading}</h2>
     <p>{d.broken.body}</p>
-    <form id="feedback-form" data-email={SUPPORT_EMAIL}>
+    <form id="feedback-form" data-email={SUPPORT_EMAIL} data-locale={locale}>
       <textarea
         id="feedback-text"
         rows="5"
+        required
+        maxlength="4000"
         placeholder={d.broken.placeholder}
         aria-label={d.broken.heading}></textarea>
+      {/* Optional, and labelled as optional: a reply address is the only way
+          to answer a bug report, and no reason to refuse an anonymous one. */}
+      <p class="field">
+        <label for="feedback-contact">{d.broken.contactLabel}</label>
+        <input id="feedback-contact" type="email" maxlength="200" autocomplete="email" />
+      </p>
       <p>
         <button class="btn btn-quiet" type="submit">{d.broken.cta}</button>
       </p>
+      <p id="feedback-error" class="feedback-error" role="alert" hidden>
+        {d.broken.failed} <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
+      </p>
     </form>
-    {/* Send opens a mail client. A visitor who has none needs the address itself. */}
     <p class="mail-fallback">
       {d.broken.mailFallback} <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
     </p>
@@ -86,27 +102,72 @@ const SUPPORT_EMAIL = 'support@minimalistprojects.com';
     font: inherit;
     resize: vertical;
   }
-  .mail-fallback {
+
+  .field {
+    display: grid;
+    gap: 6px;
+    max-width: 560px;
+  }
+
+  .field label {
+    color: var(--ink-3);
+    font-size: var(--fs-sm);
+  }
+
+  #feedback-contact {
+    padding: 10px 12px;
+    border: 1px solid var(--border, #d9d4c8);
+    border-radius: 10px;
+    font: inherit;
+  }
+
+  .mail-fallback,
+  .feedback-error {
     color: var(--ink-3);
     font-size: var(--fs-sm);
   }
 </style>
 
 <script>
-  // Feedback goes out as an email the visitor sends themselves — no backend,
-  // nothing collected. The extension version rides along from ?v; no page
-  // URLs, titles, or captures exist here to send.
+  // One POST to /api/feedback: the text, the version from ?v, this page's
+  // locale, and an optional reply address. Nothing else about the visitor
+  // exists on this page to send. A failure re-shows the form and points at the
+  // mail address rather than swallowing what they wrote — the textarea keeps
+  // its contents throughout, so a retry costs nothing.
   const form = document.getElementById('feedback-form') as HTMLFormElement;
   const text = document.getElementById('feedback-text') as HTMLTextAreaElement;
+  const contact = document.getElementById('feedback-contact') as HTMLInputElement;
   const thanks = document.getElementById('feedback-thanks') as HTMLElement;
+  const failed = document.getElementById('feedback-error') as HTMLElement;
+  const button = form?.querySelector('button[type="submit"]') as HTMLButtonElement;
+  const sending = button?.textContent ?? '';
+
   form?.addEventListener('submit', (e) => {
     e.preventDefault();
-    const version = new URLSearchParams(location.search).get('v') ?? 'unknown';
-    const body = `${text?.value ?? ''}\n\n—\nExtension version: ${version}`;
-    location.href = `mailto:${form.dataset.email}?subject=${encodeURIComponent(
-      'Uninstall feedback',
-    )}&body=${encodeURIComponent(body)}`;
-    form.hidden = true;
-    thanks.hidden = false;
+    const message = text?.value.trim() ?? '';
+    if (!message) return;
+    failed.hidden = true;
+    button.disabled = true;
+
+    void fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        message,
+        contact: contact?.value.trim() ?? '',
+        version: new URLSearchParams(location.search).get('v') ?? 'unknown',
+        locale: form.dataset.locale ?? 'en',
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(String(res.status));
+        form.hidden = true;
+        thanks.hidden = false;
+      })
+      .catch(() => {
+        failed.hidden = false;
+        button.disabled = false;
+        button.textContent = sending;
+      });
   });
 </script>

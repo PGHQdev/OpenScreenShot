@@ -15,7 +15,9 @@
     "heading": "Alguma coisa deu errado.",
     "body": "O que aconteceu? O que você esperava?",
     "placeholder": "Exemplo: a página inteira perdeu o rodapé de um painel. Ou: a captura saiu em branco num site que uso todo dia.",
+    "contactLabel": "Seu e-mail, se quiser uma resposta (opcional)",
     "cta": "Enviar feedback",
+    "failed": "Não deu para enviar. Escreva para",
     "mailFallback": "Se o seu app de e-mail não abrir, escreva para",
     "thanks": "Obrigado. Se quiser, uma avaliação ainda ajuda quem precisa de uma opção privada.",
     "rateAnyway": "Avaliar mesmo assim"

@@ -15,7 +15,9 @@
     "heading": "Algo salió mal.",
     "body": "¿Qué pasó? ¿Qué esperabas?",
     "placeholder": "Ejemplo: la página completa se dejó el pie de página de un panel. O: la captura salió en blanco en un sitio que uso a diario.",
+    "contactLabel": "Tu correo, si quieres respuesta (opcional)",
     "cta": "Enviar comentarios",
+    "failed": "No se pudo enviar. Escribe a",
     "mailFallback": "Si tu cliente de correo no se abre, escribe a",
     "thanks": "Gracias. Si quieres, una valoración sigue ayudando a quienes necesitan una opción privada.",
     "rateAnyway": "Valorar de todos modos"

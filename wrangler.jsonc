@@ -13,4 +13,15 @@
     "binding": "ASSETS",
     "run_worker_first": ["/", "/api/*", "/kofi-widget.js", "/kofi-cdn/*"],
   },
+  // Uninstall feedback, and nothing else. Schema and what it deliberately does
+  // not hold: site/migrations/0001_feedback.sql. Apply a migration with
+  // `npx wrangler d1 migrations apply openscreenshot-feedback --remote`.
+  "d1_databases": [
+    {
+      "binding": "FEEDBACK_DB",
+      "database_name": "openscreenshot-feedback",
+      "database_id": "462b6679-10de-4c97-bc31-c8b895df66fe",
+      "migrations_dir": "site/migrations",
+    },
+  ],
 }
