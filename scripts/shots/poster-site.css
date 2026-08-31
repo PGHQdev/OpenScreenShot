@@ -1,0 +1,123 @@
+/* Poster styles for the five on-site shots (hero, shot-2..5), in the white
+ * 2026-08 site brand (agent_docs/plans/2026-08-31-site-atlas-rewrite-design.md).
+ *
+ * poster.css keeps the paper-era art direction for the store posters
+ * (promo-tile, marquee, store-popup) and must not change with site restyles;
+ * this file is that same window-and-ground vocabulary redrawn neutral, so a
+ * poster sits cleanly inside the site's white cards and gradient hero frame.
+ *
+ * All five posters render at 1200x720, so the hero tab panels swap without a
+ * height jump. */
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+html,
+body {
+  width: 1200px;
+  height: 720px;
+  overflow: hidden;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: #f6f6f7;
+  color: #17171a;
+  position: relative;
+}
+
+/* ---- Ground ---- */
+.ground {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(110% 80% at 0% 0%, rgba(232, 80, 58, 0.07), rgba(232, 80, 58, 0) 60%),
+    radial-gradient(90% 80% at 100% 100%, rgba(245, 166, 35, 0.08), rgba(245, 166, 35, 0) 60%),
+    linear-gradient(160deg, #fbfbfc 0%, #f2f2f4 100%);
+}
+
+/* ---- Browser window ---- */
+.window {
+  position: absolute;
+  background: #ffffff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(23, 23, 26, 0.08),
+    0 1px 2px rgba(23, 23, 26, 0.05),
+    0 24px 48px -20px rgba(23, 23, 26, 0.25);
+}
+.window-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+  padding: 0 14px;
+  background: #f6f6f7;
+  border-bottom: 1px solid #e9e9ec;
+}
+.lights {
+  display: flex;
+  gap: 6px;
+}
+.lights i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d9d9de;
+}
+.urlbar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #e9e9ec;
+  font-size: 12px;
+  color: #6e6e76;
+  white-space: nowrap;
+}
+/* the extension's toolbar icon, which the popup hangs from */
+.ext-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #ececef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.window-body {
+  position: relative;
+  overflow: hidden;
+}
+.window-body > iframe,
+.window-body > img {
+  display: block;
+  border: 0;
+  transform-origin: top left;
+}
+
+/* ---- The popup, at its natural 340px ---- */
+.popup {
+  position: absolute;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgba(23, 23, 26, 0.1),
+    0 2px 6px rgba(23, 23, 26, 0.07),
+    0 32px 64px -20px rgba(23, 23, 26, 0.38);
+}
+.popup img {
+  display: block;
+  border: 0;
+  /* The capture is 2x of a 340 CSS px popup; shown at 340 it is exactly the
+     size Chrome draws it. */
+  width: 340px;
+  height: auto;
+}

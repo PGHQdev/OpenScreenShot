@@ -191,16 +191,23 @@ samp {
   transition:
     background var(--dur-fast) var(--ease),
     border-color var(--dur-fast) var(--ease),
-    color var(--dur-fast) var(--ease);
+    color var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
 }
 
+.btn:active {
+  transform: scale(0.97);
+}
+
+/* Hover lightens the same ink, the way the reference pill does — never a
+ * color swap, which fights the multicolor glyph inside. */
 .btn-ink {
   background: var(--ink);
   color: #fff;
 }
 
 .btn-ink:hover {
-  background: var(--accent-ink);
+  background: color-mix(in srgb, var(--ink) 85%, #fff);
 }
 
 .btn-quiet {
@@ -237,8 +244,10 @@ samp {
   box-shadow: var(--sh-card);
 }
 
+/* Concentric corners: the inner radius is the outer radius minus the padding,
+ * so the gradient band keeps one visual thickness around the bend. */
 .frame-grad > * {
-  border-radius: var(--r-lg);
+  border-radius: var(--r-xl);
   overflow: hidden;
   background: var(--paper);
 }

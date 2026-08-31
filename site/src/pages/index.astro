@@ -34,6 +34,34 @@ const icons = {
   terminal: 'm5 7 5 5-5 5M12.5 17H19',
 };
 
+// The hero's tabbed showcase: one framed stage, four screens.
+const heroTabs = [
+  {
+    id: 'capture',
+    label: 'Capture',
+    image: hero,
+    alt: 'The OpenScreenShot popup open over a web page in Chrome, with Full Page, Visible Area, Selected Region and Record options.',
+  },
+  {
+    id: 'annotate',
+    label: 'Annotate',
+    image: shotEditor,
+    alt: 'The OpenScreenShot editor with its tool rail, color palette and stroke controls, showing a full page capture of opentechcheck.com with a box and an arrow drawn on it.',
+  },
+  {
+    id: 'export',
+    label: 'Export',
+    image: shotExport,
+    alt: 'The export dialog in the OpenScreenShot editor, with PNG selected, JPEG, WebP and PDF beside it, a scale row, a width field and a filename field.',
+  },
+  {
+    id: 'record',
+    label: 'Record',
+    image: shotRecorder,
+    alt: 'The OpenScreenShot recorder with a recorded page in the preview, cursor and tab volume controls, and a timeline with two 2x zoom blocks.',
+  },
+];
+
 // The trio under the hero: the three reasons to install, benefit first.
 const trio = [
   {
@@ -68,7 +96,7 @@ const features = [
       'A 3, 5 or 10 second delay for menus and hover states',
     ],
     image: shotCapture,
-    alt: 'A region selection in progress on a web page in Chrome: a dashed rectangle with corner handles, a 516 by 300 size readout, and Capture and Cancel buttons.',
+    alt: 'A region selection in progress on opentechcheck.com in Chrome: a dashed rectangle with corner handles, a 420 by 300 size readout, and Capture and Cancel buttons.',
   },
   {
     id: 'editor',
@@ -82,7 +110,7 @@ const features = [
       'Crop, with undo that goes all the way back',
     ],
     image: shotEditor,
-    alt: 'The OpenScreenShot editor with its tool rail, color palette and stroke controls, showing a full page screenshot with a box and an arrow drawn on it.',
+    alt: 'The OpenScreenShot editor with its tool rail, color palette and stroke controls, showing a full page capture of opentechcheck.com with a box and an arrow drawn on it.',
   },
   {
     id: 'export',
@@ -196,55 +224,100 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
         uploaded.
       </p>
       <p class="cta-row">
-        <a class="btn btn-ink" href={STORE_URL} target="_blank" rel="noopener">Add to Chrome</a>
-        <a class="btn btn-quiet" href={REPO_URL} target="_blank" rel="noopener">View on GitHub ↗</a>
+        <a class="btn btn-ink" href={STORE_URL} target="_blank" rel="noopener">
+          <ChromeIcon size={18} />
+          Add to Chrome
+        </a>
+        <a class="btn btn-quiet" href={REPO_URL} target="_blank" rel="noopener">
+          <svg class="gh-mark" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+            <path
+              fill="currentColor"
+              d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
+            ></path>
+          </svg>
+          View on GitHub
+        </a>
       </p>
     </div>
     <div class="container-hero">
-      <figure class="hero-shot frame-grad">
-        <div>
-          <Picture
-            src={hero}
-            alt="The OpenScreenShot popup open over a web page in Chrome, with Full Page, Visible Area, Selected Region and Record options."
-            formats={['avif', 'webp']}
-            fallbackFormat="webp"
-            widths={[640, 960, 1280, 1800, 2400]}
-            sizes="(min-width: 1248px) 1200px, 100vw"
-            fetchpriority="high"
-            loading="eager"
-            decoding="async"
-          />
+      <div class="hero-frame">
+        <div class="hero-tabs" role="tablist" aria-label="The extension's screens">
+          <span class="hero-tabs-thumb" aria-hidden="true"></span>
+          {
+            heroTabs.map((tab, i) => (
+              <button
+                id={`hero-tab-${tab.id}`}
+                class="hero-tab"
+                role="tab"
+                aria-selected={i === 0 ? 'true' : 'false'}
+                aria-controls={`hero-panel-${tab.id}`}
+                tabindex={i === 0 ? undefined : -1}
+              >
+                {tab.label}
+              </button>
+            ))
+          }
         </div>
-      </figure>
+        {
+          heroTabs.map((tab, i) => (
+            <div
+              id={`hero-panel-${tab.id}`}
+              class="hero-panel"
+              role="tabpanel"
+              aria-labelledby={`hero-tab-${tab.id}`}
+              hidden={i !== 0}
+            >
+              <Picture
+                src={tab.image}
+                alt={tab.alt}
+                formats={['avif', 'webp']}
+                fallbackFormat="webp"
+                widths={[640, 960, 1280, 1800, 2400]}
+                sizes="(min-width: 1248px) 1200px, 100vw"
+                fetchpriority={i === 0 ? 'high' : undefined}
+                loading={i === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+              />
+            </div>
+          ))
+        }
+      </div>
+      <p class="hero-credit">
+        The site in these screenshots is OpenTechCheck, also by us — see what any website is built
+        with. <a href="https://opentechcheck.com" target="_blank" rel="noopener">Try it now</a>
+      </p>
     </div>
   </section>
 
-  <!-- Proof. site-worker.js rewrites the two data-stat elements at the edge;
-       the numbers here are the fallback when shields.io is unreachable. -->
+  <!-- Proof. site-worker.js rewrites the two data-stat elements at the edge,
+       and the script below refreshes them from /api/stats.json in the
+       browser; the numbers in the markup are the fallback when both miss. -->
   <section class="proof-strip" aria-label="In numbers">
     <ul class="container-wide proof">
-      <li><b data-stat="users">985</b> users on the Chrome Web Store</li>
-      <li><b data-stat="stars">65</b> stars on GitHub</li>
+      <li><b data-stat="users">1k</b> users on the Chrome Web Store</li>
+      <li><b data-stat="stars">66</b> stars on GitHub</li>
       <li>MIT licensed</li>
       <li>Works offline</li>
     </ul>
   </section>
 
   <!-- Trio -->
-  <section class="section">
-    <ul class="container-wide trio">
-      {
-        trio.map((t) => (
-          <li>
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path d={t.icon} />
-            </svg>
-            <h2>{t.title}</h2>
-            <p class="trio-body">{t.body}</p>
-          </li>
-        ))
-      }
-    </ul>
+  <section class="section trio-section">
+    <div class="container-wide">
+      <ul class="trio">
+        {
+          trio.map((t) => (
+            <li>
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d={t.icon} />
+              </svg>
+              <h2>{t.title}</h2>
+              <p class="trio-body">{t.body}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
   </section>
 
   <!-- Alternating features -->
@@ -394,6 +467,70 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
   </Fragment>
 </Base>
 
+<script>
+  // The hero showcase: a sliding white thumb under the active tab, panels
+  // toggled through [hidden]. Arrow keys move between tabs per the ARIA
+  // tabs pattern.
+  const tablist = document.querySelector<HTMLElement>('.hero-tabs');
+  const thumb = tablist?.querySelector<HTMLElement>('.hero-tabs-thumb');
+  const tabs = [...(tablist?.querySelectorAll<HTMLButtonElement>('.hero-tab') ?? [])];
+
+  function placeThumb(tab: HTMLElement) {
+    if (!thumb) return;
+    thumb.style.width = `${tab.offsetWidth}px`;
+    thumb.style.transform = `translateX(${tab.offsetLeft}px)`;
+  }
+
+  function select(tab: HTMLButtonElement, focus = false) {
+    for (const t of tabs) {
+      const active = t === tab;
+      t.setAttribute('aria-selected', String(active));
+      if (active) t.removeAttribute('tabindex');
+      else t.setAttribute('tabindex', '-1');
+      const panel = document.getElementById(t.getAttribute('aria-controls') ?? '');
+      if (panel) panel.hidden = !active;
+    }
+    placeThumb(tab);
+    if (focus) tab.focus();
+  }
+
+  if (tablist && thumb && tabs.length) {
+    tablist.dataset.ready = 'false';
+    placeThumb(tabs[0]);
+    // Two frames so the initial placement lands before transitions turn on.
+    requestAnimationFrame(() => requestAnimationFrame(() => (tablist.dataset.ready = 'true')));
+
+    for (const tab of tabs) {
+      tab.addEventListener('click', () => select(tab));
+    }
+    tablist.addEventListener('keydown', (e) => {
+      const dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!dir) return;
+      e.preventDefault();
+      const current = tabs.findIndex((t) => t.getAttribute('aria-selected') === 'true');
+      select(tabs[(current + dir + tabs.length) % tabs.length], true);
+    });
+    window.addEventListener('resize', () => {
+      const current = tabs.find((t) => t.getAttribute('aria-selected') === 'true');
+      if (current) placeThumb(current);
+    });
+  }
+
+  // Live counts for the proof strip. The edge already injects them
+  // server-side; this refresh covers cached HTML and keeps the numbers
+  // current. A miss (offline, localhost) leaves the fallback markup alone.
+  fetch('/api/stats.json')
+    .then((r) => (r.ok ? r.json() : null))
+    .then((stats: Record<string, string | null> | null) => {
+      if (!stats) return;
+      for (const el of document.querySelectorAll<HTMLElement>('[data-stat]')) {
+        const value = stats[el.dataset.stat ?? ''];
+        if (value) el.textContent = value;
+      }
+    })
+    .catch(() => {});
+</script>
+
 <style>
   /* ---- Rhythm ---- */
 
@@ -449,6 +586,11 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
     margin: 0;
   }
 
+  .gh-mark {
+    width: 18px;
+    height: 18px;
+  }
+
   /* ---- Hero ---- */
 
   .hero {
@@ -482,12 +624,90 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
     font-size: var(--fs-lg);
   }
 
-  .hero-shot {
-    margin: 0;
+  .hero-frame {
+    padding: 8px;
+    border-radius: calc(var(--r-xl) + 8px);
+    background: var(--grad-frame);
+    box-shadow: var(--sh-card);
   }
 
-  .hero-shot img {
+  .hero-tabs {
+    position: relative;
+    display: flex;
+    margin: 2px 2px 8px;
+  }
+
+  .hero-tab {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: var(--r-full);
+    background: none;
+    color: rgba(255, 255, 255, 0.85);
+    font: inherit;
+    font-size: var(--fs-md);
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color var(--dur-fast) var(--ease);
+  }
+
+  .hero-tab:hover,
+  .hero-tab[aria-selected='true'] {
+    color: #fff;
+  }
+
+  .hero-tab[aria-selected='true'] {
+    color: var(--ink);
+  }
+
+  .hero-tabs-thumb {
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 0;
+    border-radius: var(--r-full);
+    background: #fff;
+    box-shadow:
+      0 1px 2px rgba(15, 10, 20, 0.1),
+      0 6px 16px -8px rgba(15, 10, 20, 0.28);
+    transition:
+      transform var(--dur-mid) var(--ease),
+      width var(--dur-mid) var(--ease);
+  }
+
+  /* Until the script measures the tabs (or without JS at all), the thumb
+   * spans the first quarter, which is the first of the four equal tabs. */
+  .hero-tabs:not([data-ready='true']) .hero-tabs-thumb {
+    width: 25%;
+    transition: none;
+  }
+
+  .hero-panel {
+    border-radius: var(--r-xl);
+    overflow: hidden;
+    background: var(--paper);
+  }
+
+  .hero-panel img {
     width: 100%;
+  }
+
+  .hero-credit {
+    margin: var(--s-3) 0 0;
+    color: var(--ink-3);
+    font-size: var(--fs-sm);
+    text-align: center;
+  }
+
+  @media (max-width: 620px) {
+    .hero-tab {
+      padding-inline: 6px;
+      font-size: var(--fs-sm);
+    }
   }
 
   /* ---- Proof strip ---- */
@@ -747,6 +967,7 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
   /* ---- Final CTA ---- */
 
   .cta-final {
+    padding-bottom: clamp(40px, 5vw, 64px);
     text-align: center;
   }
 

@@ -41,7 +41,7 @@ async function proxyKofiAsset(pathname) {
 // source as the README badges — and cached at the edge, so nothing but this
 // Worker ever talks to a third party. Two consumers share this: the
 // homepage's proof strip (users/stars, injected server-side with
-// HTMLRewriter — the markup's own 985 / 65 numbers are what ships if
+// HTMLRewriter — the markup's own 1k / 66 numbers are what ships if
 // shields.io doesn't answer in time) and the public /api/stats.json
 // endpoint, live since 95a14dd.
 const STAT_SOURCES = {
@@ -55,7 +55,7 @@ const STATS_TTL = 21600;
 /*
  * The homepage's first byte waits on this: the two shield lookups run
  * alongside the asset fetch, but the HTML cannot start streaming until the
- * rewriter is attached. The markup's own 985 / 65 are current and correct, so
+ * rewriter is attached. The markup's own 1k / 66 are current and correct, so
  * giving up early costs freshness and nothing else.
  */
 const STATS_TIMEOUT_MS = 500;

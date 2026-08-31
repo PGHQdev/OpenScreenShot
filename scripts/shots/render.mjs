@@ -210,7 +210,7 @@ function installPopupChromeStub(messages, seed) {
     tabs: {
       create: async () => ({ id: 1 }),
       update: async () => ({}),
-      query: async () => [{ id: 1, url: 'https://thecoastalalmanac.com/' }],
+      query: async () => [{ id: 1, url: 'https://opentechcheck.com/' }],
       remove: noop,
     },
     windows: { update: async () => ({}) },
@@ -451,8 +451,8 @@ async function renderRealCaptures(browser, base, messages) {
     width: 1100,
     height: 1500,
     mode: 'full-page',
-    title: 'The Coastal Almanac',
-    url: 'https://thecoastalalmanac.com/',
+    title: 'OpenTechCheck — see what websites are built with',
+    url: 'https://opentechcheck.com/',
     capturedAt: SEED_TIME,
   };
   const editorSeed = {
@@ -745,10 +745,12 @@ async function renderStoreShots() {
 // gone — nothing on the site references either any more.
 const PAGE_SHOTS = new Set(['shot-2', 'shot-3', 'shot-4', 'shot-5', 'hero']);
 const SHOTS = [
-  { name: 'shot-2', w: 900, h: 563 },
-  { name: 'shot-3', w: 900, h: 563 },
-  { name: 'shot-4', w: 900, h: 563 },
-  { name: 'shot-5', w: 900, h: 563 },
+  // One size for the whole set: the homepage's hero tabs swap these panels
+  // in place, so differing aspect ratios would make the page jump.
+  { name: 'shot-2', w: 1200, h: 720 },
+  { name: 'shot-3', w: 1200, h: 720 },
+  { name: 'shot-4', w: 1200, h: 720 },
+  { name: 'shot-5', w: 1200, h: 720 },
   { name: 'hero', w: 1200, h: 720 },
 ];
 const README_HERO = join(ROOT, 'media/hero.jpg');
