@@ -2256,5 +2256,49 @@
   "settingsSupport": {
     "message": "Soutenir",
     "description": "Popup settings: label for the row holding the Ko-fi and cool-stuff links."
+  },
+  "welcomeTitle": {
+    "message": "Bienvenue",
+    "description": "Welcome page: browser tab title."
+  },
+  "welcomeHeadline": {
+    "message": "C’est prêt. Cliquez sur l’icône.",
+    "description": "Welcome page: headline inviting the first icon click."
+  },
+  "welcomeBody": {
+    "message": "OpenScreenShot capture la page entière en un clic. Pas de compte. Rien ne quitte cette machine. Essayez tout de suite sur cette page.",
+    "description": "Welcome page: one-paragraph pitch under the headline."
+  },
+  "welcomePrimary": {
+    "message": "Cliquez sur l’icône OpenScreenShot dans la barre d’outils.",
+    "description": "Welcome page: the primary instruction line."
+  },
+  "welcomeSecondary": {
+    "message": "Ou appuyez sur Ctrl+Maj+S (Cmd+Maj+S sur Mac).",
+    "description": "Welcome page: the keyboard-shortcut alternative line."
+  },
+  "editorRateLabel": {
+    "message": "Noter",
+    "description": "Editor topbar: label on the always-visible Rate star."
+  },
+  "editorRateTooltip": {
+    "message": "30 secondes. C’est ainsi que d’autres trouvent un outil de capture privé.",
+    "description": "Editor topbar: tooltip on the Rate star."
+  },
+  "ratePromptHeadline": {
+    "message": "Vous fait-il gagner du temps ?",
+    "description": "One-time post-export rate prompt: headline."
+  },
+  "ratePromptBody": {
+    "message": "Une courte note sur le Chrome Web Store est le principal moyen de faire connaître un outil privé. Cela prend 30 secondes.",
+    "description": "One-time post-export rate prompt: body."
+  },
+  "ratePromptRate": {
+    "message": "Noter sur le Chrome Web Store",
+    "description": "One-time post-export rate prompt: button that opens the reviews tab."
+  },
+  "ratePromptLater": {
+    "message": "Pas maintenant",
+    "description": "One-time post-export rate prompt: dismiss button."
   }
 }

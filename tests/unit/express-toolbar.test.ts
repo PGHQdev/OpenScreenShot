@@ -21,6 +21,8 @@ function makeFakeChrome() {
       onMessage: { addListener: vi.fn() },
       getURL: vi.fn((path: string) => `chrome-extension://fake/${path}`),
       sendMessage: vi.fn(() => Promise.resolve()),
+      setUninstallURL: vi.fn(() => Promise.resolve()),
+      getManifest: vi.fn(() => ({ version: '1.6.0' })),
       lastError: undefined as { message: string } | undefined,
     },
     action: {
@@ -64,7 +66,7 @@ function makeFakeChrome() {
       onChanged: { addListener: vi.fn() },
       session: { onChanged: { addListener: vi.fn() } },
     },
-    i18n: { getMessage: vi.fn((key: string) => key) },
+    i18n: { getMessage: vi.fn((key: string) => key), getUILanguage: vi.fn(() => 'en') },
     windows: { WINDOW_ID_CURRENT: -2 },
     downloads: { download: vi.fn(() => Promise.resolve(1)) },
     scripting: { executeScript: vi.fn(() => Promise.resolve([{ result: undefined }])) },

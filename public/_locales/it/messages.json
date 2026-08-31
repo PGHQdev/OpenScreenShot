@@ -2256,5 +2256,49 @@
   "settingsSupport": {
     "message": "Sostieni",
     "description": "Popup settings: label for the row holding the Ko-fi and cool-stuff links."
+  },
+  "welcomeTitle": {
+    "message": "Benvenuto",
+    "description": "Welcome page: browser tab title."
+  },
+  "welcomeHeadline": {
+    "message": "Fatto. Fai clic sull’icona.",
+    "description": "Welcome page: headline inviting the first icon click."
+  },
+  "welcomeBody": {
+    "message": "OpenScreenShot cattura la pagina intera con un clic. Nessun account. Niente lascia questo computer. Provalo subito su questa pagina.",
+    "description": "Welcome page: one-paragraph pitch under the headline."
+  },
+  "welcomePrimary": {
+    "message": "Fai clic sull’icona di OpenScreenShot nella barra degli strumenti.",
+    "description": "Welcome page: the primary instruction line."
+  },
+  "welcomeSecondary": {
+    "message": "Oppure premi Ctrl+Maiusc+S (Cmd+Maiusc+S su Mac).",
+    "description": "Welcome page: the keyboard-shortcut alternative line."
+  },
+  "editorRateLabel": {
+    "message": "Valuta",
+    "description": "Editor topbar: label on the always-visible Rate star."
+  },
+  "editorRateTooltip": {
+    "message": "30 secondi. È così che altri trovano uno strumento privato per gli screenshot.",
+    "description": "Editor topbar: tooltip on the Rate star."
+  },
+  "ratePromptHeadline": {
+    "message": "Ti sta facendo risparmiare tempo?",
+    "description": "One-time post-export rate prompt: headline."
+  },
+  "ratePromptBody": {
+    "message": "Una breve valutazione sul Chrome Web Store è il modo principale in cui uno strumento privato viene trovato. Richiede 30 secondi.",
+    "description": "One-time post-export rate prompt: body."
+  },
+  "ratePromptRate": {
+    "message": "Valuta sul Chrome Web Store",
+    "description": "One-time post-export rate prompt: button that opens the reviews tab."
+  },
+  "ratePromptLater": {
+    "message": "Non ora",
+    "description": "One-time post-export rate prompt: dismiss button."
   }
 }

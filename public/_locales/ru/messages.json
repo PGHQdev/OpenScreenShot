@@ -2256,5 +2256,49 @@
   "settingsSupport": {
     "message": "Поддержка",
     "description": "Popup settings: label for the row holding the Ko-fi and cool-stuff links."
+  },
+  "welcomeTitle": {
+    "message": "Добро пожаловать",
+    "description": "Welcome page: browser tab title."
+  },
+  "welcomeHeadline": {
+    "message": "Готово. Нажмите на значок.",
+    "description": "Welcome page: headline inviting the first icon click."
+  },
+  "welcomeBody": {
+    "message": "OpenScreenShot снимает всю страницу в один клик. Без аккаунта. Ничего не покидает этот компьютер. Попробуйте прямо на этой странице.",
+    "description": "Welcome page: one-paragraph pitch under the headline."
+  },
+  "welcomePrimary": {
+    "message": "Нажмите на значок OpenScreenShot на панели инструментов.",
+    "description": "Welcome page: the primary instruction line."
+  },
+  "welcomeSecondary": {
+    "message": "Или нажмите Ctrl+Shift+S (Cmd+Shift+S на Mac).",
+    "description": "Welcome page: the keyboard-shortcut alternative line."
+  },
+  "editorRateLabel": {
+    "message": "Оценить",
+    "description": "Editor topbar: label on the always-visible Rate star."
+  },
+  "editorRateTooltip": {
+    "message": "30 секунд. Так другие находят приватный инструмент для скриншотов.",
+    "description": "Editor topbar: tooltip on the Rate star."
+  },
+  "ratePromptHeadline": {
+    "message": "Экономит ли это ваше время?",
+    "description": "One-time post-export rate prompt: headline."
+  },
+  "ratePromptBody": {
+    "message": "Короткий отзыв в Chrome Web Store — главный способ, которым находят приватный инструмент. Это занимает 30 секунд.",
+    "description": "One-time post-export rate prompt: body."
+  },
+  "ratePromptRate": {
+    "message": "Оценить в Chrome Web Store",
+    "description": "One-time post-export rate prompt: button that opens the reviews tab."
+  },
+  "ratePromptLater": {
+    "message": "Не сейчас",
+    "description": "One-time post-export rate prompt: dismiss button."
   }
 }

@@ -92,6 +92,15 @@ describe('isProtectedUrl', () => {
   it('treats missing urls as protected', () => {
     expect(isProtectedUrl(undefined)).toBe(true);
   });
+  it("allows the extension's own pages but no other extension's", () => {
+    vi.stubGlobal('chrome', { runtime: { id: 'ownid' } });
+    try {
+      expect(isProtectedUrl('chrome-extension://ownid/src/welcome/index.html')).toBe(false);
+      expect(isProtectedUrl('chrome-extension://otherid/page.html')).toBe(true);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });
 
 describe('insertToken', () => {

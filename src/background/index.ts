@@ -32,6 +32,7 @@ import {
   normalizeCaptureDelay,
 } from '../shared/utils';
 import { clampRegionRect, computeScrollPositions, MAX_CANVAS_HEIGHT_PX } from '../shared/geometry';
+import { recordExportSuccess } from '../shared/rating';
 import {
   cropTile,
   getMetrics,
@@ -47,6 +48,14 @@ import { restoreRecBadge } from './recording';
 
 const EDITOR_URL = chrome.runtime.getURL('src/editor/index.html');
 const POPUP_URL = 'src/popup/index.html';
+/** First-run page: a tall dummy article that invites the first capture. */
+const WELCOME_URL = chrome.runtime.getURL('src/welcome/index.html');
+/**
+ * Where an uninstall lands (Surface D of the rating funnel). Query carries
+ * the extension version and UI locale only — never a page URL, title, or
+ * capture.
+ */
+const UNINSTALL_URL = 'https://openscreenshot.app/uninstall';
 /** The popup page opened as a tab, straight into its settings pane. */
 const SETTINGS_TAB_URL = chrome.runtime.getURL('src/popup/index.html?settings=1');
 /** Icon context-menu checkbox that toggles express mode. */
@@ -71,13 +80,20 @@ const CAPTURE_THROTTLE_MS = 500;
 /** Time to let the page paint/composite after each scroll before capturing. */
 const PAINT_SETTLE_MS = 60;
 
-// No tab opens on install: the one grant a recording needs is asked for from
-// the Record click itself, so first run has nothing to walk through.
-// The express migration runs before the menus so the checkbox reads the
-// post-migration value.
+// A fresh install opens the welcome page — a tall article built to make the
+// first one-click capture look good. Updates open nothing. The express
+// migration runs before the menus so the checkbox reads the post-migration
+// value.
 chrome.runtime.onInstalled.addListener((details) => {
   void migrateExpressDefault(details.reason).then(() => createContextMenus());
+  if (details.reason === 'install') void chrome.tabs.create({ url: WELCOME_URL });
 });
+
+// Registered on every worker start so it survives service-worker restarts.
+// Version and locale only — see UNINSTALL_URL.
+void chrome.runtime.setUninstallURL(
+  `${UNINSTALL_URL}?v=${chrome.runtime.getManifest().version}&hl=${chrome.i18n.getUILanguage()}`,
+);
 
 /** Contexts the capture menu appears in — everywhere on a page. */
 const MENU_CONTEXTS: NonNullable<chrome.contextMenus.CreateProperties['contexts']> = [
@@ -522,6 +538,7 @@ async function deliverCapture(
       });
       return false;
     }
+    void recordExportSuccess();
     void flashDoneBadge();
     return true;
   }
@@ -539,6 +556,7 @@ async function deliverCapture(
     });
     return false;
   }
+  void recordExportSuccess();
   void flashDoneBadge();
   return true;
 }

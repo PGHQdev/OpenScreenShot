@@ -2256,5 +2256,49 @@
   "settingsSupport": {
     "message": "支持",
     "description": "Popup settings: label for the row holding the Ko-fi and cool-stuff links."
+  },
+  "welcomeTitle": {
+    "message": "欢迎",
+    "description": "Welcome page: browser tab title."
+  },
+  "welcomeHeadline": {
+    "message": "就绪。点击图标。",
+    "description": "Welcome page: headline inviting the first icon click."
+  },
+  "welcomeBody": {
+    "message": "OpenScreenShot 一键截取整页。无需账号，任何数据都不会离开这台电脑。现在就在本页试试吧。",
+    "description": "Welcome page: one-paragraph pitch under the headline."
+  },
+  "welcomePrimary": {
+    "message": "点击工具栏中的 OpenScreenShot 图标。",
+    "description": "Welcome page: the primary instruction line."
+  },
+  "welcomeSecondary": {
+    "message": "或按 Ctrl+Shift+S（Mac 上为 Cmd+Shift+S）。",
+    "description": "Welcome page: the keyboard-shortcut alternative line."
+  },
+  "editorRateLabel": {
+    "message": "评分",
+    "description": "Editor topbar: label on the always-visible Rate star."
+  },
+  "editorRateTooltip": {
+    "message": "只需 30 秒。这是其他人发现私密截图工具的方式。",
+    "description": "Editor topbar: tooltip on the Rate star."
+  },
+  "ratePromptHeadline": {
+    "message": "它帮你节省时间了吗？",
+    "description": "One-time post-export rate prompt: headline."
+  },
+  "ratePromptBody": {
+    "message": "在 Chrome 应用商店留下简短评分，是私密工具被发现的主要途径。只需 30 秒。",
+    "description": "One-time post-export rate prompt: body."
+  },
+  "ratePromptRate": {
+    "message": "去 Chrome 应用商店评分",
+    "description": "One-time post-export rate prompt: button that opens the reviews tab."
+  },
+  "ratePromptLater": {
+    "message": "暂不",
+    "description": "One-time post-export rate prompt: dismiss button."
   }
 }

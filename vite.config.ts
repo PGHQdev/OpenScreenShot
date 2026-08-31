@@ -46,6 +46,7 @@ export default defineConfig({
         recorder: 'src/recorder/index.html',
         webcamFrame: 'src/recorder/webcam-frame.html',
         setup: 'src/setup/index.html',
+        welcome: 'src/welcome/index.html',
       },
     },
   },

@@ -48,6 +48,8 @@ function makeFakeChrome() {
       onMessage: { addListener: vi.fn() },
       getURL: vi.fn((path: string) => `chrome-extension://fake/${path}`),
       sendMessage: vi.fn(() => Promise.resolve()),
+      setUninstallURL: vi.fn(() => Promise.resolve()),
+      getManifest: vi.fn(() => ({ version: '1.6.0' })),
       lastError: undefined as { message: string } | undefined,
     },
     action: {
@@ -109,7 +111,7 @@ function makeFakeChrome() {
       // parked failure removes the key, and the badge has to follow.
       session: { onChanged: { addListener: vi.fn() } },
     },
-    i18n: { getMessage: vi.fn((key: string) => key) },
+    i18n: { getMessage: vi.fn((key: string) => key), getUILanguage: vi.fn(() => 'en') },
     windows: { WINDOW_ID_CURRENT: -2 },
     downloads: { download: vi.fn(() => Promise.resolve(1)) },
     scripting: { executeScript: vi.fn(() => Promise.resolve([{ result: undefined }])) },
@@ -172,12 +174,11 @@ describe('createContextMenus concurrency', () => {
 });
 
 /**
- * Install opens nothing. The whole "the setup page is reached only from a
- * failure" deliverable is one hunk in `src/background/index.ts`, and it is
- * invisible to every other check here: reverting it leaves lint, types and
- * every other test green. This is the one assertion that fails when it comes
- * back, so it reads the listener the module actually registered and fires it
- * rather than trusting the source.
+ * A fresh install opens exactly one tab: the welcome page (rating funnel
+ * Surface A). An update opens nothing — the update-time welcome is the
+ * pattern users report extensions for. The setup page stays reachable only
+ * from a failure, as before. These read the listener the module actually
+ * registered and fire it rather than trusting the source.
  */
 describe('onInstalled', () => {
   beforeEach(() => {
@@ -190,7 +191,7 @@ describe('onInstalled', () => {
     vi.unstubAllGlobals();
   });
 
-  it('opens no tab on a fresh install', async () => {
+  async function fireOnInstalled(reason: string): Promise<void> {
     await import('../../src/background/index.ts');
     const listener = fakeChrome.runtime.onInstalled.addListener.mock.calls[0]?.[0] as (details: {
       reason: string;
@@ -198,18 +199,25 @@ describe('onInstalled', () => {
     expect(listener, 'background/index.ts registers an onInstalled listener').toBeTypeOf(
       'function',
     );
-
-    listener({ reason: 'install' });
+    listener({ reason });
     // Let the migration and the menu build run every read they queue, so a
     // tab created after any of those awaits would still be caught below.
     await releaseAllReads();
+  }
 
-    expect(
-      fakeChrome.tabs.create.mock.calls.map(([opts]) => (opts as { url: string }).url),
-      'a fresh install must not open the setup page (or any other tab)',
-    ).toEqual([]);
+  const openedUrls = () =>
+    fakeChrome.tabs.create.mock.calls.map(([opts]) => (opts as { url: string }).url);
+
+  it('opens exactly the welcome page on a fresh install', async () => {
+    await fireOnInstalled('install');
+    expect(openedUrls()).toEqual(['chrome-extension://fake/src/welcome/index.html']);
     // The install still has to build the menus — the assertion above must not
     // pass by the listener having stopped doing its real work.
     expect(new Set(createdIds)).toEqual(new Set(ALL_MENU_IDS));
+  });
+
+  it('opens no tab on an update', async () => {
+    await fireOnInstalled('update');
+    expect(openedUrls()).toEqual([]);
   });
 });

@@ -226,6 +226,15 @@ export function IconHistory(props: IconProps) {
   );
 }
 
+/** A five-point star — the Rate control in the editor header. */
+export function IconStar(props: IconProps) {
+  return (
+    <StrokeIcon {...props}>
+      <path d="M12 3l2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 16.9l-5.4 2.9 1.1-6.1L3.2 9.4l6.1-.8z" />
+    </StrokeIcon>
+  );
+}
+
 /** Outer frame with a small window in the corner — pin in a floating window. */
 export function IconPictureInPicture(props: IconProps) {
   return (

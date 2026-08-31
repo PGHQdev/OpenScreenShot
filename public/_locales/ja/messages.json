@@ -2256,5 +2256,49 @@
   "settingsSupport": {
     "message": "サポート",
     "description": "Popup settings: label for the row holding the Ko-fi and cool-stuff links."
+  },
+  "welcomeTitle": {
+    "message": "ようこそ",
+    "description": "Welcome page: browser tab title."
+  },
+  "welcomeHeadline": {
+    "message": "準備完了。アイコンをクリック。",
+    "description": "Welcome page: headline inviting the first icon click."
+  },
+  "welcomeBody": {
+    "message": "OpenScreenShot はワンクリックでページ全体をキャプチャします。アカウント不要。このマシンから何も送信されません。今すぐこのページで試してみてください。",
+    "description": "Welcome page: one-paragraph pitch under the headline."
+  },
+  "welcomePrimary": {
+    "message": "ツールバーの OpenScreenShot アイコンをクリックしてください。",
+    "description": "Welcome page: the primary instruction line."
+  },
+  "welcomeSecondary": {
+    "message": "または Ctrl+Shift+S（Mac では Cmd+Shift+S）を押してください。",
+    "description": "Welcome page: the keyboard-shortcut alternative line."
+  },
+  "editorRateLabel": {
+    "message": "評価",
+    "description": "Editor topbar: label on the always-visible Rate star."
+  },
+  "editorRateTooltip": {
+    "message": "30秒で完了。プライベートなスクリーンショットツールが見つかるきっかけになります。",
+    "description": "Editor topbar: tooltip on the Rate star."
+  },
+  "ratePromptHeadline": {
+    "message": "時間の節約になっていますか？",
+    "description": "One-time post-export rate prompt: headline."
+  },
+  "ratePromptBody": {
+    "message": "Chrome ウェブストアでの短い評価が、プライベートなツールが見つかる一番の理由です。30秒で終わります。",
+    "description": "One-time post-export rate prompt: body."
+  },
+  "ratePromptRate": {
+    "message": "Chrome ウェブストアで評価する",
+    "description": "One-time post-export rate prompt: button that opens the reviews tab."
+  },
+  "ratePromptLater": {
+    "message": "あとで",
+    "description": "One-time post-export rate prompt: dismiss button."
   }
 }
