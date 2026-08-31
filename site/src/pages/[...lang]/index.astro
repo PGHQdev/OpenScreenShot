@@ -300,6 +300,9 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
         </div>
       </details>
       <p class="fine" set:html={d.privacy.moreFine} />
+      <p class="fine">
+        <a href={localizePath(locale, '/compare/')}>{d.privacy.compareLine}</a>
+      </p>
     </div>
   </section>
 

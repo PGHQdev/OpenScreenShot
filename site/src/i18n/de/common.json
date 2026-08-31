@@ -20,7 +20,8 @@
     "mitLicense": "MIT-Lizenz",
     "privacy": "Datenschutz",
     "supportOpenSource": "Open Source unterstützen",
-    "languageLabel": "Sprache"
+    "languageLabel": "Sprache",
+    "compare": "Vergleich"
   },
   "meta": {
     "ogDefaultAlt": "OpenScreenShot: Ganzseiten-Screenshots und Anmerkungen für Chrome. Kostenlos, Open Source und 100 % lokal."

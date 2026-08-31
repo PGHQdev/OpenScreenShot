@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "Screenshot a pagina intera ed editor per Chrome — OpenScreenShot",
+    "title": "Screenshot a pagina intera in un clic — OpenScreenShot",
     "description": "Estensione Chrome gratuita e open source per screenshot a pagina intera, area visibile e regione, con editor di annotazioni, esportazione in PNG, JPEG, WebP o PDF e registrazione della scheda. Nulla lascia il tuo dispositivo."
   },
   "hero": {
     "note": "Gratuito · Open source · Licenza MIT",
     "title1": "Clic. Catturato. Fatto.",
     "title2": "Così privato che funziona senza Wi-Fi.",
-    "sub": "Pagina intera, annotazioni, esportazione, registrazione della scheda — direttamente in Chrome. Niente account, niente filigrana, niente cloud.",
+    "sub": "Screenshot a pagina intera in un clic. Nessun account, nessuna filigrana, niente cloud.",
     "viewOnGithub": "Vedi su GitHub",
     "tablistLabel": "Le schermate dell'estensione",
     "credit": "Il sito in questi screenshot è OpenTechCheck, sempre nostro: scopri con cosa è costruito qualsiasi sito.",
@@ -50,7 +50,7 @@
   "quartet": [
     {
       "title": "Cattura tutto",
-      "body": "La pagina intera, l'area visibile o una regione che trascini. Un clic, una scorciatoia o il menu del tasto destro."
+      "body": "Fai clic sull’icona e ottieni la pagina intera. Oppure l’area visibile o una regione trascinata — dal clic destro o con una scorciatoia."
     },
     {
       "title": "Modifica prima di condividere",
@@ -98,7 +98,8 @@
     "installFold": "Cosa chiede all'installazione",
     "recordFold": "Cosa aggiunge la registrazione, solo quando registri",
     "micFine": "Il microfono e la fotocamera, quando li attivi, vengono aperti dalla richiesta di permesso del tuo browser. Il flusso non lascia mai il tuo dispositivo.",
-    "moreFine": "Le stesse tabelle, con la policy completa, nella <a href=\"/privacy/\">pagina Privacy</a>."
+    "moreFine": "Le stesse tabelle, con la policy completa, nella <a href=\"/privacy/\">pagina Privacy</a>.",
+    "compareLine": "Confronto: OpenScreenShot vs GoFullPage vs FullPage Capture."
   },
   "cli": {
     "eyebrow": "Agenti e CLI",

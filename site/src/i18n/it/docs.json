@@ -21,11 +21,11 @@
   },
   "capture": {
     "heading": "Cattura uno screenshot",
-    "intro": "Clicca l'icona di OpenScreenShot nella barra degli strumenti e scegli una delle tre modalità di cattura. Tutto avviene in locale nel tuo browser. Ci sono quattro modi per avviare una cattura:",
+    "intro": "Fai clic sull’icona di OpenScreenShot nella barra degli strumenti e la cattura della pagina intera parte subito, senza menu di mezzo. Tutto gira in locale nel browser. Ci sono quattro modi per avviare una cattura:",
     "ways": [
-      "<strong>Il popup</strong> — clicca una modalità, o premi <kbd>1</kbd>–<kbd>3</kbd>.",
+      "<strong>L’icona nella barra degli strumenti</strong> — un clic cattura la pagina intera. Disattiva <strong>Un clic sull’icona cattura la pagina intera</strong> nelle impostazioni per riavere il selettore delle modalità; con il clic destro sull’icona trovi le altre modalità e le impostazioni.",
       "<strong>Una scorciatoia da tastiera</strong> — <kbd>Ctrl+Shift+S</kbd> per la pagina intera, <kbd>Alt+Shift+V</kbd> per l'area visibile, <kbd>Ctrl+Shift+E</kbd> per una regione. Su macOS sono <kbd>⌘⇧S</kbd>, <kbd>⌘⇧V</kbd> e <kbd>⌘⇧E</kbd>. Cambiale in <code>chrome://extensions/shortcuts</code>.",
-      "<strong>Il menu del tasto destro</strong> — il sottomenu OpenScreenShot su qualsiasi pagina offre le stesse tre modalità.",
+      "<strong>Il menu contestuale</strong> — il sottomenu OpenScreenShot su qualsiasi pagina offre le stesse tre modalità e le Impostazioni.",
       "<strong>Ripeti regione</strong> — il footer del popup e il menu del tasto destro ricatturano l'ultimo rettangolo di regione. Entrambe le voci appaiono dopo che hai selezionato una regione."
     ],
     "delay": "La riga <strong>Ritardo</strong> nel popup rimanda una cattura di 3, 5 o 10 secondi, e il badge sull'icona fa il conto alla rovescia. Usala per stati hover, menu a discesa e tooltip che si chiudono appena clicchi altrove."

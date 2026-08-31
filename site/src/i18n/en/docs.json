@@ -21,11 +21,11 @@
   },
   "capture": {
     "heading": "Capture a screenshot",
-    "intro": "Click the OpenScreenShot icon in your toolbar and pick one of the three capture modes. Everything runs locally in your browser. There are four ways to start a capture:",
+    "intro": "Click the OpenScreenShot icon in your toolbar and the full page capture starts — no menu in the way. Everything runs locally in your browser. There are four ways to start a capture:",
     "ways": [
-      "<strong>The popup</strong> — click a mode, or press <kbd>1</kbd>–<kbd>3</kbd>.",
+      "<strong>The toolbar icon</strong> — one click captures the full page. Turn <strong>Icon click captures the full page</strong> off in settings to get the mode picker popup back; right-click the icon for the other modes and settings.",
       "<strong>A keyboard shortcut</strong> — <kbd>Ctrl+Shift+S</kbd> for the full page, <kbd>Alt+Shift+V</kbd> for the visible area, <kbd>Ctrl+Shift+E</kbd> for a region. On macOS these are <kbd>⌘⇧S</kbd>, <kbd>⌘⇧V</kbd>, and <kbd>⌘⇧E</kbd>. Rebind them at <code>chrome://extensions/shortcuts</code>.",
-      "<strong>The right-click menu</strong> — the OpenScreenShot submenu on any page offers the same three modes.",
+      "<strong>The right-click menu</strong> — the OpenScreenShot submenu on any page offers the same three modes and Settings.",
       "<strong>Repeat region</strong> — the popup footer and the right-click menu re-capture the last region rectangle. Both items appear once you have selected a region."
     ],
     "delay": "The <strong>Delay</strong> row in the popup holds a capture for 3, 5, or 10 seconds, and the toolbar badge counts down. Use it for hover states, dropdown menus, and tooltips that close the moment you click somewhere else."

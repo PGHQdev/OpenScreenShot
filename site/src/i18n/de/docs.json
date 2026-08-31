@@ -21,11 +21,11 @@
   },
   "capture": {
     "heading": "Einen Screenshot aufnehmen",
-    "intro": "Klicke auf das OpenScreenShot-Symbol in deiner Symbolleiste und wähle einen der drei Aufnahmemodi. Alles läuft lokal in deinem Browser. Es gibt vier Wege, eine Aufnahme zu starten:",
+    "intro": "Klicke auf das OpenScreenShot-Symbol in der Symbolleiste und die Ganzseiten-Aufnahme startet — ohne Menü dazwischen. Alles läuft lokal in deinem Browser. Es gibt vier Wege, eine Aufnahme zu starten:",
     "ways": [
-      "<strong>Das Popup</strong> — klicke einen Modus an oder drücke <kbd>1</kbd>–<kbd>3</kbd>.",
+      "<strong>Das Symbol in der Symbolleiste</strong> — ein Klick nimmt die ganze Seite auf. Schalte <strong>Klick auf das Symbol nimmt die ganze Seite auf</strong> in den Einstellungen aus, um das Auswahlmenü zurückzubekommen; Rechtsklick auf das Symbol öffnet die anderen Modi und Einstellungen.",
       "<strong>Ein Tastenkürzel</strong> — <kbd>Ctrl+Shift+S</kbd> für die ganze Seite, <kbd>Alt+Shift+V</kbd> für den sichtbaren Bereich, <kbd>Ctrl+Shift+E</kbd> für einen Ausschnitt. Auf macOS sind es <kbd>⌘⇧S</kbd>, <kbd>⌘⇧V</kbd> und <kbd>⌘⇧E</kbd>. Ändere sie unter <code>chrome://extensions/shortcuts</code>.",
-      "<strong>Das Rechtsklick-Menü</strong> — das OpenScreenShot-Untermenü auf jeder Seite bietet dieselben drei Modi.",
+      "<strong>Das Kontextmenü</strong> — das OpenScreenShot-Untermenü auf jeder Seite bietet dieselben drei Modi und die Einstellungen.",
       "<strong>Ausschnitt erneut</strong> — die Popup-Fußzeile und das Rechtsklick-Menü nehmen das letzte Ausschnitt-Rechteck noch einmal auf. Beide Einträge erscheinen, sobald du einmal einen Ausschnitt gewählt hast."
     ],
     "delay": "Die Zeile <strong>Timer</strong> im Popup hält eine Aufnahme 3, 5 oder 10 Sekunden zurück, und das Symbol-Badge zählt herunter. Nutze sie für Hover-Zustände, Dropdown-Menüs und Tooltips, die sich schließen, sobald du woanders klickst."

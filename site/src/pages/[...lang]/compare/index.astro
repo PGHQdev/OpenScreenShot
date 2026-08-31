@@ -1,0 +1,99 @@
+---
+/**
+ * The comparison page (brief P1.2). Facts only — store status, source
+ * availability, standing access, and what is free — with the "as of" date
+ * spelled out. No malware claims, no adjectives about anyone else.
+ */
+import Doc from '../../../layouts/Doc.astro';
+import { t, localePaths, localeFromParams } from '../../../i18n';
+
+export const getStaticPaths = localePaths;
+
+const locale = localeFromParams(Astro.params.lang);
+const d = t(locale, 'compare');
+
+const STORE_URL = 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp';
+const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
+
+type Row = { feature: string; oss: string; fpc: string; gfp: string };
+const rows: Row[] = d.rows;
+---
+
+<Doc
+  title={d.meta.title}
+  description={d.meta.description}
+  path="/compare/"
+  locale={locale}
+  label={d.label}
+  heading={d.heading}
+  lead={d.lead}
+>
+  <section class="doc-section" id="table">
+    <table class="compare">
+      <thead>
+        <tr>
+          <th scope="col">{d.columns.feature}</th>
+          <th scope="col">{d.columns.oss}</th>
+          <th scope="col">{d.columns.fpc}</th>
+          <th scope="col">{d.columns.gfp}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <th scope="row">{row.feature}</th>
+              <td>{row.oss}</td>
+              <td>{row.fpc}</td>
+              <td>{row.gfp}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+    <p class="as-of">{d.asOf}</p>
+  </section>
+
+  <section class="doc-section" id="cta">
+    <p>
+      <a class="btn btn-ink" href={STORE_URL} target="_blank" rel="noopener"
+        >{d.cta.addToChrome}</a
+      >
+      <a class="btn btn-quiet" href={REPO_URL} target="_blank" rel="noopener"
+        >{d.cta.starOnGithub}</a
+      >
+    </p>
+  </section>
+</Doc>
+
+<style>
+  .compare {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+  .compare th,
+  .compare td {
+    padding: var(--s-3) var(--s-4) var(--s-3) 0;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .compare thead th:not(:first-child) {
+    white-space: nowrap;
+  }
+  .compare tbody th {
+    font-weight: 600;
+  }
+  .as-of {
+    margin-top: var(--s-3);
+    color: var(--ink-2);
+  }
+  @media (max-width: 768px) {
+    #table {
+      overflow-x: auto;
+    }
+    .compare {
+      min-width: 640px;
+    }
+  }
+</style>

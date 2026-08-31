@@ -21,11 +21,11 @@
   },
   "capture": {
     "heading": "Fazer uma captura de tela",
-    "intro": "Clique no ícone do OpenScreenShot na barra de ferramentas e escolha um dos três modos de captura. Tudo roda localmente no seu navegador. Há quatro formas de iniciar uma captura:",
+    "intro": "Clique no ícone do OpenScreenShot na barra de ferramentas e a captura de página inteira começa — sem menu no caminho. Tudo roda localmente no seu navegador. Há quatro formas de iniciar uma captura:",
     "ways": [
-      "<strong>O popup</strong> — clique em um modo, ou pressione <kbd>1</kbd>–<kbd>3</kbd>.",
+      "<strong>O ícone da barra de ferramentas</strong> — um clique captura a página inteira. Desative <strong>Clicar no ícone captura a página inteira</strong> nas configurações para recuperar o seletor de modos; o clique direito no ícone traz os outros modos e as configurações.",
       "<strong>Um atalho de teclado</strong> — <kbd>Ctrl+Shift+S</kbd> para a página inteira, <kbd>Alt+Shift+V</kbd> para a área visível, <kbd>Ctrl+Shift+E</kbd> para uma região. No macOS são <kbd>⌘⇧S</kbd>, <kbd>⌘⇧V</kbd> e <kbd>⌘⇧E</kbd>. Reatribua em <code>chrome://extensions/shortcuts</code>.",
-      "<strong>O menu do botão direito</strong> — o submenu do OpenScreenShot em qualquer página oferece os mesmos três modos.",
+      "<strong>O menu de contexto</strong> — o submenu do OpenScreenShot em qualquer página oferece os mesmos três modos e as Configurações.",
       "<strong>Repetir região</strong> — o rodapé do popup e o menu do botão direito recapturam o último retângulo de região. Os dois itens aparecem depois que você seleciona uma região."
     ],
     "delay": "A linha <strong>Atraso</strong> no popup segura a captura por 3, 5 ou 10 segundos, e o selo na barra de ferramentas faz a contagem regressiva. Use para estados de hover, menus suspensos e tooltips que fecham no momento em que você clica em outro lugar."

@@ -21,11 +21,11 @@
   },
   "capture": {
     "heading": "Hacer una captura",
-    "intro": "Haz clic en el icono de OpenScreenShot en tu barra de herramientas y elige uno de los tres modos de captura. Todo se ejecuta localmente en tu navegador. Hay cuatro formas de iniciar una captura:",
+    "intro": "Haz clic en el icono de OpenScreenShot en la barra de herramientas y la captura de página completa comienza, sin menús de por medio. Todo se ejecuta localmente en tu navegador. Hay cuatro formas de iniciar una captura:",
     "ways": [
-      "<strong>El menú</strong> — haz clic en un modo, o pulsa <kbd>1</kbd>–<kbd>3</kbd>.",
+      "<strong>El icono de la barra de herramientas</strong>: un clic captura la página completa. Desactiva <strong>Al hacer clic en el icono se captura la página completa</strong> en los ajustes para recuperar el selector de modos; con clic derecho en el icono tienes los demás modos y los ajustes.",
       "<strong>Un atajo de teclado</strong> — <kbd>Ctrl+Shift+S</kbd> para la página completa, <kbd>Alt+Shift+V</kbd> para el área visible, <kbd>Ctrl+Shift+E</kbd> para una región. En macOS son <kbd>⌘⇧S</kbd>, <kbd>⌘⇧V</kbd> y <kbd>⌘⇧E</kbd>. Cámbialos en <code>chrome://extensions/shortcuts</code>.",
-      "<strong>El menú del clic derecho</strong> — el submenú de OpenScreenShot en cualquier página ofrece los mismos tres modos.",
+      "<strong>El menú contextual</strong>: el submenú de OpenScreenShot en cualquier página ofrece los mismos tres modos y los Ajustes.",
       "<strong>Repetir región</strong> — el pie del menú y el menú del clic derecho vuelven a capturar el último rectángulo de región. Ambos elementos aparecen cuando ya has seleccionado una región."
     ],
     "delay": "La fila <strong>Retardo</strong> del menú retiene una captura durante 3, 5 o 10 segundos, y la insignia de la barra de herramientas cuenta atrás. Úsala para estados hover, menús desplegables y tooltips que se cierran en cuanto haces clic en otro sitio."

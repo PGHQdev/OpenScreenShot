@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "Captura de Página Inteira e Editor para Chrome — OpenScreenShot",
+    "title": "Captura de página inteira em um clique — OpenScreenShot",
     "description": "Extensão grátis e de código aberto para Chrome: capturas de página inteira, área visível e região, com editor de anotações, exportação em PNG, JPEG, WebP ou PDF e gravador de abas. Nada sai do seu computador."
   },
   "hero": {
     "note": "Grátis · Código aberto · Licença MIT",
     "title1": "Clique. Capturado. Pronto.",
     "title2": "Tão privado que funciona sem Wi-Fi.",
-    "sub": "Página inteira, anotações, exportação e gravação da guia — direto no Chrome. Sem conta, sem marca-d'água, sem nuvem.",
+    "sub": "Captura de página inteira em um clique. Sem conta, sem marca d’água, sem nuvem.",
     "viewOnGithub": "Ver no GitHub",
     "tablistLabel": "As telas da extensão",
     "credit": "O site nestas capturas é o OpenTechCheck, também nosso — veja com o que qualquer site foi construído.",
@@ -50,7 +50,7 @@
   "quartet": [
     {
       "title": "Capture qualquer coisa",
-      "body": "A página inteira, a área visível ou uma região que você arrasta. Um clique, um atalho ou o menu do botão direito."
+      "body": "Clique no ícone e obtenha a página inteira. Ou a área visível, ou uma região que você arrasta — pelo clique direito ou um atalho."
     },
     {
       "title": "Edite antes de compartilhar",
@@ -98,7 +98,8 @@
     "installFold": "O que ela pede na instalação",
     "recordFold": "O que a gravação adiciona, só quando você grava",
     "micFine": "O microfone e a câmera, quando você os ativa, são abertos pelo aviso de permissão do próprio navegador. O stream nunca sai do seu dispositivo.",
-    "moreFine": "As mesmas tabelas, com a política completa, na <a href=\"/privacy/\">página de Privacidade</a>."
+    "moreFine": "As mesmas tabelas, com a política completa, na <a href=\"/privacy/\">página de Privacidade</a>.",
+    "compareLine": "Comparação: OpenScreenShot vs GoFullPage vs FullPage Capture."
   },
   "cli": {
     "eyebrow": "Agentes e CLI",

@@ -20,7 +20,8 @@
     "mitLicense": "MIT 许可证",
     "privacy": "隐私",
     "supportOpenSource": "支持开源",
-    "languageLabel": "语言"
+    "languageLabel": "语言",
+    "compare": "对比"
   },
   "meta": {
     "ogDefaultAlt": "OpenScreenShot：Chrome 整页截图与标注扩展。免费、开源、100% 本地。"

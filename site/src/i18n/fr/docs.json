@@ -21,11 +21,11 @@
   },
   "capture": {
     "heading": "Capturer une image",
-    "intro": "Cliquez sur l’icône OpenScreenShot dans votre barre d’outils et choisissez l’un des trois modes de capture. Tout s’exécute en local dans votre navigateur. Il y a quatre façons de lancer une capture :",
+    "intro": "Cliquez sur l’icône OpenScreenShot dans la barre d’outils et la capture pleine page démarre — sans menu intermédiaire. Tout s’exécute localement dans votre navigateur. Il y a quatre façons de lancer une capture :",
     "ways": [
-      "<strong>Le popup</strong> — cliquez sur un mode, ou appuyez sur <kbd>1</kbd>–<kbd>3</kbd>.",
+      "<strong>L’icône de la barre d’outils</strong> — un clic capture la page entière. Désactivez <strong>Un clic sur l’icône capture la page entière</strong> dans les paramètres pour retrouver le sélecteur de modes ; le clic droit sur l’icône donne les autres modes et les paramètres.",
       "<strong>Un raccourci clavier</strong> — <kbd>Ctrl+Shift+S</kbd> pour la page entière, <kbd>Alt+Shift+V</kbd> pour la zone visible, <kbd>Ctrl+Shift+E</kbd> pour une zone. Sur macOS : <kbd>⌘⇧S</kbd>, <kbd>⌘⇧V</kbd> et <kbd>⌘⇧E</kbd>. Modifiez-les sur <code>chrome://extensions/shortcuts</code>.",
-      "<strong>Le menu du clic droit</strong> — le sous-menu OpenScreenShot, sur n’importe quelle page, propose les trois mêmes modes.",
+      "<strong>Le menu contextuel</strong> — le sous-menu OpenScreenShot sur n’importe quelle page propose les trois mêmes modes et les Paramètres.",
       "<strong>Répéter la zone</strong> — le pied du popup et le menu du clic droit recapturent le dernier rectangle de zone. Les deux entrées apparaissent une fois que vous avez sélectionné une zone."
     ],
     "delay": "La ligne <strong>Délai</strong> du popup retient une capture pendant 3, 5 ou 10 secondes, et le badge de la barre d’outils affiche le compte à rebours. Utilisez-la pour les états de survol, les menus déroulants et les infobulles qui se ferment dès que vous cliquez ailleurs."

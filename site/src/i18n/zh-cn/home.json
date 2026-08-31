@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "Chrome 整页截图与编辑器 — OpenScreenShot",
+    "title": "一键整页截图 — OpenScreenShot",
     "description": "免费开源的 Chrome 扩展：整页、可见区域和区域截图，自带标注编辑器，可导出 PNG、JPEG、WebP 或 PDF，还有标签页录屏。任何内容都不会离开你的设备。"
   },
   "hero": {
     "note": "免费 · 开源 · MIT 许可",
     "title1": "一点。截好。完成。",
     "title2": "私密到断网也能用。",
-    "sub": "整页截图、标注、导出、标签页录制，全部在 Chrome 里。无账号、无水印、无云端。",
+    "sub": "一键截取整页截图。无需账号，没有水印，不用云端。",
     "viewOnGithub": "在 GitHub 上查看",
     "tablistLabel": "扩展的各个界面",
     "credit": "截图中的网站是我们的另一款作品 OpenTechCheck——查看任何网站是用什么技术构建的。",
@@ -50,7 +50,7 @@
   "quartet": [
     {
       "title": "想截什么都行",
-      "body": "整页、可见区域，或拖选一块区域。一次点击、一个快捷键，或右键菜单。"
+      "body": "点击图标，获得整页截图。也可通过右键菜单或快捷键截取可见区域或拖选区域。"
     },
     {
       "title": "分享前先编辑",
@@ -98,7 +98,8 @@
     "installFold": "安装时请求哪些权限",
     "recordFold": "录屏新增哪些权限（仅在你录制时）",
     "micFine": "麦克风和摄像头在你启用时，由浏览器自己的权限提示打开。媒体流永远不会离开你的设备。",
-    "moreFine": "同样的表格和完整政策，见<a href=\"/privacy/\">隐私页面</a>。"
+    "moreFine": "同样的表格和完整政策，见<a href=\"/privacy/\">隐私页面</a>。",
+    "compareLine": "对比：OpenScreenShot vs GoFullPage vs FullPage Capture"
   },
   "cli": {
     "eyebrow": "智能体与 CLI",

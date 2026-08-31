@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "Captura de página completa y editor para Chrome — OpenScreenShot",
+    "title": "Captura de página completa en un clic — OpenScreenShot",
     "description": "Extensión de Chrome gratuita y de código abierto para capturas de página completa, área visible o región, con editor de anotaciones, exportación a PNG, JPEG, WebP o PDF y grabadora de pestañas. Nada sale de tu dispositivo."
   },
   "hero": {
     "note": "Gratis · Código abierto · Licencia MIT",
     "title1": "Clic. Capturado. Listo.",
     "title2": "Tan privado que funciona sin Wi-Fi.",
-    "sub": "Página completa, anotaciones, exportación y grabación de pestaña — todo en Chrome. Sin cuenta, sin marca de agua, sin nube.",
+    "sub": "Captura de página completa en un clic. Sin cuenta, sin marca de agua, sin nube.",
     "viewOnGithub": "Ver en GitHub",
     "tablistLabel": "Las pantallas de la extensión",
     "credit": "El sitio de estas capturas es OpenTechCheck, también nuestro: descubre con qué está hecho cualquier sitio web.",
@@ -50,7 +50,7 @@
   "quartet": [
     {
       "title": "Captura lo que quieras",
-      "body": "La página entera, el área visible o una región que arrastras. Un clic, un atajo o el menú del clic derecho."
+      "body": "Haz clic en el icono y obtén la página completa. O el área visible, o una región que arrastras: desde el menú contextual o un atajo."
     },
     {
       "title": "Edita antes de compartir",
@@ -98,7 +98,8 @@
     "installFold": "Qué pide al instalarse",
     "recordFold": "Qué añade la grabación, solo cuando grabas",
     "micFine": "El micrófono y la cámara, cuando los activas, se abren con el propio aviso de permiso de tu navegador. El flujo nunca sale de tu dispositivo.",
-    "moreFine": "Las mismas tablas, con la política completa, en la <a href=\"/privacy/\">página de privacidad</a>."
+    "moreFine": "Las mismas tablas, con la política completa, en la <a href=\"/privacy/\">página de privacidad</a>.",
+    "compareLine": "Comparativa: OpenScreenShot vs GoFullPage vs FullPage Capture."
   },
   "cli": {
     "eyebrow": "Agentes y CLI",
