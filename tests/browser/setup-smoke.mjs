@@ -315,7 +315,7 @@ async function main() {
     // pills (checked below) are where the repo link lives — the popup has
     // one line of --fs-xs to fit them in and no room for a fourth entry.
     const trust = await page.$eval('[data-testid="rec-trust"]', (el) => el.textContent);
-    for (const claim of [/stays on your device/i, /open source/i, /no tracking/i]) {
+    for (const claim of [/on your device/i, /open source/i, /no tracking/i]) {
       assert(claim.test(trust), `the Record ask states ${claim}`);
     }
     assert(
@@ -504,7 +504,7 @@ async function main() {
     await page.waitForSelector('.settings');
     await page.waitForSelector('[data-testid="sites-trust"]');
     const sites = await page.$eval('[data-testid="sites-trust"]', (el) => el.textContent);
-    for (const claim of [/stays on your device/i, /open source/i, /no tracking/i]) {
+    for (const claim of [/on your device/i, /open source/i, /no tracking/i]) {
       assert(claim.test(sites), `the all-sites ask states ${claim}`);
     }
     assert(!/audit/i.test(sites), 'and claims nothing about an audit');

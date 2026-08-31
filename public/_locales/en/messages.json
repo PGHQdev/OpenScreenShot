@@ -2246,7 +2246,7 @@
     "description": "Editor shortcut sheet: the \"keys\" column for a command with no key of its own, pointing at where to find it instead."
   },
   "popupTrustLine": {
-    "message": "Stays on your device · Open source (MIT) · No tracking",
+    "message": "On your device · Open source · No tracking",
     "description": "Popup: the one-line local-only assurance shown beside a permission ask."
   },
   "settingsSupport": {
