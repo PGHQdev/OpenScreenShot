@@ -20,7 +20,8 @@
     "mitLicense": "Licence MIT",
     "privacy": "Confidentialité",
     "supportOpenSource": "Soutenir l’open source",
-    "languageLabel": "Langue"
+    "languageLabel": "Langue",
+    "compare": "Comparatif"
   },
   "meta": {
     "ogDefaultAlt": "OpenScreenShot : capture de page entière et annotations pour Chrome. Gratuit, open source et 100 % local."

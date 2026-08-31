@@ -20,7 +20,8 @@
     "mitLicense": "MIT 授權",
     "privacy": "隱私權",
     "supportOpenSource": "支持開放原始碼",
-    "languageLabel": "語言"
+    "languageLabel": "語言",
+    "compare": "比較"
   },
   "meta": {
     "ogDefaultAlt": "OpenScreenShot：Chrome 的全頁截圖與註解工具。免費、開放原始碼、100% 本機處理。"

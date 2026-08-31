@@ -20,7 +20,8 @@
     "mitLicense": "MIT ライセンス",
     "privacy": "プライバシー",
     "supportOpenSource": "オープンソースを支援",
-    "languageLabel": "言語"
+    "languageLabel": "言語",
+    "compare": "比較"
   },
   "meta": {
     "ogDefaultAlt": "OpenScreenShot: Chrome 向けのフルページ スクリーンショットと注釈。無料、オープンソース、100% ローカル。"

@@ -1,13 +1,13 @@
 {
   "meta": {
-    "title": "Full Page Screenshot & Editor for Chrome — OpenScreenShot",
-    "description": "Free, open-source Chrome extension for full page, visible area and region screenshots, with an annotation editor, export to PNG, JPEG, WebP or PDF, and a tab recorder. Nothing leaves your machine."
+    "title": "Full Page Screenshot in One Click — OpenScreenShot",
+    "description": "Free, open-source Chrome extension: full page screenshot in one click, plus annotate, blur, PNG/JPEG/WebP/PDF export, and a tab recorder. MIT licensed. Nothing leaves your machine."
   },
   "hero": {
     "note": "Free · Open source · MIT licensed",
     "title1": "Click. Captured. Done.",
     "title2": "So private it works with Wi-Fi off.",
-    "sub": "Full page, markup, export, tab recording — right in Chrome. No account, no watermark, no cloud.",
+    "sub": "Full page screenshot in one click. No account, no watermark, no cloud.",
     "viewOnGithub": "View on GitHub",
     "tablistLabel": "The extension's screens",
     "credit": "The site in these screenshots is OpenTechCheck, also by us — see what any website is built with.",
@@ -50,7 +50,7 @@
   "quartet": [
     {
       "title": "Capture anything",
-      "body": "The whole page, the visible area, or a region you drag. One click, a shortcut, or the right-click menu."
+      "body": "Click the icon. Get the whole page. Or the visible area, or a region you drag — from the right-click menu or a shortcut."
     },
     {
       "title": "Edit before you share",
@@ -98,7 +98,8 @@
     "installFold": "What it asks for at install",
     "recordFold": "What recording adds, only when you record",
     "micFine": "The microphone and camera, when you enable them, are opened by your browser’s own permission prompt. The stream never leaves your device.",
-    "moreFine": "The same tables, with the full policy, on the <a href=\"/privacy/\">Privacy page</a>."
+    "moreFine": "The same tables, with the full policy, on the <a href=\"/privacy/\">Privacy page</a>.",
+    "compareLine": "How it compares: OpenScreenShot vs GoFullPage vs FullPage Capture."
   },
   "cli": {
     "eyebrow": "Agents & CLI",

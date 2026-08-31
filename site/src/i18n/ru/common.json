@@ -20,7 +20,8 @@
     "mitLicense": "Лицензия MIT",
     "privacy": "Конфиденциальность",
     "supportOpenSource": "Поддержать открытый код",
-    "languageLabel": "Язык"
+    "languageLabel": "Язык",
+    "compare": "Сравнение"
   },
   "meta": {
     "ogDefaultAlt": "OpenScreenShot: скриншот всей страницы и аннотации для Chrome. Бесплатно, с открытым кодом и 100% локально."
