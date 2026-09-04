@@ -9,6 +9,8 @@
     "title2": "So private it works with Wi-Fi off.",
     "sub": "Full page screenshot in one click. No account, no watermark, no cloud.",
     "viewOnGithub": "View on GitHub",
+    "wipTag": "WIP",
+    "wip": "Desktop & Web apps — stable versions coming soon",
     "tablistLabel": "The extension's screens",
     "credit": "The site in these screenshots is OpenTechCheck, also by us — see what any website is built with.",
     "creditCta": "Try it now"
@@ -113,7 +115,18 @@
       "Also an MCP server, with a <code>capture_screenshot</code> tool"
     ],
     "labelShot": "One screenshot",
-    "labelConfig": "MCP client config"
+    "labelConfig": "MCP client config",
+    "useCasesHeading": "Made for DevOps & CI/CD",
+    "useCases": [
+      {
+        "title": "DevOps",
+        "body": "Snapshot dashboards, status pages and admin UIs straight into incident reports, runbooks and postmortems — from cron or a chat command."
+      },
+      {
+        "title": "CI/CD",
+        "body": "Capture pages in your pipeline for docs, release notes and visual diffs on every deploy. One npx line, no hosted service."
+      }
+    ]
   },
   "faq": {
     "eyebrow": "FAQ",

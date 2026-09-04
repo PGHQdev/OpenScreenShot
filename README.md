@@ -21,6 +21,9 @@ Most screenshot extensions want an account, every site you visit, or money to dr
 arrow. This one captures the whole scrolling page when you click the icon, lets you
 annotate for free, and publishes every line.
 
+> **Desktop & Web apps: work in progress.** Stable versions are coming soon —
+> follow along on the [roadmap](./ROADMAP.md).
+
 ## Features
 
 - **One click, whole page** — the toolbar icon captures the entire scrolling page,
@@ -133,6 +136,13 @@ npx openscreenshot shot https://example.com --out shot.png --full
 
 As an MCP server, add `{ "command": "npx", "args": ["openscreenshot", "serve"] }` to your
 client config and call the `capture_screenshot` tool.
+
+Built for the terminal-heavy parts of the job:
+
+- **DevOps** — snapshot dashboards, status pages, and admin UIs straight into incident
+  reports, runbooks, and postmortems, from cron or a chat command
+- **CI/CD** — capture pages in your pipeline for docs, release notes, and visual diffs
+  on every deploy: one `npx` line, no hosted service
 
 ## Contributing
 

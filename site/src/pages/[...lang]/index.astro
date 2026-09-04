@@ -120,6 +120,12 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
           {d.hero.viewOnGithub}
         </a>
       </p>
+      <p class="hero-wip-row">
+        <a class="hero-wip" href={localizePath(locale, '/roadmap/')}>
+          <span class="wip-tag">{d.hero.wipTag}</span>
+          {d.hero.wip}
+        </a>
+      </p>
     </div>
     <div class="container-hero">
       <div class="hero-frame">
@@ -322,6 +328,17 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
           <pre class="code"><code>{'{ "command": "npx", "args": ["openscreenshot", "serve"] }'}</code></pre>
         </div>
       </div>
+      <p class="use-cases-heading">{d.cli.useCasesHeading}</p>
+      <ul class="use-cases">
+        {
+          d.cli.useCases.map((u: { title: string; body: string }) => (
+            <li class="card">
+              <h3>{u.title}</h3>
+              <p>{u.body}</p>
+            </li>
+          ))
+        }
+      </ul>
     </div>
   </section>
 
@@ -506,6 +523,40 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
   .gh-mark {
     width: 18px;
     height: 18px;
+  }
+
+  /* The coming-soon pill under the hero CTAs: quiet card, one amber tag. */
+  .hero-wip-row {
+    margin: var(--s-4) 0 0;
+  }
+
+  .hero-wip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    padding: 7px 14px;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-full);
+    color: var(--ink-2);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    text-decoration: none;
+    transition: color var(--dur-fast) var(--ease);
+  }
+
+  .hero-wip:hover {
+    color: var(--ink);
+  }
+
+  .wip-tag {
+    padding: 2px 8px;
+    border-radius: var(--r-full);
+    background: var(--chrome-yellow);
+    color: var(--ink);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: var(--tr-label);
+    text-transform: uppercase;
   }
 
   /* ---- Hero ---- */
@@ -1013,6 +1064,46 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
   @media (min-width: 860px) {
     .cli {
       grid-template-columns: 2fr 3fr;
+    }
+  }
+
+  /* DevOps & CI/CD use cases: two plain cards under the CLI card. */
+  .use-cases-heading {
+    margin: var(--s-6) 0 var(--s-3);
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    letter-spacing: var(--tr-label);
+    text-transform: uppercase;
+  }
+
+  .use-cases {
+    display: grid;
+    gap: var(--s-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .use-cases li {
+    padding: var(--s-5) var(--s-6);
+  }
+
+  .use-cases h3 {
+    margin-bottom: var(--s-2);
+    font-size: var(--fs-md);
+  }
+
+  .use-cases p {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: var(--fs-md);
+  }
+
+  @media (min-width: 720px) {
+    .use-cases {
+      grid-template-columns: 1fr 1fr;
     }
   }
 
