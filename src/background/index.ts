@@ -42,6 +42,7 @@ import {
   scrollToPosition,
   stitchTiles,
 } from '../content/scroll-capture';
+import { updateCaptureOverlay } from '../content/capture-overlay';
 import { selectRegion } from '../content/region-select';
 import { copyImageToClipboard } from '../content/clipboard';
 import { restoreRecBadge } from './recording';
@@ -300,7 +301,20 @@ chrome.runtime.onMessage.addListener((message: unknown) => {
   return false; // synchronous: no async sendResponse
 });
 
+// A capture owns the page scroll state and overlay until its final cleanup.
+let captureActive = false;
+
 async function handleCapture(mode: CaptureMode, repeatRegion = false): Promise<void> {
+  if (captureActive) return;
+  captureActive = true;
+  try {
+    await runCapture(mode, repeatRegion);
+  } finally {
+    captureActive = false;
+  }
+}
+
+async function runCapture(mode: CaptureMode, repeatRegion: boolean): Promise<void> {
   const tab = await getActiveTab();
   if (!tab || tab.id == null) {
     broadcast({
@@ -387,7 +401,10 @@ async function runInTab<A extends unknown[]>(
   await chrome.scripting.executeScript({ target: { tabId }, func, args });
 }
 
-async function captureVisibleTabPng(windowId: number): Promise<string> {
+async function captureVisibleTabPng(tabId: number, windowId: number): Promise<string> {
+  // Fail closed if hiding fails; a progress card must never enter the image.
+  await runInTab(tabId, updateCaptureOverlay, ['hide']);
+  await delay(PAINT_SETTLE_MS);
   return chrome.tabs.captureVisibleTab(windowId, { format: 'png' });
 }
 
@@ -395,19 +412,24 @@ async function captureVisible(tab: chrome.tabs.Tab): Promise<void> {
   const tabId = tab.id as number;
   const metrics = await execInTab(tabId, getMetrics, []);
   const windowId = tab.windowId ?? chrome.windows.WINDOW_ID_CURRENT;
-  const dataUrl = await captureVisibleTabPng(windowId);
-  const width = Math.round(metrics.viewportWidth * metrics.devicePixelRatio);
-  const height = Math.round(metrics.viewportHeight * metrics.devicePixelRatio);
-  const delivered = await deliverCapture(
-    tabId,
-    dataUrl,
-    width,
-    height,
-    'visible',
-    tab.title ?? '',
-    tab.url ?? '',
-  );
-  if (delivered) broadcast({ type: 'CAPTURE_COMPLETE', imageUrl: dataUrl, width, height });
+  try {
+    const dataUrl = await captureVisibleTabPng(tabId, windowId);
+    await showCaptureProgress(tabId, null);
+    const width = Math.round(metrics.viewportWidth * metrics.devicePixelRatio);
+    const height = Math.round(metrics.viewportHeight * metrics.devicePixelRatio);
+    const delivered = await deliverCapture(
+      tabId,
+      dataUrl,
+      width,
+      height,
+      'visible',
+      tab.title ?? '',
+      tab.url ?? '',
+    );
+    if (delivered) broadcast({ type: 'CAPTURE_COMPLETE', imageUrl: dataUrl, width, height });
+  } finally {
+    await removeCaptureProgress(tabId);
+  }
 }
 
 async function captureRegion(tab: chrome.tabs.Tab, repeat = false): Promise<void> {
@@ -432,23 +454,28 @@ async function captureRegion(tab: chrome.tabs.Tab, repeat = false): Promise<void
     await ensureRepeatMenuItem();
   }
   const windowId = tab.windowId ?? chrome.windows.WINDOW_ID_CURRENT;
-  const tile = await captureVisibleTabPng(windowId);
-  const dpr = metrics.devicePixelRatio;
-  const x = Math.round(rect.x * dpr);
-  const y = Math.round(rect.y * dpr);
-  const w = Math.round(rect.width * dpr);
-  const h = Math.round(rect.height * dpr);
-  const dataUrl = await execInTab(tabId, cropTile, [tile, x, y, w, h]);
-  const delivered = await deliverCapture(
-    tabId,
-    dataUrl,
-    w,
-    h,
-    'region',
-    tab.title ?? '',
-    tab.url ?? '',
-  );
-  if (delivered) broadcast({ type: 'CAPTURE_COMPLETE', imageUrl: dataUrl, width: w, height: h });
+  try {
+    const tile = await captureVisibleTabPng(tabId, windowId);
+    await showCaptureProgress(tabId, null);
+    const dpr = metrics.devicePixelRatio;
+    const x = Math.round(rect.x * dpr);
+    const y = Math.round(rect.y * dpr);
+    const w = Math.round(rect.width * dpr);
+    const h = Math.round(rect.height * dpr);
+    const dataUrl = await execInTab(tabId, cropTile, [tile, x, y, w, h]);
+    const delivered = await deliverCapture(
+      tabId,
+      dataUrl,
+      w,
+      h,
+      'region',
+      tab.title ?? '',
+      tab.url ?? '',
+    );
+    if (delivered) broadcast({ type: 'CAPTURE_COMPLETE', imageUrl: dataUrl, width: w, height: h });
+  } finally {
+    await removeCaptureProgress(tabId);
+  }
 }
 
 async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
@@ -486,71 +513,82 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
     : null;
   const canvasWidth = crop ? crop.w : Math.round(metrics.viewportWidth * dpr);
 
-  // Disable smooth scrolling (but keep fixed elements visible) for the first tile.
-  await runInTab(tabId, prepareCapture, []);
-  const tiles: TileSpec[] = [];
   try {
-    // Tile 0: capture at the top with fixed elements visible so a fixed header
-    // appears once at the top of the final image (instead of being omitted).
-    {
-      await execInTab(tabId, scrollToPosition, [positions[0]]);
-      await delay(PAINT_SETTLE_MS);
-      const first = await captureVisibleTabPng(windowId);
-      tiles.push({ dataUrl: first, y: 0 });
-      await reportProgress(1, positions.length);
-    }
-    // Remaining tiles: hide fixed elements so they don't duplicate.
-    if (positions.length > 1) {
-      await runInTab(tabId, hideFixedElements, []);
-      for (let i = 1; i < positions.length; i++) {
-        await delay(CAPTURE_THROTTLE_MS);
-        const { scrollY } = await execInTab(tabId, scrollToPosition, [positions[i]]);
-        await delay(PAINT_SETTLE_MS);
-        const dataUrl = await captureVisibleTabPng(windowId);
-        tiles.push({ dataUrl, y: Math.round(scrollY * dpr) });
-        await reportProgress(i + 1, positions.length);
+    // Disable smooth scrolling (but keep fixed elements visible) for the first tile.
+    const tiles: TileSpec[] = [];
+    try {
+      await runInTab(tabId, prepareCapture, []);
+      await showCaptureProgress(tabId, 0);
+      // Tile 0: capture at the top with fixed elements visible so a fixed header
+      // appears once at the top of the final image (instead of being omitted).
+      {
+        await execInTab(tabId, scrollToPosition, [positions[0]]);
+        const first = await captureVisibleTabPng(tabId, windowId);
+        tiles.push({ dataUrl: first, y: 0 });
+        await reportProgress(tabId, 1, positions.length);
       }
+      // Remaining tiles: hide fixed elements so they don't duplicate.
+      if (positions.length > 1) {
+        await runInTab(tabId, hideFixedElements, []);
+        for (let i = 1; i < positions.length; i++) {
+          await delay(CAPTURE_THROTTLE_MS);
+          const { scrollY } = await execInTab(tabId, scrollToPosition, [positions[i]]);
+          const dataUrl = await captureVisibleTabPng(tabId, windowId);
+          tiles.push({ dataUrl, y: Math.round(scrollY * dpr) });
+          await reportProgress(tabId, i + 1, positions.length);
+        }
+      }
+    } finally {
+      await runInTab(tabId, restoreCapture, []);
+    }
+
+    const dataUrl = await execInTab(tabId, stitchTiles, [tiles, canvasWidth, canvasHeight, crop]);
+    const delivered = await deliverCapture(
+      tabId,
+      dataUrl,
+      canvasWidth,
+      canvasHeight,
+      'full-page',
+      tab.title ?? '',
+      tab.url ?? '',
+    );
+    if (delivered) {
+      broadcast({
+        type: 'CAPTURE_COMPLETE',
+        imageUrl: dataUrl,
+        width: canvasWidth,
+        height: canvasHeight,
+      });
     }
   } finally {
-    await runInTab(tabId, restoreCapture, []);
-  }
-
-  const dataUrl = await execInTab(tabId, stitchTiles, [tiles, canvasWidth, canvasHeight, crop]);
-  const delivered = await deliverCapture(
-    tabId,
-    dataUrl,
-    canvasWidth,
-    canvasHeight,
-    'full-page',
-    tab.title ?? '',
-    tab.url ?? '',
-  );
-  if (delivered) {
-    broadcast({
-      type: 'CAPTURE_COMPLETE',
-      imageUrl: dataUrl,
-      width: canvasWidth,
-      height: canvasHeight,
-    });
+    await removeCaptureProgress(tabId);
   }
 }
 
-/**
- * Report one finished tile to both progress surfaces.
- *
- * The popup's bar is the richer one, but express mode has no popup, and a tall
- * page is half a second per tile: the page scrolls itself for several seconds
- * with nothing to say why. The action badge is the only surface an express
- * capture owns, so it carries the same number. Single-tile pages are instant
- * and get no badge — a flash of "100%" is noise.
- */
-async function reportProgress(done: number, total: number): Promise<void> {
+/** Update in-page progress as well as the popup and action badge. */
+async function reportProgress(tabId: number, done: number, total: number): Promise<void> {
   const percent = Math.round((done / total) * 100);
+  await showCaptureProgress(tabId, done === total ? null : percent);
   broadcast({ type: 'CAPTURE_PROGRESS', percent });
   if (total < 2) return;
-  await chrome.action.setBadgeBackgroundColor({ color: '#e8503a' });
+  await chrome.action.setBadgeBackgroundColor({ color: '#1967d2' });
   await chrome.action.setBadgeTextColor({ color: '#ffffff' });
   await chrome.action.setBadgeText({ text: `${percent}%` });
+}
+
+async function showCaptureProgress(tabId: number, percent: number | null): Promise<void> {
+  await runInTab(tabId, updateCaptureOverlay, [
+    'show',
+    percent,
+    chrome.i18n.getMessage(percent === null ? 'captureOverlayFinishing' : 'captureOverlayTitle'),
+    chrome.i18n.getMessage('captureOverlayDetail'),
+  ]);
+}
+
+async function removeCaptureProgress(tabId: number): Promise<void> {
+  // Navigation/tab closure destroys the DOM itself; cleanup must not replace
+  // the original error or turn an already delivered capture into a failure.
+  await runInTab(tabId, updateCaptureOverlay, ['remove']).catch(() => undefined);
 }
 
 /**

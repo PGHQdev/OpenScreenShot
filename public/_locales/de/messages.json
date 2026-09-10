@@ -1526,7 +1526,7 @@
     "description": "Editor: the Export button/dialog title, and its name in the shortcut sheet."
   },
   "editorMarkup": {
-    "message": "Markieren",
+    "message": "Bearbeiten",
     "description": "Editor topbar (View mode): button that opens the Markup chrome."
   },
   "editorFitHint": {
@@ -1538,7 +1538,7 @@
     "description": "Editor topbar (Markup mode): button that returns to View."
   },
   "editorViewHint": {
-    "message": "Markieren zum Beschriften. Danach Kopieren, PDF oder Bild speichern.",
+    "message": "Bearbeite deinen Screenshot und kopiere oder speichere ihn anschließend.",
     "description": "Editor status bar (View mode): the one-line hint under the fitted capture."
   },
   "editorSaveImage": {
@@ -1944,7 +1944,7 @@
     "description": "Editor: Actual size (100%) command, used in the zoom menu and the shortcut sheet."
   },
   "editorFitToScreen": {
-    "message": "An Bildschirm anpassen",
+    "message": "Seite einpassen",
     "description": "Editor: Fit to screen command, used in the zoom menu and the shortcut sheet."
   },
   "editorCmdPan": {
@@ -2354,5 +2354,57 @@
   "errUnknown": {
     "message": "Die Aufnahme ist unerwartet fehlgeschlagen.",
     "description": "Capture error: unexpected failure."
+  },
+  "editorFitWidth": {
+    "message": "An Breite anpassen",
+    "description": "Editor toolbar label."
+  },
+  "editorMoreActions": {
+    "message": "Mehr",
+    "description": "Editor toolbar label."
+  },
+  "settingsIntro": {
+    "message": "Passe Screenshots, gespeicherte Dateien und Aufnahmen an.",
+    "description": "Settings page label or helper."
+  },
+  "settingsAppearance": {
+    "message": "Darstellung",
+    "description": "Settings page label or helper."
+  },
+  "settingsCapture": {
+    "message": "Screenshots",
+    "description": "Settings page label or helper."
+  },
+  "settingsFiles": {
+    "message": "Dateien",
+    "description": "Settings page label or helper."
+  },
+  "settingsRecording": {
+    "message": "Videoaufnahme",
+    "description": "Settings page label or helper."
+  },
+  "settingsExpressHint": {
+    "message": "Deaktivieren, um den Aufnahmemodus jedes Mal auszuwählen.",
+    "description": "Settings page label or helper."
+  },
+  "settingsAcrossSitesHint": {
+    "message": "Den Cursor auch dann hervorheben, wenn ein Tab zu einer anderen Website wechselt. Erfordert Zugriff auf alle Websites.",
+    "description": "Settings page label or helper."
+  },
+  "settingsFilenamePreview": {
+    "message": "Vorschau",
+    "description": "Settings page label or helper."
+  },
+  "captureOverlayTitle": {
+    "message": "Screenshot wird aufgenommen…",
+    "description": "Capture overlay status."
+  },
+  "captureOverlayDetail": {
+    "message": "Lass diesen Tab geöffnet, während die Seite aufgenommen wird.",
+    "description": "Capture overlay status."
+  },
+  "captureOverlayFinishing": {
+    "message": "Screenshot wird fertiggestellt…",
+    "description": "Capture overlay status."
   }
 }

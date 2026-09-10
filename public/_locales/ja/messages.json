@@ -1526,7 +1526,7 @@
     "description": "Editor: the Export button/dialog title, and its name in the shortcut sheet."
   },
   "editorMarkup": {
-    "message": "マークアップ",
+    "message": "編集",
     "description": "Editor topbar (View mode): button that opens the Markup chrome."
   },
   "editorFitHint": {
@@ -1538,7 +1538,7 @@
     "description": "Editor topbar (Markup mode): button that returns to View."
   },
   "editorViewHint": {
-    "message": "注釈はマークアップから。完了したらコピー、PDF、保存。",
+    "message": "スクリーンショットを編集して、コピーまたは保存できます。",
     "description": "Editor status bar (View mode): the one-line hint under the fitted capture."
   },
   "editorSaveImage": {
@@ -1944,7 +1944,7 @@
     "description": "Editor: Actual size (100%) command, used in the zoom menu and the shortcut sheet."
   },
   "editorFitToScreen": {
-    "message": "画面に合わせる",
+    "message": "ページ全体を表示",
     "description": "Editor: Fit to screen command, used in the zoom menu and the shortcut sheet."
   },
   "editorCmdPan": {
@@ -2354,5 +2354,57 @@
   "errUnknown": {
     "message": "キャプチャが予期せず失敗しました。",
     "description": "Capture error: unexpected failure."
+  },
+  "editorFitWidth": {
+    "message": "幅に合わせる",
+    "description": "Editor toolbar label."
+  },
+  "editorMoreActions": {
+    "message": "その他",
+    "description": "Editor toolbar label."
+  },
+  "settingsIntro": {
+    "message": "キャプチャ、保存、録画の設定をカスタマイズします。",
+    "description": "Settings page label or helper."
+  },
+  "settingsAppearance": {
+    "message": "外観",
+    "description": "Settings page label or helper."
+  },
+  "settingsCapture": {
+    "message": "キャプチャ",
+    "description": "Settings page label or helper."
+  },
+  "settingsFiles": {
+    "message": "ファイル",
+    "description": "Settings page label or helper."
+  },
+  "settingsRecording": {
+    "message": "録画",
+    "description": "Settings page label or helper."
+  },
+  "settingsExpressHint": {
+    "message": "オフにすると、毎回キャプチャモードを選択できます。",
+    "description": "Settings page label or helper."
+  },
+  "settingsAcrossSitesHint": {
+    "message": "タブで別のサイトに移動した後も、カーソルの強調表示を維持します。すべてのサイトへのアクセス権限が必要です。",
+    "description": "Settings page label or helper."
+  },
+  "settingsFilenamePreview": {
+    "message": "プレビュー",
+    "description": "Settings page label or helper."
+  },
+  "captureOverlayTitle": {
+    "message": "スクリーンショットを撮影中…",
+    "description": "Capture overlay status."
+  },
+  "captureOverlayDetail": {
+    "message": "ページの撮影中は、このタブを開いたままにしてください。",
+    "description": "Capture overlay status."
+  },
+  "captureOverlayFinishing": {
+    "message": "スクリーンショットを仕上げています…",
+    "description": "Capture overlay status."
   }
 }

@@ -57,8 +57,8 @@ export function selectRegion(): Promise<PageRect | null> {
 
     const readout = doc.createElement('div');
     readout.style.cssText =
-      'position:absolute;background:rgba(17,17,17,0.85);color:#fff;font:600 12px/1.4 ' +
-      'system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:3px 7px;border-radius:5px;' +
+      'position:absolute;background:rgba(32,33,36,0.92);color:#fff;font:500 12px/1.4 ' +
+      'Roboto,Arial,sans-serif;padding:4px 8px;border-radius:8px;' +
       'pointer-events:none;white-space:nowrap;';
     root.appendChild(readout);
 
@@ -78,23 +78,23 @@ export function selectRegion(): Promise<PageRect | null> {
     // Action bar: makes the next step obvious once a region is drawn.
     const bar = doc.createElement('div');
     bar.style.cssText =
-      'position:absolute;display:none;gap:6px;align-items:center;pointer-events:auto;' +
-      'background:rgba(17,17,17,0.92);padding:5px;border-radius:8px;' +
+      'position:absolute;display:none;gap:8px;align-items:center;pointer-events:auto;' +
+      'background:rgba(32,33,36,0.96);padding:8px;border-radius:24px;' +
       'box-shadow:0 4px 16px rgba(0,0,0,0.35);' +
-      'font:600 12px/1 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;';
+      'font:500 12px/1 Roboto,Arial,sans-serif;';
     const captureBtn = doc.createElement('button');
     captureBtn.textContent = 'Capture';
     // The bar's own background is a fixed near-black regardless of the
     // extension's theme, so this hardcodes the dark theme's --accent-ink
-    // (#f8846f) / --on-accent (#1c1c1e) pairing from src/shared/tokens.css —
+    // (#a8c7fa) / --on-accent (#062e6f) pairing from src/shared/tokens.css —
     // same fixed choice, same reason as the mask/handle colours above.
     captureBtn.style.cssText =
-      'border:none;border-radius:5px;padding:6px 12px;background:#f8846f;color:#1c1c1e;' +
+      'border:none;border-radius:18px;padding:8px 16px;background:#a8c7fa;color:#062e6f;' +
       'font:inherit;cursor:pointer;';
     const cancelBtn = doc.createElement('button');
     cancelBtn.textContent = 'Cancel';
     cancelBtn.style.cssText =
-      'border:none;border-radius:5px;padding:6px 10px;background:transparent;color:#cfcfcf;' +
+      'border:none;border-radius:18px;padding:8px 12px;background:transparent;color:#cfcfcf;' +
       'font:inherit;cursor:pointer;';
     bar.appendChild(captureBtn);
     bar.appendChild(cancelBtn);

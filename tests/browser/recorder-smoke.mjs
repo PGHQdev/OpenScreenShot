@@ -1945,12 +1945,16 @@ async function main() {
     // blur, so this clears both inputs the rule reacts to before reading it.
     await page.mouse.move(50, 50);
     await page.evaluate(() => document.activeElement?.blur?.());
+    // The grip fades its hover background over 150ms. Read the resting
+    // state after that transition, not an intermediate translucent frame.
+    await new Promise((resolve) => setTimeout(resolve, 200));
     const idleBg = await computedBackground('rec-overlay-catcher-grip');
     assert(
       idleBg === 'rgba(0, 0, 0, 0)',
       `the catcher is transparent at rest, before any hover or focus (${idleBg})`,
     );
     await page.mouse.move(catcherRect.x, catcherRect.y, { steps: 5 });
+    await new Promise((resolve) => setTimeout(resolve, 200));
     const hoveredBg = await computedBackground('rec-overlay-catcher-grip');
     assert(hoveredBg !== 'rgba(0, 0, 0, 0)', `and paints only once hovered (${hoveredBg})`);
     await page.mouse.move(50, 50);

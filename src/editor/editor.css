@@ -1,3 +1,4 @@
+/* Hallmark · genre: modern-minimal · macrostructure: Workbench · design-system: design.md · designed-as-app */
 /* OpenScreenShot editor styles. Tokens come from src/shared/tokens.css. */
 
 @import '../shared/tokens.css';
@@ -94,12 +95,6 @@ body {
   border-bottom: 1px solid var(--border);
   background: var(--surface-1);
   flex: 0 0 auto;
-  /* App.tsx renders this bar for every tool, including Select and Crop
-     (which carry no fields and so render it empty) — min-height is what
-     actually keeps the canvas still on a V -> R -> V loop, matching the
-     28px swatch row's own height so a field-bearing tool draws no taller
-     than an empty one. See the Copy button's min-width for the same fixed-
-     box pattern against horizontal reflow (.btn-fixed, below). */
   min-height: 40px;
 }
 .stylebar-group {
@@ -447,15 +442,15 @@ body {
  * than Copy's three words, so it needs its own floor rather than reusing
  * .btn-fixed's 92px (measured for Copy's own set; too narrow for
  * "Exporting…" and there's no reason to widen Copy's button to cover a word
- * it never shows). 116px is the button's own unfloored "Exporting…" width
- * (~107px, read via getBoundingClientRect in tests/browser/editor-keyboard-
+ * it never shows). 132px covers the button's Roboto "Exporting…" width
+ * (~118px, read via getBoundingClientRect in tests/browser/editor-keyboard-
  * smoke.mjs's negative control) plus a small margin for font-metric
  * variance across machines/zoom — not a round number picked in advance, and
  * not claimed to be the exact minimum either. The same smoke asserts the
  * button's outerWidth is identical across both label states at this floor.
  */
 .btn-fixed-export {
-  min-width: 116px;
+  min-width: 132px;
   text-align: center;
 }
 
@@ -1043,6 +1038,123 @@ body {
 :root[data-theme='dark'] .export-progress-bar {
   color-scheme: dark;
 }
+/* Tonal workspace, spacious app bar, and a floating tool rail. */
+.editor {
+  background: var(--surface-2);
+}
+.topbar {
+  min-height: 56px;
+  border-bottom: none;
+  background: var(--surface-2);
+}
+.brand-name {
+  font-size: var(--fs-lg);
+  font-weight: 500;
+}
+.brand-mode {
+  border-color: transparent;
+  background: var(--surface-3);
+}
+.stylebar {
+  margin: 0 var(--s-2) var(--s-2);
+  border: none;
+  border-radius: var(--r-full);
+  background: var(--surface-3);
+  padding: var(--s-2) var(--s-4);
+  min-height: 44px;
+}
+.workspace {
+  gap: var(--s-2);
+  padding: 0 var(--s-2) var(--s-2);
+  min-height: 0;
+}
+.toolbar {
+  width: 96px;
+  border: none;
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  padding: var(--s-2) var(--s-1);
+}
+.tool-btn {
+  width: 80px;
+  height: auto;
+  min-height: 56px;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-2) var(--s-1);
+  border-radius: var(--r-md);
+}
+.tool-btn.is-active {
+  background: var(--accent-subtle);
+  border-color: var(--ring-selected);
+}
+.stage {
+  border-radius: var(--r-md);
+}
+.btn-primary {
+  height: 36px;
+  padding: 0 var(--s-5);
+  border-radius: var(--r-full);
+  font-weight: 500;
+}
+.zoom-trigger {
+  height: 36px;
+  border-color: transparent;
+  border-radius: var(--r-full);
+  background: transparent;
+}
+.modal {
+  border-color: transparent;
+  border-radius: var(--r-xl);
+}
+.modal-title {
+  font-size: var(--fs-2xl);
+  font-weight: 400;
+}
+.zoom-popover {
+  border-color: transparent;
+  padding: var(--s-2);
+}
+.zoom-item {
+  height: 36px;
+}
+.segmented {
+  border-radius: var(--r-full);
+}
+
+/* Labels stay visible at every viewport; the action row wraps as needed. */
+.topbar-actions {
+  margin-right: 0;
+  margin-left: 0;
+  padding-left: 0;
+  flex-wrap: wrap;
+}
+.topbar-controls {
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  gap: var(--s-2);
+}
+.labeled-action {
+  width: auto;
+  min-height: 36px;
+  height: auto;
+  gap: var(--s-1);
+  padding: var(--s-2);
+  font-size: var(--fs-sm);
+  line-height: 1.2;
+}
+.tool-label {
+  max-width: 100%;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.toolbar-divider {
+  width: 48px;
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) .export-progress-bar {
     color-scheme: dark;
@@ -1132,14 +1244,18 @@ body {
   display: flex;
   align-items: center;
   gap: var(--s-2);
-  height: 28px;
-  padding: 0 var(--s-4);
+  min-height: 28px;
+  padding: var(--s-1) var(--s-4);
   border-top: 1px solid var(--border);
   background: var(--surface-1);
   font-size: var(--fs-sm);
   font-variant-numeric: tabular-nums;
   color: var(--text-2);
   flex: 0 0 auto;
+}
+
+.statusbar > span:first-child {
+  white-space: nowrap;
 }
 
 .status-sep {
@@ -1584,5 +1700,54 @@ body {
      own. */
   .width-btn[aria-pressed='true'] .width-bar {
     background-color: HighlightText;
+  }
+}
+
+/* Secondary actions stay available without crowding the editing controls. */
+.editor-more {
+  position: relative;
+}
+.editor-more summary {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: var(--r-full);
+  list-style: none;
+}
+.editor-more summary::-webkit-details-marker {
+  display: none;
+}
+.editor-more summary:hover {
+  background: var(--hover-overlay);
+}
+.editor-more summary:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+.editor-more-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--s-2));
+  z-index: 30;
+  min-width: 140px;
+  padding: var(--s-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  box-shadow: var(--sh-lg);
+}
+.editor-more-panel button {
+  display: flex;
+  gap: var(--s-2);
+  align-items: center;
+  width: 100%;
+}
+@media (max-width: 768px) {
+  .topbar-controls {
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
+  .topbar {
+    gap: var(--s-2);
   }
 }

@@ -535,11 +535,11 @@ describe('an engine that was never told to begin', () => {
     sendRejects.add('OFFSCREEN_START');
     await loadWorker();
     void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS });
-    await settle();
-
-    expect(parked()).toBe('engine-unreachable');
-    // The start itself did not throw, so this is the only report there is.
-    expect(broadcasts()).toEqual(['engine-unreachable']);
+    await vi.waitFor(() => {
+      expect(parked()).toBe('engine-unreachable');
+      // The start itself did not throw, so this is the only report there is.
+      expect(broadcasts()).toEqual(['engine-unreachable']);
+    });
   });
 
   /**
@@ -555,11 +555,11 @@ describe('an engine that was never told to begin', () => {
     sendRejects.add('OFFSCREEN_START');
     await loadWorker();
     void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS });
-    await settle();
-
-    expect(session.get(REC_STATE_KEY), 'the stored recording state').toBeUndefined();
-    expect(fakeChrome.offscreen.closeDocument).toHaveBeenCalled();
-    expect(badgeText.at(-1), 'the badge shows the failure, not REC').toBe('!');
+    await vi.waitFor(() => {
+      expect(session.get(REC_STATE_KEY), 'the stored recording state').toBeUndefined();
+      expect(fakeChrome.offscreen.closeDocument).toHaveBeenCalled();
+      expect(badgeText.at(-1), 'the badge shows the failure, not REC').toBe('!');
+    });
   });
 
   it('leaves a Stop that follows it with nothing to do and nothing to say', async () => {
@@ -567,7 +567,11 @@ describe('an engine that was never told to begin', () => {
     sendRejects.add('OFFSCREEN_START');
     await loadWorker();
     void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS });
-    await settle();
+    await vi.waitFor(() => {
+      expect(parked()).toBe('engine-unreachable');
+      expect(badgeText.at(-1)).toBe('!');
+      expect(session.get(REC_STATE_KEY)).toBeUndefined();
+    });
     await chrome.storage.session.remove(REC_FAILURE_KEY);
 
     // The document is gone, so a forwarded stop would reject and park a

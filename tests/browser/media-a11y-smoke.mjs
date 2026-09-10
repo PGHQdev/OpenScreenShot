@@ -239,6 +239,9 @@ async function newPage(browser, messages, seed) {
  */
 async function emulateMedia(cdp, features) {
   await cdp.send('Emulation.setEmulatedMedia', { features });
+  // Media changes can start/reverse short color transitions. Measure the
+  // settled accessibility state rather than an intermediate animation frame.
+  await new Promise((resolve) => setTimeout(resolve, 220));
 }
 
 /**
@@ -315,9 +318,11 @@ async function rootVar(page, name) {
  * style instead of the pseudo's) — a real rendered pixel is the only way to
  * check what colour a slider's thumb and track actually paint.
  */
-async function pixelAt(page, x, y) {
+async function pixelAt(page, x, y, size = 3) {
   const sharp = createRequire(join(ROOT, 'package.json'))('sharp');
-  const buf = await page.screenshot({ clip: { x: x - 1, y: y - 1, width: 3, height: 3 } });
+  const buf = await page.screenshot({
+    clip: { x: x - Math.floor(size / 2), y: y - Math.floor(size / 2), width: size, height: size },
+  });
   const { data, info } = await sharp(buf).raw().toBuffer({ resolveWithObject: true });
   let r = 0,
     g = 0,
@@ -362,6 +367,9 @@ async function testEditor(browser, base, messages) {
   await page.goto(`${base}/src/editor/index.html`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
+  // The editor opens in View mode; enter Markup before testing tool states.
+  await page.waitForSelector('.toolbar .tool-btn');
+  await page.waitForSelector('.toolbar');
   await page.click('.tool-btn[title^="Rectangle"]');
   await page.waitForSelector('.stylebar');
   // A real swatch selection, not just the default, so [aria-pressed='true'] has a target.
@@ -374,6 +382,8 @@ async function testEditor(browser, base, messages) {
   // its own, not entangled with an unrelated focus outline.
   await page.evaluate(() => document.activeElement?.blur());
 
+  // Selection has a 120ms background transition; inspect its resting paint.
+  await new Promise((resolve) => setTimeout(resolve, 220));
   step('EDITOR — baseline (no emulated feature): the forced-colors CSS has not leaked in');
   const baseActive = await computedOf(page, '.tool-btn.is-active', ['backgroundColor']);
   const baseSwatchPressed = await computedOf(page, '.swatch[aria-pressed="true"]', [
@@ -395,9 +405,7 @@ async function testEditor(browser, base, messages) {
   const baseBorder = await rootVar(page, '--border');
   const baseEyedropper = await computedOf(page, '.swatch-screen', ['backgroundColor']);
 
-  step(
-    'EDITOR — the range slider: styled track and thumb in the coral tokens, no Chrome default blue',
-  );
+  step('EDITOR — the range slider: styled track and thumb with the shared theme tokens');
   // The fontSize field is the style bar's only slider (stylebar.ts) — Text
   // switches it in. Restored to Rectangle at the end so the rest of this
   // function sees the tool state it expects.
@@ -424,10 +432,11 @@ async function testEditor(browser, base, messages) {
   const accentHex = await rootVar(page, '--accent');
   const surface3Hex = await rootVar(page, '--surface-3');
   const thumbPixel = await pixelAt(page, thumbPoint.x, thumbPoint.y);
-  const trackPixel = await pixelAt(page, trackPoint.x, trackPoint.y);
+  // Sample the 2px track interior without averaging its 1px control border.
+  const trackPixel = await pixelAt(page, trackPoint.x, trackPoint.y, 1);
   assert(
     closeRGB(thumbPixel, hexToRGB(accentHex)),
-    `slider thumb pixel (${thumbPixel}) renders --accent (${accentHex}), not Chrome's default blue thumb`,
+    `slider thumb pixel (${thumbPixel}) renders --accent (${accentHex}), matching the themed thumb`,
   );
   assert(
     closeRGB(trackPixel, hexToRGB(surface3Hex)),
@@ -802,7 +811,7 @@ async function testEditor(browser, base, messages) {
   // The header button, not ⌘S: the editor's shortcut listener is scoped away
   // from a focused control, and focus is still in the header after the
   // Beautify step above.
-  await page.click('header .btn-secondary[title^="Export"]');
+  await page.click('header .btn-primary[title^="Save image"]');
   await page.waitForSelector('.modal', { timeout: 5000 });
   // waitForSelector resolves on insertion, before two things settle: the
   // modal's own mount effect that moves focus onto its first control lands a
@@ -1010,9 +1019,7 @@ async function testRecorder(browser, base, messages) {
     'no outline at baseline (forced-colors outline not leaking)',
   );
 
-  step(
-    'RECORDER — the bubble-size slider: styled track and thumb in the coral tokens, no Chrome default blue',
-  );
+  step('RECORDER — the bubble-size slider: styled track and thumb with the shared theme tokens');
   // The rail always renders the beautify padding/corners/shadow sliders too,
   // but frame.enabled defaults to false (recorder-draft.ts), which disables
   // those three — the webcam-bubble-size slider is the only enabled .range
@@ -1040,10 +1047,10 @@ async function testRecorder(browser, base, messages) {
   const recAccentHex = await rootVar(page, '--accent');
   const recSurface3Hex = await rootVar(page, '--surface-3');
   const recThumbPixel = await pixelAt(page, recThumbPoint.x, recThumbPoint.y);
-  const recTrackPixel = await pixelAt(page, recTrackPoint.x, recTrackPoint.y);
+  const recTrackPixel = await pixelAt(page, recTrackPoint.x, recTrackPoint.y, 1);
   assert(
     closeRGB(recThumbPixel, hexToRGB(recAccentHex)),
-    `bubble-size slider thumb pixel (${recThumbPixel}) renders --accent (${recAccentHex}), not Chrome's default blue thumb`,
+    `bubble-size slider thumb pixel (${recThumbPixel}) renders --accent (${recAccentHex}), matching the themed thumb`,
   );
   assert(
     closeRGB(recTrackPixel, hexToRGB(recSurface3Hex)),
@@ -1144,6 +1151,7 @@ async function testRecorder(browser, base, messages) {
   await page.waitForSelector('.rec-beautify-popover');
   await page.click('.rec-beautify-popover .switch');
   await page.waitForSelector('.rec-beautify-popover .switch:checked');
+  await new Promise((resolve) => setTimeout(resolve, 220));
   const switches = await page.evaluate(() => {
     const list = [...document.querySelectorAll('input.switch')];
     const on = list.find((el) => el.checked);
@@ -1283,9 +1291,7 @@ async function testPopup(browser, base, messages) {
   );
   await emulateMedia(cdp, []);
 
-  step(
-    'POPUP — the quality slider: styled track and thumb in the coral tokens, no Chrome default blue',
-  );
+  step('POPUP — the quality slider: styled track and thumb with the shared theme tokens');
   // The quality slider only renders for a lossy default format (App.tsx
   // showQuality) — Settings starts on PNG, so Settings is opened and JPEG
   // (the Format row's 2nd of 4 segments) selected first. Targeted by
@@ -1307,6 +1313,8 @@ async function testPopup(browser, base, messages) {
     el.dispatchEvent(new Event('input', { bubbles: true }));
   });
   await new Promise((r) => setTimeout(r, 60));
+  await page.$eval('.range', (el) => el.scrollIntoView({ block: 'center' }));
+  await new Promise((r) => setTimeout(r, 100));
   const popupRangeBox = await page.evaluate(() =>
     document.querySelector('.range').getBoundingClientRect().toJSON(),
   );
@@ -1318,10 +1326,10 @@ async function testPopup(browser, base, messages) {
   const popupAccentHex = await rootVar(page, '--accent');
   const popupSurface3Hex = await rootVar(page, '--surface-3');
   const popupThumbPixel = await pixelAt(page, popupThumbPoint.x, popupThumbPoint.y);
-  const popupTrackPixel = await pixelAt(page, popupTrackPoint.x, popupTrackPoint.y);
+  const popupTrackPixel = await pixelAt(page, popupTrackPoint.x, popupTrackPoint.y, 1);
   assert(
     closeRGB(popupThumbPixel, hexToRGB(popupAccentHex)),
-    `quality slider thumb pixel (${popupThumbPixel}) renders --accent (${popupAccentHex}), not Chrome's default blue thumb`,
+    `quality slider thumb pixel (${popupThumbPixel}) renders --accent (${popupAccentHex}), matching the themed thumb`,
   );
   assert(
     closeRGB(popupTrackPixel, hexToRGB(popupSurface3Hex)),

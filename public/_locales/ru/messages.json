@@ -1526,7 +1526,7 @@
     "description": "Editor: the Export button/dialog title, and its name in the shortcut sheet."
   },
   "editorMarkup": {
-    "message": "Разметка",
+    "message": "Изменить",
     "description": "Editor topbar (View mode): button that opens the Markup chrome."
   },
   "editorFitHint": {
@@ -1538,7 +1538,7 @@
     "description": "Editor topbar (Markup mode): button that returns to View."
   },
   "editorViewHint": {
-    "message": "Разметка — для заметок. Затем Копировать, PDF или Сохранить.",
+    "message": "Измените снимок экрана, затем скопируйте или сохраните его.",
     "description": "Editor status bar (View mode): the one-line hint under the fitted capture."
   },
   "editorSaveImage": {
@@ -1944,7 +1944,7 @@
     "description": "Editor: Actual size (100%) command, used in the zoom menu and the shortcut sheet."
   },
   "editorFitToScreen": {
-    "message": "По размеру экрана",
+    "message": "Страница целиком",
     "description": "Editor: Fit to screen command, used in the zoom menu and the shortcut sheet."
   },
   "editorCmdPan": {
@@ -2354,5 +2354,57 @@
   "errUnknown": {
     "message": "Захват неожиданно завершился ошибкой.",
     "description": "Capture error: unexpected failure."
+  },
+  "editorFitWidth": {
+    "message": "По ширине",
+    "description": "Editor toolbar label."
+  },
+  "editorMoreActions": {
+    "message": "Ещё",
+    "description": "Editor toolbar label."
+  },
+  "settingsIntro": {
+    "message": "Настройте создание снимков, сохранение файлов и запись.",
+    "description": "Settings page label or helper."
+  },
+  "settingsAppearance": {
+    "message": "Внешний вид",
+    "description": "Settings page label or helper."
+  },
+  "settingsCapture": {
+    "message": "Снимки экрана",
+    "description": "Settings page label or helper."
+  },
+  "settingsFiles": {
+    "message": "Файлы",
+    "description": "Settings page label or helper."
+  },
+  "settingsRecording": {
+    "message": "Запись",
+    "description": "Settings page label or helper."
+  },
+  "settingsExpressHint": {
+    "message": "Отключите, чтобы каждый раз выбирать режим снимка.",
+    "description": "Settings page label or helper."
+  },
+  "settingsAcrossSitesHint": {
+    "message": "Сохранять подсветку курсора при переходе вкладки на другой сайт. Требуется доступ ко всем сайтам.",
+    "description": "Settings page label or helper."
+  },
+  "settingsFilenamePreview": {
+    "message": "Предпросмотр",
+    "description": "Settings page label or helper."
+  },
+  "captureOverlayTitle": {
+    "message": "Создание снимка экрана…",
+    "description": "Capture overlay status."
+  },
+  "captureOverlayDetail": {
+    "message": "Не закрывайте эту вкладку, пока создаётся снимок страницы.",
+    "description": "Capture overlay status."
+  },
+  "captureOverlayFinishing": {
+    "message": "Завершение снимка экрана…",
+    "description": "Capture overlay status."
   }
 }

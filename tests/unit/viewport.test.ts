@@ -3,6 +3,8 @@ import {
   centerView,
   clampZoom,
   fitZoom,
+  fitWidthView,
+  scrollView,
   FIT_PADDING,
   MIN_ZOOM,
   MAX_ZOOM,
@@ -73,5 +75,53 @@ describe('centerView', () => {
     const v = centerView(1000, 800, 3600, 2400, 300, zoom);
     expect(v.panX - 300 * zoom).toBeGreaterThanOrEqual(0);
     expect(v.panY - 300 * zoom).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('fitWidthView', () => {
+  it('opens a long screenshot at a readable width with its top visible', () => {
+    const view = fitWidthView(1200, 800, 2880, 11546, 0);
+    expect(view.zoom).toBeCloseTo(1152 / 2880);
+    expect(view.panX).toBe(24);
+    expect(view.panY).toBe(24);
+  });
+
+  it('centers a small screenshot without enlarging it', () => {
+    expect(fitWidthView(1000, 800, 400, 300, 0)).toEqual({
+      zoom: 1,
+      panX: 300,
+      panY: 250,
+    });
+  });
+
+  it('keeps frame spacing visible above a long screenshot', () => {
+    const view = fitWidthView(1048, 700, 2000, 9000, 100);
+    expect(view.zoom).toBe(0.5);
+    expect(view.panX).toBe(74);
+    expect(view.panY).toBe(74);
+  });
+});
+
+describe('scrollView', () => {
+  it('scrolls a long capture without changing zoom', () => {
+    const view = fitWidthView(1048, 800, 2000, 10000, 0);
+    expect(scrollView(view, 1048, 800, 2000, 10000, 0, 0, 300)).toEqual({
+      zoom: 0.5,
+      panX: 24,
+      panY: -276,
+    });
+  });
+  it('keeps the image reachable when scrolling beyond either end', () => {
+    const view = fitWidthView(1048, 800, 2000, 10000, 0);
+    expect(scrollView(view, 1048, 800, 2000, 10000, 0, 0, 99999).panY).toBe(-4224);
+    expect(scrollView(view, 1048, 800, 2000, 10000, 0, 0, -99999).panY).toBe(24);
+  });
+  it('centers a short image even if a previous viewport had scrolled it', () => {
+    const view = { zoom: 0.1, panX: 24, panY: -1000 };
+    expect(scrollView(view, 1048, 800, 2000, 1000, 0, 0, 0)).toEqual({
+      zoom: 0.1,
+      panX: 424,
+      panY: 350,
+    });
   });
 });

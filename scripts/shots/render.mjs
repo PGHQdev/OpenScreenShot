@@ -480,16 +480,15 @@ async function renderRealCaptures(browser, base, messages) {
     await page.waitForSelector('.stage-canvas');
     await settle(500);
 
-    // The editor opens in View; the shot shows the Markup chrome. Enter it
-    // before measuring the canvas — the rail and style bar move it, and the
-    // mode change re-fits the view.
-    await page.click('header .markup-btn');
+    // Tools are available as soon as the capture loads.
     await page.waitForSelector('.toolbar');
     await settle(400);
 
-    const box = await page.$eval('.stage-canvas', (el) => el.getBoundingClientRect().toJSON());
     await page.$eval('.stage-canvas', (el) => el.focus());
     await page.keyboard.press('r');
+    await page.waitForSelector('.stylebar');
+    await settle(100);
+    const box = await page.$eval('.stage-canvas', (el) => el.getBoundingClientRect().toJSON());
     await page.mouse.move(box.x + box.width * 0.08, box.y + box.height * 0.1);
     await page.mouse.down();
     await page.mouse.move(box.x + box.width * 0.4, box.y + box.height * 0.32, { steps: 10 });
@@ -568,8 +567,7 @@ async function renderRealCaptures(browser, base, messages) {
     await page.waitForSelector('.stage-canvas');
     await settle(500);
 
-    // Same View-to-Markup entry as the annotation shot above.
-    await page.click('header .markup-btn');
+    // Wait for the persistent tool rail before selecting Crop.
     await page.waitForSelector('.toolbar');
     await settle(400);
 

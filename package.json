@@ -1,7 +1,7 @@
 {
   "name": "openscreenshot",
-  "version": "2.0.0",
-  "description": "Open-source screenshot tool for Chrome — full-page, region, and visible-area capture with annotation and PDF export.",
+  "version": "2.1.0",
+  "description": "Open-source screenshot tool for Chrome \u2014 full-page, region, and visible-area capture with annotation and PDF export.",
   "license": "MIT",
   "type": "module",
   "private": true,
@@ -34,7 +34,8 @@
     "smoke:region": "node tests/browser/region-select-smoke.mjs",
     "smoke:reflow": "node tests/browser/reflow-smoke.mjs",
     "smoke:setup": "node tests/browser/setup-smoke.mjs",
-    "smoke:worker": "node tests/browser/worker-thumbnail-smoke.mjs"
+    "smoke:worker": "node tests/browser/worker-thumbnail-smoke.mjs",
+    "smoke:capture": "node tests/browser/capture-overlay-smoke.mjs"
   },
   "dependencies": {
     "preact": "^10.29.4"

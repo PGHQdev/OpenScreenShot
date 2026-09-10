@@ -1,3 +1,4 @@
+/* Hallmark · genre: modern-minimal · macrostructure: Workbench · design-system: design.md · designed-as-app */
 /*
  * OpenScreenShot recorder editor styles. Design tokens (spacing, radius,
  * shadows, typography, light/dark themes) live in src/shared/tokens.css and
@@ -908,21 +909,22 @@ body {
 }
 
 .rec-seg {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-self: stretch;
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   overflow: hidden;
 }
 
-/* Four equal segments across the rail. A label longer than its quarter
+/* Two columns keep cursor labels legible inside the settings rail. A label longer than its half
    (German "Mit Klickeffekt", Japanese "クリック効果") wraps inside the
    segment instead of pushing the control past the rail's edge. */
 .rec-seg-btn {
   flex: 1 1 0;
   min-width: 0;
-  min-height: 24px;
-  padding: 2px 6px;
+  min-height: 36px;
+  padding: var(--s-2);
   border: none;
   border-right: 1px solid var(--border);
   line-height: 1.2;
@@ -934,8 +936,11 @@ body {
   transition: transform var(--dur-fast) var(--ease-out);
 }
 
-.rec-seg-btn:last-child {
+.rec-seg-btn:nth-child(even) {
   border-right: none;
+}
+.rec-seg-btn:nth-child(-n + 2) {
+  border-bottom: 1px solid var(--border);
 }
 
 .rec-seg-btn:hover {
@@ -1001,6 +1006,61 @@ body {
   height: 10px;
   border-radius: var(--r-full);
   background: var(--accent);
+}
+
+/* Recorder shares the editor's tonal shell and quiet surface hierarchy. */
+.rec-app {
+  background: var(--surface-2);
+}
+.rec-header {
+  min-height: 64px;
+  border-bottom: none;
+  background: var(--surface-2);
+}
+.brand-name {
+  font-size: var(--fs-lg);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.rec-list {
+  max-width: 800px;
+}
+.rec-list-title {
+  font-size: var(--fs-2xl);
+  font-weight: 400;
+  margin: var(--s-4) 0 var(--s-5);
+}
+.rec-row {
+  min-height: 80px;
+  border-color: transparent;
+  border-radius: var(--r-lg);
+  background: var(--surface-1);
+  padding: var(--s-4);
+}
+.rec-session {
+  gap: var(--s-3);
+  margin: 0 var(--s-3) var(--s-3);
+}
+.rec-main {
+  border-radius: var(--r-lg);
+  background: var(--surface-1);
+}
+.rail {
+  border: none;
+  border-radius: var(--r-lg);
+}
+.rail-section + .rail-section {
+  border-color: transparent;
+}
+.rec-stage {
+  border-radius: var(--r-lg);
+}
+.rec-btn-primary {
+  border-radius: var(--r-full);
+}
+.link-btn {
+  min-height: 32px;
+  border-radius: var(--r-full);
 }
 
 @media (prefers-reduced-motion: reduce) {

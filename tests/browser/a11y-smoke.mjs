@@ -441,7 +441,7 @@ async function testEditor(browser, base, messages) {
   await scan(page, 'editor view mode');
 
   step('EDITOR — Markup chrome with the Rectangle tool active');
-  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar .tool-btn');
   await page.waitForSelector('.toolbar');
   await page.click('.tool-btn[title^="Rectangle"]');
   await page.waitForSelector('.stylebar');
@@ -521,7 +521,7 @@ async function testEditor(browser, base, messages) {
   await page.waitForFunction(() => !document.querySelector('.sheet'), { timeout: 5000 });
 
   step('EDITOR — capture history shelf (task 28)');
-  await page.click('button[title="Capture history"]');
+  await page.click(`button[title="${messages.editorCaptureHistory.message}"]`);
   await page.waitForSelector('.history-row', { timeout: 5000 });
   await settle(220); // see the export dialog step above
   await scan(page, 'editor capture history shelf');

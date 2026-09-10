@@ -1526,7 +1526,7 @@
     "description": "Editor: the Export button/dialog title, and its name in the shortcut sheet."
   },
   "editorMarkup": {
-    "message": "标注",
+    "message": "编辑",
     "description": "Editor topbar (View mode): button that opens the Markup chrome."
   },
   "editorFitHint": {
@@ -1538,7 +1538,7 @@
     "description": "Editor topbar (Markup mode): button that returns to View."
   },
   "editorViewHint": {
-    "message": "点击“标注”添加注释。完成后复制、PDF 或保存。",
+    "message": "编辑截图，然后复制或保存。",
     "description": "Editor status bar (View mode): the one-line hint under the fitted capture."
   },
   "editorSaveImage": {
@@ -1944,7 +1944,7 @@
     "description": "Editor: Actual size (100%) command, used in the zoom menu and the shortcut sheet."
   },
   "editorFitToScreen": {
-    "message": "适应屏幕",
+    "message": "适应页面",
     "description": "Editor: Fit to screen command, used in the zoom menu and the shortcut sheet."
   },
   "editorCmdPan": {
@@ -2354,5 +2354,57 @@
   "errUnknown": {
     "message": "截图意外失败。",
     "description": "Capture error: unexpected failure."
+  },
+  "editorFitWidth": {
+    "message": "适应宽度",
+    "description": "Editor toolbar label."
+  },
+  "editorMoreActions": {
+    "message": "更多",
+    "description": "Editor toolbar label."
+  },
+  "settingsIntro": {
+    "message": "自定义截图、保存和录制方式。",
+    "description": "Settings page label or helper."
+  },
+  "settingsAppearance": {
+    "message": "外观",
+    "description": "Settings page label or helper."
+  },
+  "settingsCapture": {
+    "message": "截图",
+    "description": "Settings page label or helper."
+  },
+  "settingsFiles": {
+    "message": "文件",
+    "description": "Settings page label or helper."
+  },
+  "settingsRecording": {
+    "message": "录制",
+    "description": "Settings page label or helper."
+  },
+  "settingsExpressHint": {
+    "message": "关闭后，每次截图时都可以选择截图模式。",
+    "description": "Settings page label or helper."
+  },
+  "settingsAcrossSitesHint": {
+    "message": "在标签页切换到其他网站后，仍保持光标高亮显示。需要获得访问所有网站的权限。",
+    "description": "Settings page label or helper."
+  },
+  "settingsFilenamePreview": {
+    "message": "预览",
+    "description": "Settings page label or helper."
+  },
+  "captureOverlayTitle": {
+    "message": "正在截图…",
+    "description": "Capture overlay status."
+  },
+  "captureOverlayDetail": {
+    "message": "截图期间，请保持此标签页打开。",
+    "description": "Capture overlay status."
+  },
+  "captureOverlayFinishing": {
+    "message": "正在完成截图…",
+    "description": "Capture overlay status."
   }
 }

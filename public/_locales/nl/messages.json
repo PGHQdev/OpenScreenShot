@@ -64,7 +64,7 @@
     "description": "Editor topbar: the Copy button’s resting label."
   },
   "editorMarkup": {
-    "message": "Annoteren",
+    "message": "Bewerken",
     "description": "Editor topbar (View mode): button that opens the Markup chrome."
   },
   "editorFitHint": {

@@ -240,12 +240,12 @@ export function mountRecordingOverlay(
     .bar {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       padding: 8px 12px;
       border-radius: 999px;
-      background: rgba(20, 20, 22, .92);
+      background: rgba(32, 33, 36, .96);
       color: #fff;
-      font: 500 13px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font: 500 13px/1.2 Roboto, Arial, sans-serif;
       box-shadow: 0 4px 20px rgba(0, 0, 0, .35);
       user-select: none;
     }
@@ -253,7 +253,7 @@ export function mountRecordingOverlay(
       width: 9px;
       height: 9px;
       border-radius: 50%;
-      background: #e8503a;
+      background: #c5221f;
       flex: none;
       animation: pulse 1.4s ease-in-out infinite;
     }
@@ -308,8 +308,8 @@ export function mountRecordingOverlay(
        tests/unit/overlay-warning-contrast.test.ts, which reads both values
        from here and compares them to the generated tokens. 10.10:1. */
     .chip.warn {
-      background: #ffbb4d;
-      color: #1c1c1e;
+      background: #ffd6d0;
+      color: #202124;
     }
     /* Carries the warning to assistive tech exactly once, on the edge. The
        visible chip cannot do it: renderChips replaces the row on every heal,
@@ -336,18 +336,18 @@ export function mountRecordingOverlay(
       background: rgba(255, 255, 255, .12);
     }
     button:hover { background: rgba(255, 255, 255, .22); }
-    button.stop { background: #e8503a; }
-    button.stop:hover { background: #d9432c; }
+    button.stop { background: #c5221f; }
+    button.stop:hover { background: #a51c19; }
     /* all: unset above strips the button's native focus ring along with
        everything else, and Stop/Cancel are reachable by Tab whenever the
        bar is shown — so they need one back. Outline, not box-shadow: outline
        is what forced-colors mode remaps to a system colour rather than
        dropping, the same reason the ring on .rec-tl-zoom (recorder.css) uses
-       it. #f26b57 is a literal copy of the dark theme's --border-focus, like
+       it. #a8c7fa is a literal copy of the dark theme's --border-focus, like
        .chip.warn's colours above — a closed shadow root in a serialized
        function has no stylesheet to read the token from. */
     button:focus-visible {
-      outline: 2px solid #f26b57;
+      outline: 2px solid #a8c7fa;
       outline-offset: 2px;
     }
   `;
@@ -635,7 +635,7 @@ export function mountRecordingOverlay(
        against the bottom of the viewport, and an outward ring there would
        be clipped by the edge of the screen rather than the page. */
     .grip:focus-visible {
-      outline: 2px solid #f26b57;
+      outline: 2px solid #a8c7fa;
       outline-offset: -3px;
     }
     @media (prefers-reduced-motion: reduce) {

@@ -1,3 +1,4 @@
+/* Hallmark · genre: modern-minimal · macrostructure: Workbench · design-system: design.md · designed-as-app */
 /*
  * Recording setup page. Tokens come from src/shared/tokens.css (shared with
  * the popup and editor); this file only holds the page's surface styles.
@@ -246,6 +247,70 @@ a.trust-pill:hover {
   align-items: center;
   gap: var(--s-2);
   cursor: pointer;
+}
+
+/* A calm permissions page, with generous rhythm and grouped settings. */
+.setup {
+  max-width: 720px;
+  padding: calc(var(--s-6) * 2) var(--s-5);
+  gap: var(--s-5);
+}
+.setup-header {
+  align-items: center;
+  gap: var(--s-4);
+}
+.setup-header h1 {
+  font-size: var(--fs-3xl);
+  font-weight: 400;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+.setup-intro {
+  margin-top: var(--s-2);
+}
+.trust-pill {
+  border-color: transparent;
+  font-weight: 500;
+  padding: var(--s-2) var(--s-3);
+}
+.setup-rows {
+  gap: var(--s-2);
+}
+.row {
+  border-color: transparent;
+  padding: var(--s-5);
+  gap: var(--s-4);
+}
+.row-head h2 {
+  font-size: var(--fs-lg);
+  font-weight: 500;
+}
+.row-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-md);
+}
+.row:nth-child(2) .row-icon {
+  color: var(--text-1);
+  background: color-mix(in srgb, var(--brand-green) 20%, var(--surface-1));
+}
+.row:nth-child(3) .row-icon {
+  color: var(--text-1);
+  background: color-mix(in srgb, var(--brand-yellow) 28%, var(--surface-1));
+}
+.row:nth-child(4) .row-icon {
+  color: var(--danger-ink);
+  background: color-mix(in srgb, var(--brand-red) 14%, var(--surface-1));
+}
+.row-desc {
+  font-size: var(--fs-base);
+}
+.btn-primary,
+.btn-ghost {
+  min-height: 40px;
+  border-radius: var(--r-full);
+  padding: var(--s-2) var(--s-5);
+  font-weight: 500;
 }
 
 @media (prefers-reduced-motion: reduce) {

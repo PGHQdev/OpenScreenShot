@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { isTypingTarget, useEditor } from './useEditor';
 import {
   OVERFLOW_TOOLS,
@@ -60,7 +60,7 @@ import {
 import { labelForSource } from './capture-label';
 import { ZoomMenu } from './ZoomMenu';
 import { BeautifyMenu } from './BeautifyMenu';
-import { stylebarFields } from './stylebar';
+import { stylebarEmpty, stylebarFields } from './stylebar';
 import { ShortcutSheet } from './ShortcutSheet';
 import { HistorySheet } from './HistorySheet';
 import { hasScreenPicker, openScreenPicker } from './eyedropper';
@@ -95,6 +95,17 @@ export function App() {
   // missing browser API.
   const [canPin] = useState(() => hasPinWindow(window));
   const [dragOver, setDragOver] = useState(false);
+  const [canvasPointerActive, setCanvasPointerActive] = useState(false);
+  // Contextual controls must not resize/refit the canvas between down and up.
+  useEffect(() => {
+    const end = () => setCanvasPointerActive(false);
+    window.addEventListener('mouseup', end);
+    window.addEventListener('blur', end);
+    return () => {
+      window.removeEventListener('mouseup', end);
+      window.removeEventListener('blur', end);
+    };
+  }, []);
   const toolbarRef = useRef<HTMLElement>(null);
   // Echoes stageNoticeT.mounted for draftPromptT to gate on, one render
   // behind — see the coordination comment below for why the delay is
@@ -168,13 +179,10 @@ export function App() {
     !!ed.draftPrompt,
   );
 
-  // The rail's members are fixed while it is on screen, so one sync when
-  // Markup mounts it is enough to seed the roving tabindex (member 0 starts
-  // as the tab stop). The focusin handler on the toolbar keeps it in sync
-  // after that. Keyed to the mode: the rail does not exist in View.
+  // Seed the rail's single tab stop once its tools become available.
   useEffect(() => {
     if (toolbarRef.current) syncRovingTabIndex(toolbarRef.current);
-  }, [ed.mode]);
+  }, [ed.hasImage]);
 
   // The one post-success rate prompt (Surface C). Marked shown the moment it
   // renders, so it appears at most once per install however it is answered.
@@ -289,16 +297,13 @@ export function App() {
     return () => window.removeEventListener('paste', onPaste);
   }, [ed.importFromFile]);
 
-  const inMarkup = ed.mode === 'markup';
-  // View mode drags always pan (see onCanvasMouseDown), so the cursor says so.
-  const cursor =
-    ed.spaceHeld || !inMarkup
-      ? 'grab'
-      : ed.tool === 'text'
-        ? 'text'
-        : ed.tool === 'select'
-          ? 'default'
-          : 'crosshair';
+  const cursor = ed.spaceHeld
+    ? 'grab'
+    : ed.tool === 'text'
+      ? 'text'
+      : ed.tool === 'select'
+        ? 'default'
+        : 'crosshair';
 
   return (
     <div class="editor">
@@ -310,67 +315,70 @@ export function App() {
           <span class="brand-name">OpenScreenShot</span>
           {ed.capture ? <span class="brand-mode">{labelForSource(ed.capture.mode)}</span> : null}
         </div>
-        {inMarkup ? (
+        {
           <div class="topbar-actions" role="group" aria-label={t('editorAriaDocumentActions')}>
-            <button class="btn-secondary" onClick={ed.exitMarkup}>
-              {t('editorDone')}
-            </button>
             <button
-              class="icon-btn"
+              class="icon-btn labeled-action"
               title={t('editorUndoTitle')}
               disabled={!ed.canUndo}
               onClick={ed.undo}
               aria-label={t('editorUndoLabel')}
             >
               <IconUndo />
+              <span>{t('editorUndoLabel')}</span>
             </button>
             <button
-              class="icon-btn"
+              class="icon-btn labeled-action"
               title={t('editorRedoTitle')}
               disabled={!ed.canRedo}
               onClick={ed.redo}
               aria-label={t('editorRedoLabel')}
             >
               <IconRedo />
+              <span>{t('editorRedoLabel')}</span>
             </button>
             <button
-              class="icon-btn icon-btn-danger"
+              class="icon-btn icon-btn-danger labeled-action"
               title={t('editorDeleteSelectedTitle')}
               disabled={!ed.hasSelection}
               onClick={ed.deleteSelection}
               aria-label={t('editorDeleteSelectedLabel')}
             >
               <IconTrash />
+              <span>{t('editorDelete')}</span>
             </button>
           </div>
-        ) : null}
+        }
         <div class="topbar-controls">
           <button
-            class="icon-btn"
+            class="icon-btn labeled-action"
             title={t('editorCaptureHistory')}
             aria-label={t('editorCaptureHistory')}
             onClick={() => setHistoryOpen(true)}
           >
             <IconHistory size={16} />
+            <span>{t('editorCaptureHistory')}</span>
           </button>
           {canPin ? (
             <button
-              class="icon-btn"
+              class="icon-btn labeled-action"
               title={t('editorPinTitle')}
               aria-label={t('editorPinLabel')}
               disabled={!ed.capture}
               onClick={ed.pinCapture}
             >
               <IconPictureInPicture size={16} />
+              <span>{t('editorPinLabel')}</span>
             </button>
           ) : null}
           <button
-            class="icon-btn"
+            class="icon-btn labeled-action"
             title={t('editorShortcutsTitle')}
             aria-label={t('editorShortcutsLabel')}
             onClick={() => setSheetOpen(true)}
           >
-            ?
+            <span aria-hidden="true">?</span>
+            <span>{t('editorShortcutsLabel')}</span>
           </button>
           <ZoomMenu
             zoomPct={ed.zoomPct}
@@ -378,25 +386,17 @@ export function App() {
             onZoomIn={ed.zoomIn}
             onZoomOut={ed.zoomOut}
             onFit={ed.fit}
+            onFitWidth={ed.fitWidth}
+            fitMode={ed.fitMode}
             onActualSize={ed.resetZoom}
             onZoomTo={ed.zoomTo}
           />
-          {inMarkup ? (
-            <BeautifyMenu
-              frame={ed.frame}
-              disabled={!ed.hasImage}
-              imageSize={ed.imageSize}
-              onChange={ed.setFrame}
-            />
-          ) : (
-            <button
-              class="btn-secondary markup-btn"
-              disabled={!ed.hasImage}
-              onClick={ed.enterMarkup}
-            >
-              {t('editorMarkup')}
-            </button>
-          )}
+          <BeautifyMenu
+            frame={ed.frame}
+            disabled={!ed.hasImage}
+            imageSize={ed.imageSize}
+            onChange={ed.setFrame}
+          />
           <button
             class="btn-secondary btn-fixed"
             title={t('editorCopyTitle')}
@@ -425,22 +425,14 @@ export function App() {
           >
             {t('editorSaveImage')}
           </button>
-          <button
-            class="icon-btn rate-btn"
-            title={t('editorRateTooltip')}
-            aria-label={t('editorRateLabel')}
-            onClick={openReviews}
-          >
-            <IconStar size={16} />
-            {t('editorRateLabel')}
-          </button>
+          <EditorMoreMenu onRate={openReviews} />
         </div>
       </header>
 
-      {inMarkup ? <StyleBar ed={ed} /> : null}
+      <StyleBar ed={ed} pointerActive={canvasPointerActive} />
 
       <div class="workspace">
-        {inMarkup ? (
+        {
           <aside
             class="toolbar"
             role="toolbar"
@@ -459,9 +451,11 @@ export function App() {
                   class={`tool-btn${ed.tool === t.id ? ' is-active' : ''}`}
                   title={`${t.label} (${t.shortcut})`}
                   aria-pressed={ed.tool === t.id}
+                  disabled={!ed.hasImage}
                   onClick={() => ed.setTool(t.id)}
                 >
                   <ToolIcon id={t.id} />
+                  <span class="tool-label">{t.label}</span>
                 </button>
                 {TOOL_DIVIDER_AFTER.has(t.id) ? (
                   <div class="toolbar-divider" role="separator" aria-orientation="horizontal" />
@@ -477,7 +471,7 @@ export function App() {
               </div>
             ) : null}
           </aside>
-        ) : null}
+        }
 
         <div
           class="stage"
@@ -511,7 +505,10 @@ export function App() {
                 ? t('editorScreenshotCanvasSized', [String(ed.imageSize.w), String(ed.imageSize.h)])
                 : t('editorScreenshotCanvasEmpty')
             }
-            onMouseDown={ed.onCanvasMouseDown}
+            onMouseDown={(e) => {
+              setCanvasPointerActive(true);
+              ed.onCanvasMouseDown(e);
+            }}
             onDblClick={ed.onCanvasDoubleClick}
             onKeyDown={ed.onCanvasKeyDown}
           >
@@ -605,7 +602,7 @@ export function App() {
       <footer class="statusbar">
         <span>{ed.imageSize ? `${ed.imageSize.w} × ${ed.imageSize.h}px` : '—'}</span>
         <span class="status-spacer" />
-        <span class="status-hint">{inMarkup ? hintForTool(ed.tool) : t('editorViewHint')}</span>
+        <span class="status-hint">{hintForTool(ed.tool)}</span>
       </footer>
 
       {/*
@@ -665,11 +662,33 @@ export function App() {
   );
 }
 
-function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
+function StyleBar({
+  ed,
+  pointerActive,
+}: {
+  ed: ReturnType<typeof useEditor>;
+  pointerActive: boolean;
+}) {
   // Chrome 95+. Feature-detected once: the answer cannot change while the page lives.
   const [canPickScreen] = useState(() => hasScreenPicker(window));
   const sel = ed.selectedAnnotation;
-  const fields = stylebarFields(ed.tool, sel?.type ?? null);
+  const nextFields = stylebarFields(ed.tool, sel?.type ?? null);
+  const lastFields = useRef(nextFields);
+  if (!pointerActive) lastFields.current = nextFields;
+  const fields = lastFields.current;
+  // Keyboard tool changes can be followed by Enter before ResizeObserver runs.
+  useLayoutEffect(
+    () => ed.syncViewport(),
+    [
+      fields.color,
+      fields.stroke,
+      fields.fontSize,
+      fields.shape,
+      fields.redaction,
+      fields.strength,
+      ed.syncViewport,
+    ],
+  );
   const barRef = useRef<HTMLDivElement>(null);
 
   // Unlike the tool rail, this toolbar's membership changes: switching tools
@@ -696,10 +715,7 @@ function StyleBar({ ed }: { ed: ReturnType<typeof useEditor> }) {
     });
   }
 
-  // Select and Crop carry no fields (stylebar.ts), so this renders an empty
-  // toolbar for them rather than unmounting: .stylebar's min-height (see
-  // editor.css) is what actually stops the canvas moving on a tool swap —
-  // this is what keeps that promise true regardless of which fields apply.
+  if (stylebarEmpty(fields)) return null;
   return (
     <div
       class="stylebar"
@@ -1513,6 +1529,56 @@ function EmptyState() {
   );
 }
 
+function EditorMoreMenu({ onRate }: { onRate: () => void }) {
+  const ref = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const close = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) ref.current.open = false;
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, []);
+  return (
+    <details
+      class="editor-more"
+      ref={ref}
+      onFocusOut={(e) => {
+        if (ref.current && !ref.current.contains(e.relatedTarget as Node | null))
+          ref.current.open = false;
+      }}
+      onKeyDown={(e) => {
+        e.stopPropagation();
+        if (e.key === 'Escape') {
+          if (ref.current) {
+            ref.current.open = false;
+            ref.current.querySelector('summary')?.focus();
+          }
+        }
+      }}
+    >
+      <summary class="labeled-action">
+        <IconMore size={18} />
+        <span>{t('editorMoreActions')}</span>
+      </summary>
+      <div class="editor-more-panel">
+        <button
+          class="text-btn rate-btn"
+          onClick={() => {
+            if (ref.current) {
+              ref.current.open = false;
+              ref.current.querySelector('summary')?.focus();
+            }
+            onRate();
+          }}
+        >
+          <IconStar size={16} />
+          {t('editorRateLabel')}
+        </button>
+      </div>
+    </details>
+  );
+}
+
 /**
  * The tool rail's overflow: every TOOL_LIST member not in PRIMARY_TOOLS
  * (OVERFLOW_TOOLS). Popover mechanics mirror ZoomMenu's: capture-phase keys so
@@ -1529,7 +1595,7 @@ function MoreTools({ ed }: { ed: ReturnType<typeof useEditor> }) {
   const overflow: ToolDef[] = OVERFLOW_TOOLS.map((id) => TOOL_LIST.find((x) => x.id === id)!);
   const active = overflow.find((x) => x.id === ed.tool) ?? null;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open) return;
     const popover = popoverRef.current;
     // position: fixed, placed beside the trigger by hand: the rail scrolls,
@@ -1541,7 +1607,8 @@ function MoreTools({ ed }: { ed: ReturnType<typeof useEditor> }) {
       const r = trig.getBoundingClientRect();
       const top = Math.max(8, Math.min(r.top, window.innerHeight - popover.offsetHeight - 8));
       popover.style.top = `${top}px`;
-      popover.style.left = `${r.right + 10}px`;
+      const left = Math.max(8, Math.min(r.right + 10, window.innerWidth - popover.offsetWidth - 8));
+      popover.style.left = `${left}px`;
     }
     const items = popover ? getFocusable(popover) : [];
     items[0]?.focus();
@@ -1587,7 +1654,8 @@ function MoreTools({ ed }: { ed: ReturnType<typeof useEditor> }) {
         ref={triggerRef}
         class={`tool-btn${active ? ' is-active' : ''}`}
         title={t('editorMoreTools')}
-        aria-label={t('editorMoreTools')}
+        disabled={!ed.hasImage}
+        aria-label={active ? `${t('editorMoreTools')}: ${active.label}` : t('editorMoreTools')}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
@@ -1595,6 +1663,7 @@ function MoreTools({ ed }: { ed: ReturnType<typeof useEditor> }) {
         {/* An armed overflow tool shows itself here, so the rail never hides
             the active tool behind three dots. */}
         {active ? <ToolIcon id={active.id} /> : <IconMore />}
+        <span class="tool-label">{active ? active.label : t('editorMoreTools')}</span>
       </button>
       {mounted ? (
         <div

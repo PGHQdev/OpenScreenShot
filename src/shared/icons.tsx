@@ -1,443 +1,413 @@
-/**
- * Every inline icon used across editor, popup, recorder and setup, in one
- * module. One stroke weight (2, in a 24x24 viewBox) and one filled-mark
- * convention (also 24x24) for every icon here — display size is a `size`
- * prop, never a redrawn path at a different scale. `BrandMark.tsx` stays
- * separate: it is brand artwork with fixed hex colors and its own 128x128
- * viewBox, not a themed UI icon.
- *
- * Naming follows what each icon depicts, not where it is used — several of
- * these (IconPage, IconGift) were byte-identical copies under two names
- * before this file existed.
+/** Material Icons Rounded, Apache-2.0. Locally bundled SVGs: no icon font or network.
+ * Source: github.com/google/material-design-icons; license: public/licenses/Material-Icons-LICENSE.txt.
+ * Existing semantic exports keep every control and accessible label intact.
  */
 export interface IconProps {
   size?: number;
 }
-
-const VIEW_BOX = '0 0 24 24';
-const STROKE_WIDTH = 2;
-
-function StrokeIcon({ size = 20, children }: IconProps & { children: preact.ComponentChildren }) {
+function MaterialIcon({ size = 20, children }: IconProps & { children: preact.ComponentChildren }) {
   return (
     <svg
       width={size}
       height={size}
-      viewBox={VIEW_BOX}
-      fill="none"
-      stroke="currentColor"
-      stroke-width={STROKE_WIDTH}
-      stroke-linecap="round"
-      stroke-linejoin="round"
+      viewBox="0 0 24 24"
+      fill="currentColor"
       aria-hidden="true"
+      focusable="false"
     >
       {children}
     </svg>
   );
 }
 
-function FillIcon({ size = 20, children }: IconProps & { children: preact.ComponentChildren }) {
-  return (
-    <svg width={size} height={size} viewBox={VIEW_BOX} fill="currentColor" aria-hidden="true">
-      {children}
-    </svg>
-  );
-}
-
-/* ---- Editor toolbar ---- */
-
 export function IconSelect(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M4 4l6 16 2-7 7-2z" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <rect fill="none" height="24" width="24" />
+      <path d="M11.71,17.99C8.53,17.84,6,15.22,6,12c0-3.31,2.69-6,6-6c3.22,0,5.84,2.53,5.99,5.71l-2.1-0.63C15.48,9.31,13.89,8,12,8 c-2.21,0-4,1.79-4,4c0,1.89,1.31,3.48,3.08,3.89L11.71,17.99z M22,12c0,0.3-0.01,0.6-0.04,0.9l-1.97-0.59C20,12.21,20,12.1,20,12 c0-4.42-3.58-8-8-8s-8,3.58-8,8s3.58,8,8,8c0.1,0,0.21,0,0.31-0.01l0.59,1.97C12.6,21.99,12.3,22,12,22C6.48,22,2,17.52,2,12 C2,6.48,6.48,2,12,2S22,6.48,22,12z M18.23,16.26l2.27-0.76c0.46-0.15,0.45-0.81-0.01-0.95l-7.6-2.28 c-0.38-0.11-0.74,0.24-0.62,0.62l2.28,7.6c0.14,0.47,0.8,0.48,0.95,0.01l0.76-2.27l3.91,3.91c0.2,0.2,0.51,0.2,0.71,0l1.27-1.27 c0.2-0.2,0.2-0.51,0-0.71L18.23,16.26z" />
+    </MaterialIcon>
   );
 }
 
 export function IconRectangle(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <rect x="4" y="6" width="16" height="12" rx="2" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M19 4H5c-1.11 0-2 .9-2 2v12c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.89-2-2-2zm-1 14H6c-.55 0-1-.45-1-1V8h14v9c0 .55-.45 1-1 1z" />
+    </MaterialIcon>
   );
 }
 
 export function IconArrow(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M4 20L20 4M20 4h-6M20 4v6" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <rect fill="none" height="24" width="24" />
+      <path d="M9,6L9,6c0,0.56,0.45,1,1,1h5.59L4.7,17.89c-0.39,0.39-0.39,1.02,0,1.41h0c0.39,0.39,1.02,0.39,1.41,0L17,8.41V14 c0,0.55,0.45,1,1,1H18c0.55,0,1-0.45,1-1V6c0-0.55-0.45-1-1-1H10C9.45,5,9,5.45,9,6z" />
+    </MaterialIcon>
   );
 }
 
 export function IconLine(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M4 20L20 4" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M18 13H6c-.55 0-1-.45-1-1s.45-1 1-1h12c.55 0 1 .45 1 1s-.45 1-1 1z" />
+    </MaterialIcon>
   );
 }
 
 export function IconPen(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M16.5 3.5l4 4L7 21H3v-4z" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M7 14c-1.66 0-3 1.34-3 3 0 1.31-1.16 2-2 2 .92 1.22 2.49 2 4 2 2.21 0 4-1.79 4-4 0-1.66-1.34-3-3-3zm13.71-9.37l-1.34-1.34c-.39-.39-1.02-.39-1.41 0L9 12.25 11.75 15l8.96-8.96c.39-.39.39-1.02 0-1.41z" />
+    </MaterialIcon>
   );
 }
 
 export function IconHighlight(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="m9 11-6 6v3h9l3-3" />
-      <path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4l8 8Z" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <g>
+        <rect fill="none" height="24" width="24" />
+      </g>
+      <g>
+        <path
+          d="M20,24H4c-1.1,0-2-0.9-2-2v0c0-1.1,0.9-2,2-2h16c1.1,0,2,0.9,2,2v0C22,23.1,21.1,24,20,24z M13.06,5.19l3.75,3.75l-8.77,8.77C7.86,17.9,7.6,18,7.34,18H5c-0.55,0-1-0.45-1-1v-2.34c0-0.27,0.11-0.52,0.29-0.71L13.06,5.19z M17.88,7.87l-3.75-3.75l1.83-1.83c0.39-0.39,1.02-0.39,1.41,0l2.34,2.34c0.39,0.39,0.39,1.02,0,1.41L17.88,7.87z"
+          enable-background="new"
+        />
+      </g>
+    </MaterialIcon>
   );
 }
 
 export function IconStep(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M10.5 9.6L12.2 8.2v7.6" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-6 14c-.55 0-1-.45-1-1V9h-1c-.55 0-1-.45-1-1s.45-1 1-1h2c.55 0 1 .45 1 1v8c0 .55-.45 1-1 1z" />
+    </MaterialIcon>
   );
 }
 
 export function IconText(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M5 5h14M12 5v14M9 19h6" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M5 5.5C5 6.33 5.67 7 6.5 7h4v10.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V7h4c.83 0 1.5-.67 1.5-1.5S18.33 4 17.5 4h-11C5.67 4 5 4.67 5 5.5z" />
+    </MaterialIcon>
   );
 }
 
 export function IconBlur(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <circle cx="12" cy="12" r="7" stroke-dasharray="2 3" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0z" fill="none" />
+      <path d="M6 13c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm0-8c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm-3 .5c-.28 0-.5.22-.5.5s.22.5.5.5.5-.22.5-.5-.22-.5-.5-.5zM6 5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm15 5.5c.28 0 .5-.22.5-.5s-.22-.5-.5-.5-.5.22-.5.5.22.5.5.5zM14 7c.55 0 1-.45 1-1s-.45-1-1-1-1 .45-1 1 .45 1 1 1zm0-3.5c.28 0 .5-.22.5-.5s-.22-.5-.5-.5-.5.22-.5.5.22.5.5.5zm-11 10c-.28 0-.5.22-.5.5s.22.5.5.5.5-.22.5-.5-.22-.5-.5-.5zm7 7c-.28 0-.5.22-.5.5s.22.5.5.5.5-.22.5-.5-.22-.5-.5-.5zm0-17c.28 0 .5-.22.5-.5s-.22-.5-.5-.5-.5.22-.5.5.22.5.5.5zM10 7c.55 0 1-.45 1-1s-.45-1-1-1-1 .45-1 1 .45 1 1 1zm0 5.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm8 .5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm0 4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm0-8c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm0-4c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm3 8.5c-.28 0-.5.22-.5.5s.22.5.5.5.5-.22.5-.5-.22-.5-.5-.5zM14 17c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm0 3.5c-.28 0-.5.22-.5.5s.22.5.5.5.5-.22.5-.5-.22-.5-.5-.5zm-4-12c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0 8.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm4-4.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-4c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z" />
+    </MaterialIcon>
   );
 }
 
 export function IconSpotlight(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="3 3" />
-      <circle cx="12" cy="12" r="5" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm-8 7c-.55 0-1 .45-1 1v3c0 1.1.9 2 2 2h3c.55 0 1-.45 1-1s-.45-1-1-1H6c-.55 0-1-.45-1-1v-2c0-.55-.45-1-1-1zm1-9c0-.55.45-1 1-1h2c.55 0 1-.45 1-1s-.45-1-1-1H5c-1.1 0-2 .9-2 2v3c0 .55.45 1 1 1s1-.45 1-1V6zm14-3h-3c-.55 0-1 .45-1 1s.45 1 1 1h2c.55 0 1 .45 1 1v2c0 .55.45 1 1 1s1-.45 1-1V5c0-1.1-.9-2-2-2zm0 15c0 .55-.45 1-1 1h-2c-.55 0-1 .45-1 1s.45 1 1 1h3c1.1 0 2-.9 2-2v-3c0-.55-.45-1-1-1s-1 .45-1 1v2z" />
+    </MaterialIcon>
   );
 }
 
-/** The eyedropper tool and the "pick from screen" swatch button — one icon, two sizes. */
 export function IconEyedropper(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M18 3.5a2.1 2.1 0 0 1 3 3L15 12.5l-3-3z" />
-      <path d="M12 9.5 4.5 17v2.5H7L14.5 12" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M20.71 5.63l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-3.12 3.12-1.23-1.21c-.39-.39-1.02-.38-1.41 0-.39.39-.39 1.02 0 1.41l.72.72-8.77 8.77c-.1.1-.15.22-.15.36v4.04c0 .28.22.5.5.5h4.04c.13 0 .26-.05.35-.15l8.77-8.77.72.72c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41l-1.22-1.22 3.12-3.12c.41-.4.41-1.03.02-1.42zM6.92 19L5 17.08l8.06-8.06 1.92 1.92L6.92 19z" />
+    </MaterialIcon>
   );
 }
 
 export function IconCrop(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M6 2v14h14M2 6h14v14" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M17 15h2V7c0-1.1-.9-2-2-2H9v2h7c.55 0 1 .45 1 1v7zm-9 2c-.55 0-1-.45-1-1V2c0-.55-.45-1-1-1s-1 .45-1 1v3H2c-.55 0-1 .45-1 1s.45 1 1 1h3v10c0 1.1.9 2 2 2h10v3c0 .55.45 1 1 1s1-.45 1-1v-3h3c.55 0 1-.45 1-1s-.45-1-1-1H8z" />
+    </MaterialIcon>
   );
 }
 
-/**
- * Cut: two seam rules with the picture closing up between them. Deliberately
- * not scissors — the tool removes a horizontal band and pulls the rest
- * together, which is what the converging chevrons say and what scissors do
- * not.
- */
 export function IconCut(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M3 5h18M3 19h18M9 9l3 3 3-3M9 15l3-3 3 3" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M9.64 7.64c.29-.62.42-1.33.34-2.09-.19-1.73-1.54-3.2-3.26-3.49-2.77-.48-5.14 1.89-4.66 4.65.3 1.72 1.76 3.07 3.49 3.26.76.08 1.46-.05 2.09-.34L10 12l-2.36 2.36c-.62-.29-1.33-.42-2.09-.34-1.73.19-3.2 1.54-3.49 3.26-.48 2.77 1.89 5.13 4.65 4.65 1.72-.3 3.07-1.76 3.26-3.49.08-.76-.05-1.46-.34-2.09L12 14l7.59 7.59c.89.89 2.41.26 2.41-1v-.01c0-.37-.15-.73-.41-1L9.64 7.64zM6 8c-1.1 0-2-.89-2-2s.9-2 2-2 2 .89 2 2-.9 2-2 2zm0 12c-1.1 0-2-.89-2-2s.9-2 2-2 2 .89 2 2-.9 2-2 2zm6-7.5c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5zm7.59-10.09L13 9l2 2 6.59-6.59c.26-.26.41-.62.41-1V3.4c0-1.25-1.52-1.88-2.41-.99z" />
+    </MaterialIcon>
   );
 }
-
-/* ---- Editor chrome ---- */
 
 export function IconMore(props: IconProps) {
   return (
-    <FillIcon {...props}>
-      <circle cx="12" cy="5" r="2" />
-      <circle cx="12" cy="12" r="2" />
-      <circle cx="12" cy="19" r="2" />
-    </FillIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+    </MaterialIcon>
   );
 }
 
 export function IconImage(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <circle cx="8.5" cy="8.5" r="1.5" />
-      <path d="M21 15l-5-5L5 21" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.9 13.98l2.1 2.53 3.1-3.99c.2-.26.6-.26.8.01l3.51 4.68c.25.33.01.8-.4.8H6.02c-.42 0-.65-.48-.39-.81L8.12 14c.19-.26.57-.27.78-.02z" />
+    </MaterialIcon>
   );
 }
 
 export function IconAlert(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-      <path d="M12 9v4M12 17h.01" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M12 5.99L19.53 19H4.47L12 5.99M2.74 18c-.77 1.33.19 3 1.73 3h15.06c1.54 0 2.5-1.67 1.73-3L13.73 4.99c-.77-1.33-2.69-1.33-3.46 0L2.74 18zM11 11v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zm0 5h2v2h-2z" />
+    </MaterialIcon>
   );
 }
 
 export function IconUndo(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M9 14L4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L3.71 8.71C3.08 8.08 2 8.52 2 9.41V15c0 .55.45 1 1 1h5.59c.89 0 1.34-1.08.71-1.71l-1.91-1.91c1.39-1.16 3.16-1.88 5.12-1.88 3.16 0 5.89 1.84 7.19 4.5.27.56.91.84 1.5.64.71-.23 1.07-1.04.75-1.72C20.23 10.42 16.65 8 12.5 8z" />
+    </MaterialIcon>
   );
 }
 
 export function IconRedo(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M15 14l5-5-5-5M20 9H9a5 5 0 0 0 0 10h3" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.16 0-7.74 2.42-9.44 5.93-.32.67.04 1.47.75 1.71.59.2 1.23-.08 1.5-.64 1.3-2.66 4.03-4.5 7.19-4.5 1.95 0 3.73.72 5.12 1.88l-1.91 1.91c-.63.63-.19 1.71.7 1.71H21c.55 0 1-.45 1-1V9.41c0-.89-1.08-1.34-1.71-.71l-1.89 1.9z" />
+    </MaterialIcon>
   );
 }
 
 export function IconTrash(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v10zM9 9h6c.55 0 1 .45 1 1v8c0 .55-.45 1-1 1H9c-.55 0-1-.45-1-1v-8c0-.55.45-1 1-1zm6.5-5l-.71-.71c-.18-.18-.44-.29-.7-.29H9.91c-.26 0-.52.11-.7.29L8.5 4H6c-.55 0-1 .45-1 1s.45 1 1 1h12c.55 0 1-.45 1-1s-.45-1-1-1h-2.5z" />
+    </MaterialIcon>
   );
 }
 
 export function IconLayers(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M12 2l9 5-9 5-9-5 9-5z" />
-      <path d="M3 12l9 5 9-5" />
-      <path d="M3 17l9 5 9-5" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M12.6 18.06c-.36.28-.87.28-1.23 0l-6.15-4.78c-.36-.28-.86-.28-1.22 0-.51.4-.51 1.17 0 1.57l6.76 5.26c.72.56 1.73.56 2.46 0l6.76-5.26c.51-.4.51-1.17 0-1.57l-.01-.01c-.36-.28-.86-.28-1.22 0l-6.15 4.79zm.63-3.02l6.76-5.26c.51-.4.51-1.18 0-1.58l-6.76-5.26c-.72-.56-1.73-.56-2.46 0L4.01 8.21c-.51.4-.51 1.18 0 1.58l6.76 5.26c.72.56 1.74.56 2.46-.01z" />
+    </MaterialIcon>
   );
 }
 
-/** A clock face with a counter-clockwise arrow — the capture history shelf. */
 export function IconHistory(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M3 12a9 9 0 1 0 3-6.7" />
-      <path d="M3 4v5h5" />
-      <path d="M12 7v5l4 2" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M13.26 3C8.17 2.86 4 6.95 4 12H2.21c-.45 0-.67.54-.35.85l2.79 2.8c.2.2.51.2.71 0l2.79-2.8c.31-.31.09-.85-.36-.85H6c0-3.9 3.18-7.05 7.1-7 3.72.05 6.85 3.18 6.9 6.9.05 3.91-3.1 7.1-7 7.1-1.61 0-3.1-.55-4.28-1.48-.4-.31-.96-.28-1.32.08-.42.42-.39 1.13.08 1.49C9 20.29 10.91 21 13 21c5.05 0 9.14-4.17 9-9.26-.13-4.69-4.05-8.61-8.74-8.74zm-.51 5c-.41 0-.75.34-.75.75v3.68c0 .35.19.68.49.86l3.12 1.85c.36.21.82.09 1.03-.26.21-.36.09-.82-.26-1.03l-2.88-1.71v-3.4c0-.4-.34-.74-.75-.74z" />
+    </MaterialIcon>
   );
 }
 
-/** A five-point star — the Rate control in the editor header. */
 export function IconStar(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M12 3l2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 16.9l-5.4 2.9 1.1-6.1L3.2 9.4l6.1-.8z" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <g>
+        <rect fill="none" height="24" width="24" x="0" />
+      </g>
+      <g>
+        <g>
+          <path d="M19.46,8l0.79-1.75L22,5.46c0.39-0.18,0.39-0.73,0-0.91l-1.75-0.79L19.46,2c-0.18-0.39-0.73-0.39-0.91,0l-0.79,1.75 L16,4.54c-0.39,0.18-0.39,0.73,0,0.91l1.75,0.79L18.54,8C18.72,8.39,19.28,8.39,19.46,8z M11.5,9.5L9.91,6 C9.56,5.22,8.44,5.22,8.09,6L6.5,9.5L3,11.09c-0.78,0.36-0.78,1.47,0,1.82l3.5,1.59L8.09,18c0.36,0.78,1.47,0.78,1.82,0l1.59-3.5 l3.5-1.59c0.78-0.36,0.78-1.47,0-1.82L11.5,9.5z M18.54,16l-0.79,1.75L16,18.54c-0.39,0.18-0.39,0.73,0,0.91l1.75,0.79L18.54,22 c0.18,0.39,0.73,0.39,0.91,0l0.79-1.75L22,19.46c0.39-0.18,0.39-0.73,0-0.91l-1.75-0.79L19.46,16 C19.28,15.61,18.72,15.61,18.54,16z" />
+        </g>
+      </g>
+    </MaterialIcon>
   );
 }
 
-/** Outer frame with a small window in the corner — pin in a floating window. */
 export function IconPictureInPicture(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <rect x="12" y="12" width="7" height="5" rx="1" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M18 11h-6c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-4c0-.55-.45-1-1-1zm5 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-3 .02H4c-.55 0-1-.45-1-1V5.97c0-.55.45-1 1-1h16c.55 0 1 .45 1 1v12.05c0 .55-.45 1-1 1z" />
+    </MaterialIcon>
   );
 }
 
 export function IconChevronDown(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M6 9l6 6 6-6" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M24 24H0V0h24v24z" fill="none" opacity=".87" />
+      <path d="M15.88 9.29L12 13.17 8.12 9.29c-.39-.39-1.02-.39-1.41 0-.39.39-.39 1.02 0 1.41l4.59 4.59c.39.39 1.02.39 1.41 0l4.59-4.59c.39-.39.39-1.02 0-1.41-.39-.38-1.03-.39-1.42 0z" />
+    </MaterialIcon>
   );
 }
 
-/* ---- Popup / setup: shared between the two surfaces ---- */
-
-/** A page with three text lines — popup's "full page" mode and setup's capture feature. */
 export function IconPage(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <rect x="6" y="3" width="12" height="18" rx="2" />
-      <path d="M9 8h6M9 12h6M9 16h4" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M14.59 2.59c-.38-.38-.89-.59-1.42-.59H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8.83c0-.53-.21-1.04-.59-1.41l-4.82-4.83zM15 18H9c-.55 0-1-.45-1-1s.45-1 1-1h6c.55 0 1 .45 1 1s-.45 1-1 1zm0-4H9c-.55 0-1-.45-1-1s.45-1 1-1h6c.55 0 1 .45 1 1s-.45 1-1 1zm-2-6V3.5L18.5 9H14c-.55 0-1-.45-1-1z" />
+    </MaterialIcon>
   );
 }
 
-/** A wrapped gift — popup's cool-stuff link and setup's matching trust pill. */
 export function IconGift(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <rect x="3" y="8" width="18" height="4" rx="1" />
-      <path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
-      <path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm10 15H5c-.55 0-1-.45-1-1v-1h16v1c0 .55-.45 1-1 1zm1-5H4V9c0-.55.45-1 1-1h4.08L7.6 10.02c-.33.45-.23 1.08.22 1.4.44.32 1.07.22 1.39-.22L12 7.4l2.79 3.8c.32.44.95.54 1.39.22.45-.32.55-.95.22-1.4L14.92 8H19c.55 0 1 .45 1 1v5z" />
+    </MaterialIcon>
   );
 }
-
-/* ---- Popup ---- */
 
 export function IconVisible(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-      <circle cx="12" cy="12" r="3" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M12 4C7 4 2.73 7.11 1 11.5 2.73 15.89 7 19 12 19s9.27-3.11 11-7.5C21.27 7.11 17 4 12 4zm0 12.5c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+    </MaterialIcon>
   );
 }
 
 export function IconRegion(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <rect x="4" y="5" width="16" height="14" rx="2" stroke-dasharray="4 3" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M3 5v3c0 .55.45 1 1 1s1-.45 1-1V6c0-.55.45-1 1-1h2c.55 0 1-.45 1-1s-.45-1-1-1H5c-1.1 0-2 .9-2 2zm1 10c-.55 0-1 .45-1 1v3c0 1.1.9 2 2 2h3c.55 0 1-.45 1-1s-.45-1-1-1H6c-.55 0-1-.45-1-1v-2c0-.55-.45-1-1-1zm15 3c0 .55-.45 1-1 1h-2c-.55 0-1 .45-1 1s.45 1 1 1h3c1.1 0 2-.9 2-2v-3c0-.55-.45-1-1-1s-1 .45-1 1v2zm0-15h-3c-.55 0-1 .45-1 1s.45 1 1 1h2c.55 0 1 .45 1 1v2c0 .55.45 1 1 1s1-.45 1-1V5c0-1.1-.9-2-2-2z" />
+    </MaterialIcon>
   );
 }
 
 export function IconRecordDot(props: IconProps) {
   return (
-    <FillIcon {...props}>
+    <MaterialIcon {...props}>
       <circle cx="12" cy="12" r="8" />
-    </FillIcon>
+    </MaterialIcon>
   );
 }
 
 export function IconGear(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <rect fill="none" height="24" width="24" />
+      <path d="M19.5,12c0-0.23-0.01-0.45-0.03-0.68l1.86-1.41c0.4-0.3,0.51-0.86,0.26-1.3l-1.87-3.23c-0.25-0.44-0.79-0.62-1.25-0.42 l-2.15,0.91c-0.37-0.26-0.76-0.49-1.17-0.68l-0.29-2.31C14.8,2.38,14.37,2,13.87,2h-3.73C9.63,2,9.2,2.38,9.14,2.88L8.85,5.19 c-0.41,0.19-0.8,0.42-1.17,0.68L5.53,4.96c-0.46-0.2-1-0.02-1.25,0.42L2.41,8.62c-0.25,0.44-0.14,0.99,0.26,1.3l1.86,1.41 C4.51,11.55,4.5,11.77,4.5,12s0.01,0.45,0.03,0.68l-1.86,1.41c-0.4,0.3-0.51,0.86-0.26,1.3l1.87,3.23c0.25,0.44,0.79,0.62,1.25,0.42 l2.15-0.91c0.37,0.26,0.76,0.49,1.17,0.68l0.29,2.31C9.2,21.62,9.63,22,10.13,22h3.73c0.5,0,0.93-0.38,0.99-0.88l0.29-2.31 c0.41-0.19,0.8-0.42,1.17-0.68l2.15,0.91c0.46,0.2,1,0.02,1.25-0.42l1.87-3.23c0.25-0.44,0.14-0.99-0.26-1.3l-1.86-1.41 C19.49,12.45,19.5,12.23,19.5,12z M12.04,15.5c-1.93,0-3.5-1.57-3.5-3.5s1.57-3.5,3.5-3.5s3.5,1.57,3.5,3.5S13.97,15.5,12.04,15.5z" />
+    </MaterialIcon>
   );
 }
 
 export function IconCoffee(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M17 8h1a4 4 0 1 1 0 8h-1" />
-      <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" />
-      <line x1="6" x2="6" y1="2" y2="4" />
-      <line x1="10" x2="10" y1="2" y2="4" />
-      <line x1="14" x2="14" y1="2" y2="4" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M20 3H6c-1.1 0-2 .9-2 2v8c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 5h-2V5h2v3zM3 21h16c.55 0 1-.45 1-1s-.45-1-1-1H3c-.55 0-1 .45-1 1s.45 1 1 1z" />
+    </MaterialIcon>
   );
 }
 
 export function IconBack(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M19 12H5M12 19l-7-7 7-7" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M19 11H7.83l4.88-4.88c.39-.39.39-1.03 0-1.42-.39-.39-1.02-.39-1.41 0l-6.59 6.59c-.39.39-.39 1.02 0 1.41l6.59 6.59c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L7.83 13H19c.55 0 1-.45 1-1s-.45-1-1-1z" />
+    </MaterialIcon>
   );
 }
 
-/* ---- Recorder ---- */
-
 export function IconPlay(props: IconProps) {
   return (
-    <FillIcon {...props}>
-      <path d="M6 4l14 8-14 8V4z" />
-    </FillIcon>
+    <MaterialIcon {...props}>
+      <path d="M8 6.82v10.36c0 .79.87 1.27 1.54.84l8.14-5.18c.62-.39.62-1.29 0-1.69L9.54 5.98C8.87 5.55 8 6.03 8 6.82z" />
+    </MaterialIcon>
   );
 }
 
 export function IconPause(props: IconProps) {
   return (
-    <FillIcon {...props}>
-      <rect x="5" y="4" width="5" height="16" />
-      <rect x="14" y="4" width="5" height="16" />
-    </FillIcon>
+    <MaterialIcon {...props}>
+      <path d="M8 19c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2s-2 .9-2 2v10c0 1.1.9 2 2 2zm6-12v10c0 1.1.9 2 2 2s2-.9 2-2V7c0-1.1-.9-2-2-2s-2 .9-2 2z" />
+    </MaterialIcon>
   );
 }
 
-/* ---- Setup ---- */
-
 export function IconDisplay(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <rect x="2" y="4" width="20" height="14" rx="2" />
-      <circle cx="12" cy="11" r="3" fill="currentColor" stroke="none" />
-      <path d="M8 22h8" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7v2H9c-.55 0-1 .45-1 1s.45 1 1 1h6c.55 0 1-.45 1-1s-.45-1-1-1h-1v-2h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 14H4c-.55 0-1-.45-1-1V5c0-.55.45-1 1-1h16c.55 0 1 .45 1 1v10c0 .55-.45 1-1 1z" />
+    </MaterialIcon>
   );
 }
 
 export function IconCamera(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <rect x="2" y="6" width="13" height="12" rx="2" />
-      <path d="M15 10l7-3v10l-7-3" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l2.29 2.29c.63.63 1.71.18 1.71-.71V8.91c0-.89-1.08-1.34-1.71-.71L17 10.5z" />
+    </MaterialIcon>
   );
 }
 
 export function IconMic(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <rect x="9" y="2" width="6" height="12" rx="3" />
-      <path d="M5 10a7 7 0 0 0 14 0M12 17v5" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z" />
+    </MaterialIcon>
   );
 }
 
 export function IconGlobe(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <circle cx="12" cy="12" r="10" />
-      <path d="M2 12h20M12 2a15 15 0 0 1 0 20a15 15 0 0 1 0-20" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.9-4.33-3.56zm2.95-8H5.08c.96-1.66 2.49-2.93 4.33-3.56C8.81 5.55 8.35 6.75 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2s.07-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z" />
+    </MaterialIcon>
   );
 }
 
 export function IconCode(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M8 6l-6 6 6 6M16 6l6 6-6 6" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M8.7 15.9L4.8 12l3.9-3.9c.39-.39.39-1.01 0-1.4-.39-.39-1.01-.39-1.4 0l-4.59 4.59c-.39.39-.39 1.02 0 1.41l4.59 4.6c.39.39 1.01.39 1.4 0 .39-.39.39-1.01 0-1.4zm6.6 0l3.9-3.9-3.9-3.9c-.39-.39-.39-1.01 0-1.4.39-.39 1.01-.39 1.4 0l4.59 4.59c.39.39.39 1.02 0 1.41l-4.59 4.6c-.39.39-1.01.39-1.4 0-.39-.39-.39-1.01 0-1.4z" />
+    </MaterialIcon>
   );
 }
 
 export function IconShield(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z" />
-      <path d="M9 12l2 2 4-4" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M11.19 1.36l-7 3.11C3.47 4.79 3 5.51 3 6.3V11c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6.3c0-.79-.47-1.51-1.19-1.83l-7-3.11c-.51-.23-1.11-.23-1.62 0zm-1.9 14.93L6.7 13.7c-.39-.39-.39-1.02 0-1.41.39-.39 1.02-.39 1.41 0L10 14.17l5.88-5.88c.39-.39 1.02-.39 1.41 0 .39.39.39 1.02 0 1.41l-6.59 6.59c-.38.39-1.02.39-1.41 0z" />
+    </MaterialIcon>
   );
 }
 
 export function IconEyeOff(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M3 3l18 18M10.5 5.2A10 10 0 0 1 23 12a15 15 0 0 1-3.6 4.3M6.6 6.6A15 15 0 0 0 1 12a10 10 0 0 0 12.3 5.4" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0zm0 0h24v24H0V0zm0 0h24v24H0V0zm0 0h24v24H0V0z" fill="none" />
+      <path d="M12 6.5c2.76 0 5 2.24 5 5 0 .51-.1 1-.24 1.46l3.06 3.06c1.39-1.23 2.49-2.77 3.18-4.53C21.27 7.11 17 4 12 4c-1.27 0-2.49.2-3.64.57l2.17 2.17c.47-.14.96-.24 1.47-.24zM2.71 3.16c-.39.39-.39 1.02 0 1.41l1.97 1.97C3.06 7.83 1.77 9.53 1 11.5 2.73 15.89 7 19 12 19c1.52 0 2.97-.3 4.31-.82l2.72 2.72c.39.39 1.02.39 1.41 0 .39-.39.39-1.02 0-1.41L4.13 3.16c-.39-.39-1.03-.39-1.42 0zM12 16.5c-2.76 0-5-2.24-5-5 0-.77.18-1.5.49-2.14l1.57 1.57c-.03.18-.06.37-.06.57 0 1.66 1.34 3 3 3 .2 0 .38-.03.57-.07L14.14 16c-.65.32-1.37.5-2.14.5zm2.97-5.33c-.15-1.4-1.25-2.49-2.64-2.64l2.64 2.64z" />
+    </MaterialIcon>
   );
 }
 
 export function IconZoom(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <circle cx="11" cy="11" r="7" />
-      <path d="M21 21l-4.5-4.5M11 8v6M8 11h6" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M15.5 14h-.79l-.28-.27c1.2-1.4 1.82-3.31 1.48-5.34-.47-2.78-2.79-5-5.59-5.34-4.23-.52-7.78 3.04-7.27 7.27.34 2.8 2.56 5.12 5.34 5.59 2.03.34 3.94-.28 5.34-1.48l.27.28v.79l4.26 4.25c.41.41 1.07.41 1.48 0l.01-.01c.41-.41.41-1.07 0-1.48L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14zm0-7c-.28 0-.5.22-.5.5V9H7.5c-.28 0-.5.22-.5.5s.22.5.5.5H9v1.5c0 .28.22.5.5.5s.5-.22.5-.5V10h1.5c.28 0 .5-.22.5-.5s-.22-.5-.5-.5H10V7.5c0-.28-.22-.5-.5-.5z" />
+    </MaterialIcon>
   );
 }
 
 export function IconPencil(props: IconProps) {
   return (
-    <StrokeIcon {...props}>
-      <path d="M17 3l4 4L8 20l-5 1 1-5z" />
-    </StrokeIcon>
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M3 17.46v3.04c0 .28.22.5.5.5h3.04c.13 0 .26-.05.35-.15L17.81 9.94l-3.75-3.75L3.15 17.1c-.1.1-.15.22-.15.36zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+    </MaterialIcon>
   );
 }

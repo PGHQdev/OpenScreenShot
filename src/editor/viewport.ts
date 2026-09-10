@@ -46,3 +46,41 @@ export function centerView(
     panY: (viewportH - outerH * zoom) / 2 + pad * zoom,
   };
 }
+
+/** Fit horizontally; long captures start at the top and scroll vertically. */
+export function fitWidthView(
+  viewportW: number,
+  viewportH: number,
+  outerW: number,
+  outerH: number,
+  pad: number,
+): { zoom: number; panX: number; panY: number } {
+  const zoom = clampZoom(Math.min(Math.max(1, viewportW - FIT_PADDING * 2) / outerW, 1));
+  const view = centerView(viewportW, viewportH, outerW, outerH, pad, zoom);
+  view.panY = Math.max(FIT_PADDING, (viewportH - outerH * zoom) / 2) + pad * zoom;
+  return view;
+}
+
+/** Wheel scrolling stays inside the framed image, keeping shorter axes centered. */
+export function scrollView(
+  view: { zoom: number; panX: number; panY: number },
+  viewportW: number,
+  viewportH: number,
+  outerW: number,
+  outerH: number,
+  pad: number,
+  dx: number,
+  dy: number,
+): { zoom: number; panX: number; panY: number } {
+  const clampPan = (pan: number, viewport: number, outer: number) => {
+    const size = outer * view.zoom;
+    const offset = pad * view.zoom;
+    if (size <= viewport - FIT_PADDING * 2) return (viewport - size) / 2 + offset;
+    return Math.max(viewport - size - FIT_PADDING + offset, Math.min(FIT_PADDING + offset, pan));
+  };
+  return {
+    zoom: view.zoom,
+    panX: clampPan(view.panX - dx, viewportW, outerW),
+    panY: clampPan(view.panY - dy, viewportH, outerH),
+  };
+}

@@ -1526,7 +1526,7 @@
     "description": "Editor: the Export button/dialog title, and its name in the shortcut sheet."
   },
   "editorMarkup": {
-    "message": "Anotar",
+    "message": "Editar",
     "description": "Editor topbar (View mode): button that opens the Markup chrome."
   },
   "editorFitHint": {
@@ -1538,7 +1538,7 @@
     "description": "Editor topbar (Markup mode): button that returns to View."
   },
   "editorViewHint": {
-    "message": "Anotar para marcar. Copie, PDF ou Salvar quando terminar.",
+    "message": "Edite sua captura e depois copie ou salve.",
     "description": "Editor status bar (View mode): the one-line hint under the fitted capture."
   },
   "editorSaveImage": {
@@ -1944,7 +1944,7 @@
     "description": "Editor: Actual size (100%) command, used in the zoom menu and the shortcut sheet."
   },
   "editorFitToScreen": {
-    "message": "Ajustar à tela",
+    "message": "Ajustar página",
     "description": "Editor: Fit to screen command, used in the zoom menu and the shortcut sheet."
   },
   "editorCmdPan": {
@@ -2354,5 +2354,57 @@
   "errUnknown": {
     "message": "A captura falhou inesperadamente.",
     "description": "Capture error: unexpected failure."
+  },
+  "editorFitWidth": {
+    "message": "Ajustar à largura",
+    "description": "Editor toolbar label."
+  },
+  "editorMoreActions": {
+    "message": "Mais",
+    "description": "Editor toolbar label."
+  },
+  "settingsIntro": {
+    "message": "Personalize como você captura, salva e grava.",
+    "description": "Settings page label or helper."
+  },
+  "settingsAppearance": {
+    "message": "Aparência",
+    "description": "Settings page label or helper."
+  },
+  "settingsCapture": {
+    "message": "Captura",
+    "description": "Settings page label or helper."
+  },
+  "settingsFiles": {
+    "message": "Arquivos",
+    "description": "Settings page label or helper."
+  },
+  "settingsRecording": {
+    "message": "Gravação",
+    "description": "Settings page label or helper."
+  },
+  "settingsExpressHint": {
+    "message": "Desative para escolher um modo de captura a cada vez.",
+    "description": "Settings page label or helper."
+  },
+  "settingsAcrossSitesHint": {
+    "message": "Mantenha o destaque do cursor ativo quando uma aba mudar de site. Requer acesso a todos os sites.",
+    "description": "Settings page label or helper."
+  },
+  "settingsFilenamePreview": {
+    "message": "Prévia",
+    "description": "Settings page label or helper."
+  },
+  "captureOverlayTitle": {
+    "message": "Capturando tela…",
+    "description": "Capture overlay status."
+  },
+  "captureOverlayDetail": {
+    "message": "Mantenha esta aba aberta enquanto capturamos a página.",
+    "description": "Capture overlay status."
+  },
+  "captureOverlayFinishing": {
+    "message": "Finalizando captura…",
+    "description": "Capture overlay status."
   }
 }

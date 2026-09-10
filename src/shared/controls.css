@@ -10,8 +10,8 @@ input[type='checkbox'].switch {
   appearance: none;
   -webkit-appearance: none;
   position: relative;
-  width: 34px;
-  height: 20px;
+  width: 40px;
+  height: 24px;
   margin: 0;
   flex: 0 0 auto;
   border: 1px solid var(--border);
@@ -27,12 +27,12 @@ input[type='checkbox'].switch {
 input[type='checkbox'].switch::before {
   content: '';
   position: absolute;
-  top: var(--s-05);
-  left: var(--s-05);
-  width: 14px;
-  height: 14px;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
   border-radius: var(--r-full);
-  background: #fff;
+  background: var(--text-2);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
   transition: transform var(--dur-mid) var(--ease-out);
 }
@@ -44,7 +44,7 @@ input[type='checkbox'].switch:checked {
 
 input[type='checkbox'].switch:checked::before {
   background: var(--on-accent);
-  transform: translateX(14px);
+  transform: translateX(16px);
 }
 
 input[type='checkbox'].switch:active:not(:disabled) {

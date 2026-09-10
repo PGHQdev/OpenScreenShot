@@ -432,9 +432,12 @@ async function testPdfRealProgress(browser, base, messages) {
 
   await page.evaluate(() => {
     globalThis.__progressLog = [];
+    globalThis.__progressValues = [];
     const obs = new MutationObserver(() => {
-      const el = document.querySelector('.export-progress');
+      const el = document.querySelector('.modal .export-progress');
       if (el) globalThis.__progressLog.push(el.textContent);
+      const bar = document.querySelector('.modal .export-progress-bar');
+      if (bar) globalThis.__progressValues.push([bar.value, bar.max]);
     });
     obs.observe(document.querySelector('.modal'), {
       childList: true,
@@ -448,85 +451,71 @@ async function testPdfRealProgress(browser, base, messages) {
     getComputedStyle(document.documentElement).getPropertyValue('--accent-ink').trim(),
   );
   const sharp = createRequire(join(ROOT, 'package.json'))('sharp');
-  // A one-shot "screenshot the bar's filled region" — used once for real, once
-  // more below as a negative control with accent-color stripped live. Reads
-  // value/max fresh each call (not a stale rect from a previous call), since
-  // the export keeps racing forward between the two.
-  async function sampleFilledPixel() {
-    let found = null;
-    for (let i = 0; i < 200 && !found; i++) {
-      const state = await page.evaluate(() => {
-        const bar = document.querySelector('.export-progress-bar');
-        if (!bar) return null;
-        const r = bar.getBoundingClientRect();
-        return {
-          value: bar.value,
-          max: bar.max,
-          rect: { x: r.x, y: r.y, width: r.width, height: r.height },
-        };
-      });
-      if (state && state.value > 0 && state.value < state.max) {
-        const fillRatio = state.value / state.max;
-        const clip = {
-          x: Math.round(state.rect.x + state.rect.width * (fillRatio * 0.5) - 1),
-          y: Math.round(state.rect.y + state.rect.height / 2 - 1),
-          width: 3,
-          height: 3,
-        };
-        const buf = await page.screenshot({ clip });
-        const { data } = await sharp(buf).raw().toBuffer({ resolveWithObject: true });
-        found = [data[0], data[1], data[2]];
-      } else {
-        await new Promise((r) => setTimeout(r, 5));
-      }
-    }
-    return found;
+  // Take a stable paint sample of the actual progress control's markup and
+  // stylesheet. The live PDF keeps progressing while screenshots are captured;
+  // a frozen clone avoids sampling a moved/disappeared bar or its entrance fade.
+  async function sampleFilledPixel(accentOverride) {
+    await page.waitForSelector('.export-progress-bar, #progress-paint-sample');
+    const clip = await page.evaluate((override) => {
+      const source = document.querySelector('.export-progress-bar-track');
+      const sample = document.querySelector('#progress-paint-sample') ?? source.cloneNode(true);
+      sample.id = 'progress-paint-sample';
+      Object.assign(sample.style, { position: 'fixed', left: '8px', top: '8px', zIndex: '99999' });
+      if (override) sample.style.setProperty('--accent-ink', override);
+      const bar = sample.querySelector('progress');
+      bar.max = 1;
+      bar.value = 0.5;
+      document.body.append(sample);
+      const r = sample.getBoundingClientRect();
+      return {
+        x: Math.round(r.x + r.width / 4),
+        y: Math.round(r.y + r.height / 2),
+        width: 1,
+        height: 1,
+      };
+    }, accentOverride);
+    const buf = await page.screenshot({ clip });
+    const { data } = await sharp(buf).raw().toBuffer({ resolveWithObject: true });
+    return [data[0], data[1], data[2]];
   }
 
   await page.click('.modal-actions .btn-fixed-export');
-
-  // ::-webkit-progress-bar/-value are inert in this Chromium (verified by
-  // screenshot while building this fix — the rules match but nothing they
-  // declare paints); accent-color is the one that actually works here, and
-  // only for the filled portion (see editor.css's own comment on
-  // .export-progress-bar for what was tried and ruled out). accent-color
-  // styling on a native control is not a flat, exact-hex fill — Chromium
-  // shades it — so the check is the fill's hue direction (warm, red over
-  // blue, matching the coral token) against Chromium's own unstyled default
-  // fill (a cool blue, blue over red), not a close-enough hex match.
   const filledPixel = await sampleFilledPixel();
-  assert(
-    !!filledPixel,
-    'caught the bar with a genuine partial value and screenshotted its filled region',
-  );
   const accentRGB = hexToRGB(accentInk);
+  // Native progress shading changes luminance/saturation; compare hue instead
+  // of exact RGB, and require chroma so a gray track cannot pass.
+  const hue = ([r, g, b]) => {
+    const max = Math.max(r, g, b);
+    const delta = max - Math.min(r, g, b);
+    if (!delta) return NaN;
+    const sector =
+      max === r ? (g - b) / delta : max === g ? (b - r) / delta + 2 : (r - g) / delta + 4;
+    return (sector * 60 + 360) % 360;
+  };
+  const hueDelta = Math.abs(hue(filledPixel) - hue(accentRGB));
   assert(
-    filledPixel[0] > filledPixel[2],
-    `filled region (${filledPixel}) is warm (red > blue), matching --accent-ink (${accentInk} = ${accentRGB}) rather than Chromium's cool default fill`,
+    Math.min(hueDelta, 360 - hueDelta) < 15 &&
+      Math.max(...filledPixel) - Math.min(...filledPixel) > 20,
+    `progress fill (${filledPixel}) follows the theme action ink hue (${accentRGB})`,
   );
-
-  // Negative control: strip accent-color live (an inline style wins over the
-  // class rule) and confirm the same element's filled region actually
-  // flips hue direction back to Chromium's own default (cool blue) — proving
-  // the CSS is load-bearing, not coincidentally already the right colour.
-  await page.evaluate(() => {
-    document.querySelector('.export-progress-bar').style.setProperty('accent-color', 'auto');
-  });
-  const strippedPixel = await sampleFilledPixel();
-  if (strippedPixel) {
+  // Diagnostic override: a very different token must change the rendered fill.
+  // Unlike the former coral-vs-native-blue assertion, this remains meaningful
+  // when the product's action color itself is blue.
+  {
+    const overridePixel = await sampleFilledPixel('#ff0000');
     assert(
-      strippedPixel[2] > strippedPixel[0],
-      `negative control: stripping accent-color flips the filled pixel (${strippedPixel}, was ${filledPixel}) to cool (blue > red) — Chromium's own default, proving the token was doing real work`,
-    );
-  } else {
-    // The export finished before this second sample landed — the first,
-    // positive sample above still stands; nothing to assert here.
-    console.log(
-      '    (export finished before the negative-control sample — positive check above still holds)',
+      overridePixel[0] > overridePixel[1] + 40 && overridePixel[0] > overridePixel[2] + 40,
+      `overriding the token repaints the same progress control (${overridePixel})`,
     );
   }
 
+  await page.evaluate(() => document.querySelector('#progress-paint-sample')?.remove());
   await page.waitForFunction(() => !document.querySelector('.modal'), { timeout: 15000 });
+  const realValues = await page.evaluate(() => globalThis.__progressValues);
+  assert(
+    realValues.some(([value, max]) => value > 0 && value < max),
+    `the live progress element reports a genuine partial value (${JSON.stringify(realValues)})`,
+  );
 
   const log = await page.evaluate(() => {
     globalThis.__progressObs.disconnect();
@@ -773,7 +762,7 @@ async function testStageErrorRetryAndDismiss(browser, base, messages) {
   // Beautify lives in the Markup chrome now; in View the equivalent gate is
   // the Markup button itself.
   assert(
-    (await page.$eval('header .markup-btn', (el) => el.disabled)) === true,
+    (await page.$eval('.beautify-menu > button', (el) => el.disabled)) === true,
     'Markup is disabled with no image decoded',
   );
   await page.keyboard.down('Meta');
@@ -944,7 +933,7 @@ async function testPopoverTabDuringExit(browser, base, messages) {
   // BeautifyMenu: every control is a real tab stop (no tabIndex=-1 guard at
   // all), the more direct case of the same trap. It lives in the Markup
   // chrome, so enter Markup first — the editor opens in View.
-  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar .tool-btn');
   await page.waitForSelector('.toolbar');
   const beautifyTrigger = '.beautify-menu > .btn-secondary';
   await page.$eval(beautifyTrigger, (el) => el.focus());
@@ -1263,7 +1252,7 @@ async function testMultiSelection(browser, base, messages) {
   // The editor opens in View; this section drives the Markup chrome. Enter
   // it up front and let the mode-change refit and the canvas resize land
   // before any geometry is read or driven.
-  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar .tool-btn');
   await page.waitForSelector('.toolbar');
   await new Promise((r) => setTimeout(r, 350));
 
@@ -1425,27 +1414,37 @@ async function testMultiSelection(browser, base, messages) {
   await page.keyboard.press('Escape');
   await page.keyboard.press('v');
   await settle(60);
-  const box = await page.$eval('.stage-canvas', (el) => {
-    const r = el.getBoundingClientRect();
-    return { x: r.x, y: r.y, w: r.width, h: r.height };
-  });
-  await drag(box.x + 4, box.y + 4, box.x + box.w - 4, box.y + box.h - 4);
+  const readBox = () =>
+    page.$eval('.stage-canvas', (el) => {
+      const r = el.getBoundingClientRect();
+      return { x: r.x, y: r.y, w: r.width, h: r.height };
+    });
+  let box = await readBox();
+  // The workspace has rounded corners. Start inside its visible hit area,
+  // rather than the clipped 4px corner outside the canvas pointer target.
+  const inset = await page.$eval('.stage', (el) =>
+    Math.max(4, parseFloat(getComputedStyle(el).borderTopLeftRadius)),
+  );
+  await drag(box.x + inset, box.y + inset, box.x + box.w - inset, box.y + box.h - inset);
   assert(
     (await say()) === '4 of 4 annotations selected.',
     `a marquee over the whole stage caught every layer: "${await say()}"`,
   );
+  box = await readBox();
   // Negative control: the same gesture over an empty corner catches nothing,
   // so the reading above is the rect doing work rather than any drag
   // selecting everything.
-  await drag(box.x + 4, box.y + 4, box.x + 20, box.y + 20);
+  await drag(box.x + inset, box.y + inset, box.x + inset + 16, box.y + inset + 16);
   assert(
     (await say()) === 'Selection cleared.',
     `a marquee over empty stage caught nothing: "${await say()}"`,
   );
 
+  box = await readBox();
   step('task 24: shift-click adds a layer to the selection and takes it back out');
-  await drag(box.x + 4, box.y + 4, box.x + box.w - 4, box.y + box.h - 4);
+  await drag(box.x + inset, box.y + inset, box.x + box.w - inset, box.y + box.h - inset);
   assert((await say()) === '4 of 4 annotations selected.', 'four selected going in');
+  box = await readBox();
   const cx0 = box.x + box.w / 2;
   const cy0 = box.y + box.h / 2;
   await page.keyboard.down('Shift');
@@ -1537,6 +1536,9 @@ async function testMultiSelection(browser, base, messages) {
   await focusCanvas();
   await page.keyboard.press('Escape');
   await settle(80);
+  // Keep tool options present while comparing only the selection pixels.
+  await page.keyboard.press('r');
+  await settle(80);
   await baseline();
   const none = await chrome();
   assert(
@@ -1570,6 +1572,9 @@ async function testMultiSelection(browser, base, messages) {
     `and that set moved onto the box around both layers: the handles now span ${seedSpan(two)}px, against ${seedSpan(one)}px for the lone selection`,
   );
 
+  // Return to Select for the following handle drags; the selection keeps options visible.
+  await page.keyboard.press('v');
+  await settle(80);
   step('task 24: none of that selection chrome reaches an exported image');
   await chord(['Meta'], 's');
   await page.waitForSelector('.modal');
@@ -2152,7 +2157,7 @@ async function testCutTool(browser, base, messages) {
   // The editor opens in View; this section drives the Markup chrome. Enter
   // it up front and let the mode-change refit and the canvas resize land
   // before any geometry is read or driven.
-  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar .tool-btn');
   await page.waitForSelector('.toolbar');
   await new Promise((r) => setTimeout(r, 350));
 
@@ -2644,7 +2649,7 @@ async function testCutSelectionRules(browser, base, messages) {
   // The editor opens in View; this section drives the Markup chrome. Enter
   // it up front and let the mode-change refit and the canvas resize land
   // before any geometry is read or driven.
-  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar .tool-btn');
   await page.waitForSelector('.toolbar');
   await new Promise((r) => setTimeout(r, 350));
 
@@ -2835,7 +2840,7 @@ async function testCutGroupFrame(browser, base, messages) {
   // The editor opens in View; this section drives the Markup chrome. Enter
   // it up front and let the mode-change refit and the canvas resize land
   // before any geometry is read or driven.
-  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar .tool-btn');
   await page.waitForSelector('.toolbar');
   await new Promise((r) => setTimeout(r, 350));
 
@@ -3016,7 +3021,7 @@ async function testCutMixedSelectionGrab(browser, base, messages) {
   // The editor opens in View; this section drives the Markup chrome. Enter
   // it up front and let the mode-change refit and the canvas resize land
   // before any geometry is read or driven.
-  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar .tool-btn');
   await page.waitForSelector('.toolbar');
   await new Promise((r) => setTimeout(r, 350));
 
@@ -3162,7 +3167,7 @@ async function testCutInPdfExport(browser, base, messages) {
   // The editor opens in View; this section drives the Markup chrome. Enter
   // it up front and let the mode-change refit and the canvas resize land
   // before any geometry is read or driven.
-  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar .tool-btn');
   await page.waitForSelector('.toolbar');
   await new Promise((r) => setTimeout(r, 350));
   const settle = (ms = 150) => new Promise((r) => setTimeout(r, ms));
@@ -3233,8 +3238,8 @@ async function testCutInPdfExport(browser, base, messages) {
     `the PDF lost pages with the picture: ${before.pages} -> ${after.pages}, the picture down ${Math.round(shrink * 100)}%`,
   );
   assert(
-    after.pages === Math.ceil(before.pages * (Number(cut[2]) / 6000)) ||
-      after.pages === Math.ceil(before.pages * (Number(cut[2]) / 6000)) + 1,
+    Math.abs(after.pages - before.pages * (Number(cut[2]) / 6000)) <= 1,
+    // Both page counts include a rounded-up final page, so allow one page either way.
     `and lost about the right number: ${after.pages} pages for ${cut[2]} of 6000 rows, against ${before.pages} for the whole`,
   );
 
@@ -3303,7 +3308,7 @@ async function testCutDraftRestore(browser, base, messages) {
   await legacy.page.click('.draft-restore .btn-primary');
   await settle(400);
   // The layer count sits in the rail, which is Markup chrome.
-  await legacy.page.click('header .markup-btn');
+  await legacy.page.waitForSelector('.toolbar .tool-btn');
   await legacy.page.waitForSelector('.toolbar');
   const count = await legacy.page.$eval('.toolbar-count span', (el) => el.textContent);
   assert(count === '1', `and it restores its annotation (${count})`);
@@ -3330,7 +3335,7 @@ async function testBeautifyLooks(browser, base, messages) {
   await page.goto(`${base}${PAGE}`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900));
-  await page.click('header .markup-btn'); // Beautify lives in the Markup chrome
+  await page.waitForSelector('.toolbar .tool-btn'); // Beautify lives in the Markup chrome
   await page.waitForSelector('.toolbar');
 
   const settle = (ms = 150) => new Promise((r) => setTimeout(r, ms));
@@ -3423,7 +3428,7 @@ async function testBeautifyLooks(browser, base, messages) {
   await clickLook('Poster');
   const posterSliders = await sliders();
   assert(
-    JSON.stringify(posterSliders) === JSON.stringify({ Padding: 70, Corners: 55, Shadow: 80 }),
+    JSON.stringify(posterSliders) === JSON.stringify({ Spacing: 70, Corners: 55, Shadow: 80 }),
     `Poster moved all three sliders at once (${JSON.stringify(posterSliders)})`,
   );
   const swatch = await page.evaluate(() =>
@@ -3438,7 +3443,7 @@ async function testBeautifyLooks(browser, base, messages) {
   );
 
   step('task 26: moving a slider afterwards leaves the look chosen, and marks it modified');
-  await setSlider('Padding', 33);
+  await setSlider('Spacing', 33);
   await settle();
   const adjusted = (await looks()).find((l) => l.label === 'Poster');
   assert(adjusted.pressed, 'Poster is still the chosen look after the padding moved');
@@ -3460,7 +3465,7 @@ async function testBeautifyLooks(browser, base, messages) {
   );
 
   step('task 26: moving it back clears the mark — modified is a comparison, not a flag');
-  await setSlider('Padding', 70);
+  await setSlider('Spacing', 70);
   await settle();
   const restored = (await looks()).find((l) => l.label === 'Poster');
   assert(restored.pressed && !restored.modified, 'Poster reads as unmodified again');
@@ -3496,7 +3501,7 @@ async function testBeautifyLooks(browser, base, messages) {
   await page.click('.beautify-menu > .btn-secondary');
   await page.waitForSelector('.beautify-popover', { timeout: 5000 });
   await settle();
-  await setSlider('Padding', 33);
+  await setSlider('Spacing', 33);
   await new Promise((r) => setTimeout(r, 1200)); // past DRAFT_DEBOUNCE_MS
   const stored = await page.evaluate(async () => ({
     draft: (await chrome.storage.local.get('openscreenshot:draft'))['openscreenshot:draft'] ?? null,
@@ -3528,7 +3533,7 @@ async function testBeautifyLooks(browser, base, messages) {
   await back.waitForSelector('.draft-restore', { timeout: 5000 });
   await back.click('.draft-restore .btn-primary');
   await settle(400);
-  await back.click('header .markup-btn');
+  await back.waitForSelector('.toolbar .tool-btn');
   await back.waitForSelector('.toolbar');
   await back.click('.beautify-menu > .btn-secondary');
   await back.waitForSelector('.beautify-popover', { timeout: 5000 });
@@ -3538,7 +3543,7 @@ async function testBeautifyLooks(browser, base, messages) {
     afterRestore.pressed && afterRestore.modified,
     'the restored frame is Poster, modified — the id survived the crash, not just the numbers',
   );
-  const restoredPadding = await back.$eval('.beautify-popover .range[aria-label="Padding"]', (el) =>
+  const restoredPadding = await back.$eval('.beautify-popover .range[aria-label="Spacing"]', (el) =>
     Number(el.value),
   );
   assert(restoredPadding === 33, `with the adjustment intact (padding ${restoredPadding})`);
@@ -3582,7 +3587,7 @@ async function testBeautifyLooks(browser, base, messages) {
     (await fresh.$('.draft-restore')) === null,
     'no draft is offered on this page — the settings are carrying it alone',
   );
-  await fresh.click('header .markup-btn');
+  await fresh.waitForSelector('.toolbar .tool-btn');
   await fresh.waitForSelector('.toolbar');
   await fresh.click('.beautify-menu > .btn-secondary');
   await fresh.waitForSelector('.beautify-popover', { timeout: 5000 });
@@ -3620,7 +3625,7 @@ async function testCropHandlesAndUndo(browser, base, messages) {
   // The editor opens in View; this section drives the Markup chrome. Enter
   // it up front and let the mode-change refit and the canvas resize land
   // before any geometry is read or driven.
-  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar .tool-btn');
   await page.waitForSelector('.toolbar');
   await new Promise((r) => setTimeout(r, 350));
 
@@ -4091,8 +4096,8 @@ async function testCaptureHistoryShelf(browser, base, messages) {
   await page.waitForSelector('.stage-canvas[aria-label*="400 by 300"]', { timeout: 5000 });
 
   step('task 28: opening the shelf lists both seeded entries, thumbnails included');
-  await page.click('button[title="Capture history"]');
-  await page.waitForSelector('.modal[aria-label="Capture history"]');
+  await page.click('button[title="History"]');
+  await page.waitForSelector('.modal[aria-label="History"]');
   // The row list loads async (listCaptureHistory reads storage) — wait for
   // it, rather than reading the modal's still-empty first render.
   await page.waitForSelector('.history-row', { timeout: 5000 });
@@ -4175,12 +4180,12 @@ async function testCaptureHistoryShelf(browser, base, messages) {
   // Row order follows the seeded array: index 0 = green (newest), index 1 =
   // blue (older) — nth-child is 1-based.
   await page.click('.history-row:nth-child(2) .history-row-actions button:first-child');
-  await page.waitForFunction(() => !document.querySelector('.modal[aria-label="Capture history"]'));
+  await page.waitForFunction(() => !document.querySelector('.modal[aria-label="History"]'));
   await page.waitForSelector('.stage-canvas[aria-label*="800 by 600"]', { timeout: 5000 });
 
   step('task 28: Delete needs a second click to confirm, then removes the row');
-  await page.click('button[title="Capture history"]');
-  await page.waitForSelector('.modal[aria-label="Capture history"]');
+  await page.click('button[title="History"]');
+  await page.waitForSelector('.modal[aria-label="History"]');
   const deleteBtn = '.history-row:nth-child(1) .history-delete-btn';
   await page.waitForSelector(deleteBtn, { timeout: 5000 });
   await page.click(deleteBtn);
@@ -4201,9 +4206,9 @@ async function testCaptureHistoryShelf(browser, base, messages) {
 
   step('task 28: Escape closes the shelf and returns focus to its trigger');
   await page.keyboard.press('Escape');
-  await page.waitForFunction(() => !document.querySelector('.modal[aria-label="Capture history"]'));
+  await page.waitForFunction(() => !document.querySelector('.modal[aria-label="History"]'));
   const onTrigger = await page.evaluate(
-    () => document.activeElement === document.querySelector('button[title="Capture history"]'),
+    () => document.activeElement === document.querySelector('button[title="History"]'),
   );
   assert(onTrigger, 'focus returns to the History trigger on Escape');
 
@@ -4240,7 +4245,7 @@ async function testCaptureHistoryShelf(browser, base, messages) {
  *     tests/unit/pin.test.ts stubs for the same branch.
  */
 async function testPinToFloatingWindow(browser, base, messages) {
-  const pinBtn = 'button[aria-label="Pin in a floating window"]';
+  const pinBtn = `button[aria-label="${messages.editorPinLabel.message}"]`;
 
   step('task 29: the Pin button is absent when Document Picture-in-Picture is unavailable');
   {
@@ -4320,7 +4325,7 @@ async function testPinToFloatingWindow(browser, base, messages) {
 
   step('task 29: the pinned window redraws live as the capture is edited');
   // The tool rail is Markup chrome; the pin itself was driven from View.
-  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar .tool-btn');
   await page.waitForSelector('.toolbar');
   await new Promise((r) => setTimeout(r, 350)); // mode-change refit
   await page.click('button[title^="Rectangle"]');
@@ -4410,7 +4415,7 @@ async function testBlurStrength(browser, base, messages) {
   // The editor opens in View; this section drives the Markup chrome. Enter
   // it up front and let the mode-change refit and the canvas resize land
   // before any geometry is read or driven.
-  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar .tool-btn');
   await page.waitForSelector('.toolbar');
   await new Promise((r) => setTimeout(r, 350));
 
@@ -4529,7 +4534,7 @@ async function testBlurStrength(browser, base, messages) {
   step(
     'task 30: Solid redaction has no strength — the slider disables rather than lying about one',
   );
-  await page.click('.stylebar .segmented-btn[title="Opaque fill — nothing survives"]');
+  await page.click(`.stylebar .segmented-btn[title="${messages.editorBlurModeSolidHint.message}"]`);
   await settle(80);
   assert(
     await page.$eval(strengthInput, (el) => el.disabled),
@@ -4562,7 +4567,7 @@ async function testAnnotationClipMatchesExport(browser, base, messages) {
   // The editor opens in View; this section drives the Markup chrome. Enter
   // it up front and let the mode-change refit and the canvas resize land
   // before any geometry is read or driven.
-  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar .tool-btn');
   await page.waitForSelector('.toolbar');
   await new Promise((r) => setTimeout(r, 350));
 
@@ -4610,6 +4615,10 @@ async function testAnnotationClipMatchesExport(browser, base, messages) {
         a.data[i + 3] !== b.data[i + 3],
     );
 
+  // Compare annotation pixels with the same contextual layout in every snapshot.
+  await page.$eval('.stage-canvas', (el) => el.focus());
+  await page.keyboard.press('r');
+  await new Promise((r) => setTimeout(r, 150));
   const before = await snap();
   const image = matchBox(before, (r, g, b) => r === 60 && g === 110 && b === 190);
   assert(image, 'found the solid-colour image footprint in the preview');
@@ -4675,7 +4684,7 @@ async function testStrokeWidthPreviewDistinct(browser, base, messages) {
   // The editor opens in View; this section drives the Markup chrome. Enter
   // it up front and let the mode-change refit and the canvas resize land
   // before any geometry is read or driven.
-  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar .tool-btn');
   await page.waitForSelector('.toolbar');
   await new Promise((r) => setTimeout(r, 350));
 
@@ -4824,47 +4833,27 @@ async function main() {
     assert(region.hidden === null && region.display !== 'none', 'not hidden from the a11y tree');
     assert(region.text === '', 'empty at rest, so the first message is a change');
 
-    step('the style bar renders for every tool at a fixed height — no tool swap moves the canvas');
-    // task-16's report measured a real ~39px pump on this exact loop, back
-    // when .stylebar unmounted for Select/Crop and had no min-height. The
-    // property under test is "0px", not today's pixel height (task-16
-    // review) — a future deliberate restyle should not have to come back
-    // here and edit a pinned number.
+    step('tool options only occupy space when the selected tool has options');
     const rectOf = (sel) =>
       page.evaluate((s) => document.querySelector(s).getBoundingClientRect().toJSON(), sel);
-    const barHeights = {};
-    for (const t of ['V', 'R', 'A', 'L', 'P', 'H', 'T', 'S', 'B', 'O', 'I', 'C']) {
-      await page.keyboard.press(t);
+    for (const tool of ['V', 'R', 'A', 'L', 'P', 'H', 'T', 'S', 'B', 'O', 'I', 'C']) {
+      await page.keyboard.press(tool);
       await settle(60);
-      const h = await page.evaluate(() => {
-        const bar = document.querySelector('.stylebar');
-        return bar ? bar.getBoundingClientRect().height : null;
-      });
-      barHeights[t] = h;
-      assert(h !== null, `.stylebar is rendered for tool "${t}" (not unmounted)`);
+      const bar = await page.$('.stylebar');
+      assert(
+        ['V', 'C'].includes(tool) ? bar === null : bar !== null,
+        `tool ${tool} shows options only when they apply`,
+      );
     }
-    console.log(`    style bar height per tool: ${JSON.stringify(barHeights)}`);
-    const heightSet = new Set(Object.values(barHeights));
-    assert(
-      heightSet.size === 1,
-      `every tool renders the style bar at the same height (saw: ${[...heightSet].join(', ')})`,
-    );
     await page.keyboard.press('V');
     await settle(60);
-    const canvasV1 = await rectOf('.stage-canvas');
+    const canvasV = await rectOf('.stage-canvas');
     await page.keyboard.press('R');
     await settle(60);
     const canvasR = await rectOf('.stage-canvas');
-    await page.keyboard.press('V');
-    await settle(60);
-    const canvasV2 = await rectOf('.stage-canvas');
     assert(
-      canvasR.top === canvasV1.top && canvasR.height === canvasV1.height,
-      `V -> R does not move the canvas (top ${canvasV1.top} -> ${canvasR.top}, height ${canvasV1.height} -> ${canvasR.height})`,
-    );
-    assert(
-      canvasV2.top === canvasV1.top && canvasV2.height === canvasV1.height,
-      `V -> R -> V moves the canvas by 0px (top delta ${canvasV2.top - canvasV1.top}, height delta ${canvasV2.height - canvasV1.height})`,
+      canvasV.height > canvasR.height,
+      'Select gives the empty options bar space back to the canvas',
     );
 
     step('each toolbar is one roving tab stop, and the stop follows the arrow keys');

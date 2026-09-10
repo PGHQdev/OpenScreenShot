@@ -656,11 +656,11 @@
     "description": "Recorder page: label of the toggle that hides the webcam bubble."
   },
   "recorderBeautify": {
-    "message": "Beautify",
+    "message": "Frame",
     "description": "Recorder page: label of the toggle that frames the export in padding, corners, shadow, and a background."
   },
   "recorderBeautifyPadding": {
-    "message": "Padding",
+    "message": "Spacing",
     "description": "Recorder page: label of the beautify frame's padding slider."
   },
   "recorderBeautifyCorners": {
@@ -1306,7 +1306,7 @@
     "description": "Editor tool rail: the Spotlight tool."
   },
   "editorToolEyedropper": {
-    "message": "Eyedropper",
+    "message": "Pick color",
     "description": "Editor tool rail: the Eyedropper tool."
   },
   "editorToolCrop": {
@@ -1334,11 +1334,11 @@
     "description": "Editor status bar hint for the Pen tool."
   },
   "editorHintHighlight": {
-    "message": "Drag to highlight — marker stays translucent",
+    "message": "Drag to highlight text or an area.",
     "description": "Editor status bar hint for the Highlighter tool."
   },
   "editorHintStep": {
-    "message": "Click to place a numbered badge · numbers stay in order",
+    "message": "Click to add a step number.",
     "description": "Editor status bar hint for the Step number tool."
   },
   "editorHintText": {
@@ -1346,7 +1346,7 @@
     "description": "Editor status bar hint for the Text tool."
   },
   "editorHintBlur": {
-    "message": "Drag over an area to redact it · pick Blur, Mosaic, or Solid above",
+    "message": "Drag over an area to hide it. Choose blur, blocks, or a solid color.",
     "description": "Editor status bar hint for the Blur tool."
   },
   "editorHintSpotlight": {
@@ -1358,11 +1358,11 @@
     "description": "Editor status bar hint for the Crop tool."
   },
   "editorHintCut": {
-    "message": "Drag over a band to take it out · click a seam to put it back · nothing is erased",
+    "message": "Drag across a section to remove it. Click the cut to restore it.",
     "description": "Editor status bar hint for the Cut tool."
   },
   "editorHintEyedropper": {
-    "message": "Click any pixel to take its color · the previous tool comes back",
+    "message": "Click a color to use it, then keep editing.",
     "description": "Editor status bar hint for the Eyedropper tool."
   },
   "editorHintSelect": {
@@ -1374,11 +1374,11 @@
     "description": "Editor style bar: tooltip for the Blur redaction mode."
   },
   "editorBlurModeMosaic": {
-    "message": "Mosaic",
+    "message": "Blocks",
     "description": "Editor style bar: the Mosaic redaction mode."
   },
   "editorBlurModeMosaicHint": {
-    "message": "Coarse blocks — survives recompression",
+    "message": "Cover the area with large pixels.",
     "description": "Editor style bar: tooltip for the Mosaic redaction mode."
   },
   "editorBlurModeSolid": {
@@ -1386,7 +1386,7 @@
     "description": "Editor style bar: the Solid redaction mode."
   },
   "editorBlurModeSolidHint": {
-    "message": "Opaque fill — nothing survives",
+    "message": "Cover the area with a solid color.",
     "description": "Editor style bar: tooltip for the Solid redaction mode."
   },
   "editorShapeRounded": {
@@ -1394,7 +1394,7 @@
     "description": "Editor style bar: the Rounded spotlight shape."
   },
   "editorShapeEllipse": {
-    "message": "Ellipse",
+    "message": "Oval",
     "description": "Editor style bar: the Ellipse spotlight shape."
   },
   "editorStyleColor": {
@@ -1402,7 +1402,7 @@
     "description": "Editor style bar: the color field group label."
   },
   "editorStyleStroke": {
-    "message": "Stroke",
+    "message": "Line width",
     "description": "Editor style bar: the stroke-width field group label."
   },
   "editorStyleShape": {
@@ -1410,7 +1410,7 @@
     "description": "Editor style bar: the spotlight-shape field group label."
   },
   "editorStyleRedaction": {
-    "message": "Redaction",
+    "message": "Hide area",
     "description": "Editor style bar: the redaction-mode field group label."
   },
   "editorStyleStrength": {
@@ -1450,11 +1450,11 @@
     "description": "Editor style bar: title/accessible label for the screen color-picker button."
   },
   "editorAriaAnnotationStyle": {
-    "message": "Annotation style",
+    "message": "Tool options",
     "description": "Editor: accessible label for the style bar toolbar."
   },
   "editorAriaAnnotationTools": {
-    "message": "Annotation tools",
+    "message": "Editing tools",
     "description": "Editor: accessible label for the tool rail."
   },
   "editorAriaDocumentActions": {
@@ -1486,7 +1486,7 @@
     "description": "Editor topbar: accessible label for the delete-selection button. Also its name in the shortcut sheet."
   },
   "editorCaptureHistory": {
-    "message": "Capture history",
+    "message": "History",
     "description": "Editor: title/accessible label for the History button, and the history sheet’s dialog title."
   },
   "editorPinTitle": {
@@ -1494,7 +1494,7 @@
     "description": "Editor topbar: tooltip for the Pin button."
   },
   "editorPinLabel": {
-    "message": "Pin in a floating window",
+    "message": "Pin",
     "description": "Editor topbar: accessible label for the Pin button."
   },
   "editorShortcutsTitle": {
@@ -1502,7 +1502,7 @@
     "description": "Editor topbar: tooltip for the shortcut-sheet button."
   },
   "editorShortcutsLabel": {
-    "message": "Keyboard shortcuts",
+    "message": "Shortcuts",
     "description": "Editor: accessible label for the shortcut-sheet button, and the sheet’s own dialog title."
   },
   "editorCopyIdle": {
@@ -1526,7 +1526,7 @@
     "description": "Editor: the Export button/dialog title, and its name in the shortcut sheet."
   },
   "editorMarkup": {
-    "message": "Markup",
+    "message": "Edit",
     "description": "Editor topbar (View mode): button that opens the Markup chrome."
   },
   "editorFitHint": {
@@ -1538,7 +1538,7 @@
     "description": "Editor topbar (Markup mode): button that returns to View."
   },
   "editorViewHint": {
-    "message": "Markup to annotate. Copy, PDF, or Save when you are done.",
+    "message": "Edit your screenshot, then copy or save it.",
     "description": "Editor status bar (View mode): the one-line hint under the fitted capture."
   },
   "editorSaveImage": {
@@ -1944,7 +1944,7 @@
     "description": "Editor: Actual size (100%) command, used in the zoom menu and the shortcut sheet."
   },
   "editorFitToScreen": {
-    "message": "Fit to screen",
+    "message": "Fit page",
     "description": "Editor: Fit to screen command, used in the zoom menu and the shortcut sheet."
   },
   "editorCmdPan": {
@@ -1952,7 +1952,7 @@
     "description": "Editor shortcut sheet: command row."
   },
   "editorCmdThisSheet": {
-    "message": "This sheet",
+    "message": "Show shortcuts",
     "description": "Editor shortcut sheet: command row naming the shortcut sheet itself."
   },
   "editorZoomTitle": {
@@ -2040,7 +2040,7 @@
     "description": "Editor export dialog: the PNG format card’s name."
   },
   "editorFormatPngHint": {
-    "message": "Lossless · transparency",
+    "message": "Best quality · transparent background",
     "description": "Editor export dialog: the PNG format card’s hint."
   },
   "editorFormatJpegLabel": {
@@ -2048,7 +2048,7 @@
     "description": "Editor export dialog: the JPEG format card’s name."
   },
   "editorFormatJpegHint": {
-    "message": "Smaller · no transparency",
+    "message": "Smaller file · solid background",
     "description": "Editor export dialog: the JPEG format card’s hint."
   },
   "editorFormatWebpLabel": {
@@ -2056,7 +2056,7 @@
     "description": "Editor export dialog: the WebP format card’s name."
   },
   "editorFormatWebpHint": {
-    "message": "Modern · small + quality",
+    "message": "Small file · high quality",
     "description": "Editor export dialog: the WebP format card’s hint."
   },
   "editorBgInk": {
@@ -2088,7 +2088,7 @@
     "description": "Editor beautify menu: the Clean look."
   },
   "editorLookCleanHint": {
-    "message": "The shipped default: a soft dark card.",
+    "message": "A simple frame with a soft shadow.",
     "description": "Editor beautify menu: tooltip for the Clean look."
   },
   "editorLookAiryLabel": {
@@ -2096,7 +2096,7 @@
     "description": "Editor beautify menu: the Airy look."
   },
   "editorLookAiryHint": {
-    "message": "A small crop given room to fill a wide slot.",
+    "message": "Extra space around your screenshot.",
     "description": "Editor beautify menu: tooltip for the Airy look."
   },
   "editorLookSnugLabel": {
@@ -2104,7 +2104,7 @@
     "description": "Editor beautify menu: the Snug look."
   },
   "editorLookSnugHint": {
-    "message": "A tall screenshot in a narrow column.",
+    "message": "A close-fitting frame.",
     "description": "Editor beautify menu: tooltip for the Snug look."
   },
   "editorLookFlatLabel": {
@@ -2112,7 +2112,7 @@
     "description": "Editor beautify menu: the Flat look."
   },
   "editorLookFlatHint": {
-    "message": "Square and shadowless, for docs and print.",
+    "message": "Square corners with no shadow.",
     "description": "Editor beautify menu: tooltip for the Flat look."
   },
   "editorLookPosterLabel": {
@@ -2120,7 +2120,7 @@
     "description": "Editor beautify menu: the Poster look."
   },
   "editorLookPosterHint": {
-    "message": "A hero shot: deep corners, strong lift.",
+    "message": "Rounded corners with a deep shadow.",
     "description": "Editor beautify menu: tooltip for the Poster look."
   },
   "editorLookCutoutLabel": {
@@ -2128,19 +2128,19 @@
     "description": "Editor beautify menu: the Cutout look."
   },
   "editorLookCutoutHint": {
-    "message": "Shadow on transparency, to drop onto any page.",
+    "message": "A shadow with no background.",
     "description": "Editor beautify menu: tooltip for the Cutout look."
   },
   "editorBeautify": {
-    "message": "Beautify",
+    "message": "Frame",
     "description": "Editor: the Beautify menu’s trigger button, popover label, and on/off toggle text."
   },
   "editorBeautifyTitle": {
-    "message": "Beautify: padding, corners, shadow, background",
+    "message": "Frame: spacing, corners, shadow, and background",
     "description": "Editor: tooltip for the Beautify menu trigger."
   },
   "editorLook": {
-    "message": "Look",
+    "message": "Preset",
     "description": "Editor beautify menu: the Look field group label."
   },
   "editorLookModifiedSuffix": {
@@ -2154,7 +2154,7 @@
     }
   },
   "editorPadding": {
-    "message": "Padding",
+    "message": "Spacing",
     "description": "Editor beautify menu: accessible label / field label for the padding slider."
   },
   "editorCorners": {
@@ -2354,5 +2354,57 @@
   "errUnknown": {
     "message": "Capture failed unexpectedly.",
     "description": "Capture error: unexpected failure."
+  },
+  "editorFitWidth": {
+    "message": "Fit width",
+    "description": "Editor toolbar label."
+  },
+  "editorMoreActions": {
+    "message": "More",
+    "description": "Editor toolbar label."
+  },
+  "settingsIntro": {
+    "message": "Customize how you capture, save, and record.",
+    "description": "Settings page label or helper."
+  },
+  "settingsAppearance": {
+    "message": "Appearance",
+    "description": "Settings page label or helper."
+  },
+  "settingsCapture": {
+    "message": "Capture",
+    "description": "Settings page label or helper."
+  },
+  "settingsFiles": {
+    "message": "Files",
+    "description": "Settings page label or helper."
+  },
+  "settingsRecording": {
+    "message": "Recording",
+    "description": "Settings page label or helper."
+  },
+  "settingsExpressHint": {
+    "message": "Turn off to choose a capture mode each time.",
+    "description": "Settings page label or helper."
+  },
+  "settingsAcrossSitesHint": {
+    "message": "Keep the cursor overlay active when a tab changes site. Requires access to all sites.",
+    "description": "Settings page label or helper."
+  },
+  "settingsFilenamePreview": {
+    "message": "Preview",
+    "description": "Settings page label or helper."
+  },
+  "captureOverlayTitle": {
+    "message": "Capturing screenshot…",
+    "description": "Capture overlay status."
+  },
+  "captureOverlayDetail": {
+    "message": "Keep this tab open while we capture your page.",
+    "description": "Capture overlay status."
+  },
+  "captureOverlayFinishing": {
+    "message": "Finishing screenshot…",
+    "description": "Capture overlay status."
   }
 }

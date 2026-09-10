@@ -146,20 +146,6 @@ import { exportPdf as exportPdfFile, type PdfExportProgress, type PdfOptions } f
 import { resampleToWidth } from './scale';
 import { t } from './i18n';
 
-/**
- * The editor's two chrome states. View is the first screen — the fitted
- * capture with Copy/PDF/Save alone — and Markup is the full annotation
- * chrome. Edits persist across the switch; only the chrome changes.
- */
-export type EditorMode = 'view' | 'markup';
-
-/**
- * Below this fitted zoom, a freshly opened capture says out loud that it is
- * fitted. A full page stitched from ten viewports lands near 10%, which looks
- * like a thumbnail of a failed capture until something names it.
- */
-const SMALL_FIT_ZOOM = 0.5;
-
 export interface TextOverlayPos {
   x: number;
   y: number;
@@ -264,12 +250,7 @@ export function useEditor() {
   // permanently mounted node, so every write here is a text change inside a
   // region assistive tech is already watching.
   const [announcement, setAnnouncement] = useState('');
-  // View is the first screen: the capture fitted, no tool rail, no style bar.
-  // Markup is opt-in via the header button, a tool shortcut, or Escape back.
-  const [mode, setMode] = useState<EditorMode>('view');
-
-  // Refs for use inside stable event handlers (avoid stale closures).
-  const modeRef = useRef<EditorMode>('view');
+  // Refs for stable event handlers.
   const toolRef = useRef(tool);
   const spaceRef = useRef(false);
   const draftRef = useRef<Annotation | null>(null);
@@ -525,14 +506,6 @@ export function useEditor() {
   useEffect(() => {
     controllerRef.current?.setAnnotations(annotations);
   }, [annotations]);
-
-  // Re-fit whenever the chrome changes shape: Markup adds the rail and the
-  // style bar, View takes them away, and a view carried across that resize
-  // is neither fitted nor centred any more. Runs after the commit, so the
-  // canvas rect it reads is the new layout's.
-  useEffect(() => {
-    controllerRef.current?.fit();
-  }, [mode]);
 
   const frameRef = useRef(frame);
   // Sync the beautify frame to the controller, and to a ref for the draft flush.
@@ -975,13 +948,6 @@ export function useEditor() {
         img.onerror = () => reject(new Error('decode'));
         img.src = cap.dataUrl;
       });
-      // A stitched full page is many viewports tall, so fitting it lands the
-      // view at a small fraction of actual size. That is the fit working, and
-      // it still reads as a broken capture the first time you see it. Say what
-      // happened rather than opening at 100% on a corner of the image. The
-      // functional form keeps the one-time express note, which writes the same
-      // pill and matters more, whichever of the two resolves first.
-      if (c.view.zoom < SMALL_FIT_ZOOM) setStageNotice((cur) => cur ?? t('editorFitHint'));
       setLoading(false);
     } catch (err) {
       setError(
@@ -1029,7 +995,7 @@ export function useEditor() {
     });
   }, []);
 
-  // Wheel zoom (non-passive so we can preventDefault trackpad scroll).
+  // Scroll through the screenshot; Ctrl/Command+wheel and trackpad pinch zoom.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -1037,7 +1003,12 @@ export function useEditor() {
       e.preventDefault();
       const c = controllerRef.current;
       if (!c) return;
-      c.zoomAt(e.deltaY < 0 ? 1.1 : 1 / 1.1, e.offsetX, e.offsetY);
+      if (e.ctrlKey || e.metaKey) {
+        if (e.deltaY !== 0) c.zoomAt(e.deltaY < 0 ? 1.1 : 1 / 1.1, e.offsetX, e.offsetY);
+      } else {
+        const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? canvas.clientHeight : 1;
+        c.scrollBy((e.shiftKey ? e.deltaY : e.deltaX) * unit, e.shiftKey ? 0 : e.deltaY * unit);
+      }
     };
     canvas.addEventListener('wheel', onWheel, { passive: false });
     return () => canvas.removeEventListener('wheel', onWheel);
@@ -1054,6 +1025,8 @@ export function useEditor() {
 
   const zoomIn = useCallback(() => zoomAtCenter(1.25), [zoomAtCenter]);
   const zoomOut = useCallback(() => zoomAtCenter(1 / 1.25), [zoomAtCenter]);
+  const syncViewport = useCallback(() => controllerRef.current?.resize(), []);
+  const fitWidth = useCallback(() => controllerRef.current?.fitWidth(), []);
   const fit = useCallback(() => controllerRef.current?.fit(), []);
   const resetZoom = useCallback(() => controllerRef.current?.resetZoom(), []);
   // Absolute zoom about the viewport centre — the zoom menu's 50%/25% presets.
@@ -1141,7 +1114,7 @@ export function useEditor() {
         }
       }
       // Escape backs out one level at a time: cancel a crop or a cut, else
-      // deselect, else put a drawing tool down, else leave Markup for View.
+      // deselect, else return to Select. The editing tools stay available.
       if (e.key === 'Escape') {
         if (cropDraftRef.current) {
           cancelCrop();
@@ -1156,16 +1129,11 @@ export function useEditor() {
         } else if (toolRef.current !== 'select') {
           selectTool('select');
           e.preventDefault();
-        } else if (modeRef.current === 'markup') {
-          exitMarkup();
-          e.preventDefault();
         }
         return;
       }
       if (isMod(e) || e.altKey) return;
-      // Number keys pick a palette colour, in swatch order. Not gated to
-      // Markup: the colour is only read when a drawing tool is used, and the
-      // tool letters that arm one open Markup themselves.
+      // Number keys pick a palette colour, in swatch order.
       if (/^[1-9]$/.test(e.key)) {
         const color = COLOR_PALETTE[Number(e.key) - 1];
         if (color) {
@@ -1174,14 +1142,9 @@ export function useEditor() {
           return;
         }
       }
-      // Tool shortcuts. A tool letter in View is an explicit ask to annotate,
-      // so it brings the Markup chrome with it.
+      // Tool shortcuts are always available.
       const t = TOOL_LIST.find((x) => x.shortcut === e.key.toUpperCase());
       if (t) {
-        if (modeRef.current === 'view') {
-          modeRef.current = 'markup';
-          setMode('markup');
-        }
         selectTool(t.id);
         e.preventDefault();
       }
@@ -1600,9 +1563,8 @@ export function useEditor() {
       const rect = c.canvas.getBoundingClientRect();
       const sx = e.clientX - rect.left;
       const sy = e.clientY - rect.top;
-      // Middle button or Space+left = pan. In View mode every left drag pans:
-      // the capture is the product there, and nothing on it is selectable.
-      if (e.button === 1 || (e.button === 0 && (spaceRef.current || modeRef.current === 'view'))) {
+      // Middle button or Space+left = pan.
+      if (e.button === 1 || (e.button === 0 && spaceRef.current)) {
         e.preventDefault();
         interactionRef.current = { kind: 'pan', lastX: e.clientX, lastY: e.clientY };
         window.addEventListener('mousemove', onDragMove);
@@ -1825,7 +1787,7 @@ export function useEditor() {
   const onCanvasDoubleClick = useCallback(
     (e: MouseEvent) => {
       const c = controllerRef.current;
-      if (!c || !c.image || modeRef.current === 'view' || toolRef.current !== 'select') return;
+      if (!c || !c.image || toolRef.current !== 'select') return;
       const rect = c.canvas.getBoundingClientRect();
       const hit = hitTestAnnotation(
         c,
@@ -2048,9 +2010,6 @@ export function useEditor() {
     (e: KeyboardEvent) => {
       const c = controllerRef.current;
       if (!c || !c.image) return;
-      // View mode: the canvas is a picture, not a document. A tool letter
-      // (window handler above) is the keyboard way into Markup.
-      if (modeRef.current === 'view') return;
       const mode: CanvasMode = cropDraftRef.current
         ? 'crop'
         : cutDraftRef.current
@@ -2450,29 +2409,6 @@ export function useEditor() {
   const cancelImport = useCallback(() => setPendingImport(null), []);
   const dismissStageNotice = useCallback(() => setStageNotice(null), []);
 
-  // --- View / Markup ---
-  /** Open the Markup chrome with the pointer tool armed. */
-  const enterMarkup = useCallback(() => {
-    modeRef.current = 'markup';
-    setMode('markup');
-    selectTool('select');
-  }, [selectTool]);
-
-  /**
-   * Done: back to View. Open drafts go with the chrome that shows them — a
-   * crop rect or cut band left pending would keep a confirm pill over a
-   * screen that no longer offers the tool — and the selection clears because
-   * View paints no handles.
-   */
-  const exitMarkup = useCallback(() => {
-    if (cropDraftRef.current) cancelCrop();
-    if (cutDraftRef.current) cancelCut();
-    if (selectedIdsRef.current.length > 0) selectAnnotations([]);
-    selectTool('select');
-    modeRef.current = 'view';
-    setMode('view');
-  }, [cancelCrop, cancelCut, selectAnnotations, selectTool]);
-
   const defaultFilename = useCallback(() => {
     const tmpl = settings?.filenameTemplate ?? 'screenshot_{date}_{time}';
     return formatFilename(tmpl, {
@@ -2635,9 +2571,6 @@ export function useEditor() {
   return {
     canvasRef,
     annotations,
-    mode,
-    enterMarkup,
-    exitMarkup,
     tool,
     setTool: selectTool,
     selectedIds,
@@ -2653,6 +2586,9 @@ export function useEditor() {
     cropDraft,
     spaceHeld,
     zoomPct,
+    fitMode: c?.fitMode ?? null,
+    fitWidth,
+    syncViewport,
     canUndo: past.length > 0,
     canRedo: future.length > 0,
     hasSelection: selectedIds.length > 0,

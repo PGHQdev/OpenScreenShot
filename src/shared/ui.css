@@ -1,3 +1,25 @@
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/roboto-variable.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+svg {
+  flex-shrink: 0;
+}
+
 /*
  * Shared UI components, imported by all four surfaces (editor, popup,
  * recorder, setup). Tokens come from tokens.css. This file holds chrome built
@@ -17,10 +39,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border: 1px solid transparent;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-full);
   background: transparent;
   color: var(--text-1);
   cursor: pointer;
@@ -70,13 +92,13 @@
 
 /* ---- Secondary button ---- */
 .btn-secondary {
-  height: 32px;
-  padding: 0 14px;
+  height: 36px;
+  padding: 0 var(--s-4);
   border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  background: var(--surface-2);
-  color: var(--text-1);
-  font-weight: 600;
+  border-radius: var(--r-full);
+  background: transparent;
+  color: var(--accent-ink);
+  font-weight: 500;
   font-size: var(--fs-base);
   cursor: pointer;
   transition:

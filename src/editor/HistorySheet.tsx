@@ -90,7 +90,7 @@ export function HistorySheet({
    * footprint drops from 24 stops to 1, and every Open and every Delete
    * stays reachable, via arrow keys (Home/End included) instead of Tab.
    */
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (listRef.current) syncRovingTabIndex(listRef.current);
   }, [entries]);
 

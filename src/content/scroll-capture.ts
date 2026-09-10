@@ -92,6 +92,7 @@ export function prepareCapture(): void {
 export function hideFixedElements(): void {
   const els = document.querySelectorAll('*');
   for (const el of els) {
+    if (el.hasAttribute('data-oss-capture-overlay')) continue;
     const cs = getComputedStyle(el);
     if (cs.position === 'fixed' || cs.position === 'sticky') {
       (el as HTMLElement).dataset.ossHidden = '1';

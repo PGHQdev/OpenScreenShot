@@ -1,3 +1,4 @@
+/* Hallmark · genre: modern-minimal · macrostructure: Workbench · design-system: design.md · designed-as-app */
 /*
  * OpenScreenShot popup styles. Design tokens (spacing, radius, shadows,
  * typography, light/dark themes) live in src/shared/tokens.css and are shared
@@ -319,37 +320,28 @@ body {
 }
 
 /* ---- Settings ---- */
-/* Sits inside .app's --s-4 padding and adds none of its own: a second inset
-   here cost the four-segment rows 32px of the 308px they share with their
-   label, and a top inset put the first row 28px below the header while the
-   rows sat 12px apart. With no padding of its own, the gap under the header
-   is .app's own --s-3 — the same --s-3 the rows keep between themselves. */
+/* Settings keep a compact, scrollable layout in the toolbar popup. The
+   explicit settings URL adds the responsive full-tab shell below. */
 .settings {
   display: flex;
   flex-direction: column;
   gap: var(--s-3);
+  min-height: 0;
   padding: 0;
   overflow-y: auto;
 }
 .settings-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s-2);
-}
-.settings-row-col {
   flex-direction: column;
   align-items: stretch;
-  gap: 4px;
-}
-.settings-row-between {
-  justify-content: space-between;
+  gap: var(--s-2);
+  min-width: 0;
 }
 .settings-label {
   font-size: var(--fs-base);
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-1);
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 .settings-section {
   margin-top: var(--s-2);
@@ -358,6 +350,11 @@ body {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-3);
+}
+label.settings-row .settings-label {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .settings-hint {
   font-size: var(--fs-xs);
@@ -767,6 +764,293 @@ body {
 }
 
 /* ---- Reduced motion ---- */
+/* Workspace capture launcher: tonal rows with distinct capture marks. */
+.app {
+  width: 340px;
+  max-width: 100vw;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+}
+.header {
+  min-height: 40px;
+  padding-bottom: var(--s-1);
+}
+.brand-name {
+  font-size: var(--fs-lg);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-full);
+}
+.modes {
+  gap: var(--s-1);
+  background: var(--surface-2);
+  border-radius: var(--r-lg);
+  padding: var(--s-1);
+}
+.mode-card {
+  min-height: 60px;
+  padding: var(--s-2) var(--s-3);
+  border-color: transparent;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+}
+.mode-card:hover {
+  border-color: transparent;
+  background: var(--accent-subtle);
+}
+.mode-icon {
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  border-radius: var(--r-md);
+  color: var(--accent-ink);
+  background: var(--accent-subtle);
+}
+.modes .mode-card:nth-child(2) .mode-icon {
+  color: var(--text-1);
+  background: color-mix(in srgb, var(--brand-yellow) 30%, var(--surface-1));
+}
+.modes .mode-card:nth-child(3) .mode-icon {
+  color: var(--text-1);
+  background: color-mix(in srgb, var(--brand-green) 22%, var(--surface-1));
+}
+.mode-card[data-testid='rec-start'] .mode-icon {
+  color: var(--danger-ink);
+  background: color-mix(in srgb, var(--brand-red) 14%, var(--surface-1));
+}
+.mode-title {
+  font-weight: 500;
+}
+.settings-section {
+  margin-top: var(--s-1);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-2);
+}
+.settings-label {
+  font-weight: 500;
+}
+.seg {
+  border-radius: var(--r-full);
+}
+.seg-btn {
+  height: 32px;
+}
+.seg-btn[aria-pressed='true'] {
+  background: var(--accent-subtle);
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+.text-input {
+  height: 36px;
+  background: var(--surface-1);
+}
+.rec-dot {
+  background: var(--brand-red);
+}
+
+/* ---- Responsive settings page ---- */
+.app-settings {
+  max-height: 600px;
+}
+.app-settings .header {
+  flex: 0 0 auto;
+}
+.settings-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+.settings-heading h1 {
+  margin: 0;
+}
+.settings-intro {
+  margin: var(--s-1) 0 0;
+  color: var(--text-2);
+  font-size: var(--fs-base);
+}
+.settings-group {
+  padding: var(--s-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+}
+.settings-group h2 {
+  margin: 0 0 var(--s-3);
+  color: var(--accent-ink);
+  font-size: var(--fs-base);
+  font-weight: 500;
+}
+.settings-group .settings-row + .settings-row {
+  margin-top: var(--s-3);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--border);
+}
+.settings-control,
+.settings-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+.settings-control > .link-btn {
+  align-self: flex-start;
+  white-space: normal;
+  text-align: start;
+}
+.settings .seg {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+}
+.settings .seg-btn {
+  flex: 1 1 0;
+  height: auto;
+  min-height: 36px;
+  padding: var(--s-1) var(--s-2);
+  overflow-wrap: anywhere;
+}
+.settings .settings-hint {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+.settings .settings-row-switch {
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-4);
+}
+.settings-row-switch .switch {
+  flex: 0 0 auto;
+  margin-top: var(--s-05);
+}
+.settings .rec-trust {
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  white-space: normal;
+}
+.settings .token-row {
+  flex-wrap: wrap;
+}
+.settings .token-chip {
+  background: var(--surface-1);
+}
+.settings .text-input {
+  width: 100%;
+  min-width: 0;
+}
+.settings .filename-preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-05);
+  overflow-wrap: anywhere;
+}
+.filename-preview > span:first-child {
+  font-family: var(--font);
+}
+.settings-quality {
+  flex-direction: row;
+  align-items: center;
+}
+.settings-quality .range {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+}
+.settings-quality output {
+  min-width: 4ch;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+.settings .support-links {
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-4);
+}
+.settings .support-links .link-btn {
+  min-height: 32px;
+  white-space: normal;
+  text-align: start;
+}
+.settings-footer {
+  display: flex;
+  justify-content: flex-start;
+  padding: 0 var(--s-1) var(--s-2);
+}
+.app-settings-page {
+  width: 760px;
+  max-width: calc(100% - 48px);
+  max-height: none;
+  margin: 0 auto;
+  padding: var(--s-6) 0;
+  gap: var(--s-5);
+}
+.app-settings-page .header {
+  padding: var(--s-2) var(--s-1) 0;
+}
+.app-settings-page .settings-heading {
+  gap: var(--s-4);
+}
+.app-settings-page .settings-heading h1 {
+  font-size: var(--fs-2xl);
+}
+.app-settings-page .settings {
+  overflow: visible;
+  gap: var(--s-4);
+}
+@media (min-width: 768px) {
+  .app-settings-page .settings-group {
+    padding: var(--s-5);
+  }
+  .app-settings-page .settings-row {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    align-items: center;
+    gap: var(--s-5);
+  }
+  .app-settings-page .settings-filename {
+    align-items: start;
+  }
+  .app-settings-page .settings-filename > .settings-label {
+    padding-top: var(--s-2);
+  }
+  .app-settings-page .settings-row-switch {
+    display: flex;
+    align-items: center;
+  }
+  .app-settings-page .settings .seg {
+    width: fit-content;
+    min-width: 240px;
+  }
+  .app-settings-page .settings .seg-btn {
+    flex: 1 1 auto;
+    padding-inline: var(--s-3);
+  }
+  .app-settings-page .settings-support {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+  }
+  .app-settings-page .settings-support h2 {
+    margin: 0;
+  }
+}
+@media (max-width: 768px) {
+  .app-settings-page {
+    max-width: calc(100% - 32px);
+    padding-block: var(--s-4);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mode-card,
   .icon-btn,

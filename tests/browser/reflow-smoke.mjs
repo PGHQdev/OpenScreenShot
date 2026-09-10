@@ -214,6 +214,163 @@ async function chord(page, mods, key) {
   for (const m of mods.slice().reverse()) await page.keyboard.up(m);
 }
 
+async function testLongCapture(browser, base, messages) {
+  step('EDITOR — a long capture opens readably and scrolls without zooming');
+  const sharp = createRequire(join(ROOT, 'package.json'))('sharp');
+  const png = await sharp(
+    Buffer.from(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="5800"><rect width="1440" height="5800" fill="#286ec8"/><rect width="1440" height="240" fill="#f0b428"/><rect y="5500" width="1440" height="300" fill="#dc2828"/></svg>',
+    ),
+  )
+    .png()
+    .toBuffer();
+  const { page, crashes } = await newPage(browser, messages, {
+    'openscreenshot:last-capture': {
+      dataUrl: `data:image/png;base64,${png.toString('base64')}`,
+      width: 1440,
+      height: 5800,
+      mode: 'full-page',
+      capturedAt: Date.now(),
+    },
+  });
+  await page.setViewport({ width: 1280, height: 860 });
+  await page.goto(`${base}/src/editor/index.html`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.toolbar .tool-btn:not(:disabled)');
+  await new Promise((r) => setTimeout(r, 200));
+  assert((await page.$('.stylebar')) === null, 'Select has no empty options bar');
+  assert(
+    (await page.$('.stage-notice')) === null,
+    'fitting the capture does not obscure it with a notice',
+  );
+  const readout = () => page.$eval('.zoom-readout', (el) => el.textContent.trim());
+  assert(
+    (await readout()) === messages.editorFitWidth.message,
+    'Fit width is the initial zoom mode',
+  );
+  const colors = () =>
+    page.$eval('.stage-canvas', (el) => {
+      const pixels = el.getContext('2d').getImageData(0, 0, el.width, el.height).data;
+      let yellow = 0,
+        red = 0;
+      for (let i = 0; i < pixels.length; i += 4) {
+        if (pixels[i] === 240 && pixels[i + 1] === 180 && pixels[i + 2] === 40) yellow++;
+        if (pixels[i] === 220 && pixels[i + 1] === 40 && pixels[i + 2] === 40) red++;
+      }
+      return { yellow, red };
+    });
+  const wheel = async (dy, ctrlKey = false) => {
+    await page.$eval(
+      '.stage-canvas',
+      (el, deltaY, ctrlKey) =>
+        el.dispatchEvent(
+          new WheelEvent('wheel', { deltaY, ctrlKey, bubbles: true, cancelable: true }),
+        ),
+      dy,
+      ctrlKey,
+    );
+    await new Promise((r) => setTimeout(r, 80));
+  };
+  assert(
+    (await colors()).yellow > 10000,
+    'the top of the screenshot is visible at a readable scale',
+  );
+  await wheel(600);
+  assert(
+    (await colors()).yellow === 0 && (await readout()) === messages.editorFitWidth.message,
+    'plain wheel moves down the page without changing zoom',
+  );
+  await wheel(99999);
+  assert((await colors()).red > 10000, 'scrolling reaches the bottom without losing the image');
+  await wheel(-99999);
+  assert((await colors()).yellow > 10000, 'scrolling back reaches the beginning');
+  await wheel(-100, true);
+  assert((await readout()) !== messages.editorFitWidth.message, 'modifier wheel zooms');
+  await page.click('.zoom-trigger');
+  await page.$$eval(
+    '.zoom-item',
+    (els, label) => els.find((el) => el.textContent.includes(label)).click(),
+    messages.editorFitToScreen.message,
+  );
+  await new Promise((r) => setTimeout(r, 200));
+  assert(
+    (await colors()).yellow > 0 && (await colors()).red > 0,
+    'Fit page shows both ends of the capture',
+  );
+  step('EDITOR — contextual options do not shift an in-progress drag');
+  await page.focus('.stage-canvas');
+  await page.keyboard.press('r');
+  await new Promise((r) => setTimeout(r, 100));
+  const center = await page.$eval('.stage-canvas', (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+  });
+  await page.keyboard.press('Enter');
+  await new Promise((r) => setTimeout(r, 100));
+  const added = await page.$eval('[role="status"][aria-live="polite"]', (el) => el.textContent);
+  const origin = added.match(/(\d+), (\d+)/);
+  assert(!!origin, 'a rectangle was placed for the drag test');
+  await page.keyboard.press('v');
+  await page.keyboard.press('Escape');
+  await new Promise((r) => setTimeout(r, 100));
+  // Fit width again makes its screen position deterministic after the options bar closed.
+  await page.click('.zoom-trigger');
+  await page.$$eval(
+    '.zoom-item',
+    (els, label) => els.find((el) => el.textContent.includes(label)).click(),
+    messages.editorFitWidth.message,
+  );
+  await new Promise((r) => setTimeout(r, 200));
+  // Use the known source origin and the fitted image's horizontal bounds to hit its top edge.
+  const hit = await page.$eval(
+    '.stage-canvas',
+    (el, x, y) => {
+      const r = el.getBoundingClientRect();
+      const z = Math.min((r.width - 48) / 1440, 1);
+      return { x: r.x + 24 + (x + 30) * z, y: r.y + 24 + y * z };
+    },
+    Number(origin[1]),
+    Number(origin[2]),
+  );
+  // The test annotation is far down the long page after Fit page placement; scroll to it.
+  await wheel(Math.max(0, hit.y - center.y));
+  const dragY = Math.min(hit.y, center.y);
+  await page.mouse.move(hit.x, dragY);
+  await page.mouse.down();
+  await new Promise((r) => setTimeout(r, 100));
+  assert((await page.$('.stylebar')) === null, 'options wait until the pointer gesture finishes');
+  await page.mouse.move(hit.x + 20, dragY, { steps: 4 });
+  await page.mouse.up();
+  await new Promise((r) => setTimeout(r, 100));
+  const moved = await page.$eval('[role="status"][aria-live="polite"]', (el) => el.textContent);
+  const movedCoords = moved.match(/(\d+), (\d+)/);
+  assert(
+    Number(movedCoords?.[1]) > Number(origin[1]) && movedCoords?.[2] === origin[2],
+    'a horizontal drag leaves the annotation source Y unchanged',
+  );
+
+  step('EDITOR — More supports keyboard activation and keeps shortcuts isolated');
+  await page.focus('.editor-more summary');
+  await page.keyboard.press('Space');
+  assert(await page.$eval('.editor-more', (el) => el.open), 'Space opens More');
+  await page.keyboard.press('Tab');
+  assert(
+    await page.$eval('.editor-more .rate-btn', (el) => el === document.activeElement),
+    'Tab reaches Rate',
+  );
+  await page.keyboard.press('Escape');
+  assert(await page.$eval('.editor-more', (el) => !el.open), 'Escape closes More');
+  assert(
+    await page.$eval('.editor-more summary', (el) => el === document.activeElement),
+    'Escape restores focus',
+  );
+  await page.keyboard.press('Space');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Space');
+  assert(await page.$eval('.editor-more', (el) => !el.open), 'Space activates Rate');
+  assert(crashes.length === 0, 'long capture and menu flows have no page errors');
+  await page.close();
+}
+
 // ---------------------------------------------------------------- editor ---
 async function testEditor(browser, base, messages) {
   step('EDITOR — opening with a seeded capture');
@@ -224,17 +381,13 @@ async function testEditor(browser, base, messages) {
   await page.goto(`${base}/src/editor/index.html`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.stage-canvas');
   await new Promise((r) => setTimeout(r, 900)); // controller's initial fit, see editor-keyboard-smoke
-  // The editor opens in View mode (no rail, no style bar); Markup is the
-  // chrome this file measures.
-  await page.click('header .markup-btn');
+  await page.waitForSelector('.toolbar .tool-btn');
   await page.waitForSelector('.toolbar');
   // The Rectangle tool has a style bar (color, stroke, shape); Select does not.
   await page.click(`.tool-btn[title^="${messages.editorToolRectangle.message}"]`);
   await page.waitForSelector('.stylebar');
 
-  step(
-    'EDITOR — 1280px width (ordinary desktop): topbar and style bar stay one row, toolbar does not scroll',
-  );
+  step('EDITOR — 1280px width: labeled actions have their own row, tools stay visible');
   const wideEditor = await page.evaluate(() => {
     const oneRow = (els) => {
       const rects = [...els].map((el) => el.getBoundingClientRect());
@@ -242,13 +395,21 @@ async function testEditor(browser, base, messages) {
     };
     const toolbar = document.querySelector('.toolbar');
     return {
-      topbarOneRow: oneRow(document.querySelectorAll('.topbar > *')),
+      topbarOneRow: oneRow(document.querySelectorAll('.topbar-brand, .topbar-actions')),
+      labeledTools: [...document.querySelectorAll('.tool-btn')].every(
+        (button) => button.innerText.trim().length > 0,
+      ),
+      labeledActions: [...document.querySelectorAll('.topbar .icon-btn')].every(
+        (button) => button.innerText.trim().length > 1,
+      ),
       stylebarOneRow: oneRow(document.querySelectorAll('.stylebar-group')),
       toolbarScrollH: toolbar.scrollHeight,
       toolbarClientH: toolbar.clientHeight,
     };
   });
-  assert(wideEditor.topbarOneRow, 'topbar brand, actions and controls share one row at 1280px');
+  assert(wideEditor.topbarOneRow, 'brand and edit actions share the first row');
+  assert(wideEditor.labeledTools, 'each editing tool has a visible text label');
+  assert(wideEditor.labeledActions, 'each topbar icon action has a visible text label');
   assert(wideEditor.stylebarOneRow, 'style bar groups share one row at 1280px');
   assert(
     wideEditor.toolbarScrollH === wideEditor.toolbarClientH,
@@ -476,35 +637,17 @@ async function testPopup(browser, base, messages) {
   const settingsRows = await page.$$eval('.settings-row', (els) => els.length);
   assert(settingsRows > 0, `settings view renders ${settingsRows} rows`);
 
-  step('POPUP — every settings row keeps its label and its control on one line');
-  // The four-segment rows (Format, Delay) are the ones that can lose this:
-  // at 340px they share a 308px content box with a label that does not
-  // shrink. `.settings-row-col` is the one row that stacks by design — the
-  // filename template, whose input, chips and preview cannot sit beside a
-  // label — so it is excluded by class rather than by name.
-  const rowLines = await page.evaluate(() =>
-    [...document.querySelectorAll('.settings-row:not(.settings-row-col)')].map((row) => {
-      const label = row.querySelector('.settings-label');
-      const control = [...row.children].find((el) => el !== label);
-      const a = label.getBoundingClientRect();
-      const b = control.getBoundingClientRect();
-      return {
-        label: label.textContent.trim(),
-        // Centres, not tops: a 20px label beside a 28px segmented group
-        // shares the line with its top 4px higher, which is the alignment
-        // working, not a wrap.
-        delta: Math.abs((a.top + a.bottom) / 2 - (b.top + b.bottom) / 2),
-        slack: Math.round(row.getBoundingClientRect().width - a.width - b.width),
-      };
+  step('POPUP — settings labels and controls remain within their rows');
+  const settingsFit = await page.evaluate(() =>
+    [...document.querySelectorAll('.settings-row')].every((row) => {
+      const box = row.getBoundingClientRect();
+      return [...row.children].every((child) => {
+        const r = child.getBoundingClientRect();
+        return r.left >= box.left - 1 && r.right <= box.right + 1;
+      });
     }),
   );
-  assert(rowLines.length >= 7, `${rowLines.length} label/control rows to check`);
-  for (const row of rowLines) {
-    assert(
-      row.delta <= 1 && row.slack >= 0,
-      `"${row.label}" keeps its control on the label's line (centres differ by ${row.delta.toFixed(1)}px, ${row.slack}px of the row still free)`,
-    );
-  }
+  assert(settingsFit, 'compact settings stack or wrap without clipping controls');
   const settingsReachable = await page.evaluate(() => {
     const rows = document.querySelectorAll('.settings-row');
     const last = rows[rows.length - 1];
@@ -513,6 +656,27 @@ async function testPopup(browser, base, messages) {
     return r.top >= -1 && r.bottom <= window.innerHeight + 1;
   });
   assert(settingsReachable, 'the last settings row scrolls into view at 340x260');
+
+  step('SETTINGS TAB — centered grouped layout uses the full page');
+  await page.setViewport({ width: 1280, height: 900 });
+  await page.goto(`${base}/src/popup/index.html?settings=1`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.app-settings-page');
+  const settingsTab = await page.evaluate(() => {
+    const r = document.querySelector('.app-settings-page').getBoundingClientRect();
+    return {
+      width: r.width,
+      centered: Math.abs(r.left - (innerWidth - r.right)) < 2,
+      sections: document.querySelectorAll('.settings-group').length,
+    };
+  });
+  assert(
+    settingsTab.width >= 700 && settingsTab.width <= 800 && settingsTab.centered,
+    'settings use a centered readable column on desktop',
+  );
+  assert(settingsTab.sections >= 5, 'settings are grouped into named sections');
+  await page.setViewport({ width: 320, height: 800 });
+  await new Promise((r) => setTimeout(r, 100));
+  assert((await noHorizontalOverflow(page, 320)).ok, 'full-tab settings also fit a narrow window');
 
   assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
   await page.close();
@@ -662,6 +826,7 @@ async function main() {
       args: ['--no-first-run', '--no-default-browser-check', '--disable-gpu', '--hide-scrollbars'],
     });
 
+    await testLongCapture(browser, base, messages);
     await testEditor(browser, base, messages);
     await testPopup(browser, base, messages);
     await testRecorder(browser, base, messages);

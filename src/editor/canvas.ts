@@ -31,7 +31,7 @@ import {
   type Band,
 } from './bands';
 import { drawCropHandles } from './crop';
-import { centerView, clampZoom, fitZoom } from './viewport';
+import { centerView, clampZoom, fitZoom, fitWidthView, scrollView, FIT_PADDING } from './viewport';
 import { clipToFrame, DEFAULT_FRAME, frameMetrics, paintFrame, type FrameOptions } from './frame';
 import { rgbToHex } from './eyedropper';
 
@@ -72,6 +72,7 @@ export class CanvasController {
   private readonly ctx: CanvasRenderingContext2D;
   private dpr = 1;
   image: HTMLImageElement | null = null;
+  fitMode: 'width' | 'page' | null = null;
   view: Viewport = { zoom: 1, panX: 0, panY: 0 };
   /** Committed annotations, in image pixels. React owns the list; we render it. */
   annotations: Annotation[] = [];
@@ -178,7 +179,7 @@ export class CanvasController {
   setImage(img: HTMLImageElement): void {
     this.image = img;
     this.blurCache.clear();
-    this.fit();
+    this.fitWidth();
   }
 
   setAnnotations(a: Annotation[]): void {
@@ -263,6 +264,17 @@ export class CanvasController {
     this.dpr = window.devicePixelRatio || 1;
     this.canvas.width = Math.max(1, Math.round(rect.width * this.dpr));
     this.canvas.height = Math.max(1, Math.round(rect.height * this.dpr));
+    if (this.image && this.fitMode === 'page') {
+      this.fit();
+      return;
+    }
+    if (this.image && this.fitMode === 'width') {
+      const m = frameMetrics(this.frame, this.image.naturalWidth, this.composedImageHeight());
+      const scrolled = Math.max(0, (FIT_PADDING - this.view.panY) / this.view.zoom + m.pad);
+      this.fitWidth();
+      this.scrollBy(0, scrolled * this.view.zoom);
+      return;
+    }
     this.render();
   }
 
@@ -273,13 +285,27 @@ export class CanvasController {
     if (rect.width <= 0 || rect.height <= 0) return;
     const m = frameMetrics(this.frame, this.image.naturalWidth, this.composedImageHeight());
     const zoom = fitZoom(rect.width, rect.height, m.outerW, m.outerH);
+    this.fitMode = 'page';
     this.view = centerView(rect.width, rect.height, m.outerW, m.outerH, m.pad, zoom);
+    this.render();
+    this.onViewChange?.();
+  }
+
+  /** Fit the width and show the beginning of a long capture. */
+  fitWidth(): void {
+    if (!this.image) return;
+    const rect = this.canvas.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return;
+    const m = frameMetrics(this.frame, this.image.naturalWidth, this.composedImageHeight());
+    this.fitMode = 'width';
+    this.view = fitWidthView(rect.width, rect.height, m.outerW, m.outerH, m.pad);
     this.render();
     this.onViewChange?.();
   }
 
   /** Set zoom to an absolute value, keeping the point (cx,cy) in screen space fixed. */
   setZoom(zoom: number, cx: number, cy: number): void {
+    this.fitMode = null;
     const ix = (cx - this.view.panX) / this.view.zoom;
     const iy = (cy - this.view.panY) / this.view.zoom;
     const z = clampZoom(zoom);
@@ -298,7 +324,17 @@ export class CanvasController {
     if (!this.image) return;
     const rect = this.canvas.getBoundingClientRect();
     const m = frameMetrics(this.frame, this.image.naturalWidth, this.composedImageHeight());
+    this.fitMode = null;
     this.view = centerView(rect.width, rect.height, m.outerW, m.outerH, m.pad, 1);
+    this.render();
+    this.onViewChange?.();
+  }
+
+  scrollBy(dx: number, dy: number): void {
+    if (!this.image) return;
+    const rect = this.canvas.getBoundingClientRect();
+    const m = frameMetrics(this.frame, this.image.naturalWidth, this.composedImageHeight());
+    this.view = scrollView(this.view, rect.width, rect.height, m.outerW, m.outerH, m.pad, dx, dy);
     this.render();
     this.onViewChange?.();
   }

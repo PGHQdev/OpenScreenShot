@@ -10,6 +10,8 @@ export interface ZoomMenuProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onFit: () => void;
+  onFitWidth: () => void;
+  fitMode: 'width' | 'page' | null;
   onActualSize: () => void;
   onZoomTo: (zoom: number) => void;
 }
@@ -121,7 +123,13 @@ export function ZoomMenu(props: ZoomMenuProps) {
           every zoom step. The editor's real live region (App.tsx) announces
           the change.
         */}
-        <span class="zoom-readout">{props.zoomPct}%</span>
+        <span class="zoom-readout">
+          {props.fitMode === 'width'
+            ? t('editorFitWidth')
+            : props.fitMode === 'page'
+              ? t('editorFitToScreen')
+              : `${props.zoomPct}%`}
+        </span>
         <IconChevronDown size={12} />
       </button>
       {mounted ? (
@@ -155,6 +163,14 @@ export function ZoomMenu(props: ZoomMenuProps) {
           >
             <span>{t('editorZoomOut')}</span>
             <kbd>⌘−</kbd>
+          </button>
+          <button
+            class="zoom-item"
+            role="menuitem"
+            tabIndex={-1}
+            onClick={() => run(props.onFitWidth)}
+          >
+            <span>{t('editorFitWidth')}</span>
           </button>
           <button class="zoom-item" role="menuitem" tabIndex={-1} onClick={() => run(props.onFit)}>
             <span>{t('editorFitToScreen')}</span>

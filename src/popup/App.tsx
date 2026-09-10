@@ -217,9 +217,8 @@ export function App() {
   const [settings, setSettingsState] = useState<Settings>(DEFAULT_SETTINGS);
   // The context menus' "Capture settings" items open this page as a tab with
   // ?settings=1 — the settings pane is unreachable by icon click in express mode.
-  const [showSettings, setShowSettings] = useState(() =>
-    new URLSearchParams(location.search).has('settings'),
-  );
+  const isSettingsPage = new URLSearchParams(location.search).has('settings');
+  const [showSettings, setShowSettings] = useState(isSettingsPage);
   const [busy, setBusy] = useState<CaptureMode | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -602,20 +601,31 @@ export function App() {
   }
 
   return (
-    <div class="app">
+    <div
+      class={`app${isSettingsPage ? ' app-settings-page' : ''}${showSettings ? ' app-settings' : ''}`}
+    >
       <header class="header">
         {showSettings ? (
-          <>
-            <button
-              class="icon-btn"
-              title={t('backAria')}
-              aria-label={t('backAria')}
-              onClick={() => setShowSettings(false)}
-            >
-              <IconBack size={16} />
-            </button>
-            <span class="brand-name">{t('settingsTitle')}</span>
-          </>
+          <div class="settings-heading">
+            {isSettingsPage ? (
+              <span class="brand-mark" aria-hidden="true">
+                <BrandMark size={32} />
+              </span>
+            ) : (
+              <button
+                class="icon-btn"
+                title={t('backAria')}
+                aria-label={t('backAria')}
+                onClick={() => setShowSettings(false)}
+              >
+                <IconBack size={16} />
+              </button>
+            )}
+            <div>
+              <h1 class="brand-name">{t('settingsTitle')}</h1>
+              {isSettingsPage && <p class="settings-intro">{t('settingsIntro')}</p>}
+            </div>
+          </div>
         ) : (
           <>
             <div class="brand">
@@ -938,171 +948,223 @@ function SettingsView({
   }
 
   return (
-    <div class="settings">
-      <div class="settings-row">
-        <span class="settings-label">{t('settingsTheme')}</span>
-        <div class="seg">
-          {(['light', 'dark', 'system'] as const).map((v) => (
-            <button
-              key={v}
-              class="seg-btn"
-              aria-pressed={settings.theme === v}
-              onClick={() => onChange({ theme: v })}
-            >
-              {t('theme' + v.charAt(0).toUpperCase() + v.slice(1))}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div class="settings-row">
-        <span class="settings-label">{t('settingsDefaultFormat')}</span>
-        <div class="seg">
-          {(['png', 'jpeg', 'webp', 'pdf'] as const).map((f) => (
-            <button
-              key={f}
-              class="seg-btn"
-              aria-pressed={settings.defaultFormat === f}
-              onClick={() => onChange({ defaultFormat: f as ExportFormat })}
-            >
-              {t('format' + f.charAt(0).toUpperCase() + f.slice(1))}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {showQuality ? (
+    <main class="settings" aria-label={t('settingsTitle')}>
+      <section class="settings-group" aria-labelledby="settings-appearance">
+        <h2 id="settings-appearance">{t('settingsAppearance')}</h2>
         <div class="settings-row">
-          <span class="settings-label">
-            {t('settingsQuality')} · {Math.round(settings.quality * 100)}%
+          <span class="settings-label" id="theme-label">
+            {t('settingsTheme')}
           </span>
+          <div class="settings-control">
+            <div class="seg" role="group" aria-labelledby="theme-label">
+              {(['light', 'dark', 'system'] as const).map((v) => (
+                <button
+                  key={v}
+                  class="seg-btn"
+                  aria-pressed={settings.theme === v}
+                  onClick={() => onChange({ theme: v })}
+                >
+                  {t('theme' + v.charAt(0).toUpperCase() + v.slice(1))}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-group" aria-labelledby="settings-capture">
+        <h2 id="settings-capture">{t('settingsCapture')}</h2>
+        <div class="settings-row">
+          <span class="settings-label" id="capture-action-label">
+            {t('afterCaptureLabel')}
+          </span>
+          <div class="settings-control">
+            <div class="seg" role="group" aria-labelledby="capture-action-label">
+              {CAPTURE_ACTIONS.map((a) => (
+                <button
+                  key={a}
+                  class="seg-btn"
+                  aria-pressed={normalizeCaptureAction(settings.captureAction) === a}
+                  onClick={() => onChange({ captureAction: a })}
+                >
+                  {t(ACTION_LABEL_KEYS[a])}
+                </button>
+              ))}
+            </div>
+            {normalizeCaptureAction(settings.captureAction) === 'download' && (
+              <p class="settings-hint">{t('actionHintPng')}</p>
+            )}
+          </div>
+        </div>
+        <div class="settings-row">
+          <span class="settings-label" id="capture-delay-label">
+            {t('delayLabel')}
+          </span>
+          <div class="settings-control">
+            <div class="seg" role="group" aria-labelledby="capture-delay-label">
+              {CAPTURE_DELAYS.map((d) => (
+                <button
+                  key={d}
+                  class="seg-btn"
+                  aria-pressed={normalizeCaptureDelay(settings.captureDelay) === d}
+                  onClick={() => onChange({ captureDelay: d })}
+                >
+                  {d === 0 ? t('delayOff') : `${d}s`}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div class="settings-row settings-row-switch">
+          <div class="settings-copy">
+            <label class="settings-label" for="express-mode">
+              {t('expressLabel')}
+            </label>
+            <p class="settings-hint" id="express-hint">
+              {t('settingsExpressHint')}
+            </p>
+          </div>
           <input
-            class="range"
-            type="range"
-            min="0.1"
-            max="1"
-            step="0.05"
-            aria-label={t('settingsQuality')}
-            aria-valuetext={`${Math.round(settings.quality * 100)}%`}
-            value={settings.quality}
-            onInput={(e) => onChange({ quality: Number((e.target as HTMLInputElement).value) })}
+            id="express-mode"
+            type="checkbox"
+            class="switch"
+            aria-describedby="express-hint"
+            checked={settings.expressMode}
+            onChange={(e) =>
+              onChange({ expressMode: (e.currentTarget as HTMLInputElement).checked })
+            }
           />
         </div>
-      ) : null}
+      </section>
 
-      <div class="settings-row">
-        <span class="settings-label">{t('afterCaptureLabel')}</span>
-        <div class="seg">
-          {CAPTURE_ACTIONS.map((a) => (
-            <button
-              key={a}
-              class="seg-btn"
-              aria-pressed={normalizeCaptureAction(settings.captureAction) === a}
-              onClick={() => onChange({ captureAction: a })}
-            >
-              {t(ACTION_LABEL_KEYS[a])}
-            </button>
-          ))}
+      <section class="settings-group" aria-labelledby="settings-files">
+        <h2 id="settings-files">{t('settingsFiles')}</h2>
+        <div class="settings-row">
+          <span class="settings-label" id="format-label">
+            {t('settingsDefaultFormat')}
+          </span>
+          <div class="settings-control">
+            <div class="seg" role="group" aria-labelledby="format-label">
+              {(['png', 'jpeg', 'webp', 'pdf'] as const).map((f) => (
+                <button
+                  key={f}
+                  class="seg-btn"
+                  aria-pressed={settings.defaultFormat === f}
+                  onClick={() => onChange({ defaultFormat: f as ExportFormat })}
+                >
+                  {t('format' + f.charAt(0).toUpperCase() + f.slice(1))}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
-      {normalizeCaptureAction(settings.captureAction) === 'download' ? (
-        <span class="settings-hint">{t('actionHintPng')}</span>
-      ) : null}
-
-      <div class="settings-row">
-        <span class="settings-label">{t('delayLabel')}</span>
-        <div class="seg">
-          {CAPTURE_DELAYS.map((d) => (
-            <button
-              key={d}
-              class="seg-btn"
-              aria-pressed={normalizeCaptureDelay(settings.captureDelay) === d}
-              onClick={() => onChange({ captureDelay: d })}
-            >
-              {d === 0 ? t('delayOff') : `${d}s`}
-            </button>
-          ))}
+        {showQuality && (
+          <div class="settings-row">
+            <label class="settings-label" for="export-quality">
+              {t('settingsQuality')}
+            </label>
+            <div class="settings-control settings-quality">
+              <input
+                id="export-quality"
+                class="range"
+                type="range"
+                min="0.1"
+                max="1"
+                step="0.05"
+                aria-label={t('settingsQuality')}
+                aria-valuetext={`${Math.round(settings.quality * 100)}%`}
+                value={settings.quality}
+                onInput={(e) => onChange({ quality: Number((e.target as HTMLInputElement).value) })}
+              />
+              <output for="export-quality">{Math.round(settings.quality * 100)}%</output>
+            </div>
+          </div>
+        )}
+        <div class="settings-row settings-filename">
+          <label class="settings-label" for="filename-template">
+            {t('settingsFilename')}
+          </label>
+          <div class="settings-control">
+            <input
+              id="filename-template"
+              ref={filenameRef}
+              class="text-input"
+              type="text"
+              spellcheck={false}
+              aria-label={t('settingsFilename')}
+              aria-describedby="filename-preview"
+              value={settings.filenameTemplate}
+              onInput={(e) => onChange({ filenameTemplate: (e.target as HTMLInputElement).value })}
+            />
+            <div class="token-row" role="group" aria-label={t('filenameInsert')}>
+              {FILENAME_TOKENS.map((tok) => (
+                <button key={tok} class="token-chip" onClick={() => insertAtCaret(tok)}>
+                  {tok}
+                </button>
+              ))}
+            </div>
+            <p class="settings-hint filename-preview" id="filename-preview">
+              <span>{t('settingsFilenamePreview')}</span>
+              <span>{previewFilename(settings)}</span>
+            </p>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <label class="settings-row">
-        <span class="settings-label">{t('expressLabel')}</span>
-        <input
-          type="checkbox"
-          class="switch"
-          checked={settings.expressMode}
-          onChange={(e) => onChange({ expressMode: (e.currentTarget as HTMLInputElement).checked })}
-        />
-      </label>
-      {settings.expressMode ? <span class="settings-hint">{t('expressHint')}</span> : null}
-
-      <div class="settings-row settings-row-col">
-        <span class="settings-label">{t('settingsFilename')}</span>
-        <input
-          ref={filenameRef}
-          class="text-input"
-          type="text"
-          spellcheck={false}
-          aria-label={t('settingsFilename')}
-          value={settings.filenameTemplate}
-          onInput={(e) => onChange({ filenameTemplate: (e.target as HTMLInputElement).value })}
-        />
-        {/* The chips carry the "Insert" string as the group's name instead of
-            a visible label: six of them plus the label do not fit one row. */}
-        <div class="token-row" role="group" aria-label={t('filenameInsert')}>
-          {FILENAME_TOKENS.map((tok) => (
-            <button key={tok} class="token-chip" onClick={() => insertAtCaret(tok)}>
-              {tok}
+      <section class="settings-group" aria-labelledby="settings-recording">
+        <h2 id="settings-recording">{t('settingsRecording')}</h2>
+        <div class="settings-row">
+          <span class="settings-label">{t('popupSetupLink')}</span>
+          <div class="settings-control">
+            <button class="link-btn link-btn-accent" onClick={onSetup}>
+              {t('setupTitle')}
             </button>
-          ))}
+          </div>
         </div>
-        <span class="settings-hint filename-preview">{previewFilename(settings)}</span>
-      </div>
+        <div class="settings-row settings-row-switch">
+          <div class="settings-copy">
+            <label class="settings-label" for="record-across-sites">
+              {t('recAcrossSites')}
+            </label>
+            <p class="settings-hint" id="across-sites-hint">
+              {t('settingsAcrossSitesHint')}
+            </p>
+            {!acrossSites && <TrustStrip testid="sites-trust" />}
+          </div>
+          <input
+            id="record-across-sites"
+            type="checkbox"
+            class="switch"
+            aria-describedby="across-sites-hint"
+            checked={acrossSites}
+            onChange={(e) => void toggleAcrossSites((e.currentTarget as HTMLInputElement).checked)}
+          />
+        </div>
+      </section>
 
-      <div class="settings-row">
-        <span class="settings-label">{t('popupSetupLink')}</span>
-        <button class="link-btn link-btn-accent" onClick={onSetup}>
-          {t('setupTitle')}
-        </button>
-      </div>
-
-      <label class="settings-row">
-        <span class="settings-label">{t('recAcrossSites')}</span>
-        <input
-          type="checkbox"
-          class="switch"
-          checked={acrossSites}
-          onChange={(e) => void toggleAcrossSites((e.currentTarget as HTMLInputElement).checked)}
-        />
-      </label>
-      <span class="settings-hint">{t('recAcrossSitesHint')}</span>
-      {/* Turning this on asks Chrome for <all_urls>, so the assurance sits
-          with it too, until that grant lands. */}
-      {!acrossSites && <TrustStrip testid="sites-trust" />}
-
-      <div class="settings-row">
-        <span class="settings-label">{t('settingsSupport')}</span>
+      <section class="settings-group settings-support" aria-labelledby="settings-support">
+        <h2 id="settings-support">{t('settingsSupport')}</h2>
         <div class="support-links">
           <button class="link-btn kofi-link" onClick={openKofi} title={t('supportKofiTitle')}>
-            <IconCoffee size={13} />
+            <IconCoffee size={16} />
             {t('footerKofi')}
           </button>
           <button class="link-btn kofi-link" onClick={openCoolStuff} title={t('coolStuffTitle')}>
-            <IconGift size={13} />
+            <IconGift size={16} />
             {t('footerCoolStuff')}
           </button>
         </div>
-      </div>
-
-      <div class="divider" />
-      <button
-        class="link-btn reset-btn"
-        data-armed={confirmReset ? 'true' : undefined}
-        onClick={resetAll}
-      >
-        {confirmReset ? t('resetConfirm') : t('resetDefaults')}
-      </button>
-    </div>
+      </section>
+      <footer class="settings-footer">
+        <button
+          class="link-btn reset-btn"
+          data-armed={confirmReset ? 'true' : undefined}
+          onClick={resetAll}
+        >
+          {confirmReset ? t('resetConfirm') : t('resetDefaults')}
+        </button>
+      </footer>
+    </main>
   );
 }
 
