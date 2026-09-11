@@ -2,8 +2,8 @@ import { copyFileSync, mkdirSync } from 'node:fs';
 import { defineConfig } from 'vitest/config';
 import preact from '@preact/preset-vite';
 import { crx } from '@crxjs/vite-plugin';
-import manifest from './manifest.json';
-import pkg from './package.json';
+import manifest from './manifest.json' with { type: 'json' };
+import pkg from './package.json' with { type: 'json' };
 
 // package.json is the single source of truth for the version; the extension
 // (what the Chrome Web Store reads) inherits it at build time. CI sets

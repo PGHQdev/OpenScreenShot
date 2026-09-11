@@ -214,8 +214,8 @@ export function selectRegion(): Promise<PageRect | null> {
         const o = origin;
         let x = o.x;
         let y = o.y;
-        let w = o.w;
-        let h = o.h;
+        let w: number;
+        let h: number;
         if (handle === 'nw' || handle === 'ne') {
           y = clamp(o.y + dy, 0, o.y + o.h - 1);
           h = o.y + o.h - y;

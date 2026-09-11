@@ -1,10 +1,13 @@
 {
   "name": "openscreenshot",
   "version": "2.1.0",
-  "description": "Open-source screenshot tool for Chrome \u2014 full-page, region, and visible-area capture with annotation and PDF export.",
+  "description": "Open-source screenshot tool for Chrome — full-page, region, and visible-area capture with annotation and PDF export.",
   "license": "MIT",
   "type": "module",
   "private": true,
+  "engines": {
+    "node": ">=22.19.0"
+  },
   "author": "OpenScreenShot @PGHQdev",
   "repository": {
     "type": "git",
@@ -38,26 +41,27 @@
     "smoke:capture": "node tests/browser/capture-overlay-smoke.mjs"
   },
   "dependencies": {
-    "preact": "^10.29.4"
+    "preact": "^10.29.8"
   },
   "devDependencies": {
-    "@astrojs/sitemap": "^3.7.3",
+    "@astrojs/sitemap": "^3.7.4",
     "@crxjs/vite-plugin": "^2.7.1",
-    "@eslint/js": "^9.39.4",
-    "@preact/preset-vite": "^2.10.5",
-    "@types/chrome": "^0.2.2",
-    "astro": "^7.2.9",
+    "@eslint/js": "^10.0.1",
+    "@preact/preset-vite": "^2.10.6",
+    "@types/chrome": "^0.2.9",
+    "astro": "^7.3.2",
     "axe-core": "^4.13.0",
-    "eslint": "^9.39.4",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",
     "fake-indexeddb": "^6.2.5",
-    "globals": "^17.7.0",
-    "prettier": "^3.9.4",
-    "sharp": "^0.35.3",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.62.1",
-    "vite": "^7.3.6",
-    "vitest": "^4.1.9",
-    "wrangler": "^4.114.0"
+    "globals": "^17.12.0",
+    "prettier": "^3.9.6",
+    "sharp": "^0.35.4",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.70.0",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.0",
+    "wrangler": "^4.131.0"
   }
 }

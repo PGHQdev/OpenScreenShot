@@ -2,8 +2,11 @@
 // Execute the serialized injection in real Chrome and compare clean pixels.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { transform } from 'esbuild';
-import puppeteer from '../../mcp/node_modules/puppeteer-core/lib/esm/puppeteer/puppeteer-core.js';
+import { loadPuppeteer } from './dist-server.mjs';
+
+const puppeteer = await loadPuppeteer(fileURLToPath(new URL('../../', import.meta.url)));
 
 const source = await readFile(
   new URL('../../src/content/capture-overlay.ts', import.meta.url),

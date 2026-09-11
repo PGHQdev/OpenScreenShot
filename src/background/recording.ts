@@ -321,8 +321,8 @@ async function pendingFailure(): Promise<RecFailure | null> {
  * unread recording failure is parked, and on empty otherwise.
  */
 export async function restoreRecBadge(): Promise<void> {
-  let state: StoredRecState | null = null;
-  let failure: RecFailure | null = null;
+  let state: StoredRecState | null;
+  let failure: RecFailure | null;
   try {
     state = await getRecState();
     failure = await pendingFailure();

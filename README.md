@@ -84,7 +84,7 @@ browser storage until you export or delete them. Full policy: [PRIVACY.md](./PRI
 ## Development
 
 TypeScript (strict) + Preact, bundled by Vite + [@crxjs/vite-plugin](https://github.com/crxjs/crxjs).
-One runtime dependency (Preact); unit tests with Vitest. Node.js 22+ and npm 10+.
+One runtime dependency (Preact); unit tests with Vitest. Node.js 22.19+ and npm 10+.
 
 ```bash
 npm install
