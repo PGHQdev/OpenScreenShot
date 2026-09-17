@@ -1,5 +1,6 @@
 ---
 import Doc from '../../../layouts/Doc.astro';
+import { ld } from '../../../lib/json-ld';
 import { t, localePaths, localeFromParams } from '../../../i18n';
 
 export const getStaticPaths = localePaths;
@@ -45,6 +46,25 @@ const toc = [
   heading={d.doc.heading}
   lead={d.doc.lead}
 >
+  <script slot="head" type="application/ld+json" set:html={ld({
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: d.meta.title,
+    description: d.meta.description,
+    inLanguage: locale,
+    mainEntityOfPage: new URL(Astro.url.pathname, Astro.site).href,
+    author: { '@type': 'Organization', name: 'OpenScreenShot', url: Astro.site?.href },
+  })} />
+  {locale === 'en' && (
+    <section class="doc-callout" aria-labelledby="guides-heading">
+      <h2 id="guides-heading">Start with your task</h2>
+      <ul>
+        <li><a href="/blog/full-page-screenshot-chrome/">Capture a full webpage</a>, <a href="/blog/save-screenshot-as-pdf/">save a screenshot as PDF</a>, or <a href="/blog/redact-screenshot/">redact private information</a>.</li>
+        <li><a href="/blog/screenshot-cli/">Use the screenshot CLI</a>, <a href="/blog/screenshot-mcp-server/">connect an MCP client</a>, or <a href="/blog/screenshots-for-ci/">capture CI review artifacts</a>.</li>
+      </ul>
+      <p>The reference below covers the Chrome extension. The Firefox source build supports screenshots and export; tab recording is Chrome-only. See the <a href="https://github.com/pghqdev/OpenScreenShot/tree/main/release/firefox">Firefox release guide</a> for installation and release status.</p>
+    </section>
+  )}
   <nav class="toc" aria-labelledby="toc-head">
     <h2 id="toc-head">{d.tocHead}</h2>
     <ul>
@@ -166,9 +186,9 @@ const toc = [
   <section class="doc-section" id="agents-cli">
     <h2>{d.agentsCli.heading}</h2>
     <p set:html={d.agentsCli.intro} />
-    <pre><code>npx openscreenshot shot https://example.com --out shot.png --full</code></pre>
+    <pre><code>pnpm dlx openscreenshot shot https://example.com --out shot.png --full</code></pre>
     <p>{d.agentsCli.mcpIntro}</p>
-    <pre><code>{'{ "command": "npx", "args": ["openscreenshot", "serve"] }'}</code></pre>
+    <pre><code>{'{ "command": "pnpm", "args": ["dlx", "openscreenshot", "serve"] }'}</code></pre>
     <p set:html={d.agentsCli.callOutro} />
   </section>
 

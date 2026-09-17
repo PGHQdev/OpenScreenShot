@@ -16,7 +16,7 @@
       "Open the <a href=\"{storeUrl}\" target=\"_blank\" rel=\"noopener\">OpenScreenShot listing</a> in Chrome.",
       "Click <strong>Add to Chrome</strong>.",
       "Accept the permissions. The extension needs the active tab and permission to run its capture script there.",
-      "The OpenScreenShot icon appears in your toolbar. Click it to open the popup."
+      "Pin the OpenScreenShot icon to your toolbar. By default, clicking it starts a full-page capture. Right-click the icon for other capture modes and Settings."
     ]
   },
   "capture": {
@@ -96,7 +96,7 @@
   },
   "record": {
     "heading": "Record a tab",
-    "intro": "Click <strong>Record</strong> in the popup, or press <kbd>Alt+Shift+X</kbd> to stop once a recording is running. The first time you record, Chrome shows one permission prompt for tab capture; every recording after that starts in a single click.",
+    "intro": "Tab recording is supported in the Chrome build; the Firefox build currently supports screenshots only. Click <strong>Record</strong> in the popup, or press <kbd>Alt+Shift+X</kbd> to stop once a recording is running. The first time you record, Chrome shows one permission prompt for tab capture.",
     "start": {
       "title": "Start a recording",
       "p1": "The Record row in the popup has three toggles — <strong>Mic</strong>, <strong>Tab audio</strong>, and <strong>Webcam</strong> — turn on any of them before you click Record. With the mic or webcam on, your browser’s own permission prompt appears from a small bubble on the page before capture starts.",
@@ -148,9 +148,9 @@
   },
   "agentsCli": {
     "heading": "Agents & CLI",
-    "intro": "<code>openscreenshot</code> (npm) is a separate, optional, local tool for scripting screenshots from the command line or from an AI agent. It drives the Chrome already on your machine — no browser download, no hosted service. Set <code>CHROME_PATH</code> if your Chrome cannot be found automatically.",
+    "intro": "<code>openscreenshot</code> is a separate, optional CLI and MCP server. It launches a fresh headless Chrome-compatible browser on your machine; it does not reuse your open tabs, cookies, or signed-in browser profile. Install Node.js, pnpm, and Chrome first. Set <code>CHROME_PATH</code> if the browser cannot be found automatically.",
     "mcpIntro": "As an MCP server, add this to your MCP client config:",
-    "callOutro": "Then call the <code>capture_screenshot</code> tool with <code>{ \"url\": \"https://example.com\" }</code>."
+    "callOutro": "Then call <code>capture_screenshot</code> with <code>{ \"url\": \"https://example.com\" }</code>. Optional inputs are <code>fullPage</code> (default false), <code>width</code> (200–3840, default 1280), and <code>height</code> (200–2160, default 800). The tool returns PNG image content to your client. A client using a hosted model may send that image to its provider; review the client’s data settings."
   },
   "privacy": {
     "heading": "Privacy",

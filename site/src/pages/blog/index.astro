@@ -1,0 +1,33 @@
+---
+import Base from '../../layouts/Base.astro';
+import '../../styles/doc.css';
+const articles = Object.values(import.meta.glob('./*.md', { eager: true })) as {
+  url: string;
+  frontmatter: { title: string; description: string; audience: string; order: number };
+}[];
+articles.sort((a, b) => a.frontmatter.order - b.frontmatter.order);
+---
+
+<Base title="Screenshot guides for people and developers — OpenScreenShot" description="Learn full-page capture, PDF export, and screenshot redaction, or automate PNG screenshots with the OpenScreenShot CLI and MCP server." path="/blog/" availableLocales={['en']}
+  navLinks={[{ href: '/docs/', label: 'Docs' }, { href: '/blog/', label: 'Blog & guides' }, { href: '/support/', label: 'Support' }]}>
+  <div class="doc container">
+    <header class="doc-head">
+      <p class="eyebrow">Blog & guides</p>
+      <h1>Make screenshots useful.</h1>
+      <p class="doc-lead">Capture a page, explain a problem, or automate a repeatable workflow. Start with the task you need to finish.</p>
+    </header>
+    {['Everyday screenshots', 'Developers & agents'].map((audience) => (
+      <section class="doc-section">
+        <h2>{audience}</h2>
+        <ul>
+          {articles.filter((article) => article.frontmatter.audience === audience).map((article) => (
+            <li>
+              <h3><a href={`${article.url.replace(/\/$/, '')}/`}>{article.frontmatter.title}</a></h3>
+              <p>{article.frontmatter.description}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+</Base>

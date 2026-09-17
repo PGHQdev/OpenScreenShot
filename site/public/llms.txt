@@ -12,6 +12,16 @@
 - [Roadmap](https://openscreenshot.app/roadmap/): shipped releases, what is being explored, and what is out of scope
 - [Support](https://openscreenshot.app/support/): FAQ, known limitations, and how to get help
 
+## Practical guides (English)
+
+- [Blog & guides](https://openscreenshot.app/blog/): guides for screenshot users and developers
+- [Full-page screenshots](https://openscreenshot.app/blog/full-page-screenshot-chrome/): capture steps, mode selection, and dynamic-page limitations
+- [Screenshot to PDF](https://openscreenshot.app/blog/save-screenshot-as-pdf/): single-page, A4/Letter, and multipage exports; image-only PDF limitations
+- [Screenshot redaction](https://openscreenshot.app/blog/redact-screenshot/): opaque fill, original drafts, and export verification
+- [Screenshot CLI](https://openscreenshot.app/blog/screenshot-cli/): PNG output, viewport bounds, browser setup, and exit codes
+- [Screenshot MCP server](https://openscreenshot.app/blog/screenshot-mcp-server/): stdio setup, tool inputs, image output, and client data handling
+- [CI screenshot artifacts](https://openscreenshot.app/blog/screenshots-for-ci/): reproducible captures and the limits of screenshot-only checks
+
 ## Agents & CLI
 
 - [capture-screenshot skill](https://openscreenshot.app/skills/capture-screenshot.md): agent skill for scripting screenshots via the openscreenshot CLI/MCP server

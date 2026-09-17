@@ -34,3 +34,9 @@ npx openscreenshot shot https://example.com --out shot.png --full
 MCP server: `{ "command": "npx", "args": ["openscreenshot", "serve"] }`, tool `capture_screenshot`.
 
 Skill: https://openscreenshot.app/skills/capture-screenshot.md
+
+## Learn by task
+
+Read the [blog and guides](https://openscreenshot.app/blog/) for full-page capture, PDF export, redaction, CLI screenshots, MCP setup, and CI artifacts.
+
+The optional CLI/MCP package starts a fresh headless browser, without your ordinary browser login session. MCP returns image content to the client, which may transmit it to a hosted model provider according to its settings.

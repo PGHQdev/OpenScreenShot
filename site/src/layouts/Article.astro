@@ -1,0 +1,62 @@
+---
+import Base from './Base.astro';
+import { ld } from '../lib/json-ld';
+import '../styles/doc.css';
+
+interface Props {
+  frontmatter: {
+    title: string;
+    description: string;
+    audience: string;
+  };
+}
+const { title, description, audience } = Astro.props.frontmatter;
+const path = `${Astro.url.pathname.replace(/\/$/, '')}/`;
+const url = new URL(path, Astro.site).href;
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'BlogPosting',
+      headline: title,
+      description,
+      inLanguage: 'en',
+      mainEntityOfPage: url,
+      author: { '@type': 'Organization', name: 'OpenScreenShot', url: Astro.site?.href },
+      publisher: { '@type': 'Organization', name: 'OpenScreenShot', url: Astro.site?.href },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: Astro.site?.href },
+        { '@type': 'ListItem', position: 2, name: 'Blog & guides', item: new URL('/blog/', Astro.site).href },
+        { '@type': 'ListItem', position: 3, name: title, item: url },
+      ],
+    },
+  ],
+};
+---
+
+<Base title={`${title} — OpenScreenShot`} description={description} path={path} pageType="article" availableLocales={['en']}
+  navLinks={[{ href: '/docs/', label: 'Docs' }, { href: '/blog/', label: 'Blog & guides' }, { href: '/support/', label: 'Support' }]}>
+  <script slot="head" type="application/ld+json" set:html={ld(structuredData)} />
+  <article class="doc container">
+    <header class="doc-head">
+      <p class="eyebrow"><a href="/blog/">Blog & guides</a> · {audience}</p>
+      <h1>{title}</h1>
+      <p class="doc-lead">{description}</p>
+      <p class="doc-fine">By <a href="https://github.com/pghqdev/OpenScreenShot">OpenScreenShot</a></p>
+    </header>
+    <div class="article-body"><slot /></div>
+    <aside class="doc-section" aria-label="Next steps">
+      <h2>Keep going</h2>
+      <p><a href="/docs/">Read the documentation</a>, <a href="/blog/">browse all guides</a>, or <a href="/support/">get help with a capture</a>.</p>
+    </aside>
+  </article>
+</Base>
+
+<style>
+  .article-body { max-width: var(--max-w); }
+  .article-body :global(h2) { margin-top: var(--s-7); }
+  .article-body :global(h3) { margin-top: var(--s-5); }
+</style>
