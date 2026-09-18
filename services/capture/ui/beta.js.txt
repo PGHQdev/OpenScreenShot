@@ -1,0 +1,201 @@
+const mount = location.pathname.startsWith('/capture/') ? '/capture' : '';
+const form = document.querySelector('#capture-form'),
+  button = document.querySelector('#capture-button'),
+  status = document.querySelector('#status'),
+  image = document.querySelector('#image'),
+  resume = document.querySelector('#resume');
+let busy = false,
+  current = null,
+  lastPayload = '',
+  key = '',
+  pollGeneration = 0;
+const messages = {
+  url_not_allowed:
+    'That website is not supported in this preview yet. Choose a supported website listed above.',
+  job_limit: 'The daily or shared beta limit has been reached. Please try again later.',
+  beta_unavailable: 'The beta is paused. Please try again later.',
+  session_required: 'Your browser session expired. Reload this page to start again.',
+  expired: 'This capture has expired. Submit the URL again for a new screenshot.',
+  render_timeout: 'The page took too long to load after retrying. Try a simpler page.',
+  render_rejected: 'This page could not be captured. It may block automated browsers.',
+  invalid_url: 'Enter a complete HTTPS website address.',
+  not_found: 'This capture is no longer available in this browser.',
+};
+function say(text, error = false) {
+  status.textContent = text;
+  status.dataset.error = String(error);
+}
+async function api(path, options = {}) {
+  const res = await fetch(mount + path, {
+    ...options,
+    credentials: 'same-origin',
+    signal: AbortSignal.timeout(15000),
+  });
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    throw Error('The capture service could not respond. Please try again.');
+  }
+  if (!res.ok)
+    throw Error(
+      messages[data.error?.code] ??
+        'The capture service is temporarily unavailable. Please try again.',
+    );
+  return data;
+}
+function setBusy(value) {
+  busy = value;
+  button.disabled = value;
+  document.querySelector('#capture-label').textContent = value
+    ? 'Capturing…'
+    : 'Capture screenshot';
+  document.querySelector('.capture-indicator').textContent = value ? '' : '→';
+  document.querySelector('#example').hidden = value;
+  document.querySelector('#empty-title').textContent = value
+    ? 'Capturing the full page…'
+    : 'Your full page, right here.';
+  document.querySelector('#empty-description').textContent = value
+    ? 'We’ll show your preview here as soon as it’s ready.'
+    : 'Enter a supported URL to create your first screenshot.';
+  form.setAttribute('aria-busy', String(value));
+}
+function saveJob(id) {
+  current = id;
+  try {
+    sessionStorage.setItem('osc-beta-job', id);
+  } catch {}
+}
+async function poll(id) {
+  const generation = ++pollGeneration;
+  resume.hidden = true;
+  setBusy(true);
+  const started = Date.now();
+  try {
+    while (Date.now() - started < 600000 && generation === pollGeneration) {
+      const job = await api(`/beta/captures/${encodeURIComponent(id)}`);
+      if (job.status === 'succeeded') {
+        key = '';
+        image.src = mount + job.artifactUrl;
+        image.onerror = () =>
+          say('The capture is ready, but the preview could not load. Use Download PNG.', true);
+        document.querySelector('#empty').hidden = true;
+        document.querySelector('#preview').hidden = false;
+        document.querySelector('#download').href = mount + job.downloadUrl;
+        document.querySelector('#dimensions').textContent = `${job.width} × ${job.height} · PNG`;
+        document.querySelector('#expires').textContent =
+          `Available until ${new Date(job.expiresAt).toLocaleString()}`;
+        say('Your screenshot is ready.');
+        return;
+      }
+      if (job.status === 'failed') {
+        say(
+          messages[job.error?.code] ?? 'We couldn’t capture this page. Please try another URL.',
+          true,
+        );
+        key = '';
+        return;
+      }
+      say(
+        job.status === 'running'
+          ? 'Capturing the full page…'
+          : 'Your capture is queued. Retries can take a few minutes.',
+      );
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+    }
+    say('This is taking longer than expected. You can check the capture again.', true);
+    resume.hidden = false;
+  } catch (error) {
+    say(
+      error.name === 'TimeoutError'
+        ? 'Connection timed out. Your capture may still be running.'
+        : error.message,
+      true,
+    );
+    resume.hidden = false;
+  } finally {
+    if (generation === pollGeneration) setBusy(false);
+  }
+}
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (busy) return;
+  resume.hidden = true;
+  const size = new FormData(form).get('size');
+  const raw = document.querySelector('#url').value.trim();
+  const url = raw.startsWith('//')
+    ? `https:${raw}`
+    : /^[a-z][a-z0-9+.-]*:/i.test(raw)
+      ? raw
+      : `https://${raw}`;
+  document.querySelector('#url').value = url;
+  const payload = JSON.stringify({
+    url,
+    width: size === 'mobile' ? 390 : 1440,
+    height: size === 'mobile' ? 844 : 900,
+  });
+  if (payload !== lastPayload || !key) {
+    key = crypto.randomUUID();
+    lastPayload = payload;
+  }
+  setBusy(true);
+  image.onload = null;
+  image.onerror = null;
+  image.removeAttribute('src');
+  document.querySelector('#download').removeAttribute('href');
+  document.querySelector('#preview').hidden = true;
+  document.querySelector('#empty').hidden = false;
+  say('Starting your capture…');
+  try {
+    const job = await api('/beta/captures', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key },
+      body: payload,
+    });
+    saveJob(job.id);
+    await poll(job.id);
+  } catch (error) {
+    say(
+      error.name === 'TimeoutError'
+        ? 'Connection timed out. Submit again to check the same request.'
+        : error.message,
+      true,
+    );
+  } finally {
+    setBusy(false);
+  }
+});
+resume.addEventListener('click', () => {
+  if (current && !busy) poll(current);
+});
+document.querySelector('#example').addEventListener('click', () => {
+  document.querySelector('#url').value = 'https://openscreenshot.app/';
+  document.querySelector('#url').focus();
+});
+(async () => {
+  try {
+    const session = await api('/beta/session');
+    document.querySelector('#supported').textContent =
+      `Supported in this preview: ${session.supportedHosts.join(', ')}. HTTPS only.`;
+    say('Ready when you are.');
+    setBusy(false);
+    let previous;
+    try {
+      previous = sessionStorage.getItem('osc-beta-job');
+    } catch {}
+    if (previous && /^[a-f0-9-]{36}$/.test(previous)) {
+      saveJob(previous);
+      await poll(previous);
+    }
+  } catch (error) {
+    say(error.message, true);
+    document.querySelector('#supported').textContent =
+      'Supported websites are temporarily unavailable.';
+    button.disabled = true;
+  }
+})();
+
+const head = document.querySelector('.site-head');
+const updateHeader = () => head.toggleAttribute('data-scrolled', scrollY > 24);
+updateHeader();
+addEventListener('scroll', updateHeader, { passive: true });

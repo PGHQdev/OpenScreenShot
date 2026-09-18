@@ -1,0 +1,730 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenScreenShot Capture Pilot",
+    "version": "0.1.0",
+    "description": "Private single-operator capture service. Approved HTTPS hosts only. Artifacts expire after 24 hours. No billing or public signup."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      },
+      "betaCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-osc-beta",
+        "description": "Anonymous browser capability issued by GET /beta/session. Secure, HttpOnly, SameSite=Strict. Never share it."
+      }
+    },
+    "schemas": {
+      "Job": {
+        "type": "object",
+        "required": ["id", "status", "attempts", "statusUrl", "artifactUrl"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["queued", "running", "succeeded", "failed"]
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "statusUrl": {
+            "type": "string"
+          },
+          "artifactUrl": {
+            "type": ["string", "null"]
+          },
+          "width": {
+            "type": ["integer", "null"]
+          },
+          "height": {
+            "type": ["integer", "null"]
+          },
+          "bytes": {
+            "type": ["integer", "null"]
+          },
+          "browserMs": {
+            "type": ["number", "null"],
+            "description": "Reported browser time of the successful render only. Null means unavailable. Not total job cost."
+          },
+          "error": {
+            "type": ["object", "null"],
+            "properties": {
+              "code": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/v1/captures": {
+      "post": {
+        "operationId": "createCapture",
+        "summary": "Submit an idempotent full-page PNG capture",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[-a-zA-Z0-9_:]{8,128}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["url"],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "maxLength": 2048,
+                    "description": "An operator-approved HTTPS hostname; no credentials or custom port."
+                  },
+                  "width": {
+                    "type": "integer",
+                    "minimum": 320,
+                    "maximum": 1920,
+                    "default": 1440
+                  },
+                  "height": {
+                    "type": "integer",
+                    "minimum": 480,
+                    "maximum": 1080,
+                    "default": 900
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Job state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/captures/{id}": {
+      "get": {
+        "operationId": "getCapture",
+        "summary": "Poll job state",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/captures/{id}/artifact": {
+      "get": {
+        "operationId": "downloadCapture",
+        "summary": "Download private PNG after success",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PNG attachment",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Structured error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/beta/session": {
+      "get": {
+        "summary": "Initialize an anonymous supported-site preview session",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Supported hostnames, five-per-day allowance, and 24-hour artifact access. Sets cookie if absent."
+          },
+          "503": {
+            "description": "Beta paused"
+          }
+        }
+      }
+    },
+    "/beta/captures": {
+      "post": {
+        "operationId": "createCapture",
+        "summary": "Create a supported-site beta capture",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[-a-zA-Z0-9_:]{8,128}$"
+            }
+          },
+          {
+            "name": "Origin",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Must equal this service origin."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["url"],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "maxLength": 2048,
+                    "description": "An operator-approved HTTPS hostname; no credentials or custom port."
+                  },
+                  "width": {
+                    "type": "integer",
+                    "minimum": 320,
+                    "maximum": 1920,
+                    "default": 1440
+                  },
+                  "height": {
+                    "type": "integer",
+                    "minimum": 480,
+                    "maximum": 1080,
+                    "default": 900
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "id, status and statusUrl; inspect statusUrl for result"
+          },
+          "400": {
+            "description": "Invalid input or unsupported hostname"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "403": {
+            "description": "Origin rejected"
+          },
+          "429": {
+            "description": "Browser, network or shared quota reached"
+          },
+          "503": {
+            "description": "Beta unavailable"
+          }
+        },
+        "security": [
+          {
+            "betaCookie": []
+          }
+        ]
+      }
+    },
+    "/beta/captures/{id}": {
+      "get": {
+        "summary": "Get owned beta capture status",
+        "security": [
+          {
+            "betaCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status JSON"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "404": {
+            "description": "Not found or owned by another browser"
+          },
+          "410": {
+            "description": "Expired"
+          },
+          "409": {
+            "description": "Artifact not ready"
+          },
+          "503": {
+            "description": "Beta unavailable"
+          }
+        }
+      }
+    },
+    "/beta/captures/{id}/artifact": {
+      "get": {
+        "summary": "Preview owned PNG",
+        "security": [
+          {
+            "betaCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PNG image"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "404": {
+            "description": "Not found or owned by another browser"
+          },
+          "410": {
+            "description": "Expired"
+          },
+          "409": {
+            "description": "Artifact not ready"
+          },
+          "503": {
+            "description": "Beta unavailable"
+          }
+        }
+      }
+    },
+    "/beta/captures/{id}/download": {
+      "get": {
+        "summary": "Download owned PNG; records first download request",
+        "security": [
+          {
+            "betaCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PNG image"
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "404": {
+            "description": "Not found or owned by another browser"
+          },
+          "410": {
+            "description": "Expired"
+          },
+          "409": {
+            "description": "Artifact not ready"
+          },
+          "503": {
+            "description": "Beta unavailable"
+          }
+        }
+      }
+    }
+  }
+}

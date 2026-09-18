@@ -1,0 +1,99 @@
+[
+  {
+    "name": "baseline",
+    "payload": {
+      "url": "https://openscreenshot.app/",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      },
+      "scrollPage": true,
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "rejectRequestPattern": [
+        "^(?!https:\\/\\/(?:example\\.com|openscreenshot\\.app)(?::443)?(?:[/?#]|$)).*"
+      ]
+    },
+    "status": 200,
+    "elapsedMs": 11846,
+    "browserMs": "10372.0322265625",
+    "bytes": 512398,
+    "width": 390,
+    "height": 7395
+  },
+  {
+    "name": "instant-scroll",
+    "payload": {
+      "url": "https://openscreenshot.app/",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      },
+      "scrollPage": true,
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "rejectRequestPattern": [
+        "^(?!https:\\/\\/(?:example\\.com|openscreenshot\\.app)(?::443)?(?:[/?#]|$)).*"
+      ],
+      "addStyleTag": [
+        {
+          "content": "html, body, * { scroll-behavior: auto !important; }"
+        }
+      ]
+    },
+    "status": 200,
+    "elapsedMs": 4392,
+    "browserMs": "3778.415283203125",
+    "bytes": 534773,
+    "width": 390,
+    "height": 7403
+  },
+  {
+    "name": "instant-scroll-repeat",
+    "payload": {
+      "url": "https://openscreenshot.app/",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      },
+      "scrollPage": true,
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "rejectRequestPattern": [
+        "^(?!https:\\/\\/(?:example\\.com|openscreenshot\\.app)(?::443)?(?:[/?#]|$)).*"
+      ],
+      "addStyleTag": [
+        {
+          "content": "html, body, * { scroll-behavior: auto !important; }"
+        }
+      ]
+    },
+    "status": 200,
+    "elapsedMs": 4377,
+    "browserMs": "3709.34228515625",
+    "bytes": 534773,
+    "width": 390,
+    "height": 7403
+  }
+]

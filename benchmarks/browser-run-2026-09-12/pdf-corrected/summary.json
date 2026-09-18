@@ -1,0 +1,33 @@
+{
+  "generatedAt": "2026-09-12T11:00:59.986Z",
+  "quantileMethod": "nearest rank; valid artifacts only; includes transfer to local client; visual correctness assessed separately",
+  "groups": {
+    "desktop": {
+      "attempts": 0,
+      "validArtifacts": 0,
+      "p50Seconds": null,
+      "p95Seconds": null,
+      "browserSeconds": 0,
+      "missingUsageHeaders": 0
+    },
+    "mobile": {
+      "attempts": 0,
+      "validArtifacts": 0,
+      "p50Seconds": null,
+      "p95Seconds": null,
+      "browserSeconds": 0,
+      "missingUsageHeaders": 0
+    },
+    "pdf": {
+      "attempts": 2,
+      "validArtifacts": 2,
+      "p50Seconds": 3.0730728750000016,
+      "p95Seconds": 9.851462958,
+      "browserSeconds": 8.0768154296875,
+      "missingUsageHeaders": 0
+    }
+  },
+  "totalReportedBrowserSeconds": 8.0768154296875,
+  "reportedUsageMarginalBrowserCostUSD": 0.00020192038574218748,
+  "reportedUsageCostPer1000ValidArtifactsUSD": 0.10096019287109374
+}

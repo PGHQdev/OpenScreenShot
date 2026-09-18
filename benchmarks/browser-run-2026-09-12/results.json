@@ -1,0 +1,1020 @@
+[
+  {
+    "id": "example-desktop-1",
+    "url": "https://example.com",
+    "category": "static control",
+    "mode": "desktop",
+    "round": 1,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:52:18.069Z",
+    "payload": {
+      "url": "https://example.com",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 3160.3506669999997,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 2278.57763671875,
+    "bytes": 19628,
+    "artifactValid": true,
+    "file": "artifacts/example-desktop-1.png",
+    "width": 1440,
+    "height": 900
+  },
+  {
+    "id": "openscreenshot-desktop-1",
+    "url": "https://openscreenshot.app/",
+    "category": "product landing page",
+    "mode": "desktop",
+    "round": 1,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:52:29.079Z",
+    "payload": {
+      "url": "https://openscreenshot.app/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 5853.546084,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 3912.42138671875,
+    "bytes": 829336,
+    "artifactValid": true,
+    "file": "artifacts/openscreenshot-desktop-1.png",
+    "width": 1440,
+    "height": 5820
+  },
+  {
+    "id": "screenshotone-desktop-1",
+    "url": "https://screenshotone.com/",
+    "category": "long marketing page",
+    "mode": "desktop",
+    "round": 1,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:52:40.080Z",
+    "payload": {
+      "url": "https://screenshotone.com/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 12073.595875000003,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 3458.890869140625,
+    "bytes": 1684326,
+    "artifactValid": true,
+    "file": "artifacts/screenshotone-desktop-1.png",
+    "width": 1440,
+    "height": 7842
+  },
+  {
+    "id": "astro-desktop-1",
+    "url": "https://astro.build/",
+    "category": "image-rich marketing page",
+    "mode": "desktop",
+    "round": 1,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:52:52.157Z",
+    "payload": {
+      "url": "https://astro.build/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 6724.485000000001,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 3911.763671875,
+    "bytes": 1805206,
+    "artifactValid": true,
+    "file": "artifacts/astro-desktop-1.png",
+    "width": 1440,
+    "height": 8905
+  },
+  {
+    "id": "mdn-desktop-1",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+    "category": "long documentation",
+    "mode": "desktop",
+    "round": 1,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:53:03.158Z",
+    "payload": {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 4696.902792000001,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 2019.47314453125,
+    "bytes": 785329,
+    "artifactValid": true,
+    "file": "artifacts/mdn-desktop-1.png",
+    "width": 1425,
+    "height": 4540
+  },
+  {
+    "id": "wikipedia-desktop-1",
+    "url": "https://en.wikipedia.org/wiki/Screenshot",
+    "category": "article with images",
+    "mode": "desktop",
+    "round": 1,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:53:14.159Z",
+    "payload": {
+      "url": "https://en.wikipedia.org/wiki/Screenshot",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 65005.280374999995,
+    "artifactValid": false,
+    "error": "The operation was aborted due to timeout"
+  },
+  {
+    "id": "hn-desktop-1",
+    "url": "https://news.ycombinator.com/",
+    "category": "dense text listing",
+    "mode": "desktop",
+    "round": 1,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:54:19.165Z",
+    "payload": {
+      "url": "https://news.ycombinator.com/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 4563.0919580000045,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 3666.611328125,
+    "bytes": 246150,
+    "artifactValid": true,
+    "file": "artifacts/hn-desktop-1.png",
+    "width": 1440,
+    "height": 1183
+  },
+  {
+    "id": "daytona-desktop-1",
+    "url": "https://www.daytona.io/",
+    "category": "dynamic marketing page",
+    "mode": "desktop",
+    "round": 1,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:54:30.166Z",
+    "payload": {
+      "url": "https://www.daytona.io/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 19364.790041,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 17188.68603515625,
+    "bytes": 1442379,
+    "artifactValid": true,
+    "file": "artifacts/daytona-desktop-1.png",
+    "width": 1440,
+    "height": 11660
+  },
+  {
+    "id": "example-desktop-2",
+    "url": "https://example.com",
+    "category": "static control",
+    "mode": "desktop",
+    "round": 2,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:54:49.534Z",
+    "payload": {
+      "url": "https://example.com",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 3225.0936670000083,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 2737.730712890625,
+    "bytes": 19628,
+    "artifactValid": true,
+    "file": "artifacts/example-desktop-2.png",
+    "width": 1440,
+    "height": 900
+  },
+  {
+    "id": "openscreenshot-desktop-2",
+    "url": "https://openscreenshot.app/",
+    "category": "product landing page",
+    "mode": "desktop",
+    "round": 2,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:55:00.534Z",
+    "payload": {
+      "url": "https://openscreenshot.app/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 4310.402875,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 2878.233154296875,
+    "bytes": 829616,
+    "artifactValid": true,
+    "file": "artifacts/openscreenshot-desktop-2.png",
+    "width": 1440,
+    "height": 5820
+  },
+  {
+    "id": "screenshotone-desktop-2",
+    "url": "https://screenshotone.com/",
+    "category": "long marketing page",
+    "mode": "desktop",
+    "round": 2,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:55:11.535Z",
+    "payload": {
+      "url": "https://screenshotone.com/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 10949.051542000001,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 7820.925537109375,
+    "bytes": 1684326,
+    "artifactValid": true,
+    "file": "artifacts/screenshotone-desktop-2.png",
+    "width": 1440,
+    "height": 7842
+  },
+  {
+    "id": "astro-desktop-2",
+    "url": "https://astro.build/",
+    "category": "image-rich marketing page",
+    "mode": "desktop",
+    "round": 2,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:55:22.536Z",
+    "payload": {
+      "url": "https://astro.build/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 9733.112708,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 3412.7587890625,
+    "bytes": 1804847,
+    "artifactValid": true,
+    "file": "artifacts/astro-desktop-2.png",
+    "width": 1440,
+    "height": 8905
+  },
+  {
+    "id": "mdn-desktop-2",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+    "category": "long documentation",
+    "mode": "desktop",
+    "round": 2,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:55:33.537Z",
+    "payload": {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 4854.012125000008,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 3099.434326171875,
+    "bytes": 727679,
+    "artifactValid": true,
+    "file": "artifacts/mdn-desktop-2.png",
+    "width": 1425,
+    "height": 4450
+  },
+  {
+    "id": "wikipedia-desktop-2",
+    "url": "https://en.wikipedia.org/wiki/Screenshot",
+    "category": "article with images",
+    "mode": "desktop",
+    "round": 2,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:55:44.538Z",
+    "payload": {
+      "url": "https://en.wikipedia.org/wiki/Screenshot",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 3899.2294159999874,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 1915.629638671875,
+    "bytes": 891421,
+    "artifactValid": true,
+    "file": "artifacts/wikipedia-desktop-2.png",
+    "width": 1440,
+    "height": 4098
+  },
+  {
+    "id": "hn-desktop-2",
+    "url": "https://news.ycombinator.com/",
+    "category": "dense text listing",
+    "mode": "desktop",
+    "round": 2,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:55:55.539Z",
+    "payload": {
+      "url": "https://news.ycombinator.com/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 4075.712582999986,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 2970.7109375,
+    "bytes": 245594,
+    "artifactValid": true,
+    "file": "artifacts/hn-desktop-2.png",
+    "width": 1440,
+    "height": 1183
+  },
+  {
+    "id": "daytona-desktop-2",
+    "url": "https://www.daytona.io/",
+    "category": "dynamic marketing page",
+    "mode": "desktop",
+    "round": 2,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:56:06.540Z",
+    "payload": {
+      "url": "https://www.daytona.io/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 17467.191416999995,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 15691.3896484375,
+    "bytes": 1436001,
+    "artifactValid": true,
+    "file": "artifacts/daytona-desktop-2.png",
+    "width": 1440,
+    "height": 11660
+  },
+  {
+    "id": "example-desktop-3",
+    "url": "https://example.com",
+    "category": "static control",
+    "mode": "desktop",
+    "round": 3,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:56:24.010Z",
+    "payload": {
+      "url": "https://example.com",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 2509.7511670000094,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 2208.7822265625,
+    "bytes": 19628,
+    "artifactValid": true,
+    "file": "artifacts/example-desktop-3.png",
+    "width": 1440,
+    "height": 900
+  },
+  {
+    "id": "openscreenshot-desktop-3",
+    "url": "https://openscreenshot.app/",
+    "category": "product landing page",
+    "mode": "desktop",
+    "round": 3,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:56:35.011Z",
+    "payload": {
+      "url": "https://openscreenshot.app/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 5026.896124999999,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 3255.75537109375,
+    "bytes": 830105,
+    "artifactValid": true,
+    "file": "artifacts/openscreenshot-desktop-3.png",
+    "width": 1440,
+    "height": 5820
+  },
+  {
+    "id": "screenshotone-desktop-3",
+    "url": "https://screenshotone.com/",
+    "category": "long marketing page",
+    "mode": "desktop",
+    "round": 3,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:56:46.011Z",
+    "payload": {
+      "url": "https://screenshotone.com/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 8437.814041999984,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 4812.925537109375,
+    "bytes": 1684326,
+    "artifactValid": true,
+    "file": "artifacts/screenshotone-desktop-3.png",
+    "width": 1440,
+    "height": 7842
+  },
+  {
+    "id": "astro-desktop-3",
+    "url": "https://astro.build/",
+    "category": "image-rich marketing page",
+    "mode": "desktop",
+    "round": 3,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:56:57.012Z",
+    "payload": {
+      "url": "https://astro.build/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 9238.901959000039,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 4861.628662109375,
+    "bytes": 1804907,
+    "artifactValid": true,
+    "file": "artifacts/astro-desktop-3.png",
+    "width": 1440,
+    "height": 8905
+  },
+  {
+    "id": "mdn-desktop-3",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+    "category": "long documentation",
+    "mode": "desktop",
+    "round": 3,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:57:08.014Z",
+    "payload": {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 5962.490458000044,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 3711.802001953125,
+    "bytes": 785329,
+    "artifactValid": true,
+    "file": "artifacts/mdn-desktop-3.png",
+    "width": 1425,
+    "height": 4540
+  },
+  {
+    "id": "wikipedia-desktop-3",
+    "url": "https://en.wikipedia.org/wiki/Screenshot",
+    "category": "article with images",
+    "mode": "desktop",
+    "round": 3,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:57:19.015Z",
+    "payload": {
+      "url": "https://en.wikipedia.org/wiki/Screenshot",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 5515.604209000012,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 3544.940673828125,
+    "bytes": 905708,
+    "artifactValid": true,
+    "file": "artifacts/wikipedia-desktop-3.png",
+    "width": 1440,
+    "height": 4220
+  },
+  {
+    "id": "hn-desktop-3",
+    "url": "https://news.ycombinator.com/",
+    "category": "dense text listing",
+    "mode": "desktop",
+    "round": 3,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:57:30.015Z",
+    "payload": {
+      "url": "https://news.ycombinator.com/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 4170.883916000021,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 3418.53857421875,
+    "bytes": 245765,
+    "artifactValid": true,
+    "file": "artifacts/hn-desktop-3.png",
+    "width": 1440,
+    "height": 1183
+  },
+  {
+    "id": "daytona-desktop-3",
+    "url": "https://www.daytona.io/",
+    "category": "dynamic marketing page",
+    "mode": "desktop",
+    "round": 3,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:57:41.016Z",
+    "payload": {
+      "url": "https://www.daytona.io/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 8568.367792000005,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 6664.971923828125,
+    "bytes": 1436800,
+    "artifactValid": true,
+    "file": "artifacts/daytona-desktop-3.png",
+    "width": 1440,
+    "height": 11660
+  },
+  {
+    "id": "openscreenshot-mobile-1",
+    "url": "https://openscreenshot.app/",
+    "category": "product landing page",
+    "mode": "mobile",
+    "round": 1,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:57:52.017Z",
+    "payload": {
+      "url": "https://openscreenshot.app/",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1,
+        "isMobile": true,
+        "hasTouch": true
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 3900.4222500000033,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 1792.635009765625,
+    "bytes": 532244,
+    "artifactValid": true,
+    "file": "artifacts/openscreenshot-mobile-1.png",
+    "width": 390,
+    "height": 7403
+  },
+  {
+    "id": "screenshotone-mobile-1",
+    "url": "https://screenshotone.com/",
+    "category": "long marketing page",
+    "mode": "mobile",
+    "round": 1,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:58:03.018Z",
+    "payload": {
+      "url": "https://screenshotone.com/",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1,
+        "isMobile": true,
+        "hasTouch": true
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 7544.674249999982,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 3536.638916015625,
+    "bytes": 1309168,
+    "artifactValid": true,
+    "file": "artifacts/screenshotone-mobile-1.png",
+    "width": 390,
+    "height": 12157
+  },
+  {
+    "id": "astro-mobile-1",
+    "url": "https://astro.build/",
+    "category": "image-rich marketing page",
+    "mode": "mobile",
+    "round": 1,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:58:14.019Z",
+    "payload": {
+      "url": "https://astro.build/",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1,
+        "isMobile": true,
+        "hasTouch": true
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 4605.896375000011,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 2267.312744140625,
+    "bytes": 1037520,
+    "artifactValid": true,
+    "file": "artifacts/astro-mobile-1.png",
+    "width": 390,
+    "height": 12666
+  },
+  {
+    "id": "daytona-mobile-1",
+    "url": "https://www.daytona.io/",
+    "category": "dynamic marketing page",
+    "mode": "mobile",
+    "round": 1,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:58:25.020Z",
+    "payload": {
+      "url": "https://www.daytona.io/",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "deviceScaleFactor": 1,
+        "isMobile": true,
+        "hasTouch": true
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 10508.337540999986,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 6738.489501953125,
+    "bytes": 1080314,
+    "artifactValid": true,
+    "file": "artifacts/daytona-mobile-1.png",
+    "width": 390,
+    "height": 19210
+  },
+  {
+    "id": "openscreenshot-pdf-1",
+    "url": "https://openscreenshot.app/",
+    "category": "product landing page",
+    "mode": "pdf",
+    "round": 1,
+    "endpoint": "pdf",
+    "startedAt": "2026-09-12T10:58:36.021Z",
+    "payload": {
+      "url": "https://openscreenshot.app/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "pdfOptions": {
+        "format": "A4",
+        "printBackground": true
+      }
+    },
+    "elapsedMs": 119.15341700002318,
+    "status": 400,
+    "contentType": "application/json;charset=UTF-8",
+    "browserMs": 0,
+    "bytes": 229,
+    "artifactValid": false,
+    "error": "{\"success\":false,\"errors\":[{\"code\":7001,\"message\":\"Invalid option: expected one of \\\"letter\\\"|\\\"legal\\\"|\\\"tabloid\\\"|\\\"ledger\\\"|\\\"a0\\\"|\\\"a1\\\"|\\\"a2\\\"|\\\"a3\\\"|\\\"a4\\\"|\\\"a5\\\"|\\\"a6\\\"\",\"path\":[\"body\",\"pdfOptions\",\"format\"]}],\"result\":{}}"
+  },
+  {
+    "id": "mdn-pdf-1",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+    "category": "long documentation",
+    "mode": "pdf",
+    "round": 1,
+    "endpoint": "pdf",
+    "startedAt": "2026-09-12T10:58:47.022Z",
+    "payload": {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "pdfOptions": {
+        "format": "A4",
+        "printBackground": true
+      }
+    },
+    "elapsedMs": 284.3049170000013,
+    "status": 400,
+    "contentType": "application/json;charset=UTF-8",
+    "browserMs": 0,
+    "bytes": 229,
+    "artifactValid": false,
+    "error": "{\"success\":false,\"errors\":[{\"code\":7001,\"message\":\"Invalid option: expected one of \\\"letter\\\"|\\\"legal\\\"|\\\"tabloid\\\"|\\\"ledger\\\"|\\\"a0\\\"|\\\"a1\\\"|\\\"a2\\\"|\\\"a3\\\"|\\\"a4\\\"|\\\"a5\\\"|\\\"a6\\\"\",\"path\":[\"body\",\"pdfOptions\",\"format\"]}],\"result\":{}}"
+  }
+]

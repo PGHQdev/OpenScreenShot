@@ -1,0 +1,34 @@
+{
+  "date": "2026-09-13T02:41:56.530Z",
+  "base": "https://openscreenshot-capture-pilot.pghq.workers.dev",
+  "checks": {
+    "unauthorized": true,
+    "schema": true,
+    "idempotency-0": true,
+    "private-0": true,
+    "png-0": true
+  },
+  "results": [
+    {
+      "url": "https://openscreenshot.app/docs/",
+      "requestedWidth": 1440,
+      "requestedHeight": 900,
+      "acceptedMs": 644.0803329999999,
+      "readyMs": 10376.847375000001,
+      "downloadMs": 1245.4670420000002,
+      "endToEndMs": 11685.401792,
+      "id": "34023ac1-20a9-4d0f-8c24-2bc63bc79ab0",
+      "status": "succeeded",
+      "attempts": 1,
+      "createdAt": "2026-09-13T02:41:44.998Z",
+      "expiresAt": "2026-09-14T02:41:44.998Z",
+      "width": 1440,
+      "height": 9046,
+      "bytes": 1281790,
+      "browserMs": 4525.63330078125,
+      "error": null,
+      "statusUrl": "/v1/captures/34023ac1-20a9-4d0f-8c24-2bc63bc79ab0",
+      "artifactUrl": "/v1/captures/34023ac1-20a9-4d0f-8c24-2bc63bc79ab0/artifact"
+    }
+  ]
+}

@@ -1,0 +1,142 @@
+[
+  {
+    "id": "screenshotone-scroll-1",
+    "url": "https://screenshotone.com/",
+    "category": "long marketing page",
+    "mode": "desktop",
+    "round": 1,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:59:09.180Z",
+    "payload": {
+      "url": "https://screenshotone.com/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "scrollPage": true,
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 20901.52825,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 15033.937255859375,
+    "bytes": 2120892,
+    "artifactValid": true,
+    "file": "artifacts/screenshotone-scroll-1.png",
+    "width": 1440,
+    "height": 7842
+  },
+  {
+    "id": "astro-scroll-1",
+    "url": "https://astro.build/",
+    "category": "image-rich marketing page",
+    "mode": "desktop",
+    "round": 1,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:59:30.089Z",
+    "payload": {
+      "url": "https://astro.build/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "scrollPage": true,
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 12009.410833000002,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 5853.14501953125,
+    "bytes": 2153973,
+    "artifactValid": true,
+    "file": "artifacts/astro-scroll-1.png",
+    "width": 1440,
+    "height": 8905
+  },
+  {
+    "id": "screenshotone-scroll-2",
+    "url": "https://screenshotone.com/",
+    "category": "long marketing page",
+    "mode": "desktop",
+    "round": 2,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T10:59:42.103Z",
+    "payload": {
+      "url": "https://screenshotone.com/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "scrollPage": true,
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 20677.151875000003,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 12644.31005859375,
+    "bytes": 2059036,
+    "artifactValid": true,
+    "file": "artifacts/screenshotone-scroll-2.png",
+    "width": 1440,
+    "height": 7842
+  },
+  {
+    "id": "astro-scroll-2",
+    "url": "https://astro.build/",
+    "category": "image-rich marketing page",
+    "mode": "desktop",
+    "round": 2,
+    "endpoint": "screenshot",
+    "startedAt": "2026-09-12T11:00:02.785Z",
+    "payload": {
+      "url": "https://astro.build/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "scrollPage": true,
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      }
+    },
+    "elapsedMs": 13627.500375000003,
+    "status": 200,
+    "contentType": "image/png",
+    "browserMs": 5863.317138671875,
+    "bytes": 2152864,
+    "artifactValid": true,
+    "file": "artifacts/astro-scroll-2.png",
+    "width": 1440,
+    "height": 8905
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "id": "60bf4295-026f-4431-962a-1ce5dc43aadf",
+  "status": "succeeded",
+  "attempts": 2,
+  "createdAt": "2026-09-13T01:19:56.079Z",
+  "expiresAt": "2026-09-14T01:19:56.079Z",
+  "width": 390,
+  "height": 7395,
+  "bytes": 511327,
+  "browserMs": 10332.203125,
+  "error": null,
+  "statusUrl": "/v1/captures/60bf4295-026f-4431-962a-1ce5dc43aadf",
+  "artifactUrl": "/v1/captures/60bf4295-026f-4431-962a-1ce5dc43aadf/artifact",
+  "downloadedAt": "2026-09-13T01:34:23.913Z",
+  "downloadedBytes": 511327,
+  "unauthorizedStatus": 401,
+  "clientTimingUnavailable": "Original benchmark polling interrupted by ECONNRESET; recovered existing job without resubmitting"
+}

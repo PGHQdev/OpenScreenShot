@@ -1,0 +1,66 @@
+[
+  {
+    "id": "openscreenshot-pdf-corrected",
+    "url": "https://openscreenshot.app/",
+    "category": "product landing page",
+    "mode": "pdf",
+    "round": 1,
+    "endpoint": "pdf",
+    "startedAt": "2026-09-12T11:00:28.304Z",
+    "payload": {
+      "url": "https://openscreenshot.app/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "pdfOptions": {
+        "format": "a4",
+        "printBackground": true
+      }
+    },
+    "elapsedMs": 9851.462958,
+    "status": 200,
+    "contentType": "application/pdf",
+    "browserMs": 5941.235107421875,
+    "bytes": 2065803,
+    "artifactValid": true,
+    "file": "artifacts/openscreenshot-pdf-corrected.pdf"
+  },
+  {
+    "id": "mdn-pdf-corrected",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+    "category": "long documentation",
+    "mode": "pdf",
+    "round": 1,
+    "endpoint": "pdf",
+    "startedAt": "2026-09-12T11:00:39.306Z",
+    "payload": {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "pdfOptions": {
+        "format": "a4",
+        "printBackground": true
+      }
+    },
+    "elapsedMs": 3073.0728750000017,
+    "status": 200,
+    "contentType": "application/pdf",
+    "browserMs": 2135.580322265625,
+    "bytes": 236999,
+    "artifactValid": true,
+    "file": "artifacts/mdn-pdf-corrected.pdf"
+  }
+]

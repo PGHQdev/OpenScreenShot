@@ -1,0 +1,23 @@
+[
+  {
+    "name": "forced-navigation-timeout",
+    "status": 422,
+    "elapsedMs": 1198,
+    "browserMs": "664",
+    "error": "{\"success\":false,\"errors\":[{\"code\":6002,\"message\":\"A timeout was reached. Check gotoOptions/waitForSelector/waitForTimeout/actionTimeout options.\",\"detail\":\"Navigation timeout of 1 ms exceeded\"}]}"
+  },
+  {
+    "name": "docs-normal-1",
+    "status": 200,
+    "elapsedMs": 5627,
+    "browserMs": "4706.6044921875",
+    "error": null
+  },
+  {
+    "name": "docs-normal-2",
+    "status": 200,
+    "elapsedMs": 5778,
+    "browserMs": "4630.4833984375",
+    "error": null
+  }
+]

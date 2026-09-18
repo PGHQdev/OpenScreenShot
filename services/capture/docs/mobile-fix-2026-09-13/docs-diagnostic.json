@@ -1,0 +1,36 @@
+[
+  {
+    "name": "docs",
+    "payload": {
+      "url": "https://openscreenshot.app/docs/",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "deviceScaleFactor": 1
+      },
+      "screenshotOptions": {
+        "fullPage": true,
+        "type": "png"
+      },
+      "scrollPage": true,
+      "gotoOptions": {
+        "waitUntil": "networkidle2",
+        "timeout": 25000
+      },
+      "rejectRequestPattern": [
+        "^(?!https:\\/\\/(?:example\\.com|openscreenshot\\.app)(?::443)?(?:[/?#]|$)).*"
+      ],
+      "addStyleTag": [
+        {
+          "content": "html, body, * { scroll-behavior: auto !important; }"
+        }
+      ]
+    },
+    "status": 200,
+    "elapsedMs": 6067,
+    "browserMs": "4498.62353515625",
+    "bytes": 1281790,
+    "width": 1440,
+    "height": 9046
+  }
+]

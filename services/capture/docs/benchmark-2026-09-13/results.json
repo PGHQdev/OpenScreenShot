@@ -1,0 +1,58 @@
+{
+  "date": "2026-09-13T01:19:55.920Z",
+  "base": "https://openscreenshot-capture-pilot.pghq.workers.dev",
+  "checks": {
+    "unauthorized": true,
+    "schema": true,
+    "idempotency-0": true,
+    "private-0": true,
+    "png-0": true,
+    "idempotency-1": true,
+    "private-1": true,
+    "png-1": true
+  },
+  "results": [
+    {
+      "url": "https://example.com/",
+      "requestedWidth": 1440,
+      "requestedHeight": 900,
+      "acceptedMs": 1571.044125,
+      "readyMs": 9861.342665999999,
+      "downloadMs": 986.9604999999992,
+      "endToEndMs": 10926.524416,
+      "id": "258308f8-a63d-4c06-9c95-08b2740c7134",
+      "status": "succeeded",
+      "attempts": 1,
+      "createdAt": "2026-09-13T01:19:31.264Z",
+      "expiresAt": "2026-09-14T01:19:31.264Z",
+      "width": 1440,
+      "height": 900,
+      "bytes": 19628,
+      "browserMs": 4149.270263671875,
+      "error": null,
+      "statusUrl": "/v1/captures/258308f8-a63d-4c06-9c95-08b2740c7134",
+      "artifactUrl": "/v1/captures/258308f8-a63d-4c06-9c95-08b2740c7134/artifact"
+    },
+    {
+      "url": "https://openscreenshot.app/",
+      "requestedWidth": 1440,
+      "requestedHeight": 900,
+      "acceptedMs": 487.47454199999993,
+      "readyMs": 12437.832167,
+      "downloadMs": 1383.234042,
+      "endToEndMs": 13894.635833,
+      "id": "80b53725-713b-4203-8b4d-4dadb5e24c08",
+      "status": "succeeded",
+      "attempts": 1,
+      "createdAt": "2026-09-13T01:19:42.183Z",
+      "expiresAt": "2026-09-14T01:19:42.183Z",
+      "width": 1440,
+      "height": 5812,
+      "bytes": 831453,
+      "browserMs": 9259.201171875,
+      "error": null,
+      "statusUrl": "/v1/captures/80b53725-713b-4203-8b4d-4dadb5e24c08",
+      "artifactUrl": "/v1/captures/80b53725-713b-4203-8b4d-4dadb5e24c08/artifact"
+    }
+  ]
+}

@@ -228,6 +228,8 @@ async function submitFeedback(request, env) {
 }
 
 async function route(url, request, env) {
+  if (url.pathname === '/capture') return Response.redirect(new URL('/capture/', url), 308);
+  if (url.pathname.startsWith('/capture/')) return env.CAPTURE.fetch(request);
   const accept = request.headers.get('Accept') ?? '';
 
   if (url.pathname === '/api/feedback') return submitFeedback(request, env);

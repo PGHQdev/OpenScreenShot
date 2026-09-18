@@ -1,0 +1,17 @@
+{
+  "daily": [
+    {
+      "day": 20709,
+      "started": 1,
+      "succeeded": 1,
+      "failed": 0,
+      "downloads": 1
+    }
+  ],
+  "browsers": {
+    "activeBrowsers30d": 1,
+    "repeatBrowsers30d": 0,
+    "returningBrowsers30d": 0
+  },
+  "note": "Downloads count first download requests, not confirmed file saves. Browser identities are pseudonymous and reset with cookies."
+}

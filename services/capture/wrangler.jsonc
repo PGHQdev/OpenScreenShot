@@ -1,0 +1,67 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "openscreenshot-capture-pilot",
+  "main": "src/index.ts",
+  "rules": [
+    { "type": "Data", "globs": ["**/*.woff2"], "fallthrough": true },
+    {
+      "type": "Text",
+      "globs": ["**/*.html", "**/*.css", "**/*.svg", "**/*.js.txt"],
+      "fallthrough": true,
+    },
+  ],
+  "compatibility_date": "2026-09-13",
+  "workers_dev": true,
+  "preview_urls": false,
+  "browser": {
+    "binding": "BROWSER",
+    "remote": true,
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "openscreenshot-capture-pilot",
+      "migrations_dir": "migrations",
+      "database_id": "fcb6d926-b83b-49d8-86fc-4c42207ec217",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "ARTIFACTS",
+      "bucket_name": "openscreenshot-capture-pilot",
+    },
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "CAPTURE_QUEUE",
+        "queue": "openscreenshot-capture-pilot",
+      },
+    ],
+    "consumers": [
+      {
+        "queue": "openscreenshot-capture-pilot",
+        "max_batch_size": 1,
+        "max_batch_timeout": 1,
+        "max_concurrency": 1,
+        "max_retries": 3,
+        "retry_delay": 60,
+      },
+    ],
+  },
+  "triggers": {
+    "crons": ["* * * * *"],
+  },
+  "vars": {
+    "BETA_ENABLED": "true",
+    "ALLOWED_HOSTS": "example.com,openscreenshot.app",
+    "DAILY_JOB_LIMIT": "20",
+    "ACTIVE_JOB_LIMIT": "5",
+  },
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "invocation_logs": false,
+    },
+  },
+}
