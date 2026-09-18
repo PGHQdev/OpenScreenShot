@@ -8,16 +8,16 @@ Thirty baseline requests were attempted: 24 desktop screenshots, four mobile scr
 
 ## Baseline desktop results
 
-| Page | Valid PNGs / attempts | Successful latency range | Median browser time |
-|---|---:|---:|---:|
-| example | 3 / 3 | 2.51-3.23s | 2.28s |
-| openscreenshot | 3 / 3 | 4.31-5.85s | 3.26s |
-| screenshotone | 3 / 3 | 8.44-12.07s | 4.81s |
-| astro | 3 / 3 | 6.72-9.73s | 3.91s |
-| mdn | 3 / 3 | 4.70-5.96s | 3.10s |
-| wikipedia | 2 / 3 | 3.90-5.52s | 1.92s |
-| hn | 3 / 3 | 4.08-4.56s | 3.42s |
-| daytona | 3 / 3 | 8.57-19.36s | 15.69s |
+| Page           | Valid PNGs / attempts | Successful latency range | Median browser time |
+| -------------- | --------------------: | -----------------------: | ------------------: |
+| example        |                 3 / 3 |               2.51-3.23s |               2.28s |
+| openscreenshot |                 3 / 3 |               4.31-5.85s |               3.26s |
+| screenshotone  |                 3 / 3 |              8.44-12.07s |               4.81s |
+| astro          |                 3 / 3 |               6.72-9.73s |               3.91s |
+| mdn            |                 3 / 3 |               4.70-5.96s |               3.10s |
+| wikipedia      |                 2 / 3 |               3.90-5.52s |               1.92s |
+| hn             |                 3 / 3 |               4.08-4.56s |               3.42s |
+| daytona        |                 3 / 3 |              8.57-19.36s |              15.69s |
 
 Aggregate desktop: **23/24 valid PNGs (95.8%)**, **5.52s p50**, **17.47s p95** over successful requests using nearest rank. One Wikipedia request exceeded the client's 65-second deadline without a response; the next two identical requests succeeded in 3.90s and 5.52s. Root cause remains unknown. The 25-second navigation timeout did not bound this end-to-end request. No automatic retry was used, so repeat-round recovery is not a measured retry policy.
 
@@ -38,10 +38,10 @@ Visual QA covered representative full desktop captures, all three ScreenshotOne/
 
 The only payload change was `scrollPage: true`; viewport, navigation policy, URL, and PNG options remained the same. Two runs per affected site:
 
-| Page | Baseline mean browser time (3 runs) | Scrolling mean browser time (2 runs) | Scrolling end-to-end latency | Visual result |
-|---|---:|---:|---:|---|
-| ScreenshotOne | 5.36s | 13.84s | 20.68-20.90s | Both missing illustration panels, testimonial portrait, and article thumbnails populated in both runs |
-| Astro | 4.06s | 5.86s | 12.01-13.63s | Theme previews, integration icons, and partner graphics populated in both runs |
+| Page          | Baseline mean browser time (3 runs) | Scrolling mean browser time (2 runs) | Scrolling end-to-end latency | Visual result                                                                                         |
+| ------------- | ----------------------------------: | -----------------------------------: | ---------------------------: | ----------------------------------------------------------------------------------------------------- |
+| ScreenshotOne |                               5.36s |                               13.84s |                 20.68-20.90s | Both missing illustration panels, testimonial portrait, and article thumbnails populated in both runs |
+| Astro         |                               4.06s |                                5.86s |                 12.01-13.63s | Theme previews, integration icons, and partner graphics populated in both runs                        |
 
 This supports lazy loading as the cause of the observed omissions. Scrolling does not remove overlays, freeze animation, guarantee fonts/images have settled, or prove infinite-scroll behavior is bounded. The ScreenshotOne follow-ups also contain a chat bubble that was absent in the baseline; dynamic page state still changes.
 
@@ -53,10 +53,10 @@ Both initial PDF requests were rejected with HTTP 400 because the harness sent u
 
 Changing only the format to lowercase `a4` produced:
 
-| Page | Result | Complete request | Reported browser time | PDF pages |
-|---|---|---:|---:|---:|
-| OpenScreenShot | Valid A4 PDF | 9.85s | 5.94s | 6 |
-| MDN | Valid A4 PDF | 3.07s | 2.14s | 3 |
+| Page           | Result       | Complete request | Reported browser time | PDF pages |
+| -------------- | ------------ | ---------------: | --------------------: | --------: |
+| OpenScreenShot | Valid A4 PDF |            9.85s |                 5.94s |         6 |
+| MDN            | Valid A4 PDF |            3.07s |                 2.14s |         3 |
 
 Poppler parsed both PDFs and rendered all nine pages for review. OpenScreenShot's hero splits awkwardly between pages 1 and 2; other sections also split at page boundaries. MDN uses a more readable print layout. Treat URL-to-PDF as browser print output, not a polished agency report. For the proposed product, generate a report template containing the captured images and metadata.
 

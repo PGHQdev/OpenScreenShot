@@ -2406,5 +2406,8 @@
   "captureOverlayFinishing": {
     "message": "正在完成螢幕擷取…",
     "description": "Capture overlay status."
+  },
+  "firefoxScreenshotOnly": {
+    "message": "Firefox 支援螢幕截圖和編輯。螢幕錄製功能可在 Chrome 中使用。"
   }
 }

@@ -2406,5 +2406,8 @@
   "captureOverlayFinishing": {
     "message": "Completamento dello screenshot…",
     "description": "Capture overlay status."
+  },
+  "firefoxScreenshotOnly": {
+    "message": "Firefox supporta gli screenshot e la modifica delle immagini. La registrazione dello schermo è disponibile in Chrome."
   }
 }

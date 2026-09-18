@@ -39,10 +39,7 @@ export function canvasToDataUrl(
   return canvas.toDataURL('image/webp', quality);
 }
 
-/** Trigger a browser download of a data URL via the downloads API. */
-export async function downloadDataUrl(dataUrl: string, filename: string): Promise<void> {
-  await chrome.downloads.download({ url: dataUrl, filename, saveAs: false });
-}
+export { downloadDataUrl } from '../shared/download';
 
 /** Append the right extension for a format. */
 export function withExtension(base: string, format: ImageFormat): string {

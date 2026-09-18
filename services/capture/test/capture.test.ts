@@ -1,7 +1,17 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare';
 import { readFile, readdir } from 'node:fs/promises';
+import type { Env, Job } from '../src/types';
+import { URL } from 'node:url';
 import worker, { app, processJob, recover } from '../src/index';
+
+interface CaptureResponse {
+  id: string;
+  status: string;
+  statusUrl: string;
+  browserMs: number | null;
+  error: { code: string };
+}
 
 const KEY = 'test-secret-with-at-least-32-characters';
 const PNG = Buffer.from(
@@ -9,7 +19,7 @@ const PNG = Buffer.from(
   'base64',
 );
 let mf: Miniflare;
-let env: any;
+let env: Env;
 let sent: string[];
 let calls: number;
 const base = 'https://capture.test';
@@ -29,10 +39,10 @@ async function create(key = 'test-request-0001', body: unknown = { url: 'https:/
   });
 }
 async function job(id: string) {
-  return (await request(`/v1/captures/${id}`, { headers })).json() as Promise<any>;
+  return (await request(`/v1/captures/${id}`, { headers })).json() as Promise<CaptureResponse>;
 }
 async function row(id: string) {
-  return env.DB.prepare('SELECT * FROM jobs WHERE id=?').bind(id).first();
+  return env.DB.prepare('SELECT * FROM jobs WHERE id=?').bind(id).first<Job>();
 }
 
 beforeAll(async () => {
@@ -65,7 +75,8 @@ beforeEach(async () => {
   calls = 0;
   env = {
     DB: await mf.getD1Database('DB'),
-    ARTIFACTS: await mf.getR2Bucket('ARTIFACTS'),
+    // Miniflare proxies use Node's Headers type; the Worker binding uses its runtime equivalent.
+    ARTIFACTS: (await mf.getR2Bucket('ARTIFACTS')) as unknown as R2Bucket,
     CAPTURE_API_KEY: KEY,
     ALLOWED_HOSTS: 'example.com,openscreenshot.app',
     DAILY_JOB_LIMIT: '20',
@@ -76,10 +87,10 @@ beforeEach(async () => {
       },
     },
     BROWSER: {
-      async quickAction(_action: string, options: any) {
+      async quickAction(_action: string, options: BrowserRunScreenshotOptions) {
         calls++;
         expect(options.scrollPage).toBe(true);
-        expect(options.screenshotOptions.fullPage).toBe(true);
+        expect(options.screenshotOptions?.fullPage).toBe(true);
         return new Response(PNG, {
           headers: { 'content-type': 'image/png', 'x-browser-ms-used': '1234.5' },
         });
@@ -90,7 +101,7 @@ beforeEach(async () => {
   await env.DB.prepare('DELETE FROM beta_daily').run();
   await env.DB.prepare('DELETE FROM beta_activity').run();
   const objects = await env.ARTIFACTS.list();
-  if (objects.objects.length) await env.ARTIFACTS.delete(objects.objects.map((o: any) => o.key));
+  if (objects.objects.length) await env.ARTIFACTS.delete(objects.objects.map((o) => o.key));
 });
 afterEach(() => vi.restoreAllMocks());
 afterAll(async () => mf?.dispose());
@@ -100,7 +111,7 @@ describe('capture API and durable jobs', () => {
     expect((await request('/v1/captures', { method: 'POST', body: '{}' })).status).toBe(401);
     expect((await request('/v1/captures/unknown')).status).toBe(401);
     expect((await request('/v1/captures/unknown/artifact')).status).toBe(401);
-    expect((await env.DB.prepare('SELECT COUNT(*) n FROM jobs').first()).n).toBe(0);
+    expect((await env.DB.prepare('SELECT COUNT(*) n FROM jobs').first())!.n).toBe(0);
   });
   it.each([
     'http://example.com',
@@ -137,9 +148,9 @@ describe('capture API and durable jobs', () => {
   it('atomically deduplicates concurrent submissions and rejects conflicting reuse', async () => {
     const responses = await Promise.all([create(), create()]);
     expect(responses.map((r) => r.status)).toEqual([202, 202]);
-    const [a, b] = (await Promise.all(responses.map((r) => r.json()))) as any[];
+    const [a, b] = (await Promise.all(responses.map((r) => r.json()))) as CaptureResponse[];
     expect(a.id).toBe(b.id);
-    expect((await env.DB.prepare('SELECT COUNT(*) n FROM jobs').first()).n).toBe(1);
+    expect((await env.DB.prepare('SELECT COUNT(*) n FROM jobs').first())!.n).toBe(1);
     expect((await create('test-request-0001', { url: 'https://openscreenshot.app/' })).status).toBe(
       409,
     );
@@ -150,14 +161,14 @@ describe('capture API and durable jobs', () => {
     expect(first.status).toBe(202);
     expect((await create('second-request-1')).status).toBe(429);
     expect((await create()).status).toBe(202);
-    await processJob(((await first.json()) as any).id, env);
+    await processJob(((await first.json()) as CaptureResponse).id, env);
     env.DAILY_JOB_LIMIT = '1';
     expect((await create('third-request-01')).status).toBe(429);
   });
   it('stores a private PNG before publishing success and avoids duplicate renders', async () => {
     const res = await create();
     expect(res.status).toBe(202);
-    const { id } = (await res.json()) as any;
+    const { id } = (await res.json()) as CaptureResponse;
     expect((await job(id)).status).toBe('queued');
     expect((await request(`/v1/captures/${id}/artifact`, { headers })).status).toBe(409);
     await processJob(id, env);
@@ -177,7 +188,7 @@ describe('capture API and durable jobs', () => {
     expect(calls).toBe(1);
   });
   it('leases prevent simultaneous queue deliveries from rendering twice', async () => {
-    const { id } = (await (await create()).json()) as any;
+    const { id } = (await (await create()).json()) as CaptureResponse;
     await Promise.all([processJob(id, env), processJob(id, env)]);
     expect(calls).toBe(1);
     expect((await job(id)).status).toBe('succeeded');
@@ -187,14 +198,14 @@ describe('capture API and durable jobs', () => {
       calls++;
       return new Response('unavailable', { status: 503 });
     };
-    const { id } = (await (await create()).json()) as any;
+    const { id } = (await (await create()).json()) as CaptureResponse;
     for (let attempt = 1; attempt <= 3; attempt++) {
       await processJob(id, env);
       const stored = await row(id);
-      expect(stored.attempts).toBe(attempt);
+      expect(stored!.attempts).toBe(attempt);
       if (attempt < 3) {
-        expect(stored.status).toBe('queued');
-        expect(stored.next_attempt_at).toBeGreaterThan(Date.now());
+        expect(stored!.status).toBe('queued');
+        expect(stored!.next_attempt_at).toBeGreaterThan(Date.now());
         await processJob(id, env);
         expect(calls).toBe(attempt);
         await env.DB.prepare('UPDATE jobs SET next_attempt_at=0 WHERE id=?').bind(id).run();
@@ -207,7 +218,7 @@ describe('capture API and durable jobs', () => {
   it('does not retry permanent provider errors and does not expose upstream bodies', async () => {
     env.BROWSER.quickAction = async () =>
       new Response('sensitive upstream detail', { status: 422 });
-    const { id } = (await (await create()).json()) as any;
+    const { id } = (await (await create()).json()) as CaptureResponse;
     await processJob(id, env);
     const status = await job(id);
     expect(status).toMatchObject({
@@ -220,7 +231,7 @@ describe('capture API and durable jobs', () => {
   it('rejects invalid PNG responses instead of publishing a successful artifact', async () => {
     env.BROWSER.quickAction = async () =>
       new Response('<html>blocked</html>', { headers: { 'content-type': 'image/png' } });
-    const { id } = (await (await create()).json()) as any;
+    const { id } = (await (await create()).json()) as CaptureResponse;
     await processJob(id, env);
     expect((await job(id)).error.code).toBe('invalid_image');
     expect((await env.ARTIFACTS.list()).objects).toHaveLength(0);
@@ -231,15 +242,15 @@ describe('capture API and durable jobs', () => {
     };
     const res = await create();
     expect(res.status).toBe(202);
-    const { id } = (await res.json()) as any;
-    env.CAPTURE_QUEUE.send = async (body: any) => sent.push(body.id);
+    const { id } = (await res.json()) as CaptureResponse;
+    env.CAPTURE_QUEUE.send = async (body: { id: string }) => sent.push(body.id);
     await recover(env);
     expect(sent).toContain(id);
     await processJob(id, env);
     expect((await job(id)).status).toBe('succeeded');
   });
   it('recovers expired leases and reuses an uploaded artifact after interrupted completion', async () => {
-    const { id } = (await (await create()).json()) as any;
+    const { id } = (await (await create()).json()) as CaptureResponse;
     await env.DB.prepare(
       "UPDATE jobs SET status='running', attempts=1, lease_token='dead-worker', lease_until=0 WHERE id=?",
     )
@@ -255,7 +266,7 @@ describe('capture API and durable jobs', () => {
     expect((await job(id)).status).toBe('succeeded');
   });
   it('fails an exhausted crashed job without starting a fourth render', async () => {
-    const { id } = (await (await create()).json()) as any;
+    const { id } = (await (await create()).json()) as CaptureResponse;
     await env.DB.prepare(
       "UPDATE jobs SET status='running', attempts=3, lease_token='dead-worker', lease_until=0 WHERE id=?",
     )
@@ -266,19 +277,19 @@ describe('capture API and durable jobs', () => {
     expect((await job(id)).error.code).toBe('attempts_exhausted');
   });
   it('denies expired artifacts and removes data in scheduled cleanup', async () => {
-    const { id } = (await (await create()).json()) as any;
+    const { id } = (await (await create()).json()) as CaptureResponse;
     await processJob(id, env);
     await env.DB.prepare('UPDATE jobs SET expires_at=0 WHERE id=?').bind(id).run();
     expect((await request(`/v1/captures/${id}/artifact`, { headers })).status).toBe(410);
     await recover(env);
-    expect(await row(id)).toBeNull();
+    expect(await row(id))!.toBeNull();
     expect((await env.ARTIFACTS.list()).objects).toHaveLength(0);
   });
 });
 
 it('blocks non-allowlisted resource and redirect URLs in the browser request policy', async () => {
-  env.BROWSER.quickAction = async (_action: string, options: any) => {
-    const blocked = new RegExp(options.rejectRequestPattern[0]);
+  env.BROWSER.quickAction = async (_action: string, options: BrowserRunScreenshotOptions) => {
+    const blocked = new RegExp(options.rejectRequestPattern![0]);
     for (const url of [
       'https://127.0.0.1/',
       'https://example.com.evil.test/',
@@ -296,57 +307,60 @@ it('blocks non-allowlisted resource and redirect URLs in the browser request pol
       expect(blocked.test(url)).toBe(false);
     return new Response(PNG, { headers: { 'content-type': 'image/png' } });
   };
-  const { id } = (await (await create()).json()) as any;
+  const { id } = (await (await create()).json()) as CaptureResponse;
   await processJob(id, env);
   expect((await job(id)).browserMs).toBeNull();
 });
 it('fences stale completion when a worker loses its lease mid-render', async () => {
-  const { id } = (await (await create()).json()) as any;
+  const { id } = (await (await create()).json()) as CaptureResponse;
   env.BROWSER.quickAction = async () => {
     await env.DB.prepare("UPDATE jobs SET lease_token='new-owner' WHERE id=?").bind(id).run();
     return new Response(PNG, { headers: { 'content-type': 'image/png' } });
   };
   await processJob(id, env);
   expect((await job(id)).status).toBe('running');
-  expect((await row(id)).lease_token).toBe('new-owner');
+  expect((await row(id))!.lease_token).toBe('new-owner');
   expect((await request(`/v1/captures/${id}/artifact`, { headers })).status).toBe(409);
 });
 it('rejects a truncated PNG with a valid header', async () => {
   env.BROWSER.quickAction = async () =>
     new Response(PNG.subarray(0, 33), { headers: { 'content-type': 'image/png' } });
-  const { id } = (await (await create()).json()) as any;
+  const { id } = (await (await create()).json()) as CaptureResponse;
   await processJob(id, env);
   expect((await job(id)).error?.code).toBe('invalid_image');
 });
 it('rejects an artifact beyond the byte budget', async () => {
   env.BROWSER.quickAction = async () =>
     new Response(new Uint8Array(21 * 1024 * 1024), { headers: { 'content-type': 'image/png' } });
-  const { id } = (await (await create()).json()) as any;
+  const { id } = (await (await create()).json()) as CaptureResponse;
   await processJob(id, env);
   expect((await job(id)).error?.code).toBe('image_too_large');
 });
 it('never exposes an upload that completes after expiry cleanup', async () => {
-  const { id } = (await (await create()).json()) as any;
+  const { id } = (await (await create()).json()) as CaptureResponse;
   const bucket = env.ARTIFACTS;
   env.ARTIFACTS = {
+    list: bucket.list.bind(bucket),
+    createMultipartUpload: bucket.createMultipartUpload.bind(bucket),
+    resumeMultipartUpload: bucket.resumeMultipartUpload.bind(bucket),
     head: bucket.head.bind(bucket),
     get: bucket.get.bind(bucket),
     delete: bucket.delete.bind(bucket),
-    async put(key: string, value: any, options: any) {
+    async put(...args: Parameters<R2Bucket['put']>) {
       await env.DB.prepare('UPDATE jobs SET expires_at=0, lease_until=0 WHERE id=?').bind(id).run();
       await recover(env);
-      return bucket.put(key, value, options);
+      return bucket.put(...args);
     },
   };
   await processJob(id, env);
-  expect(await row(id)).toBeNull();
+  expect(await row(id))!.toBeNull();
   expect((await request(`/v1/captures/${id}/artifact`, { headers })).status).toBe(404);
   // This orphan is intentionally retained; the mandatory bucket lifecycle expires it.
   expect(await bucket.head(`${id}/1.png`)).not.toBeNull();
 });
 it('normalizes scrolling before capture without disabling lazy-load scrolling', async () => {
-  let options: any;
-  env.BROWSER.quickAction = async (_action: string, input: any) => {
+  let options!: BrowserRunScreenshotOptions;
+  env.BROWSER.quickAction = async (_action: string, input: BrowserRunScreenshotOptions) => {
     options = input;
     return new Response(PNG, { headers: { 'content-type': 'image/png' } });
   };
@@ -356,7 +370,7 @@ it('normalizes scrolling before capture without disabling lazy-load scrolling', 
       width: 390,
       height: 844,
     })
-  ).json()) as any;
+  ).json()) as CaptureResponse;
   await processJob(id, env);
   expect((await job(id)).status).toBe('succeeded');
   expect(options.scrollPage).toBe(true);
@@ -384,11 +398,11 @@ it('retries provider timeout 6002, retaining sanitized failure diagnostics after
         },
       },
     );
-  const { id } = (await (await create()).json()) as any;
+  const { id } = (await (await create()).json()) as CaptureResponse;
   await processJob(id, env);
   expect((await job(id)).status).toBe('queued');
   expect((await job(id)).error.code).toBe('render_timeout');
-  const diagnostic = JSON.parse((await row(id)).last_failure_json);
+  const diagnostic = JSON.parse((await row(id))!.last_failure_json!);
   expect(diagnostic).toMatchObject({
     attempt: 1,
     httpStatus: 422,
@@ -406,7 +420,7 @@ it('retries provider timeout 6002, retaining sanitized failure diagnostics after
     new Response(PNG, { headers: { 'content-type': 'image/png' } });
   await processJob(id, env);
   expect((await job(id)).status).toBe('succeeded');
-  expect(JSON.parse((await row(id)).last_failure_json)).toEqual(diagnostic);
+  expect(JSON.parse((await row(id))!.last_failure_json!)).toEqual(diagnostic);
 });
 it.each([
   [
@@ -431,10 +445,10 @@ it.each([
           'x-browser-ms-used': 'NaN',
         },
       });
-    const { id } = (await (await create()).json()) as any;
+    const { id } = (await (await create()).json()) as CaptureResponse;
     await processJob(id, env);
     expect((await job(id)).status).toBe(expected);
-    expect(JSON.parse((await row(id)).last_failure_json)).toMatchObject({
+    expect(JSON.parse((await row(id))!.last_failure_json!)).toMatchObject({
       bodyState,
       rayId: null,
       browserMs: null,
@@ -449,7 +463,7 @@ it('bounds repeated recognized provider timeouts to three renders', async () => 
       headers: { 'content-type': 'application/json' },
     });
   };
-  const { id } = (await (await create()).json()) as any;
+  const { id } = (await (await create()).json()) as CaptureResponse;
   for (let i = 0; i < 3; i++) {
     await processJob(id, env);
     await env.DB.prepare('UPDATE jobs SET next_attempt_at=0 WHERE id=?').bind(id).run();
@@ -486,7 +500,7 @@ it('beta isolates jobs and artifacts between anonymous browsers and operator job
   expect(a).not.toBe(b);
   const res = await betaCreate(a);
   expect(res.status).toBe(202);
-  const j = (await res.json()) as any;
+  const j = (await res.json()) as CaptureResponse;
   expect((await request(j.statusUrl, { headers: { cookie: b } })).status).toBe(404);
   expect((await request(j.statusUrl)).status).toBe(401);
   await processJob(j.id, env);
@@ -496,7 +510,7 @@ it('beta isolates jobs and artifacts between anonymous browsers and operator job
   expect(
     (await request(`/beta/captures/${j.id}/artifact`, { headers: { cookie: a } })).status,
   ).toBe(200);
-  const operator = (await (await create()).json()) as any;
+  const operator = (await (await create()).json()) as CaptureResponse;
   expect((await request(`/beta/captures/${operator.id}`, { headers: { cookie: a } })).status).toBe(
     404,
   );
@@ -542,13 +556,13 @@ it('beta enforces network limits across cookie resets and deduplicates by owner'
 });
 it('beta aggregates actual transitions and first download requests without raw identity or URL', async () => {
   const cookie = await betaSession();
-  const j = (await (await betaCreate(cookie)).json()) as any;
+  const j = (await (await betaCreate(cookie)).json()) as CaptureResponse;
   await betaCreate(cookie);
   await processJob(j.id, env);
   await processJob(j.id, env);
   await request(`/beta/captures/${j.id}/artifact`, { headers: { cookie } });
   await request(`/beta/captures/${j.id}/download`, { method: 'HEAD', headers: { cookie } });
-  expect((await env.DB.prepare('SELECT downloads FROM beta_daily').first()).downloads).toBe(0);
+  expect((await env.DB.prepare('SELECT downloads FROM beta_daily').first())!.downloads).toBe(0);
   await request(`/beta/captures/${j.id}/download`, { headers: { cookie } });
   await request(`/beta/captures/${j.id}/download`, { headers: { cookie } });
   const metrics = await env.DB.prepare('SELECT * FROM beta_daily').first();
@@ -567,18 +581,18 @@ it('beta admission is atomic under concurrent requests', async () => {
   );
   expect(responses.filter((r) => r.status === 202)).toHaveLength(5);
   expect(responses.filter((r) => r.status === 429)).toHaveLength(3);
-  expect((await env.DB.prepare('SELECT started FROM beta_daily').first()).started).toBe(5);
+  expect((await env.DB.prepare('SELECT started FROM beta_daily').first())!.started).toBe(5);
 });
 it('beta distinguishes next-day return activity from repeated same-day captures', async () => {
   const cookie = await betaSession();
   await betaCreate(cookie, 'beta-activity-0001');
   await betaCreate(cookie, 'beta-activity-0002');
-  expect((await env.DB.prepare('SELECT days_active FROM beta_activity').first()).days_active).toBe(
+  expect((await env.DB.prepare('SELECT days_active FROM beta_activity').first())!.days_active).toBe(
     1,
   );
   await env.DB.prepare('UPDATE beta_activity SET last_seen=last_seen-86400000').run();
   await betaCreate(cookie, 'beta-activity-0003');
-  expect((await env.DB.prepare('SELECT days_active FROM beta_activity').first()).days_active).toBe(
+  expect((await env.DB.prepare('SELECT days_active FROM beta_activity').first())!.days_active).toBe(
     2,
   );
 });
@@ -587,14 +601,14 @@ it.each(['example.com', ' example.com/path?x=1 ', '//example.com/path'])(
   async (url) => {
     const res = await create('normalize-url-test', { url });
     expect(res.status).toBe(202);
-    const j = (await res.json()) as any;
-    expect(JSON.parse((await row(j.id)).input_json).url).toMatch(/^https:\/\/example\.com\//);
+    const j = (await res.json()) as CaptureResponse;
+    expect(JSON.parse((await row(j.id))!.input_json).url).toMatch(/^https:\/\/example\.com\//);
   },
 );
 
 it('mounts beta under /capture while preserving origin validation and cookie ownership', async () => {
   env.BETA_ENABLED = 'true';
-  const ctx = {} as any;
+  const ctx = {} as ExecutionContext;
   const session = await worker.fetch(new Request(base + '/capture/beta/session'), env, ctx);
   const cookie = session.headers.get('set-cookie')!.split(';')[0];
   const response = await worker.fetch(
@@ -613,7 +627,7 @@ it('mounts beta under /capture while preserving origin validation and cookie own
     ctx,
   );
   expect(response.status).toBe(202);
-  const job = (await response.json()) as any;
+  const job = (await response.json()) as CaptureResponse;
   expect(
     (
       await worker.fetch(

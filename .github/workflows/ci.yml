@@ -19,41 +19,51 @@ jobs:
           # sitemap URL without failing anything.
           fetch-depth: 0
 
+      - uses: pnpm/action-setup@v4
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Generate icons
-        run: npm run icons
+        run: pnpm run icons
 
       - name: Lint
-        run: npm run lint
+        run: pnpm run lint
 
       - name: Format check
-        run: npm run format:check
+        run: pnpm run format:check
 
       - name: Type check
-        run: npm run typecheck
+        run: pnpm run typecheck
 
       - name: Test
-        run: npm test
+        run: pnpm test
 
       - name: Build
-        run: npm run build
+        run: pnpm run build
+
+      - name: Build Firefox
+        run: pnpm run build:firefox
+
+      - name: Validate Firefox
+        run: pnpm run lint:firefox
 
       - name: Build the site
-        run: npm run site:build
+        run: pnpm run site:build
 
       - name: Upload build
         uses: actions/upload-artifact@v4
         with:
           name: openscreenshot-dist
-          path: dist
+          path: |
+            dist
+            dist-firefox
 
   # The three smokes that need nothing but a page load. smoke:recorder and
   # smoke:media stay manual on purpose: the first records a real WebM through
@@ -74,14 +84,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Install the MCP server's dependencies
         # puppeteer-core is not a devDependency of the root package — the MCP
@@ -90,20 +102,46 @@ jobs:
         run: npm ci --prefix mcp
 
       - name: Generate icons
-        run: npm run icons
+        run: pnpm run icons
 
       - name: Build
         # The smokes drive the built dist/ and refuse a stale one
         # (assertDistFresh in tests/browser/dist-server.mjs), so this job
         # builds its own rather than restoring the build job's artifact,
         # whose extraction mtimes would be what the freshness check judged.
-        run: npm run build
+        run: pnpm run build
 
       - name: Accessibility smoke
-        run: npm run smoke:a11y
+        run: pnpm run smoke:a11y
 
       - name: Reflow smoke
-        run: npm run smoke:reflow
+        run: pnpm run smoke:reflow
 
       - name: Editor keyboard smoke
-        run: npm run smoke:editor
+        run: pnpm run smoke:editor
+
+  firefox-smoke:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: browser-actions/setup-firefox@v1
+        id: firefox
+        with:
+          firefox-version: latest
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run icons
+      - run: pnpm run package:firefox
+      - run: python -m pip install -r tests/browser/requirements-firefox.txt
+      - name: Exercise real Firefox capture and export
+        env:
+          FIREFOX_BIN: ${{ steps.firefox.outputs.firefox-path }}
+        run: python tests/browser/firefox-smoke.py

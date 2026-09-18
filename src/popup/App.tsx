@@ -1,3 +1,4 @@
+import { IS_FIREFOX, RECORDING_SUPPORTED } from '../shared/browser';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type {
   CaptureAction,
@@ -64,7 +65,11 @@ function t(id: string): string {
 
 // chrome:// URLs can't be opened via <a href>; tabs.create works from the popup.
 function openShortcutSettings() {
-  void chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
+  void chrome.tabs.create({
+    url: IS_FIREFOX
+      ? 'https://support.mozilla.org/kb/manage-extension-shortcuts-firefox'
+      : 'chrome://extensions/shortcuts',
+  });
 }
 
 // External link — open in a tab (a bare <a> would navigate the popup away).
@@ -262,6 +267,7 @@ export function App() {
 
   // Recorder: settings, active tab, a pending continue-session, and current state.
   useEffect(() => {
+    if (!RECORDING_SUPPORTED) return;
     void getRecSettings().then(setRecSettingsState);
     void queryDeviceStates().then(setDeviceStates);
     void chrome.permissions
@@ -685,7 +691,7 @@ export function App() {
         <SettingsView settings={settings} onChange={updateSettings} onSetup={() => goSetup()} />
       ) : (
         <>
-          <PinHint />
+          {!IS_FIREFOX && <PinHint />}
           <span class="settings-section">{t('popupSectionScreenshot')}</span>
           <nav class="modes" aria-label={t('captureModesAria')}>
             {MODES.map((m, i) => {
@@ -738,114 +744,126 @@ export function App() {
             })}
           </nav>
 
-          <span class="settings-section">{t('popupSectionRecord')}</span>
-          {recState?.active ? (
-            <div class="mode-card rec-live">
-              <span class="rec-dot" aria-hidden="true" />
-              <span class="mode-text">
-                <span class="mode-title">
-                  {recState.paused ? t('recPaused') : t('recRecording')}
-                </span>
-                <span class="mode-sub">
-                  {recState.anchored === false ? t('recStarting') : formatElapsed(displayMs)}
-                </span>
-              </span>
-              <span class="mode-keys">
-                <button class="seg-btn" onClick={stopRecording}>
-                  {t('recStop')}
+          {RECORDING_SUPPORTED ? (
+            <>
+              <span class="settings-section">{t('popupSectionRecord')}</span>
+              {recState?.active ? (
+                <div class="mode-card rec-live">
+                  <span class="rec-dot" aria-hidden="true" />
+                  <span class="mode-text">
+                    <span class="mode-title">
+                      {recState.paused ? t('recPaused') : t('recRecording')}
+                    </span>
+                    <span class="mode-sub">
+                      {recState.anchored === false ? t('recStarting') : formatElapsed(displayMs)}
+                    </span>
+                  </span>
+                  <span class="mode-keys">
+                    <button class="seg-btn" onClick={stopRecording}>
+                      {t('recStop')}
+                    </button>
+                    <button class="seg-btn" onClick={cancelRecording}>
+                      {t('recCancel')}
+                    </button>
+                  </span>
+                </div>
+              ) : (
+                <button
+                  class="mode-card"
+                  data-testid="rec-start"
+                  aria-disabled={activeTabProtected}
+                  title={activeTabProtected ? t('recProtected') : undefined}
+                  onClick={onRecordClick}
+                >
+                  <span class="mode-icon" aria-hidden="true">
+                    <IconRecordDot size={20} />
+                  </span>
+                  <span class="mode-text">
+                    <span class="mode-title">
+                      {t(continueSessionId ? 'recContinue' : 'recTitle')}
+                    </span>
+                    <span class="mode-sub">{t('recSub')}</span>
+                  </span>
                 </button>
-                <button class="seg-btn" onClick={cancelRecording}>
-                  {t('recCancel')}
-                </button>
-              </span>
-            </div>
-          ) : (
-            <button
-              class="mode-card"
-              data-testid="rec-start"
-              aria-disabled={activeTabProtected}
-              title={activeTabProtected ? t('recProtected') : undefined}
-              onClick={onRecordClick}
-            >
-              <span class="mode-icon" aria-hidden="true">
-                <IconRecordDot size={20} />
-              </span>
-              <span class="mode-text">
-                <span class="mode-title">{t(continueSessionId ? 'recContinue' : 'recTitle')}</span>
-                <span class="mode-sub">{t('recSub')}</span>
-              </span>
-            </button>
-          )}
+              )}
 
-          {/* The Record click asks Chrome for tabCapture — the assurance sits
+              {/* The Record click asks Chrome for tabCapture — the assurance sits
               with it until that grant lands. */}
-          {!recState?.active && hasTabCapture === false && <TrustStrip testid="rec-trust" />}
+              {!recState?.active && hasTabCapture === false && <TrustStrip testid="rec-trust" />}
 
-          {/* The prompt was refused: the setup page is where it is fixed. */}
-          {tabCaptureRefused && (
-            <button class="perm-chip" data-testid="rec-refused" onClick={() => goSetup('record')}>
-              {t('popupRecordRefused')}
-            </button>
-          )}
+              {/* The prompt was refused: the setup page is where it is fixed. */}
+              {tabCaptureRefused && (
+                <button
+                  class="perm-chip"
+                  data-testid="rec-refused"
+                  onClick={() => goSetup('record')}
+                >
+                  {t('popupRecordRefused')}
+                </button>
+              )}
 
-          {recState?.active ? null : (
-            <div class="rec-sources">
-              <span class="rec-sources-label">{t('recSourceLabel')}</span>
-              <div class="chip-row" role="group" aria-label={t('recSourceLabel')}>
-                <button
-                  class="chip-toggle"
-                  aria-pressed={recSettings.mic}
-                  onClick={() => updateRecSettings({ mic: !recSettings.mic })}
-                >
-                  {t('recMic')}
-                </button>
-                <button
-                  class="chip-toggle"
-                  aria-pressed={recSettings.tabAudio}
-                  onClick={() => updateRecSettings({ tabAudio: !recSettings.tabAudio })}
-                >
-                  {t('recTabAudio')}
-                </button>
-                <button
-                  class="chip-toggle"
-                  aria-pressed={recSettings.webcam}
-                  onClick={() => updateRecSettings({ webcam: !recSettings.webcam })}
-                >
-                  {t('recWebcam')}
-                </button>
-              </div>
-              {/* Task 40: the bubble only ever exists in the exported file —
+              {recState?.active ? null : (
+                <div class="rec-sources">
+                  <span class="rec-sources-label">{t('recSourceLabel')}</span>
+                  <div class="chip-row" role="group" aria-label={t('recSourceLabel')}>
+                    <button
+                      class="chip-toggle"
+                      aria-pressed={recSettings.mic}
+                      onClick={() => updateRecSettings({ mic: !recSettings.mic })}
+                    >
+                      {t('recMic')}
+                    </button>
+                    <button
+                      class="chip-toggle"
+                      aria-pressed={recSettings.tabAudio}
+                      onClick={() => updateRecSettings({ tabAudio: !recSettings.tabAudio })}
+                    >
+                      {t('recTabAudio')}
+                    </button>
+                    <button
+                      class="chip-toggle"
+                      aria-pressed={recSettings.webcam}
+                      onClick={() => updateRecSettings({ webcam: !recSettings.webcam })}
+                    >
+                      {t('recWebcam')}
+                    </button>
+                  </div>
+                  {/* Task 40: the bubble only ever exists in the exported file —
                   there is no live self-view while recording — so this has to
                   be said before Record is pressed, not discovered after. */}
-              {recSettings.webcam && (
-                <span class="rec-trust-hint" data-testid="rec-webcam-hint">
-                  {t('recWebcamNoPreview')}
-                </span>
-              )}
-            </div>
-          )}
-
-          {recState?.active
-            ? null
-            : popupWarnings(recSettings, deviceStates).map((device) => (
-                <button key={device} class="perm-chip" onClick={() => goSetup()}>
-                  {chrome.i18n.getMessage(
-                    'popupPermissionChip',
-                    t(device === 'mic' ? 'recMic' : 'recWebcam'),
+                  {recSettings.webcam && (
+                    <span class="rec-trust-hint" data-testid="rec-webcam-hint">
+                      {t('recWebcamNoPreview')}
+                    </span>
                   )}
-                </button>
-              ))}
+                </div>
+              )}
 
-          {recState?.recoverableSessionId && !recState.active ? (
-            <div class="footer-row">
-              <button
-                class="link-btn"
-                onClick={() => recoverRecording(recState.recoverableSessionId as string)}
-              >
-                {t('recRecover')}
-              </button>
-            </div>
-          ) : null}
+              {recState?.active
+                ? null
+                : popupWarnings(recSettings, deviceStates).map((device) => (
+                    <button key={device} class="perm-chip" onClick={() => goSetup()}>
+                      {chrome.i18n.getMessage(
+                        'popupPermissionChip',
+                        t(device === 'mic' ? 'recMic' : 'recWebcam'),
+                      )}
+                    </button>
+                  ))}
+
+              {recState?.recoverableSessionId && !recState.active ? (
+                <div class="footer-row">
+                  <button
+                    class="link-btn"
+                    onClick={() => recoverRecording(recState.recoverableSessionId as string)}
+                  >
+                    {t('recRecover')}
+                  </button>
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <p class="rec-trust-hint">{t('firefoxScreenshotOnly')}</p>
+          )}
 
           <div class="divider" />
 
@@ -862,20 +880,22 @@ export function App() {
             >
               {t('reopenLast')}
             </button>
-            <button
-              class="link-btn"
-              onClick={() => {
-                void chrome.tabs
-                  .create({ url: chrome.runtime.getURL('src/recorder/index.html') })
-                  .then(
-                    () => window.close(),
-                    () => pushToast(t('popupOpenFailed'), 'error'),
-                  );
-              }}
-              title={t('recRecordings')}
-            >
-              {t('recRecordings')}
-            </button>
+            {RECORDING_SUPPORTED && (
+              <button
+                class="link-btn"
+                onClick={() => {
+                  void chrome.tabs
+                    .create({ url: chrome.runtime.getURL('src/recorder/index.html') })
+                    .then(
+                      () => window.close(),
+                      () => pushToast(t('popupOpenFailed'), 'error'),
+                    );
+                }}
+                title={t('recRecordings')}
+              >
+                {t('recRecordings')}
+              </button>
+            )}
             <button
               class="link-btn"
               onClick={() => capture('region', true)}
@@ -910,7 +930,8 @@ function SettingsView({
   const showQuality = settings.defaultFormat === 'jpeg' || settings.defaultFormat === 'webp';
 
   useEffect(() => {
-    void chrome.permissions.contains({ origins: ['<all_urls>'] }).then(setAcrossSites);
+    if (RECORDING_SUPPORTED)
+      void chrome.permissions.contains({ origins: ['<all_urls>'] }).then(setAcrossSites);
   }, []);
 
   async function toggleAcrossSites(next: boolean) {
@@ -1111,36 +1132,40 @@ function SettingsView({
         </div>
       </section>
 
-      <section class="settings-group" aria-labelledby="settings-recording">
-        <h2 id="settings-recording">{t('settingsRecording')}</h2>
-        <div class="settings-row">
-          <span class="settings-label">{t('popupSetupLink')}</span>
-          <div class="settings-control">
-            <button class="link-btn link-btn-accent" onClick={onSetup}>
-              {t('setupTitle')}
-            </button>
+      {RECORDING_SUPPORTED && (
+        <section class="settings-group" aria-labelledby="settings-recording">
+          <h2 id="settings-recording">{t('settingsRecording')}</h2>
+          <div class="settings-row">
+            <span class="settings-label">{t('popupSetupLink')}</span>
+            <div class="settings-control">
+              <button class="link-btn link-btn-accent" onClick={onSetup}>
+                {t('setupTitle')}
+              </button>
+            </div>
           </div>
-        </div>
-        <div class="settings-row settings-row-switch">
-          <div class="settings-copy">
-            <label class="settings-label" for="record-across-sites">
-              {t('recAcrossSites')}
-            </label>
-            <p class="settings-hint" id="across-sites-hint">
-              {t('settingsAcrossSitesHint')}
-            </p>
-            {!acrossSites && <TrustStrip testid="sites-trust" />}
+          <div class="settings-row settings-row-switch">
+            <div class="settings-copy">
+              <label class="settings-label" for="record-across-sites">
+                {t('recAcrossSites')}
+              </label>
+              <p class="settings-hint" id="across-sites-hint">
+                {t('settingsAcrossSitesHint')}
+              </p>
+              {!acrossSites && <TrustStrip testid="sites-trust" />}
+            </div>
+            <input
+              id="record-across-sites"
+              type="checkbox"
+              class="switch"
+              aria-describedby="across-sites-hint"
+              checked={acrossSites}
+              onChange={(e) =>
+                void toggleAcrossSites((e.currentTarget as HTMLInputElement).checked)
+              }
+            />
           </div>
-          <input
-            id="record-across-sites"
-            type="checkbox"
-            class="switch"
-            aria-describedby="across-sites-hint"
-            checked={acrossSites}
-            onChange={(e) => void toggleAcrossSites((e.currentTarget as HTMLInputElement).checked)}
-          />
-        </div>
-      </section>
+        </section>
+      )}
 
       <section class="settings-group settings-support" aria-labelledby="settings-support">
         <h2 id="settings-support">{t('settingsSupport')}</h2>

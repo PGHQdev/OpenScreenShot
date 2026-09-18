@@ -4,7 +4,7 @@
 
 # OpenScreenShot
 
-**One-click full page screenshots for Chrome. MIT licensed. Nothing leaves your machine.**
+**One-click full page screenshots for Chrome and Firefox. MIT licensed. Nothing leaves your machine.**
 
 [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/hdabbojjccojlapnfjpdppcpfcnhgmdp?label=Chrome%20Web%20Store&logo=googlechrome&logoColor=white&color=E8503A)](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp)
 [![Users](https://img.shields.io/chrome-web-store/users/hdabbojjccojlapnfjpdppcpfcnhgmdp?label=users&color=F5A623)](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp)
@@ -84,17 +84,25 @@ browser storage until you export or delete them. Full policy: [PRIVACY.md](./PRI
 ## Development
 
 TypeScript (strict) + Preact, bundled by Vite + [@crxjs/vite-plugin](https://github.com/crxjs/crxjs).
-One runtime dependency (Preact); unit tests with Vitest. Node.js 22.19+ and npm 10+.
+One runtime dependency (Preact); unit tests with Vitest. Node.js 22.19+ and pnpm 10.33.0.
 
 ```bash
-npm install
-npm run icons      # generate the extension icons into public/icons
-npm run dev        # Vite + crxjs with HMR (writes to dist/)
+pnpm install --frozen-lockfile
+pnpm run icons      # generate the extension icons into public/icons
+pnpm run dev        # Vite + crxjs with HMR (writes to dist/)
 ```
 
 Load `dist/` via `chrome://extensions` → Developer mode → **Load unpacked**.
 
-`npm run build` type-checks and bundles; `npm run package` produces the store zip. Other
+For Firefox desktop 140+, run `pnpm run build:firefox`, then load
+`dist-firefox/manifest.json` through `about:debugging` → **This Firefox** →
+**Load Temporary Add-on**. `pnpm run package:firefox` produces the Mozilla upload
+ZIP; `pnpm run lint:firefox` validates it. Firefox currently supports screenshots,
+annotation, history, image and PDF export; recording remains Chrome-only.
+The Mozilla listing is pending submission. See the [Firefox release guide](release/firefox/README.md)
+for reviewer sources, verification and ongoing publication setup.
+
+`pnpm run build` type-checks and bundles; `pnpm run package` produces the store zip. Other
 scripts: `typecheck`, `lint`, `test`, `format`, `shots` (marketing screenshots),
 `site:dev` / `site:deploy` (openscreenshot.app).
 

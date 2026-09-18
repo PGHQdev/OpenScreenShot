@@ -1,0 +1,6 @@
+{
+  "version": {
+    "license": "MIT",
+    "approval_notes": "Desktop Firefox screenshot-only build. Rebuild instructions are in release/firefox/README.md in the source archive. Recording is excluded. All screenshot processing and history stay local. The validator's innerHTML warning is Preact's renderer; application code does not use innerHTML or dangerouslySetInnerHTML. No gecko_android key is declared: this listing is desktop-only."
+  }
+}

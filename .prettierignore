@@ -10,3 +10,10 @@ public/icons
 # strips that leading indentation, which destroys the one signal telling a
 # reader where the snippet goes.
 agent_docs/plans
+dist-firefox
+pnpm-lock.yaml
+
+# Generated benchmark evidence and service output
+services/capture/benchmark-output/
+services/capture/docs/**/*.json
+benchmarks/**/gallery.html

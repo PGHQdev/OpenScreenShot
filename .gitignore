@@ -24,3 +24,12 @@ pi-session-*.html
 .worktrees/
 .superpowers/
 agent_docs/
+
+dist-firefox/
+web-ext-artifacts/
+*.xpi
+
+# Python browser-test environments and bytecode
+.venv/
+__pycache__/
+*.py[cod]

@@ -9,7 +9,8 @@ export default tseslint.config(
     // middleware facades, already gitignored. Linting a build artefact of our
     // own worker reports the bundler's style, not ours.
     ignores: [
-      'dist/**',
+      '**/dist/**',
+      'dist-firefox/**',
       'node_modules/**',
       'public/**',
       'coverage/**',

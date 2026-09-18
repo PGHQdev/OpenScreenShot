@@ -194,3 +194,20 @@ describe('normalizeCaptureAction', () => {
     expect(DEFAULT_SETTINGS.captureAction).toBe('editor');
   });
 });
+
+describe('Firefox protected pages', () => {
+  it.each([
+    'moz-extension://id/editor.html',
+    'https://addons.mozilla.org/en-US/firefox/',
+    'https://accounts.firefox.com/',
+  ])('rejects %s before injection', (url) => {
+    expect(isProtectedUrl(url, true)).toBe(true);
+  });
+  it('allows Mozilla websites in Chrome', () => {
+    expect(isProtectedUrl('https://addons.mozilla.org/', false)).toBe(false);
+    expect(isProtectedUrl('https://accounts.firefox.com/', false)).toBe(false);
+  });
+  it('allows an ordinary page mentioning Mozilla', () => {
+    expect(isProtectedUrl('https://example.com/?next=https://addons.mozilla.org')).toBe(false);
+  });
+});

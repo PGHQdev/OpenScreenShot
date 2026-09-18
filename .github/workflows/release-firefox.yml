@@ -1,0 +1,54 @@
+name: Release Firefox
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+# Firefox submissions run independently of Chrome's review queue.
+concurrency:
+  group: firefox-release
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Set version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: pnpm version "${GITHUB_REF_NAME#v}" --no-git-tag-version --allow-same-version
+      - run: pnpm run icons
+      - run: pnpm run lint
+      - run: pnpm test
+      - run: pnpm run package:firefox
+      - run: pnpm run lint:firefox
+      - run: pnpm run source:firefox
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firefox-submission
+          path: openscreenshot-firefox-*.zip
+      - name: Submit listed update to Mozilla
+        # Enable after the first listing has been created and reviewed on AMO.
+        # Manual runs only prepare artifacts, avoiding duplicate submissions.
+        if: vars.AMO_PUBLISH_ENABLED == 'true' && startsWith(github.ref, 'refs/tags/v')
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
+          WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: >-
+          pnpm exec web-ext sign --source-dir dist-firefox --channel listed
+          --upload-source-code "openscreenshot-firefox-source-v${GITHUB_REF_NAME#v}.zip"
+          --amo-metadata release/firefox/metadata.json
+          --approval-timeout 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: firefox-signed
+          path: web-ext-artifacts/*.xpi
+          if-no-files-found: ignore

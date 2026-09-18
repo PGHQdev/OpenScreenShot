@@ -1,3 +1,4 @@
+import { IS_FIREFOX } from '../shared/browser';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { isTypingTarget, useEditor } from './useEditor';
 import {
@@ -425,7 +426,7 @@ export function App() {
           >
             {t('editorSaveImage')}
           </button>
-          <EditorMoreMenu onRate={openReviews} />
+          {!IS_FIREFOX && <EditorMoreMenu onRate={openReviews} />}
         </div>
       </header>
 
@@ -1561,19 +1562,21 @@ function EditorMoreMenu({ onRate }: { onRate: () => void }) {
         <span>{t('editorMoreActions')}</span>
       </summary>
       <div class="editor-more-panel">
-        <button
-          class="text-btn rate-btn"
-          onClick={() => {
-            if (ref.current) {
-              ref.current.open = false;
-              ref.current.querySelector('summary')?.focus();
-            }
-            onRate();
-          }}
-        >
-          <IconStar size={16} />
-          {t('editorRateLabel')}
-        </button>
+        {!IS_FIREFOX && (
+          <button
+            class="text-btn rate-btn"
+            onClick={() => {
+              if (ref.current) {
+                ref.current.open = false;
+                ref.current.querySelector('summary')?.focus();
+              }
+              onRate();
+            }}
+          >
+            <IconStar size={16} />
+            {t('editorRateLabel')}
+          </button>
+        )}
       </div>
     </details>
   );

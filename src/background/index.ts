@@ -1,3 +1,5 @@
+import { downloadDataUrl } from '../shared/download';
+import { IS_FIREFOX } from '../shared/browser';
 /**
  * OpenScreenShot background service worker.
  *
@@ -45,7 +47,7 @@ import {
 import { updateCaptureOverlay } from '../content/capture-overlay';
 import { selectRegion } from '../content/region-select';
 import { copyImageToClipboard } from '../content/clipboard';
-import { restoreRecBadge } from './recording';
+import { restoreRecBadge } from '@/background/recording';
 
 const EDITOR_URL = chrome.runtime.getURL('src/editor/index.html');
 const POPUP_URL = 'src/popup/index.html';
@@ -94,7 +96,7 @@ const PAINT_SETTLE_MS = 60;
 // value.
 chrome.runtime.onInstalled.addListener((details) => {
   void migrateExpressDefault(details.reason).then(() => createContextMenus());
-  if (details.reason === 'install') void chrome.tabs.create({ url: welcomeUrl() });
+  if (!IS_FIREFOX && details.reason === 'install') void chrome.tabs.create({ url: welcomeUrl() });
 });
 
 /** The welcome URL with the same two values the uninstall URL carries. */
@@ -105,9 +107,10 @@ function welcomeUrl(): string {
 
 // Registered on every worker start so it survives service-worker restarts.
 // Version and locale only — see UNINSTALL_URL.
-void chrome.runtime.setUninstallURL(
-  `${UNINSTALL_URL}?v=${chrome.runtime.getManifest().version}&hl=${chrome.i18n.getUILanguage()}`,
-);
+if (!IS_FIREFOX)
+  void chrome.runtime.setUninstallURL(
+    `${UNINSTALL_URL}?v=${chrome.runtime.getManifest().version}&hl=${chrome.i18n.getUILanguage()}`,
+  );
 
 /** Contexts the capture menu appears in — everywhere on a page. */
 const MENU_CONTEXTS: NonNullable<chrome.contextMenus.CreateProperties['contexts']> = [
@@ -642,7 +645,7 @@ async function deliverCapture(
   // owns the format choice.
   const base = formatFilename(settings.filenameTemplate, { title, url, width, height });
   try {
-    await chrome.downloads.download({ url: dataUrl, filename: `${base}.png`, saveAs: false });
+    await downloadDataUrl(dataUrl, `${base}.png`);
   } catch {
     broadcast({
       type: 'CAPTURE_ERROR',

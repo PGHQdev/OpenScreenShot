@@ -1,3 +1,4 @@
+import { IS_FIREFOX } from './browser';
 /** Shared utility helpers used across the extension. */
 import type { CaptureAction, CaptureMode } from './types';
 
@@ -55,7 +56,7 @@ export function sanitizeFilename(name: string): string {
 }
 
 /** True for URLs the extension is not allowed to capture. */
-export function isProtectedUrl(url: string | undefined): boolean {
+export function isProtectedUrl(url: string | undefined, firefox = IS_FIREFOX): boolean {
   if (!url) return true;
   // Our own pages are protected too, and no permission changes that: a probe
   // against the packed build (2026-09-01) showed chrome.scripting.executeScript
@@ -67,6 +68,8 @@ export function isProtectedUrl(url: string | undefined): boolean {
   return (
     url.startsWith('chrome://') ||
     url.startsWith('chrome-extension://') ||
+    url.startsWith('moz-extension://') ||
+    (firefox && /^https:\/\/(addons\.mozilla\.org|accounts\.firefox\.com)(?:[/:]|$)/i.test(url)) ||
     url.startsWith('edge://') ||
     url.startsWith('devtools://') ||
     url.startsWith('about:') ||

@@ -1,3 +1,4 @@
+import { IS_FIREFOX } from './browser';
 /**
  * The rating funnel's local state (see agent_docs and the P0 brief, section
  * 11). Everything here is a plain local flag — no network call, nothing
@@ -31,6 +32,7 @@ export async function recordExportSuccess(): Promise<void> {
  * has never used a Rate surface, and the prompt has not been shown before.
  */
 export async function shouldShowRatePrompt(): Promise<boolean> {
+  if (IS_FIREFOX) return false;
   const stored = await chrome.storage.local.get([SUCCESS_COUNT_KEY, RATED_KEY, PROMPTED_KEY]);
   if (stored[RATED_KEY] || stored[PROMPTED_KEY]) return false;
   return ((stored[SUCCESS_COUNT_KEY] as number | undefined) ?? 0) >= RATE_PROMPT_AFTER;

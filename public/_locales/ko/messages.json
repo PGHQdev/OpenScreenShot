@@ -2406,5 +2406,8 @@
   "captureOverlayFinishing": {
     "message": "스크린샷 마무리 중…",
     "description": "Capture overlay status."
+  },
+  "firefoxScreenshotOnly": {
+    "message": "Firefox에서는 스크린샷 촬영과 편집을 지원합니다. 화면 녹화는 Chrome에서 사용할 수 있습니다."
   }
 }

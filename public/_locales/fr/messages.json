@@ -2406,5 +2406,8 @@
   "captureOverlayFinishing": {
     "message": "Finalisation de la capture…",
     "description": "Capture overlay status."
+  },
+  "firefoxScreenshotOnly": {
+    "message": "Firefox prend en charge les captures d’écran et leur modification. L’enregistrement vidéo est disponible dans Chrome."
   }
 }
