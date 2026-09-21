@@ -3042,7 +3042,8 @@ async function testCutMixedSelectionGrab(browser, base, messages) {
   }
   const nudge = async (rows) => {
     const key = rows > 0 ? 'ArrowDown' : 'ArrowUp';
-    for (let i = 0; i < Math.abs(rows) / 10; i++) await chord(['Shift'], key);
+    for (let i = 0; i < Math.floor(Math.abs(rows) / 10); i++) await chord(['Shift'], key);
+    for (let i = 0; i < Math.abs(rows) % 10; i++) await page.keyboard.press(key);
     await settle(60);
   };
   const band = async () => {
@@ -3062,12 +3063,13 @@ async function testCutMixedSelectionGrab(browser, base, messages) {
   // rows and leaves the other two in the picture.
   await page.$eval('.stage-canvas', (el) => el.focus());
   await page.keyboard.press('r');
-  await page.keyboard.press('Enter');
-  await nudge(-40); // top 190
-  await page.keyboard.press('Enter');
-  await nudge(90); // top 320
-  await page.keyboard.press('Enter');
-  await nudge(170); // top 400
+  for (const targetY of [190, 320, 400]) {
+    await page.keyboard.press('Enter');
+    await settle();
+    const placed = (await say()).match(/Rectangle added at (-?\d+), (-?\d+)\./);
+    assert(placed !== null, 'new rectangle reports its source position');
+    await nudge(targetY - Number(placed[2]));
+  }
   await settle();
 
   await page.keyboard.press('x');
