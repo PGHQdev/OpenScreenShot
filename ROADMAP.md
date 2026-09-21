@@ -8,6 +8,17 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 
 **Status legend:** 🧭 exploring · 📋 planned · 🚧 in progress · ✅ shipped
 
+## Suggested next priorities
+
+Explore **element capture**, **local OCR**, and **combining screenshots** first.
+These are product hypotheses to validate with user feedback, not release commitments.
+For recording, prioritize MP4 export and removing sections from the middle of a take.
+
+Keep Express mode simple. Surface additional choices where they are useful—in capture
+options, editor tools, or history—without adding steps to the default capture flow.
+New screenshot workflows should support Chrome and Firefox; recording capabilities
+remain browser-dependent.
+
 ## Capture
 
 | Feature                                                 | Status       | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
@@ -17,6 +28,7 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 | Right-click context menu capture                        | ✅ shipped   | Landed in v0.6.1: full page / visible / region from the page context menu, via the warning-free `contextMenus` permission; clicks grant `activeTab` and honor the delay setting; errors flash `!` on the badge.                                                                                                                                                                                                                                                                           |
 | Repeat last region                                      | ✅ shipped   | Landed in v0.6.1: re-capture the previous selection rect. The rect persists in local storage; entry points are a popup footer link and a context menu item, shown once a rect exists.                                                                                                                                                                                                                                                                                                     |
 | Region loupe + DOM element snapping                     | 🧭 exploring | Pixel-precise crosshair magnifier; snap selection edges to element boundaries.                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Capture an element                                      | 🧭 exploring | Hover over a card, chart, table, or article and click to capture its bounds. Reduce manual selection and unwanted surrounding space; build on element snapping.                                                                                                                                                                                                                                                                                                                           |
 | Batch capture: list of URLs → one multi-page PDF        | 🧭 exploring | Combines existing scroll-and-stitch with existing PDF export.                                                                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## Editor
@@ -42,6 +54,17 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 | Full keyboard operation and screen reader support         | ✅ shipped | Landed in v1.5.0: a focusable canvas with keyboard layer cycling, placement, move, resize, and crop; live-region announcements for every mutation; roving tabindex on both toolbars; visible focus rings and 24×24 minimum target sizes; `forced-colors` and `prefers-contrast` support; and the editor's UI strings moved behind `chrome.i18n`. |
 | Redesigned editor chrome                                  | ✅ shipped | Landed in v1.5.0: a style bar that no longer reflows the canvas on every tool swap, a coral-themed range slider and canvas stage that adapt to light and dark, a consistent pressed state across every control, a grouped tool rail, and real loading and error states on export.                                                                |
 
+## Screenshot workflows
+
+| Feature                     | Status       | Notes                                                                                                                                                                                                          |
+| --------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Readable long-page exports  | 🧭 exploring | Export an overview with selected detail crops, or split a tall screenshot into readable sections without shrinking the entire page to fit one image.                                                           |
+| Suggested redactions        | 🧭 exploring | Locally highlight possible sensitive text, such as emails and phone numbers, for the user to review and confirm as solid redactions. Detection can miss information; never imply automatic privacy guarantees. |
+| Combine screenshots         | 🧭 exploring | Arrange existing captures vertically, side by side, or in a multi-page PDF with captions. Start with saved captures before adding automated batch capture.                                                     |
+| Before-and-after comparison | 🧭 exploring | Choose two captures from history and compare them with a slider or highlighted differences. Useful for page changes, design reviews, and bug reports.                                                          |
+| Optional source caption     | 🧭 exploring | Add page title, URL, capture time, and viewport size to an export. Preview and remove sensitive URL parameters before sharing. Provides context, not proof of authenticity.                                    |
+| Create a visual guide       | 🧭 exploring | Collect captures as steps, add short captions and numbered annotations, and export a clean document locally without an account.                                                                                |
+
 ## Recording
 
 | Feature                                                                                 | Status       | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -61,8 +84,9 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 | Feature                                  | Status       | Notes                                                                                                                                                                                                                                                                                                                                                                      |
 | ---------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Crash-safe editor snapshot               | ✅ shipped   | Landed in v1.1.0: a debounced write of the annotation list and the beautify frame, plus a flush when the tab is hidden, keyed to the capture the coordinates were drawn on. A cropped image gets its own key so annotations never restore against the wrong picture. Restoring is always a click — a stale draft can never silently replace what you meant to start fresh. |
-| Local OCR: copy text out of a screenshot | 🧭 exploring | Client-side WASM OCR, lazy-loaded on first use. No data leaves the device. The engine and one language file are 10–15 MB against a 44 KB package today, so size decides it.                                                                                                                                                                                                |
+| Local OCR: copy text out of a screenshot | 🧭 exploring | Select an area and copy recognized text using local OCR. Evaluate engine and language-data size, accuracy, and startup cost; load only when needed. No screenshot data leaves the device.                                                                                                                                                                                  |
 | Capture history shelf                    | ✅ shipped   | Landed in v1.5.0: the last twelve captures instead of one, reopenable from the editor.                                                                                                                                                                                                                                                                                     |
+| Searchable local history                 | 🧭 exploring | Search by page title or domain, rename captures, and pin important items to retain them in history. Explore searching extracted text once local OCR is available.                                                                                                                                                                                                          |
 | Pin a capture in a floating window       | ✅ shipped   | Landed in v1.5.0, via Document Picture-in-Picture — the only always-on-top surface Chrome offers. The pin closes with the tab that opened it.                                                                                                                                                                                                                              |
 | Extra filename tokens (`{domain}`, …)    | ✅ shipped   | `{domain}` landed in v0.4.0. More tokens extend the same template engine.                                                                                                                                                                                                                                                                                                  |
 
@@ -128,4 +152,4 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 
 ---
 
-_Last updated for v1.5.0._
+_Feature ideas updated September 21, 2026. Shipped-feature history reflects releases through v1.5.0._
