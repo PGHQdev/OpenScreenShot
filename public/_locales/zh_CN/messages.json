@@ -2314,8 +2314,8 @@
     "description": "One-time post-export rate prompt: button that opens the reviews tab."
   },
   "ratePromptLater": {
-    "message": "暂不",
-    "description": "One-time post-export rate prompt: dismiss button."
+    "message": "稍后提醒我",
+    "description": "Post-export rating prompt: snooze for 20 more successful exports or copies."
   },
   "errNoTab": {
     "message": "未找到活动标签页。",
@@ -2454,5 +2454,25 @@
   },
   "settingsStopRecording": {
     "message": "停止录制"
+  },
+  "captureReady": {
+    "message": "截图已就绪",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureOpenEditor": {
+    "message": "打开编辑器",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureCopied": {
+    "message": "已复制到剪贴板",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureSaved": {
+    "message": "截图已保存",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureBack": {
+    "message": "返回截图",
+    "description": "Settings: return to the capture dialog that opened this tab."
   }
 }

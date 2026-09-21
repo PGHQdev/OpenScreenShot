@@ -922,7 +922,8 @@ export function useEditor() {
         fontSize: s.annotationFontSize,
       });
       setFrameState(frameFromSettings(s));
-      const cap = await getLastCapture();
+      const requestedCapture = new URLSearchParams(window.location.search).get('capture');
+      const cap = requestedCapture ? await openCapture(requestedCapture) : await getLastCapture();
       if (!cap) {
         setLoading(false);
         return;

@@ -1586,6 +1586,7 @@ body {
 
 .rate-prompt-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--s-2);
 }
 
@@ -1703,45 +1704,6 @@ body {
   }
 }
 
-/* Secondary actions stay available without crowding the editing controls. */
-.editor-more {
-  position: relative;
-}
-.editor-more summary {
-  display: inline-flex;
-  align-items: center;
-  cursor: pointer;
-  border-radius: var(--r-full);
-  list-style: none;
-}
-.editor-more summary::-webkit-details-marker {
-  display: none;
-}
-.editor-more summary:hover {
-  background: var(--hover-overlay);
-}
-.editor-more summary:focus-visible {
-  outline: 2px solid var(--border-focus);
-  outline-offset: 2px;
-}
-.editor-more-panel {
-  position: absolute;
-  right: 0;
-  top: calc(100% + var(--s-2));
-  z-index: 30;
-  min-width: 140px;
-  padding: var(--s-2);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  background: var(--surface-1);
-  box-shadow: var(--sh-lg);
-}
-.editor-more-panel button {
-  display: flex;
-  gap: var(--s-2);
-  align-items: center;
-  width: 100%;
-}
 @media (max-width: 768px) {
   .topbar-controls {
     flex-basis: 100%;

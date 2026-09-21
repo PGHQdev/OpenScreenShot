@@ -220,10 +220,12 @@ describe('setLastCapture (eviction, end to end)', () => {
 describe('capture-store concurrency (R-28a Important #1)', () => {
   it('two overlapping setLastCapture calls both land — no lost row, no orphaned image key', async () => {
     const storage = await import('../../src/shared/storage');
-    await Promise.all([
+    const [firstId, secondId] = await Promise.all([
       storage.setLastCapture(capture({ title: 'first', dataUrl: 'data:image/png;base64,ONE' })),
       storage.setLastCapture(capture({ title: 'second', dataUrl: 'data:image/png;base64,TWO' })),
     ]);
+    expect((await storage.openCapture(firstId))?.title).toBe('first');
+    expect((await storage.openCapture(secondId))?.title).toBe('second');
     const list = await storage.listCaptureHistory();
     expect(list.map((e) => e.title).sort()).toEqual(['first', 'second']);
     // Every image key actually stored is referenced by exactly one row, and

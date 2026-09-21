@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OpenScreenShot</title>
+    <script type="module" src="./main.ts"></script>
+  </head>
+  <body>
+    <main aria-live="polite">
+      <div class="heading">
+        <span id="check" hidden aria-hidden="true">✓</span><strong id="status"></strong
+        ><span id="percent"></span>
+      </div>
+      <progress id="progress" max="100" value="0"></progress>
+      <button id="open" hidden></button>
+      <button id="settings" hidden></button>
+    </main>
+  </body>
+</html>

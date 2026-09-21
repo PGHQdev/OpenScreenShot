@@ -1,3 +1,5 @@
+import { CWS_REVIEWS_URL, markRatedOrDismissed } from '../shared/rating';
+import { CaptureReturn } from './CaptureReturn';
 import { IS_FIREFOX, RECORDING_SUPPORTED } from '../shared/browser';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type {
@@ -21,6 +23,7 @@ import {
   IconRecordDot,
   IconRegion,
   IconShield,
+  IconStar,
   IconVisible,
 } from '../shared/icons';
 import { resolveModeKeys } from '../shared/shortcuts';
@@ -658,8 +661,36 @@ export function App() {
             </div>
           </>
         )}
+        {showSettings && (
+          <nav class="settings-nav-links" aria-label={t('settingsSupport')}>
+            {!IS_FIREFOX && (
+              <button
+                class="link-btn kofi-link"
+                title={t('editorRateTooltip')}
+                onClick={() => {
+                  void chrome.tabs
+                    .create({ url: CWS_REVIEWS_URL })
+                    .then(() => markRatedOrDismissed())
+                    .catch(() => pushToast(t('popupOpenFailed'), 'error'));
+                }}
+              >
+                <IconStar size={16} />
+                {t('editorRateLabel')}
+              </button>
+            )}
+            <button class="link-btn kofi-link" onClick={openKofi} title={t('supportKofiTitle')}>
+              <IconCoffee size={16} />
+              {t('footerKofi')}
+            </button>
+            <button class="link-btn kofi-link" onClick={openCoolStuff} title={t('coolStuffTitle')}>
+              <IconGift size={16} />
+              {t('footerCoolStuff')}
+            </button>
+          </nav>
+        )}
       </header>
 
+      {isSettingsPage && <CaptureReturn />}
       <div class="toasts" aria-live="polite">
         {toasts.map((toast) => (
           <div
@@ -1172,19 +1203,6 @@ function SettingsView({
         </section>
       )}
 
-      <section class="settings-group settings-support" aria-labelledby="settings-support">
-        <h2 id="settings-support">{t('settingsSupport')}</h2>
-        <div class="support-links">
-          <button class="link-btn kofi-link" onClick={openKofi} title={t('supportKofiTitle')}>
-            <IconCoffee size={16} />
-            {t('footerKofi')}
-          </button>
-          <button class="link-btn kofi-link" onClick={openCoolStuff} title={t('coolStuffTitle')}>
-            <IconGift size={16} />
-            {t('footerCoolStuff')}
-          </button>
-        </div>
-      </section>
       <footer class="settings-footer">
         <button
           class="link-btn reset-btn"

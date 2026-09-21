@@ -43,21 +43,35 @@ function makeChrome() {
       setPopup: noop,
       setBadgeBackgroundColor: noop,
       setBadgeTextColor: noop,
-      setBadgeText: noop,
+      setBadgeText: vi.fn(async (_details: { text: string }) => undefined),
       setTitle: noop,
       getTitle: async () => 'Title',
     },
     commands: { onCommand: { addListener: noop } },
     contextMenus: { onClicked: { addListener: noop }, update: noop, create: noop },
     i18n: { getMessage: (key: string) => key, getUILanguage: () => 'en' },
-    windows: { WINDOW_ID_CURRENT: -2 },
+    windows: {
+      WINDOW_ID_CURRENT: -2,
+      get: vi.fn(async () => {
+        throw new Error('window closed');
+      }),
+      create: vi.fn(async () => {
+        events.push('window:open');
+        return { id: 9 };
+      }),
+      remove: vi.fn(async () => {
+        events.push('window:close');
+      }),
+    },
     tabs: {
       query: async () => [{ id: 7, windowId: 1, url: 'https://example.com', title: 'Example' }],
-      create: async () => {
+      create: async (details: { windowId: number }) => {
+        expect(details.windowId).toBe(1);
         events.push('deliver');
         if (failAt === 'deliver') throw new Error('delivery failed');
       },
-      captureVisibleTab: async () => {
+      captureVisibleTab: async (windowId: number) => {
+        expect(windowId).toBe(1);
         events.push('snapshot');
         expect(overlayVisible, 'overlay must never be visible in captured pixels').toBe(false);
         captures++;
@@ -121,27 +135,41 @@ afterEach(() => {
 });
 
 describe('screenshot capture overlay lifecycle', () => {
-  it('shows progress between full-page tiles and hides before every snapshot', async () => {
+  it('shows external progress throughout capture without a page overlay', async () => {
     await capture();
     expect(captures).toBe(3);
     const snapshots = events.flatMap((event, index) => (event === 'snapshot' ? [index] : []));
     for (const index of snapshots) {
       expect(events[index - 1]).toBe('overlay:hide');
-      expect(events.slice(index + 1).indexOf('overlay:show')).toBeGreaterThanOrEqual(0);
     }
-    expect(events.indexOf('overlay:show')).toBeLessThan(snapshots[0]);
+    expect(events).not.toContain('overlay:show');
+    expect(events.indexOf('window:open')).toBeLessThan(snapshots[0]);
+    expect(fakeChrome.windows.create).toHaveBeenCalledWith(
+      expect.objectContaining({ focused: true }),
+    );
+    expect(fakeChrome.windows.remove).toHaveBeenCalledWith(9);
+    expect(messages.filter((m) => m.type === 'CAPTURE_PROGRESS')).toEqual([
+      { type: 'CAPTURE_PROGRESS', percent: 0 },
+      { type: 'CAPTURE_PROGRESS', percent: 33 },
+      { type: 'CAPTURE_PROGRESS', percent: 67 },
+      { type: 'CAPTURE_PROGRESS', percent: 100 },
+    ]);
+    expect(fakeChrome.action.setBadgeText.mock.calls.map(([value]) => value)).toEqual(
+      expect.arrayContaining([{ text: '0%' }, { text: '33%' }, { text: '67%' }, { text: '100%' }]),
+    );
     expect(events.indexOf('stitchTiles')).toBeLessThan(events.lastIndexOf('overlay:remove'));
-    expect(events.at(-1)).toBe('overlay:remove');
+    expect(events).toContain('overlay:remove');
     expect(messages.some((m) => m.type === 'CAPTURE_COMPLETE')).toBe(true);
   });
 
-  it.each(['snapshot:1', 'snapshot:2', 'prepareCapture', 'overlay:show', 'stitchTiles', 'deliver'])(
+  it.each(['snapshot:1', 'snapshot:2', 'prepareCapture', 'stitchTiles', 'deliver'])(
     'restores the page and removes the overlay when %s fails',
     async (stage) => {
       failAt = stage;
       await capture();
       expect(events).toContain('restoreCapture');
-      expect(events.at(-1)).toBe('overlay:remove');
+      expect(fakeChrome.windows.remove).toHaveBeenCalledWith(9);
+      expect(events).toContain('overlay:remove');
       expect(overlayVisible).toBe(false);
       expect(messages.some((m) => m.type === 'CAPTURE_ERROR')).toBe(true);
       expect(messages.some((m) => m.type === 'CAPTURE_COMPLETE')).toBe(false);
@@ -151,7 +179,7 @@ describe('screenshot capture overlay lifecycle', () => {
   it('removes the overlay even when restoring the page fails', async () => {
     failAt = 'restoreCapture';
     await capture();
-    expect(events.at(-1)).toBe('overlay:remove');
+    expect(events).toContain('overlay:remove');
     expect(overlayVisible).toBe(false);
   });
 
@@ -159,7 +187,7 @@ describe('screenshot capture overlay lifecycle', () => {
     failAt = 'overlay:hide';
     await capture();
     expect(captures).toBe(0);
-    expect(events.at(-1)).toBe('overlay:remove');
+    expect(events).toContain('overlay:remove');
   });
 
   it.each(['visible', 'region'])(
@@ -167,8 +195,9 @@ describe('screenshot capture overlay lifecycle', () => {
     async (mode) => {
       await capture(mode);
       expect(captures).toBe(1);
+      expect(fakeChrome.windows.create).not.toHaveBeenCalled();
       expect(events.indexOf('overlay:show')).toBeGreaterThan(events.indexOf('snapshot'));
-      expect(events.at(-1)).toBe('overlay:remove');
+      expect(events).toContain('overlay:remove');
       expect(messages.some((m) => m.type === 'CAPTURE_COMPLETE')).toBe(true);
     },
   );
@@ -182,10 +211,37 @@ describe('screenshot capture overlay lifecycle', () => {
   ])('cleans up %s when %s fails', async (mode, stage) => {
     failAt = stage;
     await capture(mode);
-    expect(events.at(-1)).toBe('overlay:remove');
+    expect(events).toContain('overlay:remove');
     expect(overlayVisible).toBe(false);
     expect(messages.some((m) => m.type === 'CAPTURE_COMPLETE')).toBe(false);
     expect(messages.some((m) => m.type === 'CAPTURE_ERROR')).toBe(true);
+  });
+
+  it('retains a live ready window and does not open the editor automatically', async () => {
+    fakeChrome.windows.get.mockImplementation(async () => ({}) as never);
+    await capture();
+    expect(events).not.toContain('deliver');
+    expect(fakeChrome.windows.remove).not.toHaveBeenCalled();
+    expect(messages).toContainEqual({
+      type: 'CAPTURE_WINDOW_PROGRESS',
+      percent: 100,
+      result: 'editor',
+      sourceWindowId: 1,
+    });
+  });
+
+  it('continues when opening the progress window fails', async () => {
+    fakeChrome.windows.create.mockRejectedValueOnce(new Error('blocked'));
+    await capture();
+    expect(captures).toBe(3);
+    expect(messages.some((m) => m.type === 'CAPTURE_COMPLETE')).toBe(true);
+  });
+
+  it('continues when the user already closed the progress window', async () => {
+    fakeChrome.windows.remove.mockRejectedValueOnce(new Error('already closed'));
+    await capture();
+    expect(captures).toBe(3);
+    expect(messages.some((m) => m.type === 'CAPTURE_COMPLETE')).toBe(true);
   });
 
   it('ignores overlapping capture requests to protect tile and overlay ownership', async () => {

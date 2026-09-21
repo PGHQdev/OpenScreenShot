@@ -2314,8 +2314,8 @@
     "description": "One-time post-export rate prompt: button that opens the reviews tab."
   },
   "ratePromptLater": {
-    "message": "나중에",
-    "description": "One-time post-export rate prompt: dismiss button."
+    "message": "나중에 알림",
+    "description": "Post-export rating prompt: snooze for 20 more successful exports or copies."
   },
   "errNoTab": {
     "message": "활성 탭을 찾을 수 없습니다.",
@@ -2454,5 +2454,25 @@
   },
   "settingsStopRecording": {
     "message": "녹화 중지"
+  },
+  "captureReady": {
+    "message": "스크린샷 준비 완료",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureOpenEditor": {
+    "message": "편집기 열기",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureCopied": {
+    "message": "클립보드에 복사됨",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureSaved": {
+    "message": "스크린샷 저장됨",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureBack": {
+    "message": "캡처로 돌아가기",
+    "description": "Settings: return to the capture dialog that opened this tab."
   }
 }

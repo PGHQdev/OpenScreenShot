@@ -348,26 +348,15 @@ async function testLongCapture(browser, base, messages) {
     'a horizontal drag leaves the annotation source Y unchanged',
   );
 
-  step('EDITOR — More supports keyboard activation and keeps shortcuts isolated');
-  await page.focus('.editor-more summary');
-  await page.keyboard.press('Space');
-  assert(await page.$eval('.editor-more', (el) => el.open), 'Space opens More');
-  await page.keyboard.press('Tab');
+  step('EDITOR — Rate is directly keyboard-accessible');
+  await page.focus('.topbar .rate-btn');
   assert(
-    await page.$eval('.editor-more .rate-btn', (el) => el === document.activeElement),
-    'Tab reaches Rate',
+    await page.$eval('.topbar .rate-btn', (el) => el === document.activeElement),
+    'Rate receives focus directly',
   );
-  await page.keyboard.press('Escape');
-  assert(await page.$eval('.editor-more', (el) => !el.open), 'Escape closes More');
-  assert(
-    await page.$eval('.editor-more summary', (el) => el === document.activeElement),
-    'Escape restores focus',
-  );
+  assert((await page.$('.editor-more')) === null, 'No redundant More menu');
   await page.keyboard.press('Space');
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Space');
-  assert(await page.$eval('.editor-more', (el) => !el.open), 'Space activates Rate');
-  assert(crashes.length === 0, 'long capture and menu flows have no page errors');
+  assert(crashes.length === 0, 'Rate activation has no page errors');
   await page.close();
 }
 
@@ -632,7 +621,7 @@ async function testPopup(browser, base, messages) {
   assert(footerReachable, 'the last footer control scrolls into view');
 
   step('POPUP — settings view scrolls at a short viewport too');
-  await page.click(`.icon-btn[aria-label="${messages.settingsTitle.message}"]`);
+  await page.goto(`${base}/src/popup/settings.html`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.settings');
   const settingsRows = await page.$$eval('.settings-row', (els) => els.length);
   assert(settingsRows > 0, `settings view renders ${settingsRows} rows`);

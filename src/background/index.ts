@@ -1,3 +1,10 @@
+import {
+  openCaptureProgress,
+  closeCaptureProgress,
+  setCaptureProgress,
+  getCaptureProgress,
+  finishCaptureProgress,
+} from './capture-progress';
 import { downloadDataUrl } from '../shared/download';
 import { IS_FIREFOX } from '../shared/browser';
 /**
@@ -295,7 +302,11 @@ chrome.commands.onCommand.addListener((command) => {
   if (mode) void handleCapture(mode).catch(onCaptureError);
 });
 
-chrome.runtime.onMessage.addListener((message: unknown) => {
+chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
+  if ((message as { type?: string })?.type === 'GET_CAPTURE_PROGRESS') {
+    sendResponse(getCaptureProgress());
+    return false;
+  }
   if (isCaptureRequest(message)) {
     void handleCapture(message.mode, message.repeat === true).catch(onCaptureError);
   }
@@ -309,8 +320,12 @@ async function handleCapture(mode: CaptureMode, repeatRegion = false): Promise<v
   if (captureActive) return;
   captureActive = true;
   try {
+    await closeCaptureProgress();
+    // Also dismiss a ready window that outlived a service-worker restart.
+    void chrome.runtime.sendMessage({ type: 'CAPTURE_STARTED' }).catch(() => {});
     await runCapture(mode, repeatRegion);
   } finally {
+    if (!getCaptureProgress()?.result) await closeCaptureProgress();
     captureActive = false;
   }
 }
@@ -426,6 +441,7 @@ async function captureVisible(tab: chrome.tabs.Tab): Promise<void> {
       'visible',
       tab.title ?? '',
       tab.url ?? '',
+      windowId,
     );
     if (delivered) broadcast({ type: 'CAPTURE_COMPLETE', imageUrl: dataUrl, width, height });
   } finally {
@@ -472,6 +488,7 @@ async function captureRegion(tab: chrome.tabs.Tab, repeat = false): Promise<void
       'region',
       tab.title ?? '',
       tab.url ?? '',
+      windowId,
     );
     if (delivered) broadcast({ type: 'CAPTURE_COMPLETE', imageUrl: dataUrl, width: w, height: h });
   } finally {
@@ -481,7 +498,7 @@ async function captureRegion(tab: chrome.tabs.Tab, repeat = false): Promise<void
 
 async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
   const tabId = tab.id as number;
-  const metrics = await execInTab(tabId, getMetrics, []);
+  const metrics = await execInTab(tabId, getMetrics, [true]);
   if (metrics.viewportHeight <= 0 || metrics.scrollHeight <= 0) {
     broadcast({
       type: 'CAPTURE_ERROR',
@@ -503,7 +520,8 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
 
   const positions = computeScrollPositions(metrics.scrollHeight, metrics.viewportHeight);
   const windowId = tab.windowId ?? chrome.windows.WINDOW_ID_CURRENT;
-  // When an inner element scrolls, crop each viewport tile to its rect (device px).
+  // Crop every tile to the content viewport, excluding scrollbar gutters.
+  // Inner scrollers also exclude their border and surrounding page.
   const crop = metrics.container
     ? {
         x: Math.round(metrics.container.x * dpr),
@@ -511,22 +529,28 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
         w: Math.round(metrics.container.width * dpr),
         h: Math.round(metrics.container.height * dpr),
       }
-    : null;
-  const canvasWidth = crop ? crop.w : Math.round(metrics.viewportWidth * dpr);
+    : {
+        x: Math.round((metrics.viewportLeft ?? 0) * dpr),
+        y: 0,
+        w: Math.round(metrics.viewportWidth * dpr),
+        h: Math.round(metrics.viewportHeight * dpr),
+      };
+  const canvasWidth = crop.w;
 
+  await openCaptureProgress(windowId);
   try {
     // Disable smooth scrolling (but keep fixed elements visible) for the first tile.
     const tiles: TileSpec[] = [];
     try {
       await runInTab(tabId, prepareCapture, []);
-      await showCaptureProgress(tabId, 0);
+      await reportProgress(0, positions.length);
       // Tile 0: capture at the top with fixed elements visible so a fixed header
       // appears once at the top of the final image (instead of being omitted).
       {
         await execInTab(tabId, scrollToPosition, [positions[0]]);
         const first = await captureVisibleTabPng(tabId, windowId);
         tiles.push({ dataUrl: first, y: 0 });
-        await reportProgress(tabId, 1, positions.length);
+        await reportProgress(1, positions.length);
       }
       // Remaining tiles: hide fixed elements so they don't duplicate.
       if (positions.length > 1) {
@@ -536,13 +560,14 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
           const { scrollY } = await execInTab(tabId, scrollToPosition, [positions[i]]);
           const dataUrl = await captureVisibleTabPng(tabId, windowId);
           tiles.push({ dataUrl, y: Math.round(scrollY * dpr) });
-          await reportProgress(tabId, i + 1, positions.length);
+          await reportProgress(i + 1, positions.length);
         }
       }
     } finally {
       await runInTab(tabId, restoreCapture, []);
     }
 
+    setCaptureProgress(null);
     const dataUrl = await execInTab(tabId, stitchTiles, [tiles, canvasWidth, canvasHeight, crop]);
     const delivered = await deliverCapture(
       tabId,
@@ -552,6 +577,7 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
       'full-page',
       tab.title ?? '',
       tab.url ?? '',
+      windowId,
     );
     if (delivered) {
       broadcast({
@@ -566,10 +592,10 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
   }
 }
 
-/** Update in-page progress as well as the popup and action badge. */
-async function reportProgress(tabId: number, done: number, total: number): Promise<void> {
+/** Progress stays outside captured pixels: the popup and toolbar badge. */
+async function reportProgress(done: number, total: number): Promise<void> {
   const percent = Math.round((done / total) * 100);
-  await showCaptureProgress(tabId, done === total ? null : percent);
+  setCaptureProgress(percent);
   broadcast({ type: 'CAPTURE_PROGRESS', percent });
   if (total < 2) return;
   await chrome.action.setBadgeBackgroundColor({ color: '#1967d2' });
@@ -610,13 +636,24 @@ async function deliverCapture(
   mode: CaptureMode,
   title: string,
   url: string,
+  windowId: number,
 ): Promise<boolean> {
-  await setLastCapture({ dataUrl, width, height, mode, title, url, capturedAt: Date.now() });
+  const captureId = await setLastCapture({
+    dataUrl,
+    width,
+    height,
+    mode,
+    title,
+    url,
+    capturedAt: Date.now(),
+  });
   const settings = await getSettings();
   const action = normalizeCaptureAction(settings.captureAction);
 
   if (action === 'editor') {
-    await chrome.tabs.create({ url: EDITOR_URL });
+    if (!(await finishCaptureProgress('editor', windowId, captureId))) {
+      await chrome.tabs.create({ url: EDITOR_URL, windowId });
+    }
     // The editor tab is the confirmation, so any progress badge left by a
     // full-page stitch hands the badge back here. The clipboard and download
     // branches below end on their own tick instead.
@@ -625,6 +662,10 @@ async function deliverCapture(
   }
 
   if (action === 'clipboard') {
+    // Clipboard writes run in the source document and require that window's focus.
+    if (getCaptureProgress()) {
+      await chrome.windows.update(windowId, { focused: true }).catch(() => {});
+    }
     const copied = await execInTab(tabId, copyImageToClipboard, [dataUrl]);
     if (!copied) {
       broadcast({
@@ -634,6 +675,7 @@ async function deliverCapture(
       });
       return false;
     }
+    await finishCaptureProgress('clipboard', windowId, captureId);
     void recordExportSuccess();
     void flashDoneBadge();
     return true;
@@ -652,6 +694,7 @@ async function deliverCapture(
     });
     return false;
   }
+  await finishCaptureProgress('download', windowId, captureId);
   void recordExportSuccess();
   void flashDoneBadge();
   return true;

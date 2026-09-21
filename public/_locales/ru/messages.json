@@ -2314,8 +2314,8 @@
     "description": "One-time post-export rate prompt: button that opens the reviews tab."
   },
   "ratePromptLater": {
-    "message": "Не сейчас",
-    "description": "One-time post-export rate prompt: dismiss button."
+    "message": "Напомнить позже",
+    "description": "Post-export rating prompt: snooze for 20 more successful exports or copies."
   },
   "errNoTab": {
     "message": "Активная вкладка не найдена.",
@@ -2454,5 +2454,25 @@
   },
   "settingsStopRecording": {
     "message": "Остановить запись"
+  },
+  "captureReady": {
+    "message": "Скриншот готов",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureOpenEditor": {
+    "message": "Открыть редактор",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureCopied": {
+    "message": "Скопировано в буфер обмена",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureSaved": {
+    "message": "Скриншот сохранён",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureBack": {
+    "message": "Вернуться к снимку",
+    "description": "Settings: return to the capture dialog that opened this tab."
   }
 }

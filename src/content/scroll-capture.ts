@@ -21,11 +21,18 @@ import type { Metrics, TileSpec } from '../shared/types';
  * tag it `data-oss-scroller`, and report ITS geometry + viewport rect so the
  * capture loop scrolls it and crops each tile to it.
  */
-export function getMetrics(): Metrics {
+export function getMetrics(excludeScrollbars = false): Metrics {
   const de = document.documentElement;
   const dpr = window.devicePixelRatio || 1;
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+  // client dimensions exclude classic scrollbar gutters without reflowing
+  // the page. Overlay scrollbars are made transparent during preparation.
+  const viewport = document.compatMode === 'BackCompat' ? document.body : de;
+  const vw = excludeScrollbars
+    ? Math.min(window.innerWidth, viewport?.clientWidth || window.innerWidth)
+    : window.innerWidth;
+  const vh = excludeScrollbars
+    ? Math.min(window.innerHeight, viewport?.clientHeight || window.innerHeight)
+    : window.innerHeight;
   const docScrolls = de.scrollHeight > vh + 4;
 
   let scroller: HTMLElement | null = null;
@@ -55,8 +62,8 @@ export function getMetrics(): Metrics {
       viewportWidth: scroller.clientWidth,
       devicePixelRatio: dpr,
       container: {
-        x: r.left,
-        y: r.top,
+        x: r.left + scroller.clientLeft,
+        y: r.top + scroller.clientTop,
         width: scroller.clientWidth,
         height: scroller.clientHeight,
       },
@@ -64,6 +71,7 @@ export function getMetrics(): Metrics {
   }
 
   return {
+    viewportLeft: excludeScrollbars ? (viewport?.clientLeft ?? 0) : 0,
     scrollHeight: de.scrollHeight,
     viewportHeight: vh,
     viewportWidth: vw,
@@ -79,9 +87,63 @@ export function getMetrics(): Metrics {
  * hides them for the remaining tiles.
  */
 export function prepareCapture(): void {
-  document.documentElement.style.setProperty('scroll-behavior', 'auto', 'important');
+  const win = window as Window & {
+    __ossCaptureState?: {
+      style: HTMLStyleElement;
+      positions: Array<{ el: HTMLElement; left: number; top: number }>;
+      behavior: Array<{ el: HTMLElement; value: string; priority: string }>;
+      colors: Array<{ el: HTMLElement; value: string; priority: string }>;
+    };
+  };
+  if (win.__ossCaptureState) return;
+  const root = document.documentElement;
   const scroller = document.querySelector<HTMLElement>('[data-oss-scroller="1"]');
-  scroller?.style.setProperty('scroll-behavior', 'auto', 'important');
+  const scrollRoot = (document.scrollingElement as HTMLElement | null) ?? root;
+  const elements = [...new Set([root, scrollRoot, ...(scroller ? [scroller] : [])])];
+  // Chromium's standard scrollbar-color takes precedence over WebKit rules.
+  // Only override elements already using it, avoiding a switch of scrollbar
+  // styling systems (which can change custom scrollbar dimensions).
+  const colored = [...document.querySelectorAll<HTMLElement>('*')].filter((el) => {
+    if (el !== root && el.scrollHeight <= el.clientHeight && el.scrollWidth <= el.clientWidth)
+      return false;
+    const color = getComputedStyle(el).getPropertyValue('scrollbar-color');
+    return color !== '' && color !== 'auto';
+  });
+  const style = document.createElement('style');
+  // Preserve scrollbar width/gutters: display:none or scrollbar-width:none
+  // would reflow text and invalidate the measured capture geometry.
+  style.textContent = `
+    @supports not selector(::-webkit-scrollbar) {
+      * { scrollbar-color: transparent transparent !important; }
+    }
+    * { scroll-snap-type: none !important; overflow-anchor: none !important;
+        animation-play-state: paused !important; transition: none !important;
+        caret-color: transparent !important; }
+    *::-webkit-scrollbar, *::-webkit-scrollbar-thumb,
+    *::-webkit-scrollbar-track, *::-webkit-scrollbar-track-piece,
+    *::-webkit-scrollbar-button, *::-webkit-scrollbar-corner {
+      background: transparent !important; border-color: transparent !important;
+      box-shadow: none !important; visibility: hidden !important;
+    }
+  `;
+  win.__ossCaptureState = {
+    style,
+    colors: colored.map((el) => ({
+      el,
+      value: el.style.getPropertyValue('scrollbar-color'),
+      priority: el.style.getPropertyPriority('scrollbar-color'),
+    })),
+    positions: elements.map((el) => ({ el, left: el.scrollLeft, top: el.scrollTop })),
+    behavior: elements.map((el) => ({
+      el,
+      value: el.style.getPropertyValue('scroll-behavior'),
+      priority: el.style.getPropertyPriority('scroll-behavior'),
+    })),
+  };
+  root.append(style);
+  for (const el of colored)
+    el.style.setProperty('scrollbar-color', 'transparent transparent', 'important');
+  for (const el of elements) el.style.setProperty('scroll-behavior', 'auto', 'important');
 }
 
 /**
@@ -95,6 +157,13 @@ export function hideFixedElements(): void {
     if (el.hasAttribute('data-oss-capture-overlay')) continue;
     const cs = getComputedStyle(el);
     if (cs.position === 'fixed' || cs.position === 'sticky') {
+      if (el.hasAttribute('data-oss-hidden')) continue;
+      (el as HTMLElement).dataset.ossVisibility = (el as HTMLElement).style.getPropertyValue(
+        'visibility',
+      );
+      (el as HTMLElement).dataset.ossVisibilityPriority = (
+        el as HTMLElement
+      ).style.getPropertyPriority('visibility');
       (el as HTMLElement).dataset.ossHidden = '1';
       (el as HTMLElement).style.setProperty('visibility', 'hidden', 'important');
     }
@@ -115,7 +184,7 @@ export function scrollToPosition(y: number): { scrollY: number; atBottom: boolea
   }
   window.scrollTo(0, y);
   const after = window.scrollY;
-  const max = document.documentElement.scrollHeight - window.innerHeight;
+  const max = document.documentElement.scrollHeight - document.documentElement.clientHeight;
   return { scrollY: after, atBottom: after >= max - 1 };
 }
 
@@ -123,15 +192,46 @@ export function scrollToPosition(y: number): { scrollY: number; atBottom: boolea
 export function restoreCapture(): void {
   const hidden = document.querySelectorAll('[data-oss-hidden="1"]');
   for (const el of hidden) {
-    (el as HTMLElement).style.removeProperty('visibility');
+    const node = el as HTMLElement;
+    if (node.dataset.ossVisibility)
+      node.style.setProperty(
+        'visibility',
+        node.dataset.ossVisibility,
+        node.dataset.ossVisibilityPriority || '',
+      );
+    else node.style.removeProperty('visibility');
+    delete node.dataset.ossVisibility;
+    delete node.dataset.ossVisibilityPriority;
     delete (el as HTMLElement).dataset.ossHidden;
   }
-  const scroller = document.querySelector<HTMLElement>('[data-oss-scroller="1"]');
-  if (scroller) {
-    scroller.style.removeProperty('scroll-behavior');
-    delete scroller.dataset.ossScroller;
+  const win = window as Window & {
+    __ossCaptureState?: {
+      style: HTMLStyleElement;
+      positions: Array<{ el: HTMLElement; left: number; top: number }>;
+      behavior: Array<{ el: HTMLElement; value: string; priority: string }>;
+      colors: Array<{ el: HTMLElement; value: string; priority: string }>;
+    };
+  };
+  const state = win.__ossCaptureState;
+  if (state) {
+    // Restore position while smooth scrolling and scroll snapping are disabled.
+    for (const { el, left, top } of state.positions) {
+      el.scrollLeft = left;
+      el.scrollTop = top;
+    }
+    for (const { el, value, priority } of state.behavior) {
+      if (value) el.style.setProperty('scroll-behavior', value, priority);
+      else el.style.removeProperty('scroll-behavior');
+    }
+    for (const { el, value, priority } of state.colors) {
+      if (value) el.style.setProperty('scrollbar-color', value, priority);
+      else el.style.removeProperty('scrollbar-color');
+    }
+    state.style.remove();
+    delete win.__ossCaptureState;
   }
-  document.documentElement.style.removeProperty('scroll-behavior');
+  const scroller = document.querySelector<HTMLElement>('[data-oss-scroller="1"]');
+  if (scroller) delete scroller.dataset.ossScroller;
 }
 
 /**

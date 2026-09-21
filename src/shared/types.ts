@@ -55,6 +55,8 @@ export type PopupMessage = CaptureProgress | CaptureComplete | CaptureError;
 // --- Capture geometry (in-page measurement results) -----------------------
 
 export interface Metrics {
+  /** Left document scrollbar gutter, in CSS pixels (RTL layouts). */
+  viewportLeft?: number;
   scrollHeight: number;
   viewportHeight: number;
   viewportWidth: number;

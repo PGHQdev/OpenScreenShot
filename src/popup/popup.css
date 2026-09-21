@@ -990,11 +990,18 @@ label.settings-row .settings-label {
   max-width: calc(100% - 48px);
   max-height: none;
   margin: 0 auto;
-  padding: var(--s-6) 0;
+  padding: 0 0 var(--s-6);
   gap: var(--s-5);
 }
 .app-settings-page .header {
-  padding: var(--s-2) var(--s-1) 0;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: var(--s-5) var(--s-1);
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: var(--s-4);
 }
 .app-settings-page .settings-heading {
   gap: var(--s-4);
@@ -1047,7 +1054,7 @@ label.settings-row .settings-label {
 @media (max-width: 768px) {
   .app-settings-page {
     max-width: calc(100% - 32px);
-    padding-block: var(--s-4);
+    padding-block: 0 var(--s-4);
   }
 }
 
@@ -1127,11 +1134,49 @@ label.settings-row .settings-label {
   min-height: 36px;
 }
 
-.settings-shortcuts .shortcut-manage {
+.capture-return {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+}
+.capture-return-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+.capture-return p {
+  width: 100%;
+  margin: 0;
+}
+
+.capture-return-primary {
   background: var(--accent-ink);
   color: var(--on-accent);
   border-color: transparent;
 }
-.settings-shortcuts .shortcut-manage:hover {
+.capture-return-primary:hover {
   background: var(--accent-ink-hover);
+}
+
+.settings-nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-4);
+  margin-left: auto;
+}
+.app-settings .header {
+  flex-wrap: wrap;
+}
+.app-settings-page .settings-heading {
+  flex: 1 1 340px;
+}
+.settings-shortcuts .shortcut-manage {
+  align-self: flex-start;
 }

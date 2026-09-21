@@ -2314,8 +2314,8 @@
     "description": "One-time post-export rate prompt: button that opens the reviews tab."
   },
   "ratePromptLater": {
-    "message": "Ahora no",
-    "description": "One-time post-export rate prompt: dismiss button."
+    "message": "Recordármelo más tarde",
+    "description": "Post-export rating prompt: snooze for 20 more successful exports or copies."
   },
   "errNoTab": {
     "message": "No se encontró ninguna pestaña activa.",
@@ -2454,5 +2454,25 @@
   },
   "settingsStopRecording": {
     "message": "Detener grabación"
+  },
+  "captureReady": {
+    "message": "Captura lista",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureOpenEditor": {
+    "message": "Abrir editor",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureCopied": {
+    "message": "Copiada al portapapeles",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureSaved": {
+    "message": "Captura guardada",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureBack": {
+    "message": "Volver a la captura",
+    "description": "Settings: return to the capture dialog that opened this tab."
   }
 }

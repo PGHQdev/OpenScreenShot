@@ -49,7 +49,7 @@ describe('rate prompt gating', () => {
     expect(await shouldShowRatePrompt()).toBe(true);
   });
 
-  it('never comes back once shown, whatever the answer', async () => {
+  it('does not immediately return after being shown', async () => {
     const { recordExportSuccess, shouldShowRatePrompt, markRatePromptShown, RATE_PROMPT_AFTER } =
       await rating();
     for (let i = 0; i < RATE_PROMPT_AFTER; i++) await recordExportSuccess();
@@ -65,4 +65,23 @@ describe('rate prompt gating', () => {
     for (let i = 0; i < RATE_PROMPT_AFTER + 2; i++) await recordExportSuccess();
     expect(await shouldShowRatePrompt()).toBe(false);
   });
+});
+
+it('Remind me later waits for exactly 20 more successful uses, across reloads', async () => {
+  const r = await rating();
+  for (let i = 0; i < r.RATE_PROMPT_AFTER; i++) await r.recordExportSuccess();
+  await r.markRatePromptShown();
+  await r.recordExportSuccess();
+  await r.remindRateLater();
+  vi.resetModules();
+  const reloaded = await rating();
+  for (let i = 1; i < 20; i++) {
+    await reloaded.recordExportSuccess();
+    expect(await reloaded.shouldShowRatePrompt()).toBe(false);
+  }
+  await reloaded.recordExportSuccess();
+  expect(await reloaded.shouldShowRatePrompt()).toBe(true);
+  await reloaded.markRatedOrDismissed();
+  for (let i = 0; i < 21; i++) await reloaded.recordExportSuccess();
+  expect(await reloaded.shouldShowRatePrompt()).toBe(false);
 });

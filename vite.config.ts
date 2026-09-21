@@ -78,6 +78,7 @@ export default defineConfig(({ mode }) => {
         // no longer names it. The editor also needs an explicit entry now that
         // options_ui points to the dedicated settings page.
         input: {
+          progress: 'src/progress/index.html',
           popup: 'src/popup/index.html',
           editor: 'src/editor/index.html',
           ...(!firefox

@@ -266,7 +266,7 @@ export async function listCaptureHistory(): Promise<CaptureHistoryEntry[]> {
  * count and byte budgets. The thumbnail encode runs *before* the lock is
  * taken — see `withCaptureLock`'s own doc comment for why.
  */
-export async function setLastCapture(capture: LastCapture): Promise<void> {
+export async function setLastCapture(capture: LastCapture): Promise<string> {
   const id = crypto.randomUUID();
   const thumbnail = await safeThumbnail(capture.dataUrl);
   const entry: CaptureHistoryEntry = {
@@ -295,6 +295,7 @@ export async function setLastCapture(capture: LastCapture): Promise<void> {
     });
     await Promise.all(evicted.map((e) => chrome.storage.local.remove(captureImageKey(e.id))));
   });
+  return id;
 }
 
 /**

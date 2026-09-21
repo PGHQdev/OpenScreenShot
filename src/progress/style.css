@@ -1,0 +1,80 @@
+@import '../shared/tokens.css';
+
+:root {
+  color-scheme: light dark;
+  font:
+    var(--fs-base) system-ui,
+    sans-serif;
+  color: CanvasText;
+  background: Canvas;
+}
+body {
+  margin: 0;
+}
+main {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+strong {
+  font-weight: 500;
+}
+#check {
+  color: light-dark(#247d40, #70ce89);
+}
+#percent {
+  font-variant-numeric: tabular-nums;
+}
+progress {
+  display: block;
+  width: 100%;
+  height: 8px;
+  accent-color: AccentColor;
+}
+[hidden] {
+  display: none !important;
+}
+button {
+  font: inherit;
+  cursor: pointer;
+}
+#open {
+  width: 180px;
+  max-width: 100%;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: light-dark(#1967d2, #9ec5ff);
+  color: light-dark(#fff, #102746);
+}
+#settings {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  opacity: 0.75;
+  padding: 2px 8px;
+  font-size: var(--fs-sm);
+}
+#settings:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+button:focus-visible {
+  outline: 2px solid Highlight;
+  outline-offset: 3px;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

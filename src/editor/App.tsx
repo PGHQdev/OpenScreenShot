@@ -56,6 +56,7 @@ import {
   CWS_REVIEWS_URL,
   markRatedOrDismissed,
   markRatePromptShown,
+  remindRateLater,
   recordExportSuccess,
   shouldShowRatePrompt,
 } from '../shared/rating';
@@ -198,8 +199,7 @@ export function App() {
     if (toolbarRef.current) syncRovingTabIndex(toolbarRef.current);
   }, [ed.hasImage]);
 
-  // The one post-success rate prompt (Surface C). Marked shown the moment it
-  // renders, so it appears at most once per install however it is answered.
+  // A non-blocking prompt after successful exports, with a usage-based snooze.
   const [ratePrompt, setRatePrompt] = useState(false);
 
   async function recordSuccess() {
@@ -217,7 +217,7 @@ export function App() {
   }
 
   function dismissRatePrompt() {
-    void markRatedOrDismissed();
+    void remindRateLater();
     setRatePrompt(false);
   }
 
@@ -443,7 +443,16 @@ export function App() {
           >
             {t('editorSaveImage')}
           </button>
-          {!IS_FIREFOX && <EditorMoreMenu onRate={openReviews} />}
+          {!IS_FIREFOX && (
+            <button
+              class="btn-secondary labeled-action rate-btn"
+              title={t('editorRateTooltip')}
+              onClick={openReviews}
+            >
+              <IconStar size={18} />
+              <span>{t('editorRateLabel')}</span>
+            </button>
+          )}
         </div>
       </header>
 
@@ -1550,58 +1559,6 @@ function EmptyState() {
         {failed ? <p class="empty-fallback">{t('editorOpenExtensionIcon')}</p> : null}
       </div>
     </div>
-  );
-}
-
-function EditorMoreMenu({ onRate }: { onRate: () => void }) {
-  const ref = useRef<HTMLDetailsElement>(null);
-  useEffect(() => {
-    const close = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) ref.current.open = false;
-    };
-    document.addEventListener('mousedown', close);
-    return () => document.removeEventListener('mousedown', close);
-  }, []);
-  return (
-    <details
-      class="editor-more"
-      ref={ref}
-      onFocusOut={(e) => {
-        if (ref.current && !ref.current.contains(e.relatedTarget as Node | null))
-          ref.current.open = false;
-      }}
-      onKeyDown={(e) => {
-        e.stopPropagation();
-        if (e.key === 'Escape') {
-          if (ref.current) {
-            ref.current.open = false;
-            ref.current.querySelector('summary')?.focus();
-          }
-        }
-      }}
-    >
-      <summary class="labeled-action">
-        <IconMore size={18} />
-        <span>{t('editorMoreActions')}</span>
-      </summary>
-      <div class="editor-more-panel">
-        {!IS_FIREFOX && (
-          <button
-            class="text-btn rate-btn"
-            onClick={() => {
-              if (ref.current) {
-                ref.current.open = false;
-                ref.current.querySelector('summary')?.focus();
-              }
-              onRate();
-            }}
-          >
-            <IconStar size={16} />
-            {t('editorRateLabel')}
-          </button>
-        )}
-      </div>
-    </details>
   );
 }
 

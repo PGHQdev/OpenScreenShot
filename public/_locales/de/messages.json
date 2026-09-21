@@ -2314,8 +2314,8 @@
     "description": "One-time post-export rate prompt: button that opens the reviews tab."
   },
   "ratePromptLater": {
-    "message": "Nicht jetzt",
-    "description": "One-time post-export rate prompt: dismiss button."
+    "message": "Später erinnern",
+    "description": "Post-export rating prompt: snooze for 20 more successful exports or copies."
   },
   "errNoTab": {
     "message": "Kein aktiver Tab gefunden.",
@@ -2454,5 +2454,25 @@
   },
   "settingsStopRecording": {
     "message": "Aufnahme stoppen"
+  },
+  "captureReady": {
+    "message": "Screenshot bereit",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureOpenEditor": {
+    "message": "Editor öffnen",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureCopied": {
+    "message": "In die Zwischenablage kopiert",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureSaved": {
+    "message": "Screenshot gespeichert",
+    "description": "Capture progress window: completion status or action."
+  },
+  "captureBack": {
+    "message": "Zurück zur Aufnahme",
+    "description": "Settings: return to the capture dialog that opened this tab."
   }
 }
