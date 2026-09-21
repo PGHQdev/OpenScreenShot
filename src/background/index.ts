@@ -27,6 +27,7 @@ import {
   getSettings,
   migrateExpressDefault,
   onSettingsChanged,
+  openCapture,
   setLastCapture,
   setLastRegion,
   setSettings,
@@ -321,6 +322,10 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
   if ((message as { type?: string })?.type === 'GET_CAPTURE_PROGRESS') {
     sendResponse(getCaptureProgress());
     return false;
+  }
+  if ((message as { type?: string })?.type === 'CAPTURE_QUICK_ACTION') {
+    void handleCaptureQuickAction(message).then(sendResponse);
+    return true;
   }
   if (isCaptureRequest(message)) {
     void handleCapture(message.mode, message.repeat === true).catch(onCaptureError);
@@ -713,6 +718,33 @@ async function deliverCapture(
   void recordExportSuccess();
   void flashDoneBadge();
   return true;
+}
+
+/**
+ * Quick actions from the capture progress window act on an already-stashed
+ * capture, so they work without the editor. Only the PNG download runs here:
+ * the clipboard write needs a focused page (the progress window does its
+ * own), and PDF export stays in the editor.
+ */
+async function handleCaptureQuickAction(message: unknown): Promise<{ ok: boolean }> {
+  const { action, captureId } = (message ?? {}) as { action?: string; captureId?: string };
+  if (action !== 'png' || !captureId) return { ok: false };
+  try {
+    const capture = await openCapture(captureId);
+    if (!capture) return { ok: false };
+    const settings = await getSettings();
+    const base = formatFilename(settings.filenameTemplate, {
+      title: capture.title,
+      url: capture.url,
+      width: capture.width,
+      height: capture.height,
+    });
+    await downloadDataUrl(capture.dataUrl, `${base}.png`);
+    void recordExportSuccess();
+    return { ok: true };
+  } catch {
+    return { ok: false };
+  }
 }
 
 function commandToMode(command: string): CaptureMode | null {

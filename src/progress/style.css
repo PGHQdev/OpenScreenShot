@@ -26,6 +26,24 @@ main {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  text-align: center;
+  line-height: 1.4;
+}
+#check {
+  flex-shrink: 0;
+}
+#detail {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+#retry {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: light-dark(#1967d2, #9ec5ff);
+  text-decoration: underline;
 }
 strong {
   font-weight: 500;
@@ -57,6 +75,24 @@ button {
   border-radius: 6px;
   background: light-dark(#1967d2, #9ec5ff);
   color: light-dark(#fff, #102746);
+}
+#quick {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+#quick button {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 4px;
+  border: 1px solid light-dark(#c7cdd6, #4a5462);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font-size: var(--fs-sm);
+}
+#quick button:hover:not(:disabled) {
+  background: light-dark(#eef1f5, #2a3038);
 }
 #settings {
   border: 0;

@@ -19,7 +19,7 @@ export async function openCaptureProgress(sourceWindowId: number): Promise<void>
     const source = await chrome.windows.get(sourceWindowId);
     position = {
       left: Math.round((source.left ?? 0) + ((source.width ?? 360) - 360) / 2),
-      top: Math.round((source.top ?? 0) + ((source.height ?? 190) - 190) / 2),
+      top: Math.round((source.top ?? 0) + ((source.height ?? 320) - 320) / 2),
     };
   } catch {
     // Let the browser position the window if source bounds are unavailable.
@@ -29,7 +29,7 @@ export async function openCaptureProgress(sourceWindowId: number): Promise<void>
       url: chrome.runtime.getURL('src/progress/index.html'),
       type: 'popup',
       width: 360,
-      height: 190,
+      height: 320,
       focused: true,
       ...position,
     });

@@ -2464,12 +2464,36 @@
     "description": "Capture progress window: completion status or action."
   },
   "captureCopied": {
-    "message": "Copiato negli appunti",
+    "message": "Screenshot copiato negli appunti!",
     "description": "Capture progress window: completion status or action."
   },
   "captureSaved": {
-    "message": "Screenshot salvato",
+    "message": "Il download dello screenshot sta iniziando.",
     "description": "Capture progress window: completion status or action."
+  },
+  "captureQuickCopy": {
+    "message": "Copia",
+    "description": "Capture progress window: quick-action button that copies the screenshot to the clipboard."
+  },
+  "captureQuickCopyTitle": {
+    "message": "Copia negli appunti",
+    "description": "Capture progress window: tooltip for the Copy quick action."
+  },
+  "captureQuickPng": {
+    "message": "PNG",
+    "description": "Capture progress window: quick-action button that downloads the screenshot as PNG."
+  },
+  "captureQuickPngTitle": {
+    "message": "Scarica come PNG",
+    "description": "Capture progress window: tooltip for the PNG quick action."
+  },
+  "captureQuickPdf": {
+    "message": "PDF",
+    "description": "Capture progress window: quick-action button that saves the screenshot as PDF via the editor."
+  },
+  "captureQuickPdfTitle": {
+    "message": "Salva come PDF",
+    "description": "Capture progress window: tooltip for the PDF quick action."
   },
   "captureBack": {
     "message": "Torna alla cattura",
@@ -2506,5 +2530,17 @@
   "supportBody": {
     "description": "Optional project support and rating message.",
     "message": "OpenScreenShot è completamente open source. Se ti è utile, una donazione ne sostiene lo sviluppo e una breve recensione aiuta altre persone a scoprirlo."
+  },
+  "capturePasteHint": {
+    "message": "Incollalo dove vuoi con ⌘V / Ctrl+V.",
+    "description": "Capture progress window: how to paste a copied screenshot."
+  },
+  "captureDownloadHint": {
+    "message": "Se non parte,",
+    "description": "Capture progress window: download retry hint, followed by a download again button."
+  },
+  "captureDownloadAgain": {
+    "message": "scarica di nuovo",
+    "description": "Capture progress window: button to retry the PNG download."
   }
 }

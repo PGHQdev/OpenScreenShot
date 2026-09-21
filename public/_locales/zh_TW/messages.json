@@ -2464,12 +2464,36 @@
     "description": "Capture progress window: completion status or action."
   },
   "captureCopied": {
-    "message": "已複製到剪貼簿",
+    "message": "螢幕截圖已複製到剪貼簿！",
     "description": "Capture progress window: completion status or action."
   },
   "captureSaved": {
-    "message": "截圖已儲存",
+    "message": "即將開始下載螢幕截圖。",
     "description": "Capture progress window: completion status or action."
+  },
+  "captureQuickCopy": {
+    "message": "複製",
+    "description": "Capture progress window: quick-action button that copies the screenshot to the clipboard."
+  },
+  "captureQuickCopyTitle": {
+    "message": "複製到剪貼簿",
+    "description": "Capture progress window: tooltip for the Copy quick action."
+  },
+  "captureQuickPng": {
+    "message": "PNG",
+    "description": "Capture progress window: quick-action button that downloads the screenshot as PNG."
+  },
+  "captureQuickPngTitle": {
+    "message": "下載為 PNG",
+    "description": "Capture progress window: tooltip for the PNG quick action."
+  },
+  "captureQuickPdf": {
+    "message": "PDF",
+    "description": "Capture progress window: quick-action button that saves the screenshot as PDF via the editor."
+  },
+  "captureQuickPdfTitle": {
+    "message": "另存為 PDF",
+    "description": "Capture progress window: tooltip for the PDF quick action."
   },
   "captureBack": {
     "message": "返回截圖",
@@ -2506,5 +2530,17 @@
   "supportBody": {
     "description": "Optional project support and rating message.",
     "message": "OpenScreenShot 完全開源。如果它對你有幫助，捐款可以支持專案開發，簡短的評價也能幫助更多人發現它。"
+  },
+  "capturePasteHint": {
+    "message": "按 ⌘V / Ctrl+V 貼到任何位置。",
+    "description": "Capture progress window: how to paste a copied screenshot."
+  },
+  "captureDownloadHint": {
+    "message": "如果下載未開始，",
+    "description": "Capture progress window: download retry hint, followed by a download again button."
+  },
+  "captureDownloadAgain": {
+    "message": "重新下載",
+    "description": "Capture progress window: button to retry the PNG download."
   }
 }

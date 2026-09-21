@@ -24,7 +24,7 @@ beforeEach(async () => {
 it('centers a focused window over the source browser window', async () => {
   await api.openCaptureProgress(1);
   expect(windows.create).toHaveBeenCalledWith(
-    expect.objectContaining({ left: 520, top: 505, focused: true }),
+    expect.objectContaining({ left: 520, top: 440, focused: true }),
   );
 });
 it('keeps the result ready for an explicit editor handoff', async () => {

@@ -2464,12 +2464,36 @@
     "description": "Capture progress window: completion status or action."
   },
   "captureCopied": {
-    "message": "클립보드에 복사됨",
+    "message": "스크린샷을 클립보드에 복사했습니다!",
     "description": "Capture progress window: completion status or action."
   },
   "captureSaved": {
-    "message": "스크린샷 저장됨",
+    "message": "스크린샷 다운로드를 시작합니다.",
     "description": "Capture progress window: completion status or action."
+  },
+  "captureQuickCopy": {
+    "message": "복사",
+    "description": "Capture progress window: quick-action button that copies the screenshot to the clipboard."
+  },
+  "captureQuickCopyTitle": {
+    "message": "클립보드에 복사",
+    "description": "Capture progress window: tooltip for the Copy quick action."
+  },
+  "captureQuickPng": {
+    "message": "PNG",
+    "description": "Capture progress window: quick-action button that downloads the screenshot as PNG."
+  },
+  "captureQuickPngTitle": {
+    "message": "PNG로 다운로드",
+    "description": "Capture progress window: tooltip for the PNG quick action."
+  },
+  "captureQuickPdf": {
+    "message": "PDF",
+    "description": "Capture progress window: quick-action button that saves the screenshot as PDF via the editor."
+  },
+  "captureQuickPdfTitle": {
+    "message": "PDF로 저장",
+    "description": "Capture progress window: tooltip for the PDF quick action."
   },
   "captureBack": {
     "message": "캡처로 돌아가기",
@@ -2506,5 +2530,17 @@
   "supportBody": {
     "description": "Optional project support and rating message.",
     "message": "OpenScreenShot은 완전한 오픈 소스입니다. 유용하게 사용하고 있다면 기부로 개발을 지원하고, 짧은 평가로 다른 사람들에게 알릴 수 있어요."
+  },
+  "capturePasteHint": {
+    "message": "⌘V / Ctrl+V로 원하는 곳에 붙여넣으세요.",
+    "description": "Capture progress window: how to paste a copied screenshot."
+  },
+  "captureDownloadHint": {
+    "message": "다운로드가 시작되지 않으면",
+    "description": "Capture progress window: download retry hint, followed by a download again button."
+  },
+  "captureDownloadAgain": {
+    "message": "다시 다운로드",
+    "description": "Capture progress window: button to retry the PNG download."
   }
 }

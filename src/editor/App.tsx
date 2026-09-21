@@ -257,6 +257,16 @@ export function App() {
     }
   }
 
+  // The capture progress window's PDF quick action opens the editor with
+  // ?pdf: export once, as soon as the capture image has loaded, using the
+  // stored PDF preferences — the same one-click path as the header button.
+  const autoPdf = useRef(new URLSearchParams(window.location.search).has('pdf'));
+  useEffect(() => {
+    if (!autoPdf.current || ed.loading || !ed.hasImage) return;
+    autoPdf.current = false;
+    void exportPdfDirect();
+  }, [ed.loading, ed.hasImage]);
+
   // Cmd/Ctrl+C copies the composed image, unless the user is typing or has
   // text selected (native copy wins there).
   useEffect(() => {
