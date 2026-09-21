@@ -2192,7 +2192,12 @@ async function testCutTool(browser, base, messages) {
         if (r > 150 && g < 110 && b < 110) out.red++;
         else if (g > 150 && r < 110 && b < 110) out.green++;
         else if (b > 150 && r < 110 && g < 110) out.blue++;
-        else if (r < 40 && g < 40 && b < 40) out.black++;
+        // A one-pixel seam at a fractional fitted coordinate is antialiased
+        // over the red/blue fixture. Its darkest pixel may be half coverage
+        // (channel value ~128), rather than pure black. The light stage and
+        // frame stay above this bound. The channel-sum limit also excludes
+        // a red/blue blend (~128, 0, 128) at a seam with no marker drawn.
+        else if (r < 150 && g < 150 && b < 150 && r + g + b < 180) out.black++;
       }
       return out;
     });

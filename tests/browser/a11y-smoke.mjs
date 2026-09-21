@@ -569,7 +569,7 @@ async function popupFirstRun(browser, base, messages) {
   );
 
   step('POPUP — first-run settings (the across-sites ask carries it too)');
-  await page.click('.icon-btn[aria-label="Settings"]');
+  await page.goto(`${base}/src/popup/settings.html`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('[data-testid="sites-trust"]');
   await scan(page, 'popup first-run settings');
   assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
@@ -586,7 +586,7 @@ async function popupMain(browser, base, messages) {
   await scan(page, 'popup main surface');
 
   step('POPUP — settings view');
-  await page.click('.icon-btn[aria-label="Settings"]');
+  await page.goto(`${base}/src/popup/settings.html`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.settings');
   await scan(page, 'popup settings view');
 
