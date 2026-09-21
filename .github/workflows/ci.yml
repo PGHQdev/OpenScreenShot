@@ -8,9 +8,9 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # site/astro.config.mjs derives SITE_LASTMOD from
           # `git log -1 --format=%cI -- .` inside site/. On the default
@@ -19,10 +19,10 @@ jobs:
           # sitemap URL without failing anything.
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
@@ -58,7 +58,7 @@ jobs:
         run: pnpm run site:build
 
       - name: Upload build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: openscreenshot-dist
           path: |
@@ -76,18 +76,18 @@ jobs:
   # which the runner's branded Chrome ignores.
   smoke:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
-      # ubuntu-latest ships Google Chrome stable here; every smoke reads
+      # ubuntu-24.04 ships Google Chrome stable here; every smoke reads
       # CHROME_BIN and falls back to the macOS path otherwise.
       CHROME_BIN: /usr/bin/google-chrome
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
@@ -122,15 +122,15 @@ jobs:
 
   firefox-smoke:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - uses: browser-actions/setup-firefox@v1

@@ -15,7 +15,7 @@ jobs:
   # release proceed: that is the status quo, a late failure at the upload
   # step, which must stay possible so a broken gate never blocks releases.
   review-gate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check for a version already in review
         env:
@@ -56,16 +56,16 @@ jobs:
 
   build:
     needs: review-gate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write # to create a GitHub release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
@@ -95,7 +95,7 @@ jobs:
         run: pnpm run package
 
       - name: Publish to Chrome Web Store
-        uses: mnao305/chrome-extension-upload@v5.0.0
+        uses: mnao305/chrome-extension-upload@v6.0.0
         with:
           file-path: openscreenshot-v${{ env.VERSION }}.zip
           extension-id: hdabbojjccojlapnfjpdppcpfcnhgmdp
@@ -105,7 +105,7 @@ jobs:
           publish: true
 
       - name: Create release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: OpenScreenShot ${{ github.ref_name }}
           body: |
