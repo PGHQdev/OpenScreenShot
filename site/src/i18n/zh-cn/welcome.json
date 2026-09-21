@@ -9,6 +9,7 @@
   "primary": "点击工具栏中的 OpenScreenShot 图标。",
   "secondary": "或按 Ctrl+Shift+S（Mac 上为 Cmd+Shift+S）。",
   "pinTitle": "固定 OpenScreenShot",
+  "pinFirefox": "点击 🧩，打开 OpenScreenShot 旁的菜单，然后选择“固定到工具栏”。",
   "pinSub": "点击上方的 🧩，再点击 OpenScreenShot 旁边的 📌。",
   "quartetHeading": "你刚刚添加了什么。",
   "bandHeading": "整个页面。",

@@ -12,6 +12,7 @@
  * a stitched capture of it has something to show.
  */
 import Base from '../../../layouts/Base.astro';
+import WelcomePin from '../../../components/WelcomePin.astro';
 import LocaleRedirect from '../../../components/LocaleRedirect.astro';
 import { ICON_PATHS } from '../../../lib/icons';
 import { t, localePaths, localeFromParams, DEFAULT_LOCALE } from '../../../i18n';
@@ -34,7 +35,13 @@ const quartet = [
 ---
 
 <Base title={d.meta.title} description={d.meta.description} path="/welcome/" locale={locale}>
+  <WelcomePin slot="header-action" locale={locale} />
   <Fragment slot="head">
+    <script is:inline>
+      document.documentElement.dataset.welcomeBrowser = /Firefox\//i.test(navigator.userAgent)
+        ? 'firefox'
+        : 'chrome';
+    </script>
     {/* A landing the browser opens once, on install. It has no business in search. */}
     <meta name="robots" content="noindex, follow" />
     {locale === DEFAULT_LOCALE && <LocaleRedirect path="/welcome/" />}
@@ -56,7 +63,7 @@ const quartet = [
         <p class="chip chip-go">{d.primary}</p>
         <p class="chip">{d.secondary}</p>
       </div>
-      <p class="pin"><strong>{d.pinTitle}</strong> <span>{d.pinSub}</span></p>
+      <WelcomePin locale={locale} inline />
     </div>
   </section>
 
@@ -168,16 +175,6 @@ const quartet = [
     border-color: transparent;
     background: var(--accent);
     color: #fff;
-  }
-
-  .pin {
-    margin: 0;
-    color: var(--ink-3);
-    font-size: var(--fs-sm);
-  }
-
-  .pin strong {
-    color: var(--ink);
   }
 
   .section {

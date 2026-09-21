@@ -1,0 +1,80 @@
+---
+import { t, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+  inline?: boolean;
+}
+const { locale, inline = false } = Astro.props;
+const d = t(locale, 'welcome');
+---
+
+<div class:list={['welcome-pin', { 'welcome-pin-inline': inline }]}>
+  <p>
+    <strong>{d.pinTitle}</strong>
+    <span class="pin-chrome">{d.pinSub}</span>
+    <span class="pin-firefox">{d.pinFirefox}</span>
+  </p>
+  {
+    !inline && (
+      <svg class="pin-arrow" viewBox="0 0 90 88" fill="none" aria-hidden="true" focusable="false">
+        <path d="M5 73C29 80 58 68 54 48C51 33 32 40 39 52C50 69 79 43 77 6M64 19L77 6L86 24" />
+      </svg>
+    )
+  }
+</div>
+
+<style>
+  .welcome-pin {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    max-width: 390px;
+    color: var(--ink);
+  }
+  .welcome-pin p {
+    margin: 0;
+    min-width: 0;
+    text-align: right;
+  }
+  .welcome-pin strong {
+    display: block;
+    margin-bottom: var(--s-1);
+    font-size: var(--fs-base);
+    font-weight: 700;
+  }
+  .welcome-pin span {
+    color: var(--ink-2);
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+  }
+  .pin-arrow {
+    flex: 0 0 76px;
+    width: 76px;
+    height: 76px;
+    align-self: flex-start;
+    margin-top: -12px;
+    stroke: var(--accent);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .pin-firefox { display: none; }
+  :global(html[data-welcome-browser='firefox']) .pin-chrome { display: none; }
+  :global(html[data-welcome-browser='firefox']) .pin-firefox { display: inline; }
+  .welcome-pin-inline {
+    display: block;
+    max-width: none;
+  }
+  .welcome-pin-inline p { text-align: center; }
+  .welcome-pin-inline strong {
+    display: inline;
+    margin-right: var(--s-1);
+    font-size: var(--fs-sm);
+  }
+  @media (max-width: 620px) {
+    .welcome-pin { max-width: 320px; }
+    .welcome-pin-inline { max-width: none; }
+    .pin-arrow { flex-basis: 52px; width: 52px; height: 64px; }
+  }
+</style>

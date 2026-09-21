@@ -129,7 +129,7 @@ const alternates = availableLocales.map((l) => ({
   <body>
     <a class="skip-link" href="#main">{c.nav.skipToContent}</a>
 
-    <header class="site-head">
+    <header class:list={['site-head', { 'site-head-onboarding': Astro.slots.has('header-action') }]}>
       <nav class="container-wide nav" aria-label={c.nav.ariaPrimary}>
         <a class="nav-brand" href={isHome ? '#top' : localizePath(locale, '/')}>
           <BrandMark size={24} />
@@ -150,10 +150,12 @@ const alternates = availableLocales.map((l) => ({
             ))
           }
           <li>
-            <a class="btn nav-cta" href={STORE_URL} target="_blank" rel="noopener">
-              <ChromeIcon size={18} />
-              {c.nav.addToChrome}
-            </a>
+            <slot name="header-action">
+              <a class="btn nav-cta" href={STORE_URL} target="_blank" rel="noopener">
+                <ChromeIcon size={18} />
+                {c.nav.addToChrome}
+              </a>
+            </slot>
           </li>
         </ul>
       </nav>
@@ -301,6 +303,18 @@ const alternates = availableLocales.map((l) => ({
 
   .site-head[data-scrolled] .nav {
     padding-block: var(--s-3);
+  }
+
+  /* The welcome arrow points to the browser toolbar, so keep it at the
+   * viewport edge even when the site's content column is narrower. */
+  .site-head.site-head-onboarding .nav {
+    padding-inline: var(--s-5);
+  }
+
+  .site-head-onboarding .nav-links {
+    margin-left: auto;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .nav-brand {
