@@ -45,6 +45,8 @@ export interface Props {
    * same-page anchors only; sub-pages pass cross-page links.
    */
   navLinks?: NavLink[];
+  /** Quiet shell for post-uninstall feedback. */
+  minimal?: boolean;
 }
 
 const STORE_URL = 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp';
@@ -58,6 +60,7 @@ const {
   pageType = 'website',
   availableLocales = LOCALES,
   navLinks = [],
+  minimal = false,
 } = Astro.props;
 
 const c = t(locale, 'common');
@@ -135,7 +138,7 @@ const alternates = availableLocales.map((l) => ({
           <BrandMark size={24} />
           OpenScreenShot
         </a>
-        <ul class="nav-links">
+        {!minimal && <ul class="nav-links">
           {
             navLinks.map((link) => (
               <li>
@@ -157,7 +160,7 @@ const alternates = availableLocales.map((l) => ({
               </a>
             </slot>
           </li>
-        </ul>
+        </ul>}
       </nav>
     </header>
 
@@ -165,7 +168,7 @@ const alternates = availableLocales.map((l) => ({
       <slot />
     </main>
 
-    <footer class="site-foot">
+    {!minimal && <footer class="site-foot">
       <div class="container-wide foot-grid">
         <div class="foot-brand-block">
           <p class="foot-brand">
@@ -240,7 +243,10 @@ const alternates = availableLocales.map((l) => ({
           ))
         }
       </nav>
-    </footer>
+    </footer>}
+    {minimal && <footer class="quiet-foot">
+      <a href={localizePath(locale, '/privacy/')}>{c.footer.privacy}</a>
+    </footer>}
 
     <slot name="body-end" />
 
@@ -362,6 +368,13 @@ const alternates = availableLocales.map((l) => ({
     background: color-mix(in srgb, var(--ink) 85%, #fff);
     color: #fff;
   }
+
+  .quiet-foot {
+    padding: var(--s-5);
+    text-align: center;
+    font-size: var(--fs-sm);
+  }
+  .quiet-foot a { color: var(--ink-3); }
 
   .site-foot {
     margin-top: var(--s-6);

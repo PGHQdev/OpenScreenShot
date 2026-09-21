@@ -1,131 +1,119 @@
 ---
-/**
- * Uninstall landing (rating funnel Surface D). chrome.runtime.setUninstallURL
- * points here with ?v=<version>&hl=<locale> — nothing else.
- *
- * Send posts to /api/feedback, which writes one row to D1: what was typed,
- * the version from ?v, this page's locale, and an optional reply address. No
- * IP, no user agent, no cookie, no analytics. It used to open the visitor's
- * mail client instead, which asked someone mid-uninstall to own a mail app and
- * hand over their address to report a missing footer. The mail link stays
- * under the form for anyone who prefers it, and it is also the way through
- * when the endpoint is down.
- */
-import Doc from '../../../layouts/Doc.astro';
+import Base from '../../../layouts/Base.astro';
 import LocaleRedirect from '../../../components/LocaleRedirect.astro';
 import { t, localePaths, localeFromParams, DEFAULT_LOCALE } from '../../../i18n';
 
 export const getStaticPaths = localePaths;
-
 const locale = localeFromParams(Astro.params.lang);
 const d = t(locale, 'uninstall');
-
-const REVIEWS_URL =
-  'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp/reviews';
-const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
+const REVIEWS_URL = 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp/reviews';
 const SUPPORT_EMAIL = 'support@minimalistprojects.com';
 ---
 
-<Doc
-  title={d.meta.title}
-  description={d.meta.description}
-  path="/uninstall/"
-  locale={locale}
-  label={d.label}
-  heading={d.heading}
-  lead={d.lead}
->
-  {
-    locale === DEFAULT_LOCALE && (
-      <Fragment slot="head">
-        <LocaleRedirect path="/uninstall/" />
-      </Fragment>
-    )
-  }
+<Base title={d.meta.title} description={d.meta.description} path="/uninstall/" locale={locale} minimal>
+  <Fragment slot="head">
+    <meta name="robots" content="noindex, follow" />
+    {locale === DEFAULT_LOCALE && <LocaleRedirect path="/uninstall/" />}
+  </Fragment>
 
-  <section class="doc-section" id="worked">
-    <h2>{d.happy.heading}</h2>
-    <p>{d.happy.body}</p>
-    <p>
-      <a class="btn btn-ink" href={REVIEWS_URL} target="_blank" rel="noopener">{d.happy.cta}</a>
-    </p>
-  </section>
+  <div class="goodbye">
+    <header class="goodbye-heading">
+      <h1>{d.heading}</h1>
+      <p class="intro">{d.lead}</p>
+      <a class="btn btn-ink rate-link" href={REVIEWS_URL} target="_blank" rel="noopener">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
+          <path d="m12 3 2.8 5.7 6.3.9-4.5 4.4 1.1 6.2-5.7-3-5.7 3 1.1-6.2L3.2 9.6l6-.9Z" />
+        </svg>
+        {d.happy.cta}
+      </a>
+    </header>
 
-  <section class="doc-section" id="broken">
-    <h2>{d.broken.heading}</h2>
-    <p>{d.broken.body}</p>
-    <form id="feedback-form" data-email={SUPPORT_EMAIL} data-locale={locale}>
-      <textarea
-        id="feedback-text"
-        rows="5"
-        required
-        maxlength="4000"
-        placeholder={d.broken.placeholder}
-        aria-label={d.broken.heading}></textarea>
-      {/* Optional, and labelled as optional: a reply address is the only way
-          to answer a bug report, and no reason to refuse an anonymous one. */}
-      <p class="field">
-        <label for="feedback-contact">{d.broken.contactLabel}</label>
-        <input id="feedback-contact" type="email" maxlength="200" autocomplete="email" />
-      </p>
-      <p>
+    <section class="feedback" aria-labelledby="feedback-heading">
+      <h2 id="feedback-heading">{d.broken.heading}</h2>
+      <p class="feedback-note" id="feedback-note">{d.broken.body}</p>
+      <form id="feedback-form" data-locale={locale}>
+        <textarea id="feedback-text" rows="4" required maxlength="4000"
+          placeholder={d.broken.placeholder} aria-labelledby="feedback-heading" aria-describedby="feedback-note"></textarea>
+        <details class="reply-field">
+          <summary>{d.broken.replyToggle}</summary>
+          <label for="feedback-contact">{d.broken.contactLabel}</label>
+          <input id="feedback-contact" type="email" maxlength="200" autocomplete="email" />
+        </details>
         <button class="btn btn-quiet" type="submit">{d.broken.cta}</button>
-      </p>
-      <p id="feedback-error" class="feedback-error" role="alert" hidden>
-        {d.broken.failed} <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
-      </p>
-    </form>
-    <p class="mail-fallback">
-      {d.broken.mailFallback} <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
-    </p>
-    <p id="feedback-thanks" hidden>
-      {d.broken.thanks}
-      <a class="btn btn-quiet" href={REVIEWS_URL} target="_blank" rel="noopener"
-        >{d.broken.rateAnyway}</a
-      >
-    </p>
-  </section>
-
-  <p class="doc-section">
-    {d.footer}
-    <a href={REPO_URL}>github.com/pghqdev/OpenScreenShot</a>
-  </p>
-</Doc>
+        <p id="feedback-error" class="feedback-error" role="alert" hidden>
+          {d.broken.failed} <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>
+        </p>
+      </form>
+      <p id="feedback-thanks" class="feedback-thanks" role="status" tabindex="-1" hidden>{d.broken.thanks}</p>
+    </section>
+  </div>
+</Base>
 
 <style>
-  #feedback-text {
+  .goodbye {
+    width: min(100% - 48px, 560px);
+    margin: clamp(40px, 8vh, 80px) auto clamp(48px, 9vh, 96px);
+  }
+  .goodbye-heading h1 {
+    max-width: 18ch;
+    margin: 0 0 var(--s-4);
+    font-size: clamp(32px, 4.4vw, 48px);
+    line-height: 1.12;
+    letter-spacing: var(--tr-tight);
+    overflow-wrap: anywhere;
+  }
+  .intro {
+    margin: 0 0 var(--s-5);
+    color: var(--ink-2);
+    font-size: var(--fs-lg);
+    line-height: 1.6;
+  }
+  .rate-link { gap: var(--s-2); }
+  .rate-link svg { flex-shrink: 0; }
+  .feedback {
+    margin-top: var(--s-7);
+    padding-top: var(--s-6);
+    border-top: 1px solid var(--rule);
+  }
+  .feedback h2 {
+    margin: 0 0 var(--s-2);
+    font-size: var(--fs-lg);
+    letter-spacing: var(--tr-tight);
+  }
+  .feedback-note {
+    color: var(--ink-2);
+    margin: 0 0 var(--s-4);
+    font-size: var(--fs-sm);
+  }
+  textarea, input {
     width: 100%;
-    max-width: 560px;
-    padding: 12px;
-    border: 1px solid var(--border, #d9d4c8);
-    border-radius: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-md);
+    background: var(--paper);
+    color: var(--ink);
     font: inherit;
-    resize: vertical;
+    font-size: var(--fs-base);
   }
-
-  .field {
-    display: grid;
-    gap: 6px;
-    max-width: 560px;
+  textarea { display: block; resize: vertical; min-height: 120px; }
+  textarea::placeholder { color: var(--ink-3); }
+  textarea:focus-visible, input:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
   }
-
-  .field label {
-    color: var(--ink-3);
+  .reply-field { margin: var(--s-3) 0 var(--s-5); }
+  summary { width: fit-content; cursor: pointer; color: var(--ink-2); font-size: var(--fs-sm); }
+  summary:hover { color: var(--ink); }
+  .reply-field label {
+    display: block;
+    margin: var(--s-3) 0 var(--s-2);
+    color: var(--ink-2);
     font-size: var(--fs-sm);
   }
-
-  #feedback-contact {
-    padding: 10px 12px;
-    border: 1px solid var(--border, #d9d4c8);
-    border-radius: 10px;
-    font: inherit;
-  }
-
-  .mail-fallback,
-  .feedback-error {
-    color: var(--ink-3);
-    font-size: var(--fs-sm);
-  }
+  .feedback-error, .feedback-thanks { font-size: var(--fs-sm); margin-top: var(--s-4); }
+  .feedback-error a { overflow-wrap: anywhere; }
+  .feedback-thanks { color: var(--ink-2); }
+  button:disabled { opacity: .6; cursor: wait; }
 </style>
 
 <script>
@@ -141,6 +129,12 @@ const SUPPORT_EMAIL = 'support@minimalistprojects.com';
   const failed = document.getElementById('feedback-error') as HTMLElement;
   const button = form?.querySelector('button[type="submit"]') as HTMLButtonElement;
   const sending = button?.textContent ?? '';
+
+  // A collapsed optional field must still be reachable if validation fails.
+  contact?.addEventListener('invalid', () => {
+    const disclosure = contact.closest('details');
+    if (disclosure) disclosure.open = true;
+  });
 
   form?.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -163,6 +157,7 @@ const SUPPORT_EMAIL = 'support@minimalistprojects.com';
         if (!res.ok) throw new Error(String(res.status));
         form.hidden = true;
         thanks.hidden = false;
+        thanks.focus();
       })
       .catch(() => {
         failed.hidden = false;
