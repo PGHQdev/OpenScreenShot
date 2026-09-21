@@ -2409,5 +2409,50 @@
   },
   "firefoxScreenshotOnly": {
     "message": "Firefox поддерживает создание и редактирование скриншотов. Запись экрана доступна в Chrome."
+  },
+  "settingsKeyboardShortcuts": {
+    "message": "Сочетания клавиш"
+  },
+  "settingsBrowserShortcuts": {
+    "message": "При просмотре страниц"
+  },
+  "settingsBrowserShortcutsHint": {
+    "message": "Эти сочетания запускают захват и запись при просмотре страниц. Назначениями управляет браузер."
+  },
+  "settingsShortcutUnassigned": {
+    "message": "Не назначено"
+  },
+  "settingsChangeShortcuts": {
+    "message": "Изменить или удалить сочетания"
+  },
+  "settingsShortcutConflictHint": {
+    "message": "Конфликт с другим приложением? Измените или удалите сочетание в настройках сочетаний клавиш браузера."
+  },
+  "settingsEditorShortcuts": {
+    "message": "В редакторе"
+  },
+  "settingsEditorShortcutsHint": {
+    "message": "Сочетания редактора работают только в редакторе. Они фиксированы и не связаны с сочетаниями для захвата в браузере."
+  },
+  "settingsViewEditorShortcuts": {
+    "message": "Показать сочетания редактора"
+  },
+  "settingsRevealRecordingBar": {
+    "message": "Показать управление записью"
+  },
+  "settingsShortcutsReadError": {
+    "message": "Не удалось загрузить сочетания клавиш. Вернитесь на эту страницу, чтобы повторить попытку."
+  },
+  "settingsFirefoxShortcutsHint": {
+    "message": "Если настройки не открываются напрямую, используйте менеджер дополнений Firefox → меню с шестерёнкой → Управление сочетаниями клавиш расширений."
+  },
+  "expressSettingsHint": {
+    "message": "Захват одним щелчком включён. Сочетания клавиш и параметры захвата можно изменить в настройках."
+  },
+  "settingsBrowserScreenshotShortcutsHint": {
+    "message": "Эти сочетания делают снимки экрана при просмотре страниц. Назначениями управляет браузер."
+  },
+  "settingsStopRecording": {
+    "message": "Остановить запись"
   }
 }

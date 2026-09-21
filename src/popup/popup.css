@@ -1098,3 +1098,40 @@ label.settings-row .settings-label {
     color: HighlightText;
   }
 }
+
+.settings-shortcuts h3 {
+  margin: var(--s-3) 0 var(--s-2);
+  font-size: var(--fs-base);
+}
+.settings-shortcuts > .settings-hint {
+  margin: var(--s-2) 0;
+}
+.shortcut-bindings {
+  margin: var(--s-3) 0;
+}
+.shortcut-bindings > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--border);
+}
+.shortcut-bindings dd {
+  margin: 0;
+}
+.settings-shortcuts > button {
+  white-space: normal;
+  height: auto;
+  min-height: 36px;
+}
+
+.settings-shortcuts .shortcut-manage {
+  background: var(--accent-ink);
+  color: var(--on-accent);
+  border-color: transparent;
+}
+.settings-shortcuts .shortcut-manage:hover {
+  background: var(--accent-ink-hover);
+}

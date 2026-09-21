@@ -2409,5 +2409,50 @@
   },
   "firefoxScreenshotOnly": {
     "message": "Firefox permite hacer capturas de pantalla y editarlas. La grabación de pantalla está disponible en Chrome."
+  },
+  "settingsKeyboardShortcuts": {
+    "message": "Atajos de teclado"
+  },
+  "settingsBrowserShortcuts": {
+    "message": "Durante la navegación"
+  },
+  "settingsBrowserShortcutsHint": {
+    "message": "Estos atajos activan las capturas y grabaciones al navegar. El navegador gestiona sus asignaciones."
+  },
+  "settingsShortcutUnassigned": {
+    "message": "Sin asignar"
+  },
+  "settingsChangeShortcuts": {
+    "message": "Cambiar o eliminar atajos"
+  },
+  "settingsShortcutConflictHint": {
+    "message": "¿Conflicto con otra aplicación? Cambia o elimina el atajo en la configuración de atajos del navegador."
+  },
+  "settingsEditorShortcuts": {
+    "message": "Dentro del editor"
+  },
+  "settingsEditorShortcutsHint": {
+    "message": "Los atajos del editor solo funcionan dentro del editor. Son fijos e independientes de los atajos de captura del navegador."
+  },
+  "settingsViewEditorShortcuts": {
+    "message": "Ver atajos del editor"
+  },
+  "settingsRevealRecordingBar": {
+    "message": "Mostrar controles de grabación"
+  },
+  "settingsShortcutsReadError": {
+    "message": "No se pudieron cargar los atajos. Vuelve a esta página para reintentarlo."
+  },
+  "settingsFirefoxShortcutsHint": {
+    "message": "Si no se abre la configuración directamente, usa el Administrador de complementos de Firefox → engranaje → Administrar atajos de extensiones."
+  },
+  "expressSettingsHint": {
+    "message": "La captura con un clic está activada. Cambia los atajos y las preferencias de captura en Ajustes."
+  },
+  "settingsBrowserScreenshotShortcutsHint": {
+    "message": "Estos atajos toman capturas de pantalla al navegar. El navegador gestiona sus asignaciones."
+  },
+  "settingsStopRecording": {
+    "message": "Detener grabación"
   }
 }

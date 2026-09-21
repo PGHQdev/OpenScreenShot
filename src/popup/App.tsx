@@ -24,6 +24,8 @@ import {
   IconVisible,
 } from '../shared/icons';
 import { resolveModeKeys } from '../shared/shortcuts';
+import { openShortcutSettings } from '../shared/settings-navigation';
+import { ShortcutSettings } from './ShortcutSettings';
 import {
   CAPTURE_ACTIONS,
   CAPTURE_DELAYS,
@@ -61,15 +63,6 @@ import { applyTheme, watchSystemTheme } from '../shared/theme';
 // i18n helper
 function t(id: string): string {
   return chrome.i18n.getMessage(id) ?? id;
-}
-
-// chrome:// URLs can't be opened via <a href>; tabs.create works from the popup.
-function openShortcutSettings() {
-  void chrome.tabs.create({
-    url: IS_FIREFOX
-      ? 'https://support.mozilla.org/kb/manage-extension-shortcuts-firefox'
-      : 'chrome://extensions/shortcuts',
-  });
 }
 
 // External link — open in a tab (a bare <a> would navigate the popup away).
@@ -220,9 +213,10 @@ const MODES: ModeDef[] = [
 
 export function App() {
   const [settings, setSettingsState] = useState<Settings>(DEFAULT_SETTINGS);
-  // The context menus' "Capture settings" items open this page as a tab with
-  // ?settings=1 — the settings pane is unreachable by icon click in express mode.
-  const isSettingsPage = new URLSearchParams(location.search).has('settings');
+  // All Settings entries open settings.html. Keep the legacy URL working too.
+  const isSettingsPage =
+    location.pathname.endsWith('/settings.html') ||
+    new URLSearchParams(location.search).has('settings');
   const [showSettings, setShowSettings] = useState(isSettingsPage);
   const [busy, setBusy] = useState<CaptureMode | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
@@ -653,7 +647,11 @@ export function App() {
                 class="icon-btn"
                 title={t('settingsTitle')}
                 aria-label={t('settingsTitle')}
-                onClick={() => setShowSettings(true)}
+                onClick={() =>
+                  void chrome.runtime
+                    .openOptionsPage()
+                    .catch(() => pushToast(t('popupOpenFailed'), 'error'))
+                }
               >
                 <IconGear size={16} />
               </button>
@@ -904,7 +902,13 @@ export function App() {
             >
               {t('repeatLastRegion')}
             </button>
-            <button class="link-btn" onClick={openShortcutSettings} title={t('customizeShortcuts')}>
+            <button
+              class="link-btn"
+              onClick={() =>
+                void openShortcutSettings().catch(() => pushToast(t('popupOpenFailed'), 'error'))
+              }
+              title={t('customizeShortcuts')}
+            >
               {t('footerShortcuts')}
             </button>
           </div>
@@ -970,6 +974,7 @@ function SettingsView({
 
   return (
     <main class="settings" aria-label={t('settingsTitle')}>
+      <ShortcutSettings />
       <section class="settings-group" aria-labelledby="settings-appearance">
         <h2 id="settings-appearance">{t('settingsAppearance')}</h2>
         <div class="settings-row">

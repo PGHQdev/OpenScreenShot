@@ -75,9 +75,11 @@ export default defineConfig(({ mode }) => {
         // recorder pages are opened via chrome.runtime.getURL, so list them here.
         // The popup joined them when the manifest dropped `action.default_popup`
         // — the worker binds it at runtime (see syncExpressMode), so the manifest
-        // no longer names it.
+        // no longer names it. The editor also needs an explicit entry now that
+        // options_ui points to the dedicated settings page.
         input: {
           popup: 'src/popup/index.html',
+          editor: 'src/editor/index.html',
           ...(!firefox
             ? {
                 offscreen: 'src/offscreen/index.html',

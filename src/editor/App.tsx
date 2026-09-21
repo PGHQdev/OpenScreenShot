@@ -34,6 +34,7 @@ import {
   IconEyedropper,
   IconHighlight,
   IconHistory,
+  IconGear,
   IconImage,
   IconLayers,
   IconLine,
@@ -63,6 +64,7 @@ import { ZoomMenu } from './ZoomMenu';
 import { BeautifyMenu } from './BeautifyMenu';
 import { stylebarEmpty, stylebarFields } from './stylebar';
 import { ShortcutSheet } from './ShortcutSheet';
+import { ExpressHint } from './ExpressHint';
 import { HistorySheet } from './HistorySheet';
 import { hasScreenPicker, openScreenPicker } from './eyedropper';
 import { hasPinWindow } from './pin';
@@ -81,7 +83,18 @@ type DialogFormat = ImageFormat | 'pdf';
 export function App() {
   const ed = useEditor();
   const [exportOpen, setExportOpen] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(() =>
+    new URLSearchParams(window.location.search).has('shortcuts'),
+  );
+  const [settingsError, setSettingsError] = useState(false);
+  async function openSettings() {
+    try {
+      await chrome.runtime.openOptionsPage();
+      setSettingsError(false);
+    } catch {
+      setSettingsError(true);
+    }
+  }
   // The popup's History footer link opens the editor with ?history=1 (see
   // openHistory() in popup/App.tsx) — read once, at mount, same as the
   // recorder page reads its own ?session= param.
@@ -351,6 +364,10 @@ export function App() {
           </div>
         }
         <div class="topbar-controls">
+          <button class="icon-btn labeled-action" onClick={() => void openSettings()}>
+            <IconGear size={16} />
+            <span>{t('settingsTitle')}</span>
+          </button>
           <button
             class="icon-btn labeled-action"
             title={t('editorCaptureHistory')}
@@ -430,6 +447,12 @@ export function App() {
         </div>
       </header>
 
+      {settingsError && <p role="alert">{t('popupOpenFailed')}</p>}
+      <ExpressHint
+        capture={ed.capture}
+        ready={ed.hasImage && !ed.loading}
+        onSettings={() => void openSettings()}
+      />
       <StyleBar ed={ed} pointerActive={canvasPointerActive} />
 
       <div class="workspace">

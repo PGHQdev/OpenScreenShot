@@ -2409,5 +2409,50 @@
   },
   "firefoxScreenshotOnly": {
     "message": "Firefox supports screenshots and editing. Screen recording is available in Chrome."
+  },
+  "settingsKeyboardShortcuts": {
+    "message": "Keyboard shortcuts"
+  },
+  "settingsBrowserShortcuts": {
+    "message": "While browsing"
+  },
+  "settingsBrowserShortcutsHint": {
+    "message": "These shortcuts trigger capture and recording actions while browsing. Your browser manages their bindings."
+  },
+  "settingsShortcutUnassigned": {
+    "message": "Not assigned"
+  },
+  "settingsChangeShortcuts": {
+    "message": "Change or remove shortcuts"
+  },
+  "settingsShortcutConflictHint": {
+    "message": "Conflicts with another app? Change or remove the shortcut in your browser’s shortcut settings."
+  },
+  "settingsEditorShortcuts": {
+    "message": "Inside the editor"
+  },
+  "settingsEditorShortcutsHint": {
+    "message": "Editor shortcuts work only inside the editor. They are fixed and are separate from browser capture shortcuts."
+  },
+  "settingsViewEditorShortcuts": {
+    "message": "View editor shortcuts"
+  },
+  "settingsRevealRecordingBar": {
+    "message": "Show recording controls"
+  },
+  "settingsShortcutsReadError": {
+    "message": "Could not load shortcut bindings. Return to this page to try again."
+  },
+  "settingsFirefoxShortcutsHint": {
+    "message": "If shortcut settings cannot open directly, use Firefox’s Add-ons Manager → gear menu → Manage Extension Shortcuts."
+  },
+  "expressSettingsHint": {
+    "message": "One-click capture is on. Change shortcuts and capture preferences in Settings."
+  },
+  "settingsBrowserScreenshotShortcutsHint": {
+    "message": "These shortcuts trigger screenshot actions while browsing. Your browser manages their bindings."
+  },
+  "settingsStopRecording": {
+    "message": "Stop recording"
   }
 }

@@ -2409,5 +2409,50 @@
   },
   "firefoxScreenshotOnly": {
     "message": "Firefox에서는 스크린샷 촬영과 편집을 지원합니다. 화면 녹화는 Chrome에서 사용할 수 있습니다."
+  },
+  "settingsKeyboardShortcuts": {
+    "message": "키보드 단축키"
+  },
+  "settingsBrowserShortcuts": {
+    "message": "탐색 중"
+  },
+  "settingsBrowserShortcutsHint": {
+    "message": "탐색 중 캡처와 녹화를 실행하는 단축키입니다. 키 할당은 브라우저에서 관리합니다."
+  },
+  "settingsShortcutUnassigned": {
+    "message": "할당되지 않음"
+  },
+  "settingsChangeShortcuts": {
+    "message": "단축키 변경 또는 제거"
+  },
+  "settingsShortcutConflictHint": {
+    "message": "다른 앱과 충돌하나요? 브라우저의 단축키 설정에서 변경하거나 제거하세요."
+  },
+  "settingsEditorShortcuts": {
+    "message": "편집기 내부"
+  },
+  "settingsEditorShortcutsHint": {
+    "message": "편집기 단축키는 편집기 안에서만 작동합니다. 키는 고정되어 있으며 브라우저 캡처 단축키와 별개입니다."
+  },
+  "settingsViewEditorShortcuts": {
+    "message": "편집기 단축키 보기"
+  },
+  "settingsRevealRecordingBar": {
+    "message": "녹화 컨트롤 표시"
+  },
+  "settingsShortcutsReadError": {
+    "message": "단축키를 불러오지 못했습니다. 이 페이지로 돌아오면 다시 시도합니다."
+  },
+  "settingsFirefoxShortcutsHint": {
+    "message": "설정이 바로 열리지 않으면 Firefox 부가 기능 관리자 → 톱니바퀴 메뉴 → 확장 기능 단축키 관리를 사용하세요."
+  },
+  "expressSettingsHint": {
+    "message": "원클릭 캡처가 켜져 있습니다. 설정에서 단축키와 캡처 환경설정을 변경하세요."
+  },
+  "settingsBrowserScreenshotShortcutsHint": {
+    "message": "탐색 중 스크린샷을 찍는 단축키입니다. 키 할당은 브라우저에서 관리합니다."
+  },
+  "settingsStopRecording": {
+    "message": "녹화 중지"
   }
 }

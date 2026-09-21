@@ -66,8 +66,6 @@ const WELCOME_URL = 'https://openscreenshot.app/welcome';
  * capture.
  */
 const UNINSTALL_URL = 'https://openscreenshot.app/uninstall';
-/** The popup page opened as a tab, straight into its settings pane. */
-const SETTINGS_TAB_URL = chrome.runtime.getURL('src/popup/index.html?settings=1');
 /** Icon context-menu checkbox that toggles express mode. */
 const MENU_EXPRESS_ID = 'oss-express';
 /** Page-menu and icon-menu items that open the settings pane in a tab. */
@@ -282,7 +280,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
     return;
   }
   if (id === MENU_SETTINGS_ID || id === MENU_ICON_SETTINGS_ID) {
-    void chrome.tabs.create({ url: SETTINGS_TAB_URL });
+    void chrome.runtime.openOptionsPage();
     return;
   }
   const iconMode = (Object.entries(ICON_MENU_IDS) as [CaptureMode, string][]).find(

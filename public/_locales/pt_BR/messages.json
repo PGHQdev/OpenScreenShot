@@ -2409,5 +2409,50 @@
   },
   "firefoxScreenshotOnly": {
     "message": "O Firefox permite capturar e editar imagens da tela. A gravação de tela está disponível no Chrome."
+  },
+  "settingsKeyboardShortcuts": {
+    "message": "Atalhos de teclado"
+  },
+  "settingsBrowserShortcuts": {
+    "message": "Durante a navegação"
+  },
+  "settingsBrowserShortcutsHint": {
+    "message": "Estes atalhos iniciam capturas e gravações durante a navegação. O navegador gerencia as combinações."
+  },
+  "settingsShortcutUnassigned": {
+    "message": "Não atribuído"
+  },
+  "settingsChangeShortcuts": {
+    "message": "Alterar ou remover atalhos"
+  },
+  "settingsShortcutConflictHint": {
+    "message": "Conflito com outro aplicativo? Altere ou remova o atalho nas configurações de atalhos do navegador."
+  },
+  "settingsEditorShortcuts": {
+    "message": "Dentro do editor"
+  },
+  "settingsEditorShortcutsHint": {
+    "message": "Os atalhos do editor funcionam apenas dentro dele. São fixos e separados dos atalhos de captura do navegador."
+  },
+  "settingsViewEditorShortcuts": {
+    "message": "Ver atalhos do editor"
+  },
+  "settingsRevealRecordingBar": {
+    "message": "Mostrar controles de gravação"
+  },
+  "settingsShortcutsReadError": {
+    "message": "Não foi possível carregar os atalhos. Volte a esta página para tentar novamente."
+  },
+  "settingsFirefoxShortcutsHint": {
+    "message": "Se as configurações não abrirem diretamente, use o Gerenciador de extensões do Firefox → engrenagem → Gerenciar atalhos de extensões."
+  },
+  "expressSettingsHint": {
+    "message": "A captura com um clique está ativada. Altere os atalhos e as preferências de captura nas Configurações."
+  },
+  "settingsBrowserScreenshotShortcutsHint": {
+    "message": "Estes atalhos fazem capturas de tela durante a navegação. O navegador gerencia as combinações."
+  },
+  "settingsStopRecording": {
+    "message": "Parar gravação"
   }
 }

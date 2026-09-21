@@ -2409,5 +2409,50 @@
   },
   "firefoxScreenshotOnly": {
     "message": "Firefox 支援螢幕截圖和編輯。螢幕錄製功能可在 Chrome 中使用。"
+  },
+  "settingsKeyboardShortcuts": {
+    "message": "鍵盤快捷鍵"
+  },
+  "settingsBrowserShortcuts": {
+    "message": "瀏覽時"
+  },
+  "settingsBrowserShortcutsHint": {
+    "message": "這些快捷鍵可在瀏覽時觸發截圖和錄製操作。按鍵配置由瀏覽器管理。"
+  },
+  "settingsShortcutUnassigned": {
+    "message": "未指派"
+  },
+  "settingsChangeShortcuts": {
+    "message": "變更或移除快捷鍵"
+  },
+  "settingsShortcutConflictHint": {
+    "message": "與其他應用程式衝突？請在瀏覽器的快捷鍵設定中變更或移除快捷鍵。"
+  },
+  "settingsEditorShortcuts": {
+    "message": "編輯器內"
+  },
+  "settingsEditorShortcutsHint": {
+    "message": "編輯器快捷鍵僅在編輯器內生效。按鍵固定，與瀏覽器的截圖快捷鍵互相獨立。"
+  },
+  "settingsViewEditorShortcuts": {
+    "message": "查看編輯器快捷鍵"
+  },
+  "settingsRevealRecordingBar": {
+    "message": "顯示錄製控制項"
+  },
+  "settingsShortcutsReadError": {
+    "message": "無法載入快捷鍵。返回此頁面即可重試。"
+  },
+  "settingsFirefoxShortcutsHint": {
+    "message": "如果無法直接開啟設定，請使用 Firefox 附加元件管理員 → 齒輪選單 → 管理擴充套件快捷鍵。"
+  },
+  "expressSettingsHint": {
+    "message": "一鍵截圖已開啟。您可以在設定中變更快捷鍵和截圖偏好。"
+  },
+  "settingsBrowserScreenshotShortcutsHint": {
+    "message": "這些快捷鍵可在瀏覽時觸發截圖操作。按鍵配置由瀏覽器管理。"
+  },
+  "settingsStopRecording": {
+    "message": "停止錄製"
   }
 }

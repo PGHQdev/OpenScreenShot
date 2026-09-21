@@ -2409,5 +2409,50 @@
   },
   "firefoxScreenshotOnly": {
     "message": "Firefox supporta gli screenshot e la modifica delle immagini. La registrazione dello schermo è disponibile in Chrome."
+  },
+  "settingsKeyboardShortcuts": {
+    "message": "Scorciatoie da tastiera"
+  },
+  "settingsBrowserShortcuts": {
+    "message": "Durante la navigazione"
+  },
+  "settingsBrowserShortcutsHint": {
+    "message": "Queste scorciatoie avviano catture e registrazioni durante la navigazione. Le assegnazioni sono gestite dal browser."
+  },
+  "settingsShortcutUnassigned": {
+    "message": "Non assegnata"
+  },
+  "settingsChangeShortcuts": {
+    "message": "Modifica o rimuovi scorciatoie"
+  },
+  "settingsShortcutConflictHint": {
+    "message": "Conflitto con un’altra app? Modifica o rimuovi la scorciatoia nelle impostazioni delle scorciatoie del browser."
+  },
+  "settingsEditorShortcuts": {
+    "message": "Nell’editor"
+  },
+  "settingsEditorShortcutsHint": {
+    "message": "Le scorciatoie dell’editor funzionano solo nell’editor. Sono fisse e separate da quelle di cattura del browser."
+  },
+  "settingsViewEditorShortcuts": {
+    "message": "Mostra scorciatoie dell’editor"
+  },
+  "settingsRevealRecordingBar": {
+    "message": "Mostra controlli di registrazione"
+  },
+  "settingsShortcutsReadError": {
+    "message": "Impossibile caricare le scorciatoie. Torna a questa pagina per riprovare."
+  },
+  "settingsFirefoxShortcutsHint": {
+    "message": "Se le impostazioni non si aprono direttamente, usa Gestione componenti aggiuntivi di Firefox → ingranaggio → Gestisci scorciatoie da tastiera."
+  },
+  "expressSettingsHint": {
+    "message": "La cattura con un clic è attiva. Modifica scorciatoie e preferenze di cattura nelle Impostazioni."
+  },
+  "settingsBrowserScreenshotShortcutsHint": {
+    "message": "Queste scorciatoie acquisiscono schermate durante la navigazione. Le assegnazioni sono gestite dal browser."
+  },
+  "settingsStopRecording": {
+    "message": "Interrompi registrazione"
   }
 }

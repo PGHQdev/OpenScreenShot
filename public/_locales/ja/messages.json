@@ -2409,5 +2409,50 @@
   },
   "firefoxScreenshotOnly": {
     "message": "Firefoxではスクリーンショットの撮影と編集ができます。画面録画はChromeで利用できます。"
+  },
+  "settingsKeyboardShortcuts": {
+    "message": "キーボードショートカット"
+  },
+  "settingsBrowserShortcuts": {
+    "message": "ブラウジング中"
+  },
+  "settingsBrowserShortcutsHint": {
+    "message": "閲覧中にキャプチャや録画を操作するショートカットです。キーの割り当てはブラウザーで管理します。"
+  },
+  "settingsShortcutUnassigned": {
+    "message": "未割り当て"
+  },
+  "settingsChangeShortcuts": {
+    "message": "ショートカットを変更・削除"
+  },
+  "settingsShortcutConflictHint": {
+    "message": "他のアプリと競合していますか？ブラウザーのショートカット設定で変更または削除できます。"
+  },
+  "settingsEditorShortcuts": {
+    "message": "エディター内"
+  },
+  "settingsEditorShortcutsHint": {
+    "message": "エディターのショートカットはエディター内でのみ動作します。キーは固定で、ブラウザーのキャプチャ用ショートカットとは別です。"
+  },
+  "settingsViewEditorShortcuts": {
+    "message": "エディターのショートカットを表示"
+  },
+  "settingsRevealRecordingBar": {
+    "message": "録画コントロールを表示"
+  },
+  "settingsShortcutsReadError": {
+    "message": "ショートカットを読み込めませんでした。このページに戻ると再試行します。"
+  },
+  "settingsFirefoxShortcutsHint": {
+    "message": "設定が直接開かない場合は、Firefox のアドオンマネージャー → 歯車メニュー → 拡張機能のショートカットキーの管理を選択してください。"
+  },
+  "expressSettingsHint": {
+    "message": "ワンクリックキャプチャが有効です。ショートカットとキャプチャの設定は「設定」で変更できます。"
+  },
+  "settingsBrowserScreenshotShortcutsHint": {
+    "message": "閲覧中にスクリーンショットを撮影するショートカットです。キーの割り当てはブラウザーで管理します。"
+  },
+  "settingsStopRecording": {
+    "message": "録画を停止"
   }
 }

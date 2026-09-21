@@ -1751,3 +1751,18 @@ body {
     gap: var(--s-2);
   }
 }
+
+.express-settings-hint {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--fs-sm);
+}
+.express-settings-hint > span {
+  flex: 1 1 240px;
+}

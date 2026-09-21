@@ -2409,5 +2409,50 @@
   },
   "firefoxScreenshotOnly": {
     "message": "Firefox prend en charge les captures d’écran et leur modification. L’enregistrement vidéo est disponible dans Chrome."
+  },
+  "settingsKeyboardShortcuts": {
+    "message": "Raccourcis clavier"
+  },
+  "settingsBrowserShortcuts": {
+    "message": "Pendant la navigation"
+  },
+  "settingsBrowserShortcutsHint": {
+    "message": "Ces raccourcis déclenchent les captures et les enregistrements pendant la navigation. Le navigateur gère leur attribution."
+  },
+  "settingsShortcutUnassigned": {
+    "message": "Non attribué"
+  },
+  "settingsChangeShortcuts": {
+    "message": "Modifier ou supprimer les raccourcis"
+  },
+  "settingsShortcutConflictHint": {
+    "message": "Conflit avec une autre application ? Modifiez ou supprimez le raccourci dans les paramètres de raccourcis du navigateur."
+  },
+  "settingsEditorShortcuts": {
+    "message": "Dans l’éditeur"
+  },
+  "settingsEditorShortcutsHint": {
+    "message": "Les raccourcis de l’éditeur fonctionnent uniquement dans l’éditeur. Ils sont fixes et distincts des raccourcis de capture du navigateur."
+  },
+  "settingsViewEditorShortcuts": {
+    "message": "Voir les raccourcis de l’éditeur"
+  },
+  "settingsRevealRecordingBar": {
+    "message": "Afficher les commandes d’enregistrement"
+  },
+  "settingsShortcutsReadError": {
+    "message": "Impossible de charger les raccourcis. Revenez sur cette page pour réessayer."
+  },
+  "settingsFirefoxShortcutsHint": {
+    "message": "Si les paramètres ne s’ouvrent pas directement, utilisez le gestionnaire de modules de Firefox → engrenage → Gérer les raccourcis d’extensions."
+  },
+  "expressSettingsHint": {
+    "message": "La capture en un clic est activée. Modifiez les raccourcis et les préférences de capture dans les paramètres."
+  },
+  "settingsBrowserScreenshotShortcutsHint": {
+    "message": "Ces raccourcis prennent des captures d’écran pendant la navigation. Le navigateur gère leur attribution."
+  },
+  "settingsStopRecording": {
+    "message": "Arrêter l’enregistrement"
   }
 }

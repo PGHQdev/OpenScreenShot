@@ -92,6 +92,7 @@ export function ShortcutSheet({ onClose, closing }: { onClose: () => void; closi
         }}
       >
         <h2 class="modal-title">{t('editorShortcutsLabel')}</h2>
+        <p>{t('settingsEditorShortcutsHint')}</p>
         <div class="sheet-grid">
           <div>
             <div class="field-label">{t('editorTools')}</div>

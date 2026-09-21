@@ -16,6 +16,7 @@ let store: Map<string, unknown>;
 function makeFakeChrome() {
   const fake = {
     runtime: {
+      openOptionsPage: vi.fn(() => Promise.resolve()),
       onInstalled: { addListener: vi.fn() },
       onStartup: { addListener: vi.fn() },
       onMessage: { addListener: vi.fn() },
@@ -163,15 +164,13 @@ describe('context-menu surfaces', () => {
     expect(fakeChrome.tabs.query).toHaveBeenCalledWith({ active: true, currentWindow: true });
   });
 
-  it('the settings items open the popup page on its settings pane', async () => {
+  it('the settings items open the browser options page', async () => {
     await importBackground();
     for (const id of ['oss-settings', 'oss-icon-settings']) {
-      fakeChrome.tabs.create.mockClear();
+      fakeChrome.runtime.openOptionsPage.mockClear();
       menuClick(id);
       await flushMicrotasks();
-      expect(fakeChrome.tabs.create).toHaveBeenCalledWith({
-        url: 'chrome-extension://fake/src/popup/index.html?settings=1',
-      });
+      expect(fakeChrome.runtime.openOptionsPage).toHaveBeenCalledOnce();
     }
   });
 

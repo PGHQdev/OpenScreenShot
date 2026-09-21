@@ -2409,5 +2409,50 @@
   },
   "firefoxScreenshotOnly": {
     "message": "Firefox unterstützt Screenshots und Bildbearbeitung. Bildschirmaufnahmen sind in Chrome verfügbar."
+  },
+  "settingsKeyboardShortcuts": {
+    "message": "Tastenkürzel"
+  },
+  "settingsBrowserShortcuts": {
+    "message": "Beim Surfen"
+  },
+  "settingsBrowserShortcutsHint": {
+    "message": "Diese Tastenkürzel starten Aufnahmen beim Surfen. Die Belegung wird vom Browser verwaltet."
+  },
+  "settingsShortcutUnassigned": {
+    "message": "Nicht zugewiesen"
+  },
+  "settingsChangeShortcuts": {
+    "message": "Tastenkürzel ändern oder entfernen"
+  },
+  "settingsShortcutConflictHint": {
+    "message": "Konflikt mit einer anderen App? Ändere oder entferne das Kürzel in den Tastenkürzel-Einstellungen deines Browsers."
+  },
+  "settingsEditorShortcuts": {
+    "message": "Im Editor"
+  },
+  "settingsEditorShortcutsHint": {
+    "message": "Editor-Tastenkürzel gelten nur im Editor. Sie sind festgelegt und unabhängig von den Aufnahme-Kürzeln des Browsers."
+  },
+  "settingsViewEditorShortcuts": {
+    "message": "Editor-Tastenkürzel ansehen"
+  },
+  "settingsRevealRecordingBar": {
+    "message": "Aufnahmesteuerung anzeigen"
+  },
+  "settingsShortcutsReadError": {
+    "message": "Tastenkürzel konnten nicht geladen werden. Kehre zu dieser Seite zurück, um es erneut zu versuchen."
+  },
+  "settingsFirefoxShortcutsHint": {
+    "message": "Falls sich die Einstellungen nicht direkt öffnen: Firefox Add-ons-Verwaltung → Zahnrad → Tastenkombinationen von Erweiterungen verwalten."
+  },
+  "expressSettingsHint": {
+    "message": "Ein-Klick-Aufnahme ist aktiv. Tastenkürzel und Aufnahmeoptionen lassen sich in den Einstellungen ändern."
+  },
+  "settingsBrowserScreenshotShortcutsHint": {
+    "message": "Diese Tastenkürzel erstellen Screenshots beim Surfen. Die Belegung wird vom Browser verwaltet."
+  },
+  "settingsStopRecording": {
+    "message": "Aufnahme stoppen"
   }
 }
