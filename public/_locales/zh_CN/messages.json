@@ -2302,15 +2302,15 @@
     "description": "Editor topbar: tooltip on the Rate star."
   },
   "ratePromptHeadline": {
-    "message": "它帮你节省时间了吗？",
+    "message": "OpenScreenShot 帮到你了吗？",
     "description": "One-time post-export rate prompt: headline."
   },
   "ratePromptBody": {
-    "message": "在 Chrome 应用商店留下简短评分，是私密工具被发现的主要途径。只需 30 秒。",
+    "message": "简短的评价能帮助更多人发现它。如果你愿意支持开发，也可以小额捐赠。",
     "description": "One-time post-export rate prompt: body."
   },
   "ratePromptRate": {
-    "message": "去 Chrome 应用商店评分",
+    "message": "评分",
     "description": "One-time post-export rate prompt: button that opens the reviews tab."
   },
   "ratePromptLater": {
@@ -2474,5 +2474,37 @@
   "captureBack": {
     "message": "返回截图",
     "description": "Settings: return to the capture dialog that opened this tab."
+  },
+  "restrictedTitle": {
+    "message": "无法截取此页面",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "restrictedExplanation": {
+    "message": "浏览器会限制扩展程序在扩展商店、浏览器设置和其他扩展程序页面上运行。",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "restrictedInstructions": {
+    "message": "打开示例页面，然后在新标签页中点击 OpenScreenShot 图标。",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "restrictedSample": {
+    "message": "试用示例页面",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "restrictedHelp": {
+    "message": "获取帮助",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "supportProject": {
+    "description": "Optional project support and rating message.",
+    "message": "支持这个项目"
+  },
+  "supportHeadline": {
+    "description": "Optional project support and rating message.",
+    "message": "开源开发，人人免费。"
+  },
+  "supportBody": {
+    "description": "Optional project support and rating message.",
+    "message": "OpenScreenShot 完全开源。如果它对你有帮助，捐赠可以支持项目开发，简短的评价也能帮助更多人发现它。"
   }
 }

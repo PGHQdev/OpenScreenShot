@@ -1,4 +1,4 @@
-import { CWS_REVIEWS_URL, markRatedOrDismissed } from '../shared/rating';
+import { CWS_REVIEWS_URL, SUPPORT_PROJECT_URL, markRatedOrDismissed } from '../shared/rating';
 import { CaptureReturn } from './CaptureReturn';
 import { IS_FIREFOX, RECORDING_SUPPORTED } from '../shared/browser';
 import { useEffect, useRef, useState } from 'preact/hooks';
@@ -70,7 +70,7 @@ function t(id: string): string {
 
 // External link — open in a tab (a bare <a> would navigate the popup away).
 function openKofi() {
-  void chrome.tabs.create({ url: 'https://ko-fi.com/T7A624DAY7' });
+  void chrome.tabs.create({ url: SUPPORT_PROJECT_URL });
 }
 
 function openCoolStuff() {
@@ -231,7 +231,9 @@ export function App() {
   const [recSettings, setRecSettingsState] = useState<RecordingSettings>(
     DEFAULT_RECORDING_SETTINGS,
   );
-  const [activeTabProtected, setActiveTabProtected] = useState(false);
+  const [activeTabProtected, setActiveTabProtected] = useState(
+    new URLSearchParams(location.search).get('restricted') === '1',
+  );
   const [activeTabId, setActiveTabId] = useState<number | null>(null);
   const [continueSessionId, setContinueSessionId] = useState<string | null>(null);
   const [displayMs, setDisplayMs] = useState(0);
@@ -262,6 +264,16 @@ export function App() {
   // Live-update a "system" theme setting when the OS preference flips.
   useEffect(() => watchSystemTheme(() => void getSettings().then((s) => applyTheme(s.theme))), []);
 
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get('restricted') === '1') {
+      void chrome.runtime.sendMessage({ type: 'RESTRICTED_POPUP_OPENED' }).catch(() => {});
+    }
+    void chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
+      if (tab) setActiveTabProtected(isProtectedUrl(tab.url));
+      setActiveTabId(tab?.id ?? null);
+    });
+  }, []);
+
   // Recorder: settings, active tab, a pending continue-session, and current state.
   useEffect(() => {
     if (!RECORDING_SUPPORTED) return;
@@ -287,10 +299,6 @@ export function App() {
         if (parked.asked) setTabCaptureRefused(true);
       })
       .catch(() => setHasTabCapture(null));
-    void chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
-      setActiveTabProtected(isProtectedUrl(tab?.url));
-      setActiveTabId(tab?.id ?? null);
-    });
     void chrome.storage.session.get(CONTINUE_SESSION_KEY).then((stored) => {
       setContinueSessionId((stored[CONTINUE_SESSION_KEY] as string | undefined) ?? null);
     });
@@ -603,6 +611,54 @@ export function App() {
       );
   }
 
+  if (!showSettings && activeTabProtected) {
+    const openPage = async (url: string) => {
+      try {
+        await chrome.tabs.create({ url });
+        window.close();
+      } catch {
+        pushToast(t('popupOpenFailed'), 'error');
+      }
+    };
+    return (
+      <main class="app restricted-page">
+        <div class="brand">
+          <BrandMark size={28} />
+          <span class="brand-name">OpenScreenShot</span>
+        </div>
+        <h1>{t('restrictedTitle')}</h1>
+        <p>{t('restrictedExplanation')}</p>
+        <p>{t('restrictedInstructions')}</p>
+        <button class="btn-secondary btn-primary" onClick={() => void openPage('https://pghq.dev')}>
+          {t('restrictedSample')}
+        </button>
+        <nav class="restricted-links">
+          <button
+            class="link-btn"
+            onClick={() =>
+              void chrome.runtime
+                .openOptionsPage()
+                .catch(() => pushToast(t('popupOpenFailed'), 'error'))
+            }
+          >
+            {t('settingsTitle')}
+          </button>
+          <button
+            class="link-btn"
+            onClick={() => void openPage('https://openscreenshot.app/support')}
+          >
+            {t('restrictedHelp')}
+          </button>
+        </nav>
+        {toasts.map((toast) => (
+          <p key={toast.id} role="alert">
+            {toast.message}
+          </p>
+        ))}
+      </main>
+    );
+  }
+
   return (
     <div
       class={`app${isSettingsPage ? ' app-settings-page' : ''}${showSettings ? ' app-settings' : ''}`}
@@ -680,7 +736,7 @@ export function App() {
             )}
             <button class="link-btn kofi-link" onClick={openKofi} title={t('supportKofiTitle')}>
               <IconCoffee size={16} />
-              {t('footerKofi')}
+              {t('supportProject')}
             </button>
             <button class="link-btn kofi-link" onClick={openCoolStuff} title={t('coolStuffTitle')}>
               <IconGift size={16} />
@@ -1202,6 +1258,28 @@ function SettingsView({
           </div>
         </section>
       )}
+
+      <section class="settings-group project-support" aria-labelledby="project-support-heading">
+        <h2 id="project-support-heading">{t('supportHeadline')}</h2>
+        <p class="settings-hint">{t('supportBody')}</p>
+        <div class="support-links">
+          <button class="btn-secondary" onClick={openKofi}>
+            {t('supportProject')}
+          </button>
+          {!IS_FIREFOX && (
+            <button
+              class="link-btn"
+              onClick={() => {
+                void chrome.tabs
+                  .create({ url: CWS_REVIEWS_URL })
+                  .then(() => markRatedOrDismissed());
+              }}
+            >
+              {t('editorRateLabel')}
+            </button>
+          )}
+        </div>
+      </section>
 
       <footer class="settings-footer">
         <button

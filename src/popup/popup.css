@@ -603,6 +603,7 @@ label.settings-row .settings-label {
 
 .support-links {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--s-2);
 }
@@ -1179,4 +1180,28 @@ label.settings-row .settings-label {
 }
 .settings-shortcuts .shortcut-manage {
   align-self: flex-start;
+}
+
+.restricted-page {
+  gap: var(--s-4);
+}
+.restricted-page h1 {
+  margin: 0;
+  font-size: var(--fs-lg);
+  line-height: 1.3;
+}
+.restricted-page p {
+  margin: 0;
+  color: var(--text-2);
+}
+.restricted-page > .btn-primary {
+  background: var(--accent-ink);
+  color: var(--on-accent);
+  border-color: transparent;
+  white-space: normal;
+}
+.restricted-links {
+  display: flex;
+  justify-content: center;
+  gap: var(--s-5);
 }

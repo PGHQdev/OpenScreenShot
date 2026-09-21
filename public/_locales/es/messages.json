@@ -2302,15 +2302,15 @@
     "description": "Editor topbar: tooltip on the Rate star."
   },
   "ratePromptHeadline": {
-    "message": "¿Te está ahorrando tiempo?",
+    "message": "¿Te ayudó OpenScreenShot?",
     "description": "One-time post-export rate prompt: headline."
   },
   "ratePromptBody": {
-    "message": "Una valoración breve en Chrome Web Store es la principal forma de que se encuentre una herramienta privada. Lleva 30 segundos.",
+    "message": "Una breve reseña ayuda a más personas a descubrirlo. Si quieres apoyar su desarrollo, también puedes hacer una pequeña donación.",
     "description": "One-time post-export rate prompt: body."
   },
   "ratePromptRate": {
-    "message": "Valorar en Chrome Web Store",
+    "message": "Valorar",
     "description": "One-time post-export rate prompt: button that opens the reviews tab."
   },
   "ratePromptLater": {
@@ -2474,5 +2474,37 @@
   "captureBack": {
     "message": "Volver a la captura",
     "description": "Settings: return to the capture dialog that opened this tab."
+  },
+  "restrictedTitle": {
+    "message": "No se puede capturar esta página",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "restrictedExplanation": {
+    "message": "Tu navegador restringe las extensiones en tiendas de extensiones, ajustes del navegador y otras extensiones.",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "restrictedInstructions": {
+    "message": "Abre la página de ejemplo y haz clic en el icono de OpenScreenShot en esa nueva pestaña.",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "restrictedSample": {
+    "message": "Probar una página de ejemplo",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "restrictedHelp": {
+    "message": "Obtener ayuda",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "supportProject": {
+    "description": "Optional project support and rating message.",
+    "message": "Apoya este proyecto"
+  },
+  "supportHeadline": {
+    "description": "Optional project support and rating message.",
+    "message": "Código abierto. Gratis para todos."
+  },
+  "supportBody": {
+    "description": "Optional project support and rating message.",
+    "message": "OpenScreenShot es completamente de código abierto. Si te resulta útil, una donación ayuda a su desarrollo y una breve reseña ayuda a otros a descubrirlo."
   }
 }

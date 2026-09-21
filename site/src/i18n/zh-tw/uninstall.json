@@ -17,5 +17,10 @@
     "failed": "沒能送出。請寫信到",
     "thanks": "感謝您的回饋，幫助我們改善 OpenScreenShot。",
     "replyToggle": "希望收到回覆？"
+  },
+  "support": {
+    "cta": "支持這個專案",
+    "heading": "開源開發，人人免費。",
+    "body": "OpenScreenShot 完全開源。如果它對你有幫助，捐款可以支持專案開發，簡短的評價也能幫助更多人發現它。"
   }
 }

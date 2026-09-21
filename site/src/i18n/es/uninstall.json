@@ -17,5 +17,10 @@
     "failed": "No se pudo enviar. Escribe a",
     "thanks": "Gracias por tus comentarios. Nos ayudan a mejorar OpenScreenShot.",
     "replyToggle": "¿Quieres una respuesta?"
+  },
+  "support": {
+    "cta": "Apoya este proyecto",
+    "heading": "Código abierto. Gratis para todos.",
+    "body": "OpenScreenShot es completamente de código abierto. Si te resulta útil, una donación ayuda a su desarrollo y una breve reseña ayuda a otros a descubrirlo."
   }
 }

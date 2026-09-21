@@ -5,6 +5,8 @@ import { IS_FIREFOX } from './browser';
  * blocks an export, and prompts are spaced by successful uses.
  */
 
+export const SUPPORT_PROJECT_URL = 'https://ko-fi.com/T7A624DAY7';
+
 /** The listing's reviews tab — where every Rate surface points. */
 export const CWS_REVIEWS_URL =
   'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp/reviews';

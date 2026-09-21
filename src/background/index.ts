@@ -240,7 +240,7 @@ chrome.runtime.onStartup.addListener(() => void syncExpressMode());
 // re-bound the popup would capture instead of showing the picker. Re-reading
 // the setting here closes it — the click binds the popup and opens it rather
 // than capturing something nobody asked for.
-chrome.action.onClicked.addListener(() => {
+chrome.action.onClicked.addListener((tab) => {
   void (async () => {
     const { expressMode } = await getSettings();
     if (!expressMode) {
@@ -250,6 +250,17 @@ chrome.action.onClicked.addListener(() => {
       await chrome.action.openPopup?.().catch(() => {
         /* no popup to open (unsupported, or no focused window) */
       });
+      return;
+    }
+    if (tab?.id !== undefined && isProtectedUrl(tab.url)) {
+      await chrome.action.setPopup({ popup: `${POPUP_URL}?restricted=1` });
+      try {
+        await chrome.action.openPopup();
+        await syncExpressMode();
+      } catch {
+        // Older Chrome cannot open a popup programmatically. Leave it bound
+        // for the next click; the popup restores the preferred mode on mount.
+      }
       return;
     }
     await handleCapture('full-page');
@@ -303,6 +314,10 @@ chrome.commands.onCommand.addListener((command) => {
 });
 
 chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
+  if ((message as { type?: string })?.type === 'RESTRICTED_POPUP_OPENED') {
+    void syncExpressMode();
+    return false;
+  }
   if ((message as { type?: string })?.type === 'GET_CAPTURE_PROGRESS') {
     sendResponse(getCaptureProgress());
     return false;

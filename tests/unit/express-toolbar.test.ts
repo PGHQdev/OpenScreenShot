@@ -132,6 +132,35 @@ describe('toolbar-click branching', () => {
     );
   });
 
+  it('opens restricted-page guidance without attempting capture and restores Express mode', async () => {
+    await importBackground();
+    const listener = fakeChrome.action.onClicked.addListener.mock.calls[0]?.[0] as (
+      tab: unknown,
+    ) => void;
+    listener({ id: 7, windowId: 1, url: 'https://chromewebstore.google.com/' });
+    await flushMicrotasks();
+    expect(fakeChrome.action.setPopup).toHaveBeenCalledWith({
+      popup: 'src/popup/index.html?restricted=1',
+    });
+    expect(fakeChrome.action.openPopup).toHaveBeenCalled();
+    expect(fakeChrome.action.setPopup).toHaveBeenLastCalledWith({ popup: '' });
+    expect(fakeChrome.tabs.captureVisibleTab).not.toHaveBeenCalled();
+    expect(fakeChrome.runtime.sendMessage).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'CAPTURE_ERROR' }),
+    );
+  });
+
+  it('keeps the guidance available on the next click if openPopup is unavailable', async () => {
+    await importBackground();
+    fakeChrome.action.openPopup.mockRejectedValueOnce(new Error('Unsupported'));
+    const listener = fakeChrome.action.onClicked.addListener.mock.calls[0]?.[0] as (
+      tab: unknown,
+    ) => void;
+    listener({ id: 7, url: 'chrome://settings' });
+    await flushMicrotasks();
+    expect(lastPopupBinding()).toBe('src/popup/index.html?restricted=1');
+  });
+
   it('express off: a click that still reaches the listener opens the picker, not a capture', async () => {
     // The manifest declares no default_popup, so an action Chrome has not yet
     // let the worker bind is unbound — and `onClicked` fires. Capturing there

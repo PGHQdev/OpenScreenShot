@@ -30,6 +30,7 @@ import {
   IconArrow,
   IconBlur,
   IconCrop,
+  IconCoffee,
   IconCut,
   IconEyedropper,
   IconHighlight,
@@ -54,6 +55,7 @@ import {
 import { getSettings, setSettings } from '../shared/storage';
 import {
   CWS_REVIEWS_URL,
+  SUPPORT_PROJECT_URL,
   markRatedOrDismissed,
   markRatePromptShown,
   remindRateLater,
@@ -453,6 +455,13 @@ export function App() {
               <span>{t('editorRateLabel')}</span>
             </button>
           )}
+          <button
+            class="text-btn labeled-action"
+            onClick={() => window.open(SUPPORT_PROJECT_URL, '_blank', 'noopener')}
+          >
+            <IconCoffee size={18} />
+            <span>{t('supportProject')}</span>
+          </button>
         </div>
       </header>
 
@@ -662,6 +671,15 @@ export function App() {
           <div class="rate-prompt-actions">
             <button class="btn-primary" onClick={openReviews}>
               {t('ratePromptRate')}
+            </button>
+            <button
+              class="text-btn"
+              onClick={() => {
+                window.open(SUPPORT_PROJECT_URL, '_blank', 'noopener');
+                dismissRatePrompt();
+              }}
+            >
+              {t('supportProject')}
             </button>
             <button class="btn-secondary" onClick={dismissRatePrompt}>
               {t('ratePromptLater')}

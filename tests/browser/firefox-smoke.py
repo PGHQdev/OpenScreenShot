@@ -91,9 +91,10 @@ def main():
             base = 'moz-extension://' + uuids[ADDON_ID]
             driver.set_context('content')
             driver.get(base + '/src/popup/index.html')
-            wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, '.mode-card')) == 3)
+            # Opening the popup as a tab is itself an extension URL: restricted.
+            wait.until(lambda d: d.find_elements(By.CSS_SELECTOR, '.restricted-page'))
             assert not driver.find_elements(By.CSS_SELECTOR, '[data-testid="rec-start"]')
-            assert 'Firefox supports screenshots' in driver.find_element(By.TAG_NAME, 'body').text
+            assert 'This page can’t be captured' in driver.find_element(By.TAG_NAME, 'body').text
             permissions = api('return chrome.permissions.getAll();')
             assert 'offscreen' not in permissions['permissions']
             assert 'tabCapture' not in permissions['permissions']

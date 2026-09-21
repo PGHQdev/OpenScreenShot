@@ -2302,15 +2302,15 @@
     "description": "Editor topbar: tooltip on the Rate star."
   },
   "ratePromptHeadline": {
-    "message": "時間の節約になっていますか？",
+    "message": "OpenScreenShotは役に立ちましたか？",
     "description": "One-time post-export rate prompt: headline."
   },
   "ratePromptBody": {
-    "message": "Chrome ウェブストアでの短い評価が、プライベートなツールが見つかる一番の理由です。30秒で終わります。",
+    "message": "評価を投稿すると、より多くの人に知ってもらえます。開発を支援したい場合は、少額の寄付もできます。",
     "description": "One-time post-export rate prompt: body."
   },
   "ratePromptRate": {
-    "message": "Chrome ウェブストアで評価する",
+    "message": "評価",
     "description": "One-time post-export rate prompt: button that opens the reviews tab."
   },
   "ratePromptLater": {
@@ -2474,5 +2474,37 @@
   "captureBack": {
     "message": "キャプチャに戻る",
     "description": "Settings: return to the capture dialog that opened this tab."
+  },
+  "restrictedTitle": {
+    "message": "このページはキャプチャできません",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "restrictedExplanation": {
+    "message": "ブラウザーは拡張機能ストア、ブラウザー設定、他の拡張機能などのページで拡張機能の動作を制限しています。",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "restrictedInstructions": {
+    "message": "サンプルページを開き、その新しいタブでOpenScreenShotのアイコンをクリックしてください。",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "restrictedSample": {
+    "message": "サンプルページを試す",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "restrictedHelp": {
+    "message": "ヘルプ",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "supportProject": {
+    "description": "Optional project support and rating message.",
+    "message": "このプロジェクトを支援"
+  },
+  "supportHeadline": {
+    "description": "Optional project support and rating message.",
+    "message": "オープンソース。誰でも無料。"
+  },
+  "supportBody": {
+    "description": "Optional project support and rating message.",
+    "message": "OpenScreenShotは完全にオープンソースです。役に立ったら、寄付で開発を支援できます。評価を投稿すると、より多くの人に知ってもらえます。"
   }
 }

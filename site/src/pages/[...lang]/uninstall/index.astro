@@ -26,6 +26,11 @@ const SUPPORT_EMAIL = 'support@minimalistprojects.com';
         </svg>
         {d.happy.cta}
       </a>
+      <a class="support-link" href="https://ko-fi.com/T7A624DAY7" target="_blank" rel="noopener">{d.support.cta}</a>
+      <div class="project-support">
+        <h2>{d.support.heading}</h2>
+        <p>{d.support.body}</p>
+      </div>
     </header>
 
     <section class="feedback" aria-labelledby="feedback-heading">
@@ -50,6 +55,11 @@ const SUPPORT_EMAIL = 'support@minimalistprojects.com';
 </Base>
 
 <style>
+  .support-link { display: inline-block; margin: var(--s-3) 0 0 var(--s-4); }
+  .project-support { margin-top: var(--s-5); }
+  .project-support h2 { font-size: var(--fs-base); margin: 0 0 var(--s-2); }
+  .project-support p { margin: 0; color: var(--ink-2); line-height: 1.6; }
+
   .goodbye {
     width: min(100% - 48px, 560px);
     margin: clamp(40px, 8vh, 80px) auto clamp(48px, 9vh, 96px);

@@ -2302,15 +2302,15 @@
     "description": "Editor topbar: tooltip on the Rate star."
   },
   "ratePromptHeadline": {
-    "message": "Экономит ли это ваше время?",
+    "message": "OpenScreenShot вам помог?",
     "description": "One-time post-export rate prompt: headline."
   },
   "ratePromptBody": {
-    "message": "Короткий отзыв в Chrome Web Store — главный способ, которым находят приватный инструмент. Это занимает 30 секунд.",
+    "message": "Короткий отзыв поможет другим узнать о расширении. Вы также можете поддержать разработку небольшим пожертвованием.",
     "description": "One-time post-export rate prompt: body."
   },
   "ratePromptRate": {
-    "message": "Оценить в Chrome Web Store",
+    "message": "Оценить",
     "description": "One-time post-export rate prompt: button that opens the reviews tab."
   },
   "ratePromptLater": {
@@ -2474,5 +2474,37 @@
   "captureBack": {
     "message": "Вернуться к снимку",
     "description": "Settings: return to the capture dialog that opened this tab."
+  },
+  "restrictedTitle": {
+    "message": "Эту страницу нельзя снять",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "restrictedExplanation": {
+    "message": "Браузер ограничивает работу расширений в магазинах расширений, настройках браузера и других расширениях.",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "restrictedInstructions": {
+    "message": "Откройте пример страницы, затем нажмите значок OpenScreenShot в новой вкладке.",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "restrictedSample": {
+    "message": "Открыть пример страницы",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "restrictedHelp": {
+    "message": "Помощь",
+    "description": "Toolbar popup shown on browser-restricted pages."
+  },
+  "supportProject": {
+    "description": "Optional project support and rating message.",
+    "message": "Поддержать проект"
+  },
+  "supportHeadline": {
+    "description": "Optional project support and rating message.",
+    "message": "Открытый код. Бесплатно для всех."
+  },
+  "supportBody": {
+    "description": "Optional project support and rating message.",
+    "message": "OpenScreenShot — проект с полностью открытым исходным кодом. Если он вам полезен, пожертвование поддержит разработку, а короткий отзыв поможет другим узнать о нём."
   }
 }
