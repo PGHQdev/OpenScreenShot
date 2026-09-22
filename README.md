@@ -8,7 +8,9 @@
 
 Full-page screenshots for Chrome and Firefox. Free editing. Local processing. No account.
 
-[![CI](https://github.com/pghqdev/OpenScreenShot/actions/workflows/ci.yml/badge.svg)](https://github.com/pghqdev/OpenScreenShot/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-MIT-1B1A17)](./LICENSE) [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/hdabbojjccojlapnfjpdppcpfcnhgmdp?label=Chrome&color=4285F4)](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp) [![Firefox Add-ons](https://img.shields.io/amo/v/openscreenshot?label=Firefox&color=FF7139)](https://addons.mozilla.org/firefox/addon/openscreenshot/)
+[![CI](https://github.com/PGHQdev/OpenScreenShot/actions/workflows/ci.yml/badge.svg)](https://github.com/PGHQdev/OpenScreenShot/actions/workflows/ci.yml) [![Chrome release](https://github.com/PGHQdev/OpenScreenShot/actions/workflows/release.yml/badge.svg)](https://github.com/PGHQdev/OpenScreenShot/actions/workflows/release.yml) [![Firefox release](https://github.com/PGHQdev/OpenScreenShot/actions/workflows/release-firefox.yml/badge.svg)](https://github.com/PGHQdev/OpenScreenShot/actions/workflows/release-firefox.yml) [![MCP publish](https://github.com/PGHQdev/OpenScreenShot/actions/workflows/publish-mcp.yml/badge.svg)](https://github.com/PGHQdev/OpenScreenShot/actions/workflows/publish-mcp.yml)
+
+[![License](https://img.shields.io/badge/license-MIT-1B1A17)](./LICENSE) [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/hdabbojjccojlapnfjpdppcpfcnhgmdp?label=Chrome&color=4285F4)](https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp) [![Firefox Add-ons](https://img.shields.io/amo/v/openscreenshot?label=Firefox&color=FF7139)](https://addons.mozilla.org/firefox/addon/openscreenshot/)
 
 <br />
 
@@ -16,14 +18,18 @@ Full-page screenshots for Chrome and Firefox. Free editing. Local processing. No
 <tr>
 <td align="center" width="280">
 <a href="https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp">
-<img src="site/public/assets/brands/chrome.svg" alt="" width="36" height="36" /><br />
+<img src="site/public/assets/brands/chrome.svg" alt="Chrome" width="24" height="24" />
+<img src="site/public/assets/brands/edge.svg" alt="Edge" width="24" height="24" />
+<img src="site/public/assets/brands/brave.svg" alt="Brave" width="24" height="24" />
+<img src="site/public/assets/brands/arc.png" alt="Arc" width="24" height="24" />
+<img src="site/public/assets/brands/chromium.svg" alt="Chromium" width="24" height="24" /><br />
 <strong>Add to Chrome</strong>
 </a><br />
-<sub>Chrome · Edge · Brave · Arc</sub>
+<sub>Chrome · Edge · Brave · Arc · Chromium</sub>
 </td>
 <td align="center" width="280">
 <a href="https://addons.mozilla.org/firefox/addon/openscreenshot/">
-<img src="site/public/assets/brands/firefox.svg" alt="" width="36" height="36" /><br />
+<img src="site/public/assets/brands/firefox.svg" alt="Firefox" width="24" height="24" /><br />
 <strong>Add to Firefox</strong>
 </a><br />
 <sub>Firefox for desktop · 140+</sub>
