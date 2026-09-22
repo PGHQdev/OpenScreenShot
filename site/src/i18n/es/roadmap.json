@@ -8,7 +8,7 @@
     "heading": "Hoja de ruta",
     "lead": "Qué se ha publicado, qué está en estudio y qué queda fuera del alcance."
   },
-  "callout": "<strong>La promesa:</strong> todo lo de esta página sigue 100 % local. Sin servidores, sin cuentas, sin nueva recopilación de datos, nunca. Los elementos de la hoja de ruta no llevan fechas. Los comentarios y los pull requests deciden qué se publica. Versión actual: <strong>v2.1.3</strong>.",
+  "callout": "<strong>La promesa:</strong> todo lo de esta página sigue 100 % local. Sin servidores, sin cuentas, sin nueva recopilación de datos, nunca. Los elementos de la hoja de ruta no llevan fechas. Los comentarios y los pull requests deciden qué se publica. Versión actual: <strong>v2.1.4</strong>.",
   "legend": {
     "srLabel": "Leyenda de estados:",
     "exploring": "En estudio",

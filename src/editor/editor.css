@@ -1136,11 +1136,14 @@ body {
   gap: var(--s-2);
 }
 .labeled-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: auto;
   min-height: 36px;
   height: auto;
-  gap: var(--s-1);
-  padding: var(--s-2);
+  gap: 6px;
+  padding: var(--s-2) 10px;
   font-size: var(--fs-sm);
   line-height: 1.2;
 }

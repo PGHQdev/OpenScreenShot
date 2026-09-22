@@ -8,7 +8,7 @@
     "heading": "Feuille de route",
     "lead": "Ce qui est livré, ce qui est à l’étude, et ce qui reste hors périmètre."
   },
-  "callout": "<strong>La promesse :</strong> tout ce qui figure sur cette page reste 100 % local. Ni serveurs, ni comptes, ni nouvelle collecte de données — jamais. Les éléments de la feuille de route ne portent pas de date. Les retours et les pull requests décident de ce qui sort. Version actuelle : <strong>v2.1.3</strong>.",
+  "callout": "<strong>La promesse :</strong> tout ce qui figure sur cette page reste 100 % local. Ni serveurs, ni comptes, ni nouvelle collecte de données — jamais. Les éléments de la feuille de route ne portent pas de date. Les retours et les pull requests décident de ce qui sort. Version actuelle : <strong>v2.1.4</strong>.",
   "legend": {
     "srLabel": "Légende des statuts :",
     "exploring": "À l’étude",

@@ -8,7 +8,7 @@
     "heading": "Roadmap",
     "lead": "What has shipped, what is being explored, and what stays out of scope."
   },
-  "callout": "<strong>The promise:</strong> everything on this page stays 100% local. No servers, no accounts, no new data collection — ever. Roadmap items carry no dates. Feedback and pull requests shape what ships. Current release: <strong>v2.1.3</strong>.",
+  "callout": "<strong>The promise:</strong> everything on this page stays 100% local. No servers, no accounts, no new data collection — ever. Roadmap items carry no dates. Feedback and pull requests shape what ships. Current release: <strong>v2.1.4</strong>.",
   "legend": {
     "srLabel": "Status legend:",
     "exploring": "Exploring",

@@ -1,6 +1,6 @@
 {
   "name": "openscreenshot",
-  "version": "2.1.3",
+  "version": "2.1.4",
   "description": "Open-source screenshot tool for Chrome and Firefox — full-page, region, and visible-area capture with annotation and PDF export.",
   "license": "MIT",
   "type": "module",

@@ -8,7 +8,7 @@
     "heading": "路線圖",
     "lead": "已經推出什麼、正在探索什麼，以及什麼不在範圍內。"
   },
-  "callout": "<strong>我們的承諾：</strong>本頁的一切都保持 100% 本機。沒有伺服器、沒有帳號、沒有新的資料收集——永遠如此。路線圖項目不標日期。回饋和 pull request 決定什麼會推出。目前版本：<strong>v2.1.3</strong>。",
+  "callout": "<strong>我們的承諾：</strong>本頁的一切都保持 100% 本機。沒有伺服器、沒有帳號、沒有新的資料收集——永遠如此。路線圖項目不標日期。回饋和 pull request 決定什麼會推出。目前版本：<strong>v2.1.4</strong>。",
   "legend": {
     "srLabel": "狀態圖例：",
     "exploring": "探索中",

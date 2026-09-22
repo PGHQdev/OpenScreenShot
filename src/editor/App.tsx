@@ -466,7 +466,7 @@ export function App() {
             <span>{t('editorRateLabel')}</span>
           </button>
           <button
-            class="text-btn labeled-action"
+            class="btn-secondary labeled-action"
             onClick={() => window.open(SUPPORT_PROJECT_URL, '_blank', 'noopener')}
           >
             <IconCoffee size={18} />

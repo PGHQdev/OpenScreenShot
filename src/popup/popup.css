@@ -29,6 +29,13 @@ body {
 }
 
 /* ---- App shell ---- */
+/* Toolbar popups start with a narrow viewport while Chrome measures their
+   content. Give the document an intrinsic width before applying viewport caps.
+   The standalone settings page keeps its responsive document width. */
+body:has(.app:not(.app-settings-page)) {
+  width: 340px;
+}
+
 .app {
   width: 340px;
   padding: var(--s-4);
@@ -1183,7 +1190,16 @@ label.settings-row .settings-label {
 }
 
 .restricted-page {
+  padding: 20px;
   gap: var(--s-4);
+}
+.restricted-page .brand-name {
+  font-size: var(--fs-base);
+}
+.restricted-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
 }
 .restricted-page h1 {
   margin: 0;
@@ -1195,13 +1211,23 @@ label.settings-row .settings-label {
   color: var(--text-2);
 }
 .restricted-page > .btn-primary {
+  height: auto;
+  min-height: 40px;
+  padding: var(--s-2) var(--s-4);
   background: var(--accent-ink);
   color: var(--on-accent);
   border-color: transparent;
   white-space: normal;
 }
+.restricted-page > .btn-primary:hover:not(:disabled) {
+  background: var(--accent-ink-hover);
+}
+.restricted-page > .btn-primary:active:not(:disabled) {
+  background: var(--accent-ink-pressed);
+}
 .restricted-links {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: var(--s-5);
+  gap: var(--s-2) var(--s-5);
 }

@@ -626,9 +626,11 @@ export function App() {
           <BrandMark size={28} />
           <span class="brand-name">OpenScreenShot</span>
         </div>
-        <h1>{t('restrictedTitle')}</h1>
-        <p>{t('restrictedExplanation')}</p>
-        <p>{t('restrictedInstructions')}</p>
+        <div class="restricted-copy">
+          <h1>{t('restrictedTitle')}</h1>
+          <p>{t('restrictedExplanation')}</p>
+          <p>{t('restrictedInstructions')}</p>
+        </div>
         <button class="btn-secondary btn-primary" onClick={() => void openPage('https://pghq.dev')}>
           {t('restrictedSample')}
         </button>
