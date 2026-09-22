@@ -1,19 +1,20 @@
 {
   "meta": {
     "title": "Feuille de route — OpenScreenShot",
-    "description": "Feuille de route d’OpenScreenShot — fonctionnalités prévues et pistes explorées pour l’extension de capture d’écran open source pour Chrome. Tout reste 100 % local : ni serveurs, ni comptes."
+    "description": "Feuille de route d’OpenScreenShot — fonctionnalités prévues et pistes explorées pour l’extension de capture d’écran open source pour Chrome / Firefox. Tout reste 100 % local : ni serveurs, ni comptes."
   },
   "doc": {
     "label": "Livré et à l’étude",
     "heading": "Feuille de route",
     "lead": "Ce qui est livré, ce qui est à l’étude, et ce qui reste hors périmètre."
   },
-  "callout": "<strong>La promesse :</strong> tout ce qui figure sur cette page reste 100 % local. Ni serveurs, ni comptes, ni nouvelle collecte de données — jamais. Les éléments de la feuille de route ne portent pas de date. Les retours et les pull requests décident de ce qui sort. Version actuelle : <strong>v1.5.0</strong>.",
+  "callout": "<strong>La promesse :</strong> tout ce qui figure sur cette page reste 100 % local. Ni serveurs, ni comptes, ni nouvelle collecte de données — jamais. Les éléments de la feuille de route ne portent pas de date. Les retours et les pull requests décident de ce qui sort. Version actuelle : <strong>v2.1.3</strong>.",
   "legend": {
     "srLabel": "Légende des statuts :",
     "exploring": "À l’étude",
     "shipped": "Livré",
-    "out": "Hors périmètre"
+    "out": "Hors périmètre",
+    "planned": "Prévu"
   },
   "groups": [
     {
@@ -26,9 +27,50 @@
           "note": "Une loupe au niveau du réticule pendant le glissement, avec des bords qui s’accrochent aux contours des éléments."
         },
         {
+          "name": "Capturer un élément",
+          "status": "exploring",
+          "note": "Survoler une carte, un graphique, un tableau ou un article, puis cliquer pour en capturer les limites. S’appuyer sur l’alignement aux éléments pour réduire la sélection manuelle et les espaces superflus."
+        },
+        {
           "name": "Capture par lots : une liste d’URL → un seul PDF",
           "status": "exploring",
           "note": "Défiler et assembler plusieurs pages, puis les exporter en un seul PDF multipage. Cela combine deux briques qui existent déjà."
+        }
+      ]
+    },
+    {
+      "id": "screenshot-workflows",
+      "heading": "Usages des captures d’écran",
+      "items": [
+        {
+          "name": "Exports lisibles de pages longues",
+          "status": "exploring",
+          "note": "Exporter une vue d’ensemble avec des détails recadrés, ou découper une capture longue en sections lisibles sans réduire toute la page à une seule image."
+        },
+        {
+          "name": "Masquages suggérés",
+          "status": "exploring",
+          "note": "Repérer localement les textes potentiellement sensibles, comme les e-mails et numéros de téléphone, pour vérifier et confirmer leur masquage opaque. La détection peut manquer des informations et ne garantit pas la confidentialité."
+        },
+        {
+          "name": "Assembler des captures",
+          "status": "exploring",
+          "note": "Disposer des captures enregistrées verticalement, côte à côte ou dans un PDF de plusieurs pages avec des légendes. Commencer par les captures enregistrées avant d’ajouter la capture automatique par lot."
+        },
+        {
+          "name": "Comparaison avant-après",
+          "status": "exploring",
+          "note": "Choisir deux captures dans l’historique et les comparer avec un curseur ou des différences surlignées pour suivre les changements de pages, revoir des designs et signaler des bugs."
+        },
+        {
+          "name": "Légende de source facultative",
+          "status": "exploring",
+          "note": "Ajouter le titre de la page, l’URL, l’heure de capture et la taille de la zone visible à l’export. Vérifier et supprimer les paramètres sensibles de l’URL avant le partage. Cela apporte du contexte, pas une preuve d’authenticité."
+        },
+        {
+          "name": "Créer un guide visuel",
+          "status": "exploring",
+          "note": "Rassembler des captures sous forme d’étapes, ajouter de courtes légendes et des annotations numérotées, puis exporter localement un document clair sans compte."
         }
       ]
     },
@@ -38,12 +80,12 @@
       "items": [
         {
           "name": "Export MP4",
-          "status": "exploring",
+          "status": "planned",
           "note": "WebCodecs plus un muxeur, aux côtés de l’export WebM existant."
         },
         {
           "name": "Mode zoom qui suit le curseur",
-          "status": "exploring",
+          "status": "planned",
           "note": "Un zoom qui se déplace pour suivre le curseur, plutôt que des blocs de zoom fixes."
         },
         {
@@ -65,7 +107,12 @@
         {
           "name": "OCR local — copier le texte d’une capture",
           "status": "exploring",
-          "note": "Reconnaissance de texte en WASM, chargée au premier usage et exécutée sur votre appareil. Le moteur et un fichier de langue pèsent 10 à 15 Mo, plusieurs fois le poids de l’extension entière : la taille tranchera."
+          "note": "Sélectionner une zone et copier le texte reconnu par OCR local. Évaluer la taille du moteur et des données linguistiques, la précision et le coût de démarrage ; charger uniquement au besoin. Aucune donnée de capture ne quitte l’appareil."
+        },
+        {
+          "name": "Historique local avec recherche",
+          "status": "exploring",
+          "note": "Rechercher par titre de page ou domaine, renommer les captures et épingler les éléments importants pour les conserver. Explorer la recherche dans le texte extrait une fois l’OCR local disponible."
         }
       ]
     },
@@ -102,8 +149,20 @@
     "currentTag": "version actuelle",
     "releases": [
       {
-        "version": "v1.5.0",
+        "version": "v2.1.3",
         "current": true,
+        "items": [
+          "Les boutons et rappels d’évaluation de Firefox ouvrent désormais les avis Mozilla. Les boutons d’installation du site s’adaptent au navigateur et proposent une alternative pour l’autre. Priorités et usages des captures mis à jour."
+        ]
+      },
+      {
+        "version": "v2.1.2",
+        "items": [
+          "Actions rapides et confirmation de capture — copier, enregistrer en PNG ou exporter en PDF depuis la fenêtre de progression, avec des confirmations plus claires pour le presse-papiers et les téléchargements."
+        ]
+      },
+      {
+        "version": "v1.5.0",
         "items": [
           "<strong>Utilisation complète au clavier et prise en charge des lecteurs d’écran</strong> — un canevas focalisable avec parcours des calques, placement, déplacement, redimensionnement et recadrage au clavier ; des annonces en zone live pour chaque modification ; un roving tabindex sur les deux barres d’outils ; des contours de focus visibles et des cibles d’au moins 24×24 ; la prise en charge de <code>forced-colors</code> et <code>prefers-contrast</code> ; et les libellés de l’éditeur passés derrière <code>chrome.i18n</code>.",
           "<strong>Outil Cut</strong> — marquez une ou plusieurs bandes horizontales sur une capture de page entière et retirez-les avec un aperçu en direct. Les coupes sont non destructives et s’annulent comme toute autre modification.",
@@ -193,5 +252,10 @@
     "body": "Ce que les gens demandent guide ce qui se construit.",
     "button": "Proposer une fonctionnalité",
     "fine": "Envie d’en construire une vous-même ? Les pull requests sont bienvenues. Voir le <a href=\"https://github.com/pghqdev/OpenScreenShot/blob/main/CONTRIBUTING.md\" target=\"_blank\" rel=\"noopener\">guide de contribution</a>."
+  },
+  "priorities": {
+    "heading": "Prochaines priorités suggérées",
+    "lead": "Explorer d’abord la capture d’éléments, l’OCR local et l’assemblage de captures. Ces hypothèses sont à valider avec les retours des utilisateurs et ne constituent pas des engagements de livraison. Pour l’enregistrement, privilégier l’export MP4 et la suppression de passages au milieu d’une prise.",
+    "guidance": "Garder le mode Express simple. Placer les choix supplémentaires dans les options de capture, les outils de l’éditeur ou l’historique sans ajouter d’étapes au parcours par défaut. Les nouveaux usages des captures doivent fonctionner sur Chrome et Firefox ; les capacités d’enregistrement dépendent du navigateur."
   }
 }

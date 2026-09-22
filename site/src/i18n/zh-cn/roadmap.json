@@ -1,19 +1,20 @@
 {
   "meta": {
     "title": "路线图 — OpenScreenShot",
-    "description": "OpenScreenShot 路线图——这款开源 Chrome 截图扩展计划中的功能与想法。一切保持 100% 本地：没有服务器，没有账号。"
+    "description": "OpenScreenShot 路线图——这款开源 Chrome / Firefox 截图扩展计划中的功能与想法。一切保持 100% 本地：没有服务器，没有账号。"
   },
   "doc": {
     "label": "已发布与探索中",
     "heading": "路线图",
     "lead": "已经发布了什么、正在探索什么、什么不在范围之内。"
   },
-  "callout": "<strong>我们的承诺：</strong>本页的一切都保持 100% 本地。没有服务器、没有账号、没有新的数据收集——永远如此。路线图条目不带日期。反馈和 Pull Request 决定什么会发布。当前版本：<strong>v1.5.0</strong>。",
+  "callout": "<strong>我们的承诺：</strong>本页的一切都保持 100% 本地。没有服务器、没有账号、没有新的数据收集——永远如此。路线图条目不带日期。反馈和 Pull Request 决定什么会发布。当前版本：<strong>v2.1.3</strong>。",
   "legend": {
     "srLabel": "状态图例：",
     "exploring": "探索中",
     "shipped": "已发布",
-    "out": "不在范围内"
+    "out": "不在范围内",
+    "planned": "已计划"
   },
   "groups": [
     {
@@ -26,9 +27,50 @@
           "note": "拖动时在十字光标处显示放大镜，边缘可吸附到元素边界。"
         },
         {
+          "name": "截取元素",
+          "status": "exploring",
+          "note": "将鼠标悬停在卡片、图表、表格或文章上，点击即可按其边界截图。基于元素吸附，减少手动选区和多余留白。"
+        },
+        {
           "name": "批量截图：URL 列表 → 一份 PDF",
           "status": "exploring",
           "note": "滚动拼接多个页面，并导出为一份多页 PDF。它把两个已有的部分组合到一起。"
+        }
+      ]
+    },
+    {
+      "id": "screenshot-workflows",
+      "heading": "截图工作流",
+      "items": [
+        {
+          "name": "清晰易读的长页面导出",
+          "status": "exploring",
+          "note": "导出总览及选定的局部细节，或将长截图拆分为易读的部分，无需缩小整页来塞进一张图片。"
+        },
+        {
+          "name": "建议遮盖敏感信息",
+          "status": "exploring",
+          "note": "在本地标出可能包含敏感信息的文字，如邮箱和电话号码，供用户审核并确认用不透明色块遮盖。检测可能遗漏信息，不能保证隐私安全。"
+        },
+        {
+          "name": "合并截图",
+          "status": "exploring",
+          "note": "将已保存的截图纵向排列、并排展示，或加上说明组成多页 PDF。先支持已保存的截图，再考虑自动批量截图。"
+        },
+        {
+          "name": "前后对比",
+          "status": "exploring",
+          "note": "从历史记录中选择两张截图，通过滑块或高亮差异进行对比，用于页面变更、设计评审和错误报告。"
+        },
+        {
+          "name": "可选的来源说明",
+          "status": "exploring",
+          "note": "导出时添加页面标题、URL、截图时间和视口尺寸。分享前预览并移除 URL 中的敏感参数。这只能提供背景信息，不能证明真实性。"
+        },
+        {
+          "name": "创建图文指南",
+          "status": "exploring",
+          "note": "将截图整理为步骤，添加简短说明和编号标注，无需账号即可在本地导出整洁的文档。"
         }
       ]
     },
@@ -38,12 +80,12 @@
       "items": [
         {
           "name": "MP4 导出",
-          "status": "exploring",
+          "status": "planned",
           "note": "WebCodecs 加封装器，与现有的 WebM 导出并存。"
         },
         {
           "name": "跟随光标的缩放模式",
-          "status": "exploring",
+          "status": "planned",
           "note": "缩放画面平移跟随光标，而不是停在固定的缩放块上。"
         },
         {
@@ -65,7 +107,12 @@
         {
           "name": "本地 OCR——从截图中复制文字",
           "status": "exploring",
-          "note": "基于 WASM 的文字识别，首次使用时加载，在你的设备上运行。引擎加一个语言文件重 10–15 MB，是整个扩展的许多倍，因此体积决定它的去留。"
+          "note": "选择区域，使用本地 OCR 识别并复制文字。评估引擎和语言数据的大小、准确率及启动成本，仅在需要时加载。截图数据不会离开设备。"
+        },
+        {
+          "name": "可搜索的本地历史记录",
+          "status": "exploring",
+          "note": "按页面标题或域名搜索，重命名截图，并置顶重要项目以保留在历史记录中。本地 OCR 可用后，再探索搜索提取的文字。"
         }
       ]
     },
@@ -102,8 +149,20 @@
     "currentTag": "当前版本",
     "releases": [
       {
-        "version": "v1.5.0",
+        "version": "v2.1.3",
         "current": true,
+        "items": [
+          "Firefox 的评分按钮和提醒现已打开 Mozilla 评论页面。网站安装按钮会根据浏览器切换，并提供另一种浏览器的安装链接。更新了路线图优先事项和截图工作流。"
+        ]
+      },
+      {
+        "version": "v2.1.2",
+        "items": [
+          "截图快捷操作与成功提示 — 在进度窗口中复制、保存 PNG 或导出 PDF，并更清楚地确认剪贴板复制和下载结果。"
+        ]
+      },
+      {
+        "version": "v1.5.0",
         "items": [
           "<strong>完整的键盘操作与屏幕阅读器支持</strong>——可聚焦的画布支持用键盘循环图层、放置、移动、调整大小和裁剪；每次变更都有实时区域播报；两条工具栏都采用 roving tabindex；可见的焦点环和 24×24 的最小目标尺寸；支持 <code>forced-colors</code> 和 <code>prefers-contrast</code>；编辑器的界面文案也已迁移到 <code>chrome.i18n</code>。",
           "<strong>Cut（裁切）工具</strong>——在整页截图上标记一条或多条水平横带，实时预览并移除。裁切是非破坏性的，可以像其他编辑一样撤销。",
@@ -193,5 +252,10 @@
     "body": "大家要什么，就做什么。",
     "button": "提出功能建议",
     "fine": "想亲手实现其中一个？欢迎 Pull Request。参见<a href=\"https://github.com/pghqdev/OpenScreenShot/blob/main/CONTRIBUTING.md\" target=\"_blank\" rel=\"noopener\">贡献指南</a>。"
+  },
+  "priorities": {
+    "heading": "建议的下一步优先事项",
+    "lead": "优先探索元素截图、本地 OCR 和合并截图。这些是需要通过用户反馈验证的假设，并非发布承诺。录屏方面，优先考虑 MP4 导出和删除录制中间的片段。",
+    "guidance": "保持 Express 模式简洁。将额外选项放在截图设置、编辑工具或历史记录中，不增加默认截图流程的步骤。新的截图工作流应支持 Chrome 和 Firefox；录屏能力仍取决于浏览器。"
   }
 }

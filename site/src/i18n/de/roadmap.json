@@ -1,19 +1,20 @@
 {
   "meta": {
     "title": "Roadmap — OpenScreenShot",
-    "description": "OpenScreenShot-Roadmap — geplante Funktionen und Ideen für die Open-Source-Screenshot-Erweiterung für Chrome. Alles bleibt 100 % lokal: keine Server, keine Konten."
+    "description": "OpenScreenShot-Roadmap — geplante Funktionen und Ideen für die Open-Source-Screenshot-Erweiterung für Chrome / Firefox. Alles bleibt 100 % lokal: keine Server, keine Konten."
   },
   "doc": {
     "label": "Ausgeliefert und in Prüfung",
     "heading": "Roadmap",
     "lead": "Was ausgeliefert ist, was geprüft wird und was außerhalb des Rahmens bleibt."
   },
-  "callout": "<strong>Das Versprechen:</strong> Alles auf dieser Seite bleibt 100 % lokal. Keine Server, keine Konten, keine neue Datensammlung — niemals. Roadmap-Einträge tragen keine Termine. Feedback und Pull Requests bestimmen, was ausgeliefert wird. Aktuelle Version: <strong>v1.5.0</strong>.",
+  "callout": "<strong>Das Versprechen:</strong> Alles auf dieser Seite bleibt 100 % lokal. Keine Server, keine Konten, keine neue Datensammlung — niemals. Roadmap-Einträge tragen keine Termine. Feedback und Pull Requests bestimmen, was ausgeliefert wird. Aktuelle Version: <strong>v2.1.3</strong>.",
   "legend": {
     "srLabel": "Status-Legende:",
     "exploring": "In Prüfung",
     "shipped": "Ausgeliefert",
-    "out": "Außerhalb des Rahmens"
+    "out": "Außerhalb des Rahmens",
+    "planned": "Geplant"
   },
   "groups": [
     {
@@ -26,9 +27,50 @@
           "note": "Eine Lupe am Fadenkreuz während du ziehst, mit Kanten, die an Elementgrenzen einrasten."
         },
         {
+          "name": "Ein Element aufnehmen",
+          "status": "exploring",
+          "note": "Mit der Maus über eine Karte, ein Diagramm, eine Tabelle oder einen Artikel fahren und dessen Bereich per Klick aufnehmen. Das Einrasten an Elementen soll manuelle Auswahl und unerwünschte Ränder reduzieren."
+        },
+        {
           "name": "Stapelaufnahme: URL-Liste → ein PDF",
           "status": "exploring",
           "note": "Mehrere Seiten scrollen, zusammensetzen und als ein mehrseitiges PDF exportieren. Es kombiniert zwei Teile, die schon existieren."
+        }
+      ]
+    },
+    {
+      "id": "screenshot-workflows",
+      "heading": "Screenshot-Abläufe",
+      "items": [
+        {
+          "name": "Lesbare Exporte langer Seiten",
+          "status": "exploring",
+          "note": "Eine Übersicht mit ausgewählten Detailausschnitten exportieren oder einen langen Screenshot in lesbare Abschnitte aufteilen, ohne die ganze Seite auf ein Bild zu verkleinern."
+        },
+        {
+          "name": "Vorgeschlagene Schwärzungen",
+          "status": "exploring",
+          "note": "Möglicherweise sensible Texte wie E-Mail-Adressen und Telefonnummern lokal zur Prüfung und Bestätigung als deckende Schwärzung markieren. Die Erkennung kann Informationen übersehen und garantiert keinen Datenschutz."
+        },
+        {
+          "name": "Screenshots zusammenfügen",
+          "status": "exploring",
+          "note": "Gespeicherte Aufnahmen untereinander, nebeneinander oder mit Beschriftungen in einem mehrseitigen PDF anordnen. Zunächst gespeicherte Aufnahmen nutzen, bevor automatische Stapelaufnahmen hinzukommen."
+        },
+        {
+          "name": "Vorher-nachher-Vergleich",
+          "status": "exploring",
+          "note": "Zwei Aufnahmen aus dem Verlauf mit einem Schieberegler oder hervorgehobenen Unterschieden vergleichen — für Seitenänderungen, Design-Reviews und Fehlerberichte."
+        },
+        {
+          "name": "Optionale Quellenangabe",
+          "status": "exploring",
+          "note": "Seitentitel, URL, Aufnahmezeit und Ansichtsgröße zum Export hinzufügen. Sensible URL-Parameter vor dem Teilen prüfen und entfernen. Das liefert Kontext, keinen Echtheitsnachweis."
+        },
+        {
+          "name": "Eine visuelle Anleitung erstellen",
+          "status": "exploring",
+          "note": "Aufnahmen als Schritte sammeln, kurze Beschriftungen und nummerierte Anmerkungen ergänzen und lokal ein übersichtliches Dokument ohne Konto exportieren."
         }
       ]
     },
@@ -38,12 +80,12 @@
       "items": [
         {
           "name": "MP4-Export",
-          "status": "exploring",
+          "status": "planned",
           "note": "WebCodecs plus ein Muxer, neben dem bestehenden WebM-Export."
         },
         {
           "name": "Zoom, der dem Cursor folgt",
-          "status": "exploring",
+          "status": "planned",
           "note": "Ein Zoom, der mitschwenkt und den Cursor verfolgt, statt auf festen Zoom-Blöcken zu sitzen."
         },
         {
@@ -65,7 +107,12 @@
         {
           "name": "Lokale OCR — Text aus einem Screenshot kopieren",
           "status": "exploring",
-          "note": "Texterkennung in WASM, geladen bei der ersten Nutzung und ausgeführt auf deinem Gerät. Engine und eine Sprachdatei wiegen 10–15 MB, ein Vielfaches der ganzen Erweiterung; die Größe entscheidet."
+          "note": "Einen Bereich auswählen und erkannten Text mit lokaler OCR kopieren. Größe von Engine und Sprachdaten, Genauigkeit und Startaufwand prüfen; nur bei Bedarf laden. Keine Screenshot-Daten verlassen das Gerät."
+        },
+        {
+          "name": "Durchsuchbarer lokaler Verlauf",
+          "status": "exploring",
+          "note": "Nach Seitentitel oder Domain suchen, Aufnahmen umbenennen und wichtige Einträge anheften, um sie im Verlauf zu behalten. Die Suche in erkanntem Text erkunden, sobald lokale OCR verfügbar ist."
         }
       ]
     },
@@ -102,8 +149,20 @@
     "currentTag": "aktuelle Version",
     "releases": [
       {
-        "version": "v1.5.0",
+        "version": "v2.1.3",
         "current": true,
+        "items": [
+          "Bewertungsbuttons und Erinnerungen in Firefox öffnen jetzt die Mozilla-Rezensionen. Die Installationsbuttons der Website passen sich dem Browser an und bieten eine Alternative für den anderen Browser. Aktualisierte Roadmap-Prioritäten und Screenshot-Abläufe."
+        ]
+      },
+      {
+        "version": "v2.1.2",
+        "items": [
+          "Schnellaktionen und Erfolgsrückmeldung — direkt im Fortschrittsfenster kopieren, als PNG speichern oder als PDF exportieren, mit klareren Bestätigungen für Zwischenablage und Downloads."
+        ]
+      },
+      {
+        "version": "v1.5.0",
         "items": [
           "<strong>Volle Tastaturbedienung und Screenreader-Unterstützung</strong> — eine fokussierbare Leinwand mit Ebenenwechsel, Platzieren, Verschieben, Skalieren und Zuschneiden per Tastatur; Live-Region-Ansagen für jede Änderung; Roving Tabindex auf beiden Werkzeugleisten; sichtbare Fokusringe und Mindest-Zielgrößen von 24×24; Unterstützung für <code>forced-colors</code> und <code>prefers-contrast</code>; und die UI-Texte des Editors hinter <code>chrome.i18n</code>.",
           "<strong>Cut-Werkzeug</strong> — markiere einen oder mehrere horizontale Streifen auf einer Ganzseiten-Aufnahme und entferne sie mit Live-Vorschau. Cuts sind nicht destruktiv und lassen sich wie jede andere Bearbeitung rückgängig machen.",
@@ -193,5 +252,10 @@
     "body": "Gebaut wird, wonach Leute fragen.",
     "button": "Funktion vorschlagen",
     "fine": "Du willst eine davon selbst bauen? Pull Requests sind willkommen. Siehe den <a href=\"https://github.com/pghqdev/OpenScreenShot/blob/main/CONTRIBUTING.md\" target=\"_blank\" rel=\"noopener\">Leitfaden zum Mitwirken</a>."
+  },
+  "priorities": {
+    "heading": "Empfohlene nächste Prioritäten",
+    "lead": "Zuerst die Aufnahme einzelner Elemente, lokale OCR und das Zusammenfügen von Screenshots erkunden. Diese Ideen sollen durch Nutzerfeedback geprüft werden und sind keine Release-Zusagen. Bei Aufnahmen haben MP4-Export und das Entfernen von Abschnitten mitten im Video Vorrang.",
+    "guidance": "Der Express-Modus soll einfach bleiben. Zusätzliche Auswahlmöglichkeiten gehören in die Aufnahmeoptionen, Editor-Werkzeuge oder den Verlauf, ohne den Standardablauf zu verlängern. Neue Screenshot-Abläufe sollen Chrome und Firefox unterstützen; Aufnahmefunktionen bleiben browserabhängig."
   }
 }

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "2.1.0",
+  "version": "2.1.3",
   "description": "__MSG_extDesc__",
   "default_locale": "en",
   "minimum_chrome_version": "116",
@@ -47,19 +47,31 @@
   },
   "commands": {
     "capture-full-page": {
-      "suggested_key": { "default": "Ctrl+Shift+S", "mac": "Command+Shift+S" },
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
       "description": "Capture the full scrolling page"
     },
     "capture-visible": {
-      "suggested_key": { "default": "Alt+Shift+V", "mac": "Command+Shift+V" },
+      "suggested_key": {
+        "default": "Alt+Shift+V",
+        "mac": "Command+Shift+V"
+      },
       "description": "Capture the visible area"
     },
     "capture-region": {
-      "suggested_key": { "default": "Ctrl+Shift+E", "mac": "Command+Shift+E" },
+      "suggested_key": {
+        "default": "Ctrl+Shift+E",
+        "mac": "Command+Shift+E"
+      },
       "description": "Capture a selected region"
     },
     "stop-recording": {
-      "suggested_key": { "default": "Alt+Shift+X", "mac": "Alt+Shift+X" },
+      "suggested_key": {
+        "default": "Alt+Shift+X",
+        "mac": "Alt+Shift+X"
+      },
       "description": "Stop the current recording"
     },
     "reveal-recording-bar": {

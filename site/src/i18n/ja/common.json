@@ -6,7 +6,10 @@
     "docs": "ドキュメント",
     "support": "サポート",
     "roadmap": "ロードマップ",
-    "github": "GitHub"
+    "github": "GitHub",
+    "addToFirefox": "Firefox に追加",
+    "installForFirefox": "Firefox 用をインストール",
+    "installForChrome": "Chrome 用をインストール"
   },
   "footer": {
     "tagline": "スクリーンショットがデバイスの外に出ることはありません。",

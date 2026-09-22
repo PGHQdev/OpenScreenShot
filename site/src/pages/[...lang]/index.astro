@@ -1,7 +1,8 @@
 ---
 import { Picture } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
-import ChromeIcon from '../../components/ChromeIcon.astro';
+import InstallButtons from '../../components/InstallButtons.astro';
+import { CHROME_STORE_URL } from '../../lib/install';
 import FaqList from '../../components/FaqList.astro';
 import PermissionTable from '../../components/PermissionTable.astro';
 import { getHomeFaq } from '../../data/faq';
@@ -18,10 +19,8 @@ export const getStaticPaths = localePaths;
 
 const locale = localeFromParams(Astro.params.lang);
 const d = t(locale, 'home');
-const c = t(locale, 'common');
 const homeFaq = getHomeFaq(locale);
 
-const STORE_URL = 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp';
 const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
 
 // The homepage nav is the reference's minimal pair: brand left, install pill
@@ -65,8 +64,8 @@ const softwareLd = {
   operatingSystem: 'Chrome',
   description: d.meta.description,
   url: new URL(localizePath(locale, '/'), Astro.site).href,
-  downloadUrl: STORE_URL,
-  softwareVersion: '2.1.0',
+  downloadUrl: CHROME_STORE_URL,
+  softwareVersion: '2.1.3',
   license: `${REPO_URL}/blob/main/LICENSE`,
   isAccessibleForFree: true,
   inLanguage: LANG_TAGS[locale],
@@ -106,10 +105,7 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
       <h1>{d.hero.title1}<br />{d.hero.title2}</h1>
       <p class="sub">{d.hero.sub}</p>
       <p class="cta-row">
-        <a class="btn btn-ink" href={STORE_URL} target="_blank" rel="noopener">
-          <ChromeIcon size={18} />
-          {c.nav.addToChrome}
-        </a>
+        <InstallButtons locale={locale} />
         <a class="btn btn-quiet" href={REPO_URL} target="_blank" rel="noopener">
           <svg class="gh-mark" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
             <path
@@ -370,10 +366,7 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
         }
       </ol>
       <p class="cta-row">
-        <a class="btn btn-ink btn-install" href={STORE_URL} target="_blank" rel="noopener">
-          <ChromeIcon size={22} />
-          {c.nav.addToChrome}
-        </a>
+        <InstallButtons locale={locale} size="large" />
       </p>
       <p class="fine">{d.cta.browsersFine}</p>
     </div>
@@ -514,7 +507,7 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
   .cta-row {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     gap: var(--s-3);
     margin: 0;
@@ -1163,12 +1156,6 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
 
   .cta-final .cta-row {
     margin-bottom: var(--s-4);
-  }
-
-  .btn-install {
-    min-height: 56px;
-    padding: 0 28px 0 22px;
-    font-size: var(--fs-base);
   }
 
   .cta-final .fine {

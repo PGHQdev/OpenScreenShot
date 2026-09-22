@@ -62,10 +62,9 @@ Add-ons Manager → gear menu → Manage Extension Shortcuts; the popup links to
    retain it for all updates.
 4. The manifest declares no data collection. Screenshots/history stay local;
    Firefox does not automatically open the hosted welcome or uninstall pages.
-   Support/donation links open only on user clicks. Chrome review prompts are
-   hidden until there is an actual Mozilla listing URL.
-5. After Mozilla approves the listing, add its real install URL to the README,
-   website and browser-specific review UI. Do not advertise a placeholder URL.
+   Support/donation links open only on user clicks. Rating buttons and post-export reminders open the Mozilla listing’s reviews page.
+5. The approved listing is [OpenScreenShot on Firefox Add-ons](https://addons.mozilla.org/firefox/addon/openscreenshot/).
+   Website install buttons and Firefox rating actions point to this listing.
 6. Create [AMO API credentials](https://addons.mozilla.org/developers/addon/api/key/)
    and set GitHub secrets `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`. Set repository
    variable `AMO_PUBLISH_ENABLED=true` to enable future tagged submissions.
@@ -75,3 +74,13 @@ It always uploads the package and source as the `firefox-submission` workflow
 artifact. Once enabled, it submits listed updates with source for Mozilla review;
 submission is not an immediate public release. A manual workflow run prepares
 artifacts only. Signing credentials are never needed for local builds or CI.
+
+## Publishing status
+
+The v2.1.1 and v2.1.2 tagged workflows built and uploaded submission artifacts,
+but skipped the Mozilla submission step. A successful packaging job alone does
+not mean an update was submitted to AMO. The repository variable
+`AMO_PUBLISH_ENABLED=true` and the `AMO_JWT_ISSUER` / `AMO_JWT_SECRET` repository
+secrets were configured for the v2.1.3 release. Manual runs remain artifact-only. Check the
+**Submit listed update to Mozilla** step to confirm submission; Mozilla review
+and public availability are separate from this workflow completing.

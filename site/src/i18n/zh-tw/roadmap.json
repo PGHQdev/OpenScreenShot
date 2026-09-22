@@ -1,19 +1,20 @@
 {
   "meta": {
     "title": "路線圖 — OpenScreenShot",
-    "description": "OpenScreenShot 路線圖——這個開放原始碼 Chrome 截圖擴充功能規劃中的功能與構想。一切保持 100% 本機：沒有伺服器、沒有帳號。"
+    "description": "OpenScreenShot 路線圖——這個開放原始碼 Chrome / Firefox 截圖擴充功能規劃中的功能與構想。一切保持 100% 本機：沒有伺服器、沒有帳號。"
   },
   "doc": {
     "label": "已推出與探索中",
     "heading": "路線圖",
     "lead": "已經推出什麼、正在探索什麼，以及什麼不在範圍內。"
   },
-  "callout": "<strong>我們的承諾：</strong>本頁的一切都保持 100% 本機。沒有伺服器、沒有帳號、沒有新的資料收集——永遠如此。路線圖項目不標日期。回饋和 pull request 決定什麼會推出。目前版本：<strong>v1.5.0</strong>。",
+  "callout": "<strong>我們的承諾：</strong>本頁的一切都保持 100% 本機。沒有伺服器、沒有帳號、沒有新的資料收集——永遠如此。路線圖項目不標日期。回饋和 pull request 決定什麼會推出。目前版本：<strong>v2.1.3</strong>。",
   "legend": {
     "srLabel": "狀態圖例：",
     "exploring": "探索中",
     "shipped": "已推出",
-    "out": "不在範圍內"
+    "out": "不在範圍內",
+    "planned": "已規劃"
   },
   "groups": [
     {
@@ -26,9 +27,50 @@
           "note": "拖曳時在十字準星處顯示放大鏡，邊緣會吸附到元素邊界。"
         },
         {
+          "name": "擷取元素",
+          "status": "exploring",
+          "note": "將游標移至卡片、圖表、表格或文章上，點擊即可依其邊界擷取。利用元素貼齊功能，減少手動選取和多餘留白。"
+        },
+        {
           "name": "批次擷取：一串網址 → 一份 PDF",
           "status": "exploring",
           "note": "捲動拼接多個頁面，匯出成單一份多頁 PDF。它組合的是兩個已經存在的部分。"
+        }
+      ]
+    },
+    {
+      "id": "screenshot-workflows",
+      "heading": "擷取畫面工作流程",
+      "items": [
+        {
+          "name": "清晰易讀的長頁面匯出",
+          "status": "exploring",
+          "note": "匯出總覽及選定的局部細節，或將長截圖拆分為易讀的區段，不必縮小整頁來塞進一張圖片。"
+        },
+        {
+          "name": "建議遮蔽敏感資訊",
+          "status": "exploring",
+          "note": "在本機標出可能包含敏感資訊的文字，例如電子郵件和電話號碼，供使用者檢查並確認以不透明色塊遮蔽。偵測可能遺漏資訊，無法保證隱私安全。"
+        },
+        {
+          "name": "合併擷取畫面",
+          "status": "exploring",
+          "note": "將已儲存的擷取畫面垂直排列、並排顯示，或加上說明組成多頁 PDF。先支援已儲存的畫面，再考慮自動批次擷取。"
+        },
+        {
+          "name": "前後比較",
+          "status": "exploring",
+          "note": "從歷史記錄中選擇兩張擷取畫面，透過滑桿或醒目標示的差異進行比較，用於頁面變更、設計審查和錯誤回報。"
+        },
+        {
+          "name": "選用的來源說明",
+          "status": "exploring",
+          "note": "匯出時加入頁面標題、URL、擷取時間和可視區域尺寸。分享前預覽並移除 URL 中的敏感參數。這僅提供背景資訊，並非真實性證明。"
+        },
+        {
+          "name": "建立圖文指南",
+          "status": "exploring",
+          "note": "將擷取畫面整理為步驟，加入簡短說明和編號註解，無須帳號即可在本機匯出整潔的文件。"
         }
       ]
     },
@@ -38,12 +80,12 @@
       "items": [
         {
           "name": "MP4 匯出",
-          "status": "exploring",
+          "status": "planned",
           "note": "WebCodecs 加上封裝器，與現有的 WebM 匯出並存。"
         },
         {
           "name": "跟隨游標的縮放模式",
-          "status": "exploring",
+          "status": "planned",
           "note": "會平移追蹤游標的縮放，而非停在固定的縮放區塊上。"
         },
         {
@@ -65,7 +107,12 @@
         {
           "name": "本機 OCR——從截圖複製文字",
           "status": "exploring",
-          "note": "以 WASM 執行文字辨識，首次使用時載入並在你的裝置上運作。引擎加一個語言檔重達 10–15 MB，是整個擴充功能的好幾倍，所以體積是關鍵。"
+          "note": "選取區域，使用本機 OCR 辨識並複製文字。評估引擎和語言資料的大小、準確率及啟動成本，僅在需要時載入。擷取畫面的資料不會離開裝置。"
+        },
+        {
+          "name": "可搜尋的本機歷史記錄",
+          "status": "exploring",
+          "note": "依頁面標題或網域搜尋、重新命名擷取畫面，並釘選重要項目以保留在歷史記錄中。本機 OCR 可用後，再探索搜尋擷取出的文字。"
         }
       ]
     },
@@ -102,8 +149,20 @@
     "currentTag": "目前版本",
     "releases": [
       {
-        "version": "v1.5.0",
+        "version": "v2.1.3",
         "current": true,
+        "items": [
+          "Firefox 的評分按鈕和提醒現在會開啟 Mozilla 評論頁面。網站安裝按鈕會依瀏覽器切換，並提供另一種瀏覽器的安裝連結。更新了路線圖優先事項和擷取畫面工作流程。"
+        ]
+      },
+      {
+        "version": "v2.1.2",
+        "items": [
+          "擷取快捷操作與成功提示 — 在進度視窗中複製、儲存 PNG 或匯出 PDF，並更清楚地確認剪貼簿複製和下載結果。"
+        ]
+      },
+      {
+        "version": "v1.5.0",
         "items": [
           "<strong>完整鍵盤操作與螢幕閱讀器支援</strong>——可聚焦的畫布支援鍵盤圖層循環、放置、移動、調整大小和裁切；每次變動都有即時區域播報；兩條工具列都有 roving tabindex；可見的焦點框和 24×24 最小目標尺寸；支援 <code>forced-colors</code> 和 <code>prefers-contrast</code>；編輯器的 UI 字串也移到 <code>chrome.i18n</code> 之後。",
           "<strong>Cut（剪除）工具</strong>——在整頁擷取上標出一段或多段水平區帶，即時預覽移除效果。剪除是非破壞性的，和其他編輯一樣可以復原。",
@@ -193,5 +252,10 @@
     "body": "大家要求什麼，就打造什麼。",
     "button": "建議一個功能",
     "fine": "想自己動手做其中一項？歡迎 pull request。請見<a href=\"https://github.com/pghqdev/OpenScreenShot/blob/main/CONTRIBUTING.md\" target=\"_blank\" rel=\"noopener\">貢獻指南</a>。"
+  },
+  "priorities": {
+    "heading": "建議的下一步優先事項",
+    "lead": "優先探索元素擷取、本機 OCR 和合併擷取畫面。這些是需要透過使用者回饋驗證的假設，並非發布承諾。錄影方面，優先考慮 MP4 匯出和刪除錄製中間的片段。",
+    "guidance": "保持 Express 模式簡潔。將額外選項放在擷取設定、編輯工具或歷史記錄中，不增加預設擷取流程的步驟。新的擷取工作流程應支援 Chrome 和 Firefox；錄影能力仍取決於瀏覽器。"
   }
 }

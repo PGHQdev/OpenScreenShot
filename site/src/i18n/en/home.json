@@ -137,8 +137,8 @@
     "heading": "Ready in ten seconds.",
     "steps": [
       {
-        "title": "Add it to Chrome",
-        "body": "One click on the Chrome Web Store. Free, and no sign-up."
+        "title": "Add it to your browser",
+        "body": "Install from the Chrome Web Store or Firefox Add-ons. Free, and no sign-up."
       },
       {
         "title": "Click the icon",
@@ -149,6 +149,6 @@
         "body": "Annotate, export, or copy. It never leaves your machine."
       }
     ],
-    "browsersFine": "Works on Chrome, Edge, Brave, Arc and other Chromium browsers."
+    "browsersFine": "Screenshots work on desktop Firefox, Chrome, Edge, Brave, Arc and other Chromium browsers. Recording is Chrome-only."
   }
 }

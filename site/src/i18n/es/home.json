@@ -124,8 +124,8 @@
     "heading": "Listo en diez segundos.",
     "steps": [
       {
-        "title": "Añádelo a Chrome",
-        "body": "Un clic en la Chrome Web Store. Gratis y sin registro."
+        "title": "Añádelo a tu navegador",
+        "body": "Instálalo desde Chrome Web Store o los complementos de Firefox. Gratis y sin registro."
       },
       {
         "title": "Haz clic en el icono",
@@ -136,6 +136,6 @@
         "body": "Anota, exporta o copia. Nunca sale de tu dispositivo."
       }
     ],
-    "browsersFine": "Funciona en Chrome, Edge, Brave, Arc y otros navegadores Chromium."
+    "browsersFine": "Las capturas funcionan en Firefox de escritorio, Chrome, Edge, Brave, Arc y otros navegadores Chromium. La grabación solo está disponible en Chrome."
   }
 }

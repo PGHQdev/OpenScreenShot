@@ -6,7 +6,10 @@
     "docs": "문서",
     "support": "지원",
     "roadmap": "로드맵",
-    "github": "GitHub"
+    "github": "GitHub",
+    "addToFirefox": "Firefox에 추가",
+    "installForFirefox": "Firefox용 설치",
+    "installForChrome": "Chrome용 설치"
   },
   "footer": {
     "tagline": "기기 밖으로 절대 나가지 않는 스크린샷.",

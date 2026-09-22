@@ -6,7 +6,10 @@
     "docs": "Документация",
     "support": "Поддержка",
     "roadmap": "Дорожная карта",
-    "github": "GitHub"
+    "github": "GitHub",
+    "addToFirefox": "Добавить в Firefox",
+    "installForFirefox": "Установить для Firefox",
+    "installForChrome": "Установить для Chrome"
   },
   "footer": {
     "tagline": "Скриншоты, которые никогда не покидают ваш компьютер.",

@@ -124,8 +124,8 @@
     "heading": "10 秒で準備完了。",
     "steps": [
       {
-        "title": "Chrome に追加",
-        "body": "Chrome ウェブストアでワンクリック。無料で、登録も不要です。"
+        "title": "ブラウザに追加",
+        "body": "Chrome ウェブストアまたは Firefox Add-ons からインストール。無料で、登録は不要です。"
       },
       {
         "title": "アイコンをクリック",
@@ -136,6 +136,6 @@
         "body": "注釈、書き出し、コピー。デバイスの外に出ることはありません。"
       }
     ],
-    "browsersFine": "Chrome、Edge、Brave、Arc などの Chromium ブラウザで動作します。"
+    "browsersFine": "スクリーンショットはデスクトップ版 Firefox、Chrome、Edge、Brave、Arc などの Chromium 系ブラウザに対応。録画は Chrome のみ対応しています。"
   }
 }

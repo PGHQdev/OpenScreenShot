@@ -6,7 +6,10 @@
     "docs": "Docs",
     "support": "Suporte",
     "roadmap": "Roadmap",
-    "github": "GitHub"
+    "github": "GitHub",
+    "addToFirefox": "Adicionar ao Firefox",
+    "installForFirefox": "Instalar para Firefox",
+    "installForChrome": "Instalar para Chrome"
   },
   "footer": {
     "tagline": "Capturas de tela que nunca saem do seu computador.",

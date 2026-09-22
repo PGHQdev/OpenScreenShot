@@ -1,19 +1,20 @@
 {
   "meta": {
     "title": "Roadmap — OpenScreenShot",
-    "description": "Roadmap di OpenScreenShot: funzionalità pianificate e idee per l'estensione Chrome open source per screenshot. Tutto resta 100% locale: nessun server, nessun account."
+    "description": "Roadmap di OpenScreenShot: funzionalità pianificate e idee per l'estensione Chrome / Firefox open source per screenshot. Tutto resta 100% locale: nessun server, nessun account."
   },
   "doc": {
     "label": "Rilasciato e in valutazione",
     "heading": "Roadmap",
     "lead": "Cosa è stato rilasciato, cosa è in valutazione e cosa resta fuori dagli obiettivi."
   },
-  "callout": "<strong>La promessa:</strong> tutto su questa pagina resta 100% locale. Nessun server, nessun account, nessuna nuova raccolta di dati, mai. Le voci della roadmap non hanno date. Feedback e pull request decidono cosa viene rilasciato. Versione corrente: <strong>v1.5.0</strong>.",
+  "callout": "<strong>La promessa:</strong> tutto su questa pagina resta 100% locale. Nessun server, nessun account, nessuna nuova raccolta di dati, mai. Le voci della roadmap non hanno date. Feedback e pull request decidono cosa viene rilasciato. Versione corrente: <strong>v2.1.3</strong>.",
   "legend": {
     "srLabel": "Legenda degli stati:",
     "exploring": "In valutazione",
     "shipped": "Rilasciato",
-    "out": "Fuori obiettivo"
+    "out": "Fuori obiettivo",
+    "planned": "Pianificato"
   },
   "groups": [
     {
@@ -26,9 +27,50 @@
           "note": "Una lente di ingrandimento sul mirino mentre trascini, con bordi che si agganciano ai confini degli elementi."
         },
         {
+          "name": "Catturare un elemento",
+          "status": "exploring",
+          "note": "Passare il puntatore su una scheda, un grafico, una tabella o un articolo e fare clic per catturarne i confini. Sfruttare l’aggancio agli elementi per ridurre la selezione manuale e lo spazio superfluo."
+        },
+        {
           "name": "Cattura in serie: elenco di URL → un solo PDF",
           "status": "exploring",
           "note": "Scorrere e unire più pagine ed esportarle come un unico PDF multipagina. Combina due parti che esistono già."
+        }
+      ]
+    },
+    {
+      "id": "screenshot-workflows",
+      "heading": "Flussi di lavoro con screenshot",
+      "items": [
+        {
+          "name": "Esportazioni leggibili di pagine lunghe",
+          "status": "exploring",
+          "note": "Esportare una panoramica con ritagli di dettagli selezionati oppure dividere uno screenshot lungo in sezioni leggibili senza ridurre l’intera pagina a una sola immagine."
+        },
+        {
+          "name": "Oscuramenti suggeriti",
+          "status": "exploring",
+          "note": "Evidenziare localmente testi potenzialmente sensibili, come e-mail e numeri di telefono, da verificare e confermare per l’oscuramento opaco. Il rilevamento può tralasciare informazioni e non garantisce la privacy."
+        },
+        {
+          "name": "Unire screenshot",
+          "status": "exploring",
+          "note": "Disporre catture salvate in verticale, affiancate o in un PDF multipagina con didascalie. Iniziare dalle catture salvate prima di aggiungere la cattura automatica in serie."
+        },
+        {
+          "name": "Confronto prima e dopo",
+          "status": "exploring",
+          "note": "Scegliere due catture dalla cronologia e confrontarle con un cursore o differenze evidenziate per modifiche alle pagine, revisioni del design e segnalazioni di bug."
+        },
+        {
+          "name": "Didascalia della fonte facoltativa",
+          "status": "exploring",
+          "note": "Aggiungere titolo della pagina, URL, ora della cattura e dimensioni dell’area visibile all’esportazione. Controllare e rimuovere i parametri sensibili dell’URL prima di condividere. Offre contesto, non una prova di autenticità."
+        },
+        {
+          "name": "Creare una guida visiva",
+          "status": "exploring",
+          "note": "Raccogliere catture come passaggi, aggiungere brevi didascalie e annotazioni numerate ed esportare un documento chiaro localmente, senza account."
         }
       ]
     },
@@ -38,12 +80,12 @@
       "items": [
         {
           "name": "Esportazione MP4",
-          "status": "exploring",
+          "status": "planned",
           "note": "WebCodecs più un muxer, accanto all'esportazione WebM esistente."
         },
         {
           "name": "Zoom che segue il cursore",
-          "status": "exploring",
+          "status": "planned",
           "note": "Uno zoom che si sposta per seguire il cursore, invece di restare su blocchi di zoom fissi."
         },
         {
@@ -65,7 +107,12 @@
         {
           "name": "OCR locale: copia il testo da uno screenshot",
           "status": "exploring",
-          "note": "Riconoscimento del testo in WASM, caricato al primo uso ed eseguito sul tuo dispositivo. Il motore e un file di lingua pesano 10–15 MB, molte volte l'intera estensione, quindi è la dimensione a decidere."
+          "note": "Selezionare un’area e copiare il testo riconosciuto tramite OCR locale. Valutare dimensioni del motore e dei dati linguistici, precisione e costo di avvio; caricare solo quando necessario. Nessun dato dello screenshot lascia il dispositivo."
+        },
+        {
+          "name": "Cronologia locale ricercabile",
+          "status": "exploring",
+          "note": "Cercare per titolo della pagina o dominio, rinominare le catture e fissare quelle importanti per conservarle nella cronologia. Esplorare la ricerca nel testo estratto quando sarà disponibile l’OCR locale."
         }
       ]
     },
@@ -102,8 +149,20 @@
     "currentTag": "versione corrente",
     "releases": [
       {
-        "version": "v1.5.0",
+        "version": "v2.1.3",
         "current": true,
+        "items": [
+          "I pulsanti e i promemoria di valutazione di Firefox ora aprono le recensioni Mozilla. I pulsanti di installazione del sito si adattano al browser e offrono un’alternativa per l’altro. Priorità e flussi per gli screenshot aggiornati."
+        ]
+      },
+      {
+        "version": "v2.1.2",
+        "items": [
+          "Azioni rapide e conferma della cattura — copiare, salvare PNG o esportare PDF dalla finestra di avanzamento, con conferme più chiare per appunti e download."
+        ]
+      },
+      {
+        "version": "v1.5.0",
         "items": [
           "<strong>Uso completo da tastiera e supporto per screen reader</strong> — un canvas focalizzabile con scorrimento dei livelli, posizionamento, spostamento, ridimensionamento e ritaglio da tastiera; annunci in live region per ogni modifica; roving tabindex su entrambe le barre degli strumenti; indicatori di focus visibili e bersagli di almeno 24×24; supporto per <code>forced-colors</code> e <code>prefers-contrast</code>; e le stringhe dell'interfaccia dell'editor spostate dietro <code>chrome.i18n</code>.",
           "<strong>Strumento Cut</strong> — segna una o più fasce orizzontali su una cattura a pagina intera e rimuovile con un'anteprima dal vivo. I tagli non sono distruttivi e si annullano come ogni altra modifica.",
@@ -193,5 +252,10 @@
     "body": "Quello che le persone chiedono è quello che viene costruito.",
     "button": "Suggerisci una funzionalità",
     "fine": "Vuoi costruirne una tu? Le pull request sono benvenute. Vedi la <a href=\"https://github.com/pghqdev/OpenScreenShot/blob/main/CONTRIBUTING.md\" target=\"_blank\" rel=\"noopener\">guida per contribuire</a>."
+  },
+  "priorities": {
+    "heading": "Prossime priorità suggerite",
+    "lead": "Esplorare prima la cattura di elementi, l’OCR locale e l’unione di screenshot. Sono ipotesi da validare con i commenti degli utenti, non impegni di rilascio. Per le registrazioni, dare priorità all’esportazione MP4 e alla rimozione di sezioni intermedie.",
+    "guidance": "Mantenere semplice la modalità Express. Inserire le scelte aggiuntive nelle opzioni di cattura, negli strumenti dell’editor o nella cronologia senza aggiungere passaggi al flusso predefinito. I nuovi flussi per gli screenshot devono supportare Chrome e Firefox; le funzioni di registrazione dipendono dal browser."
   }
 }

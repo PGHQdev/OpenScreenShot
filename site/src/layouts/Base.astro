@@ -1,6 +1,6 @@
 ---
 import BrandMark from '../components/BrandMark.astro';
-import ChromeIcon from '../components/ChromeIcon.astro';
+import InstallButtons from '../components/InstallButtons.astro';
 import ogCard from '../assets/og-card.png';
 import {
   t,
@@ -49,7 +49,6 @@ export interface Props {
   minimal?: boolean;
 }
 
-const STORE_URL = 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp';
 const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
 
 const {
@@ -126,6 +125,13 @@ const alternates = availableLocales.map((l) => ({
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
 
+    <!-- Select the install destination before body paint; both links work without JS. -->
+    <script is:inline>
+      document.documentElement.dataset.installBrowser = /Firefox\/|FxiOS\//i.test(navigator.userAgent)
+        ? 'firefox'
+        : 'chrome';
+    </script>
+
     <slot name="head" />
   </head>
 
@@ -154,10 +160,7 @@ const alternates = availableLocales.map((l) => ({
           }
           <li>
             <slot name="header-action">
-              <a class="btn nav-cta" href={STORE_URL} target="_blank" rel="noopener">
-                <ChromeIcon size={18} />
-                {c.nav.addToChrome}
-              </a>
+              <InstallButtons locale={locale} size="compact" />
             </slot>
           </li>
         </ul>}
@@ -353,20 +356,6 @@ const alternates = availableLocales.map((l) => ({
 
   .nav-links a:hover {
     color: var(--ink);
-  }
-
-  .nav-links .nav-cta {
-    min-height: 40px;
-    padding: 0 var(--s-4) 0 var(--s-3);
-    background: var(--ink);
-    color: #fff;
-    font-size: var(--fs-sm);
-  }
-
-  /* The plain-link hover above would ink the label; the pill stays white. */
-  .nav-links .nav-cta:hover {
-    background: color-mix(in srgb, var(--ink) 85%, #fff);
-    color: #fff;
   }
 
   .quiet-foot {

@@ -1,19 +1,20 @@
 {
   "meta": {
     "title": "Roadmap — OpenScreenShot",
-    "description": "OpenScreenShot roadmap — planned features and ideas for the open-source Chrome screenshot extension. Everything stays 100% local: no servers, no accounts."
+    "description": "OpenScreenShot roadmap — planned features and ideas for the open-source Chrome / Firefox screenshot extension. Everything stays 100% local: no servers, no accounts."
   },
   "doc": {
     "label": "Shipped and exploring",
     "heading": "Roadmap",
     "lead": "What has shipped, what is being explored, and what stays out of scope."
   },
-  "callout": "<strong>The promise:</strong> everything on this page stays 100% local. No servers, no accounts, no new data collection — ever. Roadmap items carry no dates. Feedback and pull requests shape what ships. Current release: <strong>v1.5.0</strong>.",
+  "callout": "<strong>The promise:</strong> everything on this page stays 100% local. No servers, no accounts, no new data collection — ever. Roadmap items carry no dates. Feedback and pull requests shape what ships. Current release: <strong>v2.1.3</strong>.",
   "legend": {
     "srLabel": "Status legend:",
     "exploring": "Exploring",
     "shipped": "Shipped",
-    "out": "Out of scope"
+    "out": "Out of scope",
+    "planned": "Planned"
   },
   "groups": [
     {
@@ -26,9 +27,50 @@
           "note": "A magnifier at the crosshair while you drag, with edges that snap to element boundaries."
         },
         {
+          "name": "Capture an element",
+          "status": "exploring",
+          "note": "Hover over a card, chart, table, or article and click to capture its bounds. Build on element snapping to reduce manual selection and unwanted surrounding space."
+        },
+        {
           "name": "Batch capture: list of URLs → one PDF",
           "status": "exploring",
           "note": "Scroll-and-stitch several pages and export them as a single multi-page PDF. It combines two parts that already exist."
+        }
+      ]
+    },
+    {
+      "id": "screenshot-workflows",
+      "heading": "Screenshot workflows",
+      "items": [
+        {
+          "name": "Readable long-page exports",
+          "status": "exploring",
+          "note": "Export an overview with selected detail crops, or split a tall screenshot into readable sections without shrinking the entire page to fit one image."
+        },
+        {
+          "name": "Suggested redactions",
+          "status": "exploring",
+          "note": "Locally highlight possible sensitive text, such as emails and phone numbers, for review and confirmation as solid redactions. Detection can miss information; it does not guarantee privacy."
+        },
+        {
+          "name": "Combine screenshots",
+          "status": "exploring",
+          "note": "Arrange saved captures vertically, side by side, or in a multi-page PDF with captions. Start with saved captures before adding automated batch capture."
+        },
+        {
+          "name": "Before-and-after comparison",
+          "status": "exploring",
+          "note": "Choose two captures from history and compare them with a slider or highlighted differences for page changes, design reviews, and bug reports."
+        },
+        {
+          "name": "Optional source caption",
+          "status": "exploring",
+          "note": "Add page title, URL, capture time, and viewport size to an export. Preview and remove sensitive URL parameters before sharing. This provides context, not proof of authenticity."
+        },
+        {
+          "name": "Create a visual guide",
+          "status": "exploring",
+          "note": "Collect captures as steps, add short captions and numbered annotations, and export a clean document locally without an account."
         }
       ]
     },
@@ -38,12 +80,12 @@
       "items": [
         {
           "name": "MP4 export",
-          "status": "exploring",
+          "status": "planned",
           "note": "WebCodecs plus a muxer, alongside the existing WebM export."
         },
         {
           "name": "Follow-cursor zoom mode",
-          "status": "exploring",
+          "status": "planned",
           "note": "A zoom that pans to track the cursor, instead of sitting on fixed zoom blocks."
         },
         {
@@ -65,7 +107,12 @@
         {
           "name": "Local OCR — copy text out of a screenshot",
           "status": "exploring",
-          "note": "Text recognition in WASM, loaded on first use and run on your device. The engine and one language file weigh 10–15 MB, many times the whole extension, so size decides it."
+          "note": "Select an area and copy recognized text using local OCR. Evaluate engine and language-data size, accuracy, and startup cost; load only when needed. No screenshot data leaves the device."
+        },
+        {
+          "name": "Searchable local history",
+          "status": "exploring",
+          "note": "Search by page title or domain, rename captures, and pin important items to retain them in history. Explore searching extracted text once local OCR is available."
         }
       ]
     },
@@ -102,8 +149,20 @@
     "currentTag": "current release",
     "releases": [
       {
-        "version": "v1.5.0",
+        "version": "v2.1.3",
         "current": true,
+        "items": [
+          "Firefox rating buttons and reminders now open Mozilla reviews. Website install buttons match your browser, with an alternative for the other browser. Updated roadmap priorities and screenshot workflows."
+        ]
+      },
+      {
+        "version": "v2.1.2",
+        "items": [
+          "Capture quick actions and success feedback — copy, save PNG, or export PDF from the capture progress window, with clearer clipboard and download confirmations."
+        ]
+      },
+      {
+        "version": "v1.5.0",
         "items": [
           "<strong>Full keyboard operation and screen reader support</strong> — a focusable canvas with keyboard layer cycling, placement, move, resize, and crop; live-region announcements for every mutation; roving tabindex on both toolbars; visible focus rings and 24×24 minimum target sizes; <code>forced-colors</code> and <code>prefers-contrast</code> support; and the editor’s UI strings moved behind <code>chrome.i18n</code>.",
           "<strong>Cut tool</strong> — mark one or more horizontal bands on a full-page capture and remove them with a live preview. Cuts are non-destructive and undo like every other edit.",
@@ -193,5 +252,10 @@
     "body": "What people ask for is what gets built.",
     "button": "Suggest a feature",
     "fine": "Want to build one of these? Pull requests are welcome. See the <a href=\"https://github.com/pghqdev/OpenScreenShot/blob/main/CONTRIBUTING.md\" target=\"_blank\" rel=\"noopener\">contributing guide</a>."
+  },
+  "priorities": {
+    "heading": "Suggested next priorities",
+    "lead": "Explore element capture, local OCR, and combining screenshots first. These are hypotheses to validate with user feedback, not release commitments. For recording, prioritize MP4 export and removing sections from the middle of a take.",
+    "guidance": "Keep Express mode simple. Put additional choices in capture options, editor tools, or history without adding steps to the default capture flow. New screenshot workflows should support Chrome and Firefox; recording capabilities remain browser-dependent."
   }
 }

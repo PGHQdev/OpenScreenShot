@@ -6,7 +6,10 @@
     "docs": "Docs",
     "support": "Soporte",
     "roadmap": "Hoja de ruta",
-    "github": "GitHub"
+    "github": "GitHub",
+    "addToFirefox": "Añadir a Firefox",
+    "installForFirefox": "Instalar para Firefox",
+    "installForChrome": "Instalar para Chrome"
   },
   "footer": {
     "tagline": "Capturas que nunca salen de tu dispositivo.",

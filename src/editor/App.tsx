@@ -1,4 +1,3 @@
-import { IS_FIREFOX } from '../shared/browser';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { isTypingTarget, useEditor } from './useEditor';
 import {
@@ -54,9 +53,8 @@ import {
 } from '../shared/icons';
 import { getSettings, setSettings } from '../shared/storage';
 import {
-  CWS_REVIEWS_URL,
   SUPPORT_PROJECT_URL,
-  markRatedOrDismissed,
+  openReviewPage,
   markRatePromptShown,
   remindRateLater,
   recordExportSuccess,
@@ -89,13 +87,13 @@ export function App() {
   const [sheetOpen, setSheetOpen] = useState(() =>
     new URLSearchParams(window.location.search).has('shortcuts'),
   );
-  const [settingsError, setSettingsError] = useState(false);
+  const [navigationError, setNavigationError] = useState(false);
   async function openSettings() {
     try {
       await chrome.runtime.openOptionsPage();
-      setSettingsError(false);
+      setNavigationError(false);
     } catch {
-      setSettingsError(true);
+      setNavigationError(true);
     }
   }
   // The popup's History footer link opens the editor with ?history=1 (see
@@ -212,10 +210,14 @@ export function App() {
     }
   }
 
-  function openReviews() {
-    void markRatedOrDismissed();
-    setRatePrompt(false);
-    window.open(CWS_REVIEWS_URL, '_blank', 'noopener');
+  async function openReviews() {
+    try {
+      await openReviewPage();
+      setRatePrompt(false);
+      setNavigationError(false);
+    } catch {
+      setNavigationError(true);
+    }
   }
 
   function dismissRatePrompt() {
@@ -455,16 +457,14 @@ export function App() {
           >
             {t('editorSaveImage')}
           </button>
-          {!IS_FIREFOX && (
-            <button
-              class="btn-secondary labeled-action rate-btn"
-              title={t('editorRateTooltip')}
-              onClick={openReviews}
-            >
-              <IconStar size={18} />
-              <span>{t('editorRateLabel')}</span>
-            </button>
-          )}
+          <button
+            class="btn-secondary labeled-action rate-btn"
+            title={t('editorRateTooltip')}
+            onClick={openReviews}
+          >
+            <IconStar size={18} />
+            <span>{t('editorRateLabel')}</span>
+          </button>
           <button
             class="text-btn labeled-action"
             onClick={() => window.open(SUPPORT_PROJECT_URL, '_blank', 'noopener')}
@@ -475,7 +475,7 @@ export function App() {
         </div>
       </header>
 
-      {settingsError && <p role="alert">{t('popupOpenFailed')}</p>}
+      {navigationError && <p role="alert">{t('popupOpenFailed')}</p>}
       <ExpressHint
         capture={ed.capture}
         ready={ed.hasImage && !ed.loading}

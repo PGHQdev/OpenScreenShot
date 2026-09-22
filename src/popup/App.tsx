@@ -1,4 +1,4 @@
-import { CWS_REVIEWS_URL, SUPPORT_PROJECT_URL, markRatedOrDismissed } from '../shared/rating';
+import { SUPPORT_PROJECT_URL, openReviewPage } from '../shared/rating';
 import { CaptureReturn } from './CaptureReturn';
 import { IS_FIREFOX, RECORDING_SUPPORTED } from '../shared/browser';
 import { useEffect, useRef, useState } from 'preact/hooks';
@@ -719,21 +719,16 @@ export function App() {
         )}
         {showSettings && (
           <nav class="settings-nav-links" aria-label={t('settingsSupport')}>
-            {!IS_FIREFOX && (
-              <button
-                class="link-btn kofi-link"
-                title={t('editorRateTooltip')}
-                onClick={() => {
-                  void chrome.tabs
-                    .create({ url: CWS_REVIEWS_URL })
-                    .then(() => markRatedOrDismissed())
-                    .catch(() => pushToast(t('popupOpenFailed'), 'error'));
-                }}
-              >
-                <IconStar size={16} />
-                {t('editorRateLabel')}
-              </button>
-            )}
+            <button
+              class="link-btn kofi-link"
+              title={t('editorRateTooltip')}
+              onClick={() => {
+                void openReviewPage().catch(() => pushToast(t('popupOpenFailed'), 'error'));
+              }}
+            >
+              <IconStar size={16} />
+              {t('editorRateLabel')}
+            </button>
             <button class="link-btn kofi-link" onClick={openKofi} title={t('supportKofiTitle')}>
               <IconCoffee size={16} />
               {t('supportProject')}
@@ -773,7 +768,12 @@ export function App() {
       </div>
 
       {showSettings ? (
-        <SettingsView settings={settings} onChange={updateSettings} onSetup={() => goSetup()} />
+        <SettingsView
+          settings={settings}
+          onChange={updateSettings}
+          onSetup={() => goSetup()}
+          onRate={() => void openReviewPage().catch(() => pushToast(t('popupOpenFailed'), 'error'))}
+        />
       ) : (
         <>
           {!IS_FIREFOX && <PinHint />}
@@ -1009,11 +1009,13 @@ function SettingsView({
   settings,
   onChange,
   onSetup,
+  onRate,
 }: {
   settings: Settings;
   onChange: (patch: Partial<Settings>) => void;
   /** Owned by App, which has the toast surface a failed handoff needs. */
   onSetup: () => void;
+  onRate: () => void;
 }) {
   const filenameRef = useRef<HTMLInputElement>(null);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -1266,18 +1268,9 @@ function SettingsView({
           <button class="btn-secondary" onClick={openKofi}>
             {t('supportProject')}
           </button>
-          {!IS_FIREFOX && (
-            <button
-              class="link-btn"
-              onClick={() => {
-                void chrome.tabs
-                  .create({ url: CWS_REVIEWS_URL })
-                  .then(() => markRatedOrDismissed());
-              }}
-            >
-              {t('editorRateLabel')}
-            </button>
-          )}
+          <button class="link-btn" onClick={onRate}>
+            {t('editorRateLabel')}
+          </button>
         </div>
       </section>
 

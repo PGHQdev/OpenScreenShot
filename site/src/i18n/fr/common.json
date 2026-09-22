@@ -6,7 +6,10 @@
     "docs": "Docs",
     "support": "Support",
     "roadmap": "Feuille de route",
-    "github": "GitHub"
+    "github": "GitHub",
+    "addToFirefox": "Ajouter à Firefox",
+    "installForFirefox": "Installer pour Firefox",
+    "installForChrome": "Installer pour Chrome"
   },
   "footer": {
     "tagline": "Des captures d’écran qui ne quittent jamais votre machine.",

@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { capture, CaptureOptions } from './capture.js';
 
 export function buildServer(): McpServer {
-  const server = new McpServer({ name: 'openscreenshot', version: '2.1.0' });
+  const server = new McpServer({ name: 'openscreenshot', version: '2.1.3' });
   server.registerTool(
     'capture_screenshot',
     {

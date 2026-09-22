@@ -8,8 +8,9 @@ import { IS_FIREFOX } from './browser';
 export const SUPPORT_PROJECT_URL = 'https://ko-fi.com/T7A624DAY7';
 
 /** The listing's reviews tab — where every Rate surface points. */
-export const CWS_REVIEWS_URL =
-  'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp/reviews';
+export const REVIEWS_URL = IS_FIREFOX
+  ? 'https://addons.mozilla.org/firefox/addon/openscreenshot/reviews/'
+  : 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp/reviews';
 
 /** Set by a Rate action (or a legacy permanent dismissal); stops future prompts. */
 const RATED_KEY = 'openscreenshot:rated-or-dismissed';
@@ -23,6 +24,12 @@ const PROMPTED_KEY = 'openscreenshot:rate-prompted';
 /** How many successful exports/copies before the first prompt may appear. */
 export const RATE_PROMPT_AFTER = 3;
 
+/** Open the browser's reviews page, then persist the user's rating choice. */
+export async function openReviewPage(): Promise<void> {
+  await chrome.tabs.create({ url: REVIEWS_URL });
+  await markRatedOrDismissed();
+}
+
 /** Count one successful export or clipboard copy. */
 export async function recordExportSuccess(): Promise<void> {
   const stored = await chrome.storage.local.get(SUCCESS_COUNT_KEY);
@@ -34,7 +41,6 @@ export async function recordExportSuccess(): Promise<void> {
  * True after enough successes, unless rated, permanently dismissed, or snoozed.
  */
 export async function shouldShowRatePrompt(): Promise<boolean> {
-  if (IS_FIREFOX) return false;
   const stored = await chrome.storage.local.get([
     SUCCESS_COUNT_KEY,
     RATED_KEY,

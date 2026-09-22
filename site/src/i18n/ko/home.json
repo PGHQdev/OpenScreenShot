@@ -124,8 +124,8 @@
     "heading": "10초면 준비 완료.",
     "steps": [
       {
-        "title": "Chrome에 추가",
-        "body": "Chrome 웹 스토어에서 클릭 한 번. 무료이고 가입도 필요 없어요."
+        "title": "브라우저에 추가",
+        "body": "Chrome 웹 스토어 또는 Firefox 부가 기능에서 설치하세요. 무료이며 가입이 필요 없습니다."
       },
       {
         "title": "아이콘 클릭",
@@ -136,6 +136,6 @@
         "body": "주석을 달고, 내보내고, 복사하세요. 기기 밖으로는 절대 나가지 않아요."
       }
     ],
-    "browsersFine": "Chrome, Edge, Brave, Arc 등 Chromium 기반 브라우저에서 동작해요."
+    "browsersFine": "스크린샷은 데스크톱 Firefox, Chrome, Edge, Brave, Arc 및 기타 Chromium 브라우저에서 지원됩니다. 녹화는 Chrome에서만 지원됩니다."
   }
 }

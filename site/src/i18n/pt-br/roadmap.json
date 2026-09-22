@@ -1,19 +1,20 @@
 {
   "meta": {
     "title": "Roadmap — OpenScreenShot",
-    "description": "Roadmap do OpenScreenShot — recursos planejados e ideias para a extensão de captura de tela de código aberto para Chrome. Tudo continua 100% local: sem servidores, sem contas."
+    "description": "Roadmap do OpenScreenShot — recursos planejados e ideias para a extensão de captura de tela de código aberto para Chrome / Firefox. Tudo continua 100% local: sem servidores, sem contas."
   },
   "doc": {
     "label": "Lançado e em estudo",
     "heading": "Roadmap",
     "lead": "O que já foi lançado, o que está em estudo e o que fica fora do escopo."
   },
-  "callout": "<strong>A promessa:</strong> tudo nesta página continua 100% local. Sem servidores, sem contas, sem nova coleta de dados — nunca. Os itens do roadmap não têm datas. Feedback e pull requests definem o que é lançado. Versão atual: <strong>v1.5.0</strong>.",
+  "callout": "<strong>A promessa:</strong> tudo nesta página continua 100% local. Sem servidores, sem contas, sem nova coleta de dados — nunca. Os itens do roadmap não têm datas. Feedback e pull requests definem o que é lançado. Versão atual: <strong>v2.1.3</strong>.",
   "legend": {
     "srLabel": "Legenda de status:",
     "exploring": "Em estudo",
     "shipped": "Lançado",
-    "out": "Fora do escopo"
+    "out": "Fora do escopo",
+    "planned": "Planejado"
   },
   "groups": [
     {
@@ -26,9 +27,50 @@
           "note": "Uma lupa na mira enquanto você arrasta, com bordas que se encaixam nos limites dos elementos."
         },
         {
+          "name": "Capturar um elemento",
+          "status": "exploring",
+          "note": "Passar o cursor sobre um cartão, gráfico, tabela ou artigo e clicar para capturar seus limites. Usar o ajuste aos elementos para reduzir a seleção manual e o espaço desnecessário ao redor."
+        },
+        {
           "name": "Captura em lote: lista de URLs → um PDF",
           "status": "exploring",
           "note": "Rolar e costurar várias páginas e exportá-las como um único PDF de várias páginas. Combina duas partes que já existem."
+        }
+      ]
+    },
+    {
+      "id": "screenshot-workflows",
+      "heading": "Fluxos de trabalho com capturas",
+      "items": [
+        {
+          "name": "Exportações legíveis de páginas longas",
+          "status": "exploring",
+          "note": "Exportar uma visão geral com recortes de detalhes selecionados ou dividir uma captura longa em seções legíveis sem reduzir a página inteira a uma única imagem."
+        },
+        {
+          "name": "Ocultações sugeridas",
+          "status": "exploring",
+          "note": "Destacar localmente possíveis textos sensíveis, como e-mails e telefones, para revisão e confirmação da ocultação com preenchimento opaco. A detecção pode deixar informações passar e não garante privacidade."
+        },
+        {
+          "name": "Combinar capturas",
+          "status": "exploring",
+          "note": "Organizar capturas salvas na vertical, lado a lado ou em um PDF de várias páginas com legendas. Começar pelas capturas salvas antes de adicionar a captura automática em lote."
+        },
+        {
+          "name": "Comparação de antes e depois",
+          "status": "exploring",
+          "note": "Escolher duas capturas do histórico e compará-las com um controle deslizante ou diferenças destacadas para acompanhar mudanças em páginas, revisar designs e relatar bugs."
+        },
+        {
+          "name": "Legenda de origem opcional",
+          "status": "exploring",
+          "note": "Adicionar título da página, URL, horário da captura e tamanho da área visível à exportação. Revisar e remover parâmetros sensíveis da URL antes de compartilhar. Isso fornece contexto, não prova de autenticidade."
+        },
+        {
+          "name": "Criar um guia visual",
+          "status": "exploring",
+          "note": "Reunir capturas como etapas, adicionar legendas curtas e anotações numeradas e exportar um documento claro localmente, sem conta."
         }
       ]
     },
@@ -38,12 +80,12 @@
       "items": [
         {
           "name": "Exportação em MP4",
-          "status": "exploring",
+          "status": "planned",
           "note": "WebCodecs mais um muxer, ao lado da exportação WebM existente."
         },
         {
           "name": "Modo de zoom que segue o cursor",
-          "status": "exploring",
+          "status": "planned",
           "note": "Um zoom que se desloca para acompanhar o cursor, em vez de ficar preso a blocos de zoom fixos."
         },
         {
@@ -65,7 +107,12 @@
         {
           "name": "OCR local — copie texto de uma captura",
           "status": "exploring",
-          "note": "Reconhecimento de texto em WASM, carregado no primeiro uso e executado no seu dispositivo. O mecanismo e um arquivo de idioma pesam de 10 a 15 MB, muitas vezes o tamanho da extensão inteira, então o tamanho é o que vai decidir."
+          "note": "Selecionar uma área e copiar o texto reconhecido por OCR local. Avaliar o tamanho do mecanismo e dos dados de idiomas, a precisão e o custo de inicialização; carregar apenas quando necessário. Nenhum dado da captura sai do dispositivo."
+        },
+        {
+          "name": "Histórico local pesquisável",
+          "status": "exploring",
+          "note": "Pesquisar por título da página ou domínio, renomear capturas e fixar itens importantes para mantê-los no histórico. Explorar a busca no texto extraído quando o OCR local estiver disponível."
         }
       ]
     },
@@ -102,8 +149,20 @@
     "currentTag": "versão atual",
     "releases": [
       {
-        "version": "v1.5.0",
+        "version": "v2.1.3",
         "current": true,
+        "items": [
+          "Os botões e lembretes de avaliação do Firefox agora abrem as avaliações da Mozilla. Os botões de instalação do site se adaptam ao navegador e oferecem uma alternativa para o outro. Prioridades e fluxos de capturas atualizados."
+        ]
+      },
+      {
+        "version": "v2.1.2",
+        "items": [
+          "Ações rápidas e confirmação de captura — copiar, salvar PNG ou exportar PDF pela janela de progresso, com confirmações mais claras da área de transferência e dos downloads."
+        ]
+      },
+      {
+        "version": "v1.5.0",
         "items": [
           "<strong>Operação completa por teclado e suporte a leitores de tela</strong> — um canvas focável com ciclo de camadas, posicionamento, movimento, redimensionamento e recorte pelo teclado; anúncios por live region a cada mudança; roving tabindex nas duas barras de ferramentas; anéis de foco visíveis e alvos mínimos de 24×24; suporte a <code>forced-colors</code> e <code>prefers-contrast</code>; e os textos da interface do editor movidos para <code>chrome.i18n</code>.",
           "<strong>Ferramenta Cut</strong> — marque uma ou mais faixas horizontais em uma captura de página inteira e remova-as com prévia ao vivo. Os cortes não são destrutivos e podem ser desfeitos como qualquer outra edição.",
@@ -193,5 +252,10 @@
     "body": "O que as pessoas pedem é o que é construído.",
     "button": "Sugerir um recurso",
     "fine": "Quer construir um destes? Pull requests são bem-vindos. Veja o <a href=\"https://github.com/pghqdev/OpenScreenShot/blob/main/CONTRIBUTING.md\" target=\"_blank\" rel=\"noopener\">guia de contribuição</a>."
+  },
+  "priorities": {
+    "heading": "Próximas prioridades sugeridas",
+    "lead": "Explorar primeiro a captura de elementos, o OCR local e a combinação de capturas. São hipóteses a validar com o feedback dos usuários, não compromissos de lançamento. Para gravações, priorizar a exportação MP4 e a remoção de trechos no meio de uma tomada.",
+    "guidance": "Manter o modo Express simples. Oferecer escolhas adicionais nas opções de captura, nas ferramentas do editor ou no histórico sem adicionar etapas ao fluxo padrão. Os novos fluxos de capturas devem funcionar no Chrome e no Firefox; os recursos de gravação dependem do navegador."
   }
 }

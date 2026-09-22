@@ -124,8 +124,8 @@
     "heading": "Pronto in dieci secondi.",
     "steps": [
       {
-        "title": "Aggiungilo a Chrome",
-        "body": "Un clic sul Chrome Web Store. Gratuito e senza registrazione."
+        "title": "Aggiungilo al browser",
+        "body": "Installalo dal Chrome Web Store o dai componenti aggiuntivi di Firefox. Gratis e senza registrazione."
       },
       {
         "title": "Clicca l'icona",
@@ -136,6 +136,6 @@
         "body": "Annota, esporta o copia. Non lascia mai il tuo dispositivo."
       }
     ],
-    "browsersFine": "Funziona su Chrome, Edge, Brave, Arc e altri browser Chromium."
+    "browsersFine": "Gli screenshot funzionano su Firefox per desktop, Chrome, Edge, Brave, Arc e altri browser Chromium. La registrazione è disponibile solo su Chrome."
   }
 }

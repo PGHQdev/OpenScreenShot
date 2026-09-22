@@ -124,8 +124,8 @@
     "heading": "In zehn Sekunden startklar.",
     "steps": [
       {
-        "title": "Zu Chrome hinzufügen",
-        "body": "Ein Klick im Chrome Web Store. Kostenlos, ohne Registrierung."
+        "title": "Zum Browser hinzufügen",
+        "body": "Aus dem Chrome Web Store oder von Firefox Add-ons installieren. Kostenlos und ohne Registrierung."
       },
       {
         "title": "Auf das Symbol klicken",
@@ -136,6 +136,6 @@
         "body": "Anmerken, exportieren oder kopieren. Es verlässt nie dein Gerät."
       }
     ],
-    "browsersFine": "Funktioniert mit Chrome, Edge, Brave, Arc und anderen Chromium-Browsern."
+    "browsersFine": "Screenshots funktionieren in Firefox für Desktop, Chrome, Edge, Brave, Arc und anderen Chromium-Browsern. Videoaufnahmen sind nur in Chrome verfügbar."
   }
 }

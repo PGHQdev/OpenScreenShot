@@ -124,8 +124,8 @@
     "heading": "十秒就能開始。",
     "steps": [
       {
-        "title": "加到 Chrome",
-        "body": "在 Chrome 線上應用程式商店點一下即可。免費，不用註冊。"
+        "title": "加入瀏覽器",
+        "body": "從 Chrome 線上應用程式商店或 Firefox 附加元件網站安裝。免費，無須註冊。"
       },
       {
         "title": "點圖示",
@@ -136,6 +136,6 @@
         "body": "註解、匯出或複製。內容永遠不離開你的裝置。"
       }
     ],
-    "browsersFine": "適用於 Chrome、Edge、Brave、Arc 及其他 Chromium 瀏覽器。"
+    "browsersFine": "擷取畫面支援桌面版 Firefox、Chrome、Edge、Brave、Arc 及其他 Chromium 瀏覽器。錄影僅支援 Chrome。"
   }
 }

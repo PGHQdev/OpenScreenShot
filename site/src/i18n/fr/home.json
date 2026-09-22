@@ -124,8 +124,8 @@
     "heading": "Prêt en dix secondes.",
     "steps": [
       {
-        "title": "Ajoutez-la à Chrome",
-        "body": "Un clic sur le Chrome Web Store. Gratuit, sans inscription."
+        "title": "Ajoutez-le à votre navigateur",
+        "body": "Installez-le depuis le Chrome Web Store ou les modules complémentaires Firefox. Gratuit et sans inscription."
       },
       {
         "title": "Cliquez sur l’icône",
@@ -136,6 +136,6 @@
         "body": "Annotez, exportez ou copiez. Rien ne quitte votre machine."
       }
     ],
-    "browsersFine": "Fonctionne sur Chrome, Edge, Brave, Arc et les autres navigateurs Chromium."
+    "browsersFine": "Les captures fonctionnent sur Firefox pour ordinateur, Chrome, Edge, Brave, Arc et les autres navigateurs Chromium. L’enregistrement vidéo est réservé à Chrome."
   }
 }

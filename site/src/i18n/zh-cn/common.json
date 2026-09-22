@@ -6,7 +6,10 @@
     "docs": "文档",
     "support": "支持",
     "roadmap": "路线图",
-    "github": "GitHub"
+    "github": "GitHub",
+    "addToFirefox": "添加到 Firefox",
+    "installForFirefox": "安装 Firefox 版",
+    "installForChrome": "安装 Chrome 版"
   },
   "footer": {
     "tagline": "截图永远不离开你的设备。",

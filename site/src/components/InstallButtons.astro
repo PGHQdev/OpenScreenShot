@@ -1,0 +1,96 @@
+---
+import ChromeIcon from './ChromeIcon.astro';
+import { t, type Locale } from '../i18n';
+import { CHROME_STORE_URL, FIREFOX_STORE_URL } from '../lib/install';
+
+interface Props {
+  locale: Locale;
+  size?: 'compact' | 'standard' | 'large';
+}
+
+const { locale, size = 'standard' } = Astro.props;
+const c = t(locale, 'common');
+const iconSize = size === 'large' ? 22 : 18;
+---
+
+<span class:list={['install-options', `install-${size}`]}>
+  <span class="install-choice install-chrome">
+    <a class="btn btn-ink install-primary" href={CHROME_STORE_URL} target="_blank" rel="noopener">
+      <ChromeIcon size={iconSize} />
+      {c.nav.addToChrome}
+    </a>
+    <a class="install-alternative" href={FIREFOX_STORE_URL} target="_blank" rel="noopener">
+      <img src="/assets/brands/firefox.svg" width="14" height="14" alt="" />
+      {c.nav.installForFirefox}
+    </a>
+  </span>
+  <span class="install-choice install-firefox">
+    <a class="btn btn-ink install-primary" href={FIREFOX_STORE_URL} target="_blank" rel="noopener">
+      <img src="/assets/brands/firefox.svg" width={iconSize} height={iconSize} alt="" />
+      {c.nav.addToFirefox}
+    </a>
+    <a class="install-alternative" href={CHROME_STORE_URL} target="_blank" rel="noopener">
+      <ChromeIcon size={14} />
+      {c.nav.installForChrome}
+    </a>
+  </span>
+</span>
+
+<style>
+  .install-options {
+    display: inline-block;
+    max-width: 100%;
+    vertical-align: top;
+  }
+
+  .install-choice {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .install-firefox,
+  :global(html[data-install-browser='firefox']) .install-chrome {
+    display: none;
+  }
+
+  :global(html[data-install-browser='firefox']) .install-firefox {
+    display: flex;
+  }
+
+  .install-alternative {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 24px;
+    color: var(--ink-2);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    line-height: 1.4;
+    text-decoration: none;
+  }
+
+  .install-alternative:hover {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .install-alternative img {
+    flex-shrink: 0;
+  }
+
+  .install-compact .install-primary {
+    min-height: 40px;
+    padding: 0 var(--s-4) 0 var(--s-3);
+    font-size: var(--fs-sm);
+  }
+
+  .install-large .install-primary {
+    min-height: 56px;
+    padding: 0 28px 0 22px;
+    font-size: var(--fs-base);
+  }
+</style>

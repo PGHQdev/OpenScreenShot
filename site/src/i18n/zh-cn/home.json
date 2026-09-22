@@ -124,8 +124,8 @@
     "heading": "十秒即可就绪。",
     "steps": [
       {
-        "title": "添加至 Chrome",
-        "body": "在 Chrome 应用商店点一下即可。免费，无需注册。"
+        "title": "添加到浏览器",
+        "body": "从 Chrome 应用商店或 Firefox 附加组件商店安装。免费，无需注册。"
       },
       {
         "title": "点击图标",
@@ -136,6 +136,6 @@
         "body": "标注、导出或复制。它永远不会离开你的设备。"
       }
     ],
-    "browsersFine": "适用于 Chrome、Edge、Brave、Arc 及其他 Chromium 内核浏览器。"
+    "browsersFine": "截图支持桌面版 Firefox、Chrome、Edge、Brave、Arc 及其他 Chromium 浏览器。录屏仅支持 Chrome。"
   }
 }

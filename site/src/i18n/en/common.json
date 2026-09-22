@@ -6,7 +6,10 @@
     "docs": "Docs",
     "support": "Support",
     "roadmap": "Roadmap",
-    "github": "GitHub"
+    "github": "GitHub",
+    "addToFirefox": "Add to Firefox",
+    "installForFirefox": "Install it for Firefox",
+    "installForChrome": "Install it for Chrome"
   },
   "footer": {
     "tagline": "Screenshots that never leave your machine.",
