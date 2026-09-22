@@ -35,6 +35,28 @@ Full-page screenshots for Chrome and Firefox. Free editing. Local processing. No
 <sub>Firefox for desktop · 140+</sub>
 </td>
 </tr>
+<tr>
+<td align="center" width="280">
+<a href="#mcp">
+<img src="site/public/assets/brands/claude.svg" alt="Claude" width="24" height="24" />
+<img src="site/public/assets/brands/chatgpt.svg" alt="ChatGPT" width="24" height="24" />
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="site/public/assets/brands/grok-dark.svg" />
+<img src="site/public/assets/brands/grok.svg" alt="Grok" width="24" height="24" />
+</picture>
+<img src="site/public/assets/brands/muse.svg" alt="Muse" width="24" height="24" /><br />
+<strong>MCP</strong>
+</a><br />
+<sub>Local server · client setup required</sub>
+</td>
+<td align="center" width="280">
+<a href="#cli">
+<img src="site/public/assets/brands/terminal.svg" alt="Terminal" width="24" height="24" /><br />
+<strong>CLI</strong>
+</a><br />
+<sub>Terminal · scripts · CI/CD</sub>
+</td>
+</tr>
 </table>
 
 [Website](https://openscreenshot.app) &nbsp;·&nbsp; [Docs](https://openscreenshot.app/docs/) &nbsp;·&nbsp; [Roadmap](./ROADMAP.md) &nbsp;·&nbsp; [Report a bug](https://github.com/PGHQdev/OpenScreenShot/issues)
@@ -171,19 +193,33 @@ openscreenshot/
 
 </details>
 
-## Screenshots from the CLI or an agent
+## CLI & MCP
 
 [![npm](https://img.shields.io/npm/v/openscreenshot?label=openscreenshot&color=E8503A)](https://www.npmjs.com/package/openscreenshot)
 
 `openscreenshot` (npm) is a separate, optional tool that drives the Chrome already on your
 machine — also fully local:
 
+### CLI
+
 ```bash
 pnpm dlx openscreenshot shot https://example.com --out shot.png --full
 ```
 
-As an MCP server, add `{ "command": "pnpm", "args": ["dlx", "openscreenshot", "serve"] }` to your
-client config and call the `capture_screenshot` tool.
+### MCP
+
+Add this server entry to your MCP client’s configuration, then call `capture_screenshot`:
+
+```json
+{
+  "command": "pnpm",
+  "args": ["dlx", "openscreenshot", "serve"]
+}
+```
+
+The server runs locally over **stdio**. Your client must support launching a local MCP
+process; clients that only accept remote MCP URLs need a compatible bridge. Setup and
+availability depend on the client.
 
 Built for the terminal-heavy parts of the job:
 
