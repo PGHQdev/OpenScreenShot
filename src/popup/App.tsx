@@ -7,10 +7,11 @@ import type {
   CaptureMode,
   ExportFormat,
   PopupMessage,
+  PendingCaptureError,
   Settings,
 } from '../shared/types';
 import { DEFAULT_SETTINGS } from '../shared/types';
-import { getLastRegion, getSettings, hasLastCapture, setSettings } from '../shared/storage';
+import { clearPendingCaptureError, getLastRegion, getPendingCaptureError, getSettings, hasLastCapture, setSettings } from '../shared/storage';
 import { onPopupMessage, sendToBackground } from '../shared/messaging';
 import { BrandMark } from '../shared/BrandMark';
 import {
@@ -223,6 +224,9 @@ export function App() {
   const [showSettings, setShowSettings] = useState(isSettingsPage);
   const [busy, setBusy] = useState<CaptureMode | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
+  const [pendingCaptureError, setPendingCaptureError] = useState<PendingCaptureError | null>(null);
+  const [reportDetail, setReportDetail] = useState('');
+  const [reportState, setReportState] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle');
   const [toasts, setToasts] = useState<Toast[]>(() => {
     const message = new URLSearchParams(location.search).get('captureError');
     return message ? [{ id: Date.now(), message, tone: 'error' }] : [];
@@ -263,6 +267,34 @@ export function App() {
     void hasLastCapture().then(setHasStash);
     void getLastRegion().then((r) => setHasRegion(r != null));
   }, []);
+
+  useEffect(() => {
+    void getPendingCaptureError().then((error) => {
+      if (error) {
+        setPendingCaptureError(error);
+        setReportDetail(error.detail);
+      }
+    });
+  }, []);
+
+  async function submitCaptureError(event: Event): Promise<void> {
+    event.preventDefault();
+    if (!pendingCaptureError || reportState === 'sending') return;
+    setReportState('sending');
+    try {
+      const response = await fetch('https://openscreenshot.app/api/capture-errors', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ ...pendingCaptureError, detail: reportDetail }),
+      });
+      if (!response.ok) throw new Error(`report failed: ${response.status}`);
+      await clearPendingCaptureError();
+      setReportState('sent');
+      setPendingCaptureError(null);
+    } catch {
+      setReportState('failed');
+    }
+  }
 
   // Live-update a "system" theme setting when the OS preference flips.
   useEffect(() => watchSystemTheme(() => void getSettings().then((s) => applyTheme(s.theme))), []);
@@ -774,6 +806,27 @@ export function App() {
           </div>
         ))}
       </div>
+
+      {pendingCaptureError && (
+        <form class="capture-error-report" onSubmit={submitCaptureError}>
+          <strong>{t('captureReportTitle')}</strong>
+          <p>{t('captureReportBody')}</p>
+          <label>
+            {t('captureReportDetails')}
+            <textarea
+              value={reportDetail}
+              rows={3}
+              maxlength={4000}
+              onInput={(event) => setReportDetail((event.currentTarget as HTMLTextAreaElement).value)}
+            />
+          </label>
+          <button class="btn-secondary" type="submit" disabled={reportState === 'sending'}>
+            {reportState === 'sending' ? t('captureReportSending') : t('captureReportSend')}
+          </button>
+          {reportState === 'failed' && <p class="capture-error-report-status" role="alert">{t('captureReportFailed')}</p>}
+        </form>
+      )}
+      {reportState === 'sent' && <p class="capture-error-report-status" role="status">{t('captureReportSent')}</p>}
 
       {showSettings ? (
         <SettingsView

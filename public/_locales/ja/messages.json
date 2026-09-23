@@ -2542,5 +2542,12 @@
   "captureDownloadAgain": {
     "message": "もう一度ダウンロード",
     "description": "Capture progress window: button to retry the PNG download."
-  }
+  },
+  "captureReportTitle": { "message": "Help diagnose this capture error" },
+  "captureReportBody": { "message": "Review the details, then send an anonymous error report to help improve OpenScreenShot." },
+  "captureReportDetails": { "message": "Technical details (optional)" },
+  "captureReportSend": { "message": "Send error report" },
+  "captureReportSending": { "message": "Sending…" },
+  "captureReportSent": { "message": "Thanks — the error report was sent." },
+  "captureReportFailed": { "message": "Couldn’t send the report. Check your connection and try again." }
 }

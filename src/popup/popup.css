@@ -1231,3 +1231,18 @@ label.settings-row .settings-label {
   justify-content: center;
   gap: var(--s-2) var(--s-5);
 }
+
+.capture-error-report {
+  display: grid;
+  gap: var(--s-2);
+  margin: var(--s-3) 16px 0;
+  padding: var(--s-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+}
+.capture-error-report strong { font-size: var(--fs-sm); }
+.capture-error-report p { margin: 0; color: var(--text-2); font-size: var(--fs-xs); line-height: 1.4; }
+.capture-error-report label { display: grid; gap: var(--s-1); font-size: var(--fs-xs); color: var(--text-2); }
+.capture-error-report textarea { width: 100%; min-height: 64px; resize: vertical; box-sizing: border-box; }
+.capture-error-report-status { margin: var(--s-3) 16px 0; color: var(--text-2); font-size: var(--fs-xs); }

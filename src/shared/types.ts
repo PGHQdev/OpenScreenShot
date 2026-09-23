@@ -48,6 +48,18 @@ export interface CaptureError {
   type: 'CAPTURE_ERROR';
   code: CaptureErrorCode;
   message: string;
+  detail?: string;
+}
+
+export interface PendingCaptureError {
+  code: CaptureErrorCode;
+  message: string;
+  detail: string;
+  version: string;
+  locale: string;
+  url: string;
+  title: string;
+  createdAt: number;
 }
 
 export type PopupMessage = CaptureProgress | CaptureComplete | CaptureError;

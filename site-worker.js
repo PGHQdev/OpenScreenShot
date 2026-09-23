@@ -227,12 +227,83 @@ async function submitFeedback(request, env) {
   return feedbackJson(201, { ok: true });
 }
 
+const CAPTURE_ERROR_MAX_MESSAGE = 4000;
+const CAPTURE_ERROR_MAX_DETAIL = 4000;
+const CAPTURE_ERROR_MAX_URL = 2000;
+const CAPTURE_ERROR_MAX_TITLE = 500;
+const CAPTURE_ERROR_MAX_CODE = 64;
+const CAPTURE_ERROR_MAX_VERSION = 32;
+const CAPTURE_ERROR_MAX_LOCALE = 16;
+
+function captureErrorOrigin(origin) {
+  if (!origin || origin === 'https://openscreenshot.app') return null;
+  if (/^(?:chrome|moz)-extension:\/\/[^/]+$/i.test(origin)) return origin;
+  return undefined;
+}
+
+function captureErrorJson(status, body, origin = null) {
+  const headers = {
+    'content-type': 'application/json; charset=utf-8',
+    'cache-control': 'no-store',
+  };
+  if (origin) {
+    headers['access-control-allow-origin'] = origin;
+    headers.vary = 'Origin';
+  }
+  return new Response(JSON.stringify(body), { status, headers });
+}
+
+async function submitCaptureError(request, env) {
+  const origin = request.headers.get('Origin');
+  const allowedOrigin = captureErrorOrigin(origin);
+  if (allowedOrigin === undefined) return captureErrorJson(403, { ok: false, error: 'origin' });
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        ...(allowedOrigin ? { 'access-control-allow-origin': allowedOrigin, vary: 'Origin' } : {}),
+        'access-control-allow-methods': 'POST, OPTIONS',
+        'access-control-allow-headers': 'content-type',
+        'access-control-max-age': '86400',
+      },
+    });
+  }
+  if (request.method !== 'POST') return captureErrorJson(405, { ok: false, error: 'method' }, allowedOrigin);
+  if (!env.FEEDBACK_DB) return captureErrorJson(503, { ok: false, error: 'unavailable' }, allowedOrigin);
+
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return captureErrorJson(400, { ok: false, error: 'json' }, allowedOrigin);
+  }
+  const code = boundedField(payload?.code, CAPTURE_ERROR_MAX_CODE, /^[a-z0-9-]+$/i) || 'unknown';
+  const message = boundedField(payload?.message, CAPTURE_ERROR_MAX_MESSAGE);
+  if (!message) return captureErrorJson(400, { ok: false, error: 'message' }, allowedOrigin);
+  const detail = boundedField(payload?.detail, CAPTURE_ERROR_MAX_DETAIL);
+  const version = boundedField(payload?.version, CAPTURE_ERROR_MAX_VERSION, /^[\w.+-]*$/) || 'unknown';
+  const locale = boundedField(payload?.locale, CAPTURE_ERROR_MAX_LOCALE, /^[a-z-]*$/i) || 'en';
+  const url = boundedField(payload?.url, CAPTURE_ERROR_MAX_URL);
+  const title = boundedField(payload?.title, CAPTURE_ERROR_MAX_TITLE);
+  try {
+    await env.FEEDBACK_DB.prepare(
+      'INSERT INTO capture_error_reports (code, message, detail, version, locale, url, title) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    )
+      .bind(code, message, detail, version, locale, url, title)
+      .run();
+  } catch {
+    return captureErrorJson(500, { ok: false, error: 'write' }, allowedOrigin);
+  }
+  return captureErrorJson(201, { ok: true }, allowedOrigin);
+}
+
 async function route(url, request, env) {
   if (url.pathname === '/capture') return Response.redirect(new URL('/capture/', url), 308);
   if (url.pathname.startsWith('/capture/')) return env.CAPTURE.fetch(request);
   const accept = request.headers.get('Accept') ?? '';
 
   if (url.pathname === '/api/feedback') return submitFeedback(request, env);
+  if (url.pathname === '/api/capture-errors') return submitCaptureError(request, env);
   if (url.pathname === '/api/stats.json') return siteStats();
   if (url.pathname === '/kofi-widget.js') return proxyKofiWidget();
   if (url.pathname.startsWith('/kofi-cdn/')) return proxyKofiAsset(url.pathname);

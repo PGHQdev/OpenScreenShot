@@ -31,6 +31,7 @@ import {
   setLastCapture,
   setLastRegion,
   setSettings,
+  setPendingCaptureError,
 } from '../shared/storage';
 import {
   formatFilename,
@@ -769,6 +770,7 @@ function onCaptureError(err: unknown): void {
     type: 'CAPTURE_ERROR',
     code: 'unknown',
     message: chrome.i18n.getMessage('errUnknown'),
+    detail: err instanceof Error ? err.message : String(err),
   });
 }
 
@@ -777,8 +779,15 @@ function broadcast(msg: PopupMessage): void {
     // Keep the machine-readable failure visible in the service-worker console.
     // These expected capture failures do not pass through onCaptureError().
     console.warn('[OpenScreenShot] capture error', msg.code, msg.message);
+    void getActiveTab()
+      .then(async (tab) => {
+        await setPendingCaptureError(msg, tab ?? undefined).catch(() => {});
+        await showCaptureError(msg.message);
+      })
+      .catch(() => {
+        // Session storage is best effort; the badge still identifies a failure.
+      });
     void flashErrorBadge(msg.message);
-    void showCaptureError(msg.message);
   }
   // The popup may already be closed (e.g. region mode); ignore delivery failures.
   void chrome.runtime.sendMessage(msg).catch(() => {

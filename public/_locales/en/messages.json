@@ -2542,5 +2542,12 @@
   "captureDownloadAgain": {
     "message": "download again",
     "description": "Capture progress window: button to retry the PNG download."
-  }
+  },
+  "captureReportTitle": { "message": "Help diagnose this capture error", "description": "Popup error report heading." },
+  "captureReportBody": { "message": "Review the details, then send an anonymous error report to help improve OpenScreenShot.", "description": "Popup error report explanation." },
+  "captureReportDetails": { "message": "Technical details (optional)", "description": "Popup error report detail label." },
+  "captureReportSend": { "message": "Send error report", "description": "Popup error report submit button." },
+  "captureReportSending": { "message": "Sending…", "description": "Popup error report loading state." },
+  "captureReportSent": { "message": "Thanks — the error report was sent.", "description": "Popup error report success message." },
+  "captureReportFailed": { "message": "Couldn’t send the report. Check your connection and try again.", "description": "Popup error report failure message." }
 }
