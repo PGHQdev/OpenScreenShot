@@ -223,7 +223,10 @@ export function App() {
   const [showSettings, setShowSettings] = useState(isSettingsPage);
   const [busy, setBusy] = useState<CaptureMode | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
-  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [toasts, setToasts] = useState<Toast[]>(() => {
+    const message = new URLSearchParams(location.search).get('captureError');
+    return message ? [{ id: Date.now(), message, tone: 'error' }] : [];
+  });
   const [shortcuts, setShortcuts] = useState<Record<string, string>>({});
   const [hasStash, setHasStash] = useState(false);
   const [hasRegion, setHasRegion] = useState(false);
@@ -267,6 +270,9 @@ export function App() {
   useEffect(() => {
     if (new URLSearchParams(location.search).get('restricted') === '1') {
       void chrome.runtime.sendMessage({ type: 'RESTRICTED_POPUP_OPENED' }).catch(() => {});
+    }
+    if (new URLSearchParams(location.search).has('captureError')) {
+      void chrome.runtime.sendMessage({ type: 'CAPTURE_ERROR_POPUP_OPENED' }).catch(() => {});
     }
     void chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
       if (tab) setActiveTabProtected(isProtectedUrl(tab.url));

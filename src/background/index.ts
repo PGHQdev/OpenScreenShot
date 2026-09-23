@@ -315,7 +315,10 @@ chrome.commands.onCommand.addListener((command) => {
 });
 
 chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
-  if ((message as { type?: string })?.type === 'RESTRICTED_POPUP_OPENED') {
+  if (
+    (message as { type?: string })?.type === 'RESTRICTED_POPUP_OPENED' ||
+    (message as { type?: string })?.type === 'CAPTURE_ERROR_POPUP_OPENED'
+  ) {
     void syncExpressMode();
     return false;
   }
@@ -770,13 +773,32 @@ function onCaptureError(err: unknown): void {
 }
 
 function broadcast(msg: PopupMessage): void {
-  // Context menu, express and delayed captures have no popup to show a toast
-  // in, so errors also flash the action badge.
-  if (msg.type === 'CAPTURE_ERROR') void flashErrorBadge(msg.message);
+  if (msg.type === 'CAPTURE_ERROR') {
+    // Keep the machine-readable failure visible in the service-worker console.
+    // These expected capture failures do not pass through onCaptureError().
+    console.warn('[OpenScreenShot] capture error', msg.code, msg.message);
+    void flashErrorBadge(msg.message);
+    void showCaptureError(msg.message);
+  }
   // The popup may already be closed (e.g. region mode); ignore delivery failures.
   void chrome.runtime.sendMessage(msg).catch(() => {
     /* popup not listening */
   });
+}
+
+/** Errors must remain readable even when capture started without an open popup. */
+async function showCaptureError(message: string): Promise<void> {
+  try {
+    // Carry the message in the URL: broadcasting before a popup mounts loses it.
+    await chrome.action.setPopup({
+      popup: `${POPUP_URL}?captureError=${encodeURIComponent(message)}`,
+    });
+    await chrome.action.openPopup();
+    await syncExpressMode();
+  } catch {
+    // Leave the error bound for the next click on browsers that cannot open it.
+    // The popup restores the user's preferred binding after it mounts.
+  }
 }
 
 /** How long an error badge and its tooltip stay up before the badge is handed back. */

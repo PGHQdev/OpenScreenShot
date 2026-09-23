@@ -150,6 +150,33 @@ describe('toolbar-click branching', () => {
     );
   });
 
+  it('opens capture errors with their message available before the popup loads', async () => {
+    await importBackground();
+    const listener = fakeChrome.action.onClicked.addListener.mock.calls[0]?.[0] as () => void;
+    listener();
+    await flushMicrotasks(60);
+    expect(fakeChrome.action.setPopup).toHaveBeenCalledWith({
+      popup: 'src/popup/index.html?captureError=errNoTab',
+    });
+    expect(fakeChrome.action.openPopup).toHaveBeenCalled();
+    expect(lastPopupBinding()).toBe('');
+  });
+
+  it('keeps a capture error available on the next click if automatic opening fails', async () => {
+    await importBackground();
+    fakeChrome.action.openPopup.mockRejectedValueOnce(new Error('Unsupported'));
+    const listener = fakeChrome.action.onClicked.addListener.mock.calls[0]?.[0] as () => void;
+    listener();
+    await flushMicrotasks(60);
+    expect(lastPopupBinding()).toBe('src/popup/index.html?captureError=errNoTab');
+    const messageListener = fakeChrome.runtime.onMessage.addListener.mock.calls.map(
+      ([fn]) => fn as (message: unknown) => void,
+    );
+    for (const fn of messageListener) fn({ type: 'CAPTURE_ERROR_POPUP_OPENED' });
+    await flushMicrotasks();
+    expect(lastPopupBinding()).toBe('');
+  });
+
   it('keeps the guidance available on the next click if openPopup is unavailable', async () => {
     await importBackground();
     fakeChrome.action.openPopup.mockRejectedValueOnce(new Error('Unsupported'));
