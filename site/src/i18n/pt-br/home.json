@@ -1,17 +1,19 @@
 {
   "meta": {
-    "title": "Captura de página inteira em um clique — OpenScreenShot",
-    "description": "Extensão grátis e de código aberto para Chrome: capturas de página inteira, área visível e região, com editor de anotações, exportação em PNG, JPEG, WebP ou PDF e gravador de abas. Nada sai do seu computador."
+    "title": "Capturas de página inteira para Chrome e Firefox — OpenScreenShot",
+    "description": "Capture páginas inteiras no Chrome e no Firefox. Adicione anotações e salve como imagem ou PDF, tudo no seu dispositivo. Grátis e de código aberto. Sem conta."
   },
   "hero": {
-    "note": "Grátis · Código aberto · Licença MIT",
-    "title1": "Clique. Capturado. Pronto.",
-    "title2": "Tão privado que funciona sem Wi-Fi.",
-    "sub": "Captura de página inteira em um clique. Sem conta, sem marca d’água, sem nuvem.",
+    "note": "Grátis e de código aberto",
+    "title1": "Capturas de página inteira.",
+    "title2": "Tudo no seu dispositivo. Privado. Fácil de usar.",
+    "sub": "Capture páginas no Chrome ou no Firefox. Adicione anotações e salve uma imagem ou PDF. Não precisa de conta.",
     "viewOnGithub": "Ver no GitHub",
     "tablistLabel": "As telas da extensão",
-    "credit": "O site nestas capturas é o OpenTechCheck, também nosso — veja com o que qualquer site foi construído.",
-    "creditCta": "Experimente agora"
+    "credit": "As capturas mostram o OpenTechCheck, nossa ferramenta para consultar as tecnologias de um site.",
+    "creditCta": "Visite o OpenTechCheck",
+    "wipTag": "Em curso",
+    "wip": "Os aplicativos para desktop e web estão em desenvolvimento"
   },
   "tabs": {
     "capture": {
@@ -36,9 +38,9 @@
     }
   },
   "term": {
-    "commentShot": "# Uma captura, direto do seu terminal",
-    "commentServe": "# Ou um servidor MCP para o seu agente de IA",
-    "commentConfig": "# Qualquer configuração de cliente MCP"
+    "commentShot": "# Capture uma página inteira",
+    "commentServe": "# Inicie o servidor MCP local",
+    "commentConfig": "# Configure um cliente compatível com servidores MCP locais"
   },
   "proof": {
     "ariaLabel": "Em números",
@@ -49,26 +51,26 @@
   },
   "quartet": [
     {
-      "title": "Capture qualquer coisa",
-      "body": "Clique no ícone e obtenha a página inteira. Ou a área visível, ou uma região que você arrasta — pelo clique direito ou um atalho."
+      "title": "Capture uma página ou região",
+      "body": "Faça uma captura da página inteira, da área visível ou de uma região selecionada. Use a barra de ferramentas, o menu do botão direito ou um atalho de teclado."
     },
     {
       "title": "Edite antes de compartilhar",
-      "body": "Setas, caixas e texto para deixar claro o que você quer dizer. Desfoque para as partes que ninguém mais deve ver."
+      "body": "Adicione setas, formas e texto. Recorte a captura, copie para a área de transferência ou exporte como PNG, JPEG, WebP ou PDF."
     },
     {
-      "title": "Grave a aba",
-      "body": "Um clique grava, com zoom automático a cada clique. Apare na linha do tempo e exporte em WebM."
+      "title": "Grave uma aba do navegador",
+      "body": "Grave uma aba no Chrome, amplie os cliques e corte o vídeo antes de exportar como WebM."
     },
     {
-      "title": "Privado por padrão",
-      "body": "Sem conta, sem upload, sem telemetria. Funciona com o Wi-Fi desligado."
+      "title": "Processe tudo no seu dispositivo",
+      "body": "A captura, a edição e a exportação são executadas no seu dispositivo. A extensão não envia suas capturas ou gravações para servidores, nem monitora seu uso."
     }
   ],
   "privacy": {
     "eyebrow": "Privacidade",
-    "heading": "Ninguém vê o que você captura. Nem a gente.",
-    "lede": "Capturas de tela costumam ser as imagens mais sensíveis do seu computador. Captura, edição, exportação, PDF e gravação rodam todos no seu navegador. A extensão não faz nenhuma requisição de rede própria e não tem acesso permanente a nenhum site que você visita.",
+    "heading": "Suas capturas ficam no seu dispositivo.",
+    "lede": "Capturas de tela, gravações e edições são armazenadas no seu navegador. Nós não as recebemos. Não é necessário ter uma conta, e a extensão não tem análise de uso nem telemetria. O acesso aos sites é concedido quando você usa a extensão; o acesso mais amplo para gravar em diferentes sites é opcional.",
     "receipt": [
       {
         "k": "Conta",
@@ -95,45 +97,56 @@
         "v": "MIT"
       }
     ],
-    "installFold": "O que ela pede na instalação",
-    "recordFold": "O que a gravação adiciona, só quando você grava",
-    "micFine": "O microfone e a câmera, quando você os ativa, são abertos pelo aviso de permissão do próprio navegador. O stream nunca sai do seu dispositivo.",
-    "moreFine": "As mesmas tabelas, com a política completa, na <a href=\"/privacy/\">página de Privacidade</a>.",
-    "compareLine": "Comparação: OpenScreenShot vs GoFullPage vs FullPage Capture."
+    "installFold": "Permissões solicitadas na instalação",
+    "recordFold": "Permissões opcionais de gravação",
+    "micFine": "Seu navegador pede permissão antes de ativar o microfone ou a câmera. O áudio e o vídeo são processados localmente.",
+    "moreFine": "Leia a <a href=\"/privacy/\">política de privacidade</a> completa para saber mais sobre armazenamento e permissões.",
+    "compareLine": "Compare OpenScreenShot, GoFullPage e FullPage Capture"
   },
   "cli": {
-    "eyebrow": "Agentes e CLI",
-    "heading": "Automatizável pelo seu terminal.",
-    "headingMuted": "Ainda local.",
+    "eyebrow": "Para desenvolvedores",
+    "heading": "Faça capturas usando",
+    "headingMuted": "scripts e agentes de IA.",
     "name": "<code>openscreenshot</code> no npm",
     "bullets": [
       "Uma ferramenta separada e opcional para scripts e agentes de IA",
-      "Usa o Chrome que já está no seu computador",
-      "Sem download de navegador, sem serviço hospedado",
-      "Também um servidor MCP, com uma ferramenta <code>capture_screenshot</code>"
+      "Usa sua instalação local do Chrome",
+      "Executa localmente sem um serviço de captura hospedado",
+      "Oferece <code>capture_screenshot</code> para clientes compatíveis com servidores MCP locais"
     ],
-    "labelShot": "Uma captura",
-    "labelConfig": "Configuração do cliente MCP"
+    "labelShot": "Capture uma página inteira",
+    "labelConfig": "Configuração do servidor MCP local",
+    "useCasesHeading": "Use capturas no seu fluxo de trabalho",
+    "useCases": [
+      {
+        "title": "Documente incidentes",
+        "body": "Capture painéis e páginas de status para relatórios de incidentes, procedimentos operacionais e análises posteriores. Execute as capturas a partir de um script ou de um cliente MCP conectado."
+      },
+      {
+        "title": "Capture páginas na integração contínua",
+        "body": "Adicione capturas ao seu pipeline de build para documentação, notas de versão e comparações visuais. Requer o Chrome no seu ambiente de integração contínua."
+      }
+    ]
   },
   "faq": {
     "eyebrow": "FAQ",
-    "heading": "Perguntas, respondidas.",
-    "moreFine": "Todas as perguntas, mais os limites conhecidos, na <a href=\"/support/\">página de Suporte</a>."
+    "heading": "Perguntas frequentes",
+    "moreFine": "Encontre mais respostas e limitações conhecidas na <a href=\"/support/\">página de suporte</a>."
   },
   "cta": {
-    "heading": "Pronto em dez segundos.",
+    "heading": "Faça sua primeira captura",
     "steps": [
       {
         "title": "Adicione ao seu navegador",
-        "body": "Instale pela Chrome Web Store ou pelos complementos do Firefox. Grátis e sem cadastro."
+        "body": "Instale o OpenScreenShot pela Chrome Web Store ou pelo Firefox Add-ons. Não precisa de conta."
       },
       {
-        "title": "Clique no ícone",
-        "body": "Ou pressione o atalho. Um clique captura a página inteira; clique com o botão direito para os outros modos."
+        "title": "Capture uma página",
+        "body": "Clique no ícone da extensão para capturar a página inteira. Clique com o botão direito para capturar a área visível ou uma região."
       },
       {
-        "title": "Capture",
-        "body": "Anote, exporte ou copie. Nada sai do seu computador."
+        "title": "Edite e salve",
+        "body": "Adicione anotações e copie a captura ou salve uma imagem ou PDF. As exportações não têm marca d’água."
       }
     ],
     "browsersFine": "As capturas funcionam no Firefox para desktop, Chrome, Edge, Brave, Arc e outros navegadores Chromium. A gravação está disponível apenas no Chrome."

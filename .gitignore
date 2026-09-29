@@ -25,6 +25,8 @@ pi-session-*.html
 .superpowers/
 agent_docs/
 
+tmp
+
 dist-firefox/
 web-ext-artifacts/
 *.xpi

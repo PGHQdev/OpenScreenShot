@@ -2,17 +2,17 @@
   "items": [
     {
       "q": "Werden meine Daten an einen Server geschickt?",
-      "a": "<p>Nein. <strong>Null Daten verlassen dein Gerät.</strong> Aufnahme, Anmerkungen und Export laufen komplett lokal in deinem Browser. Die Erweiterung hat keine Analytics, keine Telemetrie und keine Drittanbieterdienste. Details stehen in der <a href=\"/privacy/\">Datenschutzerklärung</a>.</p>",
+      "a": "<p>Die Erweiterung lädt deine Screenshots und Videoaufnahmen nicht hoch. Aufnahme, Bearbeitung und Export laufen lokal in deinem Browser, ohne Nutzungsanalysen oder Telemetrie. Details zur Speicherung und Informationen zu freiwilligem Feedback findest du in der <a href=\"/privacy/\">Datenschutzerklärung</a>.</p>",
       "home": true
     },
     {
       "q": "Funktioniert es auf chrome://- und Erweiterungsseiten?",
-      "a": "<p>Nein. Chrome verbietet Erweiterungen die Aufnahme von <code>chrome://</code>, <code>chrome-extension://</code>, dem Chrome Web Store und <code>about:</code>-Seiten. Das ist eine Sicherheitsregel von Chrome, die keine Erweiterung umgehen kann. Die Erweiterung zeigt einen Fehler, wenn du es versuchst.</p>",
+      "a": "<p>Nein. Browsereinstellungen, Erweiterungsseiten und Browser-Stores sind geschützt. OpenScreenShot zeigt einen Fehler, wenn eine Seite nicht aufgenommen werden kann. Nutze es auf normalen Webseiten.</p>",
       "home": true
     },
     {
       "q": "Warum dauert die Ganzseiten-Aufnahme ein paar Sekunden?",
-      "a": "<p>Chrome begrenzt <code>captureVisibleTab</code> auf etwa 2 Aufrufe pro Sekunde. Jede Kachel in Viewport-Höhe kostet einen Aufruf, plus eine kurze Pause, damit die Seite neu zeichnen kann. Eine typische Seite mit 10 Kacheln braucht 5–6 Sekunden, eine längere Seite entsprechend länger. Das Symbol in der Symbolleiste zählt den Fortschritt in Prozent mit.</p>",
+      "a": "<p>Die Erweiterung scrollt durch die Seite, nimmt sie abschnittsweise auf und fügt die Teile zu einem Bild zusammen. Längere Seiten brauchen mehr Zeit. Die Anzeige am Symbol in der Symbolleiste zeigt den Fortschritt.</p>",
       "home": true
     },
     {
@@ -29,7 +29,7 @@
     },
     {
       "q": "Kann ich den Editor überspringen und einen Screenshot sofort kopieren oder speichern?",
-      "a": "<p>Ja. Die Zeile <strong>Nach Screenshot</strong> im Popup wählt Editor, Kopieren oder Speichern. Die Einstellung gilt für jeden Einstieg — die Popup-Buttons, die Tastenkürzel und das Rechtsklick-Menü. Schnelle Speicherungen werden als PNG geschrieben, und das Symbol-Badge ist die Bestätigung, weil sich kein Tab öffnet.</p>",
+      "a": "<p>Ja. Wähle im Aufnahmemenü unter <strong>Nach Screenshot</strong> die Option Kopieren oder Speichern. Das gilt für Aufnahmen über die Symbolleiste, Tastenkürzel und das Rechtsklick-Menü. Direkte Downloads werden als PNG gespeichert.</p>",
       "home": true
     },
     {
@@ -45,8 +45,8 @@
       "a": "<p>Ja. Ziehe eine Bilddatei auf die Editor-Fläche oder füge eine mit <code>Ctrl+V</code> / <code>⌘V</code> außerhalb eines Textfelds ein. Der Import nimmt denselben Platz ein wie ein Screenshot, also funktionieren jedes Werkzeug, der Beautify-Rahmen und jeder Exportweg weiter. Er ersetzt die Leinwand, deshalb fragt der Editor vorher nach, wenn Anmerkungen verloren gingen.</p><p><strong>Letzten öffnen</strong> in der Fußzeile des Popups lädt außerdem die letzte Aufnahme zurück in den Editor.</p>"
     },
     {
-      "q": "Bündelt der PDF-Export eine schwere Bibliothek?",
-      "a": "<p>Nein. Der PDF-Export läuft über einen kleinen Writer, der in die Erweiterung eingebaut ist (<code>src/editor/pdf-writer.ts</code>). Er platziert das Bild jeder Seite und komprimiert es mit dem browsereigenen <code>CompressionStream</code>. Ein PDF-Export stellt also keine Netzwerkanfrage und lädt keinen Fremdcode. Frühere Versionen nutzten jsPDF, das <code>html2canvas</code> und <code>dompurify</code> für eine Funktion mitbrachte, die die Erweiterung nie aufrief.</p>",
+      "q": "Welche Dateiformate kann ich exportieren?",
+      "a": "<p>Speichere Screenshots im Editor als PNG, JPEG, WebP oder PDF. Du kannst ein Bild auch in die Zwischenablage kopieren. Tab-Aufnahmen werden als WebM exportiert. Alle Exporte werden lokal verarbeitet und haben kein Wasserzeichen.</p>",
       "home": true
     },
     {
@@ -55,17 +55,17 @@
     },
     {
       "q": "Kann ich die Tastenkürzel ändern?",
-      "a": "<p>Ja. Öffne <code>chrome://extensions/shortcuts</code> oder nutze den Link <strong>Kürzel</strong> in der Fußzeile des Popups. Die Standards sind <code>Ctrl+Shift+S</code> für die ganze Seite, <code>Alt+Shift+V</code> für den sichtbaren Bereich und <code>Ctrl+Shift+E</code> für einen Ausschnitt; auf macOS sind es <code>⌘⇧S</code>, <code>⌘⇧V</code> und <code>⌘⇧E</code>. Chrome lässt ein Kommando womöglich unbelegt, wenn eine andere Erweiterung die Kombination schon beansprucht.</p>",
+      "a": "<p>Ja. Über den Link <strong>Kürzel</strong> im Aufnahmemenü kannst du deine Tastenkürzel ansehen oder ändern. In Chrome kannst du auch <code>chrome://extensions/shortcuts</code> öffnen. Wenn ein Kürzel nicht funktioniert, prüfe, ob eine andere Erweiterung dieselben Tasten verwendet.</p>",
       "home": true
     },
     {
       "q": "Warum fragt Chrome nach Zugriff auf die Tab-Aufnahme?",
-      "a": "<p><code>tabCapture</code> ist eine optionale Berechtigung, keine, die die Erweiterung bei der Installation anfragt. Chrome zeigt die Abfrage einmal, beim ersten Klick auf Aufnehmen; jede Aufnahme danach startet mit einem Klick, ohne weitere Abfrage. Als optional deklariert trägt sie keine Warnung bei der Installation und erscheint nie, solange du keine Aufnahme startest.</p>",
+      "a": "<p>Chrome braucht diese Berechtigung, um einen Tab aufzunehmen. Sie ist optional und wird beim ersten Einsatz des Rekorders angefordert, nicht bei der Installation. Du kannst Screenshots aufnehmen, ohne sie zu erteilen.</p>",
       "home": true
     },
     {
       "q": "Wo werden meine Aufnahmen gespeichert?",
-      "a": "<p>Auf deinem Gerät, und nirgendwo sonst. Video-Chunks, das Cursor-Protokoll und jedes Mikro- oder Tab-Audio werden während der Aufnahme in 1-Sekunden-Stücken in IndexedDB geschrieben, damit ein Absturz oder eine beendete Hintergrundseite den Take nie verliert. Sie bleiben dort, bis du die Aufnahme exportierst oder löschst — nichts wird jemals hochgeladen.</p>",
+      "a": "<p>Videoaufnahmen und ihr Ton werden während der Aufnahme im lokalen Browserspeicher abgelegt. Sie bleiben dort, bis du die Sitzung löschst. Exportiere eine WebM-Datei, um eine separate Kopie auf deinem Gerät zu behalten. Die Erweiterung lädt keine Aufnahmen hoch.</p>",
       "home": true
     },
     {

@@ -1,17 +1,19 @@
 {
   "meta": {
-    "title": "一鍵整頁截圖 — OpenScreenShot",
-    "description": "免費開放原始碼的 Chrome 擴充功能：整頁、可見範圍與選取區域截圖，內建註解編輯器，可匯出 PNG、JPEG、WebP 或 PDF，還有分頁錄影工具。任何內容都不會離開你的裝置。"
+    "title": "Chrome 與 Firefox 整頁截圖 — OpenScreenShot",
+    "description": "在 Chrome 與 Firefox 中擷取整頁截圖，加入註記並儲存為圖片或 PDF。所有處理都在你的裝置上完成。免費且開放原始碼，無需帳號。"
   },
   "hero": {
-    "note": "免費 · 開放原始碼 · MIT 授權",
-    "title1": "一按。截好。完成。",
-    "title2": "私密到離線也能用。",
-    "sub": "一鍵擷取整頁截圖。無需帳號、沒有浮水印、不用雲端。",
+    "note": "免費且開放原始碼",
+    "title1": "整頁截圖。",
+    "title2": "完全在本機處理。保護隱私。簡單易用。",
+    "sub": "在 Chrome 或 Firefox 中擷取頁面，加入註記後儲存為圖片或 PDF。無需帳號。",
     "viewOnGithub": "在 GitHub 上查看",
     "tablistLabel": "擴充功能的畫面",
-    "credit": "截圖裡的網站是我們的另一個作品 OpenTechCheck，可以查出任何網站用了哪些技術。",
-    "creditCta": "立即試用"
+    "credit": "截圖展示的是我們的網站技術查詢工具 OpenTechCheck。",
+    "creditCta": "造訪 OpenTechCheck",
+    "wipTag": "開發中",
+    "wip": "桌面應用程式與網頁應用程式正在開發中"
   },
   "tabs": {
     "capture": {
@@ -36,9 +38,9 @@
     }
   },
   "term": {
-    "commentShot": "# 一張截圖，直接從終端機來",
-    "commentServe": "# 也可以當你 AI 代理的 MCP 伺服器",
-    "commentConfig": "# 任何 MCP 用戶端設定"
+    "commentShot": "# 擷取整頁截圖",
+    "commentServe": "# 啟動本機 MCP 伺服器",
+    "commentConfig": "# 設定支援本機 MCP 伺服器的用戶端"
   },
   "proof": {
     "ariaLabel": "數字會說話",
@@ -49,26 +51,26 @@
   },
   "quartet": [
     {
-      "title": "什麼都能擷取",
-      "body": "點一下圖示，取得整頁截圖。也可透過右鍵選單或快速鍵擷取可見範圍或拖曳選取的區域。"
+      "title": "擷取頁面或區域",
+      "body": "擷取整個頁面、可見區域或選取範圍。可透過工具列、右鍵選單或鍵盤快速鍵操作。"
     },
     {
-      "title": "分享前先編輯",
-      "body": "用箭頭、方框和文字說清楚重點。不該給別人看的部分，用模糊遮起來。"
+      "title": "分享前編輯",
+      "body": "加入箭頭、形狀和文字。裁切截圖、複製到剪貼簿，或匯出為 PNG、JPEG、WebP 或 PDF。"
     },
     {
-      "title": "錄下這個分頁",
-      "body": "一鍵開錄，每次點擊都自動縮放。在時間軸上修剪，再匯出 WebM。"
+      "title": "錄製瀏覽器分頁",
+      "body": "在 Chrome 中錄製分頁，放大點擊位置，並在匯出為 WebM 前修剪影片。"
     },
     {
-      "title": "預設就很私密",
-      "body": "不用帳號、不上傳、不遙測。關掉 Wi-Fi 也照常運作。"
+      "title": "所有處理都在本機完成",
+      "body": "擷取、編輯和匯出均在你的裝置上執行。擴充功能不會上傳你的截圖或錄影，也不會追蹤你的使用情況。"
     }
   ],
   "privacy": {
     "eyebrow": "隱私",
-    "heading": "沒有人看得到你擷取的內容，包括我們。",
-    "lede": "截圖往往是你裝置上最敏感的圖片。擷取、編輯、匯出、PDF 和錄影全部在你的瀏覽器裡執行。擴充功能自己不發出任何網路請求，也沒有你造訪網站的常駐存取權。",
+    "heading": "擷取的內容保存在你的裝置上。",
+    "lede": "截圖、錄影和編輯內容儲存在你的瀏覽器中，我們不會收到這些內容。無需帳號，擴充功能不含分析或遙測功能。網站存取權在使用時授予；用於跨網站錄影的更廣泛存取權則可自行選擇是否授予。",
     "receipt": [
       {
         "k": "帳號",
@@ -96,44 +98,55 @@
       }
     ],
     "installFold": "安裝時要求哪些權限",
-    "recordFold": "錄影才會加上的權限，只在你錄影時要求",
-    "micFine": "啟用麥克風和攝影機時，是由瀏覽器自己的權限提示開啟。串流永遠不會離開你的裝置。",
-    "moreFine": "同樣的表格加上完整政策，請見<a href=\"/privacy/\">隱私權頁面</a>。",
-    "compareLine": "比較：OpenScreenShot vs GoFullPage vs FullPage Capture"
+    "recordFold": "選用的錄影權限",
+    "micFine": "啟用麥克風或攝影機前，瀏覽器會先要求你的許可。音訊和視訊均在本機處理。",
+    "moreFine": "有關儲存和權限的詳細資訊，請閱讀完整的<a href=\"/privacy/\">隱私權政策</a>。",
+    "compareLine": "比較 OpenScreenShot、GoFullPage 和 FullPage Capture"
   },
   "cli": {
-    "eyebrow": "AI 代理與 CLI",
-    "heading": "可以從終端機腳本操作。",
-    "headingMuted": "一樣在本機。",
+    "eyebrow": "開發者適用",
+    "heading": "透過腳本和 AI 代理",
+    "headingMuted": "擷取截圖。",
     "name": "npm 上的 <code>openscreenshot</code>",
     "bullets": [
-      "獨立、選用的工具，給腳本和 AI 代理使用",
-      "驅動你機器上現有的 Chrome",
-      "不用下載瀏覽器，也沒有託管服務",
-      "同時是 MCP 伺服器，內建 <code>capture_screenshot</code> 工具"
+      "供腳本和 AI 代理使用的獨立選用工具",
+      "使用本機安裝的 Chrome",
+      "在本機執行，無需託管截圖服務",
+      "為支援本機 MCP 伺服器的用戶端提供 <code>capture_screenshot</code>"
     ],
-    "labelShot": "單張截圖",
-    "labelConfig": "MCP 用戶端設定"
+    "labelShot": "擷取整個頁面",
+    "labelConfig": "本機 MCP 伺服器設定",
+    "useCasesHeading": "在工作流程中使用截圖",
+    "useCases": [
+      {
+        "title": "記錄事故",
+        "body": "擷取儀表板和狀態頁面，用於事故報告、操作手冊和事後檢討。可透過腳本或已連線的 MCP 用戶端執行截圖。"
+      },
+      {
+        "title": "在 CI 中擷取頁面",
+        "body": "在建置流程中加入截圖，用於文件、版本說明和視覺比較。CI 環境中需要安裝 Chrome。"
+      }
+    ]
   },
   "faq": {
     "eyebrow": "常見問題",
-    "heading": "疑問，一次解答。",
-    "moreFine": "所有問題加上已知限制，請見<a href=\"/support/\">支援頁面</a>。"
+    "heading": "常見問題",
+    "moreFine": "在<a href=\"/support/\">支援頁面</a>查看其他解答和已知限制。"
   },
   "cta": {
-    "heading": "十秒就能開始。",
+    "heading": "擷取你的第一張截圖",
     "steps": [
       {
         "title": "加入瀏覽器",
-        "body": "從 Chrome 線上應用程式商店或 Firefox 附加元件網站安裝。免費，無須註冊。"
+        "body": "從 Chrome 線上應用程式商店或 Firefox Add-ons 安裝 OpenScreenShot。無需帳號。"
       },
       {
-        "title": "點圖示",
-        "body": "或按快速鍵。點一下就擷取整頁，按右鍵可選其他模式。"
+        "title": "擷取頁面",
+        "body": "點擊擴充功能圖示擷取整個頁面。按右鍵可擷取可見區域或選取範圍。"
       },
       {
-        "title": "擷取",
-        "body": "註解、匯出或複製。內容永遠不離開你的裝置。"
+        "title": "編輯並儲存",
+        "body": "加入註記後，複製截圖或儲存為圖片或 PDF。匯出檔案沒有浮水印。"
       }
     ],
     "browsersFine": "擷取畫面支援桌面版 Firefox、Chrome、Edge、Brave、Arc 及其他 Chromium 瀏覽器。錄影僅支援 Chrome。"

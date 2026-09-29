@@ -8,11 +8,11 @@
     "roadmap": "Дорожная карта",
     "github": "GitHub",
     "addToFirefox": "Добавить в Firefox",
-    "installForFirefox": "Установить для Firefox",
-    "installForChrome": "Установить для Chrome"
+    "installForFirefox": "Добавить в Firefox",
+    "installForChrome": "Добавить в Chrome"
   },
   "footer": {
-    "tagline": "Скриншоты, которые никогда не покидают ваш компьютер.",
+    "tagline": "Бесплатный инструмент с открытым кодом для скриншотов в Chrome и Firefox.",
     "productHead": "Продукт",
     "projectHead": "Проект",
     "moreHead": "Ещё от @PGHQdev",
@@ -27,7 +27,7 @@
     "compare": "Сравнение"
   },
   "meta": {
-    "ogDefaultAlt": "OpenScreenShot: скриншот всей страницы и аннотации для Chrome. Бесплатно, с открытым кодом и 100% локально."
+    "ogDefaultAlt": "OpenScreenShot: скриншоты всей страницы и аннотации для Chrome и Firefox. Бесплатно, с открытым кодом и локальной обработкой."
   },
   "breadcrumbHome": "Главная",
   "permissionTable": {

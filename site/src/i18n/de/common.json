@@ -8,11 +8,11 @@
     "roadmap": "Roadmap",
     "github": "GitHub",
     "addToFirefox": "Zu Firefox hinzufügen",
-    "installForFirefox": "Für Firefox installieren",
-    "installForChrome": "Für Chrome installieren"
+    "installForFirefox": "Zu Firefox hinzufügen",
+    "installForChrome": "Zu Chrome hinzufügen"
   },
   "footer": {
-    "tagline": "Screenshots, die dein Gerät nie verlassen.",
+    "tagline": "Kostenlose Open-Source-Screenshots für Chrome und Firefox.",
     "productHead": "Produkt",
     "projectHead": "Projekt",
     "moreHead": "Mehr von @PGHQdev",
@@ -27,7 +27,7 @@
     "compare": "Vergleich"
   },
   "meta": {
-    "ogDefaultAlt": "OpenScreenShot: Ganzseiten-Screenshots und Anmerkungen für Chrome. Kostenlos, Open Source und 100 % lokal."
+    "ogDefaultAlt": "OpenScreenShot: Ganzseiten-Screenshots und Anmerkungen für Chrome und Firefox. Kostenlos und Open Source, mit lokaler Verarbeitung."
   },
   "breadcrumbHome": "Startseite",
   "permissionTable": {

@@ -8,11 +8,11 @@
     "roadmap": "Roadmap",
     "github": "GitHub",
     "addToFirefox": "Aggiungi a Firefox",
-    "installForFirefox": "Installa per Firefox",
-    "installForChrome": "Installa per Chrome"
+    "installForFirefox": "Aggiungi a Firefox",
+    "installForChrome": "Aggiungi a Chrome"
   },
   "footer": {
-    "tagline": "Screenshot che non lasciano mai il tuo dispositivo.",
+    "tagline": "Screenshot gratuiti e open source per Chrome e Firefox.",
     "productHead": "Prodotto",
     "projectHead": "Progetto",
     "moreHead": "Altro di @PGHQdev",
@@ -27,7 +27,7 @@
     "compare": "Confronto"
   },
   "meta": {
-    "ogDefaultAlt": "OpenScreenShot: screenshot a pagina intera e annotazioni per Chrome. Gratuito, open source e 100% locale."
+    "ogDefaultAlt": "OpenScreenShot: screenshot a pagina intera e annotazioni per Chrome e Firefox. Gratuito e open source, con elaborazione locale."
   },
   "breadcrumbHome": "Home",
   "permissionTable": {

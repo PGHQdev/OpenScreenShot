@@ -1,5 +1,7 @@
 ---
 import Doc from '../../../layouts/Doc.astro';
+import InstallButtons from '../../../components/InstallButtons.astro';
+import { CHROME_STORE_URL } from '../../../lib/install';
 import { ld } from '../../../lib/json-ld';
 import { t, localePaths, localeFromParams } from '../../../i18n';
 
@@ -7,13 +9,11 @@ export const getStaticPaths = localePaths;
 
 const locale = localeFromParams(Astro.params.lang);
 const d = t(locale, 'docs');
-const c = t(locale, 'common');
-
-const STORE_URL = 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp';
 const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
 
 // Dictionary strings carry {storeUrl}/{repoUrl} so the URLs live once, here.
-const fill = (s: string) => s.replaceAll('{storeUrl}', STORE_URL).replaceAll('{repoUrl}', REPO_URL);
+const fill = (s: string) =>
+  s.replaceAll('{storeUrl}', CHROME_STORE_URL).replaceAll('{repoUrl}', REPO_URL);
 
 // The contents list. Every label is its section's own h2 (so the two cannot
 // drift), and every id is an anchor the live site already serves, so no id
@@ -207,7 +207,7 @@ const toc = [
     <div class="card doc-cta-card">
       <h2>{d.cta.heading}</h2>
       <p>{d.cta.body}</p>
-      <a class="btn btn-ink" href={STORE_URL} target="_blank" rel="noopener">{c.nav.addToChrome}</a>
+      <InstallButtons locale={locale} />
     </div>
   </section>
 </Doc>

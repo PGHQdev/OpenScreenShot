@@ -8,11 +8,11 @@
     "roadmap": "로드맵",
     "github": "GitHub",
     "addToFirefox": "Firefox에 추가",
-    "installForFirefox": "Firefox용 설치",
-    "installForChrome": "Chrome용 설치"
+    "installForFirefox": "Firefox에 추가",
+    "installForChrome": "Chrome에 추가"
   },
   "footer": {
-    "tagline": "기기 밖으로 절대 나가지 않는 스크린샷.",
+    "tagline": "Chrome과 Firefox용 무료 오픈 소스 스크린샷 도구.",
     "productHead": "제품",
     "projectHead": "프로젝트",
     "moreHead": "@PGHQdev의 다른 도구",
@@ -27,7 +27,7 @@
     "compare": "비교"
   },
   "meta": {
-    "ogDefaultAlt": "OpenScreenShot: Chrome용 전체 페이지 스크린샷과 주석 도구. 무료, 오픈 소스, 100% 로컬."
+    "ogDefaultAlt": "OpenScreenShot: Chrome과 Firefox용 전체 페이지 스크린샷 및 주석 도구. 무료 오픈 소스이며 로컬에서 처리합니다."
   },
   "breadcrumbHome": "홈",
   "permissionTable": {

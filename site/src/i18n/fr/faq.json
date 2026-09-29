@@ -2,17 +2,17 @@
   "items": [
     {
       "q": "Mes données sont-elles envoyées à un serveur ?",
-      "a": "<p>Non. <strong>Aucune donnée ne quitte votre appareil.</strong> La capture, l’annotation et l’export s’exécutent entièrement en local, dans votre navigateur. L’extension n’a ni analytics, ni télémétrie, ni service tiers. Voir la <a href=\"/privacy/\">politique de confidentialité</a> pour les détails.</p>",
+      "a": "<p>L’extension ne téléverse ni vos captures ni vos enregistrements. La capture, la modification et l’export s’exécutent en local dans votre navigateur, sans analyse d’utilisation ni télémétrie. Consultez la <a href=\"/privacy/\">politique de confidentialité</a> pour les détails du stockage et les informations sur les retours facultatifs.</p>",
       "home": true
     },
     {
       "q": "Fonctionne-t-elle sur les pages chrome:// et les pages d’extensions ?",
-      "a": "<p>Non. Chrome interdit aux extensions de capturer <code>chrome://</code>, <code>chrome-extension://</code>, le Chrome Web Store et les pages <code>about:</code>. C’est une règle de sécurité de Chrome, et aucune extension ne peut la contourner. L’extension affiche une erreur si vous essayez.</p>",
+      "a": "<p>Non. Les paramètres du navigateur, les pages d’extensions et les boutiques de navigateurs sont protégés. OpenScreenShot affiche une erreur lorsqu’une page ne peut pas être capturée. Utilisez l’extension sur des pages web ordinaires.</p>",
       "home": true
     },
     {
       "q": "Pourquoi la capture de page entière prend-elle quelques secondes ?",
-      "a": "<p>Chrome limite <code>captureVisibleTab</code> à environ 2 appels par seconde. Chaque tuile de la hauteur de l’écran coûte un appel, plus une courte pause pour laisser la page se redessiner. Une page typique de 10 tuiles prend 5 à 6 secondes, et une page plus longue prend proportionnellement plus. Le badge de la barre d’outils fait défiler le pourcentage pendant la capture.</p>",
+      "a": "<p>L’extension fait défiler la page, la capture par sections et les assemble en une seule image. Les pages plus longues prennent plus de temps. Le badge de la barre d’outils indique la progression de la capture.</p>",
       "home": true
     },
     {
@@ -28,8 +28,8 @@
       "a": "<p>Par défaut, l’éditeur s’ouvre dans un nouvel onglet après chaque capture — vous n’avez rien à faire. Exportez votre capture annotée depuis le bouton « Exporter » de la barre du haut, ou appuyez sur <code>Ctrl+S</code> / <code>⌘S</code>.</p><p>Si la ligne <strong>Après capture</strong> du popup est réglée sur Presse-papiers ou Télécharger, aucun onglet ne s’ouvre. <strong>Rouvrir</strong>, dans le pied du popup, recharge cette capture dans l’éditeur quand vous le souhaitez.</p>"
     },
     {
-      "q": "Puis-je sauter l’éditeur et copier ou enregistrer directement une capture ?",
-      "a": "<p>Oui. La ligne <strong>Après capture</strong> du popup choisit Éditeur, Presse-papiers ou Télécharger. Le réglage s’applique à chaque point d’entrée — les boutons du popup, les raccourcis clavier et le menu du clic droit. Les sauvegardes rapides sont écrites en PNG, et le badge de la barre d’outils sert de confirmation puisque aucun onglet ne s’ouvre.</p>",
+      "q": "Puis-je passer l’éditeur et copier ou enregistrer directement une capture ?",
+      "a": "<p>Oui. Dans le menu de capture, réglez <strong>Après capture</strong> sur Presse-papiers ou Télécharger. Ce réglage s’applique aux captures depuis la barre d’outils, aux raccourcis clavier et au menu du clic droit. Les téléchargements directs sont enregistrés en PNG.</p>",
       "home": true
     },
     {
@@ -45,8 +45,8 @@
       "a": "<p>Oui. Déposez un fichier image sur la scène de l’éditeur, ou collez-en un avec <code>Ctrl+V</code> / <code>⌘V</code> hors d’un champ de texte. L’import prend la même place qu’une capture : chaque outil, le cadre Beautify et chaque chemin d’export continuent de fonctionner. Il remplace le canevas, donc l’éditeur demande d’abord confirmation s’il y a des annotations à perdre.</p><p><strong>Rouvrir</strong>, dans le pied du popup, recharge aussi la capture la plus récente dans l’éditeur.</p>"
     },
     {
-      "q": "L’export PDF embarque-t-il une grosse bibliothèque ?",
-      "a": "<p>Non. L’export PDF repose sur un petit générateur intégré à l’extension (<code>src/editor/pdf-writer.ts</code>). Il place l’image de chaque page et la compresse avec le <code>CompressionStream</code> du navigateur : exporter un PDF ne fait aucune requête réseau et n’ajoute aucun code tiers. Les versions précédentes utilisaient jsPDF, qui embarquait <code>html2canvas</code> et <code>dompurify</code> pour une fonction que l’extension n’appelait jamais.</p>",
+      "q": "Quels formats de fichiers puis-je exporter ?",
+      "a": "<p>Enregistrez vos captures en PNG, JPEG, WebP ou PDF depuis l’éditeur. Vous pouvez aussi copier une image dans le presse-papiers. Les enregistrements d’onglets s’exportent en WebM. Tous les exports sont traités en local et sans filigrane.</p>",
       "home": true
     },
     {
@@ -55,17 +55,17 @@
     },
     {
       "q": "Puis-je changer les raccourcis clavier ?",
-      "a": "<p>Oui. Ouvrez <code>chrome://extensions/shortcuts</code>, ou utilisez le lien <strong>Raccourcis</strong> dans le pied du popup. Par défaut : <code>Ctrl+Shift+S</code> pour la page entière, <code>Alt+Shift+V</code> pour la zone visible et <code>Ctrl+Shift+E</code> pour une zone ; sur macOS, ce sont <code>⌘⇧S</code>, <code>⌘⇧V</code> et <code>⌘⇧E</code>. Chrome peut laisser une commande sans raccourci si une autre extension revendique déjà la combinaison.</p>",
+      "a": "<p>Oui. Utilisez le lien <strong>Raccourcis</strong> du menu de capture pour consulter ou modifier vos raccourcis. Dans Chrome, vous pouvez aussi ouvrir <code>chrome://extensions/shortcuts</code>. Si un raccourci ne fonctionne pas, vérifiez si une autre extension utilise les mêmes touches.</p>",
       "home": true
     },
     {
       "q": "Pourquoi Chrome demande-t-il l’accès à la capture d’onglet ?",
-      "a": "<p><code>tabCapture</code> est une autorisation facultative, que l’extension ne demande pas à l’installation. Chrome affiche l’invite une seule fois, au premier clic sur Enregistrer ; chaque enregistrement suivant démarre en un clic, sans nouvelle invite. La déclarer facultative signifie qu’elle n’ajoute aucun avertissement à l’installation et n’apparaît jamais tant que vous ne lancez pas un enregistrement.</p>",
+      "a": "<p>Chrome a besoin de cette autorisation pour enregistrer un onglet. Elle est facultative et demandée lors de la première utilisation de l’enregistreur, pas à l’installation. Vous pouvez prendre des captures sans l’accorder.</p>",
       "home": true
     },
     {
       "q": "Où mes enregistrements sont-ils stockés ?",
-      "a": "<p>Sur votre appareil, et nulle part ailleurs. Les segments vidéo, le journal du curseur et l’audio du micro ou de l’onglet sont écrits dans IndexedDB pendant l’enregistrement, par tranches d’une seconde : un plantage ou une page d’arrière-plan fermée de force ne perd jamais la prise. Ils y restent jusqu’à ce que vous exportiez ou supprimiez la session — rien n’est jamais téléversé.</p>",
+      "a": "<p>Les enregistrements et leur audio sont sauvegardés dans le stockage local du navigateur pendant l’enregistrement. Ils y restent jusqu’à ce que vous supprimiez la session. Exportez un fichier WebM pour conserver une copie séparée sur votre appareil. L’extension ne téléverse pas les enregistrements.</p>",
       "home": true
     },
     {

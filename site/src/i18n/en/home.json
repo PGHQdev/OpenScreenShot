@@ -1,19 +1,19 @@
 {
   "meta": {
-    "title": "Full Page Screenshot in One Click — OpenScreenShot",
-    "description": "Free, open-source Chrome extension: full page screenshot in one click, plus annotate, blur, PNG/JPEG/WebP/PDF export, and a tab recorder. MIT licensed. Nothing leaves your machine."
+    "title": "Full-Page Screenshots for Chrome & Firefox — OpenScreenShot",
+    "description": "Capture full-page screenshots in Chrome and Firefox. Annotate and save as an image or PDF, all on your device. Free and open source. No account required."
   },
   "hero": {
-    "note": "Free · Open source · MIT licensed",
-    "title1": "Click. Captured. Done.",
-    "title2": "So private it works with Wi-Fi off.",
-    "sub": "Full page screenshot in one click. No account, no watermark, no cloud.",
+    "note": "Free and open source",
+    "title1": "Full-page screenshots.",
+    "title2": "Fully local. Private. Easy to use.",
+    "sub": "Capture pages in Chrome or Firefox. Add annotations, then save an image or PDF. No account required.",
     "viewOnGithub": "View on GitHub",
     "wipTag": "WIP",
-    "wip": "Desktop & Web apps — stable versions coming soon",
+    "wip": "Desktop and web apps are in development",
     "tablistLabel": "The extension's screens",
-    "credit": "The site in these screenshots is OpenTechCheck, also by us — see what any website is built with.",
-    "creditCta": "Try it now"
+    "credit": "Screenshots feature OpenTechCheck, our website technology lookup tool.",
+    "creditCta": "Visit OpenTechCheck"
   },
   "tabs": {
     "capture": {
@@ -38,9 +38,9 @@
     }
   },
   "term": {
-    "commentShot": "# One screenshot, straight from your terminal",
-    "commentServe": "# Or an MCP server for your AI agent",
-    "commentConfig": "# Any MCP client config"
+    "commentShot": "# Capture a full-page screenshot",
+    "commentServe": "# Start the local MCP server",
+    "commentConfig": "# Configure a client that supports local MCP servers"
   },
   "proof": {
     "ariaLabel": "In numbers",
@@ -51,26 +51,26 @@
   },
   "quartet": [
     {
-      "title": "Capture anything",
-      "body": "Click the icon. Get the whole page. Or the visible area, or a region you drag — from the right-click menu or a shortcut."
+      "title": "Capture a page or region",
+      "body": "Take a full-page screenshot, capture the visible area, or select a region. Use the toolbar, right-click menu, or a keyboard shortcut."
     },
     {
       "title": "Edit before you share",
-      "body": "Arrows, boxes and text to make your point. Blur for the parts nobody else should see."
+      "body": "Add arrows, shapes, and text. Crop the screenshot, copy it to your clipboard, or export as PNG, JPEG, WebP, or PDF."
     },
     {
-      "title": "Record the tab",
-      "body": "One click records, with auto zoom at every click. Trim on a timeline, then export WebM."
+      "title": "Record a browser tab",
+      "body": "Record a tab in Chrome, zoom in on clicks, and trim the video before exporting as WebM."
     },
     {
-      "title": "Private by default",
-      "body": "No account, no upload, no telemetry. It works with your Wi-Fi off."
+      "title": "Process everything locally",
+      "body": "Capture, editing, and export run on your device. The extension does not upload your screenshots or recordings, or track your usage."
     }
   ],
   "privacy": {
     "eyebrow": "Privacy",
-    "heading": "Nobody can see what you capture. Not even us.",
-    "lede": "Screenshots are often the most sensitive images on your machine. Capture, editing, export, PDF and recording all run in your browser. The extension makes no network request of its own, and it has no standing access to any site you visit.",
+    "heading": "Your captures stay on your device.",
+    "lede": "Screenshots, recordings, and edits are stored in your browser. We do not receive them. No account is required, and the extension has no analytics or telemetry. Website access is granted when you use it; broader access for recording across sites is optional.",
     "receipt": [
       {
         "k": "Account",
@@ -97,56 +97,56 @@
         "v": "MIT"
       }
     ],
-    "installFold": "What it asks for at install",
-    "recordFold": "What recording adds, only when you record",
-    "micFine": "The microphone and camera, when you enable them, are opened by your browser’s own permission prompt. The stream never leaves your device.",
-    "moreFine": "The same tables, with the full policy, on the <a href=\"/privacy/\">Privacy page</a>.",
-    "compareLine": "How it compares: OpenScreenShot vs GoFullPage vs FullPage Capture."
+    "installFold": "Permissions requested at installation",
+    "recordFold": "Optional recording permissions",
+    "micFine": "Your browser asks for permission before enabling the microphone or camera. Their audio and video are processed locally.",
+    "moreFine": "Read the full <a href=\"/privacy/\">privacy policy</a> for details on storage and permissions.",
+    "compareLine": "Compare OpenScreenShot, GoFullPage, and FullPage Capture"
   },
   "cli": {
-    "eyebrow": "Agents & CLI",
-    "heading": "Scriptable from your terminal.",
-    "headingMuted": "Still local.",
+    "eyebrow": "For developers",
+    "heading": "Capture screenshots from",
+    "headingMuted": "scripts and AI agents.",
     "name": "<code>openscreenshot</code> on npm",
     "bullets": [
       "A separate, optional tool for scripts and AI agents",
-      "Drives the Chrome already on your machine",
-      "No browser download, no hosted service",
-      "Also an MCP server, with a <code>capture_screenshot</code> tool"
+      "Uses your local Chrome installation",
+      "Runs locally without a hosted capture service",
+      "Provides <code>capture_screenshot</code> for clients that support local MCP servers"
     ],
-    "labelShot": "One screenshot",
-    "labelConfig": "MCP client config",
-    "useCasesHeading": "Made for DevOps & CI/CD",
+    "labelShot": "Capture a full page",
+    "labelConfig": "Local MCP server configuration",
+    "useCasesHeading": "Use screenshots in your workflow",
     "useCases": [
       {
-        "title": "DevOps",
-        "body": "Snapshot dashboards, status pages and admin UIs straight into incident reports, runbooks and postmortems — from cron or a chat command."
+        "title": "Document incidents",
+        "body": "Capture dashboards and status pages for incident reports, runbooks, and postmortems. Run captures from a script or a connected MCP client."
       },
       {
-        "title": "CI/CD",
-        "body": "Capture pages in your pipeline for docs, release notes and visual diffs on every deploy. One npx line, no hosted service."
+        "title": "Capture pages in CI",
+        "body": "Add screenshots to your build pipeline for documentation, release notes, and visual comparisons. Requires Chrome in your CI environment."
       }
     ]
   },
   "faq": {
     "eyebrow": "FAQ",
-    "heading": "Questions, answered.",
-    "moreFine": "Every question, plus the known limits, on the <a href=\"/support/\">Support page</a>."
+    "heading": "Frequently asked questions",
+    "moreFine": "Find more answers and known limitations on the <a href=\"/support/\">support page</a>."
   },
   "cta": {
-    "heading": "Ready in ten seconds.",
+    "heading": "Take your first screenshot",
     "steps": [
       {
         "title": "Add it to your browser",
-        "body": "Install from the Chrome Web Store or Firefox Add-ons. Free, and no sign-up."
+        "body": "Install OpenScreenShot from the Chrome Web Store or Firefox Add-ons. No account is needed."
       },
       {
-        "title": "Click the icon",
-        "body": "Or press the shortcut. One click takes the whole page; right-click for the other modes."
+        "title": "Capture a page",
+        "body": "Click the extension icon to capture the full page. Right-click for visible-area or region capture."
       },
       {
-        "title": "Capture",
-        "body": "Annotate, export, or copy. It never leaves your machine."
+        "title": "Edit and save",
+        "body": "Add annotations, then copy the screenshot or save an image or PDF. Exports have no watermark."
       }
     ],
     "browsersFine": "Screenshots work on desktop Firefox, Chrome, Edge, Brave, Arc and other Chromium browsers. Recording is Chrome-only."

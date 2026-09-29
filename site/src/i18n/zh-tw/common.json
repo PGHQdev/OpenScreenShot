@@ -8,11 +8,11 @@
     "roadmap": "路線圖",
     "github": "GitHub",
     "addToFirefox": "加入 Firefox",
-    "installForFirefox": "安裝 Firefox 版",
-    "installForChrome": "安裝 Chrome 版"
+    "installForFirefox": "加入 Firefox",
+    "installForChrome": "加到 Chrome"
   },
   "footer": {
-    "tagline": "截圖永遠不離開你的裝置。",
+    "tagline": "適用於 Chrome 與 Firefox 的免費、開放原始碼截圖工具。",
     "productHead": "產品",
     "projectHead": "專案",
     "moreHead": "@PGHQdev 的更多作品",
@@ -27,7 +27,7 @@
     "compare": "比較"
   },
   "meta": {
-    "ogDefaultAlt": "OpenScreenShot：Chrome 的全頁截圖與註解工具。免費、開放原始碼、100% 本機處理。"
+    "ogDefaultAlt": "OpenScreenShot：適用於 Chrome 與 Firefox 的整頁截圖和註記工具。免費且開放原始碼，在本機處理。"
   },
   "breadcrumbHome": "首頁",
   "permissionTable": {

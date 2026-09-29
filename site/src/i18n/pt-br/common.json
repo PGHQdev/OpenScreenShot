@@ -8,11 +8,11 @@
     "roadmap": "Roadmap",
     "github": "GitHub",
     "addToFirefox": "Adicionar ao Firefox",
-    "installForFirefox": "Instalar para Firefox",
-    "installForChrome": "Instalar para Chrome"
+    "installForFirefox": "Adicionar ao Firefox",
+    "installForChrome": "Adicionar ao Chrome"
   },
   "footer": {
-    "tagline": "Capturas de tela que nunca saem do seu computador.",
+    "tagline": "Capturas de tela grátis e de código aberto para Chrome e Firefox.",
     "productHead": "Produto",
     "projectHead": "Projeto",
     "moreHead": "Mais de @PGHQdev",
@@ -27,7 +27,7 @@
     "compare": "Comparação"
   },
   "meta": {
-    "ogDefaultAlt": "OpenScreenShot: captura de página inteira e anotações para o Chrome. Grátis, de código aberto e 100% local."
+    "ogDefaultAlt": "OpenScreenShot: capturas de página inteira e anotações para Chrome e Firefox. Grátis e de código aberto, com processamento local."
   },
   "breadcrumbHome": "Início",
   "permissionTable": {

@@ -5,6 +5,7 @@
  * spelled out. No malware claims, no adjectives about anyone else.
  */
 import Doc from '../../../layouts/Doc.astro';
+import InstallButtons from '../../../components/InstallButtons.astro';
 import { t, localePaths, localeFromParams } from '../../../i18n';
 
 export const getStaticPaths = localePaths;
@@ -12,7 +13,6 @@ export const getStaticPaths = localePaths;
 const locale = localeFromParams(Astro.params.lang);
 const d = t(locale, 'compare');
 
-const STORE_URL = 'https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp';
 const REPO_URL = 'https://github.com/pghqdev/OpenScreenShot';
 
 type Row = { feature: string; oss: string; fpc: string; gfp: string };
@@ -55,10 +55,8 @@ const rows: Row[] = d.rows;
   </section>
 
   <section class="doc-section" id="cta">
-    <p>
-      <a class="btn btn-ink" href={STORE_URL} target="_blank" rel="noopener"
-        >{d.cta.addToChrome}</a
-      >
+    <p class="install-row">
+      <InstallButtons locale={locale} />
       <a class="btn btn-quiet" href={REPO_URL} target="_blank" rel="noopener"
         >{d.cta.starOnGithub}</a
       >
@@ -67,6 +65,13 @@ const rows: Row[] = d.rows;
 </Doc>
 
 <style>
+  .install-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-3);
+  }
+
   .compare {
     width: 100%;
     border-collapse: collapse;

@@ -2,17 +2,17 @@
   "items": [
     {
       "q": "I miei dati vengono inviati a un server?",
-      "a": "<p>No. <strong>Nessun dato lascia il tuo dispositivo.</strong> Cattura, annotazione ed esportazione avvengono tutte in locale nel tuo browser. L'estensione non ha analytics, telemetria né servizi di terze parti. Vedi la <a href=\"/privacy/\">Privacy Policy</a> per i dettagli.</p>",
+      "a": "<p>L’estensione non carica online screenshot o registrazioni. Cattura, modifica ed esportazione avvengono in locale nel browser, senza analisi dell’utilizzo né telemetria. Consulta l’<a href=\"/privacy/\">informativa sulla privacy</a> per i dettagli sull’archiviazione e sull’invio facoltativo di feedback.</p>",
       "home": true
     },
     {
       "q": "Funziona sulle pagine chrome:// e delle estensioni?",
-      "a": "<p>No. Chrome impedisce alle estensioni di catturare le pagine <code>chrome://</code>, <code>chrome-extension://</code>, il Chrome Web Store e le pagine <code>about:</code>. È una regola di sicurezza di Chrome, e nessuna estensione può aggirarla. Se ci provi, l'estensione mostra un errore.</p>",
+      "a": "<p>No. Le impostazioni del browser, le pagine delle estensioni e gli store dei browser sono protetti. OpenScreenShot mostra un errore quando una pagina non può essere catturata. Usalo sulle normali pagine web.</p>",
       "home": true
     },
     {
       "q": "Perché la cattura a pagina intera richiede qualche secondo?",
-      "a": "<p>Chrome limita <code>captureVisibleTab</code> a circa 2 chiamate al secondo. Ogni porzione alta quanto la finestra costa una chiamata, più una breve pausa perché la pagina si ridisegni. Una pagina tipica da 10 porzioni richiede 5–6 secondi, e una pagina più lunga richiede un tempo proporzionale. Il badge sulla barra degli strumenti conta la percentuale mentre lavora.</p>",
+      "a": "<p>L’estensione scorre la pagina, la cattura in sezioni e le unisce in un’unica immagine. Le pagine più lunghe richiedono più tempo. Il badge sulla barra degli strumenti mostra l’avanzamento della cattura.</p>",
       "home": true
     },
     {
@@ -28,8 +28,8 @@
       "a": "<p>Per impostazione predefinita l'editor si apre in una nuova scheda dopo ogni cattura: non devi fare nulla. Esporta lo screenshot annotato con il pulsante «Esporta» nella barra superiore dell'editor, o premi <code>Ctrl+S</code> / <code>⌘S</code>.</p><p>Se la riga <strong>Dopo la cattura</strong> nel popup è impostata su Appunti o Scarica, non si apre alcuna scheda. <strong>Riapri ultima</strong> nel footer del popup carica quella cattura nell'editor quando vuoi.</p>"
     },
     {
-      "q": "Posso saltare l'editor e copiare o salvare subito uno screenshot?",
-      "a": "<p>Sì. La riga <strong>Dopo la cattura</strong> nel popup sceglie tra Editor, Appunti o Scarica. L'impostazione vale per ogni punto di partenza: i pulsanti del popup, le scorciatoie da tastiera e il menu del tasto destro. I salvataggi rapidi sono in PNG, e il badge sull'icona è la conferma, perché non si apre alcuna scheda.</p>",
+      "q": "Posso saltare l’editor e copiare o salvare subito uno screenshot?",
+      "a": "<p>Sì. Imposta <strong>Dopo la cattura</strong> su Appunti o Scarica nel menu di cattura. L’impostazione si applica alle catture dalla barra degli strumenti, alle scorciatoie da tastiera e al menu del tasto destro. I download diretti vengono salvati in PNG.</p>",
       "home": true
     },
     {
@@ -45,8 +45,8 @@
       "a": "<p>Sì. Trascina un file immagine sull'area di lavoro dell'editor, o incollane uno con <code>Ctrl+V</code> / <code>⌘V</code> fuori da un campo di testo. L'importazione prende il posto di una cattura, quindi ogni strumento, la cornice Beautify e ogni percorso di esportazione continuano a funzionare. Sostituisce il canvas, per cui l'editor chiede conferma quando ci sono annotazioni da perdere.</p><p><strong>Riapri ultima</strong> nel footer del popup carica anche la cattura più recente nell'editor.</p>"
     },
     {
-      "q": "L'esportazione PDF include una libreria pesante?",
-      "a": "<p>No. L'esportazione PDF usa un piccolo writer integrato nell'estensione (<code>src/editor/pdf-writer.ts</code>). Inserisce l'immagine di ogni pagina e la comprime con il <code>CompressionStream</code> del browser, quindi esportare un PDF non fa richieste di rete e non aggiunge codice di terze parti. Le versioni precedenti usavano jsPDF, che trascinava <code>html2canvas</code> e <code>dompurify</code> per una funzione mai usata dall'estensione.</p>",
+      "q": "Quali formati di file posso esportare?",
+      "a": "<p>Salva gli screenshot in PNG, JPEG, WebP o PDF dall’editor. Puoi anche copiare un’immagine negli appunti. Le registrazioni delle schede vengono esportate in WebM. Tutte le esportazioni vengono elaborate in locale e non hanno filigrane.</p>",
       "home": true
     },
     {
@@ -55,17 +55,17 @@
     },
     {
       "q": "Posso cambiare le scorciatoie da tastiera?",
-      "a": "<p>Sì. Apri <code>chrome://extensions/shortcuts</code>, o usa il link <strong>Scorciatoie</strong> nel footer del popup. I valori predefiniti sono <code>Ctrl+Shift+S</code> per la pagina intera, <code>Alt+Shift+V</code> per l'area visibile e <code>Ctrl+Shift+E</code> per una regione; su macOS sono <code>⌘⇧S</code>, <code>⌘⇧V</code> e <code>⌘⇧E</code>. Chrome può lasciare un comando senza combinazione se un'altra estensione l'ha già in uso.</p>",
+      "a": "<p>Sì. Usa il link <strong>Scorciatoie</strong> nel menu di cattura per visualizzare o modificare le scorciatoie. In Chrome puoi anche aprire <code>chrome://extensions/shortcuts</code>. Se una scorciatoia non funziona, controlla se un’altra estensione usa gli stessi tasti.</p>",
       "home": true
     },
     {
-      "q": "Perché Chrome chiede l'accesso alla cattura della scheda?",
-      "a": "<p><code>tabCapture</code> è un permesso opzionale, che l'estensione non chiede all'installazione. Chrome mostra la richiesta una sola volta, al primo clic su Registra; ogni registrazione successiva parte con un clic, senza altre richieste. Dichiararlo opzionale significa che non aggiunge avvisi all'installazione e non compare mai finché non avvii davvero una registrazione.</p>",
+      "q": "Perché Chrome chiede l’accesso alla cattura della scheda?",
+      "a": "<p>Chrome ha bisogno di questo permesso per registrare una scheda. È facoltativo e viene richiesto al primo utilizzo del registratore, non all’installazione. Puoi catturare screenshot senza concederlo.</p>",
       "home": true
     },
     {
       "q": "Dove vengono salvate le mie registrazioni?",
-      "a": "<p>Sul tuo dispositivo, e da nessun'altra parte. I segmenti video, la traccia del cursore e l'eventuale audio del microfono o della scheda vengono scritti in IndexedDB mentre registri, in blocchi da 1 secondo, così un crash o una pagina in background terminata non fanno perdere la ripresa. Restano lì finché non esporti o elimini la sessione: nulla viene mai caricato online.</p>",
+      "a": "<p>Le registrazioni e il loro audio vengono salvati nella memoria locale del browser mentre registri. Restano lì finché non elimini la sessione. Esporta un file WebM per conservare una copia separata sul tuo dispositivo. L’estensione non carica online le registrazioni.</p>",
       "home": true
     },
     {

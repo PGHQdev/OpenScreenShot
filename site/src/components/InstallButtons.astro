@@ -14,71 +14,58 @@ const iconSize = size === 'large' ? 22 : 18;
 ---
 
 <span class:list={['install-options', `install-${size}`]}>
-  <span class="install-choice install-chrome">
-    <a class="btn btn-ink install-primary" href={CHROME_STORE_URL} target="_blank" rel="noopener">
-      <ChromeIcon size={iconSize} />
-      {c.nav.addToChrome}
-    </a>
-    <a class="install-alternative" href={FIREFOX_STORE_URL} target="_blank" rel="noopener">
-      <img src="/assets/brands/firefox.svg" width="14" height="14" alt="" />
-      {c.nav.installForFirefox}
-    </a>
-  </span>
-  <span class="install-choice install-firefox">
-    <a class="btn btn-ink install-primary" href={FIREFOX_STORE_URL} target="_blank" rel="noopener">
-      <img src="/assets/brands/firefox.svg" width={iconSize} height={iconSize} alt="" />
-      {c.nav.addToFirefox}
-    </a>
-    <a class="install-alternative" href={CHROME_STORE_URL} target="_blank" rel="noopener">
-      <ChromeIcon size={14} />
-      {c.nav.installForChrome}
-    </a>
-  </span>
+  <a
+    class="btn btn-ink install-primary install-chrome"
+    href={CHROME_STORE_URL}
+    target="_blank"
+    rel="noopener"
+  >
+    <ChromeIcon size={iconSize} />
+    {c.nav.addToChrome}
+  </a>
+  <a
+    class="btn btn-ink install-primary install-firefox"
+    href={FIREFOX_STORE_URL}
+    target="_blank"
+    rel="noopener"
+  >
+    <img src="/assets/brands/firefox.svg" width={iconSize} height={iconSize} alt="" />
+    {c.nav.addToFirefox}
+  </a>
 </span>
 
 <style>
   .install-options {
-    display: inline-block;
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--rule);
+    border-radius: 28px;
     max-width: 100%;
-    vertical-align: top;
+    vertical-align: middle;
   }
 
-  .install-choice {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
+  .install-primary {
+    flex: 1 1 auto;
+    white-space: normal;
+    text-align: center;
   }
 
-  .install-firefox,
+  :global(html[data-install-browser='chrome']) .install-firefox,
   :global(html[data-install-browser='firefox']) .install-chrome {
     display: none;
   }
 
-  :global(html[data-install-browser='firefox']) .install-firefox {
-    display: flex;
+  :global(html[data-install-browser='chrome']) .install-options,
+  :global(html[data-install-browser='firefox']) .install-options {
+    padding: 0;
+    border: 0;
   }
 
-  .install-alternative {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    min-height: 24px;
-    color: var(--ink-2);
-    font-size: var(--fs-xs);
-    font-weight: 500;
-    line-height: 1.4;
-    text-decoration: none;
-  }
-
-  .install-alternative:hover {
-    color: var(--ink);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
-  .install-alternative img {
+  .install-primary img,
+  .install-primary :global(svg) {
     flex-shrink: 0;
   }
 

@@ -1,17 +1,19 @@
 {
   "meta": {
-    "title": "Ganzseiten-Screenshot mit einem Klick — OpenScreenShot",
-    "description": "Kostenlose Open-Source-Erweiterung für Chrome: Screenshots der ganzen Seite, des sichtbaren Bereichs oder eines Ausschnitts, mit Anmerkungs-Editor, Export als PNG, JPEG, WebP oder PDF und einem Tab-Rekorder. Nichts verlässt dein Gerät."
+    "title": "Ganzseiten-Screenshots für Chrome & Firefox — OpenScreenShot",
+    "description": "Nimm Ganzseiten-Screenshots in Chrome und Firefox auf. Füge Anmerkungen hinzu und speichere sie als Bild oder PDF – alles auf deinem Gerät. Kostenlos und Open Source. Kein Konto erforderlich."
   },
   "hero": {
-    "note": "Kostenlos · Open Source · MIT-lizenziert",
-    "title1": "Klick. Aufgenommen. Fertig.",
-    "title2": "So privat, dass es ohne WLAN funktioniert.",
-    "sub": "Ganzseiten-Screenshot mit einem Klick. Kein Konto, kein Wasserzeichen, keine Cloud.",
+    "note": "Kostenlos und Open Source",
+    "title1": "Ganzseiten-Screenshots.",
+    "title2": "Vollständig lokal. Privat. Einfach zu bedienen.",
+    "sub": "Nimm Seiten in Chrome oder Firefox auf. Füge Anmerkungen hinzu und speichere ein Bild oder PDF. Kein Konto erforderlich.",
     "viewOnGithub": "Auf GitHub ansehen",
     "tablistLabel": "Die Ansichten der Erweiterung",
-    "credit": "Die Website in diesen Screenshots ist OpenTechCheck, ebenfalls von uns — sieh nach, womit eine Website gebaut ist.",
-    "creditCta": "Jetzt ausprobieren"
+    "credit": "Die Screenshots zeigen OpenTechCheck, unser Tool zum Erkennen der Technologien einer Website.",
+    "creditCta": "OpenTechCheck besuchen",
+    "wipTag": "In Arbeit",
+    "wip": "Desktop- und Web-Apps sind in Entwicklung"
   },
   "tabs": {
     "capture": {
@@ -36,9 +38,9 @@
     }
   },
   "term": {
-    "commentShot": "# Ein Screenshot, direkt aus deinem Terminal",
-    "commentServe": "# Oder ein MCP-Server für deinen KI-Agenten",
-    "commentConfig": "# Beliebige MCP-Client-Konfiguration"
+    "commentShot": "# Einen Ganzseiten-Screenshot aufnehmen",
+    "commentServe": "# Den lokalen MCP-Server starten",
+    "commentConfig": "# Einen Client konfigurieren, der lokale MCP-Server unterstützt"
   },
   "proof": {
     "ariaLabel": "In Zahlen",
@@ -49,26 +51,26 @@
   },
   "quartet": [
     {
-      "title": "Alles aufnehmen",
-      "body": "Klicke auf das Symbol und erhalte die ganze Seite. Oder den sichtbaren Bereich oder einen Ausschnitt — per Rechtsklick oder Tastenkürzel."
+      "title": "Eine Seite oder einen Ausschnitt aufnehmen",
+      "body": "Nimm die ganze Seite oder den sichtbaren Bereich auf, oder wähle einen Ausschnitt. Nutze die Symbolleiste, das Rechtsklick-Menü oder ein Tastenkürzel."
     },
     {
-      "title": "Bearbeiten vor dem Teilen",
-      "body": "Pfeile, Rechtecke und Text bringen es auf den Punkt. Unschärfe für alles, was niemand sonst sehen soll."
+      "title": "Vor dem Teilen bearbeiten",
+      "body": "Füge Pfeile, Formen und Text hinzu. Schneide den Screenshot zu, kopiere ihn in die Zwischenablage oder exportiere ihn als PNG, JPEG, WebP oder PDF."
     },
     {
-      "title": "Den Tab aufnehmen",
-      "body": "Ein Klick startet die Aufnahme, mit Auto-Zoom bei jedem Klick. Auf der Zeitleiste trimmen, dann als WebM exportieren."
+      "title": "Einen Browser-Tab aufnehmen",
+      "body": "Nimm einen Tab in Chrome auf, zoome bei Klicks heran und kürze das Video vor dem Export als WebM."
     },
     {
-      "title": "Privat ab Werk",
-      "body": "Kein Konto, kein Upload, keine Telemetrie. Funktioniert auch ohne WLAN."
+      "title": "Alles lokal verarbeiten",
+      "body": "Aufnahme, Bearbeitung und Export laufen auf deinem Gerät. Die Erweiterung lädt deine Screenshots und Aufnahmen nicht hoch und verfolgt deine Nutzung nicht."
     }
   ],
   "privacy": {
     "eyebrow": "Datenschutz",
-    "heading": "Niemand sieht, was du aufnimmst. Auch wir nicht.",
-    "lede": "Screenshots gehören oft zu den sensibelsten Bildern auf deinem Gerät. Aufnahme, Bearbeitung, Export, PDF und Bildschirmaufnahme laufen komplett in deinem Browser. Die Erweiterung stellt keine eigenen Netzwerkanfragen und hat keinen dauerhaften Zugriff auf die Websites, die du besuchst.",
+    "heading": "Deine Aufnahmen bleiben auf deinem Gerät.",
+    "lede": "Screenshots, Videoaufnahmen und Bearbeitungen werden in deinem Browser gespeichert. Wir erhalten sie nicht. Du brauchst kein Konto, und die Erweiterung enthält weder Nutzungsanalysen noch Telemetrie. Der Zugriff auf Websites wird bei der Nutzung gewährt; weitergehender Zugriff für Aufnahmen über mehrere Websites hinweg ist optional.",
     "receipt": [
       {
         "k": "Konto",
@@ -95,45 +97,56 @@
         "v": "MIT"
       }
     ],
-    "installFold": "Was bei der Installation angefragt wird",
-    "recordFold": "Was die Aufnahme dazunimmt — nur wenn du aufnimmst",
-    "micFine": "Mikrofon und Kamera werden, wenn du sie aktivierst, über die Berechtigungsabfrage deines Browsers geöffnet. Der Stream verlässt nie dein Gerät.",
-    "moreFine": "Dieselben Tabellen, mit der vollständigen Richtlinie, auf der <a href=\"/privacy/\">Datenschutzseite</a>.",
-    "compareLine": "Der Vergleich: OpenScreenShot vs. GoFullPage vs. FullPage Capture."
+    "installFold": "Bei der Installation angeforderte Berechtigungen",
+    "recordFold": "Optionale Berechtigungen für Videoaufnahmen",
+    "micFine": "Dein Browser fragt nach deiner Erlaubnis, bevor er Mikrofon oder Kamera aktiviert. Ton und Bild werden lokal verarbeitet.",
+    "moreFine": "Details zu Speicherung und Berechtigungen findest du in der vollständigen <a href=\"/privacy/\">Datenschutzerklärung</a>.",
+    "compareLine": "OpenScreenShot, GoFullPage und FullPage Capture vergleichen"
   },
   "cli": {
-    "eyebrow": "Agenten & CLI",
-    "heading": "Skriptbar aus deinem Terminal.",
-    "headingMuted": "Weiterhin lokal.",
+    "eyebrow": "Für Entwickler",
+    "heading": "Screenshots aufnehmen mit",
+    "headingMuted": "Skripten und KI-Agenten.",
     "name": "<code>openscreenshot</code> auf npm",
     "bullets": [
       "Ein separates, optionales Tool für Skripte und KI-Agenten",
-      "Steuert das Chrome, das schon auf deinem Gerät ist",
-      "Kein Browser-Download, kein gehosteter Dienst",
-      "Auch ein MCP-Server, mit einem <code>capture_screenshot</code>-Tool"
+      "Nutzt deine lokale Chrome-Installation",
+      "Läuft lokal ohne gehosteten Aufnahmedienst",
+      "Stellt <code>capture_screenshot</code> für Clients bereit, die lokale MCP-Server unterstützen"
     ],
-    "labelShot": "Ein Screenshot",
-    "labelConfig": "MCP-Client-Konfiguration"
+    "labelShot": "Eine ganze Seite aufnehmen",
+    "labelConfig": "Konfiguration des lokalen MCP-Servers",
+    "useCasesHeading": "Screenshots in deinen Arbeitsablauf einbinden",
+    "useCases": [
+      {
+        "title": "Störungen dokumentieren",
+        "body": "Nimm Dashboards und Statusseiten für Störungsberichte, Betriebshandbücher und Nachanalysen auf. Starte Aufnahmen über ein Skript oder einen verbundenen MCP-Client."
+      },
+      {
+        "title": "Seiten in CI aufnehmen",
+        "body": "Ergänze deine Build-Pipeline um Screenshots für Dokumentation, Versionshinweise und visuelle Vergleiche. Chrome muss in deiner CI-Umgebung verfügbar sein."
+      }
+    ]
   },
   "faq": {
     "eyebrow": "FAQ",
-    "heading": "Fragen, beantwortet.",
-    "moreFine": "Alle Fragen, samt bekannter Grenzen, auf der <a href=\"/support/\">Support-Seite</a>."
+    "heading": "Häufig gestellte Fragen",
+    "moreFine": "Weitere Antworten und bekannte Einschränkungen findest du auf der <a href=\"/support/\">Support-Seite</a>."
   },
   "cta": {
-    "heading": "In zehn Sekunden startklar.",
+    "heading": "Nimm deinen ersten Screenshot auf",
     "steps": [
       {
         "title": "Zum Browser hinzufügen",
-        "body": "Aus dem Chrome Web Store oder von Firefox Add-ons installieren. Kostenlos und ohne Registrierung."
+        "body": "Installiere OpenScreenShot aus dem Chrome Web Store oder von Firefox Add-ons. Du brauchst kein Konto."
       },
       {
-        "title": "Auf das Symbol klicken",
-        "body": "Oder Tastenkürzel drücken. Ein Klick nimmt die ganze Seite; Rechtsklick für die anderen Modi."
+        "title": "Eine Seite aufnehmen",
+        "body": "Klicke auf das Erweiterungssymbol, um die ganze Seite aufzunehmen. Per Rechtsklick nimmst du den sichtbaren Bereich oder einen Ausschnitt auf."
       },
       {
-        "title": "Aufnehmen",
-        "body": "Anmerken, exportieren oder kopieren. Es verlässt nie dein Gerät."
+        "title": "Bearbeiten und speichern",
+        "body": "Füge Anmerkungen hinzu und kopiere den Screenshot oder speichere ihn als Bild oder PDF. Exporte haben kein Wasserzeichen."
       }
     ],
     "browsersFine": "Screenshots funktionieren in Firefox für Desktop, Chrome, Edge, Brave, Arc und anderen Chromium-Browsern. Videoaufnahmen sind nur in Chrome verfügbar."

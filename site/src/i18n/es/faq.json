@@ -2,17 +2,17 @@
   "items": [
     {
       "q": "¿Se envían mis datos a un servidor?",
-      "a": "<p>No. <strong>Ningún dato sale de tu dispositivo.</strong> Toda la captura, la anotación y la exportación se procesan localmente en tu navegador. La extensión no tiene analíticas, ni telemetría, ni servicios de terceros. Consulta la <a href=\"/privacy/\">política de privacidad</a> para más detalles.</p>",
+      "a": "<p>La extensión no sube tus capturas ni grabaciones a ningún servidor. La captura, la edición y la exportación se ejecutan localmente en tu navegador, sin analíticas ni telemetría. Consulta la <a href=\"/privacy/\">política de privacidad</a> para conocer los detalles sobre almacenamiento y el envío opcional de comentarios.</p>",
       "home": true
     },
     {
       "q": "¿Funciona en páginas chrome:// y de extensiones?",
-      "a": "<p>No. Chrome impide que las extensiones capturen <code>chrome://</code>, <code>chrome-extension://</code>, la Chrome Web Store y las páginas <code>about:</code>. Ese bloqueo es una regla de seguridad de Chrome y ninguna extensión puede saltárselo. La extensión muestra un error si lo intentas.</p>",
+      "a": "<p>No. La configuración del navegador, las páginas de extensiones y las tiendas de los navegadores tienen restricciones. OpenScreenShot muestra un error cuando una página no se puede capturar. Úsalo en páginas web normales.</p>",
       "home": true
     },
     {
       "q": "¿Por qué la captura de página completa tarda unos segundos?",
-      "a": "<p>Chrome limita <code>captureVisibleTab</code> a unas 2 llamadas por segundo. Cada franja de la altura del viewport cuesta una llamada, más una breve pausa para que la página se repinte. Una página típica de 10 franjas tarda 5–6 segundos, y una página más larga tarda proporcionalmente más. La insignia del icono cuenta el porcentaje mientras avanza.</p>",
+      "a": "<p>La extensión se desplaza por la página, la captura por secciones y las une en una sola imagen. Las páginas más largas tardan más. La insignia de la barra de herramientas muestra el progreso de la captura.</p>",
       "home": true
     },
     {
@@ -29,7 +29,7 @@
     },
     {
       "q": "¿Puedo saltarme el editor y copiar o guardar una captura directamente?",
-      "a": "<p>Sí. La fila <strong>Tras capturar</strong> del menú elige entre Editor, Portapapeles o Descargar. El ajuste se aplica a todos los puntos de entrada: los botones del menú, los atajos de teclado y el menú del clic derecho. Los guardados rápidos se escriben como PNG, y la insignia de la barra de herramientas es la confirmación, ya que no se abre ninguna pestaña.</p>",
+      "a": "<p>Sí. Configura <strong>Tras capturar</strong> como Portapapeles o Descargar en el menú de captura. Esto se aplica a las capturas desde la barra de herramientas, los atajos de teclado y el menú contextual. Las descargas directas se guardan como PNG.</p>",
       "home": true
     },
     {
@@ -45,8 +45,8 @@
       "a": "<p>Sí. Suelta un archivo de imagen sobre el lienzo del editor, o pega una imagen con <code>Ctrl+V</code> / <code>⌘V</code> fuera de un campo de texto. La importación ocupa el mismo lugar que una captura, así que todas las herramientas, el marco Beautify y todas las vías de exportación siguen funcionando. Sustituye el lienzo, por eso el editor pregunta primero cuando hay anotaciones que perder.</p><p><strong>Reabrir última</strong>, en el pie del menú, también carga la captura más reciente en el editor.</p>"
     },
     {
-      "q": "¿La exportación a PDF incluye una biblioteca pesada?",
-      "a": "<p>No. La exportación a PDF usa un pequeño generador integrado en la extensión (<code>src/editor/pdf-writer.ts</code>). Coloca la imagen de cada página y la comprime con el <code>CompressionStream</code> del propio navegador, así que exportar un PDF no hace ninguna petición de red ni añade código de terceros. Versiones anteriores usaban jsPDF, que arrastraba <code>html2canvas</code> y <code>dompurify</code> para una función que la extensión nunca llamaba.</p>",
+      "q": "¿En qué formatos puedo exportar?",
+      "a": "<p>Guarda capturas como PNG, JPEG, WebP o PDF desde el editor. También puedes copiar una imagen al portapapeles. Las grabaciones de pestañas se exportan como WebM. Todas las exportaciones se procesan localmente y no tienen marca de agua.</p>",
       "home": true
     },
     {
@@ -55,17 +55,17 @@
     },
     {
       "q": "¿Puedo cambiar los atajos de teclado?",
-      "a": "<p>Sí. Abre <code>chrome://extensions/shortcuts</code>, o usa el enlace <strong>Atajos</strong> del pie del menú. Los valores por defecto son <code>Ctrl+Shift+S</code> para la página completa, <code>Alt+Shift+V</code> para el área visible y <code>Ctrl+Shift+E</code> para una región; en macOS son <code>⌘⇧S</code>, <code>⌘⇧V</code> y <code>⌘⇧E</code>. Chrome puede dejar un comando sin asignar si otra extensión ya reclama la combinación.</p>",
+      "a": "<p>Sí. Usa el enlace <strong>Atajos</strong> del menú de captura para ver o cambiar tus atajos. En Chrome también puedes abrir <code>chrome://extensions/shortcuts</code>. Si un atajo no funciona, comprueba si otra extensión usa las mismas teclas.</p>",
       "home": true
     },
     {
       "q": "¿Por qué Chrome pide acceso a la captura de pestañas?",
-      "a": "<p><code>tabCapture</code> es un permiso opcional; la extensión no lo pide al instalarse. Chrome muestra el aviso una sola vez, la primera vez que haces clic en Grabar; a partir de ahí, cada grabación empieza con un clic, sin más avisos. Declararlo opcional significa que no añade ninguna advertencia en la instalación y que nunca aparece salvo que de verdad inicies una grabación.</p>",
+      "a": "<p>Chrome necesita este permiso para grabar una pestaña. Es opcional y se solicita la primera vez que usas la grabadora, no durante la instalación. Puedes hacer capturas de pantalla sin concederlo.</p>",
       "home": true
     },
     {
       "q": "¿Dónde se guardan mis grabaciones?",
-      "a": "<p>En tu dispositivo, y en ningún otro sitio. Los fragmentos de vídeo, el registro del cursor y cualquier audio del micro o de la pestaña se escriben en IndexedDB mientras grabas, en piezas de 1 segundo, así que ni un fallo ni el cierre de la página en segundo plano te hacen perder la toma. Ahí se quedan hasta que exportas o eliminas la sesión; nunca se sube nada.</p>",
+      "a": "<p>Las grabaciones y su audio se guardan en el almacenamiento local del navegador mientras grabas. Permanecen allí hasta que eliminas la sesión. Exporta un archivo WebM para conservar una copia independiente en tu dispositivo. La extensión no sube las grabaciones a ningún servidor.</p>",
       "home": true
     },
     {

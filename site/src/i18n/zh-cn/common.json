@@ -8,11 +8,11 @@
     "roadmap": "路线图",
     "github": "GitHub",
     "addToFirefox": "添加到 Firefox",
-    "installForFirefox": "安装 Firefox 版",
-    "installForChrome": "安装 Chrome 版"
+    "installForFirefox": "添加到 Firefox",
+    "installForChrome": "添加至 Chrome"
   },
   "footer": {
-    "tagline": "截图永远不离开你的设备。",
+    "tagline": "适用于 Chrome 和 Firefox 的免费开源截图工具。",
     "productHead": "产品",
     "projectHead": "项目",
     "moreHead": "@PGHQdev 的更多作品",
@@ -27,7 +27,7 @@
     "compare": "对比"
   },
   "meta": {
-    "ogDefaultAlt": "OpenScreenShot：Chrome 整页截图与标注扩展。免费、开源、100% 本地。"
+    "ogDefaultAlt": "OpenScreenShot：适用于 Chrome 和 Firefox 的整页截图和标注工具。免费开源，本地处理。"
   },
   "breadcrumbHome": "首页",
   "permissionTable": {

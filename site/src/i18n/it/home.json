@@ -1,17 +1,19 @@
 {
   "meta": {
-    "title": "Screenshot a pagina intera in un clic — OpenScreenShot",
-    "description": "Estensione Chrome gratuita e open source per screenshot a pagina intera, area visibile e regione, con editor di annotazioni, esportazione in PNG, JPEG, WebP o PDF e registrazione della scheda. Nulla lascia il tuo dispositivo."
+    "title": "Screenshot a pagina intera per Chrome e Firefox — OpenScreenShot",
+    "description": "Cattura screenshot a pagina intera in Chrome e Firefox. Annotali e salvali come immagine o PDF, sul tuo dispositivo. Gratuito e open source. Nessun account richiesto."
   },
   "hero": {
-    "note": "Gratuito · Open source · Licenza MIT",
-    "title1": "Clic. Catturato. Fatto.",
-    "title2": "Così privato che funziona senza Wi-Fi.",
-    "sub": "Screenshot a pagina intera in un clic. Nessun account, nessuna filigrana, niente cloud.",
+    "note": "Gratuito e open source",
+    "title1": "Screenshot a pagina intera.",
+    "title2": "Tutto in locale. Privato. Facile da usare.",
+    "sub": "Cattura pagine in Chrome o Firefox. Aggiungi annotazioni, poi salva un’immagine o un PDF. Nessun account richiesto.",
     "viewOnGithub": "Vedi su GitHub",
     "tablistLabel": "Le schermate dell'estensione",
-    "credit": "Il sito in questi screenshot è OpenTechCheck, sempre nostro: scopri con cosa è costruito qualsiasi sito.",
-    "creditCta": "Provalo ora"
+    "credit": "Gli screenshot mostrano OpenTechCheck, il nostro strumento per identificare le tecnologie usate dai siti web.",
+    "creditCta": "Visita OpenTechCheck",
+    "wipTag": "In sviluppo",
+    "wip": "Le app desktop e web sono in fase di sviluppo"
   },
   "tabs": {
     "capture": {
@@ -36,9 +38,9 @@
     }
   },
   "term": {
-    "commentShot": "# Uno screenshot, direttamente dal terminale",
-    "commentServe": "# Oppure un server MCP per il tuo agente AI",
-    "commentConfig": "# Qualsiasi configurazione client MCP"
+    "commentShot": "# Cattura uno screenshot a pagina intera",
+    "commentServe": "# Avvia il server MCP locale",
+    "commentConfig": "# Configura un client che supporta i server MCP locali"
   },
   "proof": {
     "ariaLabel": "In numeri",
@@ -49,26 +51,26 @@
   },
   "quartet": [
     {
-      "title": "Cattura tutto",
-      "body": "Fai clic sull’icona e ottieni la pagina intera. Oppure l’area visibile o una regione trascinata — dal clic destro o con una scorciatoia."
+      "title": "Cattura una pagina o una regione",
+      "body": "Cattura la pagina intera, l’area visibile o seleziona una regione. Usa la barra degli strumenti, il menu del tasto destro o una scorciatoia da tastiera."
     },
     {
       "title": "Modifica prima di condividere",
-      "body": "Frecce, riquadri e testo per farti capire. Sfocatura per le parti che nessun altro deve vedere."
+      "body": "Aggiungi frecce, forme e testo. Ritaglia lo screenshot, copialo negli appunti o esportalo in PNG, JPEG, WebP o PDF."
     },
     {
-      "title": "Registra la scheda",
-      "body": "Un clic registra, con zoom automatico a ogni clic. Taglia sulla timeline, poi esporta in WebM."
+      "title": "Registra una scheda del browser",
+      "body": "Registra una scheda in Chrome, ingrandisci i punti in cui fai clic e taglia il video prima di esportarlo in WebM."
     },
     {
-      "title": "Privato per impostazione predefinita",
-      "body": "Nessun account, nessun upload, nessuna telemetria. Funziona anche con il Wi-Fi spento."
+      "title": "Elabora tutto in locale",
+      "body": "Cattura, modifica ed esportazione avvengono sul tuo dispositivo. L’estensione non carica online screenshot o registrazioni e non traccia il tuo utilizzo."
     }
   ],
   "privacy": {
     "eyebrow": "Privacy",
-    "heading": "Nessuno può vedere quello che catturi. Nemmeno noi.",
-    "lede": "Gli screenshot sono spesso le immagini più sensibili sul tuo dispositivo. Cattura, modifica, esportazione, PDF e registrazione avvengono tutti nel tuo browser. L'estensione non fa alcuna richiesta di rete di propria iniziativa e non ha accesso permanente ad alcun sito che visiti.",
+    "heading": "Le tue catture restano sul tuo dispositivo.",
+    "lede": "Screenshot, registrazioni e modifiche vengono salvati nel tuo browser. Noi non li riceviamo. Non serve un account e l’estensione non include analisi dell’utilizzo né telemetria. L’accesso ai siti viene concesso quando usi l’estensione; un accesso più ampio per registrare su più siti è facoltativo.",
     "receipt": [
       {
         "k": "Account",
@@ -95,45 +97,56 @@
         "v": "MIT"
       }
     ],
-    "installFold": "Cosa chiede all'installazione",
-    "recordFold": "Cosa aggiunge la registrazione, solo quando registri",
-    "micFine": "Il microfono e la fotocamera, quando li attivi, vengono aperti dalla richiesta di permesso del tuo browser. Il flusso non lascia mai il tuo dispositivo.",
-    "moreFine": "Le stesse tabelle, con la policy completa, nella <a href=\"/privacy/\">pagina Privacy</a>.",
-    "compareLine": "Confronto: OpenScreenShot vs GoFullPage vs FullPage Capture."
+    "installFold": "Permessi richiesti all’installazione",
+    "recordFold": "Permessi facoltativi per la registrazione",
+    "micFine": "Il browser chiede il permesso prima di attivare il microfono o la fotocamera. Audio e video vengono elaborati in locale.",
+    "moreFine": "Leggi l’<a href=\"/privacy/\">informativa sulla privacy</a> completa per i dettagli su archiviazione e permessi.",
+    "compareLine": "Confronta OpenScreenShot, GoFullPage e FullPage Capture"
   },
   "cli": {
-    "eyebrow": "Agenti e CLI",
-    "heading": "Automatizzabile dal terminale.",
-    "headingMuted": "Sempre in locale.",
+    "eyebrow": "Per sviluppatori",
+    "heading": "Cattura screenshot con",
+    "headingMuted": "script e agenti AI.",
     "name": "<code>openscreenshot</code> su npm",
     "bullets": [
       "Uno strumento separato e opzionale per script e agenti AI",
-      "Usa il Chrome già presente sul tuo dispositivo",
-      "Nessun browser da scaricare, nessun servizio remoto",
-      "Anche un server MCP, con uno strumento <code>capture_screenshot</code>"
+      "Usa la tua installazione locale di Chrome",
+      "Funziona in locale senza un servizio di cattura remoto",
+      "Fornisce <code>capture_screenshot</code> ai client che supportano i server MCP locali"
     ],
-    "labelShot": "Uno screenshot",
-    "labelConfig": "Configurazione client MCP"
+    "labelShot": "Cattura una pagina intera",
+    "labelConfig": "Configurazione del server MCP locale",
+    "useCasesHeading": "Usa gli screenshot nel tuo flusso di lavoro",
+    "useCases": [
+      {
+        "title": "Documenta gli incidenti",
+        "body": "Cattura dashboard e pagine di stato per rapporti sugli incidenti, procedure operative e analisi successive. Avvia le catture da uno script o da un client MCP connesso."
+      },
+      {
+        "title": "Cattura pagine in CI",
+        "body": "Aggiungi screenshot alla pipeline di build per documentazione, note di rilascio e confronti visivi. Richiede Chrome nell’ambiente CI."
+      }
+    ]
   },
   "faq": {
     "eyebrow": "FAQ",
-    "heading": "Domande e risposte.",
-    "moreFine": "Tutte le domande, più i limiti noti, nella <a href=\"/support/\">pagina Supporto</a>."
+    "heading": "Domande frequenti",
+    "moreFine": "Trovi altre risposte e i limiti noti nella <a href=\"/support/\">pagina di supporto</a>."
   },
   "cta": {
-    "heading": "Pronto in dieci secondi.",
+    "heading": "Cattura il tuo primo screenshot",
     "steps": [
       {
         "title": "Aggiungilo al browser",
-        "body": "Installalo dal Chrome Web Store o dai componenti aggiuntivi di Firefox. Gratis e senza registrazione."
+        "body": "Installa OpenScreenShot dal Chrome Web Store o da Firefox Add-ons. Non serve un account."
       },
       {
-        "title": "Clicca l'icona",
-        "body": "O premi la scorciatoia. Un clic cattura la pagina intera; clic destro per gli altri modi."
+        "title": "Cattura una pagina",
+        "body": "Fai clic sull’icona dell’estensione per catturare la pagina intera. Usa il tasto destro per catturare l’area visibile o una regione."
       },
       {
-        "title": "Cattura",
-        "body": "Annota, esporta o copia. Non lascia mai il tuo dispositivo."
+        "title": "Modifica e salva",
+        "body": "Aggiungi annotazioni, poi copia lo screenshot o salva un’immagine o un PDF. Le esportazioni non hanno filigrane."
       }
     ],
     "browsersFine": "Gli screenshot funzionano su Firefox per desktop, Chrome, Edge, Brave, Arc e altri browser Chromium. La registrazione è disponibile solo su Chrome."

@@ -125,11 +125,18 @@ const alternates = availableLocales.map((l) => ({
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
 
-    <!-- Select the install destination before body paint; both links work without JS. -->
+    <!-- Show one desktop-browser CTA before paint; other browsers and no-JS get a button group. -->
     <script is:inline>
-      document.documentElement.dataset.installBrowser = /Firefox\/|FxiOS\//i.test(navigator.userAgent)
-        ? 'firefox'
-        : 'chrome';
+      const ua = navigator.userAgent;
+      const mobile =
+        /Android|iPhone|iPad|iPod|Mobile/i.test(ua) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      document.documentElement.dataset.installBrowser =
+        !mobile && /Firefox\//i.test(ua)
+          ? 'firefox'
+          : !mobile && /Chrome\/|Chromium\//i.test(ua)
+            ? 'chrome'
+            : 'both';
     </script>
 
     <slot name="head" />

@@ -102,7 +102,10 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
   <section id="top" class="hero">
     <div class="container-wide hero-copy">
       <p class="hero-note">{d.hero.note}</p>
-      <h1>{d.hero.title1}<br />{d.hero.title2}</h1>
+      <h1>
+        {d.hero.title1}
+        <span class="hero-benefit">{d.hero.title2}</span>
+      </h1>
       <p class="sub">{d.hero.sub}</p>
       <p class="cta-row">
         <InstallButtons locale={locale} />
@@ -542,6 +545,7 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
   }
 
   .wip-tag {
+    flex-shrink: 0;
     padding: 2px 8px;
     border-radius: var(--r-full);
     background: var(--chrome-yellow);
@@ -550,6 +554,7 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
     font-weight: 700;
     letter-spacing: var(--tr-label);
     text-transform: uppercase;
+    white-space: nowrap;
   }
 
   /* ---- Hero ---- */
@@ -576,6 +581,16 @@ if (faqLd.mainEntity.length !== homeFaq.length) {
   .hero h1 {
     margin-bottom: var(--s-5);
     font-size: var(--fs-hero);
+  }
+
+  .hero-benefit {
+    display: block;
+    margin-top: 0.6em;
+    font-size: 0.5em;
+    font-weight: 500;
+    line-height: 1.35;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
   }
 
   .sub {

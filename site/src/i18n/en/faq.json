@@ -2,17 +2,17 @@
   "items": [
     {
       "q": "Is my data sent to a server?",
-      "a": "<p>No. <strong>Zero data leaves your device.</strong> All capture, annotation, and export processing runs locally in your browser. The extension has no analytics, no telemetry, and no third-party services. See the <a href=\"/privacy/\">Privacy Policy</a> for details.</p>",
+      "a": "<p>The extension does not upload your screenshots or recordings. Capture, editing, and export run locally in your browser, with no analytics or telemetry. See the <a href=\"/privacy/\">privacy policy</a> for storage details and information about optional feedback.</p>",
       "home": true
     },
     {
       "q": "Does it work on chrome:// and extension pages?",
-      "a": "<p>No. Chrome blocks extensions from capturing <code>chrome://</code>, <code>chrome-extension://</code>, the Chrome Web Store, and <code>about:</code> pages. That block is a Chrome security rule, and no extension can lift it. The extension shows an error if you try.</p>",
+      "a": "<p>No. Browser settings, extension pages, and browser stores are restricted. OpenScreenShot shows an error when a page cannot be captured. Use it on regular web pages.</p>",
       "home": true
     },
     {
       "q": "Why does full-page capture take a few seconds?",
-      "a": "<p>Chrome limits <code>captureVisibleTab</code> to about 2 calls per second. Every viewport-height tile costs one call, plus a short pause for the page to repaint. A typical 10-tile page takes 5–6 seconds, and a longer page takes proportionally longer. The toolbar badge counts the percentage up while it works.</p>",
+      "a": "<p>The extension scrolls through the page, captures it in sections, and joins them into one image. Longer pages take more time. The toolbar badge shows capture progress.</p>",
       "home": true
     },
     {
@@ -29,7 +29,7 @@
     },
     {
       "q": "Can I skip the editor and copy or save a screenshot straight away?",
-      "a": "<p>Yes. The <strong>After capture</strong> row in the popup picks Editor, Clipboard, or Download. The setting applies to every entry point — the popup buttons, the keyboard shortcuts, and the right-click menu. Quick saves are written as PNG, and the toolbar badge is the confirmation since no tab opens.</p>",
+      "a": "<p>Yes. Set <strong>After capture</strong> to Clipboard or Download in the capture menu. This applies to toolbar captures, keyboard shortcuts, and the right-click menu. Direct downloads are saved as PNG.</p>",
       "home": true
     },
     {
@@ -45,8 +45,8 @@
       "a": "<p>Yes. Drop an image file onto the editor stage, or paste one with <code>Ctrl+V</code> / <code>⌘V</code> outside a text field. The import takes the same seat a capture takes, so every tool, the beautify frame, and every export path keep working. It replaces the canvas, so the editor asks first when there are annotations to lose.</p><p><strong>Reopen last</strong> in the popup footer also loads the most recent capture back into the editor.</p>"
     },
     {
-      "q": "Does PDF export bundle a heavy library?",
-      "a": "<p>No. PDF export runs on a small writer built into the extension (<code>src/editor/pdf-writer.ts</code>). It places each page’s image and compresses it with the browser’s own <code>CompressionStream</code>, so exporting a PDF makes no network request and adds no third-party code. Earlier versions used jsPDF, which pulled in <code>html2canvas</code> and <code>dompurify</code> for a feature the extension never called.</p>",
+      "q": "Which file formats can I export?",
+      "a": "<p>Save screenshots as PNG, JPEG, WebP, or PDF from the editor. You can also copy an image to your clipboard. Tab recordings export as WebM. All exports are processed locally and have no watermark.</p>",
       "home": true
     },
     {
@@ -55,17 +55,17 @@
     },
     {
       "q": "Can I change the keyboard shortcuts?",
-      "a": "<p>Yes. Open <code>chrome://extensions/shortcuts</code>, or use the <strong>Shortcuts</strong> link in the popup footer. The defaults are <code>Ctrl+Shift+S</code> for the full page, <code>Alt+Shift+V</code> for the visible area, and <code>Ctrl+Shift+E</code> for a region; on macOS they are <code>⌘⇧S</code>, <code>⌘⇧V</code>, and <code>⌘⇧E</code>. Chrome may leave a command unbound if another extension already claims the combination.</p>",
+      "a": "<p>Yes. Use the <strong>Shortcuts</strong> link in the capture menu to view or change your shortcuts. In Chrome, you can also open <code>chrome://extensions/shortcuts</code>. If a shortcut does not work, check whether another extension uses the same keys.</p>",
       "home": true
     },
     {
       "q": "Why does Chrome ask for tab capture access?",
-      "a": "<p><code>tabCapture</code> is an optional permission, not one the extension asks for at install. Chrome shows the prompt once, the first time you click Record; every recording after that starts in one click, with no further prompt. Declaring it optional means it carries no install-time warning and never appears unless you actually start a recording.</p>",
+      "a": "<p>Chrome needs this permission to record a tab. It is optional and requested when you first use the recorder, not during installation. You can take screenshots without granting it.</p>",
       "home": true
     },
     {
       "q": "Where are my recordings stored?",
-      "a": "<p>On your device, and nowhere else. Video chunks, the cursor log, and any mic or tab audio are written to IndexedDB as you record, in 1-second pieces, so a crash or a killed background page never loses the take. They stay there until you export or delete the session — nothing is ever uploaded.</p>",
+      "a": "<p>Recordings and their audio are saved in local browser storage as you record. They remain there until you delete the session. Export a WebM file to keep a separate copy on your device. The extension does not upload recordings.</p>",
       "home": true
     },
     {

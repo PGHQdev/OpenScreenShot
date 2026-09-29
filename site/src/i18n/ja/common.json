@@ -8,11 +8,11 @@
     "roadmap": "ロードマップ",
     "github": "GitHub",
     "addToFirefox": "Firefox に追加",
-    "installForFirefox": "Firefox 用をインストール",
-    "installForChrome": "Chrome 用をインストール"
+    "installForFirefox": "Firefox に追加",
+    "installForChrome": "Chrome に追加"
   },
   "footer": {
-    "tagline": "スクリーンショットがデバイスの外に出ることはありません。",
+    "tagline": "Chrome・Firefox 向けの無料・オープンソースのスクリーンショットツール。",
     "productHead": "プロダクト",
     "projectHead": "プロジェクト",
     "moreHead": "@PGHQdev のその他のツール",
@@ -27,7 +27,7 @@
     "compare": "比較"
   },
   "meta": {
-    "ogDefaultAlt": "OpenScreenShot: Chrome 向けのフルページ スクリーンショットと注釈。無料、オープンソース、100% ローカル。"
+    "ogDefaultAlt": "OpenScreenShot: Chrome・Firefox 向けのページ全体のスクリーンショットと注釈。無料・オープンソースで、ローカルで処理します。"
   },
   "breadcrumbHome": "ホーム",
   "permissionTable": {
