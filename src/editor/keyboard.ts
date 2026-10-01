@@ -30,7 +30,7 @@ import {
 } from './annotations';
 import { t } from './i18n';
 import type { Band } from './bands';
-import { TOOL_LIST } from './tools';
+import { TOOL_LIST, type Tool } from './tools';
 
 /** Nudge and resize step, in image pixels. Shift takes the coarse one. */
 export const STEP_FINE = 1;
@@ -370,6 +370,8 @@ export type Mutation =
   | { kind: 'delete'; type: AnnotationType; remaining: number }
   | { kind: 'delete-many'; count: number; remaining: number }
   | { kind: 'duplicate'; count: number }
+  /** A tool rail button moved with Alt+Arrow; `position` counts from 1. */
+  | { kind: 'tool-moved'; tool: Tool; position: number; total: number }
   /**
    * What the step did to the picture, so a step that changed it says so
    * instead of naming the layer count alone.
@@ -484,6 +486,12 @@ export function announce(m: Mutation): string {
     }
     case 'duplicate':
       return t('editorAnnounceDuplicate', [count(m.count)]);
+    case 'tool-moved':
+      return t('editorAnnounceToolMoved', [
+        TOOL_LIST.find((tool) => tool.id === m.tool)?.label ?? m.tool,
+        String(m.position),
+        String(m.total),
+      ]);
     case 'undo':
       return `${t('editorAnnounceUndo')}${stepSize(m)} ${count(m.total)}.`;
     case 'redo':

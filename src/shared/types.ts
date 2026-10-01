@@ -183,6 +183,8 @@ export interface Settings {
   annotationFill: boolean;
   /** The outline the Shape tool draws. See BOX_SHAPES (src/editor/annotations.ts). */
   annotationShape: BoxShape;
+  /** The editor's tool rail, in order. Empty = the default (PRIMARY_TOOLS). */
+  toolRail: string[];
   /** Custom colours the user picked, most recent first. */
   recentColors: string[];
   /** Seconds to wait before every capture (0 = immediate). See CAPTURE_DELAYS. */
@@ -215,6 +217,7 @@ export const DEFAULT_SETTINGS: Settings = {
   annotationFontSize: 28,
   annotationFill: false,
   annotationShape: 'rect',
+  toolRail: [],
   recentColors: [],
   captureDelay: 0,
   captureAction: 'editor',

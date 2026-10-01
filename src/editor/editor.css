@@ -687,6 +687,31 @@ body {
   color: var(--text-2);
 }
 
+.more-separator {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--rule);
+}
+
+.more-hint {
+  max-width: 190px;
+  padding: 2px 8px 4px;
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+
+/* Where a dragged tool lands: a bar on the side it will take, or a ring on
+   More for "send it to the menu". */
+.tool-btn[data-drop='before'] {
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+.tool-btn[data-drop='after'] {
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.tool-btn[data-drop='into'] {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
 .btn-sm {
   height: 28px;
   padding: 0 10px;

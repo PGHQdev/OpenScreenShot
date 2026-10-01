@@ -1,8 +1,13 @@
+import { Fragment } from 'preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { isTypingTarget, useEditor } from './useEditor';
 import {
-  OVERFLOW_TOOLS,
+  isDefaultRail,
+  normalizeToolRail,
+  overflowTools,
+  placeOnRail,
   PRIMARY_TOOLS,
+  removeFromRail,
   TOOL_DIVIDER_AFTER,
   TOOL_LIST,
   type Tool,
@@ -123,6 +128,75 @@ export function App() {
     };
   }, []);
   const toolbarRef = useRef<HTMLElement>(null);
+
+  // The tool rail's order: the user's, from settings, or PRIMARY_TOOLS.
+  const [rail, setRail] = useState<Tool[]>(() => [...PRIMARY_TOOLS]);
+  useEffect(() => {
+    void getSettings().then((s) => setRail(normalizeToolRail(s.toolRail)));
+  }, []);
+  function saveRail(next: Tool[]) {
+    setRail(next);
+    void setSettings({ toolRail: isDefaultRail(next) ? [] : next });
+  }
+
+  // A drag carries a tool id, read back on drop; dragover cannot read
+  // dataTransfer, so the id also sits here for the drop-side indicator.
+  const dragToolRef = useRef<Tool | null>(null);
+  const [dropAt, setDropAt] = useState<{ tool: Tool; side: 'before' | 'after' } | null>(null);
+  function startToolDrag(e: DragEvent, id: Tool) {
+    dragToolRef.current = id;
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', id);
+    }
+  }
+  function endToolDrag() {
+    dragToolRef.current = null;
+    setDropAt(null);
+  }
+  function dropSide(e: DragEvent): 'before' | 'after' {
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    return e.clientY < r.top + r.height / 2 ? 'before' : 'after';
+  }
+  function overRailTool(e: DragEvent, id: Tool) {
+    if (!dragToolRef.current) return;
+    e.preventDefault();
+    const side = dropSide(e);
+    setDropAt((prev) => (prev?.tool === id && prev.side === side ? prev : { tool: id, side }));
+  }
+  function dropOnRailTool(e: DragEvent, id: Tool) {
+    const dragged = dragToolRef.current;
+    if (!dragged) return;
+    e.preventDefault();
+    const index = rail.indexOf(id) + (dropSide(e) === 'after' ? 1 : 0);
+    saveRail(placeOnRail(rail, dragged, index));
+    endToolDrag();
+  }
+
+  // Alt+Up / Alt+Down moves the focused rail tool: the keyboard's reorder.
+  // A moved button is a new DOM position, so focus follows it after render.
+  const refocusToolRef = useRef<Tool | null>(null);
+  function moveFocusedTool(e: KeyboardEvent): boolean {
+    if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return false;
+    const id = (document.activeElement as HTMLElement | null)?.dataset?.tool as Tool | undefined;
+    const from = id ? rail.indexOf(id) : -1;
+    if (!id || from === -1) return false;
+    e.preventDefault();
+    // placeOnRail counts slots before the move, so one step down is from + 2.
+    const to = e.key === 'ArrowUp' ? from - 1 : from + 2;
+    if (to < 0 || to > rail.length) return true;
+    const next = placeOnRail(rail, id, to);
+    refocusToolRef.current = id;
+    saveRail(next);
+    ed.say({ kind: 'tool-moved', tool: id, position: next.indexOf(id) + 1, total: next.length });
+    return true;
+  }
+  useLayoutEffect(() => {
+    const id = refocusToolRef.current;
+    if (!id) return;
+    refocusToolRef.current = null;
+    toolbarRef.current?.querySelector<HTMLElement>(`[data-tool="${id}"]`)?.focus();
+  }, [rail]);
   // Echoes stageNoticeT.mounted for draftPromptT to gate on, one render
   // behind — see the coordination comment below for why the delay is
   // harmless. A plain ref write here would not be: nothing forces the
@@ -492,30 +566,50 @@ export function App() {
             aria-orientation="vertical"
             aria-label={t('editorAriaAnnotationTools')}
             ref={toolbarRef}
-            onKeyDown={(e) => arrowNav(e.currentTarget as HTMLElement, e)}
+            onKeyDown={(e) => {
+              if (!moveFocusedTool(e)) arrowNav(e.currentTarget as HTMLElement, e);
+            }}
             onFocusIn={(e) =>
               syncRovingTabIndex(e.currentTarget as HTMLElement, e.target as HTMLElement)
             }
           >
-            {PRIMARY_TOOLS.map((id) => TOOL_LIST.find((x) => x.id === id)!).map((t) => (
-              <>
-                <button
-                  key={t.id}
-                  class={`tool-btn${ed.tool === t.id ? ' is-active' : ''}`}
-                  title={`${t.label} (${t.shortcut})`}
-                  aria-pressed={ed.tool === t.id}
-                  disabled={!ed.hasImage}
-                  onClick={() => ed.setTool(t.id)}
-                >
-                  <ToolIcon id={t.id} />
-                  <span class="tool-label">{t.label}</span>
-                </button>
-                {TOOL_DIVIDER_AFTER.has(t.id) ? (
-                  <div class="toolbar-divider" role="separator" aria-orientation="horizontal" />
-                ) : null}
-              </>
-            ))}
-            <MoreTools ed={ed} />
+            {rail
+              .map((id) => TOOL_LIST.find((x) => x.id === id)!)
+              .map((t) => (
+                <Fragment key={t.id}>
+                  <button
+                    class={`tool-btn${ed.tool === t.id ? ' is-active' : ''}`}
+                    data-tool={t.id}
+                    data-drop={dropAt?.tool === t.id ? dropAt.side : undefined}
+                    title={`${t.label} (${t.shortcut})`}
+                    aria-pressed={ed.tool === t.id}
+                    disabled={!ed.hasImage}
+                    draggable={ed.hasImage}
+                    onClick={() => ed.setTool(t.id)}
+                    onDragStart={(e) => startToolDrag(e, t.id)}
+                    onDragEnd={endToolDrag}
+                    onDragOver={(e) => overRailTool(e, t.id)}
+                    onDragLeave={() => setDropAt((prev) => (prev?.tool === t.id ? null : prev))}
+                    onDrop={(e) => dropOnRailTool(e, t.id)}
+                  >
+                    <ToolIcon id={t.id} />
+                    <span class="tool-label">{t.label}</span>
+                  </button>
+                  {/* The groups the dividers mark only hold in the default order. */}
+                  {isDefaultRail(rail) && TOOL_DIVIDER_AFTER.has(t.id) ? (
+                    <div class="toolbar-divider" role="separator" aria-orientation="horizontal" />
+                  ) : null}
+                </Fragment>
+              ))}
+            <MoreTools
+              ed={ed}
+              rail={rail}
+              dragToolRef={dragToolRef}
+              onDragStart={startToolDrag}
+              onDragEnd={endToolDrag}
+              onRemove={(id) => saveRail(removeFromRail(rail, id))}
+              onReset={() => saveRail([...PRIMARY_TOOLS])}
+            />
 
             {ed.annotations.length > 0 ? (
               <div class="toolbar-count" title={annotationCount(ed.annotations.length)}>
@@ -530,6 +624,8 @@ export function App() {
           class="stage"
           data-dropping={dragOver ? 'true' : undefined}
           onDragOver={(e) => {
+            // A tool dragged off the rail is not an image to import.
+            if (dragToolRef.current) return;
             e.preventDefault();
             setDragOver(true);
           }}
@@ -1667,14 +1763,35 @@ function EmptyState() {
  * the editor's window shortcuts stay out, Escape restores the trigger, Tab
  * closes and moves on.
  */
-function MoreTools({ ed }: { ed: ReturnType<typeof useEditor> }) {
+function MoreTools({
+  ed,
+  rail,
+  dragToolRef,
+  onDragStart,
+  onDragEnd,
+  onRemove,
+  onReset,
+}: {
+  ed: ReturnType<typeof useEditor>;
+  rail: readonly Tool[];
+  dragToolRef: { current: Tool | null };
+  onDragStart: (e: DragEvent, id: Tool) => void;
+  onDragEnd: () => void;
+  /** A rail tool dropped on this button leaves the rail for this menu. */
+  onRemove: (id: Tool) => void;
+  onReset: () => void;
+}) {
   const [open, setOpen] = useState(false);
+  const [dropHere, setDropHere] = useState(false);
+  // A tool dragged out of this menu leaves it on drop, taking its dragend
+  // handler with it, so the rail changing is what closes the menu.
+  useEffect(() => setOpen(false), [rail]);
   const { mounted, closing } = useExitDelay(open, DUR_MID);
   const wrapRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  const overflow: ToolDef[] = OVERFLOW_TOOLS.map((id) => TOOL_LIST.find((x) => x.id === id)!);
+  const overflow: ToolDef[] = overflowTools(rail).map((id) => TOOL_LIST.find((x) => x.id === id)!);
   const active = overflow.find((x) => x.id === ed.tool) ?? null;
 
   useLayoutEffect(() => {
@@ -1740,7 +1857,23 @@ function MoreTools({ ed }: { ed: ReturnType<typeof useEditor> }) {
         aria-label={active ? `${t('editorMoreTools')}: ${active.label}` : t('editorMoreTools')}
         aria-haspopup="menu"
         aria-expanded={open}
+        data-drop={dropHere ? 'into' : undefined}
         onClick={() => setOpen((v) => !v)}
+        onDragOver={(e) => {
+          const id = dragToolRef.current;
+          if (!id || !rail.includes(id) || rail.length <= 1) return;
+          e.preventDefault();
+          setDropHere(true);
+        }}
+        onDragLeave={() => setDropHere(false)}
+        onDrop={(e) => {
+          const id = dragToolRef.current;
+          setDropHere(false);
+          if (!id || !rail.includes(id)) return;
+          e.preventDefault();
+          onRemove(id);
+          onDragEnd();
+        }}
       >
         {/* An armed overflow tool shows itself here, so the rail never hides
             the active tool behind three dots. */}
@@ -1762,6 +1895,12 @@ function MoreTools({ ed }: { ed: ReturnType<typeof useEditor> }) {
               role="menuitemradio"
               aria-checked={ed.tool === x.id}
               tabIndex={-1}
+              draggable
+              onDragStart={(e) => onDragStart(e, x.id)}
+              onDragEnd={() => {
+                onDragEnd();
+                setOpen(false);
+              }}
               onClick={() => {
                 ed.setTool(x.id);
                 setOpen(false);
@@ -1773,6 +1912,26 @@ function MoreTools({ ed }: { ed: ReturnType<typeof useEditor> }) {
               <kbd>{x.shortcut}</kbd>
             </button>
           ))}
+          <div class="more-separator" role="separator" />
+          <div class="more-hint" role="none">
+            {t('editorToolbarHint')}
+          </div>
+          {isDefaultRail(rail) ? null : (
+            <>
+              <button
+                class="more-item"
+                role="menuitem"
+                tabIndex={-1}
+                onClick={() => {
+                  onReset();
+                  setOpen(false);
+                  triggerRef.current?.focus();
+                }}
+              >
+                <span>{t('editorToolbarReset')}</span>
+              </button>
+            </>
+          )}
         </div>
       ) : null}
     </div>

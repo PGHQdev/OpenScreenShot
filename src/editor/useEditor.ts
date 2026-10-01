@@ -2680,6 +2680,7 @@ export function useEditor() {
     onCanvasDoubleClick,
     onCanvasKeyDown,
     announcement,
+    say,
     updateText,
     finishText,
     applyCrop,

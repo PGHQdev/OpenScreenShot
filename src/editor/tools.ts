@@ -60,9 +60,10 @@ export const TOOL_LIST: ToolDef[] = [
 ];
 
 /**
- * The tool rail's first paint: Select, the four most-used drawing tools, and
+ * The tool rail's default: Select, the four most-used drawing tools, and
  * the two redaction tools. Everything else stays reachable behind the rail's
- * More button ({@link OVERFLOW_TOOLS}) and through its shortcut letter.
+ * More button ({@link overflowTools}) and through its shortcut letter. The
+ * user can reorder the rail; that order lives in settings (`toolRail`).
  */
 export const PRIMARY_TOOLS: readonly Tool[] = [
   'select',
@@ -74,10 +75,49 @@ export const PRIMARY_TOOLS: readonly Tool[] = [
   'crop',
 ];
 
-/** The rest of TOOL_LIST, in TOOL_LIST order — the More button's menu. */
-export const OVERFLOW_TOOLS: readonly Tool[] = TOOL_LIST.map((t) => t.id).filter(
-  (id) => !PRIMARY_TOOLS.includes(id),
-);
+/** The tools not on `rail`, in TOOL_LIST order — the More button's menu. */
+export function overflowTools(rail: readonly Tool[]): Tool[] {
+  return TOOL_LIST.map((t) => t.id).filter((id) => !rail.includes(id));
+}
+
+/** Whether `rail` is the default order, which is the only one drawn with dividers. */
+export function isDefaultRail(rail: readonly Tool[]): boolean {
+  return rail.length === PRIMARY_TOOLS.length && rail.every((id, i) => id === PRIMARY_TOOLS[i]);
+}
+
+/**
+ * A stored rail order made safe to render: known tools only, each once. An
+ * empty or unreadable value gives the default, so the rail is never blank.
+ */
+export function normalizeToolRail(value: unknown): Tool[] {
+  if (!Array.isArray(value)) return [...PRIMARY_TOOLS];
+  const known = new Set<string>(TOOL_LIST.map((t) => t.id));
+  const rail: Tool[] = [];
+  for (const id of value) {
+    if (typeof id === 'string' && known.has(id) && !rail.includes(id as Tool))
+      rail.push(id as Tool);
+  }
+  return rail.length > 0 ? rail : [...PRIMARY_TOOLS];
+}
+
+/**
+ * Put `tool` at `index` on the rail: a move when it is already there, an add
+ * when it comes from the More menu. `index` counts slots in the rail before
+ * the move, so dropping a tool on its own slot leaves the order as it was.
+ */
+export function placeOnRail(rail: readonly Tool[], tool: Tool, index: number): Tool[] {
+  const from = rail.indexOf(tool);
+  const next = rail.filter((id) => id !== tool);
+  const at = from !== -1 && from < index ? index - 1 : index;
+  next.splice(Math.max(0, Math.min(at, next.length)), 0, tool);
+  return next;
+}
+
+/** Send `tool` to the More menu. The last tool on the rail stays. */
+export function removeFromRail(rail: readonly Tool[], tool: Tool): Tool[] {
+  if (rail.length <= 1) return [...rail];
+  return rail.filter((id) => id !== tool);
+}
 
 /**
  * Tool rail dividers: rendered after the tool whose id is a member, splitting

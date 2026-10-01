@@ -1065,6 +1065,24 @@
       }
     }
   },
+  "editorAnnounceToolMoved": {
+    "message": "$TOOL$ 已移到第 $POS$ 位，共 $TOTAL$ 位。",
+    "description": "Editor live region: a tool rail button moved with Alt+Arrow, e.g. \"Pen moved to position 2 of 7.\"",
+    "placeholders": {
+      "tool": {
+        "content": "$1",
+        "example": "Pen"
+      },
+      "pos": {
+        "content": "$2",
+        "example": "2"
+      },
+      "total": {
+        "content": "$3",
+        "example": "7"
+      }
+    }
+  },
   "editorAnnounceUndo": {
     "message": "已撤销。",
     "description": "Editor live region: an undo step ran. Followed in code by an optional picture-size sentence and the current layer count."
@@ -1584,6 +1602,14 @@
   "editorMoreTools": {
     "message": "更多工具",
     "description": "Editor tool rail: accessible label and tooltip on the More overflow button."
+  },
+  "editorToolbarReset": {
+    "message": "重置工具栏",
+    "description": "Editor More-tools menu: restores the default tool rail order."
+  },
+  "editorToolbarHint": {
+    "message": "拖动工具可调整顺序，拖到“更多工具”可隐藏。",
+    "description": "Editor More-tools menu: how to reorder the tool rail by dragging."
   },
   "editorExporting": {
     "message": "正在导出…",

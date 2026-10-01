@@ -6,8 +6,12 @@ import {
   DUPLICATE_OFFSET,
   duplicateAnnotations,
   extendDraft,
-  OVERFLOW_TOOLS,
+  isDefaultRail,
+  normalizeToolRail,
+  overflowTools,
+  placeOnRail,
   PRIMARY_TOOLS,
+  removeFromRail,
   renumberSteps,
   shouldCommit,
   snapTo45,
@@ -325,17 +329,55 @@ describe('cut tool', () => {
 describe('tool rail grouping', () => {
   it('splits TOOL_LIST into primary and overflow with nothing lost or doubled', () => {
     const all = TOOL_LIST.map((t) => t.id).sort();
-    const grouped = [...PRIMARY_TOOLS, ...OVERFLOW_TOOLS].sort();
+    const grouped = [...PRIMARY_TOOLS, ...overflowTools(PRIMARY_TOOLS)].sort();
     expect(grouped).toEqual(all);
     expect(new Set(grouped).size).toBe(grouped.length);
   });
 
   it('keeps the overflow in TOOL_LIST order', () => {
-    const listOrder = TOOL_LIST.map((t) => t.id).filter((id) => OVERFLOW_TOOLS.includes(id));
-    expect([...OVERFLOW_TOOLS]).toEqual(listOrder);
+    const overflow = overflowTools(PRIMARY_TOOLS);
+    const listOrder = TOOL_LIST.map((t) => t.id).filter((id) => overflow.includes(id));
+    expect(overflow).toEqual(listOrder);
   });
 
   it('draws every divider after a tool the rail actually shows', () => {
     for (const id of TOOL_DIVIDER_AFTER) expect(PRIMARY_TOOLS).toContain(id);
+  });
+});
+
+describe('custom tool rail', () => {
+  it('reads a missing, empty or junk stored order as the default', () => {
+    expect(normalizeToolRail(undefined)).toEqual(PRIMARY_TOOLS);
+    expect(normalizeToolRail([])).toEqual(PRIMARY_TOOLS);
+    expect(normalizeToolRail(['nope', 7])).toEqual(PRIMARY_TOOLS);
+  });
+
+  it('keeps a stored order, dropping unknown tools and repeats', () => {
+    expect(normalizeToolRail(['pen', 'gone', 'select', 'pen'])).toEqual(['pen', 'select']);
+  });
+
+  it('moves a rail tool down and up by slot', () => {
+    const rail = ['select', 'arrow', 'rect', 'text'] as const;
+    expect(placeOnRail(rail, 'arrow', 3)).toEqual(['select', 'rect', 'arrow', 'text']);
+    expect(placeOnRail(rail, 'text', 0)).toEqual(['text', 'select', 'arrow', 'rect']);
+    expect(placeOnRail(rail, 'rect', 2)).toEqual([...rail]);
+    expect(placeOnRail(rail, 'rect', 3)).toEqual([...rail]);
+  });
+
+  it('adds a More-menu tool at the drop slot, and to the end past it', () => {
+    const rail = ['select', 'arrow'] as const;
+    expect(placeOnRail(rail, 'step', 1)).toEqual(['select', 'step', 'arrow']);
+    expect(placeOnRail(rail, 'step', 99)).toEqual(['select', 'arrow', 'step']);
+  });
+
+  it('sends a tool to the More menu, but never empties the rail', () => {
+    expect(removeFromRail(['select', 'pen'], 'pen')).toEqual(['select']);
+    expect(overflowTools(['select'])).toContain('pen');
+    expect(removeFromRail(['select'], 'select')).toEqual(['select']);
+  });
+
+  it('knows the default order from a custom one', () => {
+    expect(isDefaultRail(PRIMARY_TOOLS)).toBe(true);
+    expect(isDefaultRail(placeOnRail(PRIMARY_TOOLS, 'crop', 0))).toBe(false);
   });
 });

@@ -1065,6 +1065,24 @@
       }
     }
   },
+  "editorAnnounceToolMoved": {
+    "message": "$TOOL$ movido a la posición $POS$ de $TOTAL$.",
+    "description": "Editor live region: a tool rail button moved with Alt+Arrow, e.g. \"Pen moved to position 2 of 7.\"",
+    "placeholders": {
+      "tool": {
+        "content": "$1",
+        "example": "Pen"
+      },
+      "pos": {
+        "content": "$2",
+        "example": "2"
+      },
+      "total": {
+        "content": "$3",
+        "example": "7"
+      }
+    }
+  },
   "editorAnnounceUndo": {
     "message": "Deshacer.",
     "description": "Editor live region: an undo step ran. Followed in code by an optional picture-size sentence and the current layer count."
@@ -1584,6 +1602,14 @@
   "editorMoreTools": {
     "message": "Más herramientas",
     "description": "Editor tool rail: accessible label and tooltip on the More overflow button."
+  },
+  "editorToolbarReset": {
+    "message": "Restablecer barra",
+    "description": "Editor More-tools menu: restores the default tool rail order."
+  },
+  "editorToolbarHint": {
+    "message": "Arrastra herramientas para reordenar la barra, o a Más herramientas para ocultarlas.",
+    "description": "Editor More-tools menu: how to reorder the tool rail by dragging."
   },
   "editorExporting": {
     "message": "Exportando…",
