@@ -1069,6 +1069,24 @@
       }
     }
   },
+  "editorAnnounceToolMoved": {
+    "message": "$TOOL$을(를) $TOTAL$개 중 $POS$번째로 이동했습니다.",
+    "description": "Editor live region: a tool rail button moved with Alt+Arrow, e.g. \"Pen moved to position 2 of 7.\"",
+    "placeholders": {
+      "tool": {
+        "content": "$1",
+        "example": "Pen"
+      },
+      "pos": {
+        "content": "$2",
+        "example": "2"
+      },
+      "total": {
+        "content": "$3",
+        "example": "7"
+      }
+    }
+  },
   "editorAnnounceUndo": {
     "message": "실행 취소.",
     "description": "Editor live region: an undo step ran. Followed in code by an optional picture-size sentence and the current layer count."
@@ -1140,6 +1158,10 @@
   "editorHandleEnd": {
     "message": "끝",
     "description": "Editor live region: the cut band's end handle."
+  },
+  "editorHandleBend": {
+    "message": "구부리기",
+    "description": "Editor: the arrow's middle handle, which bends it into a curve."
   },
   "editorCropPhrase": {
     "message": "자르기 영역 $W$×$H$픽셀, 위치 $X$, $Y$.",
@@ -1277,6 +1299,10 @@
     "message": "사각형",
     "description": "Editor tool rail: the Rectangle tool. Also the Rectangle spotlight-shape option."
   },
+  "editorToolShape": {
+    "message": "도형",
+    "description": "Editor tool rail: the Shape tool (rectangle, rounded, oval, triangle)."
+  },
   "editorToolArrow": {
     "message": "화살표",
     "description": "Editor tool rail: the Arrow tool."
@@ -1322,11 +1348,11 @@
     "description": "Editor tool rail: the Cut tool."
   },
   "editorHintRect": {
-    "message": "드래그해 사각형 그리기 · Shift로 정사각형 유지",
+    "message": "드래그해 도형 그리기 · Shift로 가로세로 같게 유지",
     "description": "Editor status bar hint for the Rectangle tool."
   },
   "editorHintArrow": {
-    "message": "드래그해 화살표 그리기 · Shift로 45° 스냅",
+    "message": "드래그해 화살표 그리기 · Shift로 45° 스냅 · 선택 후 둥근 핸들을 끌면 구부러집니다",
     "description": "Editor status bar hint for the Arrow tool."
   },
   "editorHintLine": {
@@ -1401,6 +1427,10 @@
     "message": "타원",
     "description": "Editor style bar: the Ellipse spotlight shape."
   },
+  "editorShapeTriangle": {
+    "message": "삼각형",
+    "description": "Editor style bar: the Triangle shape of the Shape tool."
+  },
   "editorStyleColor": {
     "message": "색상",
     "description": "Editor style bar: the color field group label."
@@ -1412,6 +1442,38 @@
   "editorStyleShape": {
     "message": "모양",
     "description": "Editor style bar: the spotlight-shape field group label."
+  },
+  "editorStyleArrowHead": {
+    "message": "끝 모양",
+    "description": "Editor style bar: the arrow tip field group label."
+  },
+  "editorArrowHeadFilled": {
+    "message": "채움",
+    "description": "Editor style bar: arrow tip option, a filled triangle."
+  },
+  "editorArrowHeadOpen": {
+    "message": "열림",
+    "description": "Editor style bar: arrow tip option, an open V made of two lines."
+  },
+  "editorArrowHeadDouble": {
+    "message": "양쪽 끝",
+    "description": "Editor style bar: arrow tip option, filled tips at both ends."
+  },
+  "editorArrowHeadDot": {
+    "message": "점",
+    "description": "Editor style bar: arrow tip option, a round dot."
+  },
+  "editorStyleFill": {
+    "message": "채우기",
+    "description": "Editor style bar: the rectangle fill field group label."
+  },
+  "editorFillNone": {
+    "message": "없음",
+    "description": "Editor style bar: rectangle fill option that draws the outline only."
+  },
+  "editorFillSolid": {
+    "message": "단색",
+    "description": "Editor style bar: rectangle fill option that paints the inside in the stroke colour."
   },
   "editorStyleRedaction": {
     "message": "가리기",
@@ -1568,6 +1630,14 @@
   "editorMoreTools": {
     "message": "도구 더 보기",
     "description": "Editor tool rail: accessible label and tooltip on the More overflow button."
+  },
+  "editorToolbarReset": {
+    "message": "도구 모음 초기화",
+    "description": "Editor More-tools menu: restores the default tool rail order."
+  },
+  "editorToolbarHint": {
+    "message": "도구를 끌어 순서를 바꾸거나 '도구 더 보기'로 끌어 숨길 수 있습니다.",
+    "description": "Editor More-tools menu: how to reorder the tool rail by dragging."
   },
   "editorExporting": {
     "message": "내보내는 중…",

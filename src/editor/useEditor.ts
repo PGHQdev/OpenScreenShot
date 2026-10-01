@@ -23,16 +23,21 @@ import type { Annotation, Rect } from './annotations';
 import {
   annotationsInRect,
   bbox,
+  bendArrow,
   DEFAULT_BLUR_STRENGTH,
   DEFAULT_STYLE,
   handleAt,
   handleAtRect,
   hasStroke,
   measureTextSize,
+  normalizeArrowHead,
+  normalizeBoxShape,
   normalizeRect,
   resizeRect,
   scaleAnnotation,
   scaleInBox,
+  STROKE_WIDTHS,
+  strokeScale,
   translateAnnotation,
   type AnnotationStyle,
   type BlurMode,
@@ -97,7 +102,13 @@ import {
   type CarriedBox,
   type Mutation,
 } from './keyboard';
-import type { CaptureHistoryEntry, LastCapture, Settings } from '../shared/types';
+import type {
+  ArrowHead,
+  BoxShape,
+  CaptureHistoryEntry,
+  LastCapture,
+  Settings,
+} from '../shared/types';
 import {
   clearDraft,
   clearDraftImage,
@@ -238,6 +249,9 @@ export function useEditor() {
   const [recentColors, setRecentColors] = useState<string[]>([]);
   const [spotlightShape, setSpotlightShapeState] = useState<SpotlightShape>('rect');
   const [blurMode, setBlurModeState] = useState<BlurMode>('blur');
+  const [rectFill, setRectFillState] = useState(false);
+  const [boxShape, setBoxShapeState] = useState<BoxShape>('rect');
+  const [arrowHead, setArrowHeadState] = useState<ArrowHead>('filled');
   const [blurStrength, setBlurStrengthState] = useState<number>(DEFAULT_BLUR_STRENGTH);
   const [frame, setFrameState] = useState<FrameOptions>(DEFAULT_FRAME);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
@@ -298,8 +312,14 @@ export function useEditor() {
   // first nudge, cleared on the key's release (see the keyup handler below).
   const keyNudgeRef = useRef(false);
   const styleRef = useRef(style);
+  // style.strokeWidth is a style-bar preset; a shape draws at preset × this.
+  const strokeScaleValue = imageSize ? strokeScale(imageSize.w) : 1;
+  const strokeScaleRef = useRef(strokeScaleValue);
   const spotlightShapeRef = useRef(spotlightShape);
   const blurModeRef = useRef(blurMode);
+  const rectFillRef = useRef(rectFill);
+  const boxShapeRef = useRef(boxShape);
+  const arrowHeadRef = useRef(arrowHead);
   const blurStrengthRef = useRef(blurStrength);
   // True from the moment restoreDraft clears draftPrompt until the restored
   // annotations land. The canvas is transiently empty in that window; without
@@ -473,6 +493,18 @@ export function useEditor() {
   }, [blurMode]);
 
   useEffect(() => {
+    rectFillRef.current = rectFill;
+  }, [rectFill]);
+
+  useEffect(() => {
+    boxShapeRef.current = boxShape;
+  }, [boxShape]);
+
+  useEffect(() => {
+    arrowHeadRef.current = arrowHead;
+  }, [arrowHead]);
+
+  useEffect(() => {
     blurStrengthRef.current = blurStrength;
   }, [blurStrength]);
 
@@ -523,6 +555,10 @@ export function useEditor() {
     styleRef.current = style;
   }, [style]);
 
+  useEffect(() => {
+    strokeScaleRef.current = strokeScaleValue;
+  }, [strokeScaleValue]);
+
   // Persist the annotation style so it's remembered across sessions.
   // Skip the very first run (the initial load from settings) to avoid a write.
   const styleLoadedRef = useRef(false);
@@ -566,7 +602,10 @@ export function useEditor() {
     const color = agreed(sel, (a) =>
       hasStroke(a) ? a.stroke : a.type === 'text' || a.type === 'step' ? a.color : undefined,
     );
-    const strokeWidth = agreed(sel, (a) => (hasStroke(a) ? a.strokeWidth : undefined));
+    const drawn = agreed(sel, (a) => (hasStroke(a) ? a.strokeWidth : undefined));
+    // Back to a preset; a width no preset draws at this scale leaves the bar alone.
+    const preset = drawn === null ? null : drawn / strokeScaleRef.current;
+    const strokeWidth = preset !== null && STROKE_WIDTHS.includes(preset) ? preset : null;
     const fontSize = agreed(sel, (a) => (a.type === 'text' ? a.fontSize : undefined));
     const shape = agreed(sel, (a) => (a.type === 'spotlight' ? a.shape : undefined));
     const mode = agreed(sel, (a) => (a.type === 'blur' ? (a.mode ?? 'blur') : undefined));
@@ -580,6 +619,14 @@ export function useEditor() {
     }
     if (shape !== null) setSpotlightShapeState(shape);
     if (mode !== null) setBlurModeState(mode);
+    const fill = agreed(sel, (a) => (a.type === 'rect' ? a.filled === true : undefined));
+    if (fill !== null) setRectFillState(fill);
+    const outline = agreed(sel, (a) =>
+      a.type === 'rect' ? normalizeBoxShape(a.shape) : undefined,
+    );
+    if (outline !== null) setBoxShapeState(outline);
+    const tip = agreed(sel, (a) => (a.type === 'arrow' ? normalizeArrowHead(a.head) : undefined));
+    if (tip !== null) setArrowHeadState(tip);
     if (strength !== null) setBlurStrengthState(strength);
   }, [selectedIds]);
 
@@ -829,7 +876,8 @@ export function useEditor() {
   const setStyleStrokeWidth = useCallback(
     (strokeWidth: number) => {
       setStyle((s) => ({ ...s, strokeWidth }));
-      applyStyleToSelected((a) => (hasStroke(a) ? { ...a, strokeWidth } : a));
+      const drawn = strokeWidth * strokeScaleRef.current;
+      applyStyleToSelected((a) => (hasStroke(a) ? { ...a, strokeWidth: drawn } : a));
     },
     [applyStyleToSelected],
   );
@@ -838,6 +886,35 @@ export function useEditor() {
     (shape: SpotlightShape) => {
       setSpotlightShapeState(shape);
       applyStyleToSelected((a) => (a.type === 'spotlight' ? { ...a, shape } : a));
+    },
+    [applyStyleToSelected],
+  );
+
+  // Remembered across sessions, like the style: a user who fills boxes to
+  // write over them wants the next capture's boxes filled too.
+  const setRectFill = useCallback(
+    (fill: boolean) => {
+      setRectFillState(fill);
+      void setSettings({ annotationFill: fill });
+      applyStyleToSelected((a) => (a.type === 'rect' ? { ...a, filled: fill } : a));
+    },
+    [applyStyleToSelected],
+  );
+
+  const setBoxShape = useCallback(
+    (shape: BoxShape) => {
+      setBoxShapeState(shape);
+      void setSettings({ annotationShape: shape });
+      applyStyleToSelected((a) => (a.type === 'rect' ? { ...a, shape } : a));
+    },
+    [applyStyleToSelected],
+  );
+
+  const setArrowHead = useCallback(
+    (head: ArrowHead) => {
+      setArrowHeadState(head);
+      void setSettings({ annotationArrowHead: head });
+      applyStyleToSelected((a) => (a.type === 'arrow' ? { ...a, head } : a));
     },
     [applyStyleToSelected],
   );
@@ -921,6 +998,9 @@ export function useEditor() {
         strokeWidth: s.annotationStrokeWidth,
         fontSize: s.annotationFontSize,
       });
+      setRectFillState(s.annotationFill);
+      setBoxShapeState(normalizeBoxShape(s.annotationShape));
+      setArrowHeadState(normalizeArrowHead(s.annotationArrowHead));
       setFrameState(frameFromSettings(s));
       const requestedCapture = new URLSearchParams(window.location.search).get('capture');
       const cap = requestedCapture ? await openCapture(requestedCapture) : await getLastCapture();
@@ -1406,6 +1486,10 @@ export function useEditor() {
               const r = resizeRect(startBBox, handle, dx, dy);
               return { ...a, x: r.x, y: r.y, w: r.w, h: r.h };
             }
+            if (a.type === 'arrow' && handle === 'bend') {
+              // Straight again within a handle's reach of the chord, in screen px.
+              return bendArrow(a, p, BEND_STRAIGHT_PX / (c.view.zoom || 1));
+            }
             if (a.type === 'arrow' || a.type === 'line') {
               if (handle === 'start') return { ...a, x1: p.x, y1: p.y };
               return { ...a, x2: p.x, y2: p.y };
@@ -1743,9 +1827,12 @@ export function useEditor() {
         t as ShapeTool,
         p,
         styleRef.current.color,
-        styleRef.current.strokeWidth,
+        styleRef.current.strokeWidth * strokeScaleRef.current,
         {
           spotlightShape: spotlightShapeRef.current,
+          rectFill: rectFillRef.current,
+          boxShape: boxShapeRef.current,
+          arrowHead: arrowHeadRef.current,
           blurMode: blurModeRef.current,
           blurStrength: blurStrengthRef.current,
         },
@@ -1986,9 +2073,12 @@ export function useEditor() {
       t,
       { x: box.x, y: box.y },
       styleRef.current.color,
-      styleRef.current.strokeWidth,
+      styleRef.current.strokeWidth * strokeScaleRef.current,
       {
         spotlightShape: spotlightShapeRef.current,
+        rectFill: rectFillRef.current,
+        boxShape: boxShapeRef.current,
+        arrowHead: arrowHeadRef.current,
         blurMode: blurModeRef.current,
         blurStrength: blurStrengthRef.current,
       },
@@ -2595,11 +2685,18 @@ export function useEditor() {
     hasSelection: selectedIds.length > 0,
     selectedAnnotation,
     style,
+    strokeScale: strokeScaleValue,
     recentColors,
     spotlightShape,
     setSpotlightShape,
     blurMode,
     setBlurMode,
+    rectFill,
+    setRectFill,
+    boxShape,
+    setBoxShape,
+    arrowHead,
+    setArrowHead,
     blurStrength,
     setBlurStrength,
     frame,
@@ -2617,6 +2714,7 @@ export function useEditor() {
     onCanvasDoubleClick,
     onCanvasKeyDown,
     announcement,
+    say,
     updateText,
     finishText,
     applyCrop,
@@ -2652,6 +2750,12 @@ export function useEditor() {
  * easy to hit.
  */
 const SEAM_HIT_PX = 6;
+
+/**
+ * How near (screen px) an arrow's bend handle must come back to the chord's
+ * midpoint for the arrow to go straight again: the handle's own half-target.
+ */
+const BEND_STRAIGHT_PX = 6;
 
 /**
  * Hit-test annotations topmost-first in screen space; returns an id or null.

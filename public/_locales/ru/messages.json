@@ -1069,6 +1069,24 @@
       }
     }
   },
+  "editorAnnounceToolMoved": {
+    "message": "$TOOL$ перемещён на позицию $POS$ из $TOTAL$.",
+    "description": "Editor live region: a tool rail button moved with Alt+Arrow, e.g. \"Pen moved to position 2 of 7.\"",
+    "placeholders": {
+      "tool": {
+        "content": "$1",
+        "example": "Pen"
+      },
+      "pos": {
+        "content": "$2",
+        "example": "2"
+      },
+      "total": {
+        "content": "$3",
+        "example": "7"
+      }
+    }
+  },
   "editorAnnounceUndo": {
     "message": "Отменено.",
     "description": "Editor live region: an undo step ran. Followed in code by an optional picture-size sentence and the current layer count."
@@ -1140,6 +1158,10 @@
   "editorHandleEnd": {
     "message": "Конец",
     "description": "Editor live region: the cut band's end handle."
+  },
+  "editorHandleBend": {
+    "message": "Изгиб",
+    "description": "Editor: the arrow's middle handle, which bends it into a curve."
   },
   "editorCropPhrase": {
     "message": "Обрезка $W$ на $H$ пикселей в точке $X$, $Y$.",
@@ -1277,6 +1299,10 @@
     "message": "Прямоугольник",
     "description": "Editor tool rail: the Rectangle tool. Also the Rectangle spotlight-shape option."
   },
+  "editorToolShape": {
+    "message": "Фигура",
+    "description": "Editor tool rail: the Shape tool (rectangle, rounded, oval, triangle)."
+  },
   "editorToolArrow": {
     "message": "Стрелка",
     "description": "Editor tool rail: the Arrow tool."
@@ -1322,11 +1348,11 @@
     "description": "Editor tool rail: the Cut tool."
   },
   "editorHintRect": {
-    "message": "Потяните, чтобы нарисовать прямоугольник · Shift — квадрат",
+    "message": "Потяните, чтобы нарисовать фигуру · Shift — равные стороны",
     "description": "Editor status bar hint for the Rectangle tool."
   },
   "editorHintArrow": {
-    "message": "Потяните, чтобы нарисовать стрелку · Shift — шаг 45°",
+    "message": "Потяните, чтобы нарисовать стрелку · Shift — шаг 45° · Выделите и потяните круглую ручку, чтобы изогнуть",
     "description": "Editor status bar hint for the Arrow tool."
   },
   "editorHintLine": {
@@ -1401,6 +1427,10 @@
     "message": "Эллипс",
     "description": "Editor style bar: the Ellipse spotlight shape."
   },
+  "editorShapeTriangle": {
+    "message": "Треугольник",
+    "description": "Editor style bar: the Triangle shape of the Shape tool."
+  },
   "editorStyleColor": {
     "message": "Цвет",
     "description": "Editor style bar: the color field group label."
@@ -1412,6 +1442,38 @@
   "editorStyleShape": {
     "message": "Форма",
     "description": "Editor style bar: the spotlight-shape field group label."
+  },
+  "editorStyleArrowHead": {
+    "message": "Конец",
+    "description": "Editor style bar: the arrow tip field group label."
+  },
+  "editorArrowHeadFilled": {
+    "message": "Заливка",
+    "description": "Editor style bar: arrow tip option, a filled triangle."
+  },
+  "editorArrowHeadOpen": {
+    "message": "Контур",
+    "description": "Editor style bar: arrow tip option, an open V made of two lines."
+  },
+  "editorArrowHeadDouble": {
+    "message": "Оба конца",
+    "description": "Editor style bar: arrow tip option, filled tips at both ends."
+  },
+  "editorArrowHeadDot": {
+    "message": "Точка",
+    "description": "Editor style bar: arrow tip option, a round dot."
+  },
+  "editorStyleFill": {
+    "message": "Заливка",
+    "description": "Editor style bar: the rectangle fill field group label."
+  },
+  "editorFillNone": {
+    "message": "Нет",
+    "description": "Editor style bar: rectangle fill option that draws the outline only."
+  },
+  "editorFillSolid": {
+    "message": "Сплошная",
+    "description": "Editor style bar: rectangle fill option that paints the inside in the stroke colour."
   },
   "editorStyleRedaction": {
     "message": "Скрытие",
@@ -1568,6 +1630,14 @@
   "editorMoreTools": {
     "message": "Ещё инструменты",
     "description": "Editor tool rail: accessible label and tooltip on the More overflow button."
+  },
+  "editorToolbarReset": {
+    "message": "Сбросить панель",
+    "description": "Editor More-tools menu: restores the default tool rail order."
+  },
+  "editorToolbarHint": {
+    "message": "Перетащите инструменты, чтобы изменить порядок, или на «Ещё инструменты», чтобы скрыть их.",
+    "description": "Editor More-tools menu: how to reorder the tool rail by dragging."
   },
   "editorExporting": {
     "message": "Экспорт…",

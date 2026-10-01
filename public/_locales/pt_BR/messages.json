@@ -1069,6 +1069,24 @@
       }
     }
   },
+  "editorAnnounceToolMoved": {
+    "message": "$TOOL$ movido para a posição $POS$ de $TOTAL$.",
+    "description": "Editor live region: a tool rail button moved with Alt+Arrow, e.g. \"Pen moved to position 2 of 7.\"",
+    "placeholders": {
+      "tool": {
+        "content": "$1",
+        "example": "Pen"
+      },
+      "pos": {
+        "content": "$2",
+        "example": "2"
+      },
+      "total": {
+        "content": "$3",
+        "example": "7"
+      }
+    }
+  },
   "editorAnnounceUndo": {
     "message": "Desfeito.",
     "description": "Editor live region: an undo step ran. Followed in code by an optional picture-size sentence and the current layer count."
@@ -1140,6 +1158,10 @@
   "editorHandleEnd": {
     "message": "Fim",
     "description": "Editor live region: the cut band's end handle."
+  },
+  "editorHandleBend": {
+    "message": "Curva",
+    "description": "Editor: the arrow's middle handle, which bends it into a curve."
   },
   "editorCropPhrase": {
     "message": "Recorte de $W$ por $H$ pixels em $X$, $Y$.",
@@ -1277,6 +1299,10 @@
     "message": "Retângulo",
     "description": "Editor tool rail: the Rectangle tool. Also the Rectangle spotlight-shape option."
   },
+  "editorToolShape": {
+    "message": "Forma",
+    "description": "Editor tool rail: the Shape tool (rectangle, rounded, oval, triangle)."
+  },
   "editorToolArrow": {
     "message": "Seta",
     "description": "Editor tool rail: the Arrow tool."
@@ -1322,11 +1348,11 @@
     "description": "Editor tool rail: the Cut tool."
   },
   "editorHintRect": {
-    "message": "Arraste para desenhar um retângulo · Shift mantém quadrado",
+    "message": "Arraste para desenhar uma forma · Shift mantém largura e altura iguais",
     "description": "Editor status bar hint for the Rectangle tool."
   },
   "editorHintArrow": {
-    "message": "Arraste para desenhar uma seta · Shift alinha a 45°",
+    "message": "Arraste para desenhar uma seta · Shift alinha a 45° · Selecione e arraste a alça redonda para curvar",
     "description": "Editor status bar hint for the Arrow tool."
   },
   "editorHintLine": {
@@ -1401,6 +1427,10 @@
     "message": "Elipse",
     "description": "Editor style bar: the Ellipse spotlight shape."
   },
+  "editorShapeTriangle": {
+    "message": "Triângulo",
+    "description": "Editor style bar: the Triangle shape of the Shape tool."
+  },
   "editorStyleColor": {
     "message": "Cor",
     "description": "Editor style bar: the color field group label."
@@ -1412,6 +1442,38 @@
   "editorStyleShape": {
     "message": "Forma",
     "description": "Editor style bar: the spotlight-shape field group label."
+  },
+  "editorStyleArrowHead": {
+    "message": "Ponta",
+    "description": "Editor style bar: the arrow tip field group label."
+  },
+  "editorArrowHeadFilled": {
+    "message": "Preenchida",
+    "description": "Editor style bar: arrow tip option, a filled triangle."
+  },
+  "editorArrowHeadOpen": {
+    "message": "Aberta",
+    "description": "Editor style bar: arrow tip option, an open V made of two lines."
+  },
+  "editorArrowHeadDouble": {
+    "message": "Ambas as pontas",
+    "description": "Editor style bar: arrow tip option, filled tips at both ends."
+  },
+  "editorArrowHeadDot": {
+    "message": "Ponto",
+    "description": "Editor style bar: arrow tip option, a round dot."
+  },
+  "editorStyleFill": {
+    "message": "Preenchimento",
+    "description": "Editor style bar: the rectangle fill field group label."
+  },
+  "editorFillNone": {
+    "message": "Nenhum",
+    "description": "Editor style bar: rectangle fill option that draws the outline only."
+  },
+  "editorFillSolid": {
+    "message": "Sólido",
+    "description": "Editor style bar: rectangle fill option that paints the inside in the stroke colour."
   },
   "editorStyleRedaction": {
     "message": "Ocultação",
@@ -1568,6 +1630,14 @@
   "editorMoreTools": {
     "message": "Mais ferramentas",
     "description": "Editor tool rail: accessible label and tooltip on the More overflow button."
+  },
+  "editorToolbarReset": {
+    "message": "Redefinir barra",
+    "description": "Editor More-tools menu: restores the default tool rail order."
+  },
+  "editorToolbarHint": {
+    "message": "Arraste as ferramentas para reordenar a barra, ou para Mais ferramentas para ocultá-las.",
+    "description": "Editor More-tools menu: how to reorder the tool rail by dragging."
   },
   "editorExporting": {
     "message": "Exportando…",

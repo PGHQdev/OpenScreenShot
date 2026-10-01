@@ -1069,6 +1069,24 @@
       }
     }
   },
+  "editorAnnounceToolMoved": {
+    "message": "$TOOL$ 已移到第 $POS$ 位，共 $TOTAL$ 位。",
+    "description": "Editor live region: a tool rail button moved with Alt+Arrow, e.g. \"Pen moved to position 2 of 7.\"",
+    "placeholders": {
+      "tool": {
+        "content": "$1",
+        "example": "Pen"
+      },
+      "pos": {
+        "content": "$2",
+        "example": "2"
+      },
+      "total": {
+        "content": "$3",
+        "example": "7"
+      }
+    }
+  },
   "editorAnnounceUndo": {
     "message": "已復原。",
     "description": "Editor live region: an undo step ran. Followed in code by an optional picture-size sentence and the current layer count."
@@ -1140,6 +1158,10 @@
   "editorHandleEnd": {
     "message": "終點",
     "description": "Editor live region: the cut band's end handle."
+  },
+  "editorHandleBend": {
+    "message": "彎曲",
+    "description": "Editor: the arrow's middle handle, which bends it into a curve."
   },
   "editorCropPhrase": {
     "message": "裁切範圍 $W$ × $H$ 像素，位於 $X$、$Y$。",
@@ -1277,6 +1299,10 @@
     "message": "矩形",
     "description": "Editor tool rail: the Rectangle tool. Also the Rectangle spotlight-shape option."
   },
+  "editorToolShape": {
+    "message": "形狀",
+    "description": "Editor tool rail: the Shape tool (rectangle, rounded, oval, triangle)."
+  },
   "editorToolArrow": {
     "message": "箭頭",
     "description": "Editor tool rail: the Arrow tool."
@@ -1322,11 +1348,11 @@
     "description": "Editor tool rail: the Cut tool."
   },
   "editorHintRect": {
-    "message": "拖曳繪製矩形 · 按住 Shift 保持正方形",
+    "message": "拖曳繪製形狀 · 按住 Shift 保持寬高相等",
     "description": "Editor status bar hint for the Rectangle tool."
   },
   "editorHintArrow": {
-    "message": "拖曳繪製箭頭 · 按住 Shift 對齊 45°",
+    "message": "拖曳繪製箭頭 · 按住 Shift 對齊 45° · 選取後拖曳圓形控點可彎曲",
     "description": "Editor status bar hint for the Arrow tool."
   },
   "editorHintLine": {
@@ -1401,6 +1427,10 @@
     "message": "橢圓",
     "description": "Editor style bar: the Ellipse spotlight shape."
   },
+  "editorShapeTriangle": {
+    "message": "三角形",
+    "description": "Editor style bar: the Triangle shape of the Shape tool."
+  },
   "editorStyleColor": {
     "message": "顏色",
     "description": "Editor style bar: the color field group label."
@@ -1412,6 +1442,38 @@
   "editorStyleShape": {
     "message": "形狀",
     "description": "Editor style bar: the spotlight-shape field group label."
+  },
+  "editorStyleArrowHead": {
+    "message": "箭頭",
+    "description": "Editor style bar: the arrow tip field group label."
+  },
+  "editorArrowHeadFilled": {
+    "message": "實心",
+    "description": "Editor style bar: arrow tip option, a filled triangle."
+  },
+  "editorArrowHeadOpen": {
+    "message": "空心",
+    "description": "Editor style bar: arrow tip option, an open V made of two lines."
+  },
+  "editorArrowHeadDouble": {
+    "message": "雙向",
+    "description": "Editor style bar: arrow tip option, filled tips at both ends."
+  },
+  "editorArrowHeadDot": {
+    "message": "圓點",
+    "description": "Editor style bar: arrow tip option, a round dot."
+  },
+  "editorStyleFill": {
+    "message": "填色",
+    "description": "Editor style bar: the rectangle fill field group label."
+  },
+  "editorFillNone": {
+    "message": "無",
+    "description": "Editor style bar: rectangle fill option that draws the outline only."
+  },
+  "editorFillSolid": {
+    "message": "實心",
+    "description": "Editor style bar: rectangle fill option that paints the inside in the stroke colour."
   },
   "editorStyleRedaction": {
     "message": "遮蔽",
@@ -1568,6 +1630,14 @@
   "editorMoreTools": {
     "message": "更多工具",
     "description": "Editor tool rail: accessible label and tooltip on the More overflow button."
+  },
+  "editorToolbarReset": {
+    "message": "重設工具列",
+    "description": "Editor More-tools menu: restores the default tool rail order."
+  },
+  "editorToolbarHint": {
+    "message": "拖曳工具可調整順序，拖到「更多工具」可隱藏。",
+    "description": "Editor More-tools menu: how to reorder the tool rail by dragging."
   },
   "editorExporting": {
     "message": "匯出中…",

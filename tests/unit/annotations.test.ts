@@ -19,9 +19,18 @@ import {
   scaleInBox,
   STROKE_WIDTHS,
   strokeBarHeight,
+  strokeScale,
+  ARROW_HEADS,
+  arrowBendPoint,
+  bendArrow,
+  BOX_SHAPES,
+  isBent,
+  normalizeArrowHead,
+  normalizeBoxShape,
   translateAnnotation,
   unionBBox,
   type Annotation,
+  type ArrowAnnotation,
   type Rect,
   type BlurCache,
 } from '../../src/editor/annotations';
@@ -243,13 +252,259 @@ describe('drawAnnotation on a blur: strength drives what actually gets painted',
   });
 });
 
+describe('normalizeBoxShape', () => {
+  it('keeps every shape this build draws', () => {
+    for (const shape of BOX_SHAPES) expect(normalizeBoxShape(shape)).toBe(shape);
+  });
+
+  it('reads a missing or unknown stored shape as a rectangle', () => {
+    expect(normalizeBoxShape(undefined)).toBe('rect');
+    expect(normalizeBoxShape('hexagon')).toBe('rect');
+  });
+});
+
+describe('drawAnnotation — arrow tips', () => {
+  function pathRecorder() {
+    const calls: string[] = [];
+    const ctx = new Proxy(
+      { fillStyle: '', strokeStyle: '', lineWidth: 0, lineCap: '', lineJoin: '' },
+      {
+        get(target, prop: string) {
+          if (prop in target) return target[prop as keyof typeof target];
+          return (...args: number[]) =>
+            calls.push(`${prop}(${args.map((n) => Math.round(n)).join(',')})`);
+        },
+        set(target, prop: string, value) {
+          (target as Record<string, unknown>)[prop] = value;
+          return true;
+        },
+      },
+    );
+    return { ctx: ctx as unknown as CanvasRenderingContext2D, calls };
+  }
+  // Left to right, 4px wide, so the tip is 12px long (3 × width).
+  const arrow = {
+    id: 'a',
+    type: 'arrow',
+    x1: 0,
+    y1: 50,
+    x2: 100,
+    y2: 50,
+    stroke: '#f00',
+    strokeWidth: 4,
+  };
+  const draw = (head?: string) => {
+    const { ctx, calls } = pathRecorder();
+    drawAnnotation(
+      ctx,
+      { ...arrow, head } as Annotation,
+      {} as HTMLImageElement,
+      createBlurCache(),
+    );
+    return calls.slice(4); // after the shaft: beginPath, moveTo, lineTo, stroke
+  };
+
+  it('fills a triangle at the end by default, and for an older arrow with no tip', () => {
+    expect(draw()).toEqual([
+      'beginPath()',
+      'moveTo(100,50)',
+      'lineTo(90,56)',
+      'lineTo(90,44)',
+      'closePath()',
+      'fill()',
+    ]);
+    expect(draw('filled')).toEqual(draw());
+    expect(draw('bogus')).toEqual(draw());
+  });
+
+  it('ends the shaft inside a filled tip, so its round cap never shows past the point', () => {
+    const { ctx, calls } = pathRecorder();
+    drawAnnotation(ctx, arrow as Annotation, {} as HTMLImageElement, createBlurCache());
+    expect(calls.slice(0, 4)).toEqual(['beginPath()', 'moveTo(0,50)', 'lineTo(92,50)', 'stroke()']);
+    const open = pathRecorder();
+    drawAnnotation(
+      open.ctx,
+      { ...arrow, head: 'open' } as Annotation,
+      {} as HTMLImageElement,
+      createBlurCache(),
+    );
+    expect(open.calls[2]).toBe('lineTo(100,50)');
+  });
+
+  it('strokes an open V for the open tip', () => {
+    expect(draw('open')).toEqual([
+      'beginPath()',
+      'moveTo(90,56)',
+      'lineTo(100,50)',
+      'lineTo(90,44)',
+      'stroke()',
+    ]);
+  });
+
+  it('fills both ends for the double tip, the start pointing back', () => {
+    const calls = draw('double');
+    expect(calls.filter((c) => c === 'fill()')).toHaveLength(2);
+    expect(calls).toContain('moveTo(0,50)');
+    expect(calls).toContain('lineTo(10,44)');
+  });
+
+  it('fills a dot centred on the end for the dot tip', () => {
+    expect(draw('dot')).toEqual(['beginPath()', 'arc(100,50,5,0,6)', 'fill()']);
+  });
+});
+
+describe('bent arrows', () => {
+  const straight: ArrowAnnotation = {
+    id: 'a',
+    type: 'arrow',
+    x1: 0,
+    y1: 0,
+    x2: 100,
+    y2: 0,
+    stroke: '#f00',
+    strokeWidth: 4,
+  };
+
+  it('bends so the curve passes through the dragged point at its middle', () => {
+    const bent = bendArrow(straight, { x: 50, y: 40 }, 2);
+    expect(bent).toMatchObject({ cx: 50, cy: 80 });
+    expect(arrowBendPoint(bent)).toEqual({ x: 50, y: 40 });
+  });
+
+  it('goes straight again when the handle comes back near the chord', () => {
+    const bent = bendArrow(straight, { x: 50, y: 40 }, 2);
+    const back = bendArrow(bent, { x: 51, y: 1 }, 2);
+    expect(back).not.toHaveProperty('cx');
+    expect(back).not.toHaveProperty('cy');
+    expect(isBent(back)).toBe(false);
+  });
+
+  it('boxes the curve at its turning point, not at the control point', () => {
+    const bent = bendArrow(straight, { x: 50, y: 40 }, 2);
+    expect(bbox(bent)).toEqual({ x: 0, y: 0, w: 100, h: 40 });
+  });
+
+  it('moves the bend with the arrow', () => {
+    const bent = bendArrow(straight, { x: 50, y: 40 }, 2);
+    expect(translateAnnotation(bent, 10, -5)).toMatchObject({ cx: 60, cy: 75 });
+  });
+
+  it('scales the bend with the arrow inside a multi-selection box', () => {
+    const bent = bendArrow(straight, { x: 50, y: 40 }, 2);
+    const box = { x: 0, y: 0, w: 100, h: 40 };
+    expect(scaleInBox(bent, box, 'se', 100, 40)).toMatchObject({ x2: 200, cx: 100, cy: 160 });
+    expect(scaleInBox(straight, box, 'se', 100, 40)).not.toHaveProperty('cx');
+  });
+
+  it('draws the shaft as a curve and points the tip along the curve at its end', () => {
+    const calls: string[] = [];
+    const ctx = new Proxy(
+      { fillStyle: '', strokeStyle: '', lineWidth: 0, lineCap: '', lineJoin: '' },
+      {
+        get(target, prop: string) {
+          if (prop in target) return target[prop as keyof typeof target];
+          return (...args: number[]) =>
+            calls.push(`${prop}(${args.map((n) => Math.round(n)).join(',')})`);
+        },
+        set(target, prop: string, value) {
+          (target as Record<string, unknown>)[prop] = value;
+          return true;
+        },
+      },
+    );
+    const bent = bendArrow(straight, { x: 50, y: 40 }, 2);
+    drawAnnotation(
+      ctx as unknown as CanvasRenderingContext2D,
+      bent,
+      {} as HTMLImageElement,
+      createBlurCache(),
+    );
+    expect(calls.some((c) => c.startsWith('quadraticCurveTo(50,80,'))).toBe(true);
+    // Tangent at the end runs from the control (50,80) to (100,0): up and to
+    // the right, so both back corners of the tip sit below the point, and the
+    // shaft stops short of it along that same tangent.
+    expect(calls).toContain('quadraticCurveTo(50,80,96,7)');
+    const tip = calls.slice(calls.indexOf('stroke()') + 1);
+    expect(tip.slice(1, 4)).toEqual(['moveTo(100,0)', 'lineTo(100,12)', 'lineTo(89,6)']);
+  });
+});
+
+describe('normalizeArrowHead', () => {
+  it('keeps every tip this build draws and reads anything else as filled', () => {
+    for (const head of ARROW_HEADS) expect(normalizeArrowHead(head)).toBe(head);
+    expect(normalizeArrowHead(undefined)).toBe('filled');
+    expect(normalizeArrowHead('chevron')).toBe('filled');
+  });
+});
+
+describe('drawAnnotation — box shapes', () => {
+  function pathRecorder() {
+    const calls: string[] = [];
+    const ctx = new Proxy(
+      { fillStyle: '', strokeStyle: '', lineWidth: 0, lineJoin: '' },
+      {
+        get(target, prop: string) {
+          if (prop in target) return target[prop as keyof typeof target];
+          return (...args: number[]) => calls.push(`${prop}(${args.join(',')})`);
+        },
+        set(target, prop: string, value) {
+          (target as Record<string, unknown>)[prop] = value;
+          return true;
+        },
+      },
+    );
+    return { ctx: ctx as unknown as CanvasRenderingContext2D, calls, state: ctx };
+  }
+  const box = { id: 'b', type: 'rect', x: 0, y: 0, w: 100, h: 60, stroke: '#0f0', strokeWidth: 4 };
+
+  it('traces an oval inside the box and strokes it with no fill', () => {
+    const { ctx, calls } = pathRecorder();
+    drawAnnotation(
+      ctx,
+      { ...box, shape: 'ellipse' } as Annotation,
+      {} as HTMLImageElement,
+      createBlurCache(),
+    );
+    expect(calls).toEqual([`beginPath()`, `ellipse(50,30,50,30,0,0,${Math.PI * 2})`, 'stroke()']);
+  });
+
+  it('traces a triangle pointing up, fills it, and rounds the apex join', () => {
+    const { ctx, calls, state } = pathRecorder();
+    drawAnnotation(
+      ctx,
+      { ...box, shape: 'triangle', filled: true } as Annotation,
+      {} as HTMLImageElement,
+      createBlurCache(),
+    );
+    expect(calls).toEqual([
+      'beginPath()',
+      'moveTo(50,0)',
+      'lineTo(100,60)',
+      'lineTo(0,60)',
+      'closePath()',
+      'fill()',
+      'stroke()',
+    ]);
+    expect(state.lineJoin).toBe('round');
+  });
+
+  it('rounds the corners in proportion to the shorter side', () => {
+    const { ctx, calls } = pathRecorder();
+    drawAnnotation(
+      ctx,
+      { ...box, shape: 'rounded' } as Annotation,
+      {} as HTMLImageElement,
+      createBlurCache(),
+    );
+    expect(calls).toContain('roundRect(0,0,100,60,12)');
+  });
+});
+
 describe('drawAnnotation — rect', () => {
   /**
-   * A rect never fills, only strokes: `RectAnnotation.fill` documented a
-   * capability the style bar never exposed, so it is gone, not just always
-   * null. This uses a rect literal that still carries a `fill` value — the
-   * shape a pre-existing persisted draft could hand back — to prove drawRect
-   * has stopped reading it rather than merely defaulting it away.
+   * An older `RectAnnotation.fill` colour string was never exposed in the
+   * style bar and was removed. A persisted draft can still hand one back, so
+   * drawRect must ignore it; only the boolean `filled` paints the inside.
    */
   function recorder() {
     const calls: { op: string; args: number[] }[] = [];
@@ -287,6 +542,46 @@ describe('drawAnnotation — rect', () => {
     expect(calls.filter((c) => c.op === 'strokeRect')).toEqual([
       { op: 'strokeRect', args: [10, 20, 100, 50] },
     ]);
+  });
+  it('fills in the stroke colour, then strokes, when filled is true', () => {
+    const { ctx, calls } = recorder();
+    const filled: Annotation = {
+      id: 'r',
+      type: 'rect',
+      x: -10,
+      y: 20,
+      w: 30,
+      h: -5,
+      stroke: '#00f',
+      strokeWidth: 4,
+      filled: true,
+    };
+
+    drawAnnotation(ctx, filled, {} as HTMLImageElement, createBlurCache());
+
+    expect(calls).toEqual([
+      { op: 'fillRect', args: [-10, 15, 30, 5] },
+      { op: 'strokeRect', args: [-10, 15, 30, 5] },
+    ]);
+    expect(ctx.fillStyle).toBe('#00f');
+  });
+});
+
+describe('strokeScale', () => {
+  it('keeps the presets at their own size up to a 4K-class capture', () => {
+    expect(strokeScale(800)).toBe(1);
+    expect(strokeScale(2880)).toBe(1); // 1440pt MacBook at 2x
+    expect(strokeScale(3456)).toBe(1); // 16-inch MacBook Pro at 2x
+  });
+
+  it('doubles them on a 5K capture and triples them past 6K', () => {
+    expect(strokeScale(5120)).toBe(2);
+    expect(strokeScale(7680)).toBe(3);
+  });
+
+  it('never drops below 1, so a tiny region capture keeps visible strokes', () => {
+    expect(strokeScale(0)).toBe(1);
+    expect(strokeScale(40)).toBe(1);
   });
 });
 
@@ -329,7 +624,7 @@ describe('getHandles', () => {
     expect(getHandles(a)).toHaveLength(8);
   });
 
-  it('returns 2 handles for an arrow (start + end)', () => {
+  it('returns 3 handles for an arrow (start + end + the bend at its middle)', () => {
     const a: Annotation = {
       id: 'a',
       type: 'arrow',
@@ -341,7 +636,8 @@ describe('getHandles', () => {
       strokeWidth: 4,
     };
     const hs = getHandles(a);
-    expect(hs.map((h) => h.handle)).toEqual(['start', 'end']);
+    expect(hs.map((h) => h.handle)).toEqual(['start', 'end', 'bend']);
+    expect(hs[2]).toMatchObject({ x: 5, y: 5 });
   });
 
   it('returns 2 handles for a line (start + end)', () => {

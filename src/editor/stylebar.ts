@@ -22,6 +22,12 @@ export interface StylebarFields {
   redaction: boolean;
   /** The blur strength slider. */
   strength: boolean;
+  /** The rectangle's outline / solid fill picker. */
+  fill: boolean;
+  /** The Shape tool's outline picker (rectangle, rounded, oval, triangle). */
+  boxShape: boolean;
+  /** The Arrow tool's tip picker (filled, open, double, dot). */
+  arrowHead: boolean;
 }
 
 const NONE: StylebarFields = {
@@ -31,8 +37,13 @@ const NONE: StylebarFields = {
   shape: false,
   redaction: false,
   strength: false,
+  fill: false,
+  boxShape: false,
+  arrowHead: false,
 };
 const SHAPE: StylebarFields = { ...NONE, color: true, stroke: true };
+const BOX: StylebarFields = { ...SHAPE, fill: true, boxShape: true };
+const ARROW: StylebarFields = { ...SHAPE, arrowHead: true };
 const GLYPH: StylebarFields = { ...NONE, color: true, fontSize: true };
 const SPOTLIGHT: StylebarFields = { ...NONE, shape: true };
 const BLUR: StylebarFields = { ...NONE, redaction: true, strength: true };
@@ -44,7 +55,9 @@ export function stylebarFields(
   if (selectedType) {
     switch (selectedType) {
       case 'rect':
+        return BOX;
       case 'arrow':
+        return ARROW;
       case 'line':
       case 'pen':
       case 'highlight':
@@ -60,7 +73,9 @@ export function stylebarFields(
   }
   switch (tool) {
     case 'rect':
+      return BOX;
     case 'arrow':
+      return ARROW;
     case 'line':
     case 'pen':
     case 'highlight':
@@ -83,7 +98,17 @@ export function stylebarFields(
 
 /** True when no control applies, so the bar should not render at all. */
 export function stylebarEmpty(f: StylebarFields): boolean {
-  return !f.color && !f.stroke && !f.fontSize && !f.shape && !f.redaction && !f.strength;
+  return (
+    !f.color &&
+    !f.stroke &&
+    !f.fontSize &&
+    !f.shape &&
+    !f.redaction &&
+    !f.strength &&
+    !f.fill &&
+    !f.boxShape &&
+    !f.arrowHead
+  );
 }
 
 /**
