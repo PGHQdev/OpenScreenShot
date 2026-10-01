@@ -944,6 +944,9 @@ label.settings-row .settings-label {
   font-size: var(--fs-sm);
   line-height: 1.5;
 }
+.settings .settings-filename + .settings-hint {
+  margin-top: var(--s-2);
+}
 .settings .settings-row-switch {
   flex-direction: row;
   align-items: flex-start;

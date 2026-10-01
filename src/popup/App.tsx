@@ -1443,10 +1443,11 @@ function SettingsView({
                 <span>{previewFilename(settings)}</span>
               </span>
             </p>
-            <p class="settings-hint" id="filename-folder">
-              {t('settingsFilenameFolderHint')}
-            </p>
           </div>
+          {/* Outside the row: inside it, the row outgrows a 260px (200% zoom) popup. */}
+          <p class="settings-hint" id="filename-folder">
+            {t('settingsFilenameFolderHint')}
+          </p>
         </section>
 
         {RECORDING_SUPPORTED && (
