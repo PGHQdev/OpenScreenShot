@@ -569,8 +569,8 @@ async function popupFirstRun(browser, base, messages) {
   );
 
   step('POPUP — first-run settings (the across-sites ask carries it too)');
-  await page.goto(`${base}/src/popup/settings.html`, { waitUntil: 'networkidle0' });
-  await page.waitForSelector('[data-testid="sites-trust"]');
+  await page.goto(`${base}/src/popup/settings.html#set-recording`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('[data-testid="sites-trust"]', { visible: true });
   await scan(page, 'popup first-run settings');
   assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
   await page.close();
@@ -588,7 +588,11 @@ async function popupMain(browser, base, messages) {
   step('POPUP — settings view');
   await page.goto(`${base}/src/popup/settings.html`, { waitUntil: 'networkidle0' });
   await page.waitForSelector('.settings');
-  await scan(page, 'popup settings view');
+  // One section shows at a time, and a scan skips hidden ones: open each tab.
+  for (const tabId of await page.$$eval('[role="tab"]', (els) => els.map((el) => el.id))) {
+    await page.click(`#${tabId}`);
+    await scan(page, `popup settings view (${tabId})`);
+  }
 
   assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
   await page.close();

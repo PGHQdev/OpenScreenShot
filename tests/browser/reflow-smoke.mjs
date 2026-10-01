@@ -626,41 +626,63 @@ async function testPopup(browser, base, messages) {
   const settingsRows = await page.$$eval('.settings-row', (els) => els.length);
   assert(settingsRows > 0, `settings view renders ${settingsRows} rows`);
 
-  step('POPUP — settings labels and controls remain within their rows');
-  const settingsFit = await page.evaluate(() =>
-    [...document.querySelectorAll('.settings-row')].every((row) => {
-      const box = row.getBoundingClientRect();
-      return [...row.children].every((child) => {
-        const r = child.getBoundingClientRect();
-        return r.left >= box.left - 1 && r.right <= box.right + 1;
+  step('POPUP — settings labels and controls remain within their rows, on every tab');
+  const tabIds = await page.$$eval('[role="tab"]', (els) => els.map((el) => el.id));
+  assert(tabIds.length >= 5, `settings offer ${tabIds.length} section tabs`);
+  for (const tabId of tabIds) {
+    await page.click(`#${tabId}`);
+    const result = await page.evaluate(() => {
+      const panels = [...document.querySelectorAll('[role="tabpanel"]')].filter((p) => !p.hidden);
+      const rows = panels.flatMap((p) => [...p.querySelectorAll('.settings-row')]);
+      const fit = rows.every((row) => {
+        const box = row.getBoundingClientRect();
+        return [...row.children].every((child) => {
+          const r = child.getBoundingClientRect();
+          return r.left >= box.left - 1 && r.right <= box.right + 1;
+        });
       });
-    }),
-  );
-  assert(settingsFit, 'compact settings stack or wrap without clipping controls');
-  const settingsReachable = await page.evaluate(() => {
-    const rows = document.querySelectorAll('.settings-row');
-    const last = rows[rows.length - 1];
-    last.scrollIntoView();
-    const r = last.getBoundingClientRect();
-    return r.top >= -1 && r.bottom <= window.innerHeight + 1;
-  });
-  assert(settingsReachable, 'the last settings row scrolls into view at 340x260');
+      const last = rows[rows.length - 1];
+      last?.scrollIntoView();
+      const r = last?.getBoundingClientRect();
+      return {
+        panels: panels.length,
+        fit,
+        reachable: !r || (r.top >= -1 && r.bottom <= window.innerHeight + 1),
+      };
+    });
+    assert(result.panels === 1, `${tabId} shows exactly one section`);
+    assert(result.fit, `${tabId}: compact rows stack or wrap without clipping controls`);
+    assert(result.reachable, `${tabId}: the last row scrolls into view at 340x260`);
+  }
 
-  step('SETTINGS TAB — centered grouped layout uses the full page');
+  step('SETTINGS TAB — a rail of section tabs beside the chosen section');
   await page.setViewport({ width: 1280, height: 900 });
-  await page.goto(`${base}/src/popup/index.html?settings=1`, { waitUntil: 'networkidle0' });
+  await page.goto(`${base}/src/popup/index.html?settings=1#set-capture`, {
+    waitUntil: 'networkidle0',
+  });
   await page.waitForSelector('.app-settings-page');
   const settingsTab = await page.evaluate(() => {
     const r = document.querySelector('.app-settings-page').getBoundingClientRect();
+    const rail = document.querySelector('.settings-rail').getBoundingClientRect();
+    const shown = [...document.querySelectorAll('[role="tabpanel"]')].filter((p) => !p.hidden);
+    const panel = shown[0]?.getBoundingClientRect();
     return {
       width: r.width,
       centered: Math.abs(r.left - (innerWidth - r.right)) < 2,
+      railBeside: !!panel && rail.right <= panel.left && rail.top < panel.bottom,
+      shown: shown.map((p) => p.id),
+      selected: document.querySelector('[role="tab"][aria-selected="true"]')?.id,
       sections: document.querySelectorAll('.settings-group').length,
     };
   });
   assert(
-    settingsTab.width >= 700 && settingsTab.width <= 800 && settingsTab.centered,
-    'settings use a centered readable column on desktop',
+    settingsTab.width >= 1200 && settingsTab.centered,
+    `settings span the window on desktop (${Math.round(settingsTab.width)}px)`,
+  );
+  assert(settingsTab.railBeside, 'the tab rail sits left of the open section');
+  assert(
+    settingsTab.shown.join() === 'set-capture' && settingsTab.selected === 'tab-set-capture',
+    `the URL hash opens its own section (${settingsTab.shown.join()})`,
   );
   assert(settingsTab.sections >= 5, 'settings are grouped into named sections');
   await page.setViewport({ width: 320, height: 800 });

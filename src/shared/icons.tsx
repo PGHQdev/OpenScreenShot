@@ -238,6 +238,60 @@ export function IconBolt(props: IconProps) {
   );
 }
 
+export function IconPalette(props: IconProps) {
+  return (
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" />
+    </MaterialIcon>
+  );
+}
+
+export function IconKeyboard(props: IconProps) {
+  return (
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z" />
+    </MaterialIcon>
+  );
+}
+
+export function IconTimer(props: IconProps) {
+  return (
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z" />
+    </MaterialIcon>
+  );
+}
+
+export function IconCopy(props: IconProps) {
+  return (
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+    </MaterialIcon>
+  );
+}
+
+export function IconDownload(props: IconProps) {
+  return (
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+    </MaterialIcon>
+  );
+}
+
+export function IconChevronRight(props: IconProps) {
+  return (
+    <MaterialIcon {...props}>
+      <path d="M0 0h24v24H0V0z" fill="none" />
+      <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" />
+    </MaterialIcon>
+  );
+}
+
 export function IconPictureInPicture(props: IconProps) {
   return (
     <MaterialIcon {...props}>

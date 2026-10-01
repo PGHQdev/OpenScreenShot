@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { IS_FIREFOX, RECORDING_SUPPORTED } from '../shared/browser';
 import { openShortcutSettings } from '../shared/settings-navigation';
+import { IconKeyboard } from '../shared/icons';
 
 const t = (key: string) => chrome.i18n.getMessage(key) || key;
 const captureCommands = [
@@ -14,7 +15,13 @@ const recordingCommands = [
   ['reveal-recording-bar', 'settingsRevealRecordingBar'],
 ];
 
-export function ShortcutSettings() {
+/** Rendered as one tab panel of the settings page; the page owns its id and visibility. */
+export function ShortcutSettings(panel: {
+  id: string;
+  role: 'tabpanel';
+  'aria-labelledby': string;
+  hidden: boolean;
+}) {
   const [commands, setCommands] = useState<chrome.commands.Command[] | null>(null);
   const [readError, setReadError] = useState(false);
   const [openError, setOpenError] = useState(false);
@@ -58,8 +65,13 @@ export function ShortcutSettings() {
     }
   }
   return (
-    <section class="settings-group settings-shortcuts" aria-labelledby="settings-shortcuts">
-      <h2 id="settings-shortcuts">{t('settingsKeyboardShortcuts')}</h2>
+    <section {...panel} class="settings-group settings-shortcuts">
+      <div class="card-head">
+        <span class="card-icon" aria-hidden="true">
+          <IconKeyboard size={20} />
+        </span>
+        <h2 id="settings-shortcuts">{t('settingsKeyboardShortcuts')}</h2>
+      </div>
       <h3>{t('settingsBrowserShortcuts')}</h3>
       <p class="settings-hint">
         {t(IS_FIREFOX ? 'settingsBrowserScreenshotShortcutsHint' : 'settingsBrowserShortcutsHint')}

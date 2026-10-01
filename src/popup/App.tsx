@@ -24,16 +24,26 @@ import { BrandMark } from '../shared/BrandMark';
 import {
   IconBack,
   IconBolt,
+  IconCamera,
+  IconChevronRight,
   IconCoffee,
+  IconCopy,
+  IconDownload,
   IconGear,
   IconGift,
+  IconGlobe,
   IconHistory,
+  IconImage,
+  IconKeyboard,
   IconPage,
+  IconPalette,
+  IconPencil,
   IconRecordDot,
   IconRegion,
   IconSelect,
   IconShield,
   IconStar,
+  IconTimer,
   IconVisible,
 } from '../shared/icons';
 import { resolveModeKeys } from '../shared/shortcuts';
@@ -201,6 +211,12 @@ const ACTION_LABEL_KEYS: Record<CaptureAction, string> = {
   editor: 'actionEditor',
   clipboard: 'actionClipboard',
   download: 'actionDownload',
+};
+
+const ACTION_ICONS: Record<CaptureAction, preact.ComponentChild> = {
+  editor: <IconPencil size={22} />,
+  clipboard: <IconCopy size={22} />,
+  download: <IconDownload size={22} />,
 };
 
 const MODES: ModeDef[] = [
@@ -1133,6 +1149,8 @@ function SettingsView({
   const filenameRef = useRef<HTMLInputElement>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [acrossSites, setAcrossSites] = useState(false);
+  // The URL hash keeps the open section across reloads and links.
+  const [activeSection, setActiveSection] = useState(() => location.hash.slice(1));
   const showQuality = settings.defaultFormat === 'jpeg' || settings.defaultFormat === 'webp';
 
   useEffect(() => {
@@ -1174,69 +1192,135 @@ function SettingsView({
     onChange({ ...DEFAULT_SETTINGS });
   }
 
-  return (
-    <main class="settings" aria-label={t('settingsTitle')}>
-      <section class={`express-card${settings.expressMode ? ' is-on' : ''}`}>
-        <span class="express-card-icon" aria-hidden="true">
-          <IconBolt size={20} />
-        </span>
-        <div class="settings-copy">
-          <label class="express-card-label" for="express-mode">
-            {t('expressLabel')}
-          </label>
-          <p class="settings-hint" id="express-hint">
-            {t('settingsExpressHint')}
-          </p>
-        </div>
-        <input
-          id="express-mode"
-          type="checkbox"
-          class="switch"
-          aria-describedby="express-hint"
-          checked={settings.expressMode}
-          onChange={(e) => onChange({ expressMode: (e.currentTarget as HTMLInputElement).checked })}
-        />
-      </section>
-      <ShortcutSettings />
-      <section class="settings-group" aria-labelledby="settings-appearance">
-        <h2 id="settings-appearance">{t('settingsAppearance')}</h2>
-        <div class="settings-row">
-          <span class="settings-label" id="theme-label">
-            {t('settingsTheme')}
-          </span>
-          <div class="settings-control">
-            <div class="seg" role="group" aria-labelledby="theme-label">
-              {(['light', 'dark', 'system'] as const).map((v) => (
-                <button
-                  key={v}
-                  class="seg-btn"
-                  aria-pressed={settings.theme === v}
-                  onClick={() => onChange({ theme: v })}
-                >
-                  {t('theme' + v.charAt(0).toUpperCase() + v.slice(1))}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+  const sections = [
+    { id: 'set-express', label: t('expressLabel'), icon: <IconBolt size={18} /> },
+    { id: 'set-capture', label: t('settingsCapture'), icon: <IconCamera size={18} /> },
+    { id: 'set-files', label: t('settingsFiles'), icon: <IconImage size={18} /> },
+    ...(RECORDING_SUPPORTED
+      ? [{ id: 'set-recording', label: t('settingsRecording'), icon: <IconRecordDot size={18} /> }]
+      : []),
+    { id: 'set-appearance', label: t('settingsAppearance'), icon: <IconPalette size={18} /> },
+    {
+      id: 'set-shortcuts',
+      label: t('settingsKeyboardShortcuts'),
+      icon: <IconKeyboard size={18} />,
+    },
+    { id: 'set-support', label: t('supportProject'), icon: <IconCoffee size={18} /> },
+  ];
+  const delayIndex = Math.max(
+    0,
+    CAPTURE_DELAYS.indexOf(normalizeCaptureDelay(settings.captureDelay)),
+  );
+  const delayText = (d: number) => (d === 0 ? t('delayOff') : `${d}s`);
 
-      <section class="settings-group" aria-labelledby="settings-capture">
-        <h2 id="settings-capture">{t('settingsCapture')}</h2>
-        <div class="settings-row">
-          <span class="settings-label" id="capture-action-label">
-            {t('afterCaptureLabel')}
+  const active = sections.some((s) => s.id === activeSection) ? activeSection : sections[0].id;
+  const panel = (id: string) => ({
+    id,
+    role: 'tabpanel' as const,
+    'aria-labelledby': `tab-${id}`,
+    hidden: active !== id,
+  });
+  function select(id: string, focus = false) {
+    setActiveSection(id);
+    history.replaceState(null, '', `#${id}`);
+    if (focus) document.getElementById(`tab-${id}`)?.focus();
+  }
+  function onRailKey(e: KeyboardEvent) {
+    const index = sections.findIndex((s) => s.id === active);
+    const last = sections.length - 1;
+    const next =
+      e.key === 'ArrowDown' || e.key === 'ArrowRight'
+        ? (index + 1) % sections.length
+        : e.key === 'ArrowUp' || e.key === 'ArrowLeft'
+          ? (index + last) % sections.length
+          : e.key === 'Home'
+            ? 0
+            : e.key === 'End'
+              ? last
+              : -1;
+    if (next < 0) return;
+    e.preventDefault();
+    select(sections[next].id, true);
+  }
+
+  return (
+    <div class="settings-layout">
+      <div
+        class="settings-rail"
+        role="tablist"
+        aria-label={t('settingsTitle')}
+        aria-orientation="vertical"
+        onKeyDown={onRailKey}
+      >
+        {sections.map((s) => (
+          <button
+            key={s.id}
+            id={`tab-${s.id}`}
+            class="rail-link"
+            role="tab"
+            aria-selected={active === s.id}
+            aria-controls={s.id}
+            tabIndex={active === s.id ? 0 : -1}
+            onClick={() => select(s.id)}
+          >
+            <span class="rail-icon" aria-hidden="true">
+              {s.icon}
+            </span>
+            <span>{s.label}</span>
+          </button>
+        ))}
+      </div>
+      <main class="settings" aria-label={t('settingsTitle')}>
+        <section
+          {...panel('set-express')}
+          class={`express-card${settings.expressMode ? ' is-on' : ''}`}
+        >
+          <span class="express-card-icon" aria-hidden="true">
+            <IconBolt size={20} />
           </span>
-          <div class="settings-control">
-            <div class="seg" role="group" aria-labelledby="capture-action-label">
+          <div class="settings-copy">
+            <label class="express-card-label" for="express-mode">
+              {t('expressLabel')}
+            </label>
+            <p class="settings-hint" id="express-hint">
+              {t('settingsExpressHint')}
+            </p>
+          </div>
+          <input
+            id="express-mode"
+            type="checkbox"
+            class="switch"
+            aria-describedby="express-hint"
+            checked={settings.expressMode}
+            onChange={(e) =>
+              onChange({ expressMode: (e.currentTarget as HTMLInputElement).checked })
+            }
+          />
+        </section>
+
+        <section {...panel('set-capture')} class="settings-group">
+          <div class="card-head">
+            <span class="card-icon" aria-hidden="true">
+              <IconCamera size={20} />
+            </span>
+            <h2 id="settings-capture">{t('settingsCapture')}</h2>
+          </div>
+          <div class="settings-row">
+            <span class="settings-label" id="capture-action-label">
+              {t('afterCaptureLabel')}
+            </span>
+            <div class="choice-grid" role="group" aria-labelledby="capture-action-label">
               {CAPTURE_ACTIONS.map((a) => (
                 <button
                   key={a}
-                  class="seg-btn"
+                  class="choice-tile"
                   aria-pressed={normalizeCaptureAction(settings.captureAction) === a}
                   onClick={() => onChange({ captureAction: a })}
                 >
-                  {t(ACTION_LABEL_KEYS[a])}
+                  <span class="choice-icon" aria-hidden="true">
+                    {ACTION_ICONS[a]}
+                  </span>
+                  <span class="choice-label">{t(ACTION_LABEL_KEYS[a])}</span>
                 </button>
               ))}
             </div>
@@ -1244,55 +1328,79 @@ function SettingsView({
               <p class="settings-hint">{t('actionHintPng')}</p>
             )}
           </div>
-        </div>
-        <div class="settings-row">
-          <span class="settings-label" id="capture-delay-label">
-            {t('delayLabel')}
-          </span>
-          <div class="settings-control">
-            <div class="seg" role="group" aria-labelledby="capture-delay-label">
-              {CAPTURE_DELAYS.map((d) => (
-                <button
-                  key={d}
-                  class="seg-btn"
-                  aria-pressed={normalizeCaptureDelay(settings.captureDelay) === d}
-                  onClick={() => onChange({ captureDelay: d })}
-                >
-                  {d === 0 ? t('delayOff') : `${d}s`}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="settings-group" aria-labelledby="settings-files">
-        <h2 id="settings-files">{t('settingsFiles')}</h2>
-        <div class="settings-row">
-          <span class="settings-label" id="format-label">
-            {t('settingsDefaultFormat')}
-          </span>
-          <div class="settings-control">
-            <div class="seg" role="group" aria-labelledby="format-label">
-              {(['png', 'jpeg', 'webp', 'pdf'] as const).map((f) => (
-                <button
-                  key={f}
-                  class="seg-btn"
-                  aria-pressed={settings.defaultFormat === f}
-                  onClick={() => onChange({ defaultFormat: f as ExportFormat })}
-                >
-                  {t('format' + f.charAt(0).toUpperCase() + f.slice(1))}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-        {showQuality && (
           <div class="settings-row">
-            <label class="settings-label" for="export-quality">
-              {t('settingsQuality')}
+            <div class="row-head">
+              <span class="row-icon" aria-hidden="true">
+                <IconTimer size={18} />
+              </span>
+              <label class="settings-label" for="capture-delay">
+                {t('delayLabel')}
+              </label>
+              <output class="row-value" for="capture-delay">
+                {delayText(CAPTURE_DELAYS[delayIndex])}
+              </output>
+            </div>
+            <input
+              id="capture-delay"
+              class="range"
+              type="range"
+              min="0"
+              max={CAPTURE_DELAYS.length - 1}
+              step="1"
+              value={delayIndex}
+              aria-valuetext={delayText(CAPTURE_DELAYS[delayIndex])}
+              onInput={(e) =>
+                onChange({
+                  captureDelay: CAPTURE_DELAYS[Number((e.target as HTMLInputElement).value)],
+                })
+              }
+            />
+            <div class="range-ticks" aria-hidden="true">
+              {CAPTURE_DELAYS.map((d) => (
+                <span key={d}>{delayText(d)}</span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section {...panel('set-files')} class="settings-group">
+          <div class="card-head">
+            <span class="card-icon" aria-hidden="true">
+              <IconImage size={20} />
+            </span>
+            <h2 id="settings-files">{t('settingsFiles')}</h2>
+          </div>
+          <div class="settings-row settings-row-switch">
+            <label class="settings-label" for="default-format">
+              {t('settingsDefaultFormat')}
             </label>
-            <div class="settings-control settings-quality">
+            <select
+              id="default-format"
+              class="select"
+              value={settings.defaultFormat}
+              onChange={(e) =>
+                onChange({
+                  defaultFormat: (e.currentTarget as HTMLSelectElement).value as ExportFormat,
+                })
+              }
+            >
+              {(['png', 'jpeg', 'webp', 'pdf'] as const).map((f) => (
+                <option key={f} value={f}>
+                  {t('format' + f.charAt(0).toUpperCase() + f.slice(1))}
+                </option>
+              ))}
+            </select>
+          </div>
+          {showQuality && (
+            <div class="settings-row">
+              <div class="row-head">
+                <label class="settings-label" for="export-quality">
+                  {t('settingsQuality')}
+                </label>
+                <output class="row-value" for="export-quality">
+                  {Math.round(settings.quality * 100)}%
+                </output>
+              </div>
               <input
                 id="export-quality"
                 class="range"
@@ -1300,27 +1408,22 @@ function SettingsView({
                 min="0.1"
                 max="1"
                 step="0.05"
-                aria-label={t('settingsQuality')}
                 aria-valuetext={`${Math.round(settings.quality * 100)}%`}
                 value={settings.quality}
                 onInput={(e) => onChange({ quality: Number((e.target as HTMLInputElement).value) })}
               />
-              <output for="export-quality">{Math.round(settings.quality * 100)}%</output>
             </div>
-          </div>
-        )}
-        <div class="settings-row settings-filename">
-          <label class="settings-label" for="filename-template">
-            {t('settingsFilename')}
-          </label>
-          <div class="settings-control">
+          )}
+          <div class="settings-row settings-filename">
+            <label class="settings-label" for="filename-template">
+              {t('settingsFilename')}
+            </label>
             <input
               id="filename-template"
               ref={filenameRef}
               class="text-input"
               type="text"
               spellcheck={false}
-              aria-label={t('settingsFilename')}
               aria-describedby="filename-preview"
               value={settings.filenameTemplate}
               onInput={(e) => onChange({ filenameTemplate: (e.target as HTMLInputElement).value })}
@@ -1332,72 +1435,120 @@ function SettingsView({
                 </button>
               ))}
             </div>
-            <p class="settings-hint filename-preview" id="filename-preview">
-              <span>{t('settingsFilenamePreview')}</span>
-              <span>{previewFilename(settings)}</span>
+            <p class="filename-preview" id="filename-preview">
+              <span class="settings-hint">{t('settingsFilenamePreview')}</span>
+              <span class="file-pill">
+                <IconImage size={16} />
+                <span>{previewFilename(settings)}</span>
+              </span>
             </p>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {RECORDING_SUPPORTED && (
-        <section class="settings-group" aria-labelledby="settings-recording">
-          <h2 id="settings-recording">{t('settingsRecording')}</h2>
-          <div class="settings-row">
-            <span class="settings-label">{t('popupSetupLink')}</span>
-            <div class="settings-control">
-              <button class="link-btn link-btn-accent" onClick={onSetup}>
+        {RECORDING_SUPPORTED && (
+          <section {...panel('set-recording')} class="settings-group">
+            <div class="card-head">
+              <span class="card-icon" aria-hidden="true">
+                <IconRecordDot size={20} />
+              </span>
+              <h2 id="settings-recording">{t('settingsRecording')}</h2>
+            </div>
+            <div class="settings-row settings-row-switch">
+              <span class="settings-label">{t('popupSetupLink')}</span>
+              <button class="btn-secondary row-action" onClick={onSetup}>
                 {t('setupTitle')}
+                <IconChevronRight size={18} />
               </button>
             </div>
-          </div>
-          <div class="settings-row settings-row-switch">
-            <div class="settings-copy">
-              <label class="settings-label" for="record-across-sites">
-                {t('recAcrossSites')}
-              </label>
-              <p class="settings-hint" id="across-sites-hint">
-                {t('settingsAcrossSitesHint')}
-              </p>
-              {!acrossSites && <TrustStrip testid="sites-trust" />}
+            <div class="settings-row settings-row-switch">
+              <span class="row-icon" aria-hidden="true">
+                <IconGlobe size={18} />
+              </span>
+              <div class="settings-copy">
+                <label class="settings-label" for="record-across-sites">
+                  {t('recAcrossSites')}
+                </label>
+                <p class="settings-hint" id="across-sites-hint">
+                  {t('settingsAcrossSitesHint')}
+                </p>
+                {!acrossSites && <TrustStrip testid="sites-trust" />}
+              </div>
+              <input
+                id="record-across-sites"
+                type="checkbox"
+                class="switch"
+                aria-describedby="across-sites-hint"
+                checked={acrossSites}
+                onChange={(e) =>
+                  void toggleAcrossSites((e.currentTarget as HTMLInputElement).checked)
+                }
+              />
             </div>
-            <input
-              id="record-across-sites"
-              type="checkbox"
-              class="switch"
-              aria-describedby="across-sites-hint"
-              checked={acrossSites}
-              onChange={(e) =>
-                void toggleAcrossSites((e.currentTarget as HTMLInputElement).checked)
-              }
-            />
+          </section>
+        )}
+        <section {...panel('set-appearance')} class="settings-group">
+          <div class="card-head">
+            <span class="card-icon" aria-hidden="true">
+              <IconPalette size={20} />
+            </span>
+            <h2 id="settings-appearance">{t('settingsAppearance')}</h2>
+          </div>
+          <div class="settings-row">
+            <span class="settings-label" id="theme-label">
+              {t('settingsTheme')}
+            </span>
+            <div class="choice-grid" role="group" aria-labelledby="theme-label">
+              {(['light', 'dark', 'system'] as const).map((v) => (
+                <button
+                  key={v}
+                  class="choice-tile"
+                  aria-pressed={settings.theme === v}
+                  onClick={() => onChange({ theme: v })}
+                >
+                  <span class={`theme-preview theme-preview-${v}`} aria-hidden="true">
+                    <span />
+                    <span />
+                  </span>
+                  <span class="choice-label">
+                    {t('theme' + v.charAt(0).toUpperCase() + v.slice(1))}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </section>
-      )}
 
-      <section class="settings-group project-support" aria-labelledby="project-support-heading">
-        <h2 id="project-support-heading">{t('supportHeadline')}</h2>
-        <p class="settings-hint">{t('supportBody')}</p>
-        <div class="support-links">
-          <button class="btn-secondary" onClick={openKofi}>
-            {t('supportProject')}
-          </button>
-          <button class="link-btn" onClick={onRate}>
-            {t('editorRateLabel')}
-          </button>
-        </div>
-      </section>
+        <ShortcutSettings {...panel('set-shortcuts')} />
 
-      <footer class="settings-footer">
-        <button
-          class="link-btn reset-btn"
-          data-armed={confirmReset ? 'true' : undefined}
-          onClick={resetAll}
-        >
-          {confirmReset ? t('resetConfirm') : t('resetDefaults')}
-        </button>
-      </footer>
-    </main>
+        <section {...panel('set-support')} class="settings-group project-support">
+          <div class="card-head">
+            <span class="card-icon" aria-hidden="true">
+              <IconCoffee size={20} />
+            </span>
+            <h2 id="project-support-heading">{t('supportHeadline')}</h2>
+          </div>
+          <p class="settings-hint">{t('supportBody')}</p>
+          <div class="support-links">
+            <button class="btn-secondary" onClick={openKofi}>
+              {t('supportProject')}
+            </button>
+            <button class="link-btn" onClick={onRate}>
+              {t('editorRateLabel')}
+            </button>
+          </div>
+        </section>
+
+        <footer class="settings-footer">
+          <button
+            class="link-btn reset-btn"
+            data-armed={confirmReset ? 'true' : undefined}
+            onClick={resetAll}
+          >
+            {confirmReset ? t('resetConfirm') : t('resetDefaults')}
+          </button>
+        </footer>
+      </main>
+    </div>
   );
 }
 
