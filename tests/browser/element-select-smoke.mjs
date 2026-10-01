@@ -317,6 +317,55 @@ try {
       'position:fixed;left:auto;right:0;top:100px;width:140px;height:100px';
   });
   await page.mouse.move(990, 130);
+  await new Promise((r) => setTimeout(r, 200));
+  // DEBUG (not for merge): dump what the picker sees on this platform.
+  console.log(
+    'DEBUG',
+    JSON.stringify(
+      await page.evaluate(() => {
+        const host = document.querySelector('[data-openscreenshot-element-picker]');
+        const root = host.shadowRoot;
+        const sel = root.querySelector('[data-selection]');
+        const probe = root.querySelector('div[style*="inset"]') ?? root.lastElementChild;
+        host.style.setProperty('visibility', 'hidden', 'important');
+        const hit = document.elementFromPoint(990, 130);
+        host.style.setProperty('visibility', 'visible', 'important');
+        const img = document.querySelector('#image');
+        const r = (el) => {
+          const b = el?.getBoundingClientRect();
+          return b && [b.left, b.top, b.right, b.bottom].map((n) => Math.round(n * 100) / 100);
+        };
+        const chain = [];
+        for (let n = img; n; n = n.parentElement) {
+          const c = getComputedStyle(n);
+          chain.push({
+            tag: n.tagName,
+            ov: c.overflowX + '/' + c.overflowY,
+            vis: c.visibility,
+            op: c.opacity,
+            clip: c.clipPath,
+            rect: r(n),
+            client: [n.clientLeft, n.clientTop, n.clientWidth, n.clientHeight],
+            offset: [n.offsetWidth, n.offsetHeight],
+          });
+        }
+        return {
+          ua: navigator.userAgent,
+          inner: [innerWidth, innerHeight],
+          vv: [visualViewport.offsetLeft, visualViewport.offsetTop, visualViewport.width, visualViewport.height],
+          scroll: [scrollX, scrollY],
+          probe: r(probe),
+          host: r(host),
+          hit: hit && (hit.id || hit.tagName),
+          selHidden: sel.hidden,
+          sel: r(sel),
+          status: root.querySelector('[role=status]')?.textContent,
+          img: r(img),
+          chain,
+        };
+      }),
+    ),
+  );
   assert.equal(
     (await control(labels.capture)).disabled,
     false,
