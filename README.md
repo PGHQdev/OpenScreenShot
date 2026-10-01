@@ -254,7 +254,7 @@ Desktop and web apps are also in progress. Follow their development on the
 [roadmap](./ROADMAP.md).
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) and the [roadmap](./ROADMAP.md). If
-OpenScreenShot is useful to you, you can [buy me a coffee](https://ko-fi.com/T7A624DAY7).
+OpenScreenShot is useful to you, you can [buy me a coffee](https://ko-fi.com/pghqdev).
 
 ## License
 
