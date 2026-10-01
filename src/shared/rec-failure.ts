@@ -4,7 +4,7 @@
  * The recorder used to report failures to `console.error` and nothing else,
  * which made most of them indistinguishable from "nothing happened". This is
  * the single map from a failure to the string the user reads; the surfaces
- * (popup, recorder page, in-page control bar) look the key up here and
+ * (popup, recorder page, recording control tab) look the key up here and
  * translate it themselves, so the mapping stays testable without a DOM or a
  * `chrome` stub.
  *
@@ -44,7 +44,7 @@ export type RecFailureCode =
   | 'engine-failed'
   /**
    * `OFFSCREEN_START` never reached the engine. The worst shape a recording
-   * failure takes: the state, the badge and the control bar all say a
+   * failure takes: the state, the badge and the control tab all say a
    * recording is running, no `ENGINE_ERROR` can arrive because the engine was
    * never told to begin, and the user records for as long as they like and
    * gets nothing.
@@ -56,16 +56,16 @@ export type RecFailureCode =
    * engine never received; this covers one it received and never came back
    * from. `OFFSCREEN_STOP` reaching an engine whose own state is null parks a
    * pending stop and returns without `ENGINE_STOPPED`, so nothing downstream
-   * clears: the badge stays REC, the bar stays up reading "Starting…", and
+   * clears: the badge stays REC, the control tab reads "Starting…", and
    * `handleQuery`'s escape hatch cannot fire because the offscreen document
    * exists and is merely hung.
    */
   | 'engine-stalled'
   /** `REC_QUERY` threw, so the reported recording state is not trustworthy. */
   | 'query-failed'
-  /** The in-page control bar could not be injected on this origin. */
+  /** The in-page click tracker could not be injected on this origin. */
   | 'overlay-blocked'
-  /** The control bar stopped reporting mid-recording. */
+  /** The click tracker stopped reporting mid-recording. */
   | 'overlay-lost'
   /** Stop/pause/cancel never reached the worker. */
   | 'control-unreachable'
@@ -92,8 +92,8 @@ export type RecFailureCode =
    * A media chunk could not be written to IndexedDB while recording. The
    * recording carries on and the file is silently shorter than the clock says,
    * which is the only mode in the set that loses data the user believes they
-   * have while they are still making it. It is also the only one the in-page
-   * control bar carries, for that reason.
+   * have while they are still making it. It is also the only one the control
+   * tab carries while recording, for that reason.
    */
   | 'chunk-write-failed'
   /** The cursor track could not be written; the video itself is intact. */

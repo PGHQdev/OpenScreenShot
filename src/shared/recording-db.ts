@@ -4,13 +4,15 @@
  * `unlimitedStorage` is already granted, and the shapes live in
  * ./recording-types.
  */
-import type {
-  ChunkKind,
-  CursorEvent,
-  RecordingSegment,
-  RecordingSession,
-  RecordingSettings,
-  SegmentViewport,
+import {
+  FULL_AREA,
+  type ChunkKind,
+  type CursorEvent,
+  type RecordingArea,
+  type RecordingSegment,
+  type RecordingSession,
+  type RecordingSettings,
+  type SegmentViewport,
 } from './recording-types';
 
 const DB_NAME = 'openscreenshot-recordings';
@@ -188,6 +190,7 @@ export function createSegment(
   index: number,
   viewport: SegmentViewport,
   hasWebcam: boolean,
+  area: RecordingArea = FULL_AREA,
 ): Promise<RecordingSegment> {
   const segment: RecordingSegment = {
     id: crypto.randomUUID(),
@@ -197,6 +200,7 @@ export function createSegment(
     duration: 0,
     viewport,
     hasWebcam,
+    area,
   };
   return tx<RecordingSegment>(['segments', 'sessions'], 'readwrite', (t) => {
     t.objectStore('segments').put(segment);

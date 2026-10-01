@@ -85,7 +85,7 @@ export default defineConfig(({ mode }) => {
             ? {
                 offscreen: 'src/offscreen/index.html',
                 recorder: 'src/recorder/index.html',
-                webcamFrame: 'src/recorder/webcam-frame.html',
+                control: 'src/control/index.html',
                 setup: 'src/setup/index.html',
               }
             : {}),

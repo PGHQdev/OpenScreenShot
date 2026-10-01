@@ -623,6 +623,51 @@ async function testRecorder(browser, base, messages) {
   await page.close();
 }
 
+// ---------------------------------------------------------------- control ---
+async function testControl(browser, base, messages) {
+  const capture = await makeCapture();
+  const { page, crashes } = await newPage(browser, messages, {
+    'openscreenshot:control-target': {
+      tabId: 3,
+      windowId: 1,
+      title: 'Pricing — Example',
+      url: 'https://example.com/pricing',
+      shot: capture.dataUrl,
+    },
+  });
+  await page.setViewport({ width: 1280, height: 860 });
+
+  step('CONTROL — setup: area picker, camera, Start');
+  await page.goto(`${base}/src/control/index.html?tab=3`, { waitUntil: 'networkidle0' });
+  await page.waitForSelector('.area-frame img', { timeout: 15_000 });
+  const frame = await (await page.$('.area-frame')).boundingBox();
+  await page.mouse.move(frame.x + frame.width * 0.2, frame.y + frame.height * 0.2);
+  await page.mouse.down();
+  await page.mouse.move(frame.x + frame.width * 0.7, frame.y + frame.height * 0.8, { steps: 5 });
+  await page.mouse.up();
+  await scan(page, 'control tab setup (area drawn)');
+
+  step('CONTROL — live recording, with a warning up');
+  await page.evaluate(() => {
+    chrome.runtime.sendMessage = async (m) =>
+      m?.type === 'REC_QUERY'
+        ? {
+            active: true,
+            anchored: true,
+            paused: false,
+            elapsedMs: 5000,
+            tabId: 3,
+            writeFailed: true,
+          }
+        : {};
+  });
+  await page.waitForSelector('.control-live', { timeout: 5000 });
+  await scan(page, 'control tab live recording');
+
+  assert(crashes.length === 0, `no uncaught page errors ${crashes.join('; ')}`);
+  await page.close();
+}
+
 // ------------------------------------------------------------------ setup ---
 async function testSetup(browser, base, messages) {
   const { page, crashes } = await newPage(browser, messages, {});
@@ -673,6 +718,7 @@ async function main() {
     await testEditor(browser, base, messages);
     await testPopup(browser, base, messages);
     await testRecorder(browser, base, messages);
+    await testControl(browser, base, messages);
     await testSetup(browser, base, messages);
   } finally {
     await browser?.close();

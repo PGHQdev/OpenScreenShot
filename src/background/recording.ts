@@ -1,6 +1,7 @@
 /**
  * Screen-recorder worker orchestration. Owns the recording control surface
- * (`REC_*` messages from popup/overlay/command), drives the offscreen engine
+ * (`REC_*` messages from the popup, the control tab and the commands), opens
+ * the control tab, drives the offscreen engine
  * (`src/offscreen/engine.ts`) via `OFFSCREEN_*` messages, and keeps
  * authoritative recording state in `chrome.storage.session` so the worker can
  * idle and restart mid-recording without losing track of what's live.
@@ -22,9 +23,13 @@ import {
 } from '../shared/recording-db';
 import {
   applyCapturedTracks,
+  CONTROL_TARGET_KEY,
   isEngineMessage,
   isRecMessage,
+  normalizeArea,
   type CapturedTracks,
+  type ControlTarget,
+  type RecordingArea,
   type RecordingSession,
   type RecordingSettings,
   type RecState,
@@ -53,14 +58,10 @@ const UNOPENED_SESSION_KEY = 'openscreenshot:unopened-session';
 /** Written by the recorder's Continue button; read by the popup and here. */
 const CONTINUE_SESSION_KEY = 'openscreenshot:continue-session';
 const RECORDER_URL = chrome.runtime.getURL('src/recorder/index.html');
+const CONTROL_URL = chrome.runtime.getURL('src/control/index.html');
 const START_TIMEOUT_MS = 10_000;
-/**
- * How long the start waits for the overlay's permission frame to settle. It
- * covers a human answering Chrome's camera/mic prompt, so it is generous; the
- * frame reports back on every path it can take, so the timeout is the fallback
- * for a frame that never loaded at all (blocked iframe, dead tab).
- */
-const FRAME_READY_TIMEOUT_MS = 15_000;
+/** JPEG quality of the control tab's still of its target: a preview, not an export. */
+const CONTROL_SHOT_QUALITY = 70;
 /**
  * How long a Stop on a run that has not anchored waits for `ENGINE_STOPPED`
  * before the run is torn down as stalled. It only has to outlast a healthy
@@ -75,32 +76,33 @@ interface StoredRecState {
   sessionId: string;
   segmentId: string;
   tabId: number;
+  /** The control tab that started this run; the editor opens in it on Stop. */
+  controlTabId?: number;
   startedAt: number;
   pausedAt: number; // 0 while running
   pausedAccumMs: number;
   settings: RecordingSettings;
   overlayLost: boolean;
   /**
-   * Whether the control bar has ever reached the page during this run.
+   * Whether the cursor logger has ever reached the page during this run.
    * `overlayLost` cannot answer that: it is false both before the first mount
    * and after a heal, and the engine's watchdog is edge-triggered — it stays
-   * quiet while it believes the bar is already lost — so a bar that recovers
-   * inside its 2500ms window never produces an `OVERLAY_HEALED` to clear
-   * anything. This is the flag the mount itself sets.
+   * quiet while it believes the logger is already lost — so a logger that
+   * recovers inside its 2500ms window never produces an `OVERLAY_HEALED` to
+   * clear anything. This is the flag the mount itself sets.
    */
   overlayMounted: boolean;
-  /** Media chunks are failing to reach IndexedDB; the control bar says so. */
+  /** Media chunks are failing to reach IndexedDB; the control tab says so. */
   writeFailed: boolean;
   /**
    * A requested camera was declined (or unavailable). One-way, like
-   * `writeFailed` — set by `handleWebcamDenied`, never cleared within a run,
-   * and read back by `healOverlay` so the control bar's warning survives a
-   * heal the same way a chunk-write failure's does.
+   * `writeFailed`: set when `ENGINE_STARTED` reports no camera track for a
+   * run that asked for one, and never cleared within a run.
    */
   camDenied: boolean;
   /**
    * Whether `ENGINE_STARTED` has arrived, i.e. whether `startedAt` is the
-   * moment the recorders began rather than the moment the bar was mounted.
+   * moment the recorders began rather than the moment the logger was mounted.
    * The clock has no zero until then, so no surface may show elapsed.
    */
   anchored: boolean;
@@ -207,24 +209,14 @@ function beginStartPending(): void {
  * a session with nothing in it. The preparation is abandoned instead, and
  * nothing is ever handed to the engine.
  *
- * The frame wait is released here on purpose. Without it the gesture would
- * sit unread until the permission frame answered or its 15s timeout ran out,
- * which is the whole complaint: Stop looked broken because it was queued
- * behind the longest wait in the start.
  */
 function abortPreparingStart(gesture: 'stop' | 'cancel'): boolean {
   if (!preparingStart) return false;
   startAbort = gesture;
-  resolveFrameReadyFn?.();
   return true;
 }
 
-/**
- * (Re)start the deadline on the in-flight start. The permission-frame wait
- * sits inside the same claim and can outlast the engine's own budget, so the
- * start re-arms this once the wait is over — otherwise the round trip is
- * declared dead while the engine has not even been asked to begin.
- */
+/** (Re)start the deadline on the in-flight start. */
 function armStartTimeout(): void {
   if (startTimeout) clearTimeout(startTimeout);
   startTimeout = setTimeout(resolveStartPending, START_TIMEOUT_MS);
@@ -240,34 +232,6 @@ function resolveStartPending(): void {
 
 async function waitForStartPending(): Promise<void> {
   if (startPending) await startPending;
-}
-
-// --- Permission-frame wait ---------------------------------------------------
-
-/**
- * Camera and mic permission belongs to the extension origin, and the offscreen
- * document has no UI to ask for it — only the overlay's iframe can show the
- * prompt. So the engine's `getUserMedia` must run *after* that prompt is
- * answered, or the first webcam/mic recording of an install silently records
- * without those tracks. The start mounts the overlay, parks here until the
- * frame reports back, and only then hands the engine its `OFFSCREEN_START`.
- */
-let resolveFrameReadyFn: (() => void) | null = null;
-
-function waitForFrameReady(): Promise<void> {
-  return new Promise<void>((resolve) => {
-    const timeout = setTimeout(finish, FRAME_READY_TIMEOUT_MS);
-    function finish(): void {
-      clearTimeout(timeout);
-      resolveFrameReadyFn = null;
-      resolve();
-    }
-    resolveFrameReadyFn = finish;
-  });
-}
-
-function handleFrameReady(): void {
-  resolveFrameReadyFn?.();
 }
 
 // --- Badge -------------------------------------------------------------------
@@ -298,7 +262,7 @@ async function clearRecBadge(): Promise<void> {
  * The badge for a recording failure nobody has read yet. Coral and '!' is
  * how `flashErrorBadge` in the capture worker already spells an error; this
  * one persists instead of counting down, because it is the only surface left
- * when a failure lands with no popup, recorder page or control bar open.
+ * when a failure lands with no popup, recorder page or control tab open.
  */
 async function showFailBadge(): Promise<void> {
   await chrome.action.setBadgeBackgroundColor({ color: designTheme.light.accent });
@@ -359,7 +323,7 @@ export async function restoreRecBadge(): Promise<void> {
 /**
  * Surface a failure the worker has no caller to answer. Most of these land
  * with nothing of ours on screen — the popup hands the click over and closes,
- * and the control bar is either not up yet or is itself what failed — so this
+ * and the control tab may be closed or behind the recorded page — so this
  * takes all three routes it can: it parks the failure for the next popup open,
  * broadcasts it to any surface that happens to be listening right now, and
  * puts '!' on the action badge, which needs nothing open at all.
@@ -377,10 +341,8 @@ async function reportFailure(code: RecFailureCode, sessionId?: string): Promise<
 // --- Overlay heal ------------------------------------------------------------
 
 /**
- * Re-assert the overlay on `tabId`. A fresh document gets the full mount; an
- * overlay that is already there is re-synced instead (clock re-anchored,
- * dropped tracks removed from the chips). Returns what the injection did, so
- * the start knows whether it just mounted the permission frame.
+ * Re-assert the cursor logger on `tabId`. A fresh document gets the full
+ * mount; a logger that is already there has its clock re-synced instead.
  */
 async function healOverlay(tabId: number): Promise<'fresh' | 'synced' | 'failed'> {
   const s = await getRecState();
@@ -394,19 +356,12 @@ async function healOverlay(tabId: number): Promise<'fresh' | 'synced' | 'failed'
         s.segmentId,
         elapsed,
         s.pausedAt !== 0,
-        { mic: s.settings.mic, tabAudio: s.settings.tabAudio, webcam: s.settings.webcam },
-        s.writeFailed,
-        // A state written by a build that predates the field reads as
-        // false — no denial to report, same "absent means off" reading
-        // `writeFailed` already gets nowhere else in this call.
-        !!s.camDenied,
         // A state written by a build that predates the field would otherwise
-        // read as unanchored and leave a live recording's bar on "Starting…".
-        // Only an explicit false is unanchored.
+        // read as unanchored. Only an explicit false is unanchored.
         s.anchored !== false,
       ],
     });
-    // The bar is on the page. If this run had reported that it could not get
+    // The logger is on the page. If this run had reported that it could not get
     // there, that message is now wrong, and the flag has to flip so a genuine
     // loss later is reported rather than suppressed as a repeat.
     if (!s.overlayMounted) {
@@ -418,15 +373,14 @@ async function healOverlay(tabId: number): Promise<'fresh' | 'synced' | 'failed'
     }
     return injection?.result === 'fresh' ? 'fresh' : 'synced';
   } catch {
-    return 'failed'; // no permission on this origin — overlay stays lost
+    return 'failed'; // no permission on this origin — the logger stays lost
   }
 }
 
 /**
- * Tear down the in-page overlay: control bar, webcam frame, listeners. The
- * mounted overlay parks its own cleanup on `window.__ossRecOverlay`; without
- * this call the bar and the frame's live camera stream survive the recording
- * and the camera indicator stays lit until the tab navigates.
+ * Tear down the in-page cursor logger. It parks its own cleanup on
+ * `window.__ossRecOverlay`; without this call its listeners and heartbeat
+ * survive the recording until the tab navigates.
  */
 async function unmountOverlay(tabId: number): Promise<void> {
   try {
@@ -483,14 +437,90 @@ async function closeOffscreenSafe(): Promise<void> {
 // --- REC_* handlers ------------------------------------------------------
 
 /**
- * `devicesGranted` is the popup's answer to "is there a permission prompt
- * coming?" — see `src/shared/permissions.ts`. A worker has no
- * `navigator.permissions`, so it cannot ask; absent or false keeps the wait.
+ * Open the control tab for `tabId`, beside it. Runs from the popup's Record
+ * click (or the tabCapture grant that click was waiting on), while the
+ * toolbar invocation still lets the worker take a still of the tab — the
+ * control page draws the area selection on it. The tab must be the active
+ * one in its window for that still, which it is at the click.
+ *
+ * A run already live gets its control tab back instead of a second one.
+ */
+async function handleOpenControl(tabId: number, continueSessionId?: string): Promise<void> {
+  const live = await getRecState();
+  if (live) {
+    await showControls(live);
+    return;
+  }
+  let tab: chrome.tabs.Tab;
+  try {
+    tab = await chrome.tabs.get(tabId);
+  } catch {
+    await reportFailure('start-blocked');
+    return;
+  }
+  if (tab.id == null || isProtectedUrl(tab.url)) {
+    await reportFailure('start-blocked');
+    return;
+  }
+  // Best-effort: without the still the page offers the whole tab only.
+  const shot = await chrome.tabs
+    .captureVisibleTab(tab.windowId, { format: 'jpeg', quality: CONTROL_SHOT_QUALITY })
+    .catch(() => null);
+  const target: ControlTarget = {
+    tabId: tab.id,
+    windowId: tab.windowId,
+    title: tab.title ?? '',
+    url: tab.url ?? '',
+    ...(tab.favIconUrl ? { favIconUrl: tab.favIconUrl } : {}),
+    shot,
+    ...(continueSessionId ? { continueSessionId } : {}),
+  };
+  await chrome.storage.session.set({ [CONTROL_TARGET_KEY]: target });
+  await chrome.tabs.create({
+    url: `${CONTROL_URL}?tab=${tab.id}`,
+    windowId: tab.windowId,
+    index: tab.index + 1,
+    openerTabId: tab.id,
+  });
+}
+
+/**
+ * Bring the run's control tab to the front, or open a new one when the user
+ * closed it. The command and a second Record click both land here.
+ */
+async function showControls(state: StoredRecState): Promise<void> {
+  if (state.controlTabId != null) {
+    try {
+      const tab = await chrome.tabs.update(state.controlTabId, { active: true });
+      if (tab?.windowId != null) await chrome.windows.update(tab.windowId, { focused: true });
+      return;
+    } catch {
+      // Closed during the run — open a fresh one below.
+    }
+  }
+  const target = await chrome.tabs.get(state.tabId).catch(() => null);
+  const created = await chrome.tabs.create({
+    url: `${CONTROL_URL}?tab=${state.tabId}`,
+    ...(target ? { windowId: target.windowId, index: target.index + 1 } : {}),
+  });
+  if (created.id != null)
+    await setRecState({ sessionId: state.sessionId, controlTabId: created.id });
+}
+
+/**
+ * The control tab's Start. `tabId` is the tab its Record click came from:
+ * Chrome keeps that click's capture grant on the tab until it navigates to
+ * another site or closes, so the start may run while the control tab is in
+ * front. Camera and mic were already granted (or declined) in the control
+ * tab, which is a page of this extension's origin, so nothing here waits on
+ * a permission prompt.
  */
 async function handleStart(
   settings: RecordingSettings,
+  tabId: number,
+  area: RecordingArea,
   continueSessionId?: string,
-  devicesGranted = false,
+  controlTabId?: number,
 ): Promise<void> {
   if (startPending || preparingStart) return; // a start is already mid-flight
   // Claim the slot synchronously, before any `await` — otherwise two
@@ -501,10 +531,10 @@ async function handleStart(
 
   let session: RecordingSession | undefined;
   // These live outside the try because the catch has to undo what they name:
-  // the overlay now goes up before the last step that can throw, and a
-  // continued session's failed segment row has to be removed by id.
-  let tabId: number | undefined;
+  // the logger goes up before the last step that can throw, and a continued
+  // session's failed segment row has to be removed by id.
   let segmentId: string | undefined;
+  let mounted = false;
   try {
     if (await getRecState()) {
       resolveStartPending(); // already recording — release the claim
@@ -512,13 +542,12 @@ async function handleStart(
       return;
     }
 
-    const tab = await getActiveTab();
+    const tab = await chrome.tabs.get(tabId).catch(() => null);
     if (!tab || tab.id == null || isProtectedUrl(tab.url)) {
       resolveStartPending();
       await reportFailure('start-blocked');
       return;
     }
-    tabId = tab.id;
 
     // Only from here is there a run to give back, so only from here is a Stop
     // or Cancel this start's to answer. Claimed later than the slot above on
@@ -555,6 +584,7 @@ async function handleStart(
       session.segmentIds.length,
       viewport,
       settings.webcam,
+      area,
     );
     segmentId = segment.id;
 
@@ -563,6 +593,7 @@ async function handleStart(
       sessionId: session.id,
       segmentId: segment.id,
       tabId,
+      ...(controlTabId != null ? { controlTabId } : {}),
       startedAt: now,
       pausedAt: 0,
       pausedAccumMs: 0,
@@ -578,48 +609,27 @@ async function handleStart(
     await showRecBadge(false);
 
     /**
-     * A Stop or Cancel that landed while this start was preparing. Checked on
-     * both sides of the permission wait: before it, because a gesture that
-     * arrives ahead of the wait finds no wait to release and would otherwise
-     * go unanswered until the frame reported or its 15s timeout ran out; and
-     * after it, so the last steps are not run for a run nobody wants.
+     * A Stop or Cancel that landed while this start was preparing. Checked
+     * after each step that awaits, so the last steps are not run for a run
+     * nobody wants.
      */
     const abandoned = async (): Promise<boolean> => {
-      if (!startAbort || !session || tabId == null) return false;
+      if (!startAbort || !session) return false;
       await discardPreparedRun(session.id, tabId, segmentId, !!continueSessionId);
       return true;
     };
 
-    // The overlay goes up before the engine is asked to capture, because its
-    // iframe is the only surface that can prompt for camera/mic on this
-    // extension origin. A fresh mount means that prompt is now on screen, so
-    // hold the engine until the frame reports the answer — its own
-    // `getUserMedia` runs in the offscreen document, which cannot prompt and
-    // would just fail. `ENGINE_STARTED` anchors the clock afterwards.
+    // The cursor logger goes up before the engine is asked to capture, so the
+    // first second of the recording has its clicks. `ENGINE_STARTED` anchors
+    // its clock afterwards. A logger that never went up costs the recording
+    // its zoom and click effects, not its video, so the start goes on.
+    mounted = true;
     const mount = await healOverlay(tabId);
-    // A bar that never went up leaves the recording running with no in-page
-    // stop button; the popup is the remaining way to end it, so say so.
     if (mount === 'failed') void reportFailure('overlay-blocked', session.id);
     if (await abandoned()) return;
-    // Gated on the grant, because the wait exists for the prompt and nothing
-    // else: with camera and mic already granted the frame raises no prompt,
-    // reports ready as fast as an iframe can load, and the engine's own
-    // getUserMedia would have succeeded anyway. Waiting there spent up to
-    // FRAME_READY_TIMEOUT_MS of a start that had nothing to wait for.
-    if (mount === 'fresh' && (settings.webcam || settings.mic) && !devicesGranted) {
-      await waitForFrameReady();
-      armStartTimeout();
-    }
-
-    // Read back so the engine skips a camera the frame already reported as
-    // refused. Best-effort: the frame reports ready before it reports the
-    // denial, so the write can still be in flight here — the engine's own
-    // catch degrades either way, and `ENGINE_STARTED` corrects the settings.
-    const effective = (await getRecState())?.settings ?? settings;
 
     // Taken last on purpose: a tab-capture stream id expires if it is not
-    // consumed promptly, and the wait above can run as long as a human takes
-    // to answer a permission prompt.
+    // consumed promptly.
     const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tabId });
 
     // The last moment a Stop or Cancel can be answered by giving the run back
@@ -637,16 +647,20 @@ async function handleStart(
         streamId,
         sessionId: startedSessionId,
         segmentId: segment.id,
-        settings: effective,
+        settings,
       })
       .catch(() => void abandonUnstartedRun(startedSessionId));
     // startPending stays claimed here — resolved by ENGINE_STARTED,
     // ENGINE_ERROR, or the timeout guard in armStartTimeout().
+
+    // The user goes to the page they are recording; the control tab waits
+    // behind it for Stop. The capture does not depend on this, so a window
+    // that cannot be focused changes nothing about the recording.
+    await chrome.tabs.update(tabId, { active: true }).catch(() => {});
+    await chrome.windows.update(tab.windowId, { focused: true }).catch(() => {});
   } catch (err) {
     console.error('[OpenScreenShot] recording start failed', err);
-    // The control bar is already up by the time the last steps run, so a
-    // throw there would leave a timer counting up over dead buttons.
-    if (tabId != null) await unmountOverlay(tabId);
+    if (mounted) await unmountOverlay(tabId);
     // The session row was already written when this threw (a navigating tab
     // fails `execInTab`, for one), and a row left at status 'recording' with
     // no engine behind it reads as a crash the user is offered to recover.
@@ -672,8 +686,8 @@ async function handleStart(
  *
  * Nothing was recorded: no recorder ever ran, so there is no file to keep and
  * no shortfall to explain. It is not a failure either — the user asked for
- * it — so no message is parked and no '!' is raised. The bar going away and
- * the badge clearing is the whole answer, which is the same answer a Stop one
+ * it — so no message is parked and no '!' is raised. The control tab going
+ * back to Start and the badge clearing is the whole answer, which is the same answer a Stop one
  * second later would give.
  *
  * The DB half is a discard rather than `retainFailedSession`'s retention: a
@@ -699,7 +713,7 @@ async function discardPreparedRun(
 /**
  * `OFFSCREEN_START` never landed, so the engine holds nothing and no
  * `ENGINE_ERROR` is coming. Everything downstream still claims a live
- * recording: the stored state, the REC badge, the control bar counting up.
+ * recording: the stored state, the REC badge, the control tab counting up.
  *
  * Reporting alone was not enough — the message says "stop and try again" and
  * Stop could not work. `OFFSCREEN_STOP` reaches an engine whose own state is
@@ -726,7 +740,7 @@ async function abandonUnstartedRun(sessionId: string): Promise<void> {
  * to an engine whose own `state` is null parks a pending stop and returns, so
  * no `ENGINE_STOPPED` comes back and nothing clears; `handleQuery`'s escape
  * hatch checks for an offscreen document, which exists and is merely hung.
- * Without this the bar stays up reading "Starting…" over dead buttons, with a
+ * Without this the control tab reads "Starting…" over dead buttons, with a
  * REC badge that never goes down, until the tab is closed.
  *
  * `code` carries which gesture is waiting: `engine-stalled` for a Stop, whose
@@ -744,12 +758,12 @@ async function abandonStalledRun(sessionId: string, code: RecFailureCode | null)
  * Tear down a run the engine never took charge of, and say so — or say
  * nothing, when `code` is null because the user asked for the teardown.
  *
- * **The state goes first, and the bar goes after it.** The other order —
+ * **The state goes first, and the logger goes after it.** The other order —
  * unmount, then several awaits of IndexedDB, then clear — leaves a window in
- * which a Stop reads a live state and `healOverlay`s the bar back onto the
+ * which a Stop reads a live state and `healOverlay`s the logger back onto the
  * page. The state is then cleared under it and nothing will ever unmount that
- * bar again: it sits there reading "Starting…", with a live REC dot and a
- * webcam frame, over buttons whose messages all hit `if (!state) return`.
+ * logger again: it keeps listening and sending heartbeats to an engine that
+ * is gone.
  * Clearing first narrows that window to the microtask between `healOverlay`'s
  * own re-read and the clear, because a heal that reads no state returns
  * 'failed' instead of mounting.
@@ -949,54 +963,15 @@ async function handleCancel(): Promise<void> {
     .catch(() => reportControlUnreachable());
   // The same watchdog Stop arms, for the same hung engine: OFFSCREEN_CANCEL
   // parks a pending cancel against a null engine state and nothing comes
-  // back. It tears down without a word — the user cancelled, and the bar
-  // going away is the whole answer.
+  // back. It tears down without a word — the user cancelled, and the control
+  // tab going back to Start is the whole answer.
   setTimeout(() => void abandonStalledRun(state.sessionId, null), STALLED_STOP_TIMEOUT_MS);
 }
 
-/**
- * The permission frame failed to open the camera. The engine catches its own
- * `getUserMedia` failure independently, so nothing is forwarded to it — this
- * keeps stored settings truthful, so a later overlay mount (or a popup
- * REC_QUERY) stops claiming a webcam track that is not being recorded, and
- * it flags the denial so the control bar can say so (task 40: the permission
- * frame itself never shows anything, now that it is a 1x1 dot).
- */
-async function handleWebcamDenied(): Promise<void> {
+/** The keyboard route back to the control tab while a recording runs. */
+async function handleShowControls(): Promise<void> {
   const state = await getRecState();
-  if (!state || !state.settings.webcam) return;
-  await setRecState({
-    sessionId: state.sessionId,
-    settings: { ...state.settings, webcam: false },
-    camDenied: true,
-  });
-  // A mounted control bar keeps its CAM chip until it is told otherwise — the
-  // heal re-syncs it (and the new camDenied warning) from the state above.
-  void healOverlay(state.tabId);
-}
-
-/**
- * The keyboard route to reveal the bar. `chrome.commands` fires at the
- * browser level, before any keystroke reaches page or iframe script, so this
- * reaches the overlay from a tab whose focus is anywhere at all — including
- * inside a cross-origin iframe, which no in-page key listener could say.
- * Mirrors `unmountOverlay`'s shape: a tiny self-contained function that calls
- * a window global the mount already set up, if it is there.
- */
-async function handleRevealBar(): Promise<void> {
-  const state = await getRecState();
-  if (!state) return;
-  try {
-    await chrome.scripting.executeScript({
-      target: { tabId: state.tabId },
-      func: () => {
-        const w = window as unknown as { __ossRecReveal?: () => void };
-        if (typeof w.__ossRecReveal === 'function') w.__ossRecReveal();
-      },
-    });
-  } catch {
-    // No permission on this origin, or the tab is gone — nothing to reveal.
-  }
+  if (state) await showControls(state);
 }
 
 async function handleQuery(sendResponse: (state: RecState) => void): Promise<void> {
@@ -1049,6 +1024,9 @@ async function handleQuery(sendResponse: (state: RecState) => void): Promise<voi
       elapsedMs,
       settings: state.settings,
       overlayLost: state.overlayLost,
+      tabId: state.tabId,
+      writeFailed: state.writeFailed,
+      camDenied: !!state.camDenied,
     });
   } catch (err) {
     console.error('[OpenScreenShot] REC_QUERY failed', err);
@@ -1064,9 +1042,9 @@ async function handleQuery(sendResponse: (state: RecState) => void): Promise<voi
 /**
  * The engine is live. Two corrections land here: the settings drop whatever
  * device the engine could not open (a declined mic or camera never fails a
- * start), and the clock re-anchors to the moment the recorders actually began
- * — which trails the overlay's mount by however long the permission prompt
- * stayed on screen. The heal pushes both into the control bar.
+ * start, and a declined camera is flagged so the control tab can say so), and
+ * the clock re-anchors to the moment the recorders actually began. The heal
+ * pushes the new zero into the cursor logger.
  */
 async function handleEngineStarted(sessionId: string, tracks?: CapturedTracks): Promise<void> {
   resolveStartPending();
@@ -1079,16 +1057,17 @@ async function handleEngineStarted(sessionId: string, tracks?: CapturedTracks): 
   // It used to be skipped for a run whose clock had been touched — the old
   // `pausedAt === 0 && pausedAccumMs === 0` test — on the reasoning that a
   // pause owned the clock. A pause is reachable in this window: the 10s claim
-  // deadline releases `handlePause`'s wait while the start is still waiting
-  // for the permission frame. So the run kept the mount as its zero and the
-  // bar went "Starting…" -> 0:11, paused, for zero seconds of content, which
+  // deadline releases `handlePause`'s wait while the start is still
+  // preparing. So the run kept the mount as its zero and the
+  // clock went "Starting…" -> 0:11, paused, for zero seconds of content, which
   // is the exact reading the anchor exists to prevent. Both counters are
   // reset with it, and an open pause is re-stamped to now, so a paused run
-  // anchors at 0:00 rather than at however long the prompt was up.
+  // anchors at 0:00 rather than at however long the start took.
   const now = Date.now();
   await setRecState({
     sessionId,
     settings,
+    ...(state.settings.webcam && !settings.webcam ? { camDenied: true } : {}),
     anchored: true,
     ...(state.anchored
       ? {}
@@ -1106,11 +1085,11 @@ async function handleOverlayLost(sessionId: string): Promise<void> {
   if (!state || state.sessionId !== sessionId) return;
   await setRecState({ sessionId, overlayLost: true });
   await showRecBadge(true);
-  // A bar that never reached the page is one absent bar, and the start
-  // already named it: the engine's watchdog reports a bar that stopped
+  // A logger that never reached the page is one absent logger, and the start
+  // already named it: the engine's watchdog reports a logger that stopped
   // sending 2.5-3.5s later, which for a refused mount is the same situation
   // told twice. 'overlay-blocked' is the more accurate of the two sentences
-  // and arrives first, so it keeps the slot. Scoped to a bar that has never
+  // and arrives first, so it keeps the slot. Scoped to a logger that has never
   // mounted for this run, so a real loss minutes later is still reported —
   // `overlayMounted` is set by the mount, not by the watchdog, precisely
   // because the watchdog cannot report a heal it never noticed. The state and
@@ -1128,7 +1107,7 @@ async function handleOverlayHealed(sessionId: string): Promise<void> {
   if (!state || state.sessionId !== sessionId) return;
   await setRecState({ sessionId, overlayLost: false });
   await showRecBadge(false);
-  // The bar is back, so the parked "controls were lost" message is stale —
+  // The logger is back, so the parked "click tracking stopped" message is stale —
   // a navigation that heals in a second must not leave the next popup open
   // reporting a problem that has already fixed itself.
   const parked = await pendingFailure().catch(() => null);
@@ -1143,11 +1122,9 @@ async function handleOverlayHealed(sessionId: string): Promise<void> {
  * written is a real recording and the user may still want the rest of it. The
  * engine sends this once per kind per run, so this cannot nag.
  *
- * A media failure also goes to the control bar, which is the only surface the
- * user can see while it is happening — a parked message they find after
- * stopping arrives after the data is already gone. `handleWebcamDenied` is
- * the same shape: learn something mid-recording, write it to state, re-heal to
- * push it into the bar.
+ * A media failure is also written to state, which the control tab polls, so
+ * the user hears about it while it is happening — a parked message they find
+ * after stopping arrives after the data is already gone.
  */
 async function handleEngineWriteFailed(
   sessionId: string,
@@ -1160,10 +1137,7 @@ async function handleEngineWriteFailed(
   // direction of that mistake that costs the user data.
   const media = kind !== 'events';
   if (media) {
-    if (state) {
-      await setRecState({ sessionId, writeFailed: true });
-      void healOverlay(state.tabId);
-    }
+    if (state) await setRecState({ sessionId, writeFailed: true });
     await reportFailure('chunk-write-failed', sessionId);
     return;
   }
@@ -1171,7 +1145,7 @@ async function handleEngineWriteFailed(
   // TIMESLICE_MS and cursor batches every FLUSH_INTERVAL_MS, on independent
   // phases — so both failures arrive inside the same second in arbitrary
   // order. Last-writer-wins would leave "The video is fine" standing half the
-  // time, beside a control bar reading NOT SAVING. The graver sentence keeps
+  // time, beside a control tab reading NOT SAVING. The graver sentence keeps
   // the slot, the same rule `handleOverlayLost` uses below.
   if (state?.writeFailed) return;
   // Scoped to this run, and it has to be: a parked failure outlives its
@@ -1197,17 +1171,17 @@ async function handleEngineError(sessionId: string, message: string): Promise<vo
   // so the session holds nothing recorded. Left at 'recording' it would offer
   // the user an empty recording to recover; `tearDownUnstartedRun` marks it
   // 'failed' so it stays visible on the Recorder page as an attempt that did
-  // not work, and clears the state before the bar for the reason given there.
+  // not work, and clears the state before the logger for the reason given there.
   await tearDownUnstartedRun(state, 'engine-failed');
 }
 
 async function handleEngineStopped(sessionId: string, canceled: boolean): Promise<void> {
   resolveStartPending();
-  // Read the tab before the state is cleared; `handleStop` healed the overlay
-  // on the way in, so the bar and frame are live right up to this point.
+  // Read the tab before the state is cleared; `handleStop` healed the logger
+  // on the way in, so it is live right up to this point.
   const state = await getRecState();
   // Cleared before the unmount, so a Stop landing in this window cannot heal
-  // the bar back onto a page nothing will unmount it from again — the same
+  // the logger back onto a page nothing will unmount it from again — the same
   // ordering `tearDownUnstartedRun` explains.
   await clearRecState();
   if (state) await unmountOverlay(state.tabId);
@@ -1218,7 +1192,7 @@ async function handleEngineStopped(sessionId: string, canceled: boolean): Promis
   await closeOffscreenSafe();
   if (!canceled) {
     try {
-      await chrome.tabs.create({ url: `${RECORDER_URL}?session=${sessionId}` });
+      await openRecorder(sessionId, state?.controlTabId);
       // A page that opened retires any earlier one that did not: the offer is
       // a shortcut to the recording the user has not seen, and they are
       // looking at one now.
@@ -1234,20 +1208,44 @@ async function handleEngineStopped(sessionId: string, canceled: boolean): Promis
   }
 }
 
+/**
+ * The editor opens in the control tab that started the run, so a recording
+ * leaves one tab behind rather than two. A control tab the user closed gets a
+ * new tab instead.
+ */
+async function openRecorder(sessionId: string, controlTabId?: number): Promise<void> {
+  const url = `${RECORDER_URL}?session=${sessionId}`;
+  if (controlTabId != null) {
+    try {
+      const tab = await chrome.tabs.update(controlTabId, { url, active: true });
+      if (tab?.windowId != null) await chrome.windows.update(tab.windowId, { focused: true });
+      return;
+    } catch {
+      // The control tab is gone; fall through to a new tab.
+    }
+  }
+  await chrome.tabs.create({ url });
+}
+
 // --- Message listener --------------------------------------------------------
 
-chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
   if (isRecMessage(message)) {
     if (message.type === 'REC_QUERY') {
       void handleQuery(sendResponse);
       return true; // async sendResponse
     }
     switch (message.type) {
+      case 'REC_OPEN_CONTROL':
+        void handleOpenControl(message.tabId, message.continueSessionId);
+        break;
       case 'REC_START':
         void handleStart(
           message.settings,
+          message.tabId,
+          normalizeArea(message.area),
           message.continueSessionId,
-          message.devicesGranted === true,
+          sender.tab?.id,
         );
         break;
       case 'REC_STOP':
@@ -1261,12 +1259,6 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
         break;
       case 'REC_CANCEL':
         void handleCancel();
-        break;
-      case 'REC_WEBCAM_DENIED':
-        void handleWebcamDenied();
-        break;
-      case 'REC_FRAME_READY':
-        handleFrameReady();
         break;
     }
     return false;
@@ -1303,7 +1295,7 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
 
 chrome.commands.onCommand.addListener((command) => {
   if (command === 'stop-recording') void handleStop();
-  if (command === 'reveal-recording-bar') void handleRevealBar();
+  if (command === 'reveal-recording-bar') void handleShowControls();
 });
 
 /**
@@ -1313,8 +1305,8 @@ chrome.commands.onCommand.addListener((command) => {
  * has no user gesture, so the ask can never move here), and Chrome's dialog
  * can tear that popup down before it hears the answer. The click is parked in
  * session storage before the ask, so this listener is the one place a granted
- * prompt turns into a recording — on both the survived and the killed popup,
- * which is why the popup starts nothing itself.
+ * prompt turns into a control tab — on both the survived and the killed popup,
+ * which is why the popup opens nothing itself.
  *
  * The parked click is consumed first, then vetted: a leftover must not sit
  * there waiting to hijack an unrelated grant later.
@@ -1329,10 +1321,10 @@ chrome.permissions.onAdded.addListener((added) => {
     const activeTabId = (await getActiveTab())?.id ?? null;
     if (!pendingRecordIsLive(parked, Date.now(), activeTabId)) return;
     const pending: PendingRecord = parked;
-    // Same consumption the popup's own start does: a continue that is about
+    // Same consumption the popup's own click does: a continue that is about
     // to be spent must not keep being offered as "Continue recording".
     if (pending.continueSessionId) await chrome.storage.session.remove(CONTINUE_SESSION_KEY);
-    await handleStart(pending.settings, pending.continueSessionId, pending.devicesGranted);
+    await handleOpenControl(pending.tabId, pending.continueSessionId);
   })();
 });
 

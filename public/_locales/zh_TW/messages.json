@@ -305,22 +305,6 @@
     "message": "取消",
     "description": "Recording control bar: button that cancels the recording and discards it."
   },
-  "recOverlayReveal": {
-    "message": "顯示錄影控制列",
-    "description": "Recording control bar: accessible name of the small always-present control that reveals the hidden bar, by pointer, touch or keyboard focus."
-  },
-  "recOverlayMic": {
-    "message": "麥克風",
-    "description": "Recording control bar: chip shown when the microphone track is enabled."
-  },
-  "recOverlayTabAudio": {
-    "message": "分頁",
-    "description": "Recording control bar: chip shown when tab audio is enabled."
-  },
-  "recOverlayWebcam": {
-    "message": "鏡頭",
-    "description": "Recording control bar: chip shown when the webcam track is enabled."
-  },
   "recTitle": {
     "message": "錄影",
     "description": "Popup: title of the record row when no session is pending."
@@ -360,10 +344,6 @@
   "recWebcam": {
     "message": "視訊鏡頭",
     "description": "Popup: toggle chip for the webcam track."
-  },
-  "recWebcamNoPreview": {
-    "message": "會加入匯出檔，錄影時不會顯示預覽。",
-    "description": "Popup: one-line disclosure shown under the Webcam toggle once it is on, before Record is pressed (task 40: the recorded page never shows a live self-view)."
   },
   "recWebcamDenied": {
     "message": "攝影機遭拒，改為不含攝影機錄影",
@@ -421,17 +401,9 @@
     "message": "游標軌跡沒有儲存。影片沒有問題，但會缺少縮放和點擊效果。",
     "description": "Popup: error toast when cursor-event writes to IndexedDB failed mid-recording, leaving the video intact."
   },
-  "recOverlayStarting": {
-    "message": "啟動中…",
-    "description": "Recording control bar: shown in place of the timer while the recording is still opening its streams. Keep it short; it replaces a 0:00 clock."
-  },
   "recOverlayNotSaving": {
     "message": "未儲存",
     "description": "Recording control bar: warning chip shown when chunks are failing to reach storage. Keep it short; it sits in a row of three-letter track chips."
-  },
-  "recOverlayCamDenied": {
-    "message": "鏡頭遭拒",
-    "description": "Recording control bar: warning chip shown when a requested camera was declined or unavailable. Keep it short; it sits in a row of three-letter track chips."
   },
   "recFailRecorderOpen": {
     "message": "錄影已儲存，但錄影工具頁面沒有開啟。請使用下方的「復原上次錄影」。",
@@ -442,11 +414,11 @@
     "description": "Popup: error toast when REC_QUERY threw, so \"not recording\" cannot be trusted."
   },
   "recFailOverlayBlocked": {
-    "message": "無法在這個網頁開啟錄影控制列，請從這裡停止錄影。",
+    "message": "無法在此頁面上記錄點擊——影片會錄製，但沒有縮放和點擊效果。",
     "description": "Popup: error toast when the in-page control bar could not be injected."
   },
   "recFailOverlayLost": {
-    "message": "這個網頁上的錄影控制列已消失，請從這裡停止錄影。",
+    "message": "此頁面上的點擊記錄已停止——影片其餘部分可能缺少縮放和點擊效果。",
     "description": "Popup: error toast when the in-page control bar stopped reporting mid-recording."
   },
   "recFailControlUnreachable": {
@@ -2694,5 +2666,113 @@
   },
   "captureReportFailed": {
     "message": "Couldn’t send the report. Check your connection and try again."
+  },
+  "ctlPageTitle": {
+    "message": "錄製分頁",
+    "description": "Recording control tab: page heading and tab title."
+  },
+  "ctlTabLabel": {
+    "message": "要錄製的分頁",
+    "description": "Recording control tab: label before the title of the tab that will be recorded."
+  },
+  "ctlArea": {
+    "message": "錄製範圍",
+    "description": "Recording control tab: heading of the area picker, and the accessible name of the area box."
+  },
+  "ctlAreaHint": {
+    "message": "在圖片上拖曳，只錄製分頁的一部分。方向鍵移動範圍，Shift + 方向鍵調整大小。",
+    "description": "Recording control tab: how to pick the recorded area with the pointer and the keyboard."
+  },
+  "ctlAreaWhole": {
+    "message": "整個分頁",
+    "description": "Recording control tab: button that resets the area to the whole tab; also the size label when the whole tab is picked."
+  },
+  "ctlAreaSize": {
+    "message": "$W$ × $H$ px",
+    "description": "Recording control tab: pixel size of the picked area. $W$ and $H$ are numbers.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "1280"
+      },
+      "h": {
+        "content": "$2",
+        "example": "720"
+      }
+    }
+  },
+  "ctlAreaNoShot": {
+    "message": "沒有此分頁的圖片，因此錄製整個分頁。",
+    "description": "Recording control tab: shown when no picture of the tab could be taken."
+  },
+  "ctlCamera": {
+    "message": "攝影機和聲音",
+    "description": "Recording control tab: heading of the camera preview and source toggles."
+  },
+  "ctlCameraOff": {
+    "message": "開啟視訊鏡頭，在錄製前查看你的畫面。",
+    "description": "Recording control tab: camera preview placeholder while Webcam is off."
+  },
+  "ctlCameraLoading": {
+    "message": "正在開啟攝影機…",
+    "description": "Recording control tab: camera preview placeholder while the camera opens."
+  },
+  "ctlCameraBlocked": {
+    "message": "OpenScreenShot 的攝影機已被封鎖。錄製會在沒有攝影機的情況下繼續。",
+    "description": "Recording control tab: camera preview placeholder when the camera is blocked or missing."
+  },
+  "ctlMicBlocked": {
+    "message": "OpenScreenShot 的麥克風已被封鎖。錄製會在沒有麥克風的情況下繼續。",
+    "description": "Recording control tab: note when the microphone is blocked or missing."
+  },
+  "ctlFixPermissions": {
+    "message": "修正權限",
+    "description": "Recording control tab: link to the recording permissions page."
+  },
+  "ctlStart": {
+    "message": "開始錄製",
+    "description": "Recording control tab: main button that starts the recording."
+  },
+  "ctlStartHint": {
+    "message": "錄製會在「$TITLE$」上開始。要停止，請回到此分頁或按下 $KEY$。",
+    "description": "Recording control tab: note under Start. $TITLE$ is the tab title, $KEY$ the stop shortcut.",
+    "placeholders": {
+      "title": {
+        "content": "$1",
+        "example": "Pricing — Example"
+      },
+      "key": {
+        "content": "$2",
+        "example": "Alt+Shift+X"
+      }
+    }
+  },
+  "ctlStartHintNoKey": {
+    "message": "錄製會在「$TITLE$」上開始。要停止，請回到此分頁。",
+    "description": "Recording control tab: note under Start when no stop shortcut is set. $TITLE$ is the tab title.",
+    "placeholders": {
+      "title": {
+        "content": "$1",
+        "example": "Pricing — Example"
+      }
+    }
+  },
+  "ctlRecordingOf": {
+    "message": "正在錄製「$TITLE$」",
+    "description": "Recording control tab: line under the timer. $TITLE$ is the recorded tab title.",
+    "placeholders": {
+      "title": {
+        "content": "$1",
+        "example": "Pricing — Example"
+      }
+    }
+  },
+  "ctlGoToTab": {
+    "message": "前往正在錄製的分頁",
+    "description": "Recording control tab: button that switches to the tab being recorded."
+  },
+  "ctlNoTarget": {
+    "message": "請在要錄製的分頁上，透過工具列中的 OpenScreenShot 圖示開啟此頁面。",
+    "description": "Recording control tab: shown when the page was opened without a tab to record."
   }
 }

@@ -35,12 +35,6 @@
   "host_permissions": [],
   "optional_permissions": ["tabCapture"],
   "optional_host_permissions": ["<all_urls>"],
-  "web_accessible_resources": [
-    {
-      "resources": ["src/recorder/webcam-frame.html"],
-      "matches": ["<all_urls>"]
-    }
-  ],
   "options_ui": {
     "page": "src/popup/settings.html",
     "open_in_tab": true
@@ -78,7 +72,7 @@
       "description": "Stop the current recording"
     },
     "reveal-recording-bar": {
-      "description": "Show the recording control bar"
+      "description": "Switch to the recording controls"
     }
   }
 }

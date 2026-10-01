@@ -305,22 +305,6 @@
     "message": "Отмена",
     "description": "Recording control bar: button that cancels the recording and discards it."
   },
-  "recOverlayReveal": {
-    "message": "Показать элементы управления записью",
-    "description": "Recording control bar: accessible name of the small always-present control that reveals the hidden bar, by pointer, touch or keyboard focus."
-  },
-  "recOverlayMic": {
-    "message": "МИК",
-    "description": "Recording control bar: chip shown when the microphone track is enabled."
-  },
-  "recOverlayTabAudio": {
-    "message": "ЗВУК",
-    "description": "Recording control bar: chip shown when tab audio is enabled."
-  },
-  "recOverlayWebcam": {
-    "message": "КАМ",
-    "description": "Recording control bar: chip shown when the webcam track is enabled."
-  },
   "recTitle": {
     "message": "Запись",
     "description": "Popup: title of the record row when no session is pending."
@@ -360,10 +344,6 @@
   "recWebcam": {
     "message": "Камера",
     "description": "Popup: toggle chip for the webcam track."
-  },
-  "recWebcamNoPreview": {
-    "message": "Попадёт в экспорт — во время записи предпросмотра нет.",
-    "description": "Popup: one-line disclosure shown under the Webcam toggle once it is on, before Record is pressed (task 40: the recorded page never shows a live self-view)."
   },
   "recWebcamDenied": {
     "message": "Камера отклонена — запись идёт без неё",
@@ -421,17 +401,9 @@
     "message": "Дорожка курсора не сохраняется. Видео в порядке, но зума и эффектов кликов не будет.",
     "description": "Popup: error toast when cursor-event writes to IndexedDB failed mid-recording, leaving the video intact."
   },
-  "recOverlayStarting": {
-    "message": "Запуск…",
-    "description": "Recording control bar: shown in place of the timer while the recording is still opening its streams. Keep it short; it replaces a 0:00 clock."
-  },
   "recOverlayNotSaving": {
     "message": "НЕ СОХРАНЯЕТСЯ",
     "description": "Recording control bar: warning chip shown when chunks are failing to reach storage. Keep it short; it sits in a row of three-letter track chips."
-  },
-  "recOverlayCamDenied": {
-    "message": "НЕТ КАМЕРЫ",
-    "description": "Recording control bar: warning chip shown when a requested camera was declined or unavailable. Keep it short; it sits in a row of three-letter track chips."
   },
   "recFailRecorderOpen": {
     "message": "Запись сохранена — страница «Рекордер» не открылась. Нажмите «Восстановить запись» ниже.",
@@ -442,11 +414,11 @@
     "description": "Popup: error toast when REC_QUERY threw, so \"not recording\" cannot be trusted."
   },
   "recFailOverlayBlocked": {
-    "message": "На этой странице не удалось открыть элементы управления записью — остановите запись отсюда.",
+    "message": "На этой странице нельзя отслеживать клики — видео записывается, но без масштабирования и эффектов кликов.",
     "description": "Popup: error toast when the in-page control bar could not be injected."
   },
   "recFailOverlayLost": {
-    "message": "Элементы управления записью на этой странице пропали — остановите запись отсюда.",
+    "message": "Отслеживание кликов на этой странице остановилось — в остальной части видео может не быть масштабирования и эффектов кликов.",
     "description": "Popup: error toast when the in-page control bar stopped reporting mid-recording."
   },
   "recFailControlUnreachable": {
@@ -2694,5 +2666,113 @@
   },
   "captureReportFailed": {
     "message": "Couldn’t send the report. Check your connection and try again."
+  },
+  "ctlPageTitle": {
+    "message": "Запись вкладки",
+    "description": "Recording control tab: page heading and tab title."
+  },
+  "ctlTabLabel": {
+    "message": "Вкладка для записи",
+    "description": "Recording control tab: label before the title of the tab that will be recorded."
+  },
+  "ctlArea": {
+    "message": "Область записи",
+    "description": "Recording control tab: heading of the area picker, and the accessible name of the area box."
+  },
+  "ctlAreaHint": {
+    "message": "Проведите по изображению, чтобы записать только часть вкладки. Стрелки перемещают область, Shift + стрелки меняют её размер.",
+    "description": "Recording control tab: how to pick the recorded area with the pointer and the keyboard."
+  },
+  "ctlAreaWhole": {
+    "message": "Вся вкладка",
+    "description": "Recording control tab: button that resets the area to the whole tab; also the size label when the whole tab is picked."
+  },
+  "ctlAreaSize": {
+    "message": "$W$ × $H$ px",
+    "description": "Recording control tab: pixel size of the picked area. $W$ and $H$ are numbers.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "1280"
+      },
+      "h": {
+        "content": "$2",
+        "example": "720"
+      }
+    }
+  },
+  "ctlAreaNoShot": {
+    "message": "Изображения этой вкладки нет, поэтому записывается вся вкладка.",
+    "description": "Recording control tab: shown when no picture of the tab could be taken."
+  },
+  "ctlCamera": {
+    "message": "Камера и звук",
+    "description": "Recording control tab: heading of the camera preview and source toggles."
+  },
+  "ctlCameraOff": {
+    "message": "Включите веб-камеру, чтобы увидеть себя до начала записи.",
+    "description": "Recording control tab: camera preview placeholder while Webcam is off."
+  },
+  "ctlCameraLoading": {
+    "message": "Камера открывается…",
+    "description": "Recording control tab: camera preview placeholder while the camera opens."
+  },
+  "ctlCameraBlocked": {
+    "message": "Камера заблокирована для OpenScreenShot. Запись продолжится без неё.",
+    "description": "Recording control tab: camera preview placeholder when the camera is blocked or missing."
+  },
+  "ctlMicBlocked": {
+    "message": "Микрофон заблокирован для OpenScreenShot. Запись продолжится без него.",
+    "description": "Recording control tab: note when the microphone is blocked or missing."
+  },
+  "ctlFixPermissions": {
+    "message": "Исправить разрешения",
+    "description": "Recording control tab: link to the recording permissions page."
+  },
+  "ctlStart": {
+    "message": "Начать запись",
+    "description": "Recording control tab: main button that starts the recording."
+  },
+  "ctlStartHint": {
+    "message": "Запись начнётся на «$TITLE$». Чтобы остановить её, вернитесь на эту вкладку или нажмите $KEY$.",
+    "description": "Recording control tab: note under Start. $TITLE$ is the tab title, $KEY$ the stop shortcut.",
+    "placeholders": {
+      "title": {
+        "content": "$1",
+        "example": "Pricing — Example"
+      },
+      "key": {
+        "content": "$2",
+        "example": "Alt+Shift+X"
+      }
+    }
+  },
+  "ctlStartHintNoKey": {
+    "message": "Запись начнётся на «$TITLE$». Чтобы остановить её, вернитесь на эту вкладку.",
+    "description": "Recording control tab: note under Start when no stop shortcut is set. $TITLE$ is the tab title.",
+    "placeholders": {
+      "title": {
+        "content": "$1",
+        "example": "Pricing — Example"
+      }
+    }
+  },
+  "ctlRecordingOf": {
+    "message": "Запись «$TITLE$»",
+    "description": "Recording control tab: line under the timer. $TITLE$ is the recorded tab title.",
+    "placeholders": {
+      "title": {
+        "content": "$1",
+        "example": "Pricing — Example"
+      }
+    }
+  },
+  "ctlGoToTab": {
+    "message": "Перейти к записываемой вкладке",
+    "description": "Recording control tab: button that switches to the tab being recorded."
+  },
+  "ctlNoTarget": {
+    "message": "Откройте эту страницу значком OpenScreenShot на панели инструментов, находясь на вкладке, которую нужно записать.",
+    "description": "Recording control tab: shown when the page was opened without a tab to record."
   }
 }

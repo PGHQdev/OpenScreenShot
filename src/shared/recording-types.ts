@@ -98,34 +98,43 @@ export type CursorEvent =
   | { kind: 'overlay-lost'; t: number }
   | { kind: 'overlay-healed'; t: number };
 
-// --- Gesture surfaces (popup / overlay / command) → worker -----------------
+// --- Gesture surfaces (popup / control tab / command) → worker -------------
 
 export type RecMessage =
+  /**
+   * The popup's Record click: open the control tab for `tabId`. Sent from
+   * the click, while the toolbar invocation still grants the worker a
+   * screenshot of that tab.
+   */
+  | { type: 'REC_OPEN_CONTROL'; tabId: number; continueSessionId?: string }
+  /** The control tab's Start: record `tabId`, cropped to `area` in the editor. */
   | {
       type: 'REC_START';
       settings: RecordingSettings;
+      tabId: number;
+      area?: RecordingArea;
       continueSessionId?: string;
-      /**
-       * The popup's `devicesGranted` answer: true when every device this
-       * recording wants is already granted, so the start skips the wait for
-       * the permission frame. `isRecMessage` is a prefix check, so the
-       * handler reads this defensively — absent or malformed keeps the wait.
-       */
-      devicesGranted?: boolean;
     }
   | { type: 'REC_STOP' }
   | { type: 'REC_PAUSE' }
   | { type: 'REC_RESUME' }
   | { type: 'REC_CANCEL' }
-  | { type: 'REC_QUERY' }
-  /** The permission iframe could not open the camera; the worker drops the
-   *  track from stored settings. The engine degrades on its own catch. */
-  | { type: 'REC_WEBCAM_DENIED' }
-  /** The permission iframe settled its `getUserMedia` (granted, declined, or
-   *  gated off). The worker holds `OFFSCREEN_START` until this arrives, so the
-   *  engine's own camera/mic capture runs after the origin's permission
-   *  prompt, not before it. */
-  | { type: 'REC_FRAME_READY' };
+  | { type: 'REC_QUERY' };
+
+/** Session key for the tab the control page is about to record. */
+export const CONTROL_TARGET_KEY = 'openscreenshot:control-target';
+
+/** What the control page shows about its target before the recording starts. */
+export interface ControlTarget {
+  tabId: number;
+  windowId: number;
+  title: string;
+  url: string;
+  favIconUrl?: string;
+  /** A JPEG data URL of the tab at the Record click, or null if Chrome refused it. */
+  shot: string | null;
+  continueSessionId?: string;
+}
 
 /** REC_QUERY reply. */
 export interface RecState {
@@ -144,6 +153,12 @@ export interface RecState {
   settings?: RecordingSettings;
   overlayLost?: boolean;
   recoverableSessionId?: string;
+  /** The tab being recorded. */
+  tabId?: number;
+  /** Media chunks are failing to reach IndexedDB. */
+  writeFailed?: boolean;
+  /** A requested camera was declined or unavailable; the run records without it. */
+  camDenied?: boolean;
 }
 
 // --- Worker → offscreen document (target discriminates broadcast) ----------
@@ -208,7 +223,7 @@ export interface CursorBatch {
 /**
  * Fold what the engine really captured back into the stored settings. A
  * declined device never fails the start, so the settings the user asked for
- * can outrun the tracks that exist — the control bar chips and the popup read
+ * can outrun the tracks that exist — the control tab and the popup read
  * these settings, so they would keep claiming a track nothing is recording.
  * Correction is one-way: this can only drop a track, never add one.
  */

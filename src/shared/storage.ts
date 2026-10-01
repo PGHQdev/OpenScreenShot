@@ -7,11 +7,25 @@ import type {
   Settings,
 } from './types';
 import { DEFAULT_SETTINGS } from './types';
+import { DEFAULT_RECORDING_SETTINGS, type RecordingSettings } from './recording-types';
 import { makeThumbnail } from './thumbnail';
 
 const SETTINGS_KEY = 'openscreenshot:settings';
 const LAST_CAPTURE_KEY = 'openscreenshot:last-capture';
 const LAST_REGION_KEY = 'openscreenshot:last-region';
+const REC_SETTINGS_KEY = 'openscreenshot:rec-settings';
+
+/** Load recorder toggles, merged over the defaults so new fields are always present. */
+export async function getRecSettings(): Promise<RecordingSettings> {
+  const stored = await chrome.storage.local.get(REC_SETTINGS_KEY);
+  const partial = (stored[REC_SETTINGS_KEY] ?? {}) as Partial<RecordingSettings>;
+  return { ...DEFAULT_RECORDING_SETTINGS, ...partial };
+}
+
+/** Persist recorder toggles as-is (caller merges the patch). */
+export async function setRecSettings(next: RecordingSettings): Promise<void> {
+  await chrome.storage.local.set({ [REC_SETTINGS_KEY]: next });
+}
 export const PENDING_CAPTURE_ERROR_KEY = 'openscreenshot:pending-capture-error';
 
 export async function setPendingCaptureError(

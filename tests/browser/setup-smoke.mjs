@@ -245,21 +245,6 @@ async function settlePermissionRead(page) {
   await page.evaluate(() => chrome.storage.session.get('smoke:flush'));
 }
 
-/**
- * Wait until the popup's `navigator.permissions.query` has answered for both
- * devices. `settlePermissionRead` waits on the tabCapture `contains` call,
- * which is a different chain: an assertion about `devicesGranted` placed
- * after that one alone also passes while the device read is still in flight,
- * because the popup's initial state is 'prompt' either way.
- */
-async function settleDeviceRead(page) {
-  await page.waitForFunction(() => {
-    const seen = globalThis.__smoke.deviceQueries.map((q) => q.name);
-    return seen.includes('camera') && seen.includes('microphone');
-  });
-  await page.evaluate(() => chrome.storage.session.get('smoke:flush'));
-}
-
 async function main() {
   step('checking the build');
   const { sourceCount } = await assertDistFresh(ROOT);
@@ -345,8 +330,8 @@ async function main() {
       'the parked click carries the recording settings it was made with',
     );
     assert(
-      !state.sent.includes('REC_START'),
-      'the popup starts nothing itself — permissions.onAdded in the worker owns that',
+      !state.sent.includes('REC_OPEN_CONTROL'),
+      'the popup opens nothing itself — permissions.onAdded in the worker owns that',
     );
     await page.waitForFunction(() => globalThis.__smoke.closed > 0);
     assert(true, 'the popup closes once the grant lands');
@@ -368,7 +353,7 @@ async function main() {
     );
     assert(state.granted.length === 0, 'nothing was granted');
     assert(state.parked === undefined, 'the parked click is cleared, so no later grant hijacks it');
-    assert(!state.sent.includes('REC_START'), 'no recording is started on a refusal');
+    assert(!state.sent.includes('REC_OPEN_CONTROL'), 'no control tab is opened on a refusal');
     assert(state.closed === 0, 'the popup stays open to show the way out');
     await page.click('[data-testid="rec-refused"]');
     await page.waitForFunction(() => globalThis.__smoke.created.length > 0);
@@ -401,7 +386,10 @@ async function main() {
       PENDING_RECORD_KEY,
     );
     assert(state.parked === undefined, 'the leftover is consumed, so it shows once and not again');
-    assert(!state.sent.includes('REC_START'), 'nothing is started on the strength of a leftover');
+    assert(
+      !state.sent.includes('REC_OPEN_CONTROL'),
+      'nothing is opened on the strength of a leftover',
+    );
     await page.close();
 
     step("popup reopened after the grant landed: the leftover is the worker's, not the popup's");
@@ -437,14 +425,16 @@ async function main() {
     );
     await page.close();
 
-    step('popup Record click whose park fails: the popup starts it itself');
+    step('popup Record click whose park fails: the popup opens the control tab itself');
     // With no parked click the worker has nothing to act on, so the popup —
     // which by then has evidently survived the dialog — is the only context
     // left that can start the recording.
     page = await open(POPUP_PAGE, { grants: [], failPark: true });
     await page.waitForSelector('[data-testid="rec-trust"]');
     await page.click('.mode-card[aria-disabled]');
-    await page.waitForFunction(() => globalThis.__smoke.sent.some((m) => m.type === 'REC_START'));
+    await page.waitForFunction(() =>
+      globalThis.__smoke.sent.some((m) => m.type === 'REC_OPEN_CONTROL'),
+    );
     state = await page.evaluate(
       (key) => ({
         parked: globalThis.__smoke.session.get(key),
@@ -536,7 +526,9 @@ async function main() {
       'the trust strip is gone once there is nothing left to ask for',
     );
     await page.click('.mode-card[aria-disabled]');
-    await page.waitForFunction(() => globalThis.__smoke.sent.some((m) => m.type === 'REC_START'));
+    await page.waitForFunction(() =>
+      globalThis.__smoke.sent.some((m) => m.type === 'REC_OPEN_CONTROL'),
+    );
     state = await page.evaluate(
       (key) => ({
         parked: globalThis.__smoke.session.get(key),
@@ -546,40 +538,6 @@ async function main() {
     );
     assert(state.parked === undefined, 'a granted Record click parks nothing');
     assert(state.created.length === 0, 'a granted Record click opens no tab');
-    await page.close();
-
-    step('popup Webcam toggle: no self-view while recording is disclosed before Record is pressed');
-    // Important 2 (task 40, fix round 1): the bubble only ever exists in the
-    // exported file — there is no live preview while recording — so this has
-    // to be said before Record is pressed, not discovered after.
-    page = await open(POPUP_PAGE, { grants: ['tabCapture'] });
-    await page.waitForSelector('.mode-card[aria-disabled]');
-    const findWebcamChip = () =>
-      page.evaluateHandle((label) => {
-        return [...document.querySelectorAll('.chip-toggle')].find(
-          (el) => el.textContent?.trim() === label,
-        );
-      }, messages.recWebcam.message);
-    assert(
-      (await page.$('[data-testid="rec-webcam-hint"]')) === null,
-      'no disclosure while Webcam is off — nothing to disclose yet',
-    );
-    let chip = await findWebcamChip();
-    await chip.asElement().click();
-    await page.waitForSelector('[data-testid="rec-webcam-hint"]');
-    const hintText = await page.$eval('[data-testid="rec-webcam-hint"]', (el) =>
-      el.textContent?.trim(),
-    );
-    assert(
-      hintText === messages.recWebcamNoPreview.message,
-      `turning Webcam on discloses no live preview ("${hintText}")`,
-    );
-    chip = await findWebcamChip();
-    await chip.asElement().click();
-    assert(
-      (await page.$('[data-testid="rec-webcam-hint"]')) === null,
-      'turning Webcam back off removes the disclosure with it',
-    );
     await page.close();
 
     step('popup Record click the worker never received: the popup stays to say so');
@@ -607,53 +565,17 @@ async function main() {
     );
     await page.close();
 
-    step('the Record click carries the device grant a worker cannot read for itself');
-    // `navigator.permissions` needs a document. The worker has none, so the
-    // start would otherwise wait up to FRAME_READY_TIMEOUT_MS for a
-    // permission frame that had nothing to ask. This case runs the browser's
-    // own query in a real popup document: headless Chrome has never granted
-    // the mic, so the answer is a genuine 'prompt'.
-    const micOn = {
-      'openscreenshot:rec-settings': { mic: true, tabAudio: true, webcam: false, ripple: true },
-    };
-    page = await open(POPUP_PAGE, { grants: ['tabCapture'], local: micOn });
+    step('the Record click names the tab the control tab will record');
+    page = await open(POPUP_PAGE, { grants: ['tabCapture'] });
     await settlePermissionRead(page);
-    await settleDeviceRead(page);
-    const asked = await page.evaluate(() => globalThis.__smoke.deviceQueries);
-    assert(
-      asked.some((q) => q.name === 'microphone' && q.state === 'prompt'),
-      `the browser's own query answered for the mic (${JSON.stringify(asked)})`,
-    );
     await page.click('[data-testid="rec-start"]');
-    await page.waitForFunction(() => globalThis.__smoke.sent.some((m) => m.type === 'REC_START'));
-    let recStart = await page.evaluate(() =>
-      globalThis.__smoke.sent.find((m) => m.type === 'REC_START'),
+    await page.waitForFunction(() =>
+      globalThis.__smoke.sent.some((m) => m.type === 'REC_OPEN_CONTROL'),
     );
-    assert(
-      recStart.devicesGranted === false,
-      `an ungranted mic keeps the wait (devicesGranted=${recStart.devicesGranted})`,
+    const opened = await page.evaluate(() =>
+      globalThis.__smoke.sent.find((m) => m.type === 'REC_OPEN_CONTROL'),
     );
-    await page.close();
-
-    // The same click with the grant in place. Two cases, not one: a constant
-    // would satisfy either on its own, and only the pair shows the value
-    // tracking what the query answered.
-    page = await open(POPUP_PAGE, {
-      grants: ['tabCapture'],
-      local: micOn,
-      devicePermission: 'granted',
-    });
-    await settlePermissionRead(page);
-    await settleDeviceRead(page);
-    await page.click('[data-testid="rec-start"]');
-    await page.waitForFunction(() => globalThis.__smoke.sent.some((m) => m.type === 'REC_START'));
-    recStart = await page.evaluate(() =>
-      globalThis.__smoke.sent.find((m) => m.type === 'REC_START'),
-    );
-    assert(
-      recStart.devicesGranted === true,
-      `a granted mic drops it (devicesGranted=${recStart.devicesGranted})`,
-    );
+    assert(opened.tabId === 5, `the click is aimed at the active tab (${opened.tabId})`);
     await page.close();
 
     step('a recording that has not started yet shows no elapsed time');

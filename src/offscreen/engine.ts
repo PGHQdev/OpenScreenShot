@@ -152,8 +152,8 @@ async function start(msg: Extract<OffscreenMessage, { type: 'OFFSCREEN_START' }>
 
     if (settings.webcam) {
       try {
-        // The preview iframe (src/recorder/webcam-frame.ts) already took the
-        // camera prompt for this extension origin, so this call is silent.
+        // The control tab (src/control/index.html) already took the camera
+        // prompt for this extension origin, so this call is silent.
         webcamStream = await navigator.mediaDevices.getUserMedia({
           video: { width: { ideal: 1280 } },
           audio: false,
@@ -337,7 +337,7 @@ async function stop(canceled: boolean): Promise<void> {
   // same store the chunks did, so the disk that filled mid-recording fails them
   // too. Teardown must not depend on them: an unguarded rejection here skips
   // ENGINE_STOPPED, leaves `stopping` true and `state` set, and every later
-  // OFFSCREEN_STOP returns at the guard above — REC badge on, bar up, Stop and
+  // OFFSCREEN_STOP returns at the guard above — REC badge on, timer up, Stop and
   // Cancel inert until the extension is reloaded. The chunks are already on
   // disk either way; a session left at `status: 'recording'` is offered as a
   // crash to recover, which is the right outcome for a half-written row.

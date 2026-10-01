@@ -1,0 +1,393 @@
+/*
+ * Recording control tab. Tokens come from src/shared/tokens.css (shared with
+ * the popup, setup page and editor); this file only holds the page's surface
+ * styles.
+ */
+
+@import '../shared/tokens.css';
+@import '../shared/controls.css';
+@import '../shared/ui.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  line-height: 1.5;
+  color: var(--text-1);
+  background: var(--surface-2);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+.control {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--s-6) var(--s-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+.control-header {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.control-header h1 {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+}
+
+.control-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--s-5);
+  align-items: start;
+}
+
+.control-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.control-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-5);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+
+.control-card h2 {
+  font-size: var(--fs-base);
+  font-weight: 600;
+}
+
+.control-target {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+
+.control-target-label {
+  flex: none;
+}
+
+.control-target-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-1);
+  font-weight: 600;
+}
+
+.settings-hint {
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+
+.control-empty {
+  padding: var(--s-5);
+  color: var(--text-2);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+}
+
+.control-alert {
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--danger) 12%, var(--surface-1));
+  color: var(--danger-ink);
+}
+
+.control-note {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+
+.control-link {
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+/* ---- Area picker ---- */
+
+.area {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+/* The still sets the frame's size; the box is laid over it in percentages. */
+.area-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+}
+
+.area-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* The page outside the area is dimmed by the box's own shadow. */
+.area-box {
+  position: absolute;
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+  cursor: move;
+}
+
+.area-box.full {
+  border-color: transparent;
+  box-shadow: none;
+  cursor: crosshair;
+}
+
+.area-box:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.area-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.area-size {
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Camera ---- */
+
+.camera {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.camera-view {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  background: var(--surface-3);
+}
+
+.camera-view video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* A mirror, the way people expect to see themselves. */
+  transform: scaleX(-1);
+  visibility: hidden;
+}
+
+.camera-view.live video {
+  visibility: visible;
+}
+
+.camera-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  padding: var(--s-4);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  text-align: center;
+}
+
+/* ---- Toggles and buttons ---- */
+
+.chip-row {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.chip-toggle {
+  flex: 1;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  background: var(--surface-1);
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+
+.chip-toggle:hover {
+  background: var(--surface-2);
+}
+
+.chip-toggle[aria-pressed='true'] {
+  background: var(--accent-subtle);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.chip-toggle:focus-visible,
+.btn-primary:focus-visible,
+.btn-ghost:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: 40px;
+  border: none;
+  border-radius: var(--r-sm);
+  padding: var(--s-2) var(--s-4);
+  background: var(--accent-ink);
+  color: var(--on-accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-ink-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+.btn-ghost {
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: var(--s-1) var(--s-3);
+  background: transparent;
+  color: var(--text-1);
+  font: inherit;
+  cursor: pointer;
+}
+
+.btn-ghost:hover {
+  background: var(--hover-overlay);
+}
+
+.control-start {
+  min-height: 48px;
+  font-size: var(--fs-lg);
+}
+
+/* ---- Live recording ---- */
+
+.control-live {
+  max-width: 480px;
+  align-items: center;
+  text-align: center;
+  align-self: center;
+  width: 100%;
+}
+
+.control-live-status {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+.control-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-full);
+  background: var(--danger);
+}
+
+.control-dot.paused {
+  background: var(--text-3);
+}
+
+.control-timer {
+  font-size: var(--fs-3xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.control-live-title {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-2);
+}
+
+.control-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-2);
+}
+
+.control-stop {
+  background: var(--danger);
+}
+
+.control-stop:hover:not(:disabled) {
+  background: var(--danger-ink);
+}
+
+@media (max-width: 768px) {
+  .control {
+    padding: var(--s-5) var(--s-4);
+  }
+
+  .control-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -15,8 +15,10 @@ import {
   clearPendingCaptureError,
   getLastRegion,
   getPendingCaptureError,
+  getRecSettings,
   getSettings,
   hasLastCapture,
+  setRecSettings,
   setSettings,
 } from '../shared/storage';
 import { onPopupMessage, sendToBackground } from '../shared/messaging';
@@ -67,7 +69,6 @@ import {
 } from '../shared/recording-types';
 import {
   PENDING_RECORD_KEY,
-  devicesGranted,
   popupWarnings,
   type DevicePermission,
   type PendingRecord,
@@ -147,22 +148,9 @@ async function queryDeviceStates(): Promise<{ camera: DevicePermission; mic: Dev
   return { camera, mic };
 }
 
-const REC_SETTINGS_KEY = 'openscreenshot:rec-settings';
 const CONTINUE_SESSION_KEY = 'openscreenshot:continue-session';
 /** Mirrors `src/background/recording.ts`: a finished session whose tab failed to open. */
 const UNOPENED_SESSION_KEY = 'openscreenshot:unopened-session';
-
-/** Load recorder toggles, merged over the defaults so new fields are always present. */
-async function getRecSettings(): Promise<RecordingSettings> {
-  const stored = await chrome.storage.local.get(REC_SETTINGS_KEY);
-  const partial = (stored[REC_SETTINGS_KEY] ?? {}) as Partial<RecordingSettings>;
-  return { ...DEFAULT_RECORDING_SETTINGS, ...partial };
-}
-
-/** Persist recorder toggles as-is (caller merges the patch). */
-async function setRecSettings(next: RecordingSettings): Promise<void> {
-  await chrome.storage.local.set({ [REC_SETTINGS_KEY]: next });
-}
 
 /** mm:ss from recorded ms, pauses already excluded by the caller. */
 function formatElapsed(ms: number): string {
@@ -553,8 +541,9 @@ export function App() {
     await setRecSettings(next);
   }
 
-  // Recording needs the page, so the popup closes right after handing off —
-  // same reasoning as region mode in capture().
+  // Record opens the control tab beside the page, where the user picks the
+  // area, checks the camera and presses Start; the popup closes once the
+  // worker has the click.
   async function startRecording() {
     // Only reachable before the mount query has answered (see onRecordClick);
     // a grant that is genuinely missing goes to the setup page to be fixed.
@@ -565,14 +554,14 @@ export function App() {
         return;
       }
     }
+    if (activeTabId == null) {
+      pushToast(t('recProtected'), 'error');
+      return;
+    }
     void sendToBackground({
-      type: 'REC_START',
-      settings: recSettings,
+      type: 'REC_OPEN_CONTROL',
+      tabId: activeTabId,
       continueSessionId: continueSessionId ?? undefined,
-      // Only this side can answer it: `navigator.permissions` needs a
-      // document, and the worker has none. Without it the start waits up to
-      // 15s for a permission frame that had nothing to ask.
-      devicesGranted: devicesGranted(recSettings, deviceStates),
     }).then(
       async () => {
         // Spent only once the worker has the click. Cleared ahead of the send
@@ -597,7 +586,7 @@ export function App() {
    * - Chrome's dialog can tear this popup down, which kills everything after
    *   the request's await. So the click is parked first — awaited, so it is
    *   durable before the dialog can appear — and `permissions.onAdded` in the
-   *   worker starts the recording. That path runs whether this popup lived or
+   *   worker opens the control tab. That path runs whether this popup lived or
    *   died, which is why nothing is started from here on success.
    */
   async function requestTabCapture(tabId: number) {
@@ -606,9 +595,6 @@ export function App() {
       continueSessionId: continueSessionId ?? undefined,
       tabId,
       at: Date.now(),
-      // Parked with the click: Chrome's dialog can tear this popup down, and
-      // the worker that picks the click up cannot read this for itself.
-      devicesGranted: devicesGranted(recSettings, deviceStates),
     };
     let parked = true;
     await chrome.storage.session.set({ [PENDING_RECORD_KEY]: pending }).catch(() => {
@@ -1043,14 +1029,6 @@ export function App() {
                       {t('recWebcam')}
                     </button>
                   </div>
-                  {/* Task 40: the bubble only ever exists in the exported file —
-                  there is no live self-view while recording — so this has to
-                  be said before Record is pressed, not discovered after. */}
-                  {recSettings.webcam && (
-                    <span class="rec-trust-hint" data-testid="rec-webcam-hint">
-                      {t('recWebcamNoPreview')}
-                    </span>
-                  )}
                 </div>
               )}
 

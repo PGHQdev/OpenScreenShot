@@ -305,22 +305,6 @@
     "message": "キャンセル",
     "description": "Recording control bar: button that cancels the recording and discards it."
   },
-  "recOverlayReveal": {
-    "message": "録画コントロールを表示",
-    "description": "Recording control bar: accessible name of the small always-present control that reveals the hidden bar, by pointer, touch or keyboard focus."
-  },
-  "recOverlayMic": {
-    "message": "MIC",
-    "description": "Recording control bar: chip shown when the microphone track is enabled."
-  },
-  "recOverlayTabAudio": {
-    "message": "TAB",
-    "description": "Recording control bar: chip shown when tab audio is enabled."
-  },
-  "recOverlayWebcam": {
-    "message": "CAM",
-    "description": "Recording control bar: chip shown when the webcam track is enabled."
-  },
   "recTitle": {
     "message": "録画",
     "description": "Popup: title of the record row when no session is pending."
@@ -360,10 +344,6 @@
   "recWebcam": {
     "message": "ウェブカメラ",
     "description": "Popup: toggle chip for the webcam track."
-  },
-  "recWebcamNoPreview": {
-    "message": "書き出しに追加されます。録画中のプレビューはありません。",
-    "description": "Popup: one-line disclosure shown under the Webcam toggle once it is on, before Record is pressed (task 40: the recorded page never shows a live self-view)."
   },
   "recWebcamDenied": {
     "message": "カメラが拒否されました。カメラなしで録画します。",
@@ -421,17 +401,9 @@
     "message": "カーソル トラックが保存されていません。動画は問題ありませんが、ズームとクリックの効果は失われます。",
     "description": "Popup: error toast when cursor-event writes to IndexedDB failed mid-recording, leaving the video intact."
   },
-  "recOverlayStarting": {
-    "message": "開始中…",
-    "description": "Recording control bar: shown in place of the timer while the recording is still opening its streams. Keep it short; it replaces a 0:00 clock."
-  },
   "recOverlayNotSaving": {
     "message": "未保存",
     "description": "Recording control bar: warning chip shown when chunks are failing to reach storage. Keep it short; it sits in a row of three-letter track chips."
-  },
-  "recOverlayCamDenied": {
-    "message": "カメラ拒否",
-    "description": "Recording control bar: warning chip shown when a requested camera was declined or unavailable. Keep it short; it sits in a row of three-letter track chips."
   },
   "recFailRecorderOpen": {
     "message": "録画は保存されました。レコーダー ページを開けませんでした。下の「前回の録画を復元」を使用してください。",
@@ -442,11 +414,11 @@
     "description": "Popup: error toast when REC_QUERY threw, so \"not recording\" cannot be trusted."
   },
   "recFailOverlayBlocked": {
-    "message": "このページでは録画コントロールを開けませんでした。録画はここから停止してください。",
+    "message": "このページではクリックを記録できません。動画は録画されますが、ズームとクリック効果はありません。",
     "description": "Popup: error toast when the in-page control bar could not be injected."
   },
   "recFailOverlayLost": {
-    "message": "このページの録画コントロールが失われました。録画はここから停止してください。",
+    "message": "このページでクリックの記録が止まりました。動画の残りの部分でズームとクリック効果が欠ける場合があります。",
     "description": "Popup: error toast when the in-page control bar stopped reporting mid-recording."
   },
   "recFailControlUnreachable": {
@@ -2694,5 +2666,113 @@
   },
   "captureReportFailed": {
     "message": "Couldn’t send the report. Check your connection and try again."
+  },
+  "ctlPageTitle": {
+    "message": "タブを録画",
+    "description": "Recording control tab: page heading and tab title."
+  },
+  "ctlTabLabel": {
+    "message": "録画するタブ",
+    "description": "Recording control tab: label before the title of the tab that will be recorded."
+  },
+  "ctlArea": {
+    "message": "録画範囲",
+    "description": "Recording control tab: heading of the area picker, and the accessible name of the area box."
+  },
+  "ctlAreaHint": {
+    "message": "画像の上をドラッグすると、タブの一部だけを録画できます。矢印キーで範囲を移動し、Shift + 矢印キーでサイズを変更します。",
+    "description": "Recording control tab: how to pick the recorded area with the pointer and the keyboard."
+  },
+  "ctlAreaWhole": {
+    "message": "タブ全体",
+    "description": "Recording control tab: button that resets the area to the whole tab; also the size label when the whole tab is picked."
+  },
+  "ctlAreaSize": {
+    "message": "$W$ × $H$ px",
+    "description": "Recording control tab: pixel size of the picked area. $W$ and $H$ are numbers.",
+    "placeholders": {
+      "w": {
+        "content": "$1",
+        "example": "1280"
+      },
+      "h": {
+        "content": "$2",
+        "example": "720"
+      }
+    }
+  },
+  "ctlAreaNoShot": {
+    "message": "このタブの画像がないため、タブ全体を録画します。",
+    "description": "Recording control tab: shown when no picture of the tab could be taken."
+  },
+  "ctlCamera": {
+    "message": "カメラと音声",
+    "description": "Recording control tab: heading of the camera preview and source toggles."
+  },
+  "ctlCameraOff": {
+    "message": "ウェブカメラをオンにすると、録画前に映り方を確認できます。",
+    "description": "Recording control tab: camera preview placeholder while Webcam is off."
+  },
+  "ctlCameraLoading": {
+    "message": "カメラを起動しています…",
+    "description": "Recording control tab: camera preview placeholder while the camera opens."
+  },
+  "ctlCameraBlocked": {
+    "message": "OpenScreenShot のカメラはブロックされています。カメラなしで録画を続けます。",
+    "description": "Recording control tab: camera preview placeholder when the camera is blocked or missing."
+  },
+  "ctlMicBlocked": {
+    "message": "OpenScreenShot のマイクはブロックされています。マイクなしで録画を続けます。",
+    "description": "Recording control tab: note when the microphone is blocked or missing."
+  },
+  "ctlFixPermissions": {
+    "message": "権限を修正",
+    "description": "Recording control tab: link to the recording permissions page."
+  },
+  "ctlStart": {
+    "message": "録画を開始",
+    "description": "Recording control tab: main button that starts the recording."
+  },
+  "ctlStartHint": {
+    "message": "録画は「$TITLE$」で始まります。停止するには、このタブに戻るか $KEY$ を押します。",
+    "description": "Recording control tab: note under Start. $TITLE$ is the tab title, $KEY$ the stop shortcut.",
+    "placeholders": {
+      "title": {
+        "content": "$1",
+        "example": "Pricing — Example"
+      },
+      "key": {
+        "content": "$2",
+        "example": "Alt+Shift+X"
+      }
+    }
+  },
+  "ctlStartHintNoKey": {
+    "message": "録画は「$TITLE$」で始まります。停止するには、このタブに戻ります。",
+    "description": "Recording control tab: note under Start when no stop shortcut is set. $TITLE$ is the tab title.",
+    "placeholders": {
+      "title": {
+        "content": "$1",
+        "example": "Pricing — Example"
+      }
+    }
+  },
+  "ctlRecordingOf": {
+    "message": "「$TITLE$」を録画中",
+    "description": "Recording control tab: line under the timer. $TITLE$ is the recorded tab title.",
+    "placeholders": {
+      "title": {
+        "content": "$1",
+        "example": "Pricing — Example"
+      }
+    }
+  },
+  "ctlGoToTab": {
+    "message": "録画中のタブに移動",
+    "description": "Recording control tab: button that switches to the tab being recorded."
+  },
+  "ctlNoTarget": {
+    "message": "録画するタブで、ツールバーの OpenScreenShot アイコンからこのページを開いてください。",
+    "description": "Recording control tab: shown when the page was opened without a tab to record."
   }
 }

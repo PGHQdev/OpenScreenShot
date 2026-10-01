@@ -80,7 +80,12 @@ function makeFakeChrome() {
       onUpdated: { addListener: vi.fn() },
       query: vi.fn(() => Promise.resolve([] as { id?: number; url?: string }[])),
       create: vi.fn(() => Promise.resolve({})),
+      // No tab exists until a test says so — the start then finds nothing to record.
+      get: vi.fn((): Promise<chrome.tabs.Tab> => Promise.reject(new Error('No tab with id'))),
+      update: vi.fn((id: number) => Promise.resolve({ id, windowId: 1 })),
+      captureVisibleTab: vi.fn(() => Promise.resolve('data:image/jpeg;base64,AA==')),
     },
+    windows: { update: vi.fn(() => Promise.resolve({})) },
     scripting: { executeScript: vi.fn(() => Promise.resolve([{ result: undefined }])) },
     offscreen: {
       createDocument: vi.fn(() => Promise.resolve()),
@@ -181,8 +186,8 @@ function liveState(sessionId = 'sess-1', segmentId = 'seg-1', overlayMounted = t
 /**
  * What the worker injected into the page, in order. The three injections are
  * told apart by their arguments, which is how they differ in production too:
- * the viewport read passes an empty array, the control-bar mount passes
- * seven, and the unmount passes none at all.
+ * the viewport read passes an empty array, the logger mount passes four, and
+ * the unmount passes none at all.
  */
 function injections(): string[] {
   const calls = fakeChrome.scripting.executeScript.mock.calls as [{ args?: unknown[] }][];
@@ -192,18 +197,20 @@ function injections(): string[] {
 }
 
 /**
- * `workingTab` reports every mount as 'synced', which is the state a heal
- * finds. Only a *fresh* mount raises the permission prompt, so only a fresh
- * mount makes the start wait for the frame — these tests are about that
- * wait, so the injection has to answer the way a first mount does.
+ * A working tab whose stream id is held back: the start parks on its last
+ * await before the engine, which is where a gesture can still land on a run
+ * that has not been handed over. Returns the release.
  */
-function freshMount(): void {
+function heldStreamId(): () => void {
   workingTab();
-  fakeChrome.scripting.executeScript = vi.fn((arg: { args?: unknown[] }) =>
-    Promise.resolve([
-      { result: (arg.args?.length ?? 0) > 0 ? 'fresh' : { w: 800, h: 600, dpr: 1 } },
-    ]),
-  ) as unknown as typeof fakeChrome.scripting.executeScript;
+  let release = (): void => {};
+  fakeChrome.tabCapture.getMediaStreamId = vi.fn(
+    () =>
+      new Promise<string>((resolve) => {
+        release = () => resolve('stream-1');
+      }),
+  );
+  return () => release();
 }
 
 /** An offscreen document exists, so REC_QUERY treats the run as live. */
@@ -221,9 +228,14 @@ function offscreenSends(): string[] {
 
 /** An executeScript that answers the viewport read and mounts the bar. */
 function workingTab(): void {
-  fakeChrome.tabs.query = vi.fn(() =>
-    Promise.resolve([{ id: 3, url: 'https://example.com' }]),
-  ) as typeof fakeChrome.tabs.query;
+  fakeChrome.tabs.get = vi.fn(() =>
+    Promise.resolve({
+      id: 3,
+      url: 'https://example.com',
+      windowId: 1,
+      index: 0,
+    } as chrome.tabs.Tab),
+  );
   fakeChrome.scripting.executeScript = vi.fn((arg: { args?: unknown[] }) =>
     Promise.resolve([
       { result: (arg.args?.length ?? 0) > 0 ? 'synced' : { w: 800, h: 600, dpr: 1 } },
@@ -248,7 +260,7 @@ describe('a start that never begins', () => {
   it('reports start-busy when a recording is already running', async () => {
     session.set(REC_STATE_KEY, liveState());
     await loadWorker();
-    void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS });
+    void send({ type: 'REC_START', tabId: 3, settings: DEFAULT_RECORDING_SETTINGS });
     await settle();
     expect(parked()).toBe('start-busy');
   });
@@ -256,30 +268,40 @@ describe('a start that never begins', () => {
   it('reports start-blocked when there is no tab it may record', async () => {
     await loadWorker();
     // No active tab at all — the same silent `return` a chrome:// tab takes.
-    void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS });
+    void send({ type: 'REC_START', tabId: 3, settings: DEFAULT_RECORDING_SETTINGS });
     await settle();
     expect(parked()).toBe('start-blocked');
   });
 
   it('reports start-blocked on a protected page', async () => {
-    fakeChrome.tabs.query = vi.fn(() =>
-      Promise.resolve([{ id: 3, url: 'chrome://extensions' }]),
-    ) as typeof fakeChrome.tabs.query;
+    fakeChrome.tabs.get = vi.fn(() =>
+      Promise.resolve({
+        id: 3,
+        url: 'chrome://extensions',
+        windowId: 1,
+        index: 0,
+      } as chrome.tabs.Tab),
+    );
     await loadWorker();
-    void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS });
+    void send({ type: 'REC_START', tabId: 3, settings: DEFAULT_RECORDING_SETTINGS });
     await settle();
     expect(parked()).toBe('start-blocked');
   });
 
   it('reports start-failed when the start throws on its way to the engine', async () => {
-    fakeChrome.tabs.query = vi.fn(() =>
-      Promise.resolve([{ id: 3, url: 'https://example.com' }]),
-    ) as typeof fakeChrome.tabs.query;
+    fakeChrome.tabs.get = vi.fn(() =>
+      Promise.resolve({
+        id: 3,
+        url: 'https://example.com',
+        windowId: 1,
+        index: 0,
+      } as chrome.tabs.Tab),
+    );
     fakeChrome.offscreen.createDocument = vi.fn(() =>
       Promise.reject(new Error('offscreen refused')),
     ) as typeof fakeChrome.offscreen.createDocument;
     await loadWorker();
-    void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS });
+    void send({ type: 'REC_START', tabId: 3, settings: DEFAULT_RECORDING_SETTINGS });
     await settle();
     expect(parked()).toBe('start-failed');
   });
@@ -288,7 +310,7 @@ describe('a start that never begins', () => {
 describe('the badge, which is the only surface with nothing open', () => {
   it("puts '!' up for a parked failure and takes it down when it is read", async () => {
     await loadWorker();
-    void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS });
+    void send({ type: 'REC_START', tabId: 3, settings: DEFAULT_RECORDING_SETTINGS });
     await settle();
     expect(badgeText.at(-1)).toBe('!');
 
@@ -305,7 +327,7 @@ describe('the badge, which is the only surface with nothing open', () => {
   // drift the moment tokens.css moves.
   it('paints the failure badge in the accent token', async () => {
     await loadWorker();
-    void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS });
+    void send({ type: 'REC_START', tabId: 3, settings: DEFAULT_RECORDING_SETTINGS });
     await settle();
     const colors = fakeChrome.action.setBadgeBackgroundColor.mock.calls as [{ color: string }][];
     expect(colors.at(-1)?.[0].color).toBe(designTheme.light.accent);
@@ -354,9 +376,14 @@ describe('the control bar', () => {
   });
 
   it('reports overlay-blocked when the bar cannot be injected at all', async () => {
-    fakeChrome.tabs.query = vi.fn(() =>
-      Promise.resolve([{ id: 3, url: 'https://example.com' }]),
-    ) as typeof fakeChrome.tabs.query;
+    fakeChrome.tabs.get = vi.fn(() =>
+      Promise.resolve({
+        id: 3,
+        url: 'https://example.com',
+        windowId: 1,
+        index: 0,
+      } as chrome.tabs.Tab),
+    );
     fakeChrome.scripting.executeScript = vi.fn((arg: { args?: unknown[] }) => {
       // The viewport read (no args) succeeds; only the overlay mount, which
       // carries the bar's four arguments, is refused — what an origin without
@@ -367,21 +394,27 @@ describe('the control bar', () => {
       return Promise.resolve([{ result: { w: 800, h: 600, dpr: 1 } }]);
     }) as unknown as typeof fakeChrome.scripting.executeScript;
     await loadWorker();
-    void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS });
+    void send({ type: 'REC_START', tabId: 3, settings: DEFAULT_RECORDING_SETTINGS });
     await settle();
     expect(parked()).toBe('overlay-blocked');
   });
 });
 
 describe('a declined camera', () => {
-  it('flags the state and re-heals, so the bar can say so', async () => {
+  it('flags a run that asked for the camera and got none, for the control tab to say so', async () => {
     workingTab();
+    liveOffscreen();
     session.set(REC_STATE_KEY, {
       ...liveState(),
+      anchored: false,
       settings: { ...DEFAULT_RECORDING_SETTINGS, webcam: true },
     });
     await loadWorker();
-    void send({ type: 'REC_WEBCAM_DENIED' });
+    void send({
+      type: 'ENGINE_STARTED',
+      sessionId: 'sess-1',
+      tracks: { mic: false, webcam: false },
+    });
     await settle();
     const stored = session.get(REC_STATE_KEY) as {
       camDenied?: boolean;
@@ -389,59 +422,28 @@ describe('a declined camera', () => {
     };
     expect(stored.camDenied).toBe(true);
     expect(stored.settings?.webcam).toBe(false);
+    const reply = (await send({ type: 'REC_QUERY' })) as { camDenied?: boolean };
+    expect(reply.camDenied).toBe(true);
   });
 
-  it("rides healOverlay's re-mount as the mount function's 6th argument", async () => {
+  it('does not flag a run that never asked for the camera', async () => {
     workingTab();
-    session.set(REC_STATE_KEY, {
-      ...liveState(),
-      settings: { ...DEFAULT_RECORDING_SETTINGS, webcam: true },
+    session.set(REC_STATE_KEY, { ...liveState(), anchored: false });
+    await loadWorker();
+    void send({
+      type: 'ENGINE_STARTED',
+      sessionId: 'sess-1',
+      tracks: { mic: false, webcam: false },
     });
-    await loadWorker();
-    void send({ type: 'REC_WEBCAM_DENIED' });
-    await settle();
-    const mounts = (fakeChrome.scripting.executeScript.mock.calls as [{ args?: unknown[] }][])
-      .map(([call]) => call.args)
-      .filter((args): args is unknown[] => (args?.length ?? 0) > 1);
-    expect(mounts.at(-1)?.[5]).toBe(true);
-  });
-
-  it('reads false off a state written before this field existed', async () => {
-    workingTab();
-    const legacy: Record<string, unknown> = {
-      ...liveState(),
-      settings: { ...DEFAULT_RECORDING_SETTINGS, webcam: true },
-    };
-    delete legacy.camDenied;
-    session.set(REC_STATE_KEY, legacy);
-    await loadWorker();
-    // Any gesture that heals the bar will do, but not REC_WEBCAM_DENIED
-    // itself — that write would set camDenied before healOverlay ever reads
-    // this "predates the field" state. REC_STOP heals unconditionally and
-    // touches nothing webcam-related.
-    void send({ type: 'REC_STOP' });
-    await settle();
-    const mounts = (fakeChrome.scripting.executeScript.mock.calls as [{ args?: unknown[] }][])
-      .map(([call]) => call.args)
-      .filter((args): args is unknown[] => (args?.length ?? 0) > 1);
-    expect(mounts.at(-1)?.[5]).toBe(false);
-  });
-
-  it('does nothing when the run has no webcam requested', async () => {
-    session.set(REC_STATE_KEY, liveState());
-    await loadWorker();
-    const before = fakeChrome.scripting.executeScript.mock.calls.length;
-    void send({ type: 'REC_WEBCAM_DENIED' });
     await settle();
     const stored = session.get(REC_STATE_KEY) as { camDenied?: boolean };
     expect(stored.camDenied).toBeFalsy();
-    expect(fakeChrome.scripting.executeScript.mock.calls.length).toBe(before);
   });
 });
 
-describe('the keyboard route to reveal the bar', () => {
+describe('the keyboard route back to the controls', () => {
   /** The listener the worker itself registered, not a re-implementation. */
-  async function pressRevealCommand(): Promise<void> {
+  async function pressShowCommand(): Promise<void> {
     const onCommand = fakeChrome.commands.onCommand.addListener.mock.calls.at(-1)?.[0] as (
       command: string,
     ) => void;
@@ -449,35 +451,30 @@ describe('the keyboard route to reveal the bar', () => {
     await settle();
   }
 
-  it('injects into the recording tab when a run is live', async () => {
-    session.set(REC_STATE_KEY, liveState('sess-1', 'seg-1', true));
+  it('brings the control tab of a live run to the front', async () => {
+    session.set(REC_STATE_KEY, { ...liveState(), controlTabId: 9 });
     await loadWorker();
-    const before = fakeChrome.scripting.executeScript.mock.calls.length;
-    await pressRevealCommand();
-    const calls = fakeChrome.scripting.executeScript.mock.calls as [
-      { target?: { tabId?: number } },
-    ][];
-    expect(calls.length).toBe(before + 1);
-    expect(calls.at(-1)?.[0]?.target?.tabId).toBe(7); // liveState()'s tabId
+    await pressShowCommand();
+    expect(fakeChrome.tabs.update).toHaveBeenCalledWith(9, { active: true });
+    expect(fakeChrome.tabs.create).not.toHaveBeenCalled();
+  });
+
+  it('opens a new control tab when the user closed the first one', async () => {
+    session.set(REC_STATE_KEY, { ...liveState(), controlTabId: 9 });
+    fakeChrome.tabs.update = vi.fn(() => Promise.reject(new Error('No tab with id: 9')));
+    fakeChrome.tabs.create = vi.fn(() => Promise.resolve({ id: 11 }));
+    await loadWorker();
+    await pressShowCommand();
+    const created = fakeChrome.tabs.create.mock.calls.at(-1) as unknown as [{ url: string }];
+    expect(created[0].url).toBe('chrome-extension://fake/src/control/index.html?tab=7');
+    expect((session.get(REC_STATE_KEY) as { controlTabId?: number }).controlTabId).toBe(11);
   });
 
   it('does nothing when nothing is recording', async () => {
     await loadWorker();
-    const before = fakeChrome.scripting.executeScript.mock.calls.length;
-    await pressRevealCommand();
-    expect(fakeChrome.scripting.executeScript.mock.calls.length).toBe(before);
-  });
-
-  it('leaves an unrelated command alone', async () => {
-    session.set(REC_STATE_KEY, liveState());
-    await loadWorker();
-    const before = fakeChrome.scripting.executeScript.mock.calls.length;
-    const onCommand = fakeChrome.commands.onCommand.addListener.mock.calls.at(-1)?.[0] as (
-      command: string,
-    ) => void;
-    onCommand('capture-visible');
-    await settle();
-    expect(fakeChrome.scripting.executeScript.mock.calls.length).toBe(before);
+    await pressShowCommand();
+    expect(fakeChrome.tabs.update).not.toHaveBeenCalled();
+    expect(fakeChrome.tabs.create).not.toHaveBeenCalled();
   });
 });
 
@@ -534,7 +531,7 @@ describe('an engine that was never told to begin', () => {
     workingTab();
     sendRejects.add('OFFSCREEN_START');
     await loadWorker();
-    void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS });
+    void send({ type: 'REC_START', tabId: 3, settings: DEFAULT_RECORDING_SETTINGS });
     await vi.waitFor(() => {
       expect(parked()).toBe('engine-unreachable');
       // The start itself did not throw, so this is the only report there is.
@@ -554,7 +551,7 @@ describe('an engine that was never told to begin', () => {
     workingTab();
     sendRejects.add('OFFSCREEN_START');
     await loadWorker();
-    void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS });
+    void send({ type: 'REC_START', tabId: 3, settings: DEFAULT_RECORDING_SETTINGS });
     await vi.waitFor(() => {
       expect(session.get(REC_STATE_KEY), 'the stored recording state').toBeUndefined();
       expect(fakeChrome.offscreen.closeDocument).toHaveBeenCalled();
@@ -566,7 +563,7 @@ describe('an engine that was never told to begin', () => {
     workingTab();
     sendRejects.add('OFFSCREEN_START');
     await loadWorker();
-    void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS });
+    void send({ type: 'REC_START', tabId: 3, settings: DEFAULT_RECORDING_SETTINGS });
     await vi.waitFor(() => {
       expect(parked()).toBe('engine-unreachable');
       expect(badgeText.at(-1)).toBe('!');
@@ -602,22 +599,17 @@ describe('a write that never reached IndexedDB', () => {
    * receives it as its fifth argument — the same route `handleWebcamDenied`
    * uses to change the chips mid-run.
    */
-  it('pushes a media failure into the live control bar', async () => {
-    const injected: unknown[][] = [];
-    fakeChrome.scripting.executeScript = vi.fn((arg: { args?: unknown[] }) => {
-      if (arg.args) injected.push(arg.args);
-      return Promise.resolve([{ result: 'synced' }]);
-    }) as unknown as typeof fakeChrome.scripting.executeScript;
+  it('tells the live control tab that media is not being saved', async () => {
+    liveOffscreen();
     session.set(REC_STATE_KEY, liveState());
     await loadWorker();
     void send({ type: 'ENGINE_WRITE_FAILED', sessionId: 'sess-1', kind: 'media' });
     await settle();
 
     const state = session.get(REC_STATE_KEY) as { writeFailed?: boolean };
-    expect(state.writeFailed, 'the flag the bar is rebuilt from').toBe(true);
-    const mount = injected.at(-1);
-    expect(mount, 'the bar was re-injected').toBeDefined();
-    expect(mount?.[4], 'and told chunks are failing').toBe(true);
+    expect(state.writeFailed, 'the flag the control tab reads').toBe(true);
+    const reply = (await send({ type: 'REC_QUERY' })) as { writeFailed?: boolean };
+    expect(reply.writeFailed).toBe(true);
   });
 
   it('tells a lost cursor track apart from lost video', async () => {
@@ -627,8 +619,8 @@ describe('a write that never reached IndexedDB', () => {
     await settle();
 
     expect(parked()).toBe('events-write-failed');
-    // The video is intact, so the bar says nothing: it is reserved for the
-    // failure that loses the recording itself.
+    // The video is intact, so the control tab says nothing: its warning is
+    // reserved for the failure that loses the recording itself.
     const state = session.get(REC_STATE_KEY) as { writeFailed?: boolean };
     expect(state.writeFailed).toBe(false);
   });
@@ -1042,63 +1034,54 @@ describe('the badge when the store cannot answer', () => {
 });
 
 /**
- * The window between the Record click and the engine reporting in. Everything
- * here is driven with the mic on and no `REC_FRAME_READY` ever delivered,
- * which is exactly the state the 25-second hang lived in: the start parked on
- * the permission frame, and every gesture parked behind the start.
+ * The window between the control tab's Start and the engine reporting in.
+ * Driven with the mic on: camera and mic were granted in the control tab, so
+ * nothing in here waits on a permission prompt.
  */
 describe('the start window', () => {
   const withMic = { ...DEFAULT_RECORDING_SETTINGS, mic: true };
 
-  it('waits for the permission frame when the grant is missing', async () => {
-    freshMount();
+  it('starts the engine without waiting on a permission prompt', async () => {
+    workingTab();
     await loadWorker();
-    void send({ type: 'REC_START', settings: withMic, devicesGranted: false });
-    await settle();
-    expect(offscreenSends()).not.toContain('OFFSCREEN_START');
-    // Same start, unblocked by the frame it was waiting for.
-    void send({ type: 'REC_FRAME_READY' });
+    void send({ type: 'REC_START', tabId: 3, settings: withMic });
     await settle();
     expect(offscreenSends()).toContain('OFFSCREEN_START');
   });
 
-  it('skips the wait when every wanted device is already granted', async () => {
-    // Fresh, not synced: a synced mount skips the wait on its own, so a
-    // 'synced' fixture here would pass whether the gate existed or not.
-    freshMount();
+  it('switches to the recorded tab once the engine is asked to begin', async () => {
+    workingTab();
     await loadWorker();
-    void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+    void send({ type: 'REC_START', tabId: 3, settings: withMic });
     await settle();
-    expect(offscreenSends()).toContain('OFFSCREEN_START');
+    expect(fakeChrome.tabs.update).toHaveBeenCalledWith(3, { active: true });
+    expect(fakeChrome.windows.update).toHaveBeenCalledWith(1, { focused: true });
   });
 
-  it('waits when the click carries no answer at all', async () => {
-    freshMount();
+  it('stores the picked area on the segment', async () => {
+    workingTab();
     await loadWorker();
-    // An older popup, or a message shape `isRecMessage` never validated.
-    void send({ type: 'REC_START', settings: withMic });
+    const area = { x: 0.25, y: 0.25, w: 0.5, h: 0.5 };
+    void send({ type: 'REC_START', tabId: 3, settings: withMic, area });
     await settle();
-    expect(offscreenSends()).not.toContain('OFFSCREEN_START');
-  });
-
-  it('does not wait for a frame a mute, cameraless recording never mounts', async () => {
-    freshMount();
-    await loadWorker();
-    void send({ type: 'REC_START', settings: DEFAULT_RECORDING_SETTINGS, devicesGranted: false });
-    await settle();
-    expect(offscreenSends()).toContain('OFFSCREEN_START');
+    const [created] = await listSessions();
+    const { getSegments } = await import('../../src/shared/recording-db');
+    const [segment] = await getSegments(created.id);
+    expect(segment.area).toEqual(area);
   });
 
   it('answers a Stop mid-start by giving the run back, not by asking the engine', async () => {
-    freshMount();
+    const release = heldStreamId();
     await loadWorker();
-    void send({ type: 'REC_START', settings: withMic, devicesGranted: false });
+    void send({ type: 'REC_START', tabId: 3, settings: withMic });
     await settle();
     expect(session.get(REC_STATE_KEY)).toBeDefined();
     const started = (await listSessions()).map((s) => s.id);
     expect(started).toHaveLength(1);
 
     void send({ type: 'REC_STOP' });
+    await settle();
+    release();
     await settle();
 
     // Nothing was ever handed over, so there is nothing to unwind at the
@@ -1107,8 +1090,7 @@ describe('the start window', () => {
     expect(offscreenSends()).toEqual([]);
     expect(session.get(REC_STATE_KEY)).toBeUndefined();
     expect(badgeText.at(-1)).toBe('');
-    // A gesture is not a failure; the bar going and the badge clearing is the
-    // whole answer.
+    // A gesture is not a failure; the badge clearing is the whole answer.
     expect(parked()).toBeNull();
     expect(await listSessions()).toEqual([]);
   });
@@ -1133,7 +1115,7 @@ describe('the start window', () => {
       });
     }) as unknown as typeof fakeChrome.scripting.executeScript;
     await loadWorker();
-    void send({ type: 'REC_START', settings: withMic, devicesGranted: false });
+    void send({ type: 'REC_START', tabId: 3, settings: withMic });
     await settle();
 
     void send({ type: 'REC_STOP' });
@@ -1147,11 +1129,13 @@ describe('the start window', () => {
   });
 
   it('answers a Cancel mid-start the same way', async () => {
-    freshMount();
+    const release = heldStreamId();
     await loadWorker();
-    void send({ type: 'REC_START', settings: withMic, devicesGranted: false });
+    void send({ type: 'REC_START', tabId: 3, settings: withMic });
     await settle();
     void send({ type: 'REC_CANCEL' });
+    await settle();
+    release();
     await settle();
     expect(offscreenSends()).toEqual([]);
     expect(session.get(REC_STATE_KEY)).toBeUndefined();
@@ -1159,18 +1143,20 @@ describe('the start window', () => {
   });
 
   it('gives a continued session back its earlier segments, not a failed row', async () => {
-    freshMount();
+    const release = heldStreamId();
     const existing = await createSession(DEFAULT_RECORDING_SETTINGS);
     await updateSession(existing.id, { status: 'complete', segmentIds: ['old-seg'] });
     await loadWorker();
     void send({
       type: 'REC_START',
+      tabId: 3,
       settings: withMic,
       continueSessionId: existing.id,
-      devicesGranted: false,
     });
     await settle();
     void send({ type: 'REC_STOP' });
+    await settle();
+    release();
     await settle();
     const after = await getSession(existing.id);
     expect(after?.status).toBe('complete');
@@ -1180,7 +1166,7 @@ describe('the start window', () => {
   it('forwards a Stop that lands after the engine has been asked to begin', async () => {
     workingTab();
     await loadWorker();
-    void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+    void send({ type: 'REC_START', tabId: 3, settings: withMic });
     await settle();
     expect(offscreenSends()).toContain('OFFSCREEN_START');
     void send({ type: 'REC_STOP' });
@@ -1190,12 +1176,12 @@ describe('the start window', () => {
     expect(offscreenSends()).toContain('OFFSCREEN_STOP');
   });
 
-  it('does not let a second Record click start a run beside the one preparing', async () => {
-    freshMount();
+  it('does not let a second Start begin a run beside the one preparing', async () => {
+    heldStreamId();
     await loadWorker();
-    void send({ type: 'REC_START', settings: withMic, devicesGranted: false });
+    void send({ type: 'REC_START', tabId: 3, settings: withMic });
     await settle();
-    void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+    void send({ type: 'REC_START', tabId: 3, settings: withMic });
     await settle();
     expect(offscreenSends()).toEqual([]);
     expect(await listSessions()).toHaveLength(1);
@@ -1203,18 +1189,18 @@ describe('the start window', () => {
 
   it('holds that guard after the start deadline has released its claim', async () => {
     // The deadline releases `startPending` while the start is still parked on
-    // the permission frame, so from here on it is the only thing that knows a
-    // start is live. Real time still advances, which IndexedDB needs.
+    // its stream id, so from here on it is the only thing that knows a start
+    // is live. Real time still advances, which IndexedDB needs.
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
-      freshMount();
+      const release = heldStreamId();
       await loadWorker();
-      void send({ type: 'REC_START', settings: withMic, devicesGranted: false });
+      void send({ type: 'REC_START', tabId: 3, settings: withMic });
       await settle();
       await vi.advanceTimersByTimeAsync(11_000);
       await settle();
 
-      void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+      void send({ type: 'REC_START', tabId: 3, settings: withMic });
       await settle();
       expect(offscreenSends()).toEqual([]);
       expect(await listSessions()).toHaveLength(1);
@@ -1224,6 +1210,8 @@ describe('the start window', () => {
       // first start stops being recognised as preparing. Stop is what reads
       // that, so Stop is what has to still work.
       void send({ type: 'REC_STOP' });
+      await settle();
+      release();
       await settle();
       expect(offscreenSends()).toEqual([]);
       expect(session.get(REC_STATE_KEY)).toBeUndefined();
@@ -1236,7 +1224,7 @@ describe('the start window', () => {
     workingTab();
     liveOffscreen();
     await loadWorker();
-    void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+    void send({ type: 'REC_START', tabId: 3, settings: withMic });
     await settle();
     // The interleaving `abandonUnstartedRun` produces: the stop is in flight
     // when the run is torn down under it, so the send rejects against an
@@ -1261,7 +1249,7 @@ describe('the start window', () => {
     liveOffscreen();
     sendRejects.add('OFFSCREEN_STOP');
     await loadWorker();
-    void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+    void send({ type: 'REC_START', tabId: 3, settings: withMic });
     await settle();
     void send({ type: 'REC_STOP' });
     await settle();
@@ -1272,7 +1260,7 @@ describe('the start window', () => {
     workingTab();
     liveOffscreen();
     await loadWorker();
-    void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+    void send({ type: 'REC_START', tabId: 3, settings: withMic });
     await settle();
     const before = (await send({ type: 'REC_QUERY' })) as {
       active: boolean;
@@ -1292,22 +1280,22 @@ describe('the start window', () => {
 
   it('anchors at zero even when the start window was paused', async () => {
     // Pause is reachable here: the 10s claim deadline releases its wait while
-    // the start is still waiting on the permission frame. The clock used to
-    // keep the mount as its zero in that case, so the bar went
-    // "Starting…" -> 0:11, paused, for a recording holding nothing.
+    // the start is still parked. The clock used to keep the mount as its zero
+    // in that case, so it went "Starting…" -> 0:11, paused, for a recording
+    // holding nothing.
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
-      freshMount();
+      const release = heldStreamId();
       liveOffscreen();
       await loadWorker();
-      void send({ type: 'REC_START', settings: withMic, devicesGranted: false });
+      void send({ type: 'REC_START', tabId: 3, settings: withMic });
       await settle();
       await vi.advanceTimersByTimeAsync(11_000);
       await settle();
 
       void send({ type: 'REC_PAUSE' });
       await settle();
-      void send({ type: 'REC_FRAME_READY' });
+      release();
       await settle();
       const sessionId = (await listSessions())[0].id;
       void send({ type: 'ENGINE_STARTED', sessionId, tracks: { mic: true, webcam: false } });
@@ -1326,18 +1314,18 @@ describe('the start window', () => {
     }
   });
 
-  it('mounts the bar unanchored and re-injects it anchored on ENGINE_STARTED', async () => {
+  it('mounts the logger unanchored and re-injects it anchored on ENGINE_STARTED', async () => {
     workingTab();
     liveOffscreen();
     await loadWorker();
-    void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+    void send({ type: 'REC_START', tabId: 3, settings: withMic });
     await settle();
-    // args[6] is `anchored`; the mount is the injection that carries args.
+    // args[3] is `anchored`; the mount is the injection that carries args.
     const anchoredArgs = () =>
       (fakeChrome.scripting.executeScript.mock.calls as [{ args?: unknown[] }][])
         .map(([call]) => call.args)
         .filter((args): args is unknown[] => (args?.length ?? 0) > 1)
-        .map((args) => args[6]);
+        .map((args) => args[3]);
     expect(anchoredArgs()).toEqual([false]);
 
     const sessionId = (await listSessions())[0].id;
@@ -1371,7 +1359,7 @@ describe('a teardown a Stop can land inside', () => {
       return inner(msg);
     }) as typeof fakeChrome.runtime.sendMessage;
 
-    void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+    void send({ type: 'REC_START', tabId: 3, settings: withMic });
     await settle(40);
 
     // A fourth injection is the bar going back up after the unmount, on a run
@@ -1387,7 +1375,7 @@ describe('a teardown a Stop can land inside', () => {
       workingTab();
       liveOffscreen();
       await loadWorker();
-      void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+      void send({ type: 'REC_START', tabId: 3, settings: withMic });
       await settle();
       // The engine took the start and never reported in — a hung
       // getUserMedia. Its own state is null, so OFFSCREEN_STOP parks a
@@ -1412,7 +1400,7 @@ describe('a teardown a Stop can land inside', () => {
       workingTab();
       liveOffscreen();
       await loadWorker();
-      void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+      void send({ type: 'REC_START', tabId: 3, settings: withMic });
       await settle();
       const sessionId = (await listSessions())[0].id;
       void send({ type: 'REC_STOP' });
@@ -1437,7 +1425,7 @@ describe('a teardown a Stop can land inside', () => {
       workingTab();
       liveOffscreen();
       await loadWorker();
-      void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+      void send({ type: 'REC_START', tabId: 3, settings: withMic });
       await settle();
       const sessionId = (await listSessions())[0].id;
       void send({ type: 'REC_STOP' });
@@ -1460,7 +1448,7 @@ describe('a teardown a Stop can land inside', () => {
       workingTab();
       liveOffscreen();
       await loadWorker();
-      void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+      void send({ type: 'REC_START', tabId: 3, settings: withMic });
       await settle();
       const sessionId = (await listSessions())[0].id;
       void send({ type: 'ENGINE_STARTED', sessionId, tracks: { mic: true, webcam: false } });
@@ -1485,7 +1473,7 @@ describe('a teardown a Stop can land inside', () => {
       workingTab();
       liveOffscreen();
       await loadWorker();
-      void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+      void send({ type: 'REC_START', tabId: 3, settings: withMic });
       await settle();
       expect((await listSessions()).length).toBe(1);
       // The same hung getUserMedia the Stop watchdog covers. OFFSCREEN_CANCEL
@@ -1518,7 +1506,7 @@ describe('a teardown a Stop can land inside', () => {
       workingTab();
       liveOffscreen();
       await loadWorker();
-      void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+      void send({ type: 'REC_START', tabId: 3, settings: withMic });
       await settle();
       const sessionId = (await listSessions())[0].id;
       void send({ type: 'REC_CANCEL' });
@@ -1543,7 +1531,7 @@ describe('a teardown a Stop can land inside', () => {
     workingTab();
     liveOffscreen();
     await loadWorker();
-    void send({ type: 'REC_START', settings: withMic, devicesGranted: true });
+    void send({ type: 'REC_START', tabId: 3, settings: withMic });
     await settle();
     const inner = fakeChrome.runtime.sendMessage;
     fakeChrome.runtime.sendMessage = vi.fn((msg: { type?: string }) => {
@@ -1563,7 +1551,7 @@ describe('a teardown a Stop can land inside', () => {
 });
 
 describe('recording state written before this build', () => {
-  it('mounts the bar anchored rather than stuck on "Starting…"', async () => {
+  it('mounts the logger anchored rather than stuck on "Starting…"', async () => {
     workingTab();
     liveOffscreen();
     const legacy: Record<string, unknown> = { ...liveState() };
@@ -1577,6 +1565,94 @@ describe('recording state written before this build', () => {
     const mounts = (fakeChrome.scripting.executeScript.mock.calls as [{ args?: unknown[] }][])
       .map(([call]) => call.args)
       .filter((args): args is unknown[] => (args?.length ?? 0) > 1);
-    expect(mounts.at(-1)?.[6]).toBe(true);
+    expect(mounts.at(-1)?.[3]).toBe(true);
+  });
+});
+
+describe('the control tab', () => {
+  it('opens beside the page the Record click came from, with a still of it', async () => {
+    workingTab();
+    await loadWorker();
+    void send({ type: 'REC_OPEN_CONTROL', tabId: 3, continueSessionId: 'cont-1' });
+    await settle();
+    expect(fakeChrome.tabs.captureVisibleTab).toHaveBeenCalledWith(1, {
+      format: 'jpeg',
+      quality: 70,
+    });
+    const created = fakeChrome.tabs.create.mock.calls.at(-1) as unknown as [
+      { url: string; index: number; openerTabId: number },
+    ];
+    expect(created[0]).toMatchObject({
+      url: 'chrome-extension://fake/src/control/index.html?tab=3',
+      index: 1,
+      openerTabId: 3,
+    });
+    expect(session.get('openscreenshot:control-target')).toMatchObject({
+      tabId: 3,
+      shot: 'data:image/jpeg;base64,AA==',
+      continueSessionId: 'cont-1',
+    });
+  });
+
+  it('still opens without the still when Chrome refuses it', async () => {
+    workingTab();
+    fakeChrome.tabs.captureVisibleTab = vi.fn(() => Promise.reject(new Error('no activeTab')));
+    await loadWorker();
+    void send({ type: 'REC_OPEN_CONTROL', tabId: 3 });
+    await settle();
+    expect(fakeChrome.tabs.create).toHaveBeenCalled();
+    expect(session.get('openscreenshot:control-target')).toMatchObject({ shot: null });
+  });
+
+  it('reports start-blocked for a page that cannot be recorded', async () => {
+    fakeChrome.tabs.get = vi.fn(() =>
+      Promise.resolve({
+        id: 3,
+        url: 'chrome://extensions',
+        windowId: 1,
+        index: 0,
+      } as chrome.tabs.Tab),
+    );
+    await loadWorker();
+    void send({ type: 'REC_OPEN_CONTROL', tabId: 3 });
+    await settle();
+    expect(parked()).toBe('start-blocked');
+    expect(fakeChrome.tabs.create).not.toHaveBeenCalled();
+  });
+
+  it('brings back the control tab of a run that is already live', async () => {
+    session.set(REC_STATE_KEY, { ...liveState(), controlTabId: 9 });
+    await loadWorker();
+    void send({ type: 'REC_OPEN_CONTROL', tabId: 3 });
+    await settle();
+    expect(fakeChrome.tabs.update).toHaveBeenCalledWith(9, { active: true });
+    expect(fakeChrome.tabs.create).not.toHaveBeenCalled();
+  });
+
+  it('remembers which tab started the run', async () => {
+    workingTab();
+    await loadWorker();
+    for (const fn of fakeChrome.__listeners.message) {
+      fn(
+        { type: 'REC_START', tabId: 3, settings: DEFAULT_RECORDING_SETTINGS },
+        { tab: { id: 9 } },
+        () => {},
+      );
+    }
+    await settle();
+    expect((session.get(REC_STATE_KEY) as { controlTabId?: number }).controlTabId).toBe(9);
+  });
+
+  it('turns into the editor when the recording stops', async () => {
+    const done = await createSession(DEFAULT_RECORDING_SETTINGS);
+    session.set(REC_STATE_KEY, { ...liveState(done.id), controlTabId: 9 });
+    await loadWorker();
+    void send({ type: 'ENGINE_STOPPED', sessionId: done.id, canceled: false });
+    await settle();
+    expect(fakeChrome.tabs.update).toHaveBeenCalledWith(9, {
+      url: `chrome-extension://fake/src/recorder/index.html?session=${done.id}`,
+      active: true,
+    });
+    expect(fakeChrome.tabs.create).not.toHaveBeenCalled();
   });
 });
