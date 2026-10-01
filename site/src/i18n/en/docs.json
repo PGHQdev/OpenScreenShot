@@ -96,16 +96,16 @@
   },
   "record": {
     "heading": "Record a tab",
-    "intro": "Tab recording is supported in the Chrome build; the Firefox build currently supports screenshots only. Click <strong>Record</strong> in the popup, or press <kbd>Alt+Shift+X</kbd> to stop once a recording is running. The first time you record, Chrome shows one permission prompt for tab capture.",
+    "intro": "Tab recording is supported in the Chrome build; the Firefox build currently supports screenshots only. Click <strong>Record</strong> in the popup to open the recording tab beside your page. Once a recording is running, press <kbd>Alt+Shift+X</kbd> to stop it from any tab. The first time you record, Chrome shows one permission prompt for tab capture.",
     "start": {
       "title": "Start a recording",
-      "p1": "The Record row in the popup has three toggles — <strong>Mic</strong>, <strong>Tab audio</strong>, and <strong>Webcam</strong> — turn on any of them before you click Record. With the mic or webcam on, your browser’s own permission prompt appears from a small bubble on the page before capture starts.",
-      "p2": "If a recording navigates to a different site, the control bar needs the optional “Record across sites” permission (see <a href=\"#settings\">Settings</a>) to follow it there. Without that permission the toolbar badge turns amber; click the toolbar icon or interact with the page again to reattach the overlay."
+      "p1": "The recording tab shows a picture of your page and a live view of your camera. Turn on <strong>Mic</strong>, <strong>Tab audio</strong>, or <strong>Webcam</strong> there; your browser’s own permission prompt appears in that tab. Drag across the picture to record only part of the page, or keep <strong>Whole tab</strong>. Click <strong>Start recording</strong>, and OpenScreenShot switches to your page.",
+      "p2": "If a recording navigates to a different site, click tracking needs the optional “Record across sites” permission (see <a href=\"#settings\">Settings</a>) to follow it there. Without that permission the toolbar badge turns amber, and zoom and click effects stop for the rest of the video. The video itself keeps recording."
     },
     "bar": {
-      "title": "The control bar",
-      "p1": "A small bar sits at the bottom of the page while you record: a timer, a chip for each track you enabled, and Pause/Resume, Stop, and Cancel buttons. With the webcam on, a draggable circular preview floats over the page — drag it anywhere and it stays there for the rest of the recording.",
-      "p2": "The bar hides itself about three seconds after your pointer leaves it, so it stays out of your recording. Move your cursor to the bottom center of the page to bring it back. It stays visible while you hover it, and while the recording is paused."
+      "title": "The recording tab",
+      "p1": "While you record, the recording tab holds a timer and Pause/Resume, Stop, and Cancel buttons. Nothing is added to the page you record, so no controls appear in the video. Come back to the tab to stop, or press <kbd>Alt+Shift+X</kbd>. When you stop, the same tab opens the editor.",
+      "p2": "The webcam joins the export as a round bubble that you place in the editor, and the editor crops the video to the area you picked."
     },
     "editor": {
       "title": "The editor",
@@ -144,7 +144,7 @@
       "<strong>Filename template</strong> — click a token chip to insert <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code>, or <code>{h}</code>. A live preview shows the result. Add <code>/</code> to save into a folder inside Downloads, for example <code>Screenshots/{title}</code>."
     ],
     "storage": "Settings live in local storage on this device. <strong>Reset to defaults</strong> at the bottom of the panel takes two clicks.",
-    "recordAcrossSites": "<strong>Record across sites</strong> — off by default. Turning it on requests the optional <code>&lt;all_urls&gt;</code> host permission, so the recording control bar and cursor overlay can follow a tab that navigates to a new site mid-recording."
+    "recordAcrossSites": "<strong>Record across sites</strong> — off by default. Turning it on requests the optional <code>&lt;all_urls&gt;</code> host permission, so click tracking can follow a tab that navigates to a new site mid-recording."
   },
   "agentsCli": {
     "heading": "Agents & CLI",

@@ -37,7 +37,7 @@
     },
     {
       "name": "<all_urls>",
-      "why": "Die optionale Host-Berechtigung. Sie hält die Cursor-Anzeige und die Aufnahmesteuerung auf der Seite am Leben, wenn der Tab einer Aufnahme zu einer anderen Origin wechselt.",
+      "why": "Die optionale Host-Berechtigung. Sie hält die Klickerfassung aktiv, wenn der Tab einer Aufnahme zu einem anderen Ursprung wechselt.",
       "when": "Nur wenn du „Auf allen Websites aufnehmen“ in den Einstellungen aktivierst."
     }
   ]

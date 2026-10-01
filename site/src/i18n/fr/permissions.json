@@ -37,7 +37,7 @@
     },
     {
       "name": "<all_urls>",
-      "why": "L’autorisation d’hôte facultative. Elle maintient le calque du curseur et la barre de commandes sur la page quand l’onglet enregistré navigue vers une autre origine.",
+      "why": "L’autorisation d’hôte facultative. Elle maintient le suivi des clics quand l’onglet d’un enregistrement passe à une autre origine.",
       "when": "Seulement si vous activez « Enregistrer partout » dans les paramètres."
     }
   ]

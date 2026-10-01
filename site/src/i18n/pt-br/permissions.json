@@ -37,7 +37,7 @@
     },
     {
       "name": "<all_urls>",
-      "why": "A permissão de host opcional. Ela mantém a sobreposição do cursor e a barra de controle na página quando a aba de uma gravação navega para outra origem.",
+      "why": "A permissão de host opcional. Mantém o registro de cliques ativo quando a aba de uma gravação navega para outra origem.",
       "when": "Só se você ativar “Gravar em todos os sites” nas configurações."
     }
   ]

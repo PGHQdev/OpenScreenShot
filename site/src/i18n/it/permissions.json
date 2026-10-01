@@ -37,7 +37,7 @@
     },
     {
       "name": "<all_urls>",
-      "why": "Il permesso host opzionale. Mantiene attivi l'overlay del cursore e la barra di controllo nella pagina quando la scheda registrata passa a un'altra origine.",
+      "why": "L’autorizzazione host facoltativa. Mantiene attivo il rilevamento dei clic quando la scheda di una registrazione passa a un’altra origine.",
       "when": "Solo se attivi «Registra su tutti i siti» nelle impostazioni."
     }
   ]

@@ -37,7 +37,7 @@
     },
     {
       "name": "<all_urls>",
-      "why": "El permiso de host opcional. Mantiene vivos el cursor superpuesto y la barra de controles cuando la pestaña de una grabación navega a otro origen.",
+      "why": "El permiso de host opcional. Mantiene activo el registro de clics cuando la pestaña de una grabación navega a otro origen.",
       "when": "Solo si activas «Grabar entre sitios» en los ajustes."
     }
   ]

@@ -96,16 +96,16 @@
   },
   "record": {
     "heading": "Gravar uma aba",
-    "intro": "Clique em <strong>Gravar</strong> no popup, ou pressione <kbd>Alt+Shift+X</kbd> para parar quando uma gravação estiver em andamento. Na primeira gravação, o Chrome mostra um único aviso de permissão para a captura de abas; depois disso toda gravação começa em um clique.",
+    "intro": "A gravação de abas está disponível na versão para Chrome; a versão para Firefox por enquanto só faz capturas de tela. Clique em <strong>Gravar</strong> no pop-up para abrir a aba de gravação ao lado da sua página. Durante uma gravação, pressione <kbd>Alt+Shift+X</kbd> para pará-la de qualquer aba. Na primeira gravação, o Chrome mostra um pedido de permissão para capturar a aba.",
     "start": {
       "title": "Iniciar uma gravação",
-      "p1": "A linha Gravar no popup tem três interruptores — <strong>Mic</strong>, <strong>Som da aba</strong> e <strong>Webcam</strong> — ative os que quiser antes de clicar em Gravar. Com o mic ou a webcam ativos, o aviso de permissão do próprio navegador aparece em uma pequena bolha na página antes de a captura começar.",
-      "p2": "Se uma gravação navega para outro site, a barra de controle precisa da permissão opcional “Gravar em todos os sites” (veja <a href=\"#settings\">Configurações</a>) para acompanhá-la. Sem essa permissão o selo da barra de ferramentas fica âmbar; clique no ícone da barra de ferramentas ou interaja com a página de novo para reanexar a sobreposição."
+      "p1": "A aba de gravação mostra uma imagem da sua página e a imagem ao vivo da sua câmera. Ative ali <strong>Mic</strong>, <strong>Som da aba</strong> ou <strong>Webcam</strong>; o pedido de permissão do navegador aparece nessa aba. Arraste sobre a imagem para gravar só uma parte da página, ou mantenha <strong>Aba inteira</strong>. Clique em <strong>Iniciar gravação</strong> e o OpenScreenShot muda para a sua página.",
+      "p2": "Se uma gravação navegar para outro site, o registro de cliques precisa da permissão opcional “Gravar em todos os sites” (veja <a href=\"#settings\">Configurações</a>) para acompanhá-la. Sem ela, o selo da barra de ferramentas fica âmbar, e o zoom e os efeitos de clique param no resto do vídeo. O vídeo continua sendo gravado."
     },
     "bar": {
-      "title": "A barra de controle",
-      "p1": "Uma pequena barra fica na parte de baixo da página enquanto você grava: um cronômetro, um chip para cada trilha ativada e os botões Pausar/Retomar, Parar e Cancelar. Com a webcam ativa, uma prévia circular arrastável flutua sobre a página — arraste para onde quiser e ela fica lá pelo resto da gravação.",
-      "p2": "A barra se esconde cerca de três segundos depois que o ponteiro sai dela, para ficar fora da gravação. Mova o cursor até o centro inferior da página para trazê-la de volta. Ela fica visível enquanto você passa o mouse sobre ela e enquanto a gravação está pausada."
+      "title": "A aba de gravação",
+      "p1": "Durante a gravação, a aba de gravação mostra um cronômetro e os botões Pausar/Retomar, Parar e Cancelar. Nada é adicionado à página gravada, então nenhum controle aparece no vídeo. Volte à aba para parar, ou pressione <kbd>Alt+Shift+X</kbd>. Ao parar, a mesma aba abre o editor.",
+      "p2": "A webcam entra na exportação como uma bolha redonda que você posiciona no editor, e o editor corta o vídeo para a área escolhida."
     },
     "editor": {
       "title": "O editor",
@@ -144,7 +144,7 @@
       "<strong>Modelo de nome de arquivo</strong> — clique em um chip de token para inserir <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code> ou <code>{h}</code>. Uma prévia ao vivo mostra o resultado. Com <code>/</code>, o arquivo é salvo em uma pasta dentro de Downloads, por exemplo <code>Screenshots/{title}</code>."
     ],
     "storage": "As configurações ficam no armazenamento local deste dispositivo. <strong>Restaurar padrões</strong> no fim do painel pede dois cliques.",
-    "recordAcrossSites": "<strong>Gravar em todos os sites</strong> — desativado por padrão. Ativá-lo solicita a permissão de host opcional <code>&lt;all_urls&gt;</code>, para que a barra de controle da gravação e a sobreposição do cursor possam seguir uma aba que navega para um novo site no meio da gravação."
+    "recordAcrossSites": "<strong>Gravar em todos os sites</strong> — desativado por padrão. Ativar pede a permissão de host opcional <code>&lt;all_urls&gt;</code>, para que o registro de cliques acompanhe uma aba que navega para outro site durante a gravação."
   },
   "agentsCli": {
     "heading": "Agentes e CLI",

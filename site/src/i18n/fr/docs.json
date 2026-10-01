@@ -96,16 +96,16 @@
   },
   "record": {
     "heading": "Enregistrer un onglet",
-    "intro": "Cliquez sur <strong>Enregistrer</strong> dans le popup, ou appuyez sur <kbd>Alt+Shift+X</kbd> pour arrêter un enregistrement en cours. À votre premier enregistrement, Chrome affiche une seule invite d’autorisation pour la capture d’onglet ; chaque enregistrement suivant démarre en un seul clic.",
+    "intro": "L’enregistrement d’onglets est disponible dans la version Chrome ; la version Firefox ne prend en charge que les captures d’écran pour l’instant. Cliquez sur <strong>Enregistrer</strong> dans la fenêtre contextuelle pour ouvrir l’onglet d’enregistrement à côté de votre page. Pendant un enregistrement, appuyez sur <kbd>Alt+Shift+X</kbd> pour l’arrêter depuis n’importe quel onglet. Au premier enregistrement, Chrome affiche une demande d’autorisation pour la capture d’onglet.",
     "start": {
       "title": "Démarrer un enregistrement",
-      "p1": "La ligne Enregistrer du popup a trois interrupteurs — <strong>Micro</strong>, <strong>Audio onglet</strong> et <strong>Webcam</strong> — activez ceux que vous voulez avant de cliquer sur Enregistrer. Avec le micro ou la webcam activés, l’invite d’autorisation de votre navigateur apparaît dans une petite bulle sur la page avant le début de la capture.",
-      "p2": "Si un enregistrement navigue vers un autre site, la barre de commandes a besoin de l’autorisation facultative « Enregistrer partout » (voir <a href=\"#settings\">Paramètres</a>) pour le suivre. Sans cette autorisation, le badge de la barre d’outils vire à l’ambre ; cliquez sur l’icône de la barre d’outils ou interagissez de nouveau avec la page pour rattacher la surimpression."
+      "p1": "L’onglet d’enregistrement affiche une image de votre page et l’image en direct de votre caméra. Activez-y <strong>Micro</strong>, <strong>Audio onglet</strong> ou <strong>Webcam</strong> ; la demande d’autorisation du navigateur apparaît dans cet onglet. Faites glisser sur l’image pour n’enregistrer qu’une partie de la page, ou gardez <strong>Onglet entier</strong>. Cliquez sur <strong>Démarrer l’enregistrement</strong>, et OpenScreenShot passe à votre page.",
+      "p2": "Si un enregistrement navigue vers un autre site, le suivi des clics a besoin de l’autorisation facultative « Enregistrer sur tous les sites » (voir <a href=\"#settings\">Réglages</a>) pour le suivre. Sans elle, le badge de la barre d’outils devient orange, et le zoom et les effets de clic s’arrêtent pour la suite de la vidéo. La vidéo continue de s’enregistrer."
     },
     "bar": {
-      "title": "La barre de commandes",
-      "p1": "Une petite barre se place en bas de la page pendant l’enregistrement : un minuteur, une pastille pour chaque piste activée, et les boutons Pause/Reprendre, Arrêter et Annuler. Avec la webcam activée, un aperçu circulaire déplaçable flotte sur la page — glissez-le où vous voulez et il y reste jusqu’à la fin de l’enregistrement.",
-      "p2": "La barre se masque environ trois secondes après que votre pointeur l’a quittée, pour rester hors de votre enregistrement. Ramenez votre curseur en bas au centre de la page pour la faire réapparaître. Elle reste visible tant que vous la survolez, et tant que l’enregistrement est en pause."
+      "title": "L’onglet d’enregistrement",
+      "p1": "Pendant l’enregistrement, l’onglet d’enregistrement affiche un minuteur et les boutons Pause/Reprendre, Arrêter et Annuler. Rien n’est ajouté à la page enregistrée : aucune commande n’apparaît dans la vidéo. Revenez à l’onglet pour arrêter, ou appuyez sur <kbd>Alt+Shift+X</kbd>. À l’arrêt, le même onglet ouvre l’éditeur.",
+      "p2": "La webcam rejoint l’export sous forme de bulle ronde que vous placez dans l’éditeur, et l’éditeur recadre la vidéo sur la zone choisie."
     },
     "editor": {
       "title": "L’éditeur",
@@ -144,7 +144,7 @@
       "<strong>Modèle de nom de fichier</strong> — cliquez sur un jeton pour insérer <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code> ou <code>{h}</code>. Un aperçu en direct montre le résultat. Avec <code>/</code>, le fichier est enregistré dans un dossier de Téléchargements, par exemple <code>Screenshots/{title}</code>."
     ],
     "storage": "Les réglages vivent dans le stockage local de cet appareil. <strong>Réinitialiser</strong>, en bas du panneau, demande deux clics.",
-    "recordAcrossSites": "<strong>Enregistrer partout</strong> — désactivé par défaut. L’activer demande l’autorisation d’hôte facultative <code>&lt;all_urls&gt;</code>, pour que la barre de commandes et la surimpression du curseur puissent suivre un onglet qui navigue vers un autre site en cours d’enregistrement."
+    "recordAcrossSites": "<strong>Enregistrer sur tous les sites</strong> — désactivé par défaut. L’activer demande l’autorisation d’hôte facultative <code>&lt;all_urls&gt;</code>, pour que le suivi des clics puisse suivre un onglet qui change de site pendant l’enregistrement."
   },
   "agentsCli": {
     "heading": "Agents & CLI",

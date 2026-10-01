@@ -37,7 +37,7 @@
     },
     {
       "name": "<all_urls>",
-      "why": "The optional host permission. It keeps the in-page cursor overlay and control bar alive when a recording’s tab navigates to a different origin.",
+      "why": "The optional host permission. It keeps click tracking alive when a recording’s tab navigates to a different origin.",
       "when": "Only if you turn on “Record across sites” in settings."
     }
   ]

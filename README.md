@@ -85,7 +85,8 @@ Capture the full web page.
 - **Visible area and region capture** from the right-click menu or shortcuts
 - **Annotate** with arrows, text, numbered steps, spotlight, and crop, with full undo
 - **Blur or redact secrets** before you share
-- **Record the tab in Chrome** with auto-zoom at your clicks, mic and webcam, and trim
+- **Record the tab in Chrome** with auto-zoom at your clicks, mic and webcam, and trim. Pick
+  the part of the tab to record and check your camera first; the controls stay out of the video
 - **Export** as PNG, JPEG, WebP, or multi-page PDF, or copy straight to the clipboard
 
 The full tour, every shortcut, and the settings reference live in the
@@ -139,17 +140,17 @@ broader access for recording across sites; Firefox does not request recording pe
 
 <br />
 
-| Permission                           | Why                                                                                                                                            |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `activeTab`                          | Access the current tab — only when you click the extension, use a shortcut, or pick a capture from the right-click menu                        |
-| `scripting`                          | Inject on-demand page functions for scroll-and-stitch, region selection, the quick-mode clipboard write, and the in-page recording control bar |
-| `storage` (+ `unlimitedStorage`)     | Settings, the last region rect, editing drafts, a parked Record click, and stashing large full-page PNGs and recording chunks for the editor   |
-| `downloads`                          | Save exports, quick-mode captures, and recording exports to your Downloads folder                                                              |
-| `contextMenus`                       | Add one capture submenu to the page right-click menu                                                                                           |
-| `clipboardWrite`                     | Copy a screenshot from the editor or from quick mode; it never reads the clipboard                                                             |
-| `offscreen` (Chrome)                 | Run the recording engine in a hidden document — `MediaRecorder` and the IndexedDB writes need a page context a service worker doesn't have     |
-| `tabCapture` (Chrome, optional)      | Requested once, at your first recording; every recording after that starts in one click                                                        |
-| `<all_urls>` (Chrome, optional host) | Only if you turn on "Record across sites" — keeps the cursor overlay alive when a recording navigates to a new origin                          |
+| Permission                           | Why                                                                                                                                          |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `activeTab`                          | Access the current tab — only when you click the extension, use a shortcut, or pick a capture from the right-click menu                      |
+| `scripting`                          | Inject on-demand page functions for scroll-and-stitch, region selection, the quick-mode clipboard write, and the recording's click tracker   |
+| `storage` (+ `unlimitedStorage`)     | Settings, the last region rect, editing drafts, a parked Record click, and stashing large full-page PNGs and recording chunks for the editor |
+| `downloads`                          | Save exports, quick-mode captures, and recording exports to your Downloads folder                                                            |
+| `contextMenus`                       | Add one capture submenu to the page right-click menu                                                                                         |
+| `clipboardWrite`                     | Copy a screenshot from the editor or from quick mode; it never reads the clipboard                                                           |
+| `offscreen` (Chrome)                 | Run the recording engine in a hidden document — `MediaRecorder` and the IndexedDB writes need a page context a service worker doesn't have   |
+| `tabCapture` (Chrome, optional)      | Requested once, at your first recording; every recording after that starts in one click                                                      |
+| `<all_urls>` (Chrome, optional host) | Only if you turn on "Record across sites" — keeps click tracking alive when a recording navigates to a new origin                            |
 
 </details>
 
@@ -196,7 +197,8 @@ openscreenshot/
 ├── public/                  # icons + i18n messages
 ├── src/
 │   ├── background/          # service worker (capture + recording coordinator)
-│   ├── content/             # on-demand capture funcs (scroll, region, recording overlay)
+│   ├── content/             # on-demand capture funcs (scroll, region, recording click tracker)
+│   ├── control/             # recording control tab: area, camera preview, Start/Stop (Preact)
 │   ├── editor/              # annotation editor + export (Preact, own tab)
 │   ├── offscreen/           # recording engine: MediaRecorder + IndexedDB chunks
 │   ├── popup/               # popup UI (Preact)

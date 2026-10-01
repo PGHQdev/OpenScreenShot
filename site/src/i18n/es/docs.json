@@ -96,16 +96,16 @@
   },
   "record": {
     "heading": "Grabar una pestaña",
-    "intro": "Haz clic en <strong>Grabar</strong> en el menú, o pulsa <kbd>Alt+Shift+X</kbd> para detener una grabación en marcha. La primera vez que grabas, Chrome muestra un único aviso de permiso para la captura de pestañas; a partir de ahí, cada grabación empieza con un solo clic.",
+    "intro": "La grabación de pestañas está disponible en la versión para Chrome; la versión para Firefox solo admite capturas de pantalla por ahora. Haz clic en <strong>Grabar</strong> en la ventana emergente para abrir la pestaña de grabación junto a tu página. Mientras se graba, pulsa <kbd>Alt+Shift+X</kbd> para detenerla desde cualquier pestaña. La primera vez que grabas, Chrome muestra un aviso de permiso para capturar la pestaña.",
     "start": {
       "title": "Iniciar una grabación",
-      "p1": "La fila Grabar del menú tiene tres conmutadores — <strong>Mic</strong>, <strong>Audio</strong> y <strong>Webcam</strong> — activa los que quieras antes de hacer clic en Grabar. Con el micro o la webcam activados, el propio aviso de permiso de tu navegador aparece en una pequeña burbuja sobre la página antes de que empiece la captura.",
-      "p2": "Si una grabación navega a otro sitio, la barra de controles necesita el permiso opcional «Grabar entre sitios» (ver <a href=\"#settings\">Ajustes</a>) para seguirla. Sin ese permiso, la insignia de la barra de herramientas se vuelve ámbar; haz clic en el icono o interactúa de nuevo con la página para volver a fijar la superposición."
+      "p1": "La pestaña de grabación muestra una imagen de tu página y la vista en directo de tu cámara. Activa ahí <strong>Mic</strong>, <strong>Audio</strong> o <strong>Webcam</strong>; el aviso de permiso del navegador aparece en esa pestaña. Arrastra sobre la imagen para grabar solo una parte de la página, o deja <strong>Pestaña completa</strong>. Haz clic en <strong>Empezar a grabar</strong> y OpenScreenShot cambia a tu página.",
+      "p2": "Si una grabación navega a otro sitio, el registro de clics necesita el permiso opcional «Grabar en todos los sitios» (consulta <a href=\"#settings\">Ajustes</a>) para seguirla. Sin ese permiso, la insignia de la barra se vuelve ámbar y el zoom y los efectos de clic se detienen durante el resto del vídeo. El vídeo sigue grabándose."
     },
     "bar": {
-      "title": "La barra de controles",
-      "p1": "Una pequeña barra se sitúa en la parte inferior de la página mientras grabas: un temporizador, un chip por cada pista activada y los botones Pausar/Reanudar, Detener y Cancelar. Con la webcam activada, una vista previa circular arrastrable flota sobre la página; arrástrala a donde quieras y ahí se queda el resto de la grabación.",
-      "p2": "La barra se oculta sola unos tres segundos después de que el puntero la abandone, para quedar fuera de tu grabación. Mueve el cursor al centro inferior de la página para recuperarla. Permanece visible mientras el cursor está encima y mientras la grabación está en pausa."
+      "title": "La pestaña de grabación",
+      "p1": "Mientras grabas, la pestaña de grabación muestra un temporizador y los botones Pausar/Reanudar, Detener y Cancelar. No se añade nada a la página que grabas, así que no aparecen controles en el vídeo. Vuelve a la pestaña para detener, o pulsa <kbd>Alt+Shift+X</kbd>. Al detener, la misma pestaña abre el editor.",
+      "p2": "La webcam se añade a la exportación como una burbuja redonda que colocas en el editor, y el editor recorta el vídeo al área que elegiste."
     },
     "editor": {
       "title": "El editor",
@@ -144,7 +144,7 @@
       "<strong>Plantilla de nombre</strong> — haz clic en un chip para insertar <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code> o <code>{h}</code>. Una vista previa en vivo muestra el resultado. Con <code>/</code> se guarda en una carpeta dentro de Descargas, por ejemplo <code>Screenshots/{title}</code>."
     ],
     "storage": "Los ajustes viven en el almacenamiento local de este dispositivo. <strong>Restablecer valores</strong>, al final del panel, pide dos clics.",
-    "recordAcrossSites": "<strong>Grabar entre sitios</strong> — desactivado por defecto. Activarlo solicita el permiso de host opcional <code>&lt;all_urls&gt;</code>, para que la barra de controles y el cursor superpuesto puedan seguir a una pestaña que navega a otro sitio a mitad de grabación."
+    "recordAcrossSites": "<strong>Grabar en todos los sitios</strong>: desactivado de forma predeterminada. Al activarlo se solicita el permiso de host opcional <code>&lt;all_urls&gt;</code>, para que el registro de clics pueda seguir a una pestaña que navega a otro sitio durante la grabación."
   },
   "agentsCli": {
     "heading": "Agentes y CLI",

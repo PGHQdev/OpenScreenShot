@@ -96,16 +96,16 @@
   },
   "record": {
     "heading": "Einen Tab aufnehmen",
-    "intro": "Klicke im Popup auf <strong>Aufnehmen</strong>, oder drücke <kbd>Alt+Shift+X</kbd>, um eine laufende Aufnahme zu stoppen. Bei deiner ersten Aufnahme zeigt Chrome eine Berechtigungsabfrage für die Tab-Aufnahme; jede Aufnahme danach startet mit einem Klick.",
+    "intro": "Tab-Aufnahmen gibt es in der Chrome-Version; die Firefox-Version unterstützt derzeit nur Screenshots. Klicke im Pop-up auf <strong>Aufnehmen</strong>, um den Aufnahme-Tab neben deiner Seite zu öffnen. Während eine Aufnahme läuft, beendest du sie mit <kbd>Alt+Shift+X</kbd> aus jedem Tab. Bei der ersten Aufnahme zeigt Chrome eine Berechtigungsabfrage für die Tab-Aufnahme.",
     "start": {
       "title": "Eine Aufnahme starten",
-      "p1": "Die Aufnehmen-Zeile im Popup hat drei Schalter — <strong>Mikro</strong>, <strong>Tab-Audio</strong> und <strong>Webcam</strong> — schalte davon ein, was du willst, bevor du auf Aufnehmen klickst. Mit Mikro oder Webcam an erscheint die Berechtigungsabfrage deines Browsers aus einer kleinen Bubble auf der Seite, bevor die Aufnahme startet.",
-      "p2": "Wechselt eine Aufnahme zu einer anderen Website, braucht die Steuerleiste die optionale Berechtigung „Auf allen Websites aufnehmen“ (siehe <a href=\"#settings\">Einstellungen</a>), um ihr dorthin zu folgen. Ohne diese Berechtigung wird das Symbol-Badge gelb; klicke auf das Symbol oder interagiere wieder mit der Seite, um das Overlay neu zu verbinden."
+      "p1": "Der Aufnahme-Tab zeigt ein Bild deiner Seite und ein Live-Bild deiner Kamera. Schalte dort <strong>Mikro</strong>, <strong>Tab-Audio</strong> oder <strong>Webcam</strong> ein; die Berechtigungsabfrage deines Browsers erscheint in diesem Tab. Ziehe über das Bild, um nur einen Teil der Seite aufzunehmen, oder behalte <strong>Ganzer Tab</strong>. Klicke auf <strong>Aufnahme starten</strong>, und OpenScreenShot wechselt zu deiner Seite.",
+      "p2": "Wechselt eine Aufnahme zu einer anderen Website, braucht die Klickerfassung die optionale Berechtigung „Seitenübergreifend aufnehmen“ (siehe <a href=\"#settings\">Einstellungen</a>), um zu folgen. Ohne sie wird das Symbolleisten-Badge gelb, und Zoom und Klickeffekte fehlen im restlichen Video. Das Video selbst wird weiter aufgenommen."
     },
     "bar": {
-      "title": "Die Steuerleiste",
-      "p1": "Während du aufnimmst, sitzt eine kleine Leiste am unteren Rand der Seite: ein Timer, ein Chip für jede aktivierte Spur und Buttons für Pause/Weiter, Stopp und Abbrechen. Mit aktiver Webcam schwebt eine verschiebbare runde Vorschau über der Seite — ziehe sie irgendwohin, und sie bleibt dort für den Rest der Aufnahme.",
-      "p2": "Die Leiste blendet sich etwa drei Sekunden, nachdem dein Zeiger sie verlässt, aus und bleibt so aus deiner Aufnahme. Bewege den Cursor an die untere Mitte der Seite, um sie zurückzuholen. Sie bleibt sichtbar, solange der Mauszeiger darüber liegt und solange die Aufnahme pausiert."
+      "title": "Der Aufnahme-Tab",
+      "p1": "Während der Aufnahme enthält der Aufnahme-Tab einen Timer und die Schaltflächen Pause/Fortsetzen, Stopp und Abbrechen. Der aufgenommenen Seite wird nichts hinzugefügt, daher erscheinen keine Bedienelemente im Video. Kehre zum Tab zurück, um zu stoppen, oder drücke <kbd>Alt+Shift+X</kbd>. Nach dem Stopp öffnet derselbe Tab den Editor.",
+      "p2": "Die Webcam kommt als runde Blase in den Export, die du im Editor platzierst, und der Editor schneidet das Video auf den gewählten Bereich zu."
     },
     "editor": {
       "title": "Der Editor",
@@ -144,7 +144,7 @@
       "<strong>Dateinamen-Vorlage</strong> — klicke auf einen Token-Chip, um <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code> oder <code>{h}</code> einzufügen. Eine Live-Vorschau zeigt das Ergebnis. Mit <code>/</code> wird in einen Ordner unter Downloads gespeichert, z. B. <code>Screenshots/{title}</code>."
     ],
     "storage": "Einstellungen liegen im lokalen Speicher dieses Geräts. <strong>Zurücksetzen</strong> ganz unten im Panel braucht zwei Klicks.",
-    "recordAcrossSites": "<strong>Auf allen Websites aufnehmen</strong> — standardmäßig aus. Beim Einschalten wird die optionale Host-Berechtigung <code>&lt;all_urls&gt;</code> angefragt, damit Steuerleiste und Cursor-Anzeige einem Tab folgen können, der mitten in der Aufnahme zu einer neuen Website wechselt."
+    "recordAcrossSites": "<strong>Seitenübergreifend aufnehmen</strong> — standardmäßig aus. Beim Einschalten wird die optionale Host-Berechtigung <code>&lt;all_urls&gt;</code> angefragt, damit die Klickerfassung einem Tab folgen kann, der während der Aufnahme zu einer neuen Website wechselt."
   },
   "agentsCli": {
     "heading": "Agenten & CLI",

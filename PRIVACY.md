@@ -36,10 +36,10 @@ written to IndexedDB as you record and stay there until you delete the session; 
 ever uploaded. Recording uses two further permissions, both optional and requested only
 when you use the recorder:
 
-| Permission                              | Why it's needed                                                                                                | When it's requested                                                        |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `tabCapture`                            | Captures the current tab's video, and its audio if you enable the tab-audio track, for recording.              | Once, the first time you click Record — a single Chrome permission prompt. |
-| `<all_urls>` (optional host permission) | Keeps the in-page cursor overlay and control bar alive when a recording's tab navigates to a different origin. | Only if you turn on "Record across sites" in settings.                     |
+| Permission                              | Why it's needed                                                                                   | When it's requested                                                        |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `tabCapture`                            | Captures the current tab's video, and its audio if you enable the tab-audio track, for recording. | Once, the first time you click Record — a single Chrome permission prompt. |
+| `<all_urls>` (optional host permission) | Keeps click tracking alive when a recording's tab navigates to a different origin.                | Only if you turn on "Record across sites" in settings.                     |
 
 The microphone and camera, when you enable them, are opened directly by your browser's own
 permission prompt — the extension never sees a stream until you grant it, and the stream

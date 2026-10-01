@@ -14,8 +14,7 @@
     "items": [
       "<strong>Die Ausschnittwahl gilt nur für den sichtbaren Bereich</strong> — die Seite ist beim Ziehen gesperrt, ein Ausschnitt reicht also nicht unter den sichtbaren Bereich. Nimm die ganze Seite auf und schneide sie im Editor zu.",
       "<strong>Dynamische und endlos scrollende Seiten</strong> — die Aufnahme-Engine misst die Seitenhöhe einmal, am Anfang. Eine Seite, die beim Scrollen wächst, kommt in der Höhe heraus, die sie beim Start der Aufnahme hatte. Spät ladende Bilder können auch leer bleiben: Jede Kachel bekommt eine kurze Pause zum Neuzeichnen, keine Zeit für einen frischen Abruf.",
-      "<strong>Kein Einstellungs-Sync</strong> — Design, Exportformat und Dateinamen-Vorlage liegen im lokalen Speicher und synchronisieren nicht über Geräte oder Profile.",
-      "<strong>Die Aufnahme-Overlays liegen auf der Seite</strong> — die Webcam-Vorschau und die Steuerleiste sind Elemente auf der Seite selbst, das rohe Tab-Video enthält sie also. Beim Export setzt der Editor eine eigene Webcam-Bubble als zweites Overlay über die, die die Seite aufgenommen hat. Die Steuerleiste blendet sich etwa drei Sekunden, nachdem dein Zeiger sie verlässt, aus und bleibt so aus dem Video; bewege den Cursor an die untere Mitte der Seite, um sie zurückzuholen. Sie bleibt sichtbar, solange der Mauszeiger darüber liegt und solange die Aufnahme pausiert."
+      "<strong>Kein Einstellungs-Sync</strong> — Design, Exportformat und Dateinamen-Vorlage liegen im lokalen Speicher und synchronisieren nicht über Geräte oder Profile."
     ]
   },
   "help": {

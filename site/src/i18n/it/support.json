@@ -14,8 +14,7 @@
     "items": [
       "<strong>La selezione della regione è limitata all'area visibile</strong>: la pagina si blocca mentre trascini, quindi una regione non può estendersi oltre la parte visibile. Cattura la pagina intera e ritagliala nell'editor.",
       "<strong>Pagine dinamiche e a scorrimento infinito</strong>: il motore di cattura misura l'altezza della pagina una sola volta, all'inizio. Una pagina che cresce mentre scorri esce all'altezza che aveva quando la cattura è partita. Anche le immagini che si caricano tardi possono uscire vuote: ogni porzione riceve una breve pausa per ridisegnarsi, non il tempo per un nuovo caricamento.",
-      "<strong>Nessuna sincronizzazione delle impostazioni</strong>: tema, formato di esportazione e modello nome file vivono nell'archiviazione locale e non si sincronizzano tra dispositivi o profili.",
-      "<strong>Gli overlay di registrazione stanno sulla pagina</strong>: l'anteprima della webcam e la barra di controllo sono elementi della pagina stessa, quindi il video grezzo della scheda li contiene. All'esportazione l'editor compone la sua bolla webcam come secondo overlay, sopra quello catturato dalla pagina. La barra di controllo si nasconde circa tre secondi dopo che il puntatore la lascia, così resta fuori dal video; sposta il cursore in basso al centro della pagina per farla riapparire. Resta visibile mentre ci passi sopra e mentre la registrazione è in pausa."
+      "<strong>Nessuna sincronizzazione delle impostazioni</strong>: tema, formato di esportazione e modello nome file vivono nell'archiviazione locale e non si sincronizzano tra dispositivi o profili."
     ]
   },
   "help": {

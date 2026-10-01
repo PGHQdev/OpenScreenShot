@@ -14,8 +14,7 @@
     "items": [
       "<strong>La sélection de zone se limite à l’écran visible</strong> — la page se bloque pendant le glissement, donc une zone ne peut pas descendre sous la ligne de flottaison. Capturez la page entière puis recadrez-la dans l’éditeur.",
       "<strong>Pages dynamiques et à défilement infini</strong> — le moteur de capture mesure la hauteur de la page une seule fois, au départ. Une page qui grandit pendant le défilement ressort à la hauteur qu’elle avait au début de la capture. Les images chargées tardivement peuvent aussi ressortir vides : chaque tuile reçoit une courte pause pour se redessiner, pas le temps d’un nouveau chargement.",
-      "<strong>Pas de synchronisation des réglages</strong> — votre thème, votre format d’export et votre modèle de nom de fichier vivent dans le stockage local et ne se synchronisent pas entre appareils ou profils.",
-      "<strong>Les surimpressions d’enregistrement font partie de la page</strong> — l’aperçu webcam et la barre de commandes sont des éléments de la page elle-même, donc la vidéo brute de l’onglet les contient. À l’export, l’éditeur composite sa propre bulle webcam en seconde surimpression, par-dessus celle que la page a capturée. La barre de commandes se masque environ trois secondes après que votre pointeur l’a quittée, pour rester hors de la vidéo ; ramenez votre curseur en bas au centre de la page pour la faire réapparaître. Elle reste visible tant que vous la survolez, et tant que l’enregistrement est en pause."
+      "<strong>Pas de synchronisation des réglages</strong> — votre thème, votre format d’export et votre modèle de nom de fichier vivent dans le stockage local et ne se synchronisent pas entre appareils ou profils."
     ]
   },
   "help": {

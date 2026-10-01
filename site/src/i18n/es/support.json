@@ -14,8 +14,7 @@
     "items": [
       "<strong>La selección de región se limita al viewport</strong>: la página se bloquea mientras arrastras, así que una región no puede llegar más abajo de la parte visible. Captura la página completa y recórtala en el editor.",
       "<strong>Páginas dinámicas y de scroll infinito</strong>: el motor de captura mide la altura de la página una sola vez, al principio. Una página que crece mientras te desplazas sale con la altura que tenía al empezar la captura. Las imágenes que cargan tarde también pueden salir en blanco: cada franja recibe una breve pausa para repintarse, no tiempo para una descarga nueva.",
-      "<strong>Sin sincronización de ajustes</strong>: tu tema, formato de exportación y plantilla de nombre viven en el almacenamiento local y no se sincronizan entre dispositivos ni perfiles.",
-      "<strong>Las superposiciones de grabación están sobre la página</strong>: la vista previa de la webcam y la barra de controles son elementos de la propia página, así que el vídeo bruto de la pestaña los contiene. Al exportar, el editor compone su propia burbuja de webcam como segunda capa, encima de la que capturó la página. La barra de controles se oculta sola unos tres segundos después de que el puntero la abandone, para quedar fuera del vídeo; mueve el cursor al centro inferior de la página para recuperarla. Permanece visible mientras el cursor está encima y mientras la grabación está en pausa."
+      "<strong>Sin sincronización de ajustes</strong>: tu tema, formato de exportación y plantilla de nombre viven en el almacenamiento local y no se sincronizan entre dispositivos ni perfiles."
     ]
   },
   "help": {

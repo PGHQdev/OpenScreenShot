@@ -14,8 +14,7 @@
     "items": [
       "<strong>A seleção de região é limitada à área visível</strong> — a página trava enquanto você arrasta, então uma região não alcança abaixo da dobra. Capture a página inteira e recorte no editor.",
       "<strong>Páginas dinâmicas e de rolagem infinita</strong> — o mecanismo de captura mede a altura da página uma única vez, no início. Uma página que cresce enquanto você rola sai com a altura que tinha quando a captura começou. Imagens que carregam tarde também podem sair em branco: cada bloco ganha uma pequena pausa para redesenhar, não tempo para uma nova busca.",
-      "<strong>Sem sincronização de configurações</strong> — seu tema, formato de exportação e modelo de nome de arquivo ficam no armazenamento local e não sincronizam entre dispositivos ou perfis.",
-      "<strong>As sobreposições de gravação ficam na página</strong> — a prévia da webcam e a barra de controle são elementos da própria página, então o vídeo bruto da aba os contém. Na exportação o editor compõe a própria bolha de webcam como uma segunda sobreposição, por cima da que a página capturou. A barra de controle se esconde cerca de três segundos depois que o ponteiro sai dela, para ficar fora do vídeo; mova o cursor até o centro inferior da página para trazê-la de volta. Ela fica visível enquanto você passa o mouse sobre ela e enquanto a gravação está pausada."
+      "<strong>Sem sincronização de configurações</strong> — seu tema, formato de exportação e modelo de nome de arquivo ficam no armazenamento local e não sincronizam entre dispositivos ou perfis."
     ]
   },
   "help": {
