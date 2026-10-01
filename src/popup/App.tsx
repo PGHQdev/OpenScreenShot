@@ -838,7 +838,29 @@ export function App() {
       ) : (
         <>
           {!IS_FIREFOX && <PinHint />}
-          <span class="settings-section">{t('popupSectionScreenshot')}</span>
+          {/* The delay sits with the modes it applies to, on the section's own
+          line so it costs the popup no height. Settings holds the same row. */}
+          <div class="section-head">
+            <span class="settings-section">{t('popupSectionScreenshot')}</span>
+            <span class="delay-pick">
+              <span class="delay-label" id="popup-delay-label">
+                {t('delayLabel')}
+              </span>
+              <div class="seg seg-compact" role="group" aria-labelledby="popup-delay-label">
+                {CAPTURE_DELAYS.map((d) => (
+                  <button
+                    key={d}
+                    class="seg-btn"
+                    aria-pressed={normalizeCaptureDelay(settings.captureDelay) === d}
+                    disabled={!!busy}
+                    onClick={() => void updateSettings({ captureDelay: d })}
+                  >
+                    {d === 0 ? t('delayOff') : `${d}s`}
+                  </button>
+                ))}
+              </div>
+            </span>
+          </div>
           <nav class="modes" aria-label={t('captureModesAria')}>
             {MODES.map((m, i) => {
               const isBusy = busy === m.id;

@@ -847,6 +847,30 @@ label.settings-row .settings-label {
 .seg {
   border-radius: var(--r-full);
 }
+/* The Screenshot heading shares its line with the delay picker. The picker
+   is taller than the heading, so the heading drops its top margin to keep
+   the first-run popup under Chrome's 600px cap. */
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+.section-head .settings-section {
+  margin-top: 0;
+}
+.delay-pick {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.delay-label {
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+.seg-compact .seg-btn {
+  height: 24px;
+}
 .seg-btn {
   height: 32px;
 }
