@@ -1,7 +1,11 @@
 {
   "extName": {
-    "message": "整頁截圖 - OpenScreenShot",
+    "message": "整頁截圖與螢幕錄影 - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
+  },
+  "extNameFirefox": {
+    "message": "整頁截圖 - OpenScreenShot",
+    "description": "Extension name in the Firefox build, which takes screenshots only and has no recorder."
   },
   "extDesc": {
     "message": "一鍵擷取整頁截圖。開放原始碼，100% 私密，無需帳號，不上傳。",

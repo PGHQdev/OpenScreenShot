@@ -1,7 +1,11 @@
 {
   "extName": {
-    "message": "フルページ スクリーンショット - OpenScreenShot",
+    "message": "フルページ スクリーンショット & 画面録画 - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
+  },
+  "extNameFirefox": {
+    "message": "フルページ スクリーンショット - OpenScreenShot",
+    "description": "Extension name in the Firefox build, which takes screenshots only and has no recorder."
   },
   "extDesc": {
     "message": "ワンクリックでページ全体をスクリーンショット。オープンソース、100% プライベート、アカウント不要、アップロードなし。",

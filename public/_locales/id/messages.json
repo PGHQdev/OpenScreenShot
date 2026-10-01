@@ -1,7 +1,11 @@
 {
   "extName": {
-    "message": "Screenshot Halaman Penuh - OpenScreenShot",
+    "message": "Screenshot Halaman Penuh & Perekam Layar - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
+  },
+  "extNameFirefox": {
+    "message": "Screenshot Halaman Penuh - OpenScreenShot",
+    "description": "Extension name in the Firefox build, which takes screenshots only and has no recorder."
   },
   "extDesc": {
     "message": "Screenshot halaman penuh sekali klik. Open source, 100% privat, tanpa akun, tanpa unggahan.",

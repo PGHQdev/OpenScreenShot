@@ -17,6 +17,8 @@ export default defineConfig(({ mode }) => {
   if (firefox) {
     // CRXJS emits Firefox's module background page from this entry.
     Object.assign(browserManifest, {
+      // The Firefox build has no recorder, so its name must not offer one.
+      name: '__MSG_extNameFirefox__',
       background: { scripts: ['src/background/index.ts'], type: 'module' },
       browser_specific_settings: {
         gecko: {

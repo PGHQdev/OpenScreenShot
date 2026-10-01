@@ -1,7 +1,11 @@
 {
   "extName": {
-    "message": "전체 페이지 스크린샷 - OpenScreenShot",
+    "message": "전체 페이지 스크린샷 & 화면 녹화 - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
+  },
+  "extNameFirefox": {
+    "message": "전체 페이지 스크린샷 - OpenScreenShot",
+    "description": "Extension name in the Firefox build, which takes screenshots only and has no recorder."
   },
   "extDesc": {
     "message": "한 번의 클릭으로 전체 페이지 스크린샷. 오픈 소스, 100% 비공개, 계정 불필요, 업로드 없음.",

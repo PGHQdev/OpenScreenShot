@@ -1,7 +1,11 @@
 {
   "extName": {
-    "message": "Chụp toàn trang - OpenScreenShot",
+    "message": "Chụp toàn trang & quay màn hình - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
+  },
+  "extNameFirefox": {
+    "message": "Chụp toàn trang - OpenScreenShot",
+    "description": "Extension name in the Firefox build, which takes screenshots only and has no recorder."
   },
   "extDesc": {
     "message": "Chụp toàn trang trong một cú nhấp. Mã nguồn mở, 100% riêng tư, không tài khoản, không tải lên.",

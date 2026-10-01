@@ -6,7 +6,7 @@ repeated here. Title max 45 characters; short description max 132.
 
 ## Title (45 chars max)
 
-Full Page Screenshot - OpenScreenShot
+Full Page Screenshot & Screen Recorder - OpenScreenShot
 
 ## Short description (132 chars max)
 

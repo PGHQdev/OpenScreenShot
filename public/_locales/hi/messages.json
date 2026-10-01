@@ -1,7 +1,11 @@
 {
   "extName": {
-    "message": "पूरे पेज का स्क्रीनशॉट - OpenScreenShot",
+    "message": "पूरे पेज का स्क्रीनशॉट और स्क्रीन रिकॉर्डर - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
+  },
+  "extNameFirefox": {
+    "message": "पूरे पेज का स्क्रीनशॉट - OpenScreenShot",
+    "description": "Extension name in the Firefox build, which takes screenshots only and has no recorder."
   },
   "extDesc": {
     "message": "एक क्लिक में पूरे पेज का स्क्रीनशॉट। ओपन सोर्स, 100% निजी, न कोई खाता, न कोई अपलोड।",

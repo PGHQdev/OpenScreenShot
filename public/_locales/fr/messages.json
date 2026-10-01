@@ -1,7 +1,11 @@
 {
   "extName": {
-    "message": "Capture pleine page - OpenScreenShot",
+    "message": "Capture pleine page et enregistreur d’écran - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
+  },
+  "extNameFirefox": {
+    "message": "Capture pleine page - OpenScreenShot",
+    "description": "Extension name in the Firefox build, which takes screenshots only and has no recorder."
   },
   "extDesc": {
     "message": "Capture d’écran pleine page en un clic. Open source, 100 % privé, sans compte, sans envoi.",

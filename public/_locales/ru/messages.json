@@ -1,7 +1,11 @@
 {
   "extName": {
-    "message": "Скриншот всей страницы - OpenScreenShot",
+    "message": "Скриншот всей страницы и запись экрана - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
+  },
+  "extNameFirefox": {
+    "message": "Скриншот всей страницы - OpenScreenShot",
+    "description": "Extension name in the Firefox build, which takes screenshots only and has no recorder."
   },
   "extDesc": {
     "message": "Скриншот всей страницы в один клик. Открытый код, 100% приватно, без аккаунта, без загрузок.",

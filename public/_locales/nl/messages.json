@@ -1,7 +1,11 @@
 {
   "extName": {
-    "message": "Volledige pagina screenshot - OpenScreenShot",
+    "message": "Volledige pagina screenshot & schermrecorder - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
+  },
+  "extNameFirefox": {
+    "message": "Volledige pagina screenshot - OpenScreenShot",
+    "description": "Extension name in the Firefox build, which takes screenshots only and has no recorder."
   },
   "extDesc": {
     "message": "Screenshot van de volledige pagina met één klik. Open source, 100% privé, geen account, geen uploads.",

@@ -1,7 +1,11 @@
 {
   "extName": {
-    "message": "Tam Sayfa Ekran Görüntüsü - OpenScreenShot",
+    "message": "Tam Sayfa Ekran Görüntüsü ve Ekran Kaydedici - OpenScreenShot",
     "description": "Extension name shown in Chrome UI."
+  },
+  "extNameFirefox": {
+    "message": "Tam Sayfa Ekran Görüntüsü - OpenScreenShot",
+    "description": "Extension name in the Firefox build, which takes screenshots only and has no recorder."
   },
   "extDesc": {
     "message": "Tek tıkla tam sayfa ekran görüntüsü. Açık kaynak, %100 gizli, hesap yok, yükleme yok.",

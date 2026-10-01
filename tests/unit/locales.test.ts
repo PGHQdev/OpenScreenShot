@@ -20,6 +20,7 @@ const LOCALES = ['de', 'es', 'fr', 'it', 'pt_BR', 'ja', 'ko', 'zh_CN', 'zh_TW', 
 const PARTIAL_LOCALES = ['ar', 'es_419', 'hi', 'id', 'nl', 'pl', 'tr', 'vi'];
 const MINIMUM_KEYS = [
   'extName',
+  'extNameFirefox',
   'extDesc',
   'modeFullPage',
   'modeVisible',
