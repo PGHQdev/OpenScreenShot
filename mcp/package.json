@@ -1,7 +1,26 @@
 {
   "name": "openscreenshot",
   "version": "2.3.0",
-  "description": "Local CLI + MCP server for programmatic screenshot capture.",
+  "description": "Take website screenshots from the terminal, CI, or an AI agent. Local CLI and MCP server that drives your installed Chrome.",
+  "keywords": [
+    "screenshot",
+    "full-page-screenshot",
+    "website-screenshot",
+    "cli",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "headless-chrome",
+    "puppeteer",
+    "png",
+    "ci",
+    "ai-agent"
+  ],
+  "homepage": "https://openscreenshot.app/blog/screenshot-cli/",
+  "bugs": {
+    "url": "https://github.com/PGHQdev/OpenScreenShot/issues"
+  },
+  "funding": "https://ko-fi.com/pghqdev",
   "license": "MIT",
   "author": "OpenScreenShot @PGHQdev",
   "repository": {
