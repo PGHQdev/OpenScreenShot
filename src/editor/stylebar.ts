@@ -89,9 +89,7 @@ export function stylebarFields(
 
 /** True when no control applies, so the bar should not render at all. */
 export function stylebarEmpty(f: StylebarFields): boolean {
-  return (
-    !f.color && !f.stroke && !f.fontSize && !f.shape && !f.redaction && !f.strength && !f.fill
-  );
+  return !f.color && !f.stroke && !f.fontSize && !f.shape && !f.redaction && !f.strength && !f.fill;
 }
 
 /**
