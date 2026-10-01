@@ -24,7 +24,7 @@
     "intro": "ツールバーの OpenScreenShot アイコンをクリックすると、メニューを挟まずにページ全体のキャプチャが始まります。すべてブラウザ内でローカルに動作します。キャプチャの開始方法は 4 つあります。",
     "ways": [
       "<strong>ツールバーのアイコン</strong> — ワンクリックでページ全体をキャプチャします。設定で<strong>アイコンをクリックするとページ全体をキャプチャ</strong>をオフにするとモード選択ポップアップに戻ります。アイコンを右クリックすると他のモードと設定を選べます。",
-      "<strong>キーボード ショートカット</strong> — ページ全体は <kbd>Ctrl+Shift+S</kbd>、表示領域は <kbd>Alt+Shift+V</kbd>、選択範囲は <kbd>Ctrl+Shift+E</kbd>。macOS では <kbd>⌘⇧S</kbd>、<kbd>⌘⇧V</kbd>、<kbd>⌘⇧E</kbd> です。<code>chrome://extensions/shortcuts</code> で変更できます。",
+      "<strong>キーボード ショートカット</strong> — ページ全体は <kbd>Ctrl+Shift+S</kbd>、表示領域は <kbd>Alt+Shift+V</kbd>、選択範囲は <kbd>Ctrl+Shift+E</kbd>。macOS では <kbd>⌘⇧S</kbd>、<kbd>⌥⇧V</kbd>、<kbd>⌘⇧E</kbd> です。<code>chrome://extensions/shortcuts</code> で変更できます。",
       "<strong>右クリックメニュー</strong> — どのページでも OpenScreenShot サブメニューから同じ 3 つのモードと設定を選べます。",
       "<strong>範囲の再キャプチャ</strong> — ポップアップのフッターと右クリック メニューから、前回の範囲の矩形をもう一度キャプチャできます。どちらの項目も、一度範囲を選択すると表示されます。"
     ],

@@ -56,7 +56,7 @@
     "capture-visible": {
       "suggested_key": {
         "default": "Alt+Shift+V",
-        "mac": "Command+Shift+V"
+        "mac": "Alt+Shift+V"
       },
       "description": "Capture the visible area"
     },
