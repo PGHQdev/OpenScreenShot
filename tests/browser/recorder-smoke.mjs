@@ -1309,49 +1309,53 @@ async function main() {
       const bytes = await readFile(join(downloads, fresh[0]));
       const b64 = bytes.toString('base64');
       const type = fresh[0].endsWith('.mp4') ? 'video/mp4' : 'video/webm';
-      return page.evaluate(async (b64video, type) => {
-        const bin = atob(b64video);
-        const arr = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-        const blobUrl = URL.createObjectURL(new Blob([arr], { type }));
-        const video = document.createElement('video');
-        video.muted = true;
-        video.src = blobUrl;
-        await new Promise((done, fail) => {
-          video.onloadedmetadata = done;
-          video.onerror = () => fail(new Error('exported file failed to decode'));
-        });
-        // Not video.duration: MediaRecorder WebM carries no duration header,
-        // so a fresh <video> reports Infinity until something forces it to
-        // resolve (session-load.ts's fixDuration, same quirk). Seeking to a
-        // fixed timestamp well inside the known-2.1s clip sidesteps it.
-        video.currentTime = 0.8;
-        await new Promise((done) => (video.onseeked = done));
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0);
-        // Same corner math as render.ts's bubbleRect, corner 'br', size 0.22 —
-        // the rail's own defaults, untouched by this session.
-        const short = Math.min(canvas.width, canvas.height);
-        const d = 0.22 * short;
-        const inset = 0.02 * short + d / 2;
-        const cx = Math.round(canvas.width - inset);
-        const cy = Math.round(canvas.height - inset);
-        const { data } = ctx.getImageData(cx - 5, cy - 5, 10, 10);
-        let r = 0,
-          g = 0,
-          bch = 0;
-        const n = data.length / 4;
-        for (let i = 0; i < data.length; i += 4) {
-          r += data[i];
-          g += data[i + 1];
-          bch += data[i + 2];
-        }
-        URL.revokeObjectURL(blobUrl);
-        return { r: Math.round(r / n), g: Math.round(g / n), b: Math.round(bch / n) };
-      }, b64, type);
+      return page.evaluate(
+        async (b64video, type) => {
+          const bin = atob(b64video);
+          const arr = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+          const blobUrl = URL.createObjectURL(new Blob([arr], { type }));
+          const video = document.createElement('video');
+          video.muted = true;
+          video.src = blobUrl;
+          await new Promise((done, fail) => {
+            video.onloadedmetadata = done;
+            video.onerror = () => fail(new Error('exported file failed to decode'));
+          });
+          // Not video.duration: MediaRecorder WebM carries no duration header,
+          // so a fresh <video> reports Infinity until something forces it to
+          // resolve (session-load.ts's fixDuration, same quirk). Seeking to a
+          // fixed timestamp well inside the known-2.1s clip sidesteps it.
+          video.currentTime = 0.8;
+          await new Promise((done) => (video.onseeked = done));
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0);
+          // Same corner math as render.ts's bubbleRect, corner 'br', size 0.22 —
+          // the rail's own defaults, untouched by this session.
+          const short = Math.min(canvas.width, canvas.height);
+          const d = 0.22 * short;
+          const inset = 0.02 * short + d / 2;
+          const cx = Math.round(canvas.width - inset);
+          const cy = Math.round(canvas.height - inset);
+          const { data } = ctx.getImageData(cx - 5, cy - 5, 10, 10);
+          let r = 0,
+            g = 0,
+            bch = 0;
+          const n = data.length / 4;
+          for (let i = 0; i < data.length; i += 4) {
+            r += data[i];
+            g += data[i + 1];
+            bch += data[i + 2];
+          }
+          URL.revokeObjectURL(blobUrl);
+          return { r: Math.round(r / n), g: Math.round(g / n), b: Math.round(bch / n) };
+        },
+        b64,
+        type,
+      );
     }
 
     const beforeFirst = await readdir(downloads);
