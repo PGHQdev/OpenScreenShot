@@ -38,6 +38,43 @@ export interface SegmentViewport {
   dpr: number;
 }
 
+/**
+ * The part of the tab a recording shows, normalized 0..1 against the
+ * viewport. The tab is always captured whole; the editor crops to this.
+ */
+export interface RecordingArea {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export const FULL_AREA: RecordingArea = { x: 0, y: 0, w: 1, h: 1 };
+
+/** Smallest side an area may have, as a fraction of the viewport. */
+export const MIN_AREA_SIDE = 0.05;
+
+/**
+ * A usable area from anything: clamped inside the viewport, and the whole
+ * tab when the value is malformed or smaller than {@link MIN_AREA_SIDE}.
+ * It arrives from a page message and from stored rows, so neither is trusted.
+ */
+export function normalizeArea(value: unknown): RecordingArea {
+  if (!value || typeof value !== 'object') return FULL_AREA;
+  const { x, y, w, h } = value as Partial<RecordingArea>;
+  if (![x, y, w, h].every((n) => typeof n === 'number' && Number.isFinite(n))) return FULL_AREA;
+  // Each side loses only what lies outside the viewport, so an area already
+  // inside it comes back with exactly the numbers it went in with.
+  const side = (start: number, size: number) => {
+    const from = Math.min(1, Math.max(0, start));
+    return { from, size: Math.min(size - (from - start), 1 - from) };
+  };
+  const across = side(x as number, w as number);
+  const down = side(y as number, h as number);
+  if (across.size < MIN_AREA_SIDE || down.size < MIN_AREA_SIDE) return FULL_AREA;
+  return { x: across.from, y: down.from, w: across.size, h: down.size };
+}
+
 export interface RecordingSegment {
   id: string;
   sessionId: string;
@@ -47,6 +84,8 @@ export interface RecordingSegment {
   duration: number;
   viewport: SegmentViewport;
   hasWebcam: boolean;
+  /** Absent on segments recorded before area selection existed: the whole tab. */
+  area?: RecordingArea;
 }
 
 export type ChunkKind = 'tab' | 'webcam';

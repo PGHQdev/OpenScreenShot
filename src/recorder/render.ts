@@ -8,6 +8,7 @@
  * writes.
  */
 import { clipToFrame, paintFrame, type FrameMetrics, type FrameOptions } from '../editor/frame';
+import type { RecordingArea } from '../shared/recording-types';
 import type { RecorderDraft } from './recorder-draft';
 import type { Camera } from './zoom';
 
@@ -122,14 +123,16 @@ export interface FrameInputs {
   tab: CanvasImageSource;
   tabW: number;
   tabH: number;
+  /** The recorded part of the tab. Camera, ripples and cursor are normalized inside it. */
+  area: RecordingArea;
   webcam: CanvasImageSource | null;
   /** Source pixel size of `webcam`; only read when `webcam` is set. */
   webcamW: number;
   webcamH: number;
   camera: Camera;
-  /** Click positions normalized in video space, with the age of each click. */
+  /** Click positions normalized in area space, with the age of each click. */
   ripples: { nx: number; ny: number; ageMs: number }[];
-  /** Cursor position normalized in video space, or null to draw no pointer. */
+  /** Cursor position normalized in area space, or null to draw no pointer. */
   cursor: { nx: number; ny: number } | null;
   bubble: RecorderDraft['bubble'] | null;
   frame: FrameOptions;
@@ -183,18 +186,36 @@ export function drawExportFrame(
   ctx.save();
   clipToFrame(ctx, m);
 
-  const dst = fitRect(inputs.tabW, inputs.tabH, m.imgW, m.imgH);
+  // The area is the picture: everything below works in its pixels, and only
+  // the video read is offset back into the whole tab.
+  const view = areaPixels(inputs.area, inputs.tabW, inputs.tabH);
+  const dst = fitRect(view.w, view.h, m.imgW, m.imgH);
   if (dst.w > 0 && dst.h > 0) {
-    const src = cameraSourceRect(inputs.camera, inputs.tabW, inputs.tabH);
-    ctx.drawImage(inputs.tab, src.sx, src.sy, src.sw, src.sh, dst.x, dst.y, dst.w, dst.h);
-    drawRipples(ctx, inputs, dst, src);
-    drawPointer(ctx, inputs, dst, src);
+    const src = cameraSourceRect(inputs.camera, view.w, view.h);
+    ctx.drawImage(
+      inputs.tab,
+      view.x + src.sx,
+      view.y + src.sy,
+      src.sw,
+      src.sh,
+      dst.x,
+      dst.y,
+      dst.w,
+      dst.h,
+    );
+    drawRipples(ctx, inputs, view, dst, src);
+    drawPointer(ctx, inputs, view, dst, src);
   }
 
   drawBubble(ctx, inputs, m);
 
   ctx.restore();
   ctx.restore();
+}
+
+/** `area` in the pixels of a `tabW`x`tabH` video frame. */
+export function areaPixels(area: RecordingArea, tabW: number, tabH: number): FitRect {
+  return { x: area.x * tabW, y: area.y * tabH, w: area.w * tabW, h: area.h * tabH };
 }
 
 /**
@@ -206,12 +227,13 @@ export function drawExportFrame(
 function drawRipples(
   ctx: CanvasRenderingContext2D,
   inputs: FrameInputs,
+  view: FitRect,
   dst: FitRect,
   src: SourceRect,
 ): void {
   if (inputs.ripples.length === 0) return;
   const mag = dst.w / src.sw;
-  const unit = Math.min(inputs.tabW, inputs.tabH) * mag;
+  const unit = Math.min(view.w, view.h) * mag;
 
   ctx.save();
   ctx.beginPath();
@@ -220,8 +242,8 @@ function drawRipples(
   for (const click of inputs.ripples) {
     const ripple = rippleAt(click.ageMs);
     if (!ripple) continue;
-    const px = (click.nx * inputs.tabW - src.sx) * mag + dst.x;
-    const py = (click.ny * inputs.tabH - src.sy) * mag + dst.y;
+    const px = (click.nx * view.w - src.sx) * mag + dst.x;
+    const py = (click.ny * view.h - src.sy) * mag + dst.y;
     const radius = ripple.r * unit;
     if (radius <= 0) continue;
     ctx.beginPath();
@@ -244,15 +266,16 @@ function drawRipples(
 function drawPointer(
   ctx: CanvasRenderingContext2D,
   inputs: FrameInputs,
+  view: FitRect,
   dst: FitRect,
   src: SourceRect,
 ): void {
   const c = inputs.cursor;
   if (!c) return;
   const mag = dst.w / src.sw;
-  const size = Math.min(inputs.tabW, inputs.tabH) * mag * POINTER_SIZE;
-  const px = (c.nx * inputs.tabW - src.sx) * mag + dst.x;
-  const py = (c.ny * inputs.tabH - src.sy) * mag + dst.y;
+  const size = Math.min(view.w, view.h) * mag * POINTER_SIZE;
+  const px = (c.nx * view.w - src.sx) * mag + dst.x;
+  const py = (c.ny * view.h - src.sy) * mag + dst.y;
 
   ctx.save();
   ctx.beginPath();

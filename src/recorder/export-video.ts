@@ -22,6 +22,7 @@ import {
   type FrameOptions,
 } from '../editor/frame';
 import { pickExportMime } from '../offscreen/mime';
+import { normalizeArea } from '../shared/recording-types';
 import { DEFAULT_SETTINGS, type VideoFormat } from '../shared/types';
 import { cursorAt, normalizeClicks, normalizeMoves, type NormClick } from './events-map';
 import { cursorDrawsPointer, cursorDrawsRipple, type RecorderEdit } from './recorder-draft';
@@ -100,14 +101,16 @@ export interface ExportGeometry {
 }
 
 /**
- * The export canvas is the FIRST segment's pixel size plus the beautify
- * padding, matching the preview stage; a segment recorded at another size
- * letterboxes into it.
+ * The export canvas is the FIRST segment's recorded area, in pixels, plus the
+ * beautify padding, matching the preview stage; a segment recorded at another
+ * size letterboxes into it.
  */
 export function exportGeometry(loaded: LoadedSession, draft: ExportDraft): ExportGeometry {
-  const viewport = loaded.segments[0]?.segment.viewport;
-  const videoW = Math.max(1, Math.round((viewport?.w ?? 1280) * (viewport?.dpr || 1)));
-  const videoH = Math.max(1, Math.round((viewport?.h ?? 720) * (viewport?.dpr || 1)));
+  const first = loaded.segments[0]?.segment;
+  const viewport = first?.viewport;
+  const area = normalizeArea(first?.area);
+  const videoW = Math.max(1, Math.round((viewport?.w ?? 1280) * (viewport?.dpr || 1) * area.w));
+  const videoH = Math.max(1, Math.round((viewport?.h ?? 720) * (viewport?.dpr || 1) * area.h));
   const frame = frameFromSettings({ ...DEFAULT_SETTINGS, ...draft.frame });
   const metrics = frameMetrics(frame, videoW, videoH);
   return { width: metrics.outerW, height: metrics.outerH, frame, metrics };
@@ -264,13 +267,14 @@ export async function exportVideo(
   // smaller MP4 canvas. drawExportFrame only saves and restores on top of it.
   ctx.setTransform(encoded.width / width, 0, 0, encoded.height / height, 0, 0);
 
+  const areas = loaded.segments.map((s) => normalizeArea(s.segment.area));
   // Clicks are normalized once per segment, on the segment's own clock —
   // the same source `rippleAt` ages against.
-  const clicks: NormClick[][] = loaded.segments.map((s) =>
-    cursorDrawsRipple(draft.cursor) ? normalizeClicks(s.events, s.segment.viewport) : [],
+  const clicks: NormClick[][] = loaded.segments.map((s, i) =>
+    cursorDrawsRipple(draft.cursor) ? normalizeClicks(s.events, s.segment.viewport, areas[i]) : [],
   );
-  const moves: NormClick[][] = loaded.segments.map((s) =>
-    cursorDrawsPointer(draft.cursor) ? normalizeMoves(s.events, s.segment.viewport) : [],
+  const moves: NormClick[][] = loaded.segments.map((s, i) =>
+    cursorDrawsPointer(draft.cursor) ? normalizeMoves(s.events, s.segment.viewport, areas[i]) : [],
   );
 
   const videos = loaded.segments.map((s) => createVideo(s.tabUrl, loaded.hasAudio.tab));
@@ -343,6 +347,7 @@ export async function exportVideo(
       tab: video,
       tabW: video.videoWidth,
       tabH: video.videoHeight,
+      area: areas[index],
       webcam: webcamReady ? webcam : null,
       webcamW: webcamReady ? webcam.videoWidth : 0,
       webcamH: webcamReady ? webcam.videoHeight : 0,

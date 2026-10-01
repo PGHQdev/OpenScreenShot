@@ -6,7 +6,12 @@ import { getSettings } from '../shared/storage';
 import { DEFAULT_SETTINGS } from '../shared/types';
 import { applyTheme, watchSystemTheme } from '../shared/theme';
 import { chunkBytes, deleteSession, getSegments, listSessions } from '../shared/recording-db';
-import type { RecordingSession, RecState } from '../shared/recording-types';
+import {
+  FULL_AREA,
+  normalizeArea,
+  type RecordingSession,
+  type RecState,
+} from '../shared/recording-types';
 import { formatTimer } from '../content/recording-overlay';
 import { fixDuration, trackStatuses, type LoadedSession } from './session-load';
 import { useRecorderSession, type UseRecorderSession } from './useRecorderSession';
@@ -616,14 +621,19 @@ function Stage({
   const geometry = exportGeometry(loaded, draft);
   const { width, height, metrics } = geometry;
 
-  const clicks = useMemo(
-    () => sess.segments.map((s) => normalizeClicks(s.events, s.segment.viewport)),
+  const areas = useMemo(
+    () => sess.segments.map((s) => normalizeArea(s.segment.area)),
     [sess.segments],
   );
 
+  const clicks = useMemo(
+    () => sess.segments.map((s, i) => normalizeClicks(s.events, s.segment.viewport, areas[i])),
+    [sess.segments, areas],
+  );
+
   const moves = useMemo(
-    () => sess.segments.map((s) => normalizeMoves(s.events, s.segment.viewport)),
-    [sess.segments],
+    () => sess.segments.map((s, i) => normalizeMoves(s.events, s.segment.viewport, areas[i])),
+    [sess.segments, areas],
   );
 
   // A paused seek only shows up on the canvas once the video has decoded the
@@ -681,13 +691,6 @@ function Stage({
     // Mirrors export-video.ts's `draw`: an audio-only recorder-#2 element
     // never decodes a video frame, so `videoWidth` stays 0 forever — that is
     // the only portable way to tell it apart from a real webcam recording.
-    //
-    // Spec note: the tab video already contains a BAKED-IN live preview
-    // bubble — tabCapture recorded the in-page overlay along with the rest
-    // of the page. This composited bubble is a second, independent one, and
-    // "Hide" only removes this one; it cannot reach into the recorded tab
-    // pixels to remove the baked-in overlay. That is a consequence of the
-    // in-page-overlay design the controller has parked, not a bug here.
     const webcam = sess.webcamVideoAt(sess.segmentIndex);
     const webcamReady =
       !!webcam && !draft.bubble.hidden && webcam.readyState >= 2 && webcam.videoWidth > 0;
@@ -702,6 +705,7 @@ function Stage({
       tab: video,
       tabW: vw,
       tabH: vh,
+      area: areas[sess.segmentIndex] ?? FULL_AREA,
       webcam: webcamReady ? webcam : null,
       webcamW: webcamReady ? webcam.videoWidth : 0,
       webcamH: webcamReady ? webcam.videoHeight : 0,

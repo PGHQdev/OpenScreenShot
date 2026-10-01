@@ -141,3 +141,28 @@ describe('cursorAt', () => {
       ny: 0.9,
     }));
 });
+
+describe('area mapping', () => {
+  const initial: SegmentViewport = { w: 1000, h: 500, dpr: 1 };
+  const area = { x: 0.5, y: 0, w: 0.5, h: 0.5 };
+
+  it('re-expresses clicks inside the area and drops clicks outside it', () => {
+    const events: CursorEvent[] = [
+      { kind: 'click', t: 100, x: 750, y: 125 },
+      { kind: 'click', t: 200, x: 100, y: 100 },
+      { kind: 'click', t: 300, x: 900, y: 400 },
+    ];
+    expect(normalizeClicks(events, initial, area)).toEqual([{ t: 100, nx: 0.5, ny: 0.5 }]);
+  });
+
+  it('keeps moves outside the area so the pointer can leave the picture', () => {
+    const events: CursorEvent[] = [
+      { kind: 'move', t: 100, x: 750, y: 125 },
+      { kind: 'move', t: 200, x: 250, y: 375 },
+    ];
+    expect(normalizeMoves(events, initial, area)).toEqual([
+      { t: 100, nx: 0.5, ny: 0.5 },
+      { t: 200, nx: -0.5, ny: 1.5 },
+    ]);
+  });
+});

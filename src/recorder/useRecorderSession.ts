@@ -49,7 +49,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { loadSession } from './session-load';
 import type { LoadedSegment, LoadProgress } from './session-load';
 import { updateSession } from '../shared/recording-db';
-import type { RecordingSession } from '../shared/recording-types';
+import { normalizeArea, type RecordingSession } from '../shared/recording-types';
 import { normalizeClicks } from './events-map';
 import {
   defaultRecorderDraft,
@@ -200,7 +200,7 @@ function buildAutoZoom(segments: LoadedSegment[], timings: SegmentTiming[]): Zoo
   const clicks = segments.flatMap((seg, i) => {
     const timing = timings[i];
     const visibleEnd = timing.sourceDuration - timing.trimEnd;
-    return normalizeClicks(seg.events, seg.segment.viewport)
+    return normalizeClicks(seg.events, seg.segment.viewport, normalizeArea(seg.segment.area))
       .filter((c) => c.t >= timing.trimStart && c.t <= visibleEnd)
       .map((c) => ({ ...c, t: timelineAt(timings, i, c.t) }));
   });
