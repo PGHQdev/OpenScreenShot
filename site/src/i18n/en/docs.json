@@ -141,7 +141,7 @@
       "<strong>Theme</strong> — light, dark, or system.",
       "<strong>Default format</strong> — PNG, JPEG, WebP, or PDF.",
       "<strong>Quality</strong> — for JPEG, WebP, and PDF.",
-      "<strong>Filename template</strong> — click a token chip to insert <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code>, or <code>{h}</code>. A live preview shows the result."
+      "<strong>Filename template</strong> — click a token chip to insert <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code>, or <code>{h}</code>. A live preview shows the result. Add <code>/</code> to save into a folder inside Downloads, for example <code>Screenshots/{title}</code>."
     ],
     "storage": "Settings live in local storage on this device. <strong>Reset to defaults</strong> at the bottom of the panel takes two clicks.",
     "recordAcrossSites": "<strong>Record across sites</strong> — off by default. Turning it on requests the optional <code>&lt;all_urls&gt;</code> host permission, so the recording control bar and cursor overlay can follow a tab that navigates to a new site mid-recording."

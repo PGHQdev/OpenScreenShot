@@ -55,6 +55,20 @@ export function sanitizeFilename(name: string): string {
   return name.replace(/[\\/:*?"<>|]/g, '_').trim();
 }
 
+/**
+ * Make `name` a path the downloads API accepts. A `/` or `\` opens a folder
+ * inside Downloads. Chrome rejects `..`, a leading separator, a backslash, and
+ * a folder that starts or ends with a space or ends with a dot, so each part
+ * is cleaned and empty parts drop out.
+ */
+export function toDownloadPath(name: string): string {
+  return name
+    .split(/[\\/]/)
+    .map((part) => sanitizeFilename(part).replace(/[. ]+$/, ''))
+    .filter(Boolean)
+    .join('/');
+}
+
 /** True for URLs the extension is not allowed to capture. */
 export function isProtectedUrl(url: string | undefined, firefox = IS_FIREFOX): boolean {
   if (!url) return true;

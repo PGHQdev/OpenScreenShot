@@ -2525,6 +2525,10 @@
     "message": "Предпросмотр",
     "description": "Settings page label or helper."
   },
+  "settingsFilenameFolderHint": {
+    "message": "Добавьте /, чтобы сохранять в папку внутри «Загрузок», например Screenshots/{title}.",
+    "description": "Settings hint under the filename template: a / in the template saves into a subfolder of Downloads. Keep {title} and Screenshots/ untranslated."
+  },
   "captureOverlayTitle": {
     "message": "Создание снимка экрана…",
     "description": "Capture overlay status."

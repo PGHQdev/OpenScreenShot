@@ -11,6 +11,7 @@
  *    instead of embedding the full image on every page).
  */
 import { buildPdf, type PdfPage } from './pdf-writer';
+import { toDownloadPath } from '../shared/utils';
 
 export interface PdfOptions {
   pageSize: 'a4' | 'letter' | 'full';
@@ -175,7 +176,7 @@ async function savePdf(pages: PdfPage[], filename: string): Promise<void> {
   const blob = await buildPdf(pages);
   const url = URL.createObjectURL(blob);
   try {
-    await chrome.downloads.download({ url, filename, saveAs: false });
+    await chrome.downloads.download({ url, filename: toDownloadPath(filename), saveAs: false });
   } finally {
     // Give the download time to start before revoking the blob URL.
     setTimeout(() => URL.revokeObjectURL(url), 10000);

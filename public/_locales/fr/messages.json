@@ -2525,6 +2525,10 @@
     "message": "Aperçu",
     "description": "Settings page label or helper."
   },
+  "settingsFilenameFolderHint": {
+    "message": "Avec /, le fichier est enregistré dans un dossier de Téléchargements, par exemple Screenshots/{title}.",
+    "description": "Settings hint under the filename template: a / in the template saves into a subfolder of Downloads. Keep {title} and Screenshots/ untranslated."
+  },
   "captureOverlayTitle": {
     "message": "Capture d’écran en cours…",
     "description": "Capture overlay status."

@@ -141,7 +141,7 @@
       "<strong>Thème</strong> — clair, sombre ou système.",
       "<strong>Format par défaut</strong> — PNG, JPEG, WebP ou PDF.",
       "<strong>Qualité</strong> — pour JPEG, WebP et PDF.",
-      "<strong>Modèle de nom de fichier</strong> — cliquez sur un jeton pour insérer <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code> ou <code>{h}</code>. Un aperçu en direct montre le résultat."
+      "<strong>Modèle de nom de fichier</strong> — cliquez sur un jeton pour insérer <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code> ou <code>{h}</code>. Un aperçu en direct montre le résultat. Avec <code>/</code>, le fichier est enregistré dans un dossier de Téléchargements, par exemple <code>Screenshots/{title}</code>."
     ],
     "storage": "Les réglages vivent dans le stockage local de cet appareil. <strong>Réinitialiser</strong>, en bas du panneau, demande deux clics.",
     "recordAcrossSites": "<strong>Enregistrer partout</strong> — désactivé par défaut. L’activer demande l’autorisation d’hôte facultative <code>&lt;all_urls&gt;</code>, pour que la barre de commandes et la surimpression du curseur puissent suivre un onglet qui navigue vers un autre site en cours d’enregistrement."

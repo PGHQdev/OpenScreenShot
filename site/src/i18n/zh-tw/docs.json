@@ -141,7 +141,7 @@
       "<strong>主題</strong>——淺色、深色或系統。",
       "<strong>預設格式</strong>——PNG、JPEG、WebP 或 PDF。",
       "<strong>品質</strong>——適用於 JPEG、WebP 和 PDF。",
-      "<strong>檔名範本</strong>——點代碼標籤即可插入 <code>{date}</code>、<code>{time}</code>、<code>{title}</code>、<code>{domain}</code>、<code>{w}</code> 或 <code>{h}</code>。即時預覽會顯示結果。"
+      "<strong>檔名範本</strong>——點代碼標籤即可插入 <code>{date}</code>、<code>{time}</code>、<code>{title}</code>、<code>{domain}</code>、<code>{w}</code> 或 <code>{h}</code>。即時預覽會顯示結果。加入 <code>/</code> 可儲存到「下載」中的資料夾，例如 <code>Screenshots/{title}</code>。"
     ],
     "storage": "設定存在這台裝置的本機儲存空間。面板底部的「<strong>恢復預設值</strong>」需要按兩次。",
     "recordAcrossSites": "<strong>跨網站錄影</strong>——預設關閉。開啟時會要求選用的 <code>&lt;all_urls&gt;</code> 主機權限，讓錄影控制列和游標圖層能跟著錄影中跳轉到新網站的分頁。"

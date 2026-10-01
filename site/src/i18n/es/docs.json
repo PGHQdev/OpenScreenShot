@@ -141,7 +141,7 @@
       "<strong>Tema</strong> — claro, oscuro o sistema.",
       "<strong>Formato por defecto</strong> — PNG, JPEG, WebP o PDF.",
       "<strong>Calidad</strong> — para JPEG, WebP y PDF.",
-      "<strong>Plantilla de nombre</strong> — haz clic en un chip para insertar <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code> o <code>{h}</code>. Una vista previa en vivo muestra el resultado."
+      "<strong>Plantilla de nombre</strong> — haz clic en un chip para insertar <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code> o <code>{h}</code>. Una vista previa en vivo muestra el resultado. Con <code>/</code> se guarda en una carpeta dentro de Descargas, por ejemplo <code>Screenshots/{title}</code>."
     ],
     "storage": "Los ajustes viven en el almacenamiento local de este dispositivo. <strong>Restablecer valores</strong>, al final del panel, pide dos clics.",
     "recordAcrossSites": "<strong>Grabar entre sitios</strong> — desactivado por defecto. Activarlo solicita el permiso de host opcional <code>&lt;all_urls&gt;</code>, para que la barra de controles y el cursor superpuesto puedan seguir a una pestaña que navega a otro sitio a mitad de grabación."

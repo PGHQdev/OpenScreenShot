@@ -141,7 +141,7 @@
       "<strong>테마</strong> — 라이트, 다크, 시스템.",
       "<strong>기본 형식</strong> — PNG, JPEG, WebP, PDF.",
       "<strong>품질</strong> — JPEG, WebP, PDF에 적용돼요.",
-      "<strong>파일 이름 템플릿</strong> — 토큰 칩을 클릭해 <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code>, <code>{h}</code>를 삽입하세요. 실시간 미리보기가 결과를 보여줘요."
+      "<strong>파일 이름 템플릿</strong> — 토큰 칩을 클릭해 <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code>, <code>{h}</code>를 삽입하세요. 실시간 미리보기가 결과를 보여줘요. <code>/</code>를 넣으면 다운로드 폴더 안의 폴더에 저장돼요. 예: <code>Screenshots/{title}</code>"
     ],
     "storage": "설정은 이 기기의 로컬 저장소에 저장돼요. 패널 맨 아래의 <strong>기본값으로 재설정</strong>은 두 번 클릭해야 실행돼요.",
     "recordAcrossSites": "<strong>여러 사이트에서 녹화</strong> — 기본은 꺼짐이에요. 켜면 선택형 <code>&lt;all_urls&gt;</code> 호스트 권한을 요청해서, 녹화 중에 탭이 새 사이트로 이동해도 녹화 컨트롤 바와 커서 오버레이가 따라갈 수 있어요."

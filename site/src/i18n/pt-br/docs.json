@@ -141,7 +141,7 @@
       "<strong>Tema</strong> — claro, escuro ou sistema.",
       "<strong>Formato padrão</strong> — PNG, JPEG, WebP ou PDF.",
       "<strong>Qualidade</strong> — para JPEG, WebP e PDF.",
-      "<strong>Modelo de nome de arquivo</strong> — clique em um chip de token para inserir <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code> ou <code>{h}</code>. Uma prévia ao vivo mostra o resultado."
+      "<strong>Modelo de nome de arquivo</strong> — clique em um chip de token para inserir <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code> ou <code>{h}</code>. Uma prévia ao vivo mostra o resultado. Com <code>/</code>, o arquivo é salvo em uma pasta dentro de Downloads, por exemplo <code>Screenshots/{title}</code>."
     ],
     "storage": "As configurações ficam no armazenamento local deste dispositivo. <strong>Restaurar padrões</strong> no fim do painel pede dois cliques.",
     "recordAcrossSites": "<strong>Gravar em todos os sites</strong> — desativado por padrão. Ativá-lo solicita a permissão de host opcional <code>&lt;all_urls&gt;</code>, para que a barra de controle da gravação e a sobreposição do cursor possam seguir uma aba que navega para um novo site no meio da gravação."

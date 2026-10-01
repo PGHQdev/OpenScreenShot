@@ -2525,6 +2525,10 @@
     "message": "미리보기",
     "description": "Settings page label or helper."
   },
+  "settingsFilenameFolderHint": {
+    "message": "/를 넣으면 다운로드 폴더 안의 폴더에 저장합니다. 예: Screenshots/{title}",
+    "description": "Settings hint under the filename template: a / in the template saves into a subfolder of Downloads. Keep {title} and Screenshots/ untranslated."
+  },
   "captureOverlayTitle": {
     "message": "스크린샷 캡처 중…",
     "description": "Capture overlay status."

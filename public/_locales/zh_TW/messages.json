@@ -2525,6 +2525,10 @@
     "message": "預覽",
     "description": "Settings page label or helper."
   },
+  "settingsFilenameFolderHint": {
+    "message": "加入 / 可儲存到「下載」中的資料夾，例如 Screenshots/{title}。",
+    "description": "Settings hint under the filename template: a / in the template saves into a subfolder of Downloads. Keep {title} and Screenshots/ untranslated."
+  },
   "captureOverlayTitle": {
     "message": "正在擷取螢幕畫面…",
     "description": "Capture overlay status."

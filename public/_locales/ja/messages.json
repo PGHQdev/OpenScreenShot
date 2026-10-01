@@ -2525,6 +2525,10 @@
     "message": "プレビュー",
     "description": "Settings page label or helper."
   },
+  "settingsFilenameFolderHint": {
+    "message": "/ を入れると「ダウンロード」内のフォルダーに保存します。例: Screenshots/{title}",
+    "description": "Settings hint under the filename template: a / in the template saves into a subfolder of Downloads. Keep {title} and Screenshots/ untranslated."
+  },
   "captureOverlayTitle": {
     "message": "スクリーンショットを撮影中…",
     "description": "Capture overlay status."

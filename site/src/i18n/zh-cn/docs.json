@@ -141,7 +141,7 @@
       "<strong>主题</strong>——浅色、深色或跟随系统。",
       "<strong>默认格式</strong>——PNG、JPEG、WebP 或 PDF。",
       "<strong>质量</strong>——用于 JPEG、WebP 和 PDF。",
-      "<strong>文件名模板</strong>——点击占位符即可插入 <code>{date}</code>、<code>{time}</code>、<code>{title}</code>、<code>{domain}</code>、<code>{w}</code> 或 <code>{h}</code>。实时预览会显示结果。"
+      "<strong>文件名模板</strong>——点击占位符即可插入 <code>{date}</code>、<code>{time}</code>、<code>{title}</code>、<code>{domain}</code>、<code>{w}</code> 或 <code>{h}</code>。实时预览会显示结果。加入 <code>/</code> 可保存到“下载”中的文件夹，例如 <code>Screenshots/{title}</code>。"
     ],
     "storage": "设置保存在这台设备的本地存储中。面板底部的<strong>恢复默认设置</strong>需要点击两次。",
     "recordAcrossSites": "<strong>跨网站录制</strong>——默认关闭。开启后会请求可选的 <code>&lt;all_urls&gt;</code> 主机权限，这样录制控制栏和光标叠加层就能跟随录制途中跳转到新网站的标签页。"

@@ -2525,6 +2525,10 @@
     "message": "Vorschau",
     "description": "Settings page label or helper."
   },
+  "settingsFilenameFolderHint": {
+    "message": "Mit / wird in einen Ordner unter Downloads gespeichert, z. B. Screenshots/{title}.",
+    "description": "Settings hint under the filename template: a / in the template saves into a subfolder of Downloads. Keep {title} and Screenshots/ untranslated."
+  },
   "captureOverlayTitle": {
     "message": "Screenshot wird aufgenommen…",
     "description": "Capture overlay status."

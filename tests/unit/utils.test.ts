@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   formatFilename,
   sanitizeFilename,
+  toDownloadPath,
   isProtectedUrl,
   insertToken,
   menuIdToMode,
@@ -75,6 +76,24 @@ describe('sanitizeFilename', () => {
   });
   it('trims surrounding whitespace', () => {
     expect(sanitizeFilename('  hi  ')).toBe('hi');
+  });
+});
+
+describe('toDownloadPath', () => {
+  it('keeps folders inside Downloads', () => {
+    expect(toDownloadPath('Screenshots/sub/shot.png')).toBe('Screenshots/sub/shot.png');
+  });
+  it('drops the parts Chrome rejects as an invalid filename', () => {
+    // Each input below threw "Invalid filename" in Chrome for Testing 131.
+    expect(toDownloadPath('../shot.png')).toBe('shot.png');
+    expect(toDownloadPath('/shot.png')).toBe('shot.png');
+    expect(toDownloadPath('Shots\\shot.png')).toBe('Shots/shot.png');
+    expect(toDownloadPath('Shots /shot.png')).toBe('Shots/shot.png');
+    expect(toDownloadPath(' Shots/shot.png')).toBe('Shots/shot.png');
+    expect(toDownloadPath('Shots./shot.png')).toBe('Shots/shot.png');
+  });
+  it('collapses empty and current-folder parts', () => {
+    expect(toDownloadPath('Shots//./shot.png')).toBe('Shots/shot.png');
   });
 });
 

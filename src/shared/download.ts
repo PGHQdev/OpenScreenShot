@@ -1,7 +1,9 @@
 import { IS_FIREFOX } from './browser';
+import { toDownloadPath } from './utils';
 
 /** Firefox rejects data: downloads; its background page can own a blob URL. */
-export async function downloadDataUrl(dataUrl: string, filename: string): Promise<void> {
+export async function downloadDataUrl(dataUrl: string, name: string): Promise<void> {
+  const filename = toDownloadPath(name);
   if (!IS_FIREFOX) {
     await chrome.downloads.download({ url: dataUrl, filename, saveAs: false });
     return;

@@ -141,7 +141,7 @@
       "<strong>Design</strong> — hell, dunkel oder System.",
       "<strong>Format</strong> — PNG, JPEG, WebP oder PDF.",
       "<strong>Qualität</strong> — für JPEG, WebP und PDF.",
-      "<strong>Dateinamen-Vorlage</strong> — klicke auf einen Token-Chip, um <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code> oder <code>{h}</code> einzufügen. Eine Live-Vorschau zeigt das Ergebnis."
+      "<strong>Dateinamen-Vorlage</strong> — klicke auf einen Token-Chip, um <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code> oder <code>{h}</code> einzufügen. Eine Live-Vorschau zeigt das Ergebnis. Mit <code>/</code> wird in einen Ordner unter Downloads gespeichert, z. B. <code>Screenshots/{title}</code>."
     ],
     "storage": "Einstellungen liegen im lokalen Speicher dieses Geräts. <strong>Zurücksetzen</strong> ganz unten im Panel braucht zwei Klicks.",
     "recordAcrossSites": "<strong>Auf allen Websites aufnehmen</strong> — standardmäßig aus. Beim Einschalten wird die optionale Host-Berechtigung <code>&lt;all_urls&gt;</code> angefragt, damit Steuerleiste und Cursor-Anzeige einem Tab folgen können, der mitten in der Aufnahme zu einer neuen Website wechselt."

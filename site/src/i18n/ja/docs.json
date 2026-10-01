@@ -141,7 +141,7 @@
       "<strong>テーマ</strong> — ライト、ダーク、システム。",
       "<strong>デフォルトの形式</strong> — PNG、JPEG、WebP、PDF。",
       "<strong>画質</strong> — JPEG、WebP、PDF 用。",
-      "<strong>ファイル名テンプレート</strong> — トークン チップをクリックして <code>{date}</code>、<code>{time}</code>、<code>{title}</code>、<code>{domain}</code>、<code>{w}</code>、<code>{h}</code> を挿入します。ライブ プレビューで結果を確認できます。"
+      "<strong>ファイル名テンプレート</strong> — トークン チップをクリックして <code>{date}</code>、<code>{time}</code>、<code>{title}</code>、<code>{domain}</code>、<code>{w}</code>、<code>{h}</code> を挿入します。ライブ プレビューで結果を確認できます。<code>/</code> を入れると「ダウンロード」内のフォルダーに保存します (例: <code>Screenshots/{title}</code>)。"
     ],
     "storage": "設定はこのデバイスのローカル ストレージに保存されます。パネル下部の<strong>デフォルトに戻す</strong>は 2 回のクリックで実行されます。",
     "recordAcrossSites": "<strong>サイトをまたいで録画</strong> — デフォルトはオフです。オンにするとオプションの <code>&lt;all_urls&gt;</code> ホスト権限をリクエストし、録画中に別のサイトへ移動したタブでも、録画コントロール バーとカーソル オーバーレイが追従できるようになります。"

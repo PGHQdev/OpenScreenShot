@@ -58,6 +58,7 @@ import {
   isProtectedUrl,
   normalizeCaptureAction,
   normalizeCaptureDelay,
+  toDownloadPath,
 } from '../shared/utils';
 import {
   DEFAULT_RECORDING_SETTINGS,
@@ -1424,7 +1425,7 @@ function SettingsView({
               class="text-input"
               type="text"
               spellcheck={false}
-              aria-describedby="filename-preview"
+              aria-describedby="filename-preview filename-folder"
               value={settings.filenameTemplate}
               onInput={(e) => onChange({ filenameTemplate: (e.target as HTMLInputElement).value })}
             />
@@ -1441,6 +1442,9 @@ function SettingsView({
                 <IconImage size={16} />
                 <span>{previewFilename(settings)}</span>
               </span>
+            </p>
+            <p class="settings-hint" id="filename-folder">
+              {t('settingsFilenameFolderHint')}
             </p>
           </div>
         </section>
@@ -1616,5 +1620,5 @@ function previewFilename(settings: Settings): string {
     width: 1920,
     height: 1080,
   });
-  return `${base}.${ext}`;
+  return toDownloadPath(`${base}.${ext}`);
 }

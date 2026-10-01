@@ -2525,6 +2525,10 @@
     "message": "Preview",
     "description": "Settings page label or helper."
   },
+  "settingsFilenameFolderHint": {
+    "message": "Use / to save into a folder inside Downloads, for example Screenshots/{title}.",
+    "description": "Settings hint under the filename template: a / in the template saves into a subfolder of Downloads. Keep {title} and Screenshots/ untranslated."
+  },
   "captureOverlayTitle": {
     "message": "Capturing screenshot…",
     "description": "Capture overlay status."

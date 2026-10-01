@@ -141,7 +141,7 @@
       "<strong>Tema</strong> — chiaro, scuro o sistema.",
       "<strong>Formato predefinito</strong> — PNG, JPEG, WebP o PDF.",
       "<strong>Qualità</strong> — per JPEG, WebP e PDF.",
-      "<strong>Modello nome file</strong> — clicca un chip per inserire <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code> o <code>{h}</code>. Un'anteprima dal vivo mostra il risultato."
+      "<strong>Modello nome file</strong> — clicca un chip per inserire <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code> o <code>{h}</code>. Un'anteprima dal vivo mostra il risultato. Con <code>/</code> il file viene salvato in una cartella dentro Download, ad esempio <code>Screenshots/{title}</code>."
     ],
     "storage": "Le impostazioni vivono nell'archiviazione locale di questo dispositivo. <strong>Ripristina predefiniti</strong> in fondo al pannello richiede due clic.",
     "recordAcrossSites": "<strong>Registra su tutti i siti</strong> — disattivato per impostazione predefinita. Attivarlo richiede il permesso host opzionale <code>&lt;all_urls&gt;</code>, così la barra di controllo della registrazione e l'overlay del cursore possono seguire una scheda che passa a un altro sito a registrazione in corso."
