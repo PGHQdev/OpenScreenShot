@@ -1,4 +1,5 @@
 ---
+import BrandMark from './BrandMark.astro';
 import { t, type Locale } from '../i18n';
 
 interface Props {
@@ -7,19 +8,64 @@ interface Props {
 }
 const { locale, inline = false } = Astro.props;
 const d = t(locale, 'welcome');
+
+// The page cannot know where the puzzle icon sits in a given toolbar, so it
+// never points at one spot. The copy names the two icons; each emoji in the
+// translated text renders as the toolbar icon's own shape, so readers look
+// for what they will actually see. The emoji stays the accessible name.
+const PUZZLE =
+  'M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-1.99.9-1.99 2v3.8H3.5c1.49 0 2.7 1.21 2.7 2.7s-1.21 2.7-2.7 2.7H2V20c0 1.1.9 2 2 2h3.8v-1.5c0-1.49 1.21-2.7 2.7-2.7 1.49 0 2.7 1.21 2.7 2.7V22H17c1.1 0 2-.9 2-2v-4h1.5c1.38 0 2.5-1.12 2.5-2.5S21.88 11 20.5 11z';
+const PIN =
+  'M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z';
+const GLYPHS: Record<string, string> = { '🧩': PUZZLE, '📌': PIN };
+const parts = (text: string) => text.split(/(🧩|📌)/u).filter(Boolean);
 ---
 
 <div class:list={['welcome-pin', { 'welcome-pin-inline': inline }]}>
+  {!inline && <span class="toolbar-band" aria-hidden="true" />}
   <p>
     <strong>{d.pinTitle}</strong>
-    <span class="pin-chrome">{d.pinSub}</span>
-    <span class="pin-firefox">{d.pinFirefox}</span>
+    {
+      [
+        ['pin-chrome', d.pinSub],
+        ['pin-firefox', d.pinFirefox],
+      ].map(([cls, text]) => (
+        <span class={cls}>
+          {parts(text).map((part) =>
+            GLYPHS[part] ? (
+              <span class="pin-glyph" role="img" aria-label={part}>
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d={GLYPHS[part]} />
+                </svg>
+              </span>
+            ) : (
+              part
+            ),
+          )}
+        </span>
+      ))
+    }
   </p>
   {
-    !inline && (
-      <svg class="pin-arrow" viewBox="0 0 90 88" fill="none" aria-hidden="true" focusable="false">
-        <path d="M5 73C29 80 58 68 54 48C51 33 32 40 39 52C50 69 79 43 77 6M64 19L77 6L86 24" />
-      </svg>
+    inline && (
+      <div class="pin-sketch pin-chrome" aria-hidden="true">
+        <span class="sketch-row sketch-row-dim">
+          <span class="sketch-dot" />
+          <span class="sketch-bar" />
+          <svg class="sketch-pin" viewBox="0 0 24 24">
+            <path d={PIN} />
+          </svg>
+        </span>
+        <span class="sketch-row">
+          <BrandMark size={18} />
+          <span class="sketch-name">OpenScreenShot</span>
+          <span class="sketch-target">
+            <svg class="sketch-pin" viewBox="0 0 24 24">
+              <path d={PIN} />
+            </svg>
+          </span>
+        </span>
+      </div>
     )
   }
 </div>
@@ -28,7 +74,6 @@ const d = t(locale, 'welcome');
   .welcome-pin {
     display: flex;
     align-items: center;
-    gap: var(--s-2);
     max-width: 390px;
     color: var(--ink);
   }
@@ -43,22 +88,108 @@ const d = t(locale, 'welcome');
     font-size: var(--fs-base);
     font-weight: 700;
   }
-  .welcome-pin span {
+  .welcome-pin p > span {
     color: var(--ink-2);
     font-size: var(--fs-sm);
-    line-height: 1.5;
+    line-height: 1.7;
   }
-  .pin-arrow {
-    flex: 0 0 76px;
-    width: 76px;
-    height: 76px;
-    align-self: flex-start;
-    margin-top: -12px;
-    stroke: var(--accent);
-    stroke-width: 2.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+  .pin-glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75em;
+    height: 1.75em;
+    margin-inline: 0.15em;
+    border-radius: var(--r-full);
+    background: var(--paper-dim);
+    box-shadow: inset 0 0 0 1px var(--border);
+    color: var(--ink);
+    vertical-align: middle;
   }
+  .pin-glyph svg {
+    width: 1.05em;
+    height: 1.05em;
+    fill: currentColor;
+  }
+
+  /* A glow along the window's top edge over the side where extension icons
+     live: it names a region, which is true for every toolbar, instead of
+     pointing at one icon, which is true for almost none. */
+  .toolbar-band {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+    width: min(48vw, 640px);
+    height: 4px;
+    border-end-start-radius: var(--r-full);
+    background: linear-gradient(to right, transparent, var(--accent) 35%);
+    box-shadow: 0 0 18px 2px color-mix(in srgb, var(--accent) 45%, transparent);
+    pointer-events: none;
+    animation: band-pulse 1.6s var(--ease) 3;
+  }
+  @keyframes band-pulse {
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  .pin-sketch {
+    display: inline-flex;
+    flex-direction: column;
+    gap: var(--s-1);
+    width: min(100%, 280px);
+    margin-top: var(--s-4);
+    padding: var(--s-2);
+    border-radius: var(--r-md);
+    background: var(--paper-raised);
+    box-shadow: var(--sh-md), inset 0 0 0 1px var(--rule);
+    text-align: start;
+  }
+  .sketch-row {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: 36px;
+    padding-inline: var(--s-2);
+    border-radius: var(--r-sm);
+    color: var(--ink);
+    font-size: var(--fs-sm);
+  }
+  .sketch-row-dim {
+    opacity: 0.45;
+  }
+  .sketch-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: var(--r-sm);
+    background: var(--rule);
+  }
+  .sketch-bar {
+    flex: 1;
+    height: 8px;
+    border-radius: var(--r-full);
+    background: var(--rule);
+  }
+  .sketch-name {
+    flex: 1;
+    font-weight: 600;
+  }
+  .sketch-pin {
+    width: 18px;
+    height: 18px;
+    fill: var(--ink-2);
+  }
+  .sketch-target {
+    display: inline-flex;
+    padding: 5px;
+    border-radius: var(--r-full);
+    box-shadow: 0 0 0 2px var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+  .sketch-target .sketch-pin {
+    fill: var(--accent-ink);
+  }
+
   .pin-firefox { display: none; }
   :global(html[data-welcome-browser='firefox']) .pin-chrome { display: none; }
   :global(html[data-welcome-browser='firefox']) .pin-firefox { display: inline; }
@@ -75,6 +206,9 @@ const d = t(locale, 'welcome');
   @media (max-width: 620px) {
     .welcome-pin { max-width: 320px; }
     .welcome-pin-inline { max-width: none; }
-    .pin-arrow { flex-basis: 52px; width: 52px; height: 64px; }
+    .toolbar-band { width: 70vw; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .toolbar-band { animation: none; }
   }
 </style>
