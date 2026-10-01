@@ -6,6 +6,9 @@
 import type { RecMessage } from './recording-types';
 import { tokens } from './design-tokens';
 
+/** The recorder's export containers. */
+export type VideoFormat = 'mp4' | 'webm';
+
 /** The three capture modes offered in the popup. */
 export type CaptureMode = 'full-page' | 'visible' | 'region';
 
@@ -172,6 +175,8 @@ export interface Settings {
   pdfMarginMm: number;
   quality: number; // 0..1, JPEG/WebP quality — PDF export is lossless (pdf-writer.ts)
   filenameTemplate: string;
+  /** Container the recorder exports to; MP4 falls back to WebM where unsupported. */
+  videoExportFormat: VideoFormat;
   // Annotation style (remembered across sessions)
   annotationColor: string;
   annotationStrokeWidth: number;
@@ -203,6 +208,7 @@ export const DEFAULT_SETTINGS: Settings = {
   pdfMarginMm: 8,
   quality: 0.92,
   filenameTemplate: 'screenshot_{date}_{time}',
+  videoExportFormat: 'mp4',
   annotationColor: tokens.swatchRed,
   annotationStrokeWidth: 6,
   annotationFontSize: 28,

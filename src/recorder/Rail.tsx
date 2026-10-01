@@ -31,7 +31,9 @@ import { BACKGROUND_PRESETS, type FrameOptions } from '../editor/frame';
 import { getFocusable } from '../editor/focus';
 import { formatTimer } from '../content/recording-overlay';
 import { deleteSession } from '../shared/recording-db';
-import { getSettings } from '../shared/storage';
+import { canRecordMp4 } from '../offscreen/mime';
+import { getSettings, setSettings } from '../shared/storage';
+import type { VideoFormat } from '../shared/types';
 import { formatFilename } from '../shared/utils';
 import {
   exportGeometry,
@@ -58,6 +60,12 @@ const BUBBLE_CORNER_LABEL: Record<BubbleCorner, string> = {
 };
 
 // Ascending "how much shows": nothing, the cursor alone, clicks alone, both.
+/** Container names stay untranslated: they are what the file manager shows. */
+const VIDEO_FORMATS: { format: VideoFormat; label: string }[] = [
+  { format: 'mp4', label: 'MP4' },
+  { format: 'webm', label: 'WebM' },
+];
+
 const CURSOR_MODES: readonly { mode: CursorMode; labelKey: string }[] = [
   { mode: 'hidden', labelKey: 'recorderCursorHidden' },
   { mode: 'shown', labelKey: 'recorderCursorShown' },
@@ -86,6 +94,9 @@ export interface RailProps {
 export function Rail(props: RailProps) {
   const [progress, setProgress] = useState<ExportProgress | null>(null);
   const [deleteAfter, setDeleteAfter] = useState(false);
+  // Firefox's MediaRecorder writes WebM only, so it gets no picker at all.
+  const [mp4Available] = useState(() => canRecordMp4((t) => MediaRecorder.isTypeSupported(t)));
+  const [videoFormat, setVideoFormat] = useState<VideoFormat>('webm');
   const [cancelArmed, setCancelArmed] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const cancelDisarmRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -160,6 +171,16 @@ export function Rail(props: RailProps) {
     };
   }, [beautifyOpen]);
 
+  useEffect(() => {
+    if (!mp4Available) return;
+    void getSettings().then((s) => setVideoFormat(s.videoExportFormat));
+  }, [mp4Available]);
+
+  function chooseVideoFormat(format: VideoFormat) {
+    setVideoFormat(format);
+    void setSettings({ videoExportFormat: format });
+  }
+
   // Belt and braces alongside the focus-leave close above: an export starting
   // is reason enough on its own to close a panel that edits the very draft
   // the export just started copying.
@@ -209,6 +230,7 @@ export function Rail(props: RailProps) {
           }
         },
         controller.signal,
+        videoFormat,
       );
       // null is a cancel, which the user already knows about.
       if (!blob) return;
@@ -220,7 +242,7 @@ export function Rail(props: RailProps) {
         width,
         height,
       });
-      const outcome = await saveExport(blob, `${base}.webm`);
+      const outcome = await saveExport(blob, `${base}.${videoFormat}`);
 
       // One toast slot. What it shows depends on whether the file actually
       // reached disk: a skip only matters once there is a file to be short —
@@ -548,9 +570,26 @@ export function Rail(props: RailProps) {
             </button>
           </>
         ) : (
-          <button class="btn-secondary rec-btn-primary" onClick={runExport}>
-            {t('recorderExport')}
-          </button>
+          <>
+            {mp4Available ? (
+              <div class="rec-seg rec-seg-pair" role="group" aria-label={t('editorFormat')}>
+                {VIDEO_FORMATS.map(({ format, label }) => (
+                  <button
+                    key={format}
+                    type="button"
+                    class="rec-seg-btn"
+                    aria-pressed={videoFormat === format}
+                    onClick={() => chooseVideoFormat(format)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            <button class="btn-secondary rec-btn-primary" onClick={runExport}>
+              {t(videoFormat === 'mp4' ? 'recorderExportMp4' : 'recorderExport')}
+            </button>
+          </>
         )}
         <label class="rail-check">
           <input

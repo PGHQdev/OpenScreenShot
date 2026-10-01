@@ -687,6 +687,10 @@
     "message": "导出 WebM",
     "description": "Recorder page: button that renders the edited recording to a WebM file."
   },
+  "recorderExportMp4": {
+    "message": "导出 MP4",
+    "description": "Recorder page: button that renders the edited recording to an MP4 (H.264 + AAC) file."
+  },
   "recorderExporting": {
     "message": "正在渲染…",
     "description": "Recorder page: status shown while the export renders."

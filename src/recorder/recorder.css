@@ -942,6 +942,10 @@ body {
 .rec-seg-btn:nth-child(-n + 2) {
   border-bottom: 1px solid var(--border);
 }
+/* A two-option seg is one row, so nothing sits under the first two. */
+.rec-seg-pair .rec-seg-btn:nth-child(-n + 2) {
+  border-bottom: none;
+}
 
 .rec-seg-btn:hover {
   background: var(--surface-2);
