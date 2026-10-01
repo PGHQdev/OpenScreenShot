@@ -25,10 +25,10 @@ export function getWindowViewport() {
 /**
  * Measure the page so the background can plan the scroll loop + canvas size.
  *
- * When the document itself doesn't scroll (common in SPAs like Gmail, Claude,
- * Notion — the body is pinned and an inner element scrolls), find that element,
- * tag it `data-oss-scroller`, and report ITS geometry + viewport rect so the
- * capture loop scrolls it and crops each tile to it.
+ * When an inner element scrolls further than the document (common in SPAs and
+ * dashboards like Gmail, Claude, Notion — the body is pinned, or only a footer
+ * overflows it), find that element, tag it `data-oss-scroller`, and report ITS
+ * geometry + viewport rect so the capture loop scrolls it and crops each tile to it.
  */
 export function getMetrics(excludeScrollbars = false): Metrics {
   const de = document.documentElement;
@@ -42,24 +42,24 @@ export function getMetrics(excludeScrollbars = false): Metrics {
   const vh = excludeScrollbars
     ? Math.min(window.innerHeight, viewport?.clientHeight || window.innerHeight)
     : window.innerHeight;
-  const docScrolls = de.scrollHeight > vh + 4;
+  const vl = excludeScrollbars ? (viewport?.clientLeft ?? 0) : 0;
 
+  // Pick the element with the most vertical overflow that also covers most of
+  // the viewport — the dominant scroll region. It must outscroll the document.
+  // ponytail: linear DOM scan, fine for a one-shot capture; index by overflow if it ever matters.
   let scroller: HTMLElement | null = null;
-  if (!docScrolls) {
-    // Pick the element with the most vertical overflow that also covers most of
-    // the viewport — the dominant scroll region.
-    // ponytail: linear DOM scan, fine for a one-shot capture; index by overflow if it ever matters.
-    let bestOverflow = vh * 0.5; // must scroll at least half a viewport to qualify
-    for (const el of document.querySelectorAll<HTMLElement>('*')) {
-      const cs = getComputedStyle(el);
-      if (cs.overflowY !== 'auto' && cs.overflowY !== 'scroll') continue;
-      const overflow = el.scrollHeight - el.clientHeight;
-      if (overflow <= bestOverflow) continue;
-      const r = el.getBoundingClientRect();
-      if (r.width < vw * 0.5 || r.height < vh * 0.5) continue;
-      bestOverflow = overflow;
-      scroller = el;
-    }
+  let bestOverflow = Math.max(vh * 0.5, de.scrollHeight - vh); // at least half a viewport
+  for (const el of document.querySelectorAll<HTMLElement>('*')) {
+    const cs = getComputedStyle(el);
+    if (cs.overflowY !== 'auto' && cs.overflowY !== 'scroll') continue;
+    const overflow = el.scrollHeight - el.clientHeight;
+    if (overflow <= bestOverflow) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width < vw * 0.5 || r.height < vh * 0.5) continue;
+    // Tiles are cropped to this rect, so it must sit inside the viewport.
+    if (r.left < vl - 1 || r.top < -1 || r.right > vl + vw + 1 || r.bottom > vh + 1) continue;
+    bestOverflow = overflow;
+    scroller = el;
   }
 
   if (scroller) {
@@ -80,7 +80,7 @@ export function getMetrics(excludeScrollbars = false): Metrics {
   }
 
   return {
-    viewportLeft: excludeScrollbars ? (viewport?.clientLeft ?? 0) : 0,
+    viewportLeft: vl,
     scrollHeight: de.scrollHeight,
     viewportHeight: vh,
     viewportWidth: vw,
@@ -161,9 +161,12 @@ export function prepareCapture(): void {
  * {@link restoreCapture} can find them again.
  */
 export function hideFixedElements(): void {
+  const scroller = document.querySelector('[data-oss-scroller="1"]');
   const els = document.querySelectorAll('*');
   for (const el of els) {
     if (el.hasAttribute('data-oss-capture-overlay')) continue;
+    // A fixed app shell holds the scroller; hiding it would blank every later tile.
+    if (scroller && el.contains(scroller)) continue;
     const cs = getComputedStyle(el);
     if (cs.position === 'fixed' || cs.position === 'sticky') {
       if (el.hasAttribute('data-oss-hidden')) continue;

@@ -127,6 +127,44 @@ try {
     'smooth',
     'restore pre-existing inline styles',
   );
+
+  // Dashboard: a fixed shell holds the scroller while a footer overflows the document.
+  await page.setContent(
+    '<!doctype html><style>body{margin:0}::-webkit-scrollbar{width:18px}.shell{position:fixed;inset:0;display:flex}nav{width:200px}main{flex:1;overflow:auto}</style><div class="shell"><nav></nav><main id="main"><div style="height:3000px"></div></main></div><footer style="height:640px"></footer>',
+  );
+  await page.addScriptTag({ content: script.code });
+  const dashboard = await page.evaluate(() => {
+    const metrics = window.captureModule.getMetrics(true);
+    window.captureModule.prepareCapture();
+    window.captureModule.hideFixedElements();
+    const main = document.querySelector('#main');
+    const result = {
+      metrics,
+      tagged: main.dataset.ossScroller,
+      visibility: getComputedStyle(main).visibility,
+    };
+    window.captureModule.restoreCapture();
+    return result;
+  });
+  assert.equal(dashboard.tagged, '1', 'an inner panel that outscrolls the document wins');
+  assert.equal(dashboard.metrics.scrollHeight, 3000);
+  assert.equal(
+    dashboard.visibility,
+    'visible',
+    'the fixed shell around the scroller stays visible',
+  );
+
+  // A taller nested scroller below the fold cannot be cropped; its visible parent wins.
+  await page.setContent(
+    '<!doctype html><style>body{margin:0;height:100vh;overflow:hidden}main{height:100vh;overflow:auto}#widget{width:80%;height:70vh;overflow:auto}</style><main id="main"><div style="height:800px"></div><div id="widget"><div style="height:4000px"></div></div></main>',
+  );
+  await page.addScriptTag({ content: script.code });
+  const outer = await page.evaluate(() => {
+    const metrics = window.captureModule.getMetrics(true);
+    return { metrics, id: document.querySelector('[data-oss-scroller="1"]')?.id };
+  });
+  assert.equal(outer.id, 'main', 'an off-screen nested scroller is skipped');
+  assert.deepEqual(outer.metrics.container, { x: 0, y: 0, width: 800, height: 600 });
   for (const direction of ['ltr', 'rtl']) {
     await page.setContent(
       `<!doctype html><html dir="${direction}"><style>html{scrollbar-gutter:stable;scrollbar-color:rgb(255,0,255) rgb(0,255,0)}body{margin:0;height:1800px;background:#112233}</style></html>`,
