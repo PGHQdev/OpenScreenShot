@@ -19,6 +19,7 @@ import {
   scaleInBox,
   STROKE_WIDTHS,
   strokeBarHeight,
+  strokeScale,
   translateAnnotation,
   unionBBox,
   type Annotation,
@@ -287,6 +288,24 @@ describe('drawAnnotation — rect', () => {
     expect(calls.filter((c) => c.op === 'strokeRect')).toEqual([
       { op: 'strokeRect', args: [10, 20, 100, 50] },
     ]);
+  });
+});
+
+describe('strokeScale', () => {
+  it('keeps the presets at their own size up to a 4K-class capture', () => {
+    expect(strokeScale(800)).toBe(1);
+    expect(strokeScale(2880)).toBe(1); // 1440pt MacBook at 2x
+    expect(strokeScale(3456)).toBe(1); // 16-inch MacBook Pro at 2x
+  });
+
+  it('doubles them on a 5K capture and triples them past 6K', () => {
+    expect(strokeScale(5120)).toBe(2);
+    expect(strokeScale(7680)).toBe(3);
+  });
+
+  it('never drops below 1, so a tiny region capture keeps visible strokes', () => {
+    expect(strokeScale(0)).toBe(1);
+    expect(strokeScale(40)).toBe(1);
   });
 });
 

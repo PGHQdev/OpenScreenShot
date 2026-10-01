@@ -4672,7 +4672,7 @@ async function testAnnotationClipMatchesExport(browser, base, messages) {
  * task 41, defect 5 — the style bar's stroke-width preview bars used to draw
  * at `Math.min(w, 8)px` (App.tsx), so the 6px and 12px buttons rendered 6px
  * and 8px tall: two pixels apart, hard to tell apart at a glance. This reads
- * the three `.width-bar` heights the built page actually lays out and checks
+ * the four `.width-bar` heights the built page actually lays out and checks
  * they are clearly stepped, not just non-equal (annotations.test.ts's
  * strokeBarHeight unit tests cover the exact px values; this proves the CSS
  * custom property actually reaches the DOM).
@@ -4702,7 +4702,7 @@ async function testStrokeWidthPreviewDistinct(browser, base, messages) {
   const heights = await page.$$eval('.width-btn .width-bar', (els) =>
     els.map((el) => Math.round(el.getBoundingClientRect().height)),
   );
-  assert(heights.length === 3, `three stroke-width presets rendered (${heights.length})`);
+  assert(heights.length === 4, `four stroke-width presets rendered (${heights.length})`);
   const sorted = [...heights].sort((a, b) => a - b);
   assert(
     JSON.stringify(sorted) === JSON.stringify(heights),

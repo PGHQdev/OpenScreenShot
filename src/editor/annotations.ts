@@ -181,26 +181,45 @@ export const DEFAULT_STYLE: AnnotationStyle = {
   fontSize: DEFAULT_FONT_SIZE,
 };
 
-/** Stroke-width presets for the style bar. */
-export const STROKE_WIDTHS: number[] = [3, 6, 12];
+/**
+ * Stroke-width presets for the style bar, in pixels on a capture up to
+ * {@link STROKE_REFERENCE_WIDTH} wide. Wider captures multiply them by
+ * {@link strokeScale}, so a preset keeps its weight on a 5K screen.
+ */
+export const STROKE_WIDTHS: number[] = [3, 6, 12, 24];
+
+/** Capture width (px) at which the presets draw at their own size. */
+export const STROKE_REFERENCE_WIDTH = 2560;
 
 /**
- * Tallest the style bar's width-preview bar (.width-bar) is allowed to draw,
+ * Multiplier from a style-bar preset to the stroke width drawn on an image
+ * `imageWidth` px wide: 1 up to about 3800px, 2 for a 5K capture (5120px).
+ * Width only, because a full-page capture is tall but no wider than the
+ * screen. A whole number, so a preset maps back from the drawn width.
+ */
+export function strokeScale(imageWidth: number): number {
+  return Math.max(1, Math.round(imageWidth / STROKE_REFERENCE_WIDTH));
+}
+
+/**
+ * Tallest and shortest the style bar's width-preview bar (.width-bar) draws,
  * in px — comfortably inside the 26px .width-btn target's content box
  * (editor.css) without touching its border. The target itself never resizes;
  * only the ink inside it scales.
  */
 const STROKE_BAR_MAX_PX = 20;
+const STROKE_BAR_MIN_PX = 4;
 
 /**
- * On-screen height for a stroke-width preset's swatch bar, proportional to
- * the widest preset rather than clamped to a flat ceiling — the old
- * `Math.min(w, 8)` (App.tsx) made the 6px and 12px buttons draw at 6 and 8,
- * two pixels apart and hard to tell apart at a glance.
+ * On-screen height for a stroke-width preset's swatch bar. The presets double
+ * each step, so the bar grows on a log scale: a linear scale draws the two
+ * thinnest of four presets 2px apart, too close to tell apart at a glance.
  */
 export function strokeBarHeight(w: number): number {
+  const min = Math.min(...STROKE_WIDTHS);
   const max = Math.max(...STROKE_WIDTHS);
-  return Math.round((w / max) * STROKE_BAR_MAX_PX);
+  const t = Math.log(w / min) / Math.log(max / min);
+  return Math.round(STROKE_BAR_MIN_PX + t * (STROKE_BAR_MAX_PX - STROKE_BAR_MIN_PX));
 }
 
 const FONT_STACK = "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif";

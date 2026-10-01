@@ -853,7 +853,7 @@ function StyleBar({
               <button
                 key={w}
                 class="width-btn"
-                aria-label={`${w}px`}
+                aria-label={`${w * ed.strokeScale}px`}
                 aria-pressed={ed.style.strokeWidth === w}
                 onClick={() => ed.setStyleStrokeWidth(w)}
               >

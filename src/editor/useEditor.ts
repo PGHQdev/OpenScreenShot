@@ -33,6 +33,8 @@ import {
   resizeRect,
   scaleAnnotation,
   scaleInBox,
+  STROKE_WIDTHS,
+  strokeScale,
   translateAnnotation,
   type AnnotationStyle,
   type BlurMode,
@@ -298,6 +300,9 @@ export function useEditor() {
   // first nudge, cleared on the key's release (see the keyup handler below).
   const keyNudgeRef = useRef(false);
   const styleRef = useRef(style);
+  // style.strokeWidth is a style-bar preset; a shape draws at preset × this.
+  const strokeScaleValue = imageSize ? strokeScale(imageSize.w) : 1;
+  const strokeScaleRef = useRef(strokeScaleValue);
   const spotlightShapeRef = useRef(spotlightShape);
   const blurModeRef = useRef(blurMode);
   const blurStrengthRef = useRef(blurStrength);
@@ -523,6 +528,10 @@ export function useEditor() {
     styleRef.current = style;
   }, [style]);
 
+  useEffect(() => {
+    strokeScaleRef.current = strokeScaleValue;
+  }, [strokeScaleValue]);
+
   // Persist the annotation style so it's remembered across sessions.
   // Skip the very first run (the initial load from settings) to avoid a write.
   const styleLoadedRef = useRef(false);
@@ -566,7 +575,10 @@ export function useEditor() {
     const color = agreed(sel, (a) =>
       hasStroke(a) ? a.stroke : a.type === 'text' || a.type === 'step' ? a.color : undefined,
     );
-    const strokeWidth = agreed(sel, (a) => (hasStroke(a) ? a.strokeWidth : undefined));
+    const drawn = agreed(sel, (a) => (hasStroke(a) ? a.strokeWidth : undefined));
+    // Back to a preset; a width no preset draws at this scale leaves the bar alone.
+    const preset = drawn === null ? null : drawn / strokeScaleRef.current;
+    const strokeWidth = preset !== null && STROKE_WIDTHS.includes(preset) ? preset : null;
     const fontSize = agreed(sel, (a) => (a.type === 'text' ? a.fontSize : undefined));
     const shape = agreed(sel, (a) => (a.type === 'spotlight' ? a.shape : undefined));
     const mode = agreed(sel, (a) => (a.type === 'blur' ? (a.mode ?? 'blur') : undefined));
@@ -829,7 +841,8 @@ export function useEditor() {
   const setStyleStrokeWidth = useCallback(
     (strokeWidth: number) => {
       setStyle((s) => ({ ...s, strokeWidth }));
-      applyStyleToSelected((a) => (hasStroke(a) ? { ...a, strokeWidth } : a));
+      const drawn = strokeWidth * strokeScaleRef.current;
+      applyStyleToSelected((a) => (hasStroke(a) ? { ...a, strokeWidth: drawn } : a));
     },
     [applyStyleToSelected],
   );
@@ -1743,7 +1756,7 @@ export function useEditor() {
         t as ShapeTool,
         p,
         styleRef.current.color,
-        styleRef.current.strokeWidth,
+        styleRef.current.strokeWidth * strokeScaleRef.current,
         {
           spotlightShape: spotlightShapeRef.current,
           blurMode: blurModeRef.current,
@@ -1986,7 +1999,7 @@ export function useEditor() {
       t,
       { x: box.x, y: box.y },
       styleRef.current.color,
-      styleRef.current.strokeWidth,
+      styleRef.current.strokeWidth * strokeScaleRef.current,
       {
         spotlightShape: spotlightShapeRef.current,
         blurMode: blurModeRef.current,
@@ -2595,6 +2608,7 @@ export function useEditor() {
     hasSelection: selectedIds.length > 0,
     selectedAnnotation,
     style,
+    strokeScale: strokeScaleValue,
     recentColors,
     spotlightShape,
     setSpotlightShape,
