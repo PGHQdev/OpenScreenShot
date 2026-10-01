@@ -22,6 +22,8 @@ export interface StylebarFields {
   redaction: boolean;
   /** The blur strength slider. */
   strength: boolean;
+  /** The rectangle's outline / solid fill picker. */
+  fill: boolean;
 }
 
 const NONE: StylebarFields = {
@@ -31,8 +33,10 @@ const NONE: StylebarFields = {
   shape: false,
   redaction: false,
   strength: false,
+  fill: false,
 };
 const SHAPE: StylebarFields = { ...NONE, color: true, stroke: true };
+const BOX: StylebarFields = { ...SHAPE, fill: true };
 const GLYPH: StylebarFields = { ...NONE, color: true, fontSize: true };
 const SPOTLIGHT: StylebarFields = { ...NONE, shape: true };
 const BLUR: StylebarFields = { ...NONE, redaction: true, strength: true };
@@ -44,6 +48,7 @@ export function stylebarFields(
   if (selectedType) {
     switch (selectedType) {
       case 'rect':
+        return BOX;
       case 'arrow':
       case 'line':
       case 'pen':
@@ -60,6 +65,7 @@ export function stylebarFields(
   }
   switch (tool) {
     case 'rect':
+      return BOX;
     case 'arrow':
     case 'line':
     case 'pen':
@@ -83,7 +89,9 @@ export function stylebarFields(
 
 /** True when no control applies, so the bar should not render at all. */
 export function stylebarEmpty(f: StylebarFields): boolean {
-  return !f.color && !f.stroke && !f.fontSize && !f.shape && !f.redaction && !f.strength;
+  return (
+    !f.color && !f.stroke && !f.fontSize && !f.shape && !f.redaction && !f.strength && !f.fill
+  );
 }
 
 /**

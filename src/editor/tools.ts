@@ -87,6 +87,7 @@ export const TOOL_DIVIDER_AFTER: ReadonlySet<Tool> = new Set(['select', 'pen']);
 
 /** Per-tool options for {@link createShapeDraft} beyond the shared stroke style. */
 export interface ShapeDraftOptions {
+  rectFill?: boolean;
   spotlightShape?: SpotlightShape;
   blurMode?: BlurMode;
   blurStrength?: number;
@@ -112,6 +113,7 @@ export function createShapeDraft(
         h: 0,
         stroke,
         strokeWidth,
+        ...(opts.rectFill ? { filled: true } : {}),
       };
     case 'arrow':
     case 'line':

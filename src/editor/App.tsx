@@ -863,6 +863,23 @@ function StyleBar({
           </div>
         </div>
       ) : null}
+      {fields.fill ? (
+        <div class="stylebar-group">
+          <span class="stylebar-label">{t('editorStyleFill')}</span>
+          <div class="segmented">
+            {RECT_FILLS.map((f) => (
+              <button
+                key={f.label}
+                class={`segmented-btn${ed.rectFill === f.fill ? ' is-selected' : ''}`}
+                aria-pressed={ed.rectFill === f.fill}
+                onClick={() => ed.setRectFill(f.fill)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
       {fields.shape ? (
         <div class="stylebar-group">
           <span class="stylebar-label">{t('editorStyleShape')}</span>
@@ -941,6 +958,11 @@ const BLUR_MODES: { id: BlurMode; label: string; hint: string }[] = [
   { id: 'blur', label: t('editorToolBlur'), hint: t('editorBlurModeBlurHint') },
   { id: 'mosaic', label: t('editorBlurModeMosaic'), hint: t('editorBlurModeMosaicHint') },
   { id: 'solid', label: t('editorBlurModeSolid'), hint: t('editorBlurModeSolidHint') },
+];
+
+const RECT_FILLS: { fill: boolean; label: string }[] = [
+  { fill: false, label: t('editorFillNone') },
+  { fill: true, label: t('editorFillSolid') },
 ];
 
 const SPOTLIGHT_SHAPES: { id: SpotlightShape; label: string }[] = [

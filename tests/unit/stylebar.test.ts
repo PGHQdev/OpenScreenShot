@@ -3,8 +3,22 @@ import { agreed, stylebarEmpty, stylebarFields } from '../../src/editor/stylebar
 import type { Annotation } from '../../src/editor/annotations';
 
 describe('stylebarFields by tool', () => {
-  it('offers colour and stroke for the shape tools', () => {
-    for (const tool of ['rect', 'arrow', 'line', 'pen', 'highlight'] as const) {
+  it('adds the fill picker for a rectangle, drawn or selected', () => {
+    const box = {
+      color: true,
+      stroke: true,
+      fontSize: false,
+      shape: false,
+      redaction: false,
+      strength: false,
+      fill: true,
+    };
+    expect(stylebarFields('rect', null)).toEqual(box);
+    expect(stylebarFields('select', 'rect')).toEqual(box);
+  });
+
+  it('offers colour and stroke for the line-like shape tools', () => {
+    for (const tool of ['arrow', 'line', 'pen', 'highlight'] as const) {
       expect(stylebarFields(tool, null)).toEqual({
         color: true,
         stroke: true,
@@ -12,6 +26,7 @@ describe('stylebarFields by tool', () => {
         shape: false,
         redaction: false,
         strength: false,
+        fill: false,
       });
     }
   });
@@ -25,6 +40,7 @@ describe('stylebarFields by tool', () => {
         shape: false,
         redaction: false,
         strength: false,
+        fill: false,
       });
     }
   });
@@ -37,6 +53,7 @@ describe('stylebarFields by tool', () => {
       shape: true,
       redaction: false,
       strength: false,
+      fill: false,
     });
   });
 
@@ -48,6 +65,7 @@ describe('stylebarFields by tool', () => {
       shape: false,
       redaction: true,
       strength: true,
+      fill: false,
     });
   });
 
@@ -67,6 +85,7 @@ describe('stylebarFields by selection', () => {
       shape: false,
       redaction: false,
       strength: false,
+      fill: false,
     });
     expect(stylebarFields('rect', 'step')).toEqual({
       color: true,
@@ -75,11 +94,12 @@ describe('stylebarFields by selection', () => {
       shape: false,
       redaction: false,
       strength: false,
+      fill: false,
     });
   });
 
-  it('offers colour and stroke for a selected shape', () => {
-    for (const type of ['rect', 'arrow', 'pen', 'highlight'] as const) {
+  it('offers colour and stroke for a selected line-like shape', () => {
+    for (const type of ['arrow', 'pen', 'highlight'] as const) {
       expect(stylebarFields('select', type)).toEqual({
         color: true,
         stroke: true,
@@ -87,6 +107,7 @@ describe('stylebarFields by selection', () => {
         shape: false,
         redaction: false,
         strength: false,
+        fill: false,
       });
     }
   });
@@ -99,6 +120,7 @@ describe('stylebarFields by selection', () => {
       shape: true,
       redaction: false,
       strength: false,
+      fill: false,
     });
   });
 
@@ -110,6 +132,7 @@ describe('stylebarFields by selection', () => {
       shape: false,
       redaction: true,
       strength: true,
+      fill: false,
     });
   });
 });
@@ -123,6 +146,7 @@ describe('stylebarFields for the eyedropper', () => {
       shape: false,
       redaction: false,
       strength: false,
+      fill: false,
     });
   });
 });
@@ -136,6 +160,7 @@ describe('stylebarEmpty', () => {
       shape: false,
       redaction: false,
       strength: false,
+      fill: false,
     };
     expect(stylebarEmpty({ ...base, color: true })).toBe(false);
     expect(stylebarEmpty({ ...base, shape: true })).toBe(false);

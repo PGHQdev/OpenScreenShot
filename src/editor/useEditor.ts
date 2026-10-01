@@ -240,6 +240,7 @@ export function useEditor() {
   const [recentColors, setRecentColors] = useState<string[]>([]);
   const [spotlightShape, setSpotlightShapeState] = useState<SpotlightShape>('rect');
   const [blurMode, setBlurModeState] = useState<BlurMode>('blur');
+  const [rectFill, setRectFillState] = useState(false);
   const [blurStrength, setBlurStrengthState] = useState<number>(DEFAULT_BLUR_STRENGTH);
   const [frame, setFrameState] = useState<FrameOptions>(DEFAULT_FRAME);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
@@ -305,6 +306,7 @@ export function useEditor() {
   const strokeScaleRef = useRef(strokeScaleValue);
   const spotlightShapeRef = useRef(spotlightShape);
   const blurModeRef = useRef(blurMode);
+  const rectFillRef = useRef(rectFill);
   const blurStrengthRef = useRef(blurStrength);
   // True from the moment restoreDraft clears draftPrompt until the restored
   // annotations land. The canvas is transiently empty in that window; without
@@ -478,6 +480,10 @@ export function useEditor() {
   }, [blurMode]);
 
   useEffect(() => {
+    rectFillRef.current = rectFill;
+  }, [rectFill]);
+
+  useEffect(() => {
     blurStrengthRef.current = blurStrength;
   }, [blurStrength]);
 
@@ -592,6 +598,8 @@ export function useEditor() {
     }
     if (shape !== null) setSpotlightShapeState(shape);
     if (mode !== null) setBlurModeState(mode);
+    const fill = agreed(sel, (a) => (a.type === 'rect' ? a.filled === true : undefined));
+    if (fill !== null) setRectFillState(fill);
     if (strength !== null) setBlurStrengthState(strength);
   }, [selectedIds]);
 
@@ -855,6 +863,17 @@ export function useEditor() {
     [applyStyleToSelected],
   );
 
+  // Remembered across sessions, like the style: a user who fills boxes to
+  // write over them wants the next capture's boxes filled too.
+  const setRectFill = useCallback(
+    (fill: boolean) => {
+      setRectFillState(fill);
+      void setSettings({ annotationFill: fill });
+      applyStyleToSelected((a) => (a.type === 'rect' ? { ...a, filled: fill } : a));
+    },
+    [applyStyleToSelected],
+  );
+
   const setBlurMode = useCallback(
     (mode: BlurMode) => {
       setBlurModeState(mode);
@@ -934,6 +953,7 @@ export function useEditor() {
         strokeWidth: s.annotationStrokeWidth,
         fontSize: s.annotationFontSize,
       });
+      setRectFillState(s.annotationFill);
       setFrameState(frameFromSettings(s));
       const requestedCapture = new URLSearchParams(window.location.search).get('capture');
       const cap = requestedCapture ? await openCapture(requestedCapture) : await getLastCapture();
@@ -1759,6 +1779,7 @@ export function useEditor() {
         styleRef.current.strokeWidth * strokeScaleRef.current,
         {
           spotlightShape: spotlightShapeRef.current,
+          rectFill: rectFillRef.current,
           blurMode: blurModeRef.current,
           blurStrength: blurStrengthRef.current,
         },
@@ -2002,6 +2023,7 @@ export function useEditor() {
       styleRef.current.strokeWidth * strokeScaleRef.current,
       {
         spotlightShape: spotlightShapeRef.current,
+        rectFill: rectFillRef.current,
         blurMode: blurModeRef.current,
         blurStrength: blurStrengthRef.current,
       },
@@ -2614,6 +2636,8 @@ export function useEditor() {
     setSpotlightShape,
     blurMode,
     setBlurMode,
+    rectFill,
+    setRectFill,
     blurStrength,
     setBlurStrength,
     frame,

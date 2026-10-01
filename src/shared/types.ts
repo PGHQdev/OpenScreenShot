@@ -176,6 +176,8 @@ export interface Settings {
   annotationColor: string;
   annotationStrokeWidth: number;
   annotationFontSize: number;
+  /** Rectangles draw filled in the stroke colour. */
+  annotationFill: boolean;
   /** Custom colours the user picked, most recent first. */
   recentColors: string[];
   /** Seconds to wait before every capture (0 = immediate). See CAPTURE_DELAYS. */
@@ -206,6 +208,7 @@ export const DEFAULT_SETTINGS: Settings = {
   annotationColor: tokens.swatchRed,
   annotationStrokeWidth: 6,
   annotationFontSize: 28,
+  annotationFill: false,
   recentColors: [],
   captureDelay: 0,
   captureAction: 'editor',

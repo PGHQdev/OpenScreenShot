@@ -246,11 +246,9 @@ describe('drawAnnotation on a blur: strength drives what actually gets painted',
 
 describe('drawAnnotation — rect', () => {
   /**
-   * A rect never fills, only strokes: `RectAnnotation.fill` documented a
-   * capability the style bar never exposed, so it is gone, not just always
-   * null. This uses a rect literal that still carries a `fill` value — the
-   * shape a pre-existing persisted draft could hand back — to prove drawRect
-   * has stopped reading it rather than merely defaulting it away.
+   * An older `RectAnnotation.fill` colour string was never exposed in the
+   * style bar and was removed. A persisted draft can still hand one back, so
+   * drawRect must ignore it; only the boolean `filled` paints the inside.
    */
   function recorder() {
     const calls: { op: string; args: number[] }[] = [];
@@ -288,6 +286,28 @@ describe('drawAnnotation — rect', () => {
     expect(calls.filter((c) => c.op === 'strokeRect')).toEqual([
       { op: 'strokeRect', args: [10, 20, 100, 50] },
     ]);
+  });
+  it('fills in the stroke colour, then strokes, when filled is true', () => {
+    const { ctx, calls } = recorder();
+    const filled: Annotation = {
+      id: 'r',
+      type: 'rect',
+      x: -10,
+      y: 20,
+      w: 30,
+      h: -5,
+      stroke: '#00f',
+      strokeWidth: 4,
+      filled: true,
+    };
+
+    drawAnnotation(ctx, filled, {} as HTMLImageElement, createBlurCache());
+
+    expect(calls).toEqual([
+      { op: 'fillRect', args: [-10, 15, 30, 5] },
+      { op: 'strokeRect', args: [-10, 15, 30, 5] },
+    ]);
+    expect(ctx.fillStyle).toBe('#00f');
   });
 });
 

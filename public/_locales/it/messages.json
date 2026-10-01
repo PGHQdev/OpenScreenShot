@@ -1409,6 +1409,18 @@
     "message": "Forma",
     "description": "Editor style bar: the spotlight-shape field group label."
   },
+  "editorStyleFill": {
+    "message": "Riempimento",
+    "description": "Editor style bar: the rectangle fill field group label."
+  },
+  "editorFillNone": {
+    "message": "Nessuno",
+    "description": "Editor style bar: rectangle fill option that draws the outline only."
+  },
+  "editorFillSolid": {
+    "message": "Pieno",
+    "description": "Editor style bar: rectangle fill option that paints the inside in the stroke colour."
+  },
   "editorStyleRedaction": {
     "message": "Oscuramento",
     "description": "Editor style bar: the redaction-mode field group label."

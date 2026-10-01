@@ -34,6 +34,11 @@ export interface RectAnnotation extends BaseAnnotation {
   h: number;
   stroke: string;
   strokeWidth: number;
+  /**
+   * Paint the inside in the stroke colour. Absent = outline. Named apart from
+   * the `fill` colour string older drafts may still carry, which never draws.
+   */
+  filled?: boolean;
 }
 
 export interface ArrowAnnotation extends BaseAnnotation {
@@ -405,6 +410,10 @@ export function drawAnnotation(
 function drawRect(ctx: CanvasRenderingContext2D, a: RectAnnotation): void {
   const r = normalizeRect(a);
   if (r.w <= 0 || r.h <= 0) return;
+  if (a.filled === true) {
+    ctx.fillStyle = a.stroke;
+    ctx.fillRect(r.x, r.y, r.w, r.h);
+  }
   ctx.lineWidth = a.strokeWidth;
   ctx.strokeStyle = a.stroke;
   ctx.strokeRect(r.x, r.y, r.w, r.h);
