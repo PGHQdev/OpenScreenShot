@@ -69,8 +69,12 @@ Full-page screenshots for Chrome and Firefox. Free editing. Local processing. No
 
 </div>
 
-Capture a scrolling page, mark up what matters, and share an image or PDF.
-Screenshots and edits stay on your device. No uploads, watermarks, or paid editing tools.
+Capture the full web page.
+- Crop it as you like.
+- Edit it.
+- Mark it.
+- Blur it.
+All done locally, no account required. Fully private and privacy-friendly.
 
 ## Capture → edit → share
 
