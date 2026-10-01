@@ -84,12 +84,28 @@
     "description": "Footer link and context menu item that re-captures the previous region selection."
   },
   "expressLabel": {
-    "message": "Een klik op het werkbalkpictogram legt de volledige pagina vast",
-    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+    "message": "Express-modus met één klik",
+    "description": "Name of the one-click express setting: the Settings card, the editor status bar switch, and the icon context-menu checkbox."
   },
   "expressHint": {
     "message": "Zet uit om elke keer te kiezen tussen Volledige pagina, Zichtbaar gebied of Geselecteerd gebied.",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "editorExpressOn": {
+    "message": "Express-modus met één klik staat aan.",
+    "description": "Editor status bar, bold: express mode is on. settingsExpressHint follows it."
+  },
+  "editorExpressOff": {
+    "message": "Express-modus met één klik staat uit.",
+    "description": "Editor status bar, bold: express mode is off."
+  },
+  "editorExpressOffHint": {
+    "message": "Het werkbalkpictogram opent het vastlegmenu.",
+    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+  },
+  "settingsExpressHint": {
+    "message": "Eén klik op het werkbalkpictogram legt de volledige pagina vast. Zet uit om elke keer een modus te kiezen.",
+    "description": "Explains one-click express mode under its switch in Settings, and in the editor status bar when it is on."
   },
   "expressMigratedNote": {
     "message": "Een klik op het pictogram legt nu de volledige pagina vast. Rechtsklik voor andere modi.",

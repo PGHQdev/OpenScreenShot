@@ -266,12 +266,24 @@
     "description": "Hint shown under the after-capture row when Download is selected."
   },
   "expressLabel": {
-    "message": "Un clic sull'icona cattura la pagina intera",
-    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+    "message": "Modalità Express con un clic",
+    "description": "Name of the one-click express setting: the Settings card, the editor status bar switch, and the icon context-menu checkbox."
   },
   "expressHint": {
     "message": "Disattiva per scegliere ogni volta tra Pagina intera, Area visibile o Regione selezionata.",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "editorExpressOn": {
+    "message": "La modalità Express con un clic è attiva.",
+    "description": "Editor status bar, bold: express mode is on. settingsExpressHint follows it."
+  },
+  "editorExpressOff": {
+    "message": "La modalità Express con un clic è disattivata.",
+    "description": "Editor status bar, bold: express mode is off."
+  },
+  "editorExpressOffHint": {
+    "message": "L'icona della barra degli strumenti apre il menu di cattura.",
+    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
   },
   "expressMigratedNote": {
     "message": "Ora un clic sull'icona cattura la pagina intera. Altri modi con il clic destro.",
@@ -2502,8 +2514,8 @@
     "description": "Settings page label or helper."
   },
   "settingsExpressHint": {
-    "message": "Disattiva per scegliere una modalità di acquisizione ogni volta.",
-    "description": "Settings page label or helper."
+    "message": "Un clic sull'icona della barra degli strumenti cattura la pagina intera. Disattivala per scegliere una modalità ogni volta.",
+    "description": "Explains one-click express mode under its switch in Settings, and in the editor status bar when it is on."
   },
   "settingsAcrossSitesHint": {
     "message": "Mantieni attiva l’evidenziazione del cursore quando una scheda passa a un altro sito. Richiede l’accesso a tutti i siti.",
@@ -2563,9 +2575,6 @@
   },
   "settingsFirefoxShortcutsHint": {
     "message": "Se le impostazioni non si aprono direttamente, usa Gestione componenti aggiuntivi di Firefox → ingranaggio → Gestisci scorciatoie da tastiera."
-  },
-  "expressSettingsHint": {
-    "message": "La cattura con un clic è attiva. Modifica scorciatoie e preferenze di cattura nelle Impostazioni."
   },
   "settingsBrowserScreenshotShortcutsHint": {
     "message": "Queste scorciatoie acquisiscono schermate durante la navigazione. Le assegnazioni sono gestite dal browser."

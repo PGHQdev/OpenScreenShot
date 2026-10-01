@@ -266,12 +266,24 @@
     "description": "Hint shown under the after-capture row when Download is selected."
   },
   "expressLabel": {
-    "message": "아이콘을 클릭하면 전체 페이지를 캡처",
-    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+    "message": "원클릭 Express 모드",
+    "description": "Name of the one-click express setting: the Settings card, the editor status bar switch, and the icon context-menu checkbox."
   },
   "expressHint": {
     "message": "끄면 매번 전체 페이지, 보이는 영역, 선택 영역 중에서 선택할 수 있습니다.",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "editorExpressOn": {
+    "message": "원클릭 Express 모드가 켜져 있습니다.",
+    "description": "Editor status bar, bold: express mode is on. settingsExpressHint follows it."
+  },
+  "editorExpressOff": {
+    "message": "원클릭 Express 모드가 꺼져 있습니다.",
+    "description": "Editor status bar, bold: express mode is off."
+  },
+  "editorExpressOffHint": {
+    "message": "툴바 아이콘을 클릭하면 캡처 메뉴가 열립니다.",
+    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
   },
   "expressMigratedNote": {
     "message": "이제 아이콘을 클릭하면 전체 페이지가 캡처됩니다. 다른 모드는 마우스 오른쪽 버튼으로 선택하세요.",
@@ -2502,8 +2514,8 @@
     "description": "Settings page label or helper."
   },
   "settingsExpressHint": {
-    "message": "끄면 캡처할 때마다 모드를 선택할 수 있습니다.",
-    "description": "Settings page label or helper."
+    "message": "툴바 아이콘을 한 번 클릭하면 전체 페이지를 캡처합니다. 끄면 매번 모드를 선택할 수 있습니다.",
+    "description": "Explains one-click express mode under its switch in Settings, and in the editor status bar when it is on."
   },
   "settingsAcrossSitesHint": {
     "message": "탭에서 다른 사이트로 이동해도 커서 강조 표시를 유지합니다. 모든 사이트에 대한 액세스 권한이 필요합니다.",
@@ -2563,9 +2575,6 @@
   },
   "settingsFirefoxShortcutsHint": {
     "message": "설정이 바로 열리지 않으면 Firefox 부가 기능 관리자 → 톱니바퀴 메뉴 → 확장 기능 단축키 관리를 사용하세요."
-  },
-  "expressSettingsHint": {
-    "message": "원클릭 캡처가 켜져 있습니다. 설정에서 단축키와 캡처 환경설정을 변경하세요."
   },
   "settingsBrowserScreenshotShortcutsHint": {
     "message": "탐색 중 스크린샷을 찍는 단축키입니다. 키 할당은 브라우저에서 관리합니다."

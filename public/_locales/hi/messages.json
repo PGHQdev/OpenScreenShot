@@ -84,12 +84,28 @@
     "description": "Footer link and context menu item that re-captures the previous region selection."
   },
   "expressLabel": {
-    "message": "टूलबार आइकन पर क्लिक करने से पूरा पेज कैप्चर होता है",
-    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+    "message": "वन-क्लिक Express मोड",
+    "description": "Name of the one-click express setting: the Settings card, the editor status bar switch, and the icon context-menu checkbox."
   },
   "expressHint": {
     "message": "हर बार पूरा पेज, दिखाई देने वाला क्षेत्र या चुना हुआ क्षेत्र चुनने के लिए बंद करें।",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "editorExpressOn": {
+    "message": "वन-क्लिक Express मोड चालू है।",
+    "description": "Editor status bar, bold: express mode is on. settingsExpressHint follows it."
+  },
+  "editorExpressOff": {
+    "message": "वन-क्लिक Express मोड बंद है।",
+    "description": "Editor status bar, bold: express mode is off."
+  },
+  "editorExpressOffHint": {
+    "message": "टूलबार आइकन कैप्चर मेनू खोलता है।",
+    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+  },
+  "settingsExpressHint": {
+    "message": "टूलबार आइकन पर एक क्लिक से पूरा पेज कैप्चर होता है। हर बार मोड चुनने के लिए इसे बंद करें।",
+    "description": "Explains one-click express mode under its switch in Settings, and in the editor status bar when it is on."
   },
   "expressMigratedNote": {
     "message": "आइकन पर क्लिक अब पूरा पेज कैप्चर करता है। अन्य मोड के लिए राइट-क्लिक करें।",

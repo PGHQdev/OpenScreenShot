@@ -84,12 +84,28 @@
     "description": "Footer link and context menu item that re-captures the previous region selection."
   },
   "expressLabel": {
-    "message": "Nhấp vào biểu tượng trên thanh công cụ sẽ chụp toàn trang",
-    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+    "message": "Chế độ Express một lần nhấp",
+    "description": "Name of the one-click express setting: the Settings card, the editor status bar switch, and the icon context-menu checkbox."
   },
   "expressHint": {
     "message": "Tắt để mỗi lần chọn Toàn trang, Vùng hiển thị hoặc Vùng chọn.",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "editorExpressOn": {
+    "message": "Chế độ Express một lần nhấp đang bật.",
+    "description": "Editor status bar, bold: express mode is on. settingsExpressHint follows it."
+  },
+  "editorExpressOff": {
+    "message": "Chế độ Express một lần nhấp đang tắt.",
+    "description": "Editor status bar, bold: express mode is off."
+  },
+  "editorExpressOffHint": {
+    "message": "Biểu tượng trên thanh công cụ mở menu chụp.",
+    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+  },
+  "settingsExpressHint": {
+    "message": "Một lần nhấp vào biểu tượng trên thanh công cụ sẽ chụp toàn trang. Tắt để chọn chế độ mỗi lần.",
+    "description": "Explains one-click express mode under its switch in Settings, and in the editor status bar when it is on."
   },
   "expressMigratedNote": {
     "message": "Nhấp vào biểu tượng giờ sẽ chụp toàn trang. Nhấp chuột phải để chọn chế độ khác.",

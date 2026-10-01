@@ -266,12 +266,24 @@
     "description": "Hint shown under the after-capture row when Download is selected."
   },
   "expressLabel": {
-    "message": "Un clic sur l'icône capture la page entière",
-    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+    "message": "Mode Express en un clic",
+    "description": "Name of the one-click express setting: the Settings card, the editor status bar switch, and the icon context-menu checkbox."
   },
   "expressHint": {
     "message": "Désactivez pour choisir à chaque fois Page entière, Zone visible ou Zone sélectionnée.",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "editorExpressOn": {
+    "message": "Le mode Express en un clic est activé.",
+    "description": "Editor status bar, bold: express mode is on. settingsExpressHint follows it."
+  },
+  "editorExpressOff": {
+    "message": "Le mode Express en un clic est désactivé.",
+    "description": "Editor status bar, bold: express mode is off."
+  },
+  "editorExpressOffHint": {
+    "message": "L'icône de la barre d'outils ouvre le menu de capture.",
+    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
   },
   "expressMigratedNote": {
     "message": "Un clic sur l'icône capture désormais la page entière. Clic droit pour les autres modes.",
@@ -2502,8 +2514,8 @@
     "description": "Settings page label or helper."
   },
   "settingsExpressHint": {
-    "message": "Désactivez cette option pour choisir un mode de capture à chaque fois.",
-    "description": "Settings page label or helper."
+    "message": "Un clic sur l'icône de la barre d'outils capture la page entière. Désactivez-le pour choisir un mode à chaque fois.",
+    "description": "Explains one-click express mode under its switch in Settings, and in the editor status bar when it is on."
   },
   "settingsAcrossSitesHint": {
     "message": "Gardez le curseur en surbrillance lorsqu’un onglet change de site. Nécessite l’accès à tous les sites.",
@@ -2563,9 +2575,6 @@
   },
   "settingsFirefoxShortcutsHint": {
     "message": "Si les paramètres ne s’ouvrent pas directement, utilisez le gestionnaire de modules de Firefox → engrenage → Gérer les raccourcis d’extensions."
-  },
-  "expressSettingsHint": {
-    "message": "La capture en un clic est activée. Modifiez les raccourcis et les préférences de capture dans les paramètres."
   },
   "settingsBrowserScreenshotShortcutsHint": {
     "message": "Ces raccourcis prennent des captures d’écran pendant la navigation. Le navigateur gère leur attribution."

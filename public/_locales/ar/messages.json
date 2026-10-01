@@ -84,12 +84,28 @@
     "description": "Footer link and context menu item that re-captures the previous region selection."
   },
   "expressLabel": {
-    "message": "النقر على أيقونة شريط الأدوات يلتقط الصفحة الكاملة",
-    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+    "message": "وضع Express بنقرة واحدة",
+    "description": "Name of the one-click express setting: the Settings card, the editor status bar switch, and the icon context-menu checkbox."
   },
   "expressHint": {
     "message": "أوقفه لاختيار الصفحة الكاملة أو المنطقة المرئية أو منطقة محددة في كل مرة.",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "editorExpressOn": {
+    "message": "وضع Express بنقرة واحدة مُفعّل.",
+    "description": "Editor status bar, bold: express mode is on. settingsExpressHint follows it."
+  },
+  "editorExpressOff": {
+    "message": "وضع Express بنقرة واحدة متوقف.",
+    "description": "Editor status bar, bold: express mode is off."
+  },
+  "editorExpressOffHint": {
+    "message": "أيقونة شريط الأدوات تفتح قائمة الالتقاط.",
+    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+  },
+  "settingsExpressHint": {
+    "message": "نقرة واحدة على أيقونة شريط الأدوات تلتقط الصفحة الكاملة. أوقفه لاختيار وضع في كل مرة.",
+    "description": "Explains one-click express mode under its switch in Settings, and in the editor status bar when it is on."
   },
   "expressMigratedNote": {
     "message": "النقر على الأيقونة يلتقط الآن الصفحة الكاملة. انقر بزر الفأرة الأيمن للأوضاع الأخرى.",

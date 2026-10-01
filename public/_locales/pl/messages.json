@@ -84,12 +84,28 @@
     "description": "Footer link and context menu item that re-captures the previous region selection."
   },
   "expressLabel": {
-    "message": "Kliknięcie ikony na pasku narzędzi przechwytuje całą stronę",
-    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+    "message": "Tryb Express jednym kliknięciem",
+    "description": "Name of the one-click express setting: the Settings card, the editor status bar switch, and the icon context-menu checkbox."
   },
   "expressHint": {
     "message": "Wyłącz, aby za każdym razem wybierać: Cała strona, Widoczny obszar lub Zaznaczony obszar.",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "editorExpressOn": {
+    "message": "Tryb Express jednym kliknięciem jest włączony.",
+    "description": "Editor status bar, bold: express mode is on. settingsExpressHint follows it."
+  },
+  "editorExpressOff": {
+    "message": "Tryb Express jednym kliknięciem jest wyłączony.",
+    "description": "Editor status bar, bold: express mode is off."
+  },
+  "editorExpressOffHint": {
+    "message": "Ikona na pasku narzędzi otwiera menu przechwytywania.",
+    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+  },
+  "settingsExpressHint": {
+    "message": "Jedno kliknięcie ikony na pasku narzędzi przechwytuje całą stronę. Wyłącz, aby za każdym razem wybierać tryb.",
+    "description": "Explains one-click express mode under its switch in Settings, and in the editor status bar when it is on."
   },
   "expressMigratedNote": {
     "message": "Kliknięcie ikony przechwytuje teraz całą stronę. Inne tryby po kliknięciu prawym przyciskiem.",

@@ -266,12 +266,24 @@
     "description": "Hint shown under the after-capture row when Download is selected."
   },
   "expressLabel": {
-    "message": "Klick auf das Symbol nimmt die ganze Seite auf",
-    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+    "message": "Ein-Klick-Express-Modus",
+    "description": "Name of the one-click express setting: the Settings card, the editor status bar switch, and the icon context-menu checkbox."
   },
   "expressHint": {
     "message": "Deaktivieren, um jedes Mal zwischen Ganze Seite, Sichtbarer Bereich oder Ausschnitt zu wählen.",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "editorExpressOn": {
+    "message": "Ein-Klick-Express-Modus ist an.",
+    "description": "Editor status bar, bold: express mode is on. settingsExpressHint follows it."
+  },
+  "editorExpressOff": {
+    "message": "Ein-Klick-Express-Modus ist aus.",
+    "description": "Editor status bar, bold: express mode is off."
+  },
+  "editorExpressOffHint": {
+    "message": "Das Symbol in der Symbolleiste öffnet das Aufnahmemenü.",
+    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
   },
   "expressMigratedNote": {
     "message": "Ein Klick auf das Symbol nimmt jetzt die ganze Seite auf. Andere Modi per Rechtsklick.",
@@ -2502,8 +2514,8 @@
     "description": "Settings page label or helper."
   },
   "settingsExpressHint": {
-    "message": "Deaktivieren, um den Aufnahmemodus jedes Mal auszuwählen.",
-    "description": "Settings page label or helper."
+    "message": "Ein Klick auf das Symbol in der Symbolleiste nimmt die ganze Seite auf. Ausschalten, um jedes Mal einen Modus zu wählen.",
+    "description": "Explains one-click express mode under its switch in Settings, and in the editor status bar when it is on."
   },
   "settingsAcrossSitesHint": {
     "message": "Den Cursor auch dann hervorheben, wenn ein Tab zu einer anderen Website wechselt. Erfordert Zugriff auf alle Websites.",
@@ -2563,9 +2575,6 @@
   },
   "settingsFirefoxShortcutsHint": {
     "message": "Falls sich die Einstellungen nicht direkt öffnen: Firefox Add-ons-Verwaltung → Zahnrad → Tastenkombinationen von Erweiterungen verwalten."
-  },
-  "expressSettingsHint": {
-    "message": "Ein-Klick-Aufnahme ist aktiv. Tastenkürzel und Aufnahmeoptionen lassen sich in den Einstellungen ändern."
   },
   "settingsBrowserScreenshotShortcutsHint": {
     "message": "Diese Tastenkürzel erstellen Screenshots beim Surfen. Die Belegung wird vom Browser verwaltet."

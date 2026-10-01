@@ -266,12 +266,24 @@
     "description": "Hint shown under the after-capture row when Download is selected."
   },
   "expressLabel": {
-    "message": "Icon click captures the full page",
-    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+    "message": "One-click Express mode",
+    "description": "Name of the one-click express setting: the Settings card, the editor status bar switch, and the icon context-menu checkbox."
   },
   "expressHint": {
     "message": "Turn off to choose Full Page, Visible Area, or Selected Region each time.",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "editorExpressOn": {
+    "message": "One-click Express mode is on.",
+    "description": "Editor status bar, bold: express mode is on. settingsExpressHint follows it."
+  },
+  "editorExpressOff": {
+    "message": "One-click Express mode is off.",
+    "description": "Editor status bar, bold: express mode is off."
+  },
+  "editorExpressOffHint": {
+    "message": "The toolbar icon opens the capture menu.",
+    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
   },
   "expressMigratedNote": {
     "message": "Toolbar click now captures the full page. Right-click for other modes.",
@@ -2502,8 +2514,8 @@
     "description": "Settings page label or helper."
   },
   "settingsExpressHint": {
-    "message": "Turn off to choose a capture mode each time.",
-    "description": "Settings page label or helper."
+    "message": "One click on the toolbar icon captures the full page. Turn off to choose a mode each time.",
+    "description": "Explains one-click express mode under its switch in Settings, and in the editor status bar when it is on."
   },
   "settingsAcrossSitesHint": {
     "message": "Keep the cursor overlay active when a tab changes site. Requires access to all sites.",
@@ -2563,9 +2575,6 @@
   },
   "settingsFirefoxShortcutsHint": {
     "message": "If shortcut settings cannot open directly, use Firefox’s Add-ons Manager → gear menu → Manage Extension Shortcuts."
-  },
-  "expressSettingsHint": {
-    "message": "One-click capture is on. Change shortcuts and capture preferences in Settings."
   },
   "settingsBrowserScreenshotShortcutsHint": {
     "message": "These shortcuts trigger screenshot actions while browsing. Your browser manages their bindings."

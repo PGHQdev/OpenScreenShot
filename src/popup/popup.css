@@ -1304,3 +1304,48 @@ label.settings-row .settings-label {
   color: var(--text-2);
   font-size: var(--fs-xs);
 }
+
+/* One-click Express is the product's headline behavior, so it leads Settings
+   as its own card instead of sitting among the capture preferences. */
+.express-card {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+}
+.express-card.is-on {
+  border-color: var(--accent-ink);
+  background: var(--accent-subtle);
+}
+.express-card .settings-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.express-card-label {
+  display: block;
+  color: var(--text-1);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.express-card-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-full);
+  background: var(--surface-1);
+  color: var(--text-3);
+}
+.express-card.is-on .express-card-icon {
+  background: var(--accent-ink);
+  color: var(--on-accent);
+}
+.express-card .switch {
+  flex: 0 0 auto;
+}

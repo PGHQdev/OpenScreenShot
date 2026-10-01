@@ -84,12 +84,28 @@
     "description": "Footer link and context menu item that re-captures the previous region selection."
   },
   "expressLabel": {
-    "message": "Araç çubuğu simgesine tıklamak tam sayfayı yakalar",
-    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+    "message": "Tek tıkla Express modu",
+    "description": "Name of the one-click express setting: the Settings card, the editor status bar switch, and the icon context-menu checkbox."
   },
   "expressHint": {
     "message": "Her seferinde Tam sayfa, Görünen alan veya Seçili bölge seçmek için kapatın.",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "editorExpressOn": {
+    "message": "Tek tıkla Express modu açık.",
+    "description": "Editor status bar, bold: express mode is on. settingsExpressHint follows it."
+  },
+  "editorExpressOff": {
+    "message": "Tek tıkla Express modu kapalı.",
+    "description": "Editor status bar, bold: express mode is off."
+  },
+  "editorExpressOffHint": {
+    "message": "Araç çubuğu simgesi yakalama menüsünü açar.",
+    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+  },
+  "settingsExpressHint": {
+    "message": "Araç çubuğu simgesine tek tıklama tam sayfayı yakalar. Her seferinde mod seçmek için kapatın.",
+    "description": "Explains one-click express mode under its switch in Settings, and in the editor status bar when it is on."
   },
   "expressMigratedNote": {
     "message": "Simgeye tıklamak artık tam sayfayı yakalıyor. Diğer modlar için sağ tıklayın.",

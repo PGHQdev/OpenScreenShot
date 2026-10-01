@@ -1762,17 +1762,45 @@ body {
   }
 }
 
-.express-settings-hint {
+.express-bar {
   display: flex;
   flex: 0 0 auto;
-  flex-wrap: wrap;
   align-items: center;
-  gap: var(--s-2);
+  gap: var(--s-3);
   padding: var(--s-2) var(--s-3);
   background: var(--surface-2);
   border-bottom: 1px solid var(--border);
-  font-size: var(--fs-sm);
+  color: var(--text-2);
+  font-size: var(--fs-base);
 }
-.express-settings-hint > span {
-  flex: 1 1 240px;
+.express-bar.is-on {
+  background: var(--accent-subtle);
+  color: var(--text-1);
+}
+.express-bar-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-full);
+  background: var(--surface-1);
+  color: var(--text-3);
+}
+.express-bar.is-on .express-bar-icon {
+  background: var(--accent-ink);
+  color: var(--on-accent);
+}
+.express-bar-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+.express-bar-copy strong {
+  color: var(--text-1);
+  font-weight: 600;
+}
+.express-bar .switch {
+  flex: 0 0 auto;
 }

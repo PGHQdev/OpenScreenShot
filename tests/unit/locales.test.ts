@@ -40,6 +40,11 @@ const MINIMUM_KEYS = [
   'expressLabel',
   'expressHint',
   'expressMigratedNote',
+  // The editor's Express status bar, in view on every capture.
+  'settingsExpressHint',
+  'editorExpressOn',
+  'editorExpressOff',
+  'editorExpressOffHint',
   // The popup's pin nudge — the first thing a user who cannot find the icon
   // reads. (The welcome page itself is hosted on the site, in site i18n.)
   'setupPinTitle',

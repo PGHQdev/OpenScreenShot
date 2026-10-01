@@ -23,6 +23,7 @@ import { onPopupMessage, sendToBackground } from '../shared/messaging';
 import { BrandMark } from '../shared/BrandMark';
 import {
   IconBack,
+  IconBolt,
   IconCoffee,
   IconGear,
   IconGift,
@@ -1175,6 +1176,27 @@ function SettingsView({
 
   return (
     <main class="settings" aria-label={t('settingsTitle')}>
+      <section class={`express-card${settings.expressMode ? ' is-on' : ''}`}>
+        <span class="express-card-icon" aria-hidden="true">
+          <IconBolt size={20} />
+        </span>
+        <div class="settings-copy">
+          <label class="express-card-label" for="express-mode">
+            {t('expressLabel')}
+          </label>
+          <p class="settings-hint" id="express-hint">
+            {t('settingsExpressHint')}
+          </p>
+        </div>
+        <input
+          id="express-mode"
+          type="checkbox"
+          class="switch"
+          aria-describedby="express-hint"
+          checked={settings.expressMode}
+          onChange={(e) => onChange({ expressMode: (e.currentTarget as HTMLInputElement).checked })}
+        />
+      </section>
       <ShortcutSettings />
       <section class="settings-group" aria-labelledby="settings-appearance">
         <h2 id="settings-appearance">{t('settingsAppearance')}</h2>
@@ -1241,26 +1263,6 @@ function SettingsView({
               ))}
             </div>
           </div>
-        </div>
-        <div class="settings-row settings-row-switch">
-          <div class="settings-copy">
-            <label class="settings-label" for="express-mode">
-              {t('expressLabel')}
-            </label>
-            <p class="settings-hint" id="express-hint">
-              {t('settingsExpressHint')}
-            </p>
-          </div>
-          <input
-            id="express-mode"
-            type="checkbox"
-            class="switch"
-            aria-describedby="express-hint"
-            checked={settings.expressMode}
-            onChange={(e) =>
-              onChange({ expressMode: (e.currentTarget as HTMLInputElement).checked })
-            }
-          />
         </div>
       </section>
 

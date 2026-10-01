@@ -266,12 +266,24 @@
     "description": "Hint shown under the after-capture row when Download is selected."
   },
   "expressLabel": {
-    "message": "アイコンをクリックするとページ全体をキャプチャ",
-    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+    "message": "ワンクリック Express モード",
+    "description": "Name of the one-click express setting: the Settings card, the editor status bar switch, and the icon context-menu checkbox."
   },
   "expressHint": {
     "message": "オフにすると、毎回「ページ全体」「表示領域」「選択範囲」から選べます。",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "editorExpressOn": {
+    "message": "ワンクリック Express モードはオンです。",
+    "description": "Editor status bar, bold: express mode is on. settingsExpressHint follows it."
+  },
+  "editorExpressOff": {
+    "message": "ワンクリック Express モードはオフです。",
+    "description": "Editor status bar, bold: express mode is off."
+  },
+  "editorExpressOffHint": {
+    "message": "ツールバーのアイコンでキャプチャメニューが開きます。",
+    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
   },
   "expressMigratedNote": {
     "message": "アイコンのクリックでページ全体をキャプチャするようになりました。他のモードは右クリックから。",
@@ -2502,8 +2514,8 @@
     "description": "Settings page label or helper."
   },
   "settingsExpressHint": {
-    "message": "オフにすると、毎回キャプチャモードを選択できます。",
-    "description": "Settings page label or helper."
+    "message": "ツールバーのアイコンを 1 回クリックするとページ全体をキャプチャします。オフにすると毎回モードを選べます。",
+    "description": "Explains one-click express mode under its switch in Settings, and in the editor status bar when it is on."
   },
   "settingsAcrossSitesHint": {
     "message": "タブで別のサイトに移動した後も、カーソルの強調表示を維持します。すべてのサイトへのアクセス権限が必要です。",
@@ -2563,9 +2575,6 @@
   },
   "settingsFirefoxShortcutsHint": {
     "message": "設定が直接開かない場合は、Firefox のアドオンマネージャー → 歯車メニュー → 拡張機能のショートカットキーの管理を選択してください。"
-  },
-  "expressSettingsHint": {
-    "message": "ワンクリックキャプチャが有効です。ショートカットとキャプチャの設定は「設定」で変更できます。"
   },
   "settingsBrowserScreenshotShortcutsHint": {
     "message": "閲覧中にスクリーンショットを撮影するショートカットです。キーの割り当てはブラウザーで管理します。"

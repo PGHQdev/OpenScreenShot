@@ -266,12 +266,24 @@
     "description": "Hint shown under the after-capture row when Download is selected."
   },
   "expressLabel": {
-    "message": "点击图标即截取整页",
-    "description": "Label for the capture-on-icon-click row in the popup, and the icon context-menu checkbox."
+    "message": "一键 Express 模式",
+    "description": "Name of the one-click express setting: the Settings card, the editor status bar switch, and the icon context-menu checkbox."
   },
   "expressHint": {
     "message": "关闭后，每次可选择整页、可见区域或选定区域。",
     "description": "Hint shown under the express row when express mode is on."
+  },
+  "editorExpressOn": {
+    "message": "一键 Express 模式已开启。",
+    "description": "Editor status bar, bold: express mode is on. settingsExpressHint follows it."
+  },
+  "editorExpressOff": {
+    "message": "一键 Express 模式已关闭。",
+    "description": "Editor status bar, bold: express mode is off."
+  },
+  "editorExpressOffHint": {
+    "message": "点击工具栏图标会打开截图菜单。",
+    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
   },
   "expressMigratedNote": {
     "message": "现在点击图标即截取整页。其他模式请右键选择。",
@@ -2502,8 +2514,8 @@
     "description": "Settings page label or helper."
   },
   "settingsExpressHint": {
-    "message": "关闭后，每次截图时都可以选择截图模式。",
-    "description": "Settings page label or helper."
+    "message": "点击一次工具栏图标即截取整页。关闭后每次都可选择截图模式。",
+    "description": "Explains one-click express mode under its switch in Settings, and in the editor status bar when it is on."
   },
   "settingsAcrossSitesHint": {
     "message": "在标签页切换到其他网站后，仍保持光标高亮显示。需要获得访问所有网站的权限。",
@@ -2563,9 +2575,6 @@
   },
   "settingsFirefoxShortcutsHint": {
     "message": "如果无法直接打开设置，请使用 Firefox 附加组件管理器 → 齿轮菜单 → 管理扩展快捷键。"
-  },
-  "expressSettingsHint": {
-    "message": "一键截图已开启。您可以在设置中更改快捷键和截图偏好。"
   },
   "settingsBrowserScreenshotShortcutsHint": {
     "message": "这些快捷键可在浏览时触发截图操作。按键分配由浏览器管理。"

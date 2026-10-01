@@ -71,7 +71,7 @@ import { ZoomMenu } from './ZoomMenu';
 import { BeautifyMenu } from './BeautifyMenu';
 import { stylebarEmpty, stylebarFields } from './stylebar';
 import { ShortcutSheet } from './ShortcutSheet';
-import { ExpressHint } from './ExpressHint';
+import { ExpressBar } from './ExpressBar';
 import { HistorySheet } from './HistorySheet';
 import { hasScreenPicker, openScreenPicker } from './eyedropper';
 import { hasPinWindow } from './pin';
@@ -551,11 +551,8 @@ export function App() {
       </header>
 
       {navigationError && <p role="alert">{t('popupOpenFailed')}</p>}
-      <ExpressHint
-        capture={ed.capture}
-        ready={ed.hasImage && !ed.loading}
-        onSettings={() => void openSettings()}
-      />
+      {/* After the capture load, so the editor's own settings read goes first. */}
+      {!ed.loading && <ExpressBar />}
       <StyleBar ed={ed} pointerActive={canvasPointerActive} />
 
       <div class="workspace">
