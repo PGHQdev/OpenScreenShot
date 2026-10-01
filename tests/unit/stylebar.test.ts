@@ -3,7 +3,7 @@ import { agreed, stylebarEmpty, stylebarFields } from '../../src/editor/stylebar
 import type { Annotation } from '../../src/editor/annotations';
 
 describe('stylebarFields by tool', () => {
-  it('adds the fill picker for a rectangle, drawn or selected', () => {
+  it('adds the fill and shape pickers for the Shape tool, drawn or selected', () => {
     const box = {
       color: true,
       stroke: true,
@@ -12,6 +12,7 @@ describe('stylebarFields by tool', () => {
       redaction: false,
       strength: false,
       fill: true,
+      boxShape: true,
     };
     expect(stylebarFields('rect', null)).toEqual(box);
     expect(stylebarFields('select', 'rect')).toEqual(box);
@@ -27,6 +28,7 @@ describe('stylebarFields by tool', () => {
         redaction: false,
         strength: false,
         fill: false,
+        boxShape: false,
       });
     }
   });
@@ -41,6 +43,7 @@ describe('stylebarFields by tool', () => {
         redaction: false,
         strength: false,
         fill: false,
+        boxShape: false,
       });
     }
   });
@@ -54,6 +57,7 @@ describe('stylebarFields by tool', () => {
       redaction: false,
       strength: false,
       fill: false,
+      boxShape: false,
     });
   });
 
@@ -66,6 +70,7 @@ describe('stylebarFields by tool', () => {
       redaction: true,
       strength: true,
       fill: false,
+      boxShape: false,
     });
   });
 
@@ -86,6 +91,7 @@ describe('stylebarFields by selection', () => {
       redaction: false,
       strength: false,
       fill: false,
+      boxShape: false,
     });
     expect(stylebarFields('rect', 'step')).toEqual({
       color: true,
@@ -95,6 +101,7 @@ describe('stylebarFields by selection', () => {
       redaction: false,
       strength: false,
       fill: false,
+      boxShape: false,
     });
   });
 
@@ -108,6 +115,7 @@ describe('stylebarFields by selection', () => {
         redaction: false,
         strength: false,
         fill: false,
+        boxShape: false,
       });
     }
   });
@@ -121,6 +129,7 @@ describe('stylebarFields by selection', () => {
       redaction: false,
       strength: false,
       fill: false,
+      boxShape: false,
     });
   });
 
@@ -133,6 +142,7 @@ describe('stylebarFields by selection', () => {
       redaction: true,
       strength: true,
       fill: false,
+      boxShape: false,
     });
   });
 });
@@ -147,6 +157,7 @@ describe('stylebarFields for the eyedropper', () => {
       redaction: false,
       strength: false,
       fill: false,
+      boxShape: false,
     });
   });
 });
@@ -161,6 +172,7 @@ describe('stylebarEmpty', () => {
       redaction: false,
       strength: false,
       fill: false,
+      boxShape: false,
     };
     expect(stylebarEmpty({ ...base, color: true })).toBe(false);
     expect(stylebarEmpty({ ...base, shape: true })).toBe(false);

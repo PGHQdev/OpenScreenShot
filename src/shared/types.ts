@@ -6,6 +6,9 @@
 import type { RecMessage } from './recording-types';
 import { tokens } from './design-tokens';
 
+/** The outlines the editor's Shape tool draws inside its drag box. */
+export type BoxShape = 'rect' | 'rounded' | 'ellipse' | 'triangle';
+
 /** The three capture modes offered in the popup. */
 export type CaptureMode = 'full-page' | 'visible' | 'region';
 
@@ -178,6 +181,8 @@ export interface Settings {
   annotationFontSize: number;
   /** Rectangles draw filled in the stroke colour. */
   annotationFill: boolean;
+  /** The outline the Shape tool draws. See BOX_SHAPES (src/editor/annotations.ts). */
+  annotationShape: BoxShape;
   /** Custom colours the user picked, most recent first. */
   recentColors: string[];
   /** Seconds to wait before every capture (0 = immediate). See CAPTURE_DELAYS. */
@@ -209,6 +214,7 @@ export const DEFAULT_SETTINGS: Settings = {
   annotationStrokeWidth: 6,
   annotationFontSize: 28,
   annotationFill: false,
+  annotationShape: 'rect',
   recentColors: [],
   captureDelay: 0,
   captureAction: 'editor',

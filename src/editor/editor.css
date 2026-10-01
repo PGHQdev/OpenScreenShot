@@ -127,7 +127,8 @@ body {
   display: flex;
   gap: var(--s-05);
 }
-.width-btn {
+.width-btn,
+.shape-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -142,17 +143,21 @@ body {
     border-color var(--dur-fast) var(--ease-out),
     transform var(--dur-fast) var(--ease-out);
 }
-.width-btn:hover {
+.width-btn:hover,
+.shape-btn:hover {
   background: var(--hover-overlay);
 }
-.width-btn:active {
+.width-btn:active,
+.shape-btn:active {
   transform: scale(0.98);
 }
-.width-btn[aria-pressed='true'] {
+.width-btn[aria-pressed='true'],
+.shape-btn[aria-pressed='true'] {
   background: var(--accent-subtle);
   border-color: var(--accent);
 }
-.width-btn:focus-visible {
+.width-btn:focus-visible,
+.shape-btn:focus-visible {
   outline: 2px solid var(--border-focus);
   outline-offset: 1px;
 }
@@ -160,6 +165,15 @@ body {
   width: 20px;
   background: var(--text-1);
   border-radius: 2px;
+}
+.shape-btn {
+  color: var(--text-1);
+}
+.shape-glyph {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
 }
 /* Compound with .range (shared/controls.css), not a bare class: equal
    specificity plus source order used to let .range's own width: 100% win
@@ -1628,6 +1642,7 @@ body {
   }
   .look-btn,
   .width-btn,
+  .shape-btn,
   .zoom-trigger,
   .zoom-item,
   .more-item,
@@ -1684,6 +1699,7 @@ body {
   .tool-btn.is-active,
   .look-btn[aria-pressed='true'],
   .width-btn[aria-pressed='true'],
+  .shape-btn[aria-pressed='true'],
   .segmented-btn.is-selected,
   .format-card.is-selected,
   .btn-secondary.is-active {

@@ -1273,6 +1273,10 @@
     "message": "矩形",
     "description": "Editor tool rail: the Rectangle tool. Also the Rectangle spotlight-shape option."
   },
+  "editorToolShape": {
+    "message": "形狀",
+    "description": "Editor tool rail: the Shape tool (rectangle, rounded, oval, triangle)."
+  },
   "editorToolArrow": {
     "message": "箭頭",
     "description": "Editor tool rail: the Arrow tool."
@@ -1318,7 +1322,7 @@
     "description": "Editor tool rail: the Cut tool."
   },
   "editorHintRect": {
-    "message": "拖曳繪製矩形 · 按住 Shift 保持正方形",
+    "message": "拖曳繪製形狀 · 按住 Shift 保持寬高相等",
     "description": "Editor status bar hint for the Rectangle tool."
   },
   "editorHintArrow": {
@@ -1396,6 +1400,10 @@
   "editorShapeEllipse": {
     "message": "橢圓",
     "description": "Editor style bar: the Ellipse spotlight shape."
+  },
+  "editorShapeTriangle": {
+    "message": "三角形",
+    "description": "Editor style bar: the Triangle shape of the Shape tool."
   },
   "editorStyleColor": {
     "message": "顏色",

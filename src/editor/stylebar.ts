@@ -24,6 +24,8 @@ export interface StylebarFields {
   strength: boolean;
   /** The rectangle's outline / solid fill picker. */
   fill: boolean;
+  /** The Shape tool's outline picker (rectangle, rounded, oval, triangle). */
+  boxShape: boolean;
 }
 
 const NONE: StylebarFields = {
@@ -34,9 +36,10 @@ const NONE: StylebarFields = {
   redaction: false,
   strength: false,
   fill: false,
+  boxShape: false,
 };
 const SHAPE: StylebarFields = { ...NONE, color: true, stroke: true };
-const BOX: StylebarFields = { ...SHAPE, fill: true };
+const BOX: StylebarFields = { ...SHAPE, fill: true, boxShape: true };
 const GLYPH: StylebarFields = { ...NONE, color: true, fontSize: true };
 const SPOTLIGHT: StylebarFields = { ...NONE, shape: true };
 const BLUR: StylebarFields = { ...NONE, redaction: true, strength: true };
@@ -89,7 +92,16 @@ export function stylebarFields(
 
 /** True when no control applies, so the bar should not render at all. */
 export function stylebarEmpty(f: StylebarFields): boolean {
-  return !f.color && !f.stroke && !f.fontSize && !f.shape && !f.redaction && !f.strength && !f.fill;
+  return (
+    !f.color &&
+    !f.stroke &&
+    !f.fontSize &&
+    !f.shape &&
+    !f.redaction &&
+    !f.strength &&
+    !f.fill &&
+    !f.boxShape
+  );
 }
 
 /**

@@ -1273,6 +1273,10 @@
     "message": "Rettangolo",
     "description": "Editor tool rail: the Rectangle tool. Also the Rectangle spotlight-shape option."
   },
+  "editorToolShape": {
+    "message": "Forma",
+    "description": "Editor tool rail: the Shape tool (rectangle, rounded, oval, triangle)."
+  },
   "editorToolArrow": {
     "message": "Freccia",
     "description": "Editor tool rail: the Arrow tool."
@@ -1318,7 +1322,7 @@
     "description": "Editor tool rail: the Cut tool."
   },
   "editorHintRect": {
-    "message": "Trascina per disegnare un rettangolo · Shift lo rende quadrato",
+    "message": "Trascina per disegnare una forma · Shift mantiene larghezza e altezza uguali",
     "description": "Editor status bar hint for the Rectangle tool."
   },
   "editorHintArrow": {
@@ -1396,6 +1400,10 @@
   "editorShapeEllipse": {
     "message": "Ellisse",
     "description": "Editor style bar: the Ellipse spotlight shape."
+  },
+  "editorShapeTriangle": {
+    "message": "Triangolo",
+    "description": "Editor style bar: the Triangle shape of the Shape tool."
   },
   "editorStyleColor": {
     "message": "Colore",

@@ -9,6 +9,7 @@
  * w/h negative); {@link normalizeRect} fixes that for drawing and hit-testing.
  */
 import { tokens } from '../shared/design-tokens';
+import type { BoxShape } from '../shared/types';
 
 export interface Rect {
   x: number;
@@ -39,6 +40,8 @@ export interface RectAnnotation extends BaseAnnotation {
    * the `fill` colour string older drafts may still carry, which never draws.
    */
   filled?: boolean;
+  /** The outline drawn inside the box. Absent (older drafts) = rect. */
+  shape?: BoxShape;
 }
 
 export interface ArrowAnnotation extends BaseAnnotation {
@@ -114,6 +117,13 @@ export interface StepAnnotation extends BaseAnnotation {
 }
 
 export type SpotlightShape = 'rect' | 'rounded' | 'ellipse';
+
+export const BOX_SHAPES: readonly BoxShape[] = ['rect', 'rounded', 'ellipse', 'triangle'];
+
+/** A stored shape name, or rect when it is not one this build draws. */
+export function normalizeBoxShape(value: unknown): BoxShape {
+  return BOX_SHAPES.includes(value as BoxShape) ? (value as BoxShape) : 'rect';
+}
 
 /**
  * Dims the whole image and cuts this region out. All spotlights render as one
@@ -410,13 +420,50 @@ export function drawAnnotation(
 function drawRect(ctx: CanvasRenderingContext2D, a: RectAnnotation): void {
   const r = normalizeRect(a);
   if (r.w <= 0 || r.h <= 0) return;
+  const shape = normalizeBoxShape(a.shape);
+  if (shape === 'rect') {
+    if (a.filled === true) {
+      ctx.fillStyle = a.stroke;
+      ctx.fillRect(r.x, r.y, r.w, r.h);
+    }
+    ctx.lineWidth = a.strokeWidth;
+    ctx.strokeStyle = a.stroke;
+    ctx.strokeRect(r.x, r.y, r.w, r.h);
+    return;
+  }
+  ctx.beginPath();
+  traceBoxShape(ctx, r, shape);
   if (a.filled === true) {
     ctx.fillStyle = a.stroke;
-    ctx.fillRect(r.x, r.y, r.w, r.h);
+    ctx.fill();
   }
   ctx.lineWidth = a.strokeWidth;
   ctx.strokeStyle = a.stroke;
-  ctx.strokeRect(r.x, r.y, r.w, r.h);
+  // A mitred triangle apex spikes far past its box at thick strokes.
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+}
+
+/** Trace a non-rect box outline (caller begins the path, fills and strokes). */
+function traceBoxShape(ctx: CanvasRenderingContext2D, r: Rect, shape: BoxShape): void {
+  switch (shape) {
+    case 'rect':
+      ctx.rect(r.x, r.y, r.w, r.h);
+      break;
+    case 'rounded':
+      // Proportional, so the corner reads the same on a 5K capture as on a small one.
+      ctx.roundRect(r.x, r.y, r.w, r.h, Math.min(r.w, r.h) / 5);
+      break;
+    case 'ellipse':
+      ctx.ellipse(r.x + r.w / 2, r.y + r.h / 2, r.w / 2, r.h / 2, 0, 0, Math.PI * 2);
+      break;
+    case 'triangle':
+      ctx.moveTo(r.x + r.w / 2, r.y);
+      ctx.lineTo(r.x + r.w, r.y + r.h);
+      ctx.lineTo(r.x, r.y + r.h);
+      ctx.closePath();
+      break;
+  }
 }
 
 /** The shared body of an arrow and a line: one round-capped segment. */

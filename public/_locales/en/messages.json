@@ -1271,7 +1271,11 @@
   },
   "editorToolRectangle": {
     "message": "Rectangle",
-    "description": "Editor tool rail: the Rectangle tool. Also the Rectangle spotlight-shape option."
+    "description": "Editor style bar: the Rectangle option of the Shape tool and of the spotlight shape."
+  },
+  "editorToolShape": {
+    "message": "Shape",
+    "description": "Editor tool rail: the Shape tool (rectangle, rounded, oval, triangle)."
   },
   "editorToolArrow": {
     "message": "Arrow",
@@ -1318,7 +1322,7 @@
     "description": "Editor tool rail: the Cut tool."
   },
   "editorHintRect": {
-    "message": "Drag to draw a rectangle · Shift keeps it square",
+    "message": "Drag to draw a shape · Shift keeps width and height equal",
     "description": "Editor status bar hint for the Rectangle tool."
   },
   "editorHintArrow": {
@@ -1396,6 +1400,10 @@
   "editorShapeEllipse": {
     "message": "Oval",
     "description": "Editor style bar: the Ellipse spotlight shape."
+  },
+  "editorShapeTriangle": {
+    "message": "Triangle",
+    "description": "Editor style bar: the Triangle shape of the Shape tool."
   },
   "editorStyleColor": {
     "message": "Color",

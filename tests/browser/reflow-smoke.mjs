@@ -373,7 +373,7 @@ async function testEditor(browser, base, messages) {
   await page.waitForSelector('.toolbar .tool-btn');
   await page.waitForSelector('.toolbar');
   // The Rectangle tool has a style bar (color, stroke, shape); Select does not.
-  await page.click(`.tool-btn[title^="${messages.editorToolRectangle.message}"]`);
+  await page.click(`.tool-btn[title^="${messages.editorToolShape.message}"]`);
   await page.waitForSelector('.stylebar');
 
   step('EDITOR — 1280px width: labeled actions have their own row, tools stay visible');

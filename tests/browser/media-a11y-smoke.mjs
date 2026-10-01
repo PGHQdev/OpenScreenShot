@@ -370,7 +370,7 @@ async function testEditor(browser, base, messages) {
   // The editor opens in View mode; enter Markup before testing tool states.
   await page.waitForSelector('.toolbar .tool-btn');
   await page.waitForSelector('.toolbar');
-  await page.click('.tool-btn[title^="Rectangle"]');
+  await page.click('.tool-btn[title^="Shape"]');
   await page.waitForSelector('.stylebar');
   // A real swatch selection, not just the default, so [aria-pressed='true'] has a target.
   await page.click('.swatch[aria-label="Orange"]');
@@ -475,7 +475,7 @@ async function testEditor(browser, base, messages) {
     `the thumb (${thumbPixelFC}) stays visually distinct from its track (${trackPixelFC}) under forced-colors`,
   );
   await emulateMedia(cdp, []);
-  await page.click('.tool-btn[title^="Rectangle"]');
+  await page.click('.tool-btn[title^="Shape"]');
   await page.waitForSelector('.stylebar');
 
   step('EDITOR — forced-colors: active — box-shadow really is dropped, generally, in this browser');

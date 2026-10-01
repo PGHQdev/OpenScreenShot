@@ -101,6 +101,15 @@ describe('spotlight tool', () => {
     expect(draft).toMatchObject({ type: 'spotlight', x: 4, y: 9, w: 0, h: 0, shape: 'ellipse' });
   });
 
+  it('drafts the chosen box shape, and leaves a plain rectangle unmarked', () => {
+    expect(
+      createShapeDraft('rect', { x: 0, y: 0 }, '#ff3b30', 6, { boxShape: 'ellipse' }),
+    ).toMatchObject({ type: 'rect', shape: 'ellipse' });
+    expect(
+      createShapeDraft('rect', { x: 0, y: 0 }, '#ff3b30', 6, { boxShape: 'rect' }),
+    ).not.toHaveProperty('shape');
+  });
+
   it('drafts a filled rectangle only when asked', () => {
     expect(
       createShapeDraft('rect', { x: 0, y: 0 }, '#ff3b30', 6, { rectFill: true }),

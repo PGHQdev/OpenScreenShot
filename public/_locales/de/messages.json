@@ -1273,6 +1273,10 @@
     "message": "Rechteck",
     "description": "Editor tool rail: the Rectangle tool. Also the Rectangle spotlight-shape option."
   },
+  "editorToolShape": {
+    "message": "Form",
+    "description": "Editor tool rail: the Shape tool (rectangle, rounded, oval, triangle)."
+  },
   "editorToolArrow": {
     "message": "Pfeil",
     "description": "Editor tool rail: the Arrow tool."
@@ -1318,7 +1322,7 @@
     "description": "Editor tool rail: the Cut tool."
   },
   "editorHintRect": {
-    "message": "Ziehen für ein Rechteck · Shift hält es quadratisch",
+    "message": "Ziehen für eine Form · Shift hält Breite und Höhe gleich",
     "description": "Editor status bar hint for the Rectangle tool."
   },
   "editorHintArrow": {
@@ -1396,6 +1400,10 @@
   "editorShapeEllipse": {
     "message": "Ellipse",
     "description": "Editor style bar: the Ellipse spotlight shape."
+  },
+  "editorShapeTriangle": {
+    "message": "Dreieck",
+    "description": "Editor style bar: the Triangle shape of the Shape tool."
   },
   "editorStyleColor": {
     "message": "Farbe",

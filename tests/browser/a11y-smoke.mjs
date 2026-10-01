@@ -443,7 +443,7 @@ async function testEditor(browser, base, messages) {
   step('EDITOR — Markup chrome with the Rectangle tool active');
   await page.waitForSelector('.toolbar .tool-btn');
   await page.waitForSelector('.toolbar');
-  await page.click('.tool-btn[title^="Rectangle"]');
+  await page.click('.tool-btn[title^="Shape"]');
   await page.waitForSelector('.stylebar');
   await scan(page, 'editor main surface');
 

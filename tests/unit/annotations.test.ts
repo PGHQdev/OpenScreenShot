@@ -20,6 +20,8 @@ import {
   STROKE_WIDTHS,
   strokeBarHeight,
   strokeScale,
+  BOX_SHAPES,
+  normalizeBoxShape,
   translateAnnotation,
   unionBBox,
   type Annotation,
@@ -241,6 +243,80 @@ describe('drawAnnotation on a blur: strength drives what actually gets painted',
 
     expect(created).toHaveLength(0);
     expect(draws).toHaveLength(0);
+  });
+});
+
+describe('normalizeBoxShape', () => {
+  it('keeps every shape this build draws', () => {
+    for (const shape of BOX_SHAPES) expect(normalizeBoxShape(shape)).toBe(shape);
+  });
+
+  it('reads a missing or unknown stored shape as a rectangle', () => {
+    expect(normalizeBoxShape(undefined)).toBe('rect');
+    expect(normalizeBoxShape('hexagon')).toBe('rect');
+  });
+});
+
+describe('drawAnnotation — box shapes', () => {
+  function pathRecorder() {
+    const calls: string[] = [];
+    const ctx = new Proxy(
+      { fillStyle: '', strokeStyle: '', lineWidth: 0, lineJoin: '' },
+      {
+        get(target, prop: string) {
+          if (prop in target) return target[prop as keyof typeof target];
+          return (...args: number[]) => calls.push(`${prop}(${args.join(',')})`);
+        },
+        set(target, prop: string, value) {
+          (target as Record<string, unknown>)[prop] = value;
+          return true;
+        },
+      },
+    );
+    return { ctx: ctx as unknown as CanvasRenderingContext2D, calls, state: ctx };
+  }
+  const box = { id: 'b', type: 'rect', x: 0, y: 0, w: 100, h: 60, stroke: '#0f0', strokeWidth: 4 };
+
+  it('traces an oval inside the box and strokes it with no fill', () => {
+    const { ctx, calls } = pathRecorder();
+    drawAnnotation(
+      ctx,
+      { ...box, shape: 'ellipse' } as Annotation,
+      {} as HTMLImageElement,
+      createBlurCache(),
+    );
+    expect(calls).toEqual([`beginPath()`, `ellipse(50,30,50,30,0,0,${Math.PI * 2})`, 'stroke()']);
+  });
+
+  it('traces a triangle pointing up, fills it, and rounds the apex join', () => {
+    const { ctx, calls, state } = pathRecorder();
+    drawAnnotation(
+      ctx,
+      { ...box, shape: 'triangle', filled: true } as Annotation,
+      {} as HTMLImageElement,
+      createBlurCache(),
+    );
+    expect(calls).toEqual([
+      'beginPath()',
+      'moveTo(50,0)',
+      'lineTo(100,60)',
+      'lineTo(0,60)',
+      'closePath()',
+      'fill()',
+      'stroke()',
+    ]);
+    expect(state.lineJoin).toBe('round');
+  });
+
+  it('rounds the corners in proportion to the shorter side', () => {
+    const { ctx, calls } = pathRecorder();
+    drawAnnotation(
+      ctx,
+      { ...box, shape: 'rounded' } as Annotation,
+      {} as HTMLImageElement,
+      createBlurCache(),
+    );
+    expect(calls).toContain('roundRect(0,0,100,60,12)');
   });
 });
 

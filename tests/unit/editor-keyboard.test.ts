@@ -807,7 +807,7 @@ describe('placementRect', () => {
 
 describe('annotationLabel', () => {
   it('uses the word the toolbar already uses', () => {
-    expect(annotationLabel('rect')).toBe('Rectangle');
+    expect(annotationLabel('rect')).toBe('Shape');
     expect(annotationLabel('highlight')).toBe('Highlighter');
     expect(annotationLabel('step')).toBe('Step number');
     expect(annotationLabel('spotlight')).toBe('Spotlight');
@@ -817,7 +817,7 @@ describe('annotationLabel', () => {
 describe('announce', () => {
   it('names the layer and its place in the stack on selection', () => {
     expect(announce({ kind: 'select', annotation: rect, index: 2, total: 5 })).toBe(
-      'Rectangle selected, layer 2 of 5.',
+      'Shape selected, layer 2 of 5.',
     );
   });
 
@@ -835,18 +835,18 @@ describe('announce', () => {
   });
 
   it('gives the position of a new layer', () => {
-    expect(announce({ kind: 'add', annotation: rect })).toBe('Rectangle added at 10, 20.');
+    expect(announce({ kind: 'add', annotation: rect })).toBe('Shape added at 10, 20.');
   });
 
   it('gives the position a move landed on', () => {
     const moved = translateAnnotation(rect, 5, -5);
-    expect(announce({ kind: 'move', annotation: moved })).toBe('Rectangle moved to 15, 15.');
+    expect(announce({ kind: 'move', annotation: moved })).toBe('Shape moved to 15, 15.');
   });
 
   it('gives the size a resize landed on', () => {
     const bigger = resizeAnnotationBy(rect, 10, 10);
     expect(announce({ kind: 'resize', annotation: bigger })).toBe(
-      'Rectangle resized to 110 by 60 pixels.',
+      'Shape resized to 110 by 60 pixels.',
     );
   });
 

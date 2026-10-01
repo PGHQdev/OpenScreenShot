@@ -52,6 +52,7 @@ import {
   IconUndo,
 } from '../shared/icons';
 import { getSettings, setSettings } from '../shared/storage';
+import type { BoxShape } from '../shared/types';
 import {
   SUPPORT_PROJECT_URL,
   openReviewPage,
@@ -863,6 +864,26 @@ function StyleBar({
           </div>
         </div>
       ) : null}
+      {fields.boxShape ? (
+        <div class="stylebar-group">
+          <span class="stylebar-label">{t('editorStyleShape')}</span>
+          {/* Glyphs, not words: four labels overflow the bar on a narrow window. */}
+          <div class="widths">
+            {BOX_SHAPE_OPTIONS.map((s) => (
+              <button
+                key={s.id}
+                class="shape-btn"
+                title={s.label}
+                aria-label={s.label}
+                aria-pressed={ed.boxShape === s.id}
+                onClick={() => ed.setBoxShape(s.id)}
+              >
+                <BoxShapeGlyph shape={s.id} />
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
       {fields.fill ? (
         <div class="stylebar-group">
           <span class="stylebar-label">{t('editorStyleFill')}</span>
@@ -959,6 +980,34 @@ const BLUR_MODES: { id: BlurMode; label: string; hint: string }[] = [
   { id: 'mosaic', label: t('editorBlurModeMosaic'), hint: t('editorBlurModeMosaicHint') },
   { id: 'solid', label: t('editorBlurModeSolid'), hint: t('editorBlurModeSolidHint') },
 ];
+
+const BOX_SHAPE_OPTIONS: { id: BoxShape; label: string }[] = [
+  { id: 'rect', label: t('editorToolRectangle') },
+  { id: 'rounded', label: t('editorShapeRounded') },
+  { id: 'ellipse', label: t('editorShapeEllipse') },
+  { id: 'triangle', label: t('editorShapeTriangle') },
+];
+
+function BoxShapeGlyph({ shape }: { shape: BoxShape }) {
+  return (
+    <svg
+      class="shape-glyph"
+      width="18"
+      height="14"
+      viewBox="0 0 18 14"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {shape === 'ellipse' ? (
+        <ellipse cx="9" cy="7" rx="8" ry="6" />
+      ) : shape === 'triangle' ? (
+        <path d="M9 1 17 13H1Z" />
+      ) : (
+        <rect x="1" y="1" width="16" height="12" rx={shape === 'rounded' ? 4 : 0} />
+      )}
+    </svg>
+  );
+}
 
 const RECT_FILLS: { fill: boolean; label: string }[] = [
   { fill: false, label: t('editorFillNone') },

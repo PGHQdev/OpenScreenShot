@@ -17,6 +17,7 @@ import {
   type StepAnnotation,
   type TextAnnotation,
 } from './annotations';
+import type { BoxShape } from '../shared/types';
 import { t } from './i18n';
 
 export type Tool =
@@ -44,7 +45,7 @@ export interface ToolDef {
 
 export const TOOL_LIST: ToolDef[] = [
   { id: 'select', label: t('editorToolSelect'), shortcut: 'V' },
-  { id: 'rect', label: t('editorToolRectangle'), shortcut: 'R' },
+  { id: 'rect', label: t('editorToolShape'), shortcut: 'R' },
   { id: 'arrow', label: t('editorToolArrow'), shortcut: 'A' },
   { id: 'line', label: t('editorToolLine'), shortcut: 'L' },
   { id: 'pen', label: t('editorToolPen'), shortcut: 'P' },
@@ -88,6 +89,7 @@ export const TOOL_DIVIDER_AFTER: ReadonlySet<Tool> = new Set(['select', 'pen']);
 /** Per-tool options for {@link createShapeDraft} beyond the shared stroke style. */
 export interface ShapeDraftOptions {
   rectFill?: boolean;
+  boxShape?: BoxShape;
   spotlightShape?: SpotlightShape;
   blurMode?: BlurMode;
   blurStrength?: number;
@@ -114,6 +116,7 @@ export function createShapeDraft(
         stroke,
         strokeWidth,
         ...(opts.rectFill ? { filled: true } : {}),
+        ...(opts.boxShape && opts.boxShape !== 'rect' ? { shape: opts.boxShape } : {}),
       };
     case 'arrow':
     case 'line':

@@ -29,6 +29,7 @@ import {
   handleAtRect,
   hasStroke,
   measureTextSize,
+  normalizeBoxShape,
   normalizeRect,
   resizeRect,
   scaleAnnotation,
@@ -99,7 +100,7 @@ import {
   type CarriedBox,
   type Mutation,
 } from './keyboard';
-import type { CaptureHistoryEntry, LastCapture, Settings } from '../shared/types';
+import type { BoxShape, CaptureHistoryEntry, LastCapture, Settings } from '../shared/types';
 import {
   clearDraft,
   clearDraftImage,
@@ -241,6 +242,7 @@ export function useEditor() {
   const [spotlightShape, setSpotlightShapeState] = useState<SpotlightShape>('rect');
   const [blurMode, setBlurModeState] = useState<BlurMode>('blur');
   const [rectFill, setRectFillState] = useState(false);
+  const [boxShape, setBoxShapeState] = useState<BoxShape>('rect');
   const [blurStrength, setBlurStrengthState] = useState<number>(DEFAULT_BLUR_STRENGTH);
   const [frame, setFrameState] = useState<FrameOptions>(DEFAULT_FRAME);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
@@ -307,6 +309,7 @@ export function useEditor() {
   const spotlightShapeRef = useRef(spotlightShape);
   const blurModeRef = useRef(blurMode);
   const rectFillRef = useRef(rectFill);
+  const boxShapeRef = useRef(boxShape);
   const blurStrengthRef = useRef(blurStrength);
   // True from the moment restoreDraft clears draftPrompt until the restored
   // annotations land. The canvas is transiently empty in that window; without
@@ -484,6 +487,10 @@ export function useEditor() {
   }, [rectFill]);
 
   useEffect(() => {
+    boxShapeRef.current = boxShape;
+  }, [boxShape]);
+
+  useEffect(() => {
     blurStrengthRef.current = blurStrength;
   }, [blurStrength]);
 
@@ -600,6 +607,10 @@ export function useEditor() {
     if (mode !== null) setBlurModeState(mode);
     const fill = agreed(sel, (a) => (a.type === 'rect' ? a.filled === true : undefined));
     if (fill !== null) setRectFillState(fill);
+    const outline = agreed(sel, (a) =>
+      a.type === 'rect' ? normalizeBoxShape(a.shape) : undefined,
+    );
+    if (outline !== null) setBoxShapeState(outline);
     if (strength !== null) setBlurStrengthState(strength);
   }, [selectedIds]);
 
@@ -874,6 +885,15 @@ export function useEditor() {
     [applyStyleToSelected],
   );
 
+  const setBoxShape = useCallback(
+    (shape: BoxShape) => {
+      setBoxShapeState(shape);
+      void setSettings({ annotationShape: shape });
+      applyStyleToSelected((a) => (a.type === 'rect' ? { ...a, shape } : a));
+    },
+    [applyStyleToSelected],
+  );
+
   const setBlurMode = useCallback(
     (mode: BlurMode) => {
       setBlurModeState(mode);
@@ -954,6 +974,7 @@ export function useEditor() {
         fontSize: s.annotationFontSize,
       });
       setRectFillState(s.annotationFill);
+      setBoxShapeState(normalizeBoxShape(s.annotationShape));
       setFrameState(frameFromSettings(s));
       const requestedCapture = new URLSearchParams(window.location.search).get('capture');
       const cap = requestedCapture ? await openCapture(requestedCapture) : await getLastCapture();
@@ -1780,6 +1801,7 @@ export function useEditor() {
         {
           spotlightShape: spotlightShapeRef.current,
           rectFill: rectFillRef.current,
+          boxShape: boxShapeRef.current,
           blurMode: blurModeRef.current,
           blurStrength: blurStrengthRef.current,
         },
@@ -2024,6 +2046,7 @@ export function useEditor() {
       {
         spotlightShape: spotlightShapeRef.current,
         rectFill: rectFillRef.current,
+        boxShape: boxShapeRef.current,
         blurMode: blurModeRef.current,
         blurStrength: blurStrengthRef.current,
       },
@@ -2638,6 +2661,8 @@ export function useEditor() {
     setBlurMode,
     rectFill,
     setRectFill,
+    boxShape,
+    setBoxShape,
     blurStrength,
     setBlurStrength,
     frame,

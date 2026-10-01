@@ -1348,7 +1348,7 @@ async function testMultiSelection(browser, base, messages) {
   await page.keyboard.press('ArrowRight');
   await settle(60);
   assert(
-    /^Rectangle moved to /.test(await say()),
+    /^Shape moved to /.test(await say()),
     `a lone selection still announces itself by name: "${await say()}"`,
   );
   await page.keyboard.press('Escape');
@@ -1466,7 +1466,7 @@ async function testMultiSelection(browser, base, messages) {
   await page.mouse.click(cx0, cy0);
   await settle(80);
   assert(
-    /^Rectangle selected, layer \d+ of 4\.$/.test(await say()),
+    /^Shape selected, layer \d+ of 4\.$/.test(await say()),
     `a plain click drops back to one layer: "${await say()}"`,
   );
 
@@ -1772,7 +1772,7 @@ async function testMultiSelection(browser, base, messages) {
   // so measuring the wrong one fails here rather than passing quietly. The
   // rectangle is read first because it is the member the drift hit hardest.
   const [rx3, ry3] = await readNextLayer('[');
-  assert(/^Rectangle moved to /.test(await say()), `measuring the rectangle: "${await say()}"`);
+  assert(/^Shape moved to /.test(await say()), `measuring the rectangle: "${await say()}"`);
   const [rw3] = await sizeOfSelected();
   await page.keyboard.press('Escape');
   await page.keyboard.press('[');
@@ -1815,10 +1815,7 @@ async function testMultiSelection(browser, base, messages) {
   // the box from the members instead of carrying it.
   await page.keyboard.press('Escape');
   const [rx4, ry4] = await readNextLayer('[');
-  assert(
-    /^Rectangle moved to /.test(await say()),
-    `measuring the rectangle again: "${await say()}"`,
-  );
+  assert(/^Shape moved to /.test(await say()), `measuring the rectangle again: "${await say()}"`);
   const [rw4] = await sizeOfSelected();
   assert(
     rw4 === rw3,
@@ -1866,7 +1863,7 @@ async function testMultiSelection(browser, base, messages) {
   await settle(150);
   await page.keyboard.press('Escape');
   const [rx5, ry5] = await readNextLayer('[');
-  assert(/^Rectangle moved to /.test(await say()), `measuring the rectangle: "${await say()}"`);
+  assert(/^Shape moved to /.test(await say()), `measuring the rectangle: "${await say()}"`);
   const [rw5] = await sizeOfSelected();
   assert(
     rw5 === rw4,
@@ -1909,7 +1906,7 @@ async function testMultiSelection(browser, base, messages) {
   await settle(150);
   await page.keyboard.press('Escape');
   const [rx6, ry6] = await readNextLayer('[');
-  assert(/^Rectangle moved to /.test(await say()), `measuring the rectangle: "${await say()}"`);
+  assert(/^Shape moved to /.test(await say()), `measuring the rectangle: "${await say()}"`);
   const [rw6] = await sizeOfSelected();
   assert(
     rw6 === rw5,
@@ -1983,7 +1980,7 @@ async function testMultiSelection(browser, base, messages) {
   await page.keyboard.up('Shift');
   await settle(80);
   assert(
-    /^Rectangle selected, layer \d+ of \d+\.$/.test(await say()),
+    /^Shape selected, layer \d+ of \d+\.$/.test(await say()),
     `shift-click took the topmost layer back out, leaving one: "${await say()}"`,
   );
   assert(
@@ -2400,7 +2397,7 @@ async function testCutTool(browser, base, messages) {
   await page.keyboard.press('r');
   await page.keyboard.press('Enter');
   await settle();
-  const added = (await say()).match(/Rectangle added at (-?\d+), (-?\d+)\./);
+  const added = (await say()).match(/Shape added at (-?\d+), (-?\d+)\./);
   assert(added !== null, `a rectangle was placed ("${await say()}")`);
   const markY = Number(added[2]);
   await page.keyboard.press('Escape'); // so the band walk below cannot move it
@@ -2512,7 +2509,7 @@ async function testCutTool(browser, base, messages) {
   await page.mouse.click(crossed.x, crossed.y(340));
   await settle(150);
   assert(
-    (await say()) === 'Rectangle selected, layer 1 of 1.',
+    (await say()) === 'Shape selected, layer 1 of 1.',
     `a click on the mark's drawn lower half selects it ("${await say()}")`,
   );
   await page.keyboard.press('Escape');
@@ -2523,7 +2520,7 @@ async function testCutTool(browser, base, messages) {
   await page.keyboard.press(']');
   await settle();
   assert(
-    (await say()) === 'Rectangle selected, layer 1 of 1.',
+    (await say()) === 'Shape selected, layer 1 of 1.',
     `the mark is selected before the band that hides it ("${await say()}")`,
   );
   // The band covers the mark's top edge, so the mark leaves the picture.
@@ -2562,7 +2559,7 @@ async function testCutTool(browser, base, messages) {
   await page.keyboard.press('Enter');
   await settle();
   assert(
-    /^Rectangle added at /.test(await say()),
+    /^Shape added at /.test(await say()),
     `Enter after switching to Rectangle drew a rectangle, it did not take the band out ("${await say()}")`,
   );
   assert((await size()) === '800 × 600px', `and the picture is untouched (${await size()})`);
@@ -2704,7 +2701,7 @@ async function testCutSelectionRules(browser, base, messages) {
   await page.keyboard.press('r');
   await page.keyboard.press('Enter');
   await settle();
-  const placed = (await say()).match(/Rectangle added at (-?\d+), (-?\d+)\./);
+  const placed = (await say()).match(/Shape added at (-?\d+), (-?\d+)\./);
   assert(placed !== null, `a rectangle was placed ("${await say()}")`);
   const markX = Number(placed[1]);
   const markY = Number(placed[2]);
@@ -2748,7 +2745,7 @@ async function testCutSelectionRules(browser, base, messages) {
   await page.mouse.up();
   await settle(150);
   assert(
-    (await say()) === 'Rectangle selected, layer 1 of 1.',
+    (await say()) === 'Shape selected, layer 1 of 1.',
     `the marquee caught the mark it was dragged across ("${await say()}")`,
   );
   await page.keyboard.press('Escape');
@@ -2765,7 +2762,7 @@ async function testCutSelectionRules(browser, base, messages) {
   await page.keyboard.press(']');
   await settle();
   assert(
-    (await say()) === 'Rectangle selected, layer 1 of 1.',
+    (await say()) === 'Shape selected, layer 1 of 1.',
     `the mark is selected before it is nudged ("${await say()}")`,
   );
   // The band ends 30 rows above the mark's top. Three coarse nudges put the
@@ -2773,7 +2770,7 @@ async function testCutSelectionRules(browser, base, messages) {
   for (let i = 0; i < 3; i++) await chord(['Shift'], 'ArrowUp');
   await settle();
   assert(
-    (await say()) === `Rectangle moved to ${markX}, ${markY - 30}.`,
+    (await say()) === `Shape moved to ${markX}, ${markY - 30}.`,
     `three nudges leave it on the last row above the band ("${await say()}")`,
   );
   // The fourth takes its top onto a cut row. It was in the picture when the
@@ -2781,7 +2778,7 @@ async function testCutSelectionRules(browser, base, messages) {
   await chord(['Shift'], 'ArrowUp');
   await settle();
   assert(
-    (await say()) === `Rectangle moved to ${markX}, ${markY - 40}.`,
+    (await say()) === `Shape moved to ${markX}, ${markY - 40}.`,
     `the press that hides it still reports the move it made ("${await say()}")`,
   );
   await chord(['Shift'], 'ArrowUp');
@@ -2799,7 +2796,7 @@ async function testCutSelectionRules(browser, base, messages) {
   await page.keyboard.press(']');
   await settle();
   assert(
-    (await say()) === 'Rectangle selected, layer 1 of 1.',
+    (await say()) === 'Shape selected, layer 1 of 1.',
     `a mark is selected and a band is about to be drafted ("${await say()}")`,
   );
   await page.keyboard.press('x');
@@ -3066,7 +3063,7 @@ async function testCutMixedSelectionGrab(browser, base, messages) {
   for (const targetY of [190, 320, 400]) {
     await page.keyboard.press('Enter');
     await settle();
-    const placed = (await say()).match(/Rectangle added at (-?\d+), (-?\d+)\./);
+    const placed = (await say()).match(/Shape added at (-?\d+), (-?\d+)\./);
     assert(placed !== null, 'new rectangle reports its source position');
     await nudge(targetY - Number(placed[2]));
   }
@@ -4335,7 +4332,7 @@ async function testPinToFloatingWindow(browser, base, messages) {
   await page.waitForSelector('.toolbar .tool-btn');
   await page.waitForSelector('.toolbar');
   await new Promise((r) => setTimeout(r, 350)); // mode-change refit
-  await page.click('button[title^="Rectangle"]');
+  await page.click('button[title^="Shape"]');
   const box = await page.$eval('.stage-canvas', (el) => {
     const r = el.getBoundingClientRect();
     return { x: r.x, y: r.y, w: r.width, h: r.height };
@@ -4915,7 +4912,7 @@ async function main() {
     await page.keyboard.press('Enter');
     await settle();
     assert((await count()) === '1', 'the rectangle landed');
-    assert(/^Rectangle added at \d+, \d+\.$/.test(await say()), `announced: "${await say()}"`);
+    assert(/^Shape added at \d+, \d+\.$/.test(await say()), `announced: "${await say()}"`);
     assert(
       !(await page.$eval('[aria-label="Delete selected"]', (b) => b.disabled)),
       'the topbar Delete button is reachable — selection came from the keyboard',
