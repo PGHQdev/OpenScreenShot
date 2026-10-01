@@ -282,8 +282,8 @@
     "description": "Editor status bar, bold: express mode is off."
   },
   "editorExpressOffHint": {
-    "message": "Значок на панели инструментов открывает меню снимка.",
-    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+    "message": "Включите его, чтобы пропускать подтверждение перед снимком.",
+    "description": "Editor status bar, after editorExpressOff: asks the user to turn express mode on."
   },
   "expressMigratedNote": {
     "message": "Теперь клик по значку снимает всю страницу. Другие режимы — по правому клику.",

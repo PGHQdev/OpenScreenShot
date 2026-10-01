@@ -100,8 +100,8 @@
     "description": "Editor status bar, bold: express mode is off."
   },
   "editorExpressOffHint": {
-    "message": "Ikon bilah alat membuka menu tangkapan.",
-    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+    "message": "Aktifkan untuk melewati konfirmasi sebelum tangkapan.",
+    "description": "Editor status bar, after editorExpressOff: asks the user to turn express mode on."
   },
   "settingsExpressHint": {
     "message": "Sekali klik pada ikon bilah alat menangkap halaman penuh. Nonaktifkan untuk memilih mode setiap kali.",

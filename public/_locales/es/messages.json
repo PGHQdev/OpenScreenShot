@@ -282,8 +282,8 @@
     "description": "Editor status bar, bold: express mode is off."
   },
   "editorExpressOffHint": {
-    "message": "El icono de la barra de herramientas abre el menú de captura.",
-    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+    "message": "Actívalo para omitir la confirmación antes de la captura.",
+    "description": "Editor status bar, after editorExpressOff: asks the user to turn express mode on."
   },
   "expressMigratedNote": {
     "message": "Ahora el clic en el icono captura la página completa. Otros modos con clic derecho.",

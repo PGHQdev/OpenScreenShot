@@ -282,8 +282,8 @@
     "description": "Editor status bar, bold: express mode is off."
   },
   "editorExpressOffHint": {
-    "message": "툴바 아이콘을 클릭하면 캡처 메뉴가 열립니다.",
-    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+    "message": "켜면 캡처 전 확인 단계를 건너뜁니다.",
+    "description": "Editor status bar, after editorExpressOff: asks the user to turn express mode on."
   },
   "expressMigratedNote": {
     "message": "이제 아이콘을 클릭하면 전체 페이지가 캡처됩니다. 다른 모드는 마우스 오른쪽 버튼으로 선택하세요.",

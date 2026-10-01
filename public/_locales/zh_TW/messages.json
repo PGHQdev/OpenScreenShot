@@ -282,8 +282,8 @@
     "description": "Editor status bar, bold: express mode is off."
   },
   "editorExpressOffHint": {
-    "message": "點一下工具列圖示會開啟擷取選單。",
-    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+    "message": "開啟後可略過擷取前的確認。",
+    "description": "Editor status bar, after editorExpressOff: asks the user to turn express mode on."
   },
   "expressMigratedNote": {
     "message": "現在點一下圖示即可擷取整個網頁。其他模式請按右鍵選擇。",

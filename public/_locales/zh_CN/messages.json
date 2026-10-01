@@ -282,8 +282,8 @@
     "description": "Editor status bar, bold: express mode is off."
   },
   "editorExpressOffHint": {
-    "message": "点击工具栏图标会打开截图菜单。",
-    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+    "message": "开启后可跳过截图前的确认。",
+    "description": "Editor status bar, after editorExpressOff: asks the user to turn express mode on."
   },
   "expressMigratedNote": {
     "message": "现在点击图标即截取整页。其他模式请右键选择。",

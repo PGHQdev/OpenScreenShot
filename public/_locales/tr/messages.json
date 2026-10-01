@@ -100,8 +100,8 @@
     "description": "Editor status bar, bold: express mode is off."
   },
   "editorExpressOffHint": {
-    "message": "Araç çubuğu simgesi yakalama menüsünü açar.",
-    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+    "message": "Yakalamadan önceki onayı atlamak için açın.",
+    "description": "Editor status bar, after editorExpressOff: asks the user to turn express mode on."
   },
   "settingsExpressHint": {
     "message": "Araç çubuğu simgesine tek tıklama tam sayfayı yakalar. Her seferinde mod seçmek için kapatın.",

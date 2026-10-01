@@ -100,8 +100,8 @@
     "description": "Editor status bar, bold: express mode is off."
   },
   "editorExpressOffHint": {
-    "message": "أيقونة شريط الأدوات تفتح قائمة الالتقاط.",
-    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+    "message": "فعّله لتخطي التأكيد قبل الالتقاط.",
+    "description": "Editor status bar, after editorExpressOff: asks the user to turn express mode on."
   },
   "settingsExpressHint": {
     "message": "نقرة واحدة على أيقونة شريط الأدوات تلتقط الصفحة الكاملة. أوقفه لاختيار وضع في كل مرة.",

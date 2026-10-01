@@ -100,8 +100,8 @@
     "description": "Editor status bar, bold: express mode is off."
   },
   "editorExpressOffHint": {
-    "message": "Biểu tượng trên thanh công cụ mở menu chụp.",
-    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+    "message": "Bật để bỏ qua bước xác nhận trước khi chụp.",
+    "description": "Editor status bar, after editorExpressOff: asks the user to turn express mode on."
   },
   "settingsExpressHint": {
     "message": "Một lần nhấp vào biểu tượng trên thanh công cụ sẽ chụp toàn trang. Tắt để chọn chế độ mỗi lần.",

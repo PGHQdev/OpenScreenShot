@@ -100,8 +100,8 @@
     "description": "Editor status bar, bold: express mode is off."
   },
   "editorExpressOffHint": {
-    "message": "Het werkbalkpictogram opent het vastlegmenu.",
-    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+    "message": "Zet hem aan om de bevestiging vóór het vastleggen over te slaan.",
+    "description": "Editor status bar, after editorExpressOff: asks the user to turn express mode on."
   },
   "settingsExpressHint": {
     "message": "Eén klik op het werkbalkpictogram legt de volledige pagina vast. Zet uit om elke keer een modus te kiezen.",

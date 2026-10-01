@@ -282,8 +282,8 @@
     "description": "Editor status bar, bold: express mode is off."
   },
   "editorExpressOffHint": {
-    "message": "Das Symbol in der Symbolleiste öffnet das Aufnahmemenü.",
-    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+    "message": "Schalten Sie ihn ein, um die Bestätigung vor der Aufnahme zu überspringen.",
+    "description": "Editor status bar, after editorExpressOff: asks the user to turn express mode on."
   },
   "expressMigratedNote": {
     "message": "Ein Klick auf das Symbol nimmt jetzt die ganze Seite auf. Andere Modi per Rechtsklick.",

@@ -282,8 +282,8 @@
     "description": "Editor status bar, bold: express mode is off."
   },
   "editorExpressOffHint": {
-    "message": "ツールバーのアイコンでキャプチャメニューが開きます。",
-    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+    "message": "オンにすると、キャプチャ前の確認を省略できます。",
+    "description": "Editor status bar, after editorExpressOff: asks the user to turn express mode on."
   },
   "expressMigratedNote": {
     "message": "アイコンのクリックでページ全体をキャプチャするようになりました。他のモードは右クリックから。",

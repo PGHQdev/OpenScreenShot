@@ -100,8 +100,8 @@
     "description": "Editor status bar, bold: express mode is off."
   },
   "editorExpressOffHint": {
-    "message": "टूलबार आइकन कैप्चर मेनू खोलता है।",
-    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+    "message": "कैप्चर से पहले पुष्टि छोड़ने के लिए इसे चालू करें।",
+    "description": "Editor status bar, after editorExpressOff: asks the user to turn express mode on."
   },
   "settingsExpressHint": {
     "message": "टूलबार आइकन पर एक क्लिक से पूरा पेज कैप्चर होता है। हर बार मोड चुनने के लिए इसे बंद करें।",

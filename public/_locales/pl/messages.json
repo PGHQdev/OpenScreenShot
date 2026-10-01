@@ -100,8 +100,8 @@
     "description": "Editor status bar, bold: express mode is off."
   },
   "editorExpressOffHint": {
-    "message": "Ikona na pasku narzędzi otwiera menu przechwytywania.",
-    "description": "Editor status bar, after editorExpressOff: what the toolbar icon does instead."
+    "message": "Włącz go, aby pomijać potwierdzenie przed przechwyceniem.",
+    "description": "Editor status bar, after editorExpressOff: asks the user to turn express mode on."
   },
   "settingsExpressHint": {
     "message": "Jedno kliknięcie ikony na pasku narzędzi przechwytuje całą stronę. Wyłącz, aby za każdym razem wybierać tryb.",
