@@ -54,6 +54,12 @@ export interface ArrowAnnotation extends BaseAnnotation {
   strokeWidth: number;
   /** The tip style. Absent (older drafts) = filled. */
   head?: ArrowHead;
+  /**
+   * Quadratic Bézier control point that bends the shaft, set by dragging the
+   * arrow's middle handle. Absent = straight. See {@link bendArrow}.
+   */
+  cx?: number;
+  cy?: number;
 }
 
 export interface LineAnnotation extends BaseAnnotation {
@@ -123,6 +129,53 @@ export type SpotlightShape = 'rect' | 'rounded' | 'ellipse';
 export const BOX_SHAPES: readonly BoxShape[] = ['rect', 'rounded', 'ellipse', 'triangle'];
 
 export const ARROW_HEADS: readonly ArrowHead[] = ['filled', 'open', 'double', 'dot'];
+
+/** Whether an arrow carries a bend (both control coordinates, finite). */
+export function isBent(a: ArrowAnnotation): a is ArrowAnnotation & { cx: number; cy: number } {
+  return Number.isFinite(a.cx) && Number.isFinite(a.cy);
+}
+
+/** The arrow's middle handle: the curve's point at t = 0.5, or the chord midpoint. */
+export function arrowBendPoint(a: ArrowAnnotation): Point {
+  if (!isBent(a)) return { x: (a.x1 + a.x2) / 2, y: (a.y1 + a.y2) / 2 };
+  return {
+    x: 0.25 * a.x1 + 0.5 * a.cx + 0.25 * a.x2,
+    y: 0.25 * a.y1 + 0.5 * a.cy + 0.25 * a.y2,
+  };
+}
+
+/**
+ * Bend `a` so its curve passes through `p` at its middle. Within `straightWithin`
+ * px of the chord's midpoint the arrow goes straight again, so a bend can be
+ * undone by dragging the handle back.
+ */
+export function bendArrow(a: ArrowAnnotation, p: Point, straightWithin: number): ArrowAnnotation {
+  const mx = (a.x1 + a.x2) / 2;
+  const my = (a.y1 + a.y2) / 2;
+  const rest = { ...a };
+  delete rest.cx;
+  delete rest.cy;
+  if (Math.hypot(p.x - mx, p.y - my) <= straightWithin) return rest;
+  // B(0.5) = (P0 + 2C + P2) / 4, solved for C.
+  return { ...rest, cx: 2 * p.x - mx, cy: 2 * p.y - my };
+}
+
+/** Tight box of a bent arrow's curve: its ends plus any turning point inside. */
+function curveBox(a: ArrowAnnotation & { cx: number; cy: number }): Rect {
+  const xs = [a.x1, a.x2];
+  const ys = [a.y1, a.y2];
+  const extreme = (p0: number, c: number, p2: number, out: number[]) => {
+    const d = p0 - 2 * c + p2;
+    if (d === 0) return;
+    const t = (p0 - c) / d;
+    if (t > 0 && t < 1) out.push((1 - t) * (1 - t) * p0 + 2 * (1 - t) * t * c + t * t * p2);
+  };
+  extreme(a.x1, a.cx, a.x2, xs);
+  extreme(a.y1, a.cy, a.y2, ys);
+  const x = Math.min(...xs);
+  const y = Math.min(...ys);
+  return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
+}
 
 /** A stored tip name, or filled when it is not one this build draws. */
 export function normalizeArrowHead(value: unknown): ArrowHead {
@@ -273,6 +326,13 @@ export function bbox(a: Annotation): Rect {
     case 'spotlight':
       return normalizeRect(a);
     case 'arrow':
+      if (isBent(a)) return curveBox(a);
+      return {
+        x: Math.min(a.x1, a.x2),
+        y: Math.min(a.y1, a.y2),
+        w: Math.abs(a.x2 - a.x1),
+        h: Math.abs(a.y2 - a.y1),
+      };
     case 'line':
       return {
         x: Math.min(a.x1, a.x2),
@@ -481,6 +541,7 @@ function drawShaft(
   a: ArrowAnnotation | LineAnnotation,
   from: Point = { x: a.x1, y: a.y1 },
   to: Point = { x: a.x2, y: a.y2 },
+  control: Point | null = null,
 ): void {
   ctx.lineWidth = a.strokeWidth;
   ctx.strokeStyle = a.stroke;
@@ -488,7 +549,8 @@ function drawShaft(
   ctx.lineJoin = 'round';
   ctx.beginPath();
   ctx.moveTo(from.x, from.y);
-  ctx.lineTo(to.x, to.y);
+  if (control) ctx.quadraticCurveTo(control.x, control.y, to.x, to.y);
+  else ctx.lineTo(to.x, to.y);
   ctx.stroke();
 }
 
@@ -501,22 +563,29 @@ function drawArrow(ctx: CanvasRenderingContext2D, a: ArrowAnnotation): void {
     return; // too short to draw a head
   }
   const head = Math.max(10, a.strokeWidth * 3);
-  const angle = Math.atan2(dy, dx);
+  // Each tip points along the curve's tangent at its end: toward the end from
+  // the control point when bent, along the chord when straight.
+  const control = isBent(a) ? { x: a.cx, y: a.cy } : null;
+  const endAngle = control ? Math.atan2(a.y2 - control.y, a.x2 - control.x) : Math.atan2(dy, dx);
+  const startAngle = control ? Math.atan2(a.y1 - control.y, a.x1 - control.x) : endAngle + Math.PI;
   const style = normalizeArrowHead(a.head);
   // A filled tip ends the shaft inside the triangle: run to the point, the
   // round cap would show past it at thick widths.
   const inset = Math.min(len / 2, head * 0.7);
-  const ux = dx / len;
-  const uy = dy / len;
   const filledEnd = style === 'filled' || style === 'double';
   drawShaft(
     ctx,
     a,
-    style === 'double' ? { x: a.x1 + ux * inset, y: a.y1 + uy * inset } : undefined,
-    filledEnd ? { x: a.x2 - ux * inset, y: a.y2 - uy * inset } : undefined,
+    style === 'double'
+      ? { x: a.x1 - Math.cos(startAngle) * inset, y: a.y1 - Math.sin(startAngle) * inset }
+      : undefined,
+    filledEnd
+      ? { x: a.x2 - Math.cos(endAngle) * inset, y: a.y2 - Math.sin(endAngle) * inset }
+      : undefined,
+    control,
   );
-  drawArrowTip(ctx, a, a.x2, a.y2, angle, style === 'double' ? 'filled' : style, head);
-  if (style === 'double') drawArrowTip(ctx, a, a.x1, a.y1, angle + Math.PI, 'filled', head);
+  drawArrowTip(ctx, a, a.x2, a.y2, endAngle, style === 'double' ? 'filled' : style, head);
+  if (style === 'double') drawArrowTip(ctx, a, a.x1, a.y1, startAngle, 'filled', head);
 }
 
 /** One arrow tip at (x, y), pointing along `angle`. */
@@ -782,6 +851,14 @@ export function translateAnnotation(a: Annotation, dx: number, dy: number): Anno
     case 'spotlight':
       return { ...a, x: a.x + dx, y: a.y + dy };
     case 'arrow':
+      return {
+        ...a,
+        x1: a.x1 + dx,
+        y1: a.y1 + dy,
+        x2: a.x2 + dx,
+        y2: a.y2 + dy,
+        ...(isBent(a) ? { cx: a.cx + dx, cy: a.cy + dy } : {}),
+      };
     case 'line':
       return { ...a, x1: a.x1 + dx, y1: a.y1 + dy, x2: a.x2 + dx, y2: a.y2 + dy };
     case 'pen':
@@ -872,7 +949,7 @@ export function drawSeam(ctx: CanvasRenderingContext2D, y: number, x0: number, x
   ctx.restore();
 }
 
-export type Handle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'start' | 'end';
+export type Handle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'start' | 'end' | 'bend';
 
 export interface HandlePos {
   handle: Handle;
@@ -904,7 +981,14 @@ export function getHandles(a: Annotation): HandlePos[] {
     case 'pen':
     case 'highlight':
       return rectHandles(bbox(a));
-    case 'arrow':
+    case 'arrow': {
+      const mid = arrowBendPoint(a);
+      return [
+        { handle: 'start', x: a.x1, y: a.y1 },
+        { handle: 'end', x: a.x2, y: a.y2 },
+        { handle: 'bend', x: mid.x, y: mid.y },
+      ];
+    }
     case 'line':
       return [
         { handle: 'start', x: a.x1, y: a.y1 },
@@ -1114,6 +1198,14 @@ export function scaleInBox(
       return { ...a, x: m.x(n.x), y: m.y(n.y), w: n.w * m.kx, h: n.h * m.ky };
     }
     case 'arrow':
+      return {
+        ...a,
+        x1: m.x(a.x1),
+        y1: m.y(a.y1),
+        x2: m.x(a.x2),
+        y2: m.y(a.y2),
+        ...(isBent(a) ? { cx: m.x(a.cx), cy: m.y(a.cy) } : {}),
+      };
     case 'line':
       return { ...a, x1: m.x(a.x1), y1: m.y(a.y1), x2: m.x(a.x2), y2: m.y(a.y2) };
     case 'pen':
@@ -1229,6 +1321,14 @@ export function drawHandles(
   ctx.lineWidth = 1.5;
   for (const h of handles) {
     const p = project(h.x, h.y);
+    if (h.handle === 'bend') {
+      // Round, so it reads as "drag to curve" next to the square end handles.
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, half + 0.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      continue;
+    }
     ctx.fillRect(p.x - half, p.y - half, size, size);
     ctx.strokeRect(p.x - half, p.y - half, size, size);
   }

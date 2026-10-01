@@ -21,12 +21,16 @@ import {
   strokeBarHeight,
   strokeScale,
   ARROW_HEADS,
+  arrowBendPoint,
+  bendArrow,
   BOX_SHAPES,
+  isBent,
   normalizeArrowHead,
   normalizeBoxShape,
   translateAnnotation,
   unionBBox,
   type Annotation,
+  type ArrowAnnotation,
   type Rect,
   type BlurCache,
 } from '../../src/editor/annotations';
@@ -349,6 +353,82 @@ describe('drawAnnotation — arrow tips', () => {
   });
 });
 
+describe('bent arrows', () => {
+  const straight: ArrowAnnotation = {
+    id: 'a',
+    type: 'arrow',
+    x1: 0,
+    y1: 0,
+    x2: 100,
+    y2: 0,
+    stroke: '#f00',
+    strokeWidth: 4,
+  };
+
+  it('bends so the curve passes through the dragged point at its middle', () => {
+    const bent = bendArrow(straight, { x: 50, y: 40 }, 2);
+    expect(bent).toMatchObject({ cx: 50, cy: 80 });
+    expect(arrowBendPoint(bent)).toEqual({ x: 50, y: 40 });
+  });
+
+  it('goes straight again when the handle comes back near the chord', () => {
+    const bent = bendArrow(straight, { x: 50, y: 40 }, 2);
+    const back = bendArrow(bent, { x: 51, y: 1 }, 2);
+    expect(back).not.toHaveProperty('cx');
+    expect(back).not.toHaveProperty('cy');
+    expect(isBent(back)).toBe(false);
+  });
+
+  it('boxes the curve at its turning point, not at the control point', () => {
+    const bent = bendArrow(straight, { x: 50, y: 40 }, 2);
+    expect(bbox(bent)).toEqual({ x: 0, y: 0, w: 100, h: 40 });
+  });
+
+  it('moves the bend with the arrow', () => {
+    const bent = bendArrow(straight, { x: 50, y: 40 }, 2);
+    expect(translateAnnotation(bent, 10, -5)).toMatchObject({ cx: 60, cy: 75 });
+  });
+
+  it('scales the bend with the arrow inside a multi-selection box', () => {
+    const bent = bendArrow(straight, { x: 50, y: 40 }, 2);
+    const box = { x: 0, y: 0, w: 100, h: 40 };
+    expect(scaleInBox(bent, box, 'se', 100, 40)).toMatchObject({ x2: 200, cx: 100, cy: 160 });
+    expect(scaleInBox(straight, box, 'se', 100, 40)).not.toHaveProperty('cx');
+  });
+
+  it('draws the shaft as a curve and points the tip along the curve at its end', () => {
+    const calls: string[] = [];
+    const ctx = new Proxy(
+      { fillStyle: '', strokeStyle: '', lineWidth: 0, lineCap: '', lineJoin: '' },
+      {
+        get(target, prop: string) {
+          if (prop in target) return target[prop as keyof typeof target];
+          return (...args: number[]) =>
+            calls.push(`${prop}(${args.map((n) => Math.round(n)).join(',')})`);
+        },
+        set(target, prop: string, value) {
+          (target as Record<string, unknown>)[prop] = value;
+          return true;
+        },
+      },
+    );
+    const bent = bendArrow(straight, { x: 50, y: 40 }, 2);
+    drawAnnotation(
+      ctx as unknown as CanvasRenderingContext2D,
+      bent,
+      {} as HTMLImageElement,
+      createBlurCache(),
+    );
+    expect(calls.some((c) => c.startsWith('quadraticCurveTo(50,80,'))).toBe(true);
+    // Tangent at the end runs from the control (50,80) to (100,0): up and to
+    // the right, so both back corners of the tip sit below the point, and the
+    // shaft stops short of it along that same tangent.
+    expect(calls).toContain('quadraticCurveTo(50,80,96,7)');
+    const tip = calls.slice(calls.indexOf('stroke()') + 1);
+    expect(tip.slice(1, 4)).toEqual(['moveTo(100,0)', 'lineTo(100,12)', 'lineTo(89,6)']);
+  });
+});
+
 describe('normalizeArrowHead', () => {
   it('keeps every tip this build draws and reads anything else as filled', () => {
     for (const head of ARROW_HEADS) expect(normalizeArrowHead(head)).toBe(head);
@@ -544,7 +624,7 @@ describe('getHandles', () => {
     expect(getHandles(a)).toHaveLength(8);
   });
 
-  it('returns 2 handles for an arrow (start + end)', () => {
+  it('returns 3 handles for an arrow (start + end + the bend at its middle)', () => {
     const a: Annotation = {
       id: 'a',
       type: 'arrow',
@@ -556,7 +636,8 @@ describe('getHandles', () => {
       strokeWidth: 4,
     };
     const hs = getHandles(a);
-    expect(hs.map((h) => h.handle)).toEqual(['start', 'end']);
+    expect(hs.map((h) => h.handle)).toEqual(['start', 'end', 'bend']);
+    expect(hs[2]).toMatchObject({ x: 5, y: 5 });
   });
 
   it('returns 2 handles for a line (start + end)', () => {

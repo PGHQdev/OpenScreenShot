@@ -1155,6 +1155,10 @@
     "message": "End",
     "description": "Editor live region: the cut band's end handle."
   },
+  "editorHandleBend": {
+    "message": "Bend",
+    "description": "Editor: the arrow's middle handle, which bends it into a curve."
+  },
   "editorCropPhrase": {
     "message": "Crop $W$ by $H$ pixels at $X$, $Y$.",
     "description": "Editor live region: the size and place of the crop rectangle.",
@@ -1344,7 +1348,7 @@
     "description": "Editor status bar hint for the Rectangle tool."
   },
   "editorHintArrow": {
-    "message": "Drag to draw an arrow · Shift snaps to 45°",
+    "message": "Drag to draw an arrow · Shift snaps to 45° · Select it and drag the round handle to bend",
     "description": "Editor status bar hint for the Arrow tool."
   },
   "editorHintLine": {

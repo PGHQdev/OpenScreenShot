@@ -1155,6 +1155,10 @@
     "message": "终点",
     "description": "Editor live region: the cut band's end handle."
   },
+  "editorHandleBend": {
+    "message": "弯曲",
+    "description": "Editor: the arrow's middle handle, which bends it into a curve."
+  },
   "editorCropPhrase": {
     "message": "裁剪 $W$ × $H$ 像素，位置 $X$，$Y$。",
     "description": "Editor live region: the size and place of the crop rectangle.",
@@ -1344,7 +1348,7 @@
     "description": "Editor status bar hint for the Rectangle tool."
   },
   "editorHintArrow": {
-    "message": "拖动绘制箭头 · 按住 Shift 吸附到 45°",
+    "message": "拖动绘制箭头 · 按住 Shift 吸附到 45° · 选中后拖动圆形手柄可弯曲",
     "description": "Editor status bar hint for the Arrow tool."
   },
   "editorHintLine": {

@@ -1155,6 +1155,10 @@
     "message": "Fin",
     "description": "Editor live region: the cut band's end handle."
   },
+  "editorHandleBend": {
+    "message": "Courbure",
+    "description": "Editor: the arrow's middle handle, which bends it into a curve."
+  },
   "editorCropPhrase": {
     "message": "Recadrage de $W$ sur $H$ pixels en $X$, $Y$.",
     "description": "Editor live region: the size and place of the crop rectangle.",
@@ -1344,7 +1348,7 @@
     "description": "Editor status bar hint for the Rectangle tool."
   },
   "editorHintArrow": {
-    "message": "Glissez pour tracer une flèche · Shift aligne à 45°",
+    "message": "Glissez pour tracer une flèche · Shift aligne à 45° · Sélectionnez-la et tirez la poignée ronde pour la courber",
     "description": "Editor status bar hint for the Arrow tool."
   },
   "editorHintLine": {

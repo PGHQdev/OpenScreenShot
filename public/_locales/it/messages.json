@@ -1155,6 +1155,10 @@
     "message": "Fine",
     "description": "Editor live region: the cut band's end handle."
   },
+  "editorHandleBend": {
+    "message": "Curvatura",
+    "description": "Editor: the arrow's middle handle, which bends it into a curve."
+  },
   "editorCropPhrase": {
     "message": "Ritaglio $W$ per $H$ pixel in $X$, $Y$.",
     "description": "Editor live region: the size and place of the crop rectangle.",
@@ -1344,7 +1348,7 @@
     "description": "Editor status bar hint for the Rectangle tool."
   },
   "editorHintArrow": {
-    "message": "Trascina per disegnare una freccia · Shift aggancia a 45°",
+    "message": "Trascina per disegnare una freccia · Shift aggancia a 45° · Selezionala e trascina la maniglia tonda per curvarla",
     "description": "Editor status bar hint for the Arrow tool."
   },
   "editorHintLine": {

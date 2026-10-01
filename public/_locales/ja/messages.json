@@ -1155,6 +1155,10 @@
     "message": "終了",
     "description": "Editor live region: the cut band's end handle."
   },
+  "editorHandleBend": {
+    "message": "曲げ",
+    "description": "Editor: the arrow's middle handle, which bends it into a curve."
+  },
   "editorCropPhrase": {
     "message": "切り抜き範囲は $W$ × $H$ ピクセル、位置は $X$, $Y$ です。",
     "description": "Editor live region: the size and place of the crop rectangle.",
@@ -1344,7 +1348,7 @@
     "description": "Editor status bar hint for the Rectangle tool."
   },
   "editorHintArrow": {
-    "message": "ドラッグして矢印を描画 · Shift で 45° にスナップ",
+    "message": "ドラッグして矢印を描画 · Shift で 45° にスナップ · 選択して丸いハンドルをドラッグすると曲がります",
     "description": "Editor status bar hint for the Arrow tool."
   },
   "editorHintLine": {

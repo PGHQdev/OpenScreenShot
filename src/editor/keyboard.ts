@@ -425,6 +425,7 @@ function handleLabel(h: Handle): string {
     w: 'editorHandleLeft',
     start: 'editorHandleStart',
     end: 'editorHandleEnd',
+    bend: 'editorHandleBend',
   };
   return t(ids[h]);
 }

@@ -23,6 +23,7 @@ import type { Annotation, Rect } from './annotations';
 import {
   annotationsInRect,
   bbox,
+  bendArrow,
   DEFAULT_BLUR_STRENGTH,
   DEFAULT_STYLE,
   handleAt,
@@ -1485,6 +1486,10 @@ export function useEditor() {
               const r = resizeRect(startBBox, handle, dx, dy);
               return { ...a, x: r.x, y: r.y, w: r.w, h: r.h };
             }
+            if (a.type === 'arrow' && handle === 'bend') {
+              // Straight again within a handle's reach of the chord, in screen px.
+              return bendArrow(a, p, BEND_STRAIGHT_PX / (c.view.zoom || 1));
+            }
             if (a.type === 'arrow' || a.type === 'line') {
               if (handle === 'start') return { ...a, x1: p.x, y1: p.y };
               return { ...a, x2: p.x, y2: p.y };
@@ -2745,6 +2750,12 @@ export function useEditor() {
  * easy to hit.
  */
 const SEAM_HIT_PX = 6;
+
+/**
+ * How near (screen px) an arrow's bend handle must come back to the chord's
+ * midpoint for the arrow to go straight again: the handle's own half-target.
+ */
+const BEND_STRAIGHT_PX = 6;
 
 /**
  * Hit-test annotations topmost-first in screen space; returns an id or null.

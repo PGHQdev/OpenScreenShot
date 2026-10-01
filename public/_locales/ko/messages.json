@@ -1155,6 +1155,10 @@
     "message": "끝",
     "description": "Editor live region: the cut band's end handle."
   },
+  "editorHandleBend": {
+    "message": "구부리기",
+    "description": "Editor: the arrow's middle handle, which bends it into a curve."
+  },
   "editorCropPhrase": {
     "message": "자르기 영역 $W$×$H$픽셀, 위치 $X$, $Y$.",
     "description": "Editor live region: the size and place of the crop rectangle.",
@@ -1344,7 +1348,7 @@
     "description": "Editor status bar hint for the Rectangle tool."
   },
   "editorHintArrow": {
-    "message": "드래그해 화살표 그리기 · Shift로 45° 스냅",
+    "message": "드래그해 화살표 그리기 · Shift로 45° 스냅 · 선택 후 둥근 핸들을 끌면 구부러집니다",
     "description": "Editor status bar hint for the Arrow tool."
   },
   "editorHintLine": {

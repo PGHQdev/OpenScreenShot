@@ -1155,6 +1155,10 @@
     "message": "Ende",
     "description": "Editor live region: the cut band's end handle."
   },
+  "editorHandleBend": {
+    "message": "Biegung",
+    "description": "Editor: the arrow's middle handle, which bends it into a curve."
+  },
   "editorCropPhrase": {
     "message": "Zuschnitt $W$ mal $H$ Pixel bei $X$, $Y$.",
     "description": "Editor live region: the size and place of the crop rectangle.",
@@ -1344,7 +1348,7 @@
     "description": "Editor status bar hint for the Rectangle tool."
   },
   "editorHintArrow": {
-    "message": "Ziehen für einen Pfeil · Shift rastet auf 45° ein",
+    "message": "Ziehen für einen Pfeil · Shift rastet auf 45° ein · Auswählen und am runden Griff ziehen zum Biegen",
     "description": "Editor status bar hint for the Arrow tool."
   },
   "editorHintLine": {

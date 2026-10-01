@@ -1155,6 +1155,10 @@
     "message": "Конец",
     "description": "Editor live region: the cut band's end handle."
   },
+  "editorHandleBend": {
+    "message": "Изгиб",
+    "description": "Editor: the arrow's middle handle, which bends it into a curve."
+  },
   "editorCropPhrase": {
     "message": "Обрезка $W$ на $H$ пикселей в точке $X$, $Y$.",
     "description": "Editor live region: the size and place of the crop rectangle.",
@@ -1344,7 +1348,7 @@
     "description": "Editor status bar hint for the Rectangle tool."
   },
   "editorHintArrow": {
-    "message": "Потяните, чтобы нарисовать стрелку · Shift — шаг 45°",
+    "message": "Потяните, чтобы нарисовать стрелку · Shift — шаг 45° · Выделите и потяните круглую ручку, чтобы изогнуть",
     "description": "Editor status bar hint for the Arrow tool."
   },
   "editorHintLine": {
