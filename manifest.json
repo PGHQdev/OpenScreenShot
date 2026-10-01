@@ -67,6 +67,9 @@
       },
       "description": "Capture a selected region"
     },
+    "capture-element": {
+      "description": "__MSG_modeElement__"
+    },
     "stop-recording": {
       "suggested_key": {
         "default": "Alt+Shift+X",

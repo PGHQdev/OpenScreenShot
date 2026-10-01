@@ -13,7 +13,9 @@ import threading
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchWindowException
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
@@ -30,6 +32,10 @@ class Fixture(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b'<!doctype html><title>Firefox Capture Fixture</title>'
                         b'<body style="margin:0"><h1>Firefox screenshot smoke</h1>'
+                        b'<article id="element-card" style="position:absolute;left:80px;top:140px;'
+                        b'width:240px;height:160px;background:rgb(241,243,245)">'
+                        b'<div style="position:absolute;left:60px;top:40px;width:120px;height:80px;'
+                        b'background:rgb(36,133,75)"></div></article>'
                         b'<div style="height:2300px;background:linear-gradient(#f4d5b7,#335588)">'
                         b'Scrollable capture fixture</div><footer>Bottom of page</footer>')
 
@@ -51,6 +57,7 @@ def main():
         options.set_preference('browser.helperApps.neverAsk.saveToDisk', 'application/pdf,image/png')
         options.set_preference('pdfjs.disabled', True)
         driver = webdriver.Firefox(options=options, service=Service(service_args=['--allow-system-access']))
+        driver.set_window_size(1100, 900)
         driver.set_script_timeout(20)
         wait = WebDriverWait(driver, 30)
 
@@ -136,7 +143,7 @@ def main():
             wait.until(lambda _d: png.stat().st_size > 100)
             assert png.read_bytes().startswith(bytes([137,80,78,71,13,10,26,10]))
 
-            for mode in ['visible', 'region']:
+            for mode in ['visible', 'region', 'element']:
                 previous = set(driver.window_handles)
                 # The toolbar click granted this fixture's activeTab permission.
                 # The message exercises the same controller used by the popup.
@@ -148,14 +155,58 @@ def main():
                     await chrome.runtime.sendMessage({type:"CAPTURE_REQUEST",mode:arguments[1],repeat:arguments[1]==="region"});
                 ''', f'http://127.0.0.1:{server.server_port}', mode)
                 driver.switch_to.window(fixture_handle)
+                if mode == 'element':
+                    wait.until(lambda d: d.find_elements(
+                        By.CSS_SELECTOR, '[data-openscreenshot-element-picker]'))
+                    card = driver.find_element(By.ID, 'element-card')
+                    expected = driver.execute_script('''
+                        const rect=arguments[0].getBoundingClientRect(), dpr=devicePixelRatio;
+                        return {
+                            width:Math.round(rect.right*dpr)-Math.round(rect.left*dpr),
+                            height:Math.round(rect.bottom*dpr)-Math.round(rect.top*dpr)
+                        };
+                    ''', card)
+                    # Hover the card background, outside its smaller colored child.
+                    ActionChains(driver).move_to_element_with_offset(card, -100, -60).perform()
+                    wait.until(lambda d: d.execute_script('''
+                        const root=document.querySelector('[data-openscreenshot-element-picker]')?.shadowRoot;
+                        const selected=root?.querySelector('[data-selection]');
+                        if (!selected || selected.hidden) return false;
+                        const rect=selected.getBoundingClientRect();
+                        return rect.width===240 && rect.height===160;
+                    '''))
+                    ActionChains(driver).send_keys(Keys.ENTER).perform()
                 new_editor(previous)
                 entry = history()[0]
                 assert entry['mode'] == mode, entry
                 if mode == 'region':
                     assert entry['width'] == 200 and entry['height'] == 100, entry
+                elif mode == 'element':
+                    assert entry['width'] == expected['width'] and entry['height'] == expected['height'], entry
+                    # Decode the stored capture, rather than the editor's scaled canvas.
+                    pixels = api('''
+                        const key="openscreenshot:capture-image:"+arguments[0];
+                        const image=new Image();
+                        image.src=(await chrome.storage.local.get(key))[key];
+                        await image.decode();
+                        const canvas=document.createElement("canvas");
+                        canvas.width=image.naturalWidth; canvas.height=image.naturalHeight;
+                        const ctx=canvas.getContext("2d");
+                        ctx.drawImage(image,0,0);
+                        const sample=(x,y)=>Array.from(ctx.getImageData(x,y,1,1).data);
+                        return {
+                            width:canvas.width,height:canvas.height,
+                            corners:[sample(0,0),sample(canvas.width-1,0),
+                                     sample(0,canvas.height-1),sample(canvas.width-1,canvas.height-1)],
+                            center:sample(Math.floor(canvas.width/2),Math.floor(canvas.height/2))
+                        };
+                    ''', entry['id'])
+                    assert pixels['width'] == expected['width'] and pixels['height'] == expected['height'], pixels
+                    assert pixels['corners'] == [[241, 243, 245, 255]] * 4, pixels
+                    assert pixels['center'] == [36, 133, 75, 255], pixels
                 else:
                     assert 0 < entry['height'] < 2300, entry
-            assert len(history()) == 3
+            assert len(history()) == 4
             # Quick-save exercises blob downloads in Firefox's background page.
             existing_pngs = set(Path(downloads).glob('*.png'))
             result = api('''
@@ -172,7 +223,7 @@ def main():
             saved = next(iter(set(Path(downloads).glob('*.png')) - existing_pngs))
             wait.until(lambda _d: saved.stat().st_size > 100)
             assert saved.read_bytes().startswith(bytes([137,80,78,71,13,10,26,10]))
-            print(f'PASS Firefox {driver.capabilities["browserVersion"]}: full-page, visible, repeat-region, editor, history, clipboard, PNG, PDF, quick-save')
+            print(f'PASS Firefox {driver.capabilities["browserVersion"]}: full-page, visible, repeat-region, element (exact dimensions and clean pixels), editor, history, clipboard, PNG, PDF, quick-save')
         except Exception:
             print('Firefox smoke failure:', driver.find_element(By.TAG_NAME, 'body').text[-2500:], flush=True)
             print('Downloads:', list(Path(downloads).iterdir()), flush=True)

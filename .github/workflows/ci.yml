@@ -65,7 +65,7 @@ jobs:
             dist
             dist-firefox
 
-  # The three smokes that need nothing but a page load. smoke:recorder and
+  # These smokes need nothing but a page load. smoke:recorder and
   # smoke:media stay manual on purpose: the first records a real WebM through
   # MediaRecorder and reads it back, and the second emulates forced-colors and
   # prefers-contrast through CDP and samples real painted pixels. Both depend
@@ -116,6 +116,9 @@ jobs:
 
       - name: Reflow smoke
         run: pnpm run smoke:reflow
+
+      - name: Element picker smoke
+        run: pnpm run smoke:element
 
       - name: Editor keyboard smoke
         run: pnpm run smoke:editor

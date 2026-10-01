@@ -11,7 +11,14 @@ import type {
   Settings,
 } from '../shared/types';
 import { DEFAULT_SETTINGS } from '../shared/types';
-import { clearPendingCaptureError, getLastRegion, getPendingCaptureError, getSettings, hasLastCapture, setSettings } from '../shared/storage';
+import {
+  clearPendingCaptureError,
+  getLastRegion,
+  getPendingCaptureError,
+  getSettings,
+  hasLastCapture,
+  setSettings,
+} from '../shared/storage';
 import { onPopupMessage, sendToBackground } from '../shared/messaging';
 import { BrandMark } from '../shared/BrandMark';
 import {
@@ -23,6 +30,7 @@ import {
   IconPage,
   IconRecordDot,
   IconRegion,
+  IconSelect,
   IconShield,
   IconStar,
   IconVisible,
@@ -213,6 +221,12 @@ const MODES: ModeDef[] = [
     titleKey: 'modeRegion',
     subtitleKey: 'modeRegionSub',
   },
+  {
+    id: 'element',
+    command: 'capture-element',
+    titleKey: 'modeElement',
+    subtitleKey: 'modeElementSub',
+  },
 ];
 
 export function App() {
@@ -358,12 +372,12 @@ export function App() {
     return () => clearInterval(id);
   }, [recState?.active, recState?.paused, recState?.anchored, recState?.elapsedMs]);
 
-  // 1/2/3 fire a capture while the mode list is showing.
+  // Number keys fire the corresponding capture mode while the list is showing.
   useEffect(() => {
     if (showSettings) return;
     const onKey = (e: KeyboardEvent) => {
-      const i = ['1', '2', '3'].indexOf(e.key);
-      if (i !== -1) capture(MODES[i].id);
+      const mode = MODES.find((_, index) => e.key === String(index + 1));
+      if (mode) capture(mode.id);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -482,13 +496,18 @@ export function App() {
   function capture(mode: CaptureMode, repeat = false) {
     if (busy) return;
     setBusy(mode);
-    // Region needs the page free for the overlay, a delayed capture needs it
-    // free so the user can set up the hover state, and a clipboard capture
-    // needs the page focused before it can write — all three close the popup.
+    // Selection overlays need the page free, delayed capture lets the user set
+    // up a hover state, and clipboard capture needs page focus before writing.
+    // Close the popup for each of these cases.
     const quickCopy = normalizeCaptureAction(settings.captureAction) === 'clipboard';
-    if (mode === 'region' || normalizeCaptureDelay(settings.captureDelay) > 0 || quickCopy) {
+    if (
+      mode === 'region' ||
+      mode === 'element' ||
+      normalizeCaptureDelay(settings.captureDelay) > 0 ||
+      quickCopy
+    ) {
       // Close only AFTER the request is delivered — closing first can drop the
-      // message to a cold service worker, so region would silently no-op on the
+      // message to a cold service worker, so selection would silently no-op on the
       // first click and only work once the worker is warm.
       void sendToBackground({ type: 'CAPTURE_REQUEST', mode, repeat }).then(
         () => window.close(),
@@ -817,16 +836,26 @@ export function App() {
               value={reportDetail}
               rows={3}
               maxlength={4000}
-              onInput={(event) => setReportDetail((event.currentTarget as HTMLTextAreaElement).value)}
+              onInput={(event) =>
+                setReportDetail((event.currentTarget as HTMLTextAreaElement).value)
+              }
             />
           </label>
           <button class="btn-secondary" type="submit" disabled={reportState === 'sending'}>
             {reportState === 'sending' ? t('captureReportSending') : t('captureReportSend')}
           </button>
-          {reportState === 'failed' && <p class="capture-error-report-status" role="alert">{t('captureReportFailed')}</p>}
+          {reportState === 'failed' && (
+            <p class="capture-error-report-status" role="alert">
+              {t('captureReportFailed')}
+            </p>
+          )}
         </form>
       )}
-      {reportState === 'sent' && <p class="capture-error-report-status" role="status">{t('captureReportSent')}</p>}
+      {reportState === 'sent' && (
+        <p class="capture-error-report-status" role="status">
+          {t('captureReportSent')}
+        </p>
+      )}
 
       {showSettings ? (
         <SettingsView
@@ -1420,6 +1449,8 @@ function ModeIcon({ id }: { id: CaptureMode }) {
       return <IconVisible />;
     case 'region':
       return <IconRegion />;
+    case 'element':
+      return <IconSelect />;
   }
 }
 

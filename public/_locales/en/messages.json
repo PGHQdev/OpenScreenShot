@@ -31,6 +31,50 @@
     "message": "Click & drag to select",
     "description": "Subtitle for the Selected Region capture mode."
   },
+  "modeElement": {
+    "message": "Capture element",
+    "description": "Capture mode: capture a single page element."
+  },
+  "modeElementSub": {
+    "message": "Select a card, chart, image, or table",
+    "description": "Subtitle for the element capture mode."
+  },
+  "elementPickerTitle": {
+    "message": "Capture an element",
+    "description": "Element picker: heading."
+  },
+  "elementPickerInstructions": {
+    "message": "Hover to select · ↑ Larger · ↓ Smaller · ←/→ Other elements · Enter Capture · Esc Cancel",
+    "description": "Element picker: pointer and keyboard instructions."
+  },
+  "elementPickerEmpty": {
+    "message": "Point to an element, or use ←/→ to choose one.",
+    "description": "Element picker: hint when no element is selected."
+  },
+  "elementPickerClipped": {
+    "message": "This element is not fully visible. Scroll it into view or capture the full page.",
+    "description": "Element picker: warning when the selected element is not fully visible."
+  },
+  "elementPickerCapture": {
+    "message": "Capture",
+    "description": "Element picker: button to capture the selected element."
+  },
+  "elementPickerFullPage": {
+    "message": "Capture full page",
+    "description": "Element picker: button to capture the full page instead."
+  },
+  "elementPickerCancel": {
+    "message": "Cancel",
+    "description": "Element picker: button to cancel selection."
+  },
+  "elementPickerLarger": {
+    "message": "Larger area",
+    "description": "Element picker: button to select a larger containing element."
+  },
+  "elementPickerSmaller": {
+    "message": "Smaller area",
+    "description": "Element picker: button to select a smaller nested element."
+  },
   "capturing": {
     "message": "Capturing…",
     "description": "Status shown while a capture is in progress."
@@ -2617,11 +2661,32 @@
     "message": "download again",
     "description": "Capture progress window: button to retry the PNG download."
   },
-  "captureReportTitle": { "message": "Help diagnose this capture error", "description": "Popup error report heading." },
-  "captureReportBody": { "message": "Review the details, then send an anonymous error report to help improve OpenScreenShot.", "description": "Popup error report explanation." },
-  "captureReportDetails": { "message": "Technical details (optional)", "description": "Popup error report detail label." },
-  "captureReportSend": { "message": "Send error report", "description": "Popup error report submit button." },
-  "captureReportSending": { "message": "Sending…", "description": "Popup error report loading state." },
-  "captureReportSent": { "message": "Thanks — the error report was sent.", "description": "Popup error report success message." },
-  "captureReportFailed": { "message": "Couldn’t send the report. Check your connection and try again.", "description": "Popup error report failure message." }
+  "captureReportTitle": {
+    "message": "Help diagnose this capture error",
+    "description": "Popup error report heading."
+  },
+  "captureReportBody": {
+    "message": "Review the details, then send an anonymous error report to help improve OpenScreenShot.",
+    "description": "Popup error report explanation."
+  },
+  "captureReportDetails": {
+    "message": "Technical details (optional)",
+    "description": "Popup error report detail label."
+  },
+  "captureReportSend": {
+    "message": "Send error report",
+    "description": "Popup error report submit button."
+  },
+  "captureReportSending": {
+    "message": "Sending…",
+    "description": "Popup error report loading state."
+  },
+  "captureReportSent": {
+    "message": "Thanks — the error report was sent.",
+    "description": "Popup error report success message."
+  },
+  "captureReportFailed": {
+    "message": "Couldn’t send the report. Check your connection and try again.",
+    "description": "Popup error report failure message."
+  }
 }

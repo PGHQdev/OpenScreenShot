@@ -826,6 +826,19 @@ label.settings-row .settings-label {
   color: var(--text-1);
   background: color-mix(in srgb, var(--brand-green) 22%, var(--surface-1));
 }
+/* Four capture modes must fit alongside recording in Chrome's 600px popup. */
+.app:has(> .modes) {
+  gap: 6px;
+}
+.modes .mode-card {
+  min-height: 48px;
+  padding: var(--s-1) var(--s-2);
+  gap: var(--s-2);
+}
+.modes .mode-icon {
+  width: 32px;
+  height: 32px;
+}
 .mode-card[data-testid='rec-start'] .mode-icon {
   color: var(--danger-ink);
   background: color-mix(in srgb, var(--brand-red) 14%, var(--surface-1));
@@ -1265,8 +1278,29 @@ label.settings-row .settings-label {
   border-radius: var(--r-md);
   background: var(--surface-1);
 }
-.capture-error-report strong { font-size: var(--fs-sm); }
-.capture-error-report p { margin: 0; color: var(--text-2); font-size: var(--fs-xs); line-height: 1.4; }
-.capture-error-report label { display: grid; gap: var(--s-1); font-size: var(--fs-xs); color: var(--text-2); }
-.capture-error-report textarea { width: 100%; min-height: 64px; resize: vertical; box-sizing: border-box; }
-.capture-error-report-status { margin: var(--s-3) 16px 0; color: var(--text-2); font-size: var(--fs-xs); }
+.capture-error-report strong {
+  font-size: var(--fs-sm);
+}
+.capture-error-report p {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+}
+.capture-error-report label {
+  display: grid;
+  gap: var(--s-1);
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+.capture-error-report textarea {
+  width: 100%;
+  min-height: 64px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.capture-error-report-status {
+  margin: var(--s-3) 16px 0;
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+}

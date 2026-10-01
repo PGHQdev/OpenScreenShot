@@ -31,6 +31,50 @@
     "message": "Clicca e trascina per selezionare",
     "description": "Subtitle for the Selected Region capture mode."
   },
+  "modeElement": {
+    "message": "Cattura elemento",
+    "description": "Capture mode: capture a single page element."
+  },
+  "modeElementSub": {
+    "message": "Seleziona una scheda, un grafico, un’immagine o una tabella",
+    "description": "Subtitle for the element capture mode."
+  },
+  "elementPickerTitle": {
+    "message": "Cattura un elemento",
+    "description": "Element picker: heading."
+  },
+  "elementPickerInstructions": {
+    "message": "Passa il puntatore per selezionare · ↑ Più grande · ↓ Più piccolo · ←/→ Altri elementi · Invio Cattura · Esc Annulla",
+    "description": "Element picker: pointer and keyboard instructions."
+  },
+  "elementPickerEmpty": {
+    "message": "Punta a un elemento o usa ←/→ per sceglierne uno.",
+    "description": "Element picker: hint when no element is selected."
+  },
+  "elementPickerClipped": {
+    "message": "Questo elemento non è completamente visibile. Scorri per mostrarlo o cattura l’intera pagina.",
+    "description": "Element picker: warning when the selected element is not fully visible."
+  },
+  "elementPickerCapture": {
+    "message": "Cattura",
+    "description": "Element picker: button to capture the selected element."
+  },
+  "elementPickerFullPage": {
+    "message": "Cattura pagina intera",
+    "description": "Element picker: button to capture the full page instead."
+  },
+  "elementPickerCancel": {
+    "message": "Annulla",
+    "description": "Element picker: button to cancel selection."
+  },
+  "elementPickerLarger": {
+    "message": "Area più grande",
+    "description": "Element picker: button to select a larger containing element."
+  },
+  "elementPickerSmaller": {
+    "message": "Area più piccola",
+    "description": "Element picker: button to select a smaller nested element."
+  },
   "capturing": {
     "message": "Cattura…",
     "description": "Status shown while a capture is in progress."
@@ -2617,11 +2661,25 @@
     "message": "scarica di nuovo",
     "description": "Capture progress window: button to retry the PNG download."
   },
-  "captureReportTitle": { "message": "Help diagnose this capture error" },
-  "captureReportBody": { "message": "Review the details, then send an anonymous error report to help improve OpenScreenShot." },
-  "captureReportDetails": { "message": "Technical details (optional)" },
-  "captureReportSend": { "message": "Send error report" },
-  "captureReportSending": { "message": "Sending…" },
-  "captureReportSent": { "message": "Thanks — the error report was sent." },
-  "captureReportFailed": { "message": "Couldn’t send the report. Check your connection and try again." }
+  "captureReportTitle": {
+    "message": "Help diagnose this capture error"
+  },
+  "captureReportBody": {
+    "message": "Review the details, then send an anonymous error report to help improve OpenScreenShot."
+  },
+  "captureReportDetails": {
+    "message": "Technical details (optional)"
+  },
+  "captureReportSend": {
+    "message": "Send error report"
+  },
+  "captureReportSending": {
+    "message": "Sending…"
+  },
+  "captureReportSent": {
+    "message": "Thanks — the error report was sent."
+  },
+  "captureReportFailed": {
+    "message": "Couldn’t send the report. Check your connection and try again."
+  }
 }

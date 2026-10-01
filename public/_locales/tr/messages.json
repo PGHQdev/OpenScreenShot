@@ -31,6 +31,50 @@
     "message": "Seçmek için tıklayıp sürükleyin",
     "description": "Subtitle for the Selected Region capture mode."
   },
+  "modeElement": {
+    "message": "Öğeyi yakala",
+    "description": "Capture mode: capture a single page element."
+  },
+  "modeElementSub": {
+    "message": "Kart, grafik, resim veya tablo seçin",
+    "description": "Subtitle for the element capture mode."
+  },
+  "elementPickerTitle": {
+    "message": "Bir öğeyi yakala",
+    "description": "Element picker: heading."
+  },
+  "elementPickerInstructions": {
+    "message": "Seçmek için üzerine gelin · ↑ Daha büyük · ↓ Daha küçük · ←/→ Diğer öğeler · Enter Yakala · Esc İptal",
+    "description": "Element picker: pointer and keyboard instructions."
+  },
+  "elementPickerEmpty": {
+    "message": "Bir öğenin üzerine gelin veya seçmek için ←/→ tuşlarını kullanın.",
+    "description": "Element picker: hint when no element is selected."
+  },
+  "elementPickerClipped": {
+    "message": "Bu öğe tamamen görünmüyor. Görünür hale getirmek için kaydırın veya tam sayfayı yakalayın.",
+    "description": "Element picker: warning when the selected element is not fully visible."
+  },
+  "elementPickerCapture": {
+    "message": "Yakala",
+    "description": "Element picker: button to capture the selected element."
+  },
+  "elementPickerFullPage": {
+    "message": "Tam sayfayı yakala",
+    "description": "Element picker: button to capture the full page instead."
+  },
+  "elementPickerCancel": {
+    "message": "İptal",
+    "description": "Element picker: button to cancel selection."
+  },
+  "elementPickerLarger": {
+    "message": "Daha büyük alan",
+    "description": "Element picker: button to select a larger containing element."
+  },
+  "elementPickerSmaller": {
+    "message": "Daha küçük alan",
+    "description": "Element picker: button to select a smaller nested element."
+  },
   "settingsTitle": {
     "message": "Ayarlar",
     "description": "Settings panel heading."

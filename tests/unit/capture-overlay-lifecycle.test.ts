@@ -1,8 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { setLastCapture, setLastRegion } from '../../src/shared/storage';
 
 vi.mock('../../src/background/recording', () => ({ restoreRecBadge: vi.fn() }));
+vi.mock('../../src/shared/rating', () => ({ recordExportSuccess: vi.fn() }));
 vi.mock('../../src/shared/storage', () => ({
-  getSettings: async () => ({ captureDelay: 0, captureAction: 'editor', expressMode: true }),
+  getSettings: async () => ({
+    captureDelay: 0,
+    captureAction,
+    expressMode: true,
+    filenameTemplate: 'shot',
+  }),
   getLastRegion: async () => ({ x: 20, y: 20, width: 100, height: 100 }),
   setLastRegion: vi.fn(),
   setLastCapture: vi.fn(),
@@ -19,6 +26,14 @@ let listener: (message: unknown) => void;
 let failAt: string | undefined;
 let captures: number;
 let overlayVisible: boolean;
+let elementSelection: unknown;
+let pixelRatio: number;
+let innerScroller: boolean;
+let cropArgs: unknown[];
+let captureAction: 'editor' | 'clipboard' | 'download';
+let sourceTabActive: boolean;
+let switchTabAfterSelection: boolean;
+let switchTabBeforeSnapshot: boolean;
 let fakeChrome: ReturnType<typeof makeChrome>;
 function makeChrome() {
   const noop = vi.fn(async () => undefined);
@@ -64,7 +79,9 @@ function makeChrome() {
       }),
     },
     tabs: {
-      query: async () => [{ id: 7, windowId: 1, url: 'https://example.com', title: 'Example' }],
+      query: async () => [
+        { id: sourceTabActive ? 7 : 8, windowId: 1, url: 'https://example.com', title: 'Example' },
+      ],
       create: async (details: { windowId: number }) => {
         expect(details.windowId).toBe(1);
         events.push('deliver');
@@ -79,6 +96,7 @@ function makeChrome() {
         return 'data:image/png;base64,tile';
       },
     },
+    downloads: { download: vi.fn(async () => 1) },
     scripting: {
       executeScript: async ({
         func,
@@ -92,17 +110,27 @@ function makeChrome() {
         events.push(event);
         if (event === failAt) throw new Error('injection failed');
         if (name === 'updateCaptureOverlay') overlayVisible = args[0] === 'show';
+        if (name === 'updateCaptureOverlay' && args[0] === 'hide' && switchTabBeforeSnapshot) {
+          sourceTabActive = false;
+        }
         let result: unknown;
         if (name === 'getMetrics')
           result = {
-            viewportWidth: 800,
-            viewportHeight: 600,
+            viewportWidth: innerScroller ? 600 : 800,
+            viewportHeight: innerScroller ? 400 : 600,
             scrollHeight: 1500,
-            devicePixelRatio: 1,
+            devicePixelRatio: pixelRatio,
             container: null,
           };
+        if (name === 'getElementViewport') result = func();
         if (name === 'scrollToPosition') result = { scrollY: args[0], atBottom: false };
         if (name === 'selectRegion') result = { x: 20, y: 20, width: 100, height: 100 };
+        if (name === 'selectElement') {
+          result = elementSelection;
+          if (switchTabAfterSelection) sourceTabActive = false;
+        }
+        if (name === 'copyImageToClipboard') result = true;
+        if (name === 'cropTile') cropArgs = args;
         if (name === 'stitchTiles' || name === 'cropTile')
           result = 'data:image/png;base64,finished';
         return [{ result }];
@@ -122,6 +150,23 @@ beforeEach(async () => {
   messages = [];
   captures = 0;
   overlayVisible = false;
+  elementSelection = { kind: 'element', rect: { x: 20, y: 30, width: 100, height: 80 } };
+  pixelRatio = 1;
+  innerScroller = false;
+  vi.stubGlobal('window', {
+    innerWidth: 800,
+    innerHeight: 600,
+    get devicePixelRatio() {
+      return pixelRatio;
+    },
+  });
+  cropArgs = [];
+  captureAction = 'editor';
+  sourceTabActive = true;
+  switchTabAfterSelection = false;
+  switchTabBeforeSnapshot = false;
+  vi.mocked(setLastCapture).mockClear();
+  vi.mocked(setLastRegion).mockClear();
   failAt = undefined;
   fakeChrome = makeChrome();
   vi.stubGlobal('chrome', fakeChrome);
@@ -190,7 +235,7 @@ describe('screenshot capture overlay lifecycle', () => {
     expect(events).toContain('overlay:remove');
   });
 
-  it.each(['visible', 'region'])(
+  it.each(['visible', 'region', 'element'])(
     'shows finishing for %s only after the clean snapshot',
     async (mode) => {
       await capture(mode);
@@ -208,6 +253,9 @@ describe('screenshot capture overlay lifecycle', () => {
     ['region', 'snapshot:1'],
     ['region', 'cropTile'],
     ['region', 'deliver'],
+    ['element', 'snapshot:1'],
+    ['element', 'cropTile'],
+    ['element', 'deliver'],
   ])('cleans up %s when %s fails', async (mode, stage) => {
     failAt = stage;
     await capture(mode);
@@ -251,4 +299,95 @@ describe('screenshot capture overlay lifecycle', () => {
     expect(captures).toBe(3);
     expect(messages.filter((m) => m.type === 'CAPTURE_COMPLETE')).toHaveLength(1);
   });
+
+  it('crops the chosen element at device resolution and keeps repeat-region unchanged', async () => {
+    pixelRatio = 2;
+    await capture('element');
+    expect(cropArgs).toEqual(['data:image/png;base64,tile', 40, 60, 200, 160]);
+    expect(setLastCapture).toHaveBeenCalledWith(
+      expect.objectContaining({ mode: 'element', width: 200, height: 160 }),
+    );
+    expect(setLastRegion).not.toHaveBeenCalled();
+    expect(events.indexOf('selectElement')).toBeLessThan(events.indexOf('snapshot'));
+    expect(events.indexOf('getElementViewport')).toBeGreaterThan(events.indexOf('selectElement'));
+  });
+
+  it('uses window coordinates for elements inside an offset inner scroll panel', async () => {
+    innerScroller = true;
+    elementSelection = { kind: 'element', rect: { x: 650, y: 450, width: 100, height: 80 } };
+    await capture('element');
+    expect(cropArgs).toEqual(['data:image/png;base64,tile', 650, 450, 100, 80]);
+    expect(captures).toBe(1);
+  });
+
+  it('does not capture or deliver when the element picker is cancelled', async () => {
+    elementSelection = null;
+    await capture('element');
+    expect(events).toContain('selectElement');
+    expect(captures).toBe(0);
+    expect(setLastCapture).not.toHaveBeenCalled();
+    expect(events).not.toContain('deliver');
+    expect(messages.some((m) => m.type === 'CAPTURE_ERROR')).toBe(false);
+  });
+
+  it('does not capture a different tab after the picker returns', async () => {
+    switchTabAfterSelection = true;
+    await capture('element');
+    expect(captures).toBe(0);
+    expect(setLastCapture).not.toHaveBeenCalled();
+  });
+
+  it('rechecks the active tab immediately before capturing element pixels', async () => {
+    switchTabBeforeSnapshot = true;
+    await capture('element');
+    expect(captures).toBe(0);
+    expect(setLastCapture).not.toHaveBeenCalled();
+    expect(messages.some((m) => m.type === 'CAPTURE_ERROR')).toBe(true);
+  });
+
+  it('sends element captures directly to the clipboard when configured', async () => {
+    captureAction = 'clipboard';
+    await capture('element');
+    expect(events).toContain('copyImageToClipboard');
+    expect(events).not.toContain('deliver');
+    expect(setLastCapture).toHaveBeenCalledWith(expect.objectContaining({ mode: 'element' }));
+    expect(messages.some((m) => m.type === 'CAPTURE_COMPLETE')).toBe(true);
+  });
+
+  it('downloads element captures as PNG without opening the editor when configured', async () => {
+    captureAction = 'download';
+    await capture('element');
+    expect(fakeChrome.downloads.download).toHaveBeenCalledWith({
+      url: 'data:image/png;base64,finished',
+      filename: 'shot.png',
+      saveAs: false,
+    });
+    expect(events).not.toContain('deliver');
+    expect(messages.some((m) => m.type === 'CAPTURE_COMPLETE')).toBe(true);
+  });
+
+  it('uses full-page capture only when the user selects that fallback', async () => {
+    elementSelection = { kind: 'full-page' };
+    await capture('element');
+    expect(captures).toBe(3);
+    expect(events).toContain('stitchTiles');
+    expect(setLastCapture).toHaveBeenCalledWith(expect.objectContaining({ mode: 'full-page' }));
+  });
+
+  it.each([
+    { x: -1, y: 20, width: 100, height: 100 },
+    { x: 700, y: 20, width: 101, height: 100 },
+    { x: 20, y: 500, width: 100, height: 101 },
+    { x: NaN, y: 20, width: 100, height: 100 },
+  ])(
+    'refuses invalid or clipped element bounds instead of silently cropping them: %o',
+    async (rect) => {
+      elementSelection = { kind: 'element', rect };
+      await capture('element');
+      expect(events).toContain('selectElement');
+      expect(captures).toBe(0);
+      expect(setLastCapture).not.toHaveBeenCalled();
+      expect(messages.some((m) => m.type === 'CAPTURE_ERROR')).toBe(true);
+    },
+  );
 });

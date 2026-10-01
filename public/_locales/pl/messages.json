@@ -31,6 +31,50 @@
     "message": "Kliknij i przeciągnij, aby zaznaczyć",
     "description": "Subtitle for the Selected Region capture mode."
   },
+  "modeElement": {
+    "message": "Przechwyć element",
+    "description": "Capture mode: capture a single page element."
+  },
+  "modeElementSub": {
+    "message": "Wybierz kartę, wykres, obraz lub tabelę",
+    "description": "Subtitle for the element capture mode."
+  },
+  "elementPickerTitle": {
+    "message": "Przechwyć element",
+    "description": "Element picker: heading."
+  },
+  "elementPickerInstructions": {
+    "message": "Najedź kursorem, aby wybrać · ↑ Większy · ↓ Mniejszy · ←/→ Inne elementy · Enter Przechwyć · Esc Anuluj",
+    "description": "Element picker: pointer and keyboard instructions."
+  },
+  "elementPickerEmpty": {
+    "message": "Wskaż element lub użyj ←/→, aby go wybrać.",
+    "description": "Element picker: hint when no element is selected."
+  },
+  "elementPickerClipped": {
+    "message": "Ten element nie jest w pełni widoczny. Przewiń stronę, aby go wyświetlić, lub przechwyć całą stronę.",
+    "description": "Element picker: warning when the selected element is not fully visible."
+  },
+  "elementPickerCapture": {
+    "message": "Przechwyć",
+    "description": "Element picker: button to capture the selected element."
+  },
+  "elementPickerFullPage": {
+    "message": "Przechwyć całą stronę",
+    "description": "Element picker: button to capture the full page instead."
+  },
+  "elementPickerCancel": {
+    "message": "Anuluj",
+    "description": "Element picker: button to cancel selection."
+  },
+  "elementPickerLarger": {
+    "message": "Większy obszar",
+    "description": "Element picker: button to select a larger containing element."
+  },
+  "elementPickerSmaller": {
+    "message": "Mniejszy obszar",
+    "description": "Element picker: button to select a smaller nested element."
+  },
   "settingsTitle": {
     "message": "Ustawienia",
     "description": "Settings panel heading."

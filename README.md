@@ -109,6 +109,19 @@ capture windows appear only when the browser supports them.
 Prefer a capture menu on every click? Turn off **Express mode** in settings.
 For alternatives and a sourced feature comparison, see [How it compares](https://openscreenshot.app/compare/).
 
+### Element capture (source builds)
+
+Choose **Capture element** from the page or extension right-click menu, or from
+the popup when Express mode is off. Hover over a card, image, chart, or table to
+highlight it. Use ↑ / ↓ to select a larger or smaller area, or ← / → to move
+between elements without a mouse. Click or press Enter to capture; Esc cancels.
+
+The capture follows your existing Editor, Clipboard, or Download setting. The
+element must be fully visible: scroll it into view, or use the **Capture full
+page** fallback offered for clipped elements. Content inside an iframe is
+captured as part of the iframe's visible rectangle. No new permissions are needed.
+This feature is available in source builds and has not yet been released to the stores.
+
 ## Private by design
 
 `host_permissions` is empty: `activeTab` grants access on your click, and the extension

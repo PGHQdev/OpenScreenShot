@@ -31,6 +31,50 @@
     "message": "Klik dan seret untuk memilih",
     "description": "Subtitle for the Selected Region capture mode."
   },
+  "modeElement": {
+    "message": "Tangkap elemen",
+    "description": "Capture mode: capture a single page element."
+  },
+  "modeElementSub": {
+    "message": "Pilih kartu, grafik, gambar, atau tabel",
+    "description": "Subtitle for the element capture mode."
+  },
+  "elementPickerTitle": {
+    "message": "Tangkap elemen",
+    "description": "Element picker: heading."
+  },
+  "elementPickerInstructions": {
+    "message": "Arahkan kursor untuk memilih · ↑ Lebih besar · ↓ Lebih kecil · ←/→ Elemen lain · Enter Tangkap · Esc Batal",
+    "description": "Element picker: pointer and keyboard instructions."
+  },
+  "elementPickerEmpty": {
+    "message": "Arahkan kursor ke elemen, atau gunakan ←/→ untuk memilih.",
+    "description": "Element picker: hint when no element is selected."
+  },
+  "elementPickerClipped": {
+    "message": "Elemen ini belum terlihat sepenuhnya. Gulir hingga terlihat atau tangkap halaman penuh.",
+    "description": "Element picker: warning when the selected element is not fully visible."
+  },
+  "elementPickerCapture": {
+    "message": "Tangkap",
+    "description": "Element picker: button to capture the selected element."
+  },
+  "elementPickerFullPage": {
+    "message": "Tangkap halaman penuh",
+    "description": "Element picker: button to capture the full page instead."
+  },
+  "elementPickerCancel": {
+    "message": "Batal",
+    "description": "Element picker: button to cancel selection."
+  },
+  "elementPickerLarger": {
+    "message": "Area lebih besar",
+    "description": "Element picker: button to select a larger containing element."
+  },
+  "elementPickerSmaller": {
+    "message": "Area lebih kecil",
+    "description": "Element picker: button to select a smaller nested element."
+  },
   "settingsTitle": {
     "message": "Setelan",
     "description": "Settings panel heading."

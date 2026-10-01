@@ -46,6 +46,7 @@ import { clampRegionRect, computeScrollPositions, MAX_CANVAS_HEIGHT_PX } from '.
 import { recordExportSuccess } from '../shared/rating';
 import {
   cropTile,
+  getElementViewport,
   getMetrics,
   hideFixedElements,
   prepareCapture,
@@ -55,6 +56,7 @@ import {
 } from '../content/scroll-capture';
 import { updateCaptureOverlay } from '../content/capture-overlay';
 import { selectRegion } from '../content/region-select';
+import { selectElement } from '../content/element-select';
 import { copyImageToClipboard } from '../content/clipboard';
 import { restoreRecBadge } from '@/background/recording';
 
@@ -90,6 +92,7 @@ const ICON_MENU_IDS: Record<CaptureMode, string> = {
   'full-page': 'oss-icon-full-page',
   visible: 'oss-icon-visible',
   region: 'oss-icon-region',
+  element: 'oss-icon-element',
 };
 
 /** Minimum gap between `captureVisibleTab` calls — Chrome throttles to ~2/sec. */
@@ -171,8 +174,9 @@ async function createContextMenusOnce(): Promise<void> {
     'full-page': chrome.i18n.getMessage('modeFullPage'),
     visible: chrome.i18n.getMessage('modeVisible'),
     region: chrome.i18n.getMessage('modeRegion'),
+    element: chrome.i18n.getMessage('modeElement'),
   };
-  for (const mode of ['full-page', 'visible', 'region'] as const) {
+  for (const mode of ['full-page', 'visible', 'region', 'element'] as const) {
     chrome.contextMenus.create({
       id: MENU_IDS[mode],
       parentId: 'oss-parent',
@@ -392,6 +396,9 @@ async function runCapture(mode: CaptureMode, repeatRegion: boolean): Promise<voi
     case 'region':
       await captureRegion(tab, repeatRegion);
       return;
+    case 'element':
+      await captureElement(tab);
+      return;
   }
 }
 
@@ -441,10 +448,18 @@ async function runInTab<A extends unknown[]>(
   await chrome.scripting.executeScript({ target: { tabId }, func, args });
 }
 
-async function captureVisibleTabPng(tabId: number, windowId: number): Promise<string> {
+async function captureVisibleTabPng(
+  tabId: number,
+  windowId: number,
+  requireSourceTab = false,
+): Promise<string> {
   // Fail closed if hiding fails; a progress card must never enter the image.
   await runInTab(tabId, updateCaptureOverlay, ['hide']);
   await delay(PAINT_SETTLE_MS);
+  if (requireSourceTab) {
+    const [active] = await chrome.tabs.query({ active: true, windowId });
+    if (active?.id !== tabId) throw new Error('The source tab is no longer active');
+  }
   return chrome.tabs.captureVisibleTab(windowId, { format: 'png' });
 }
 
@@ -515,6 +530,80 @@ async function captureRegion(tab: chrome.tabs.Tab, repeat = false): Promise<void
       windowId,
     );
     if (delivered) broadcast({ type: 'CAPTURE_COMPLETE', imageUrl: dataUrl, width: w, height: h });
+  } finally {
+    await removeCaptureProgress(tabId);
+  }
+}
+
+async function captureElement(tab: chrome.tabs.Tab): Promise<void> {
+  const tabId = tab.id as number;
+  const selection = await execInTab(tabId, selectElement, [
+    {
+      title: chrome.i18n.getMessage('elementPickerTitle'),
+      instructions: chrome.i18n.getMessage('elementPickerInstructions'),
+      empty: chrome.i18n.getMessage('elementPickerEmpty'),
+      clipped: chrome.i18n.getMessage('elementPickerClipped'),
+      capture: chrome.i18n.getMessage('elementPickerCapture'),
+      fullPage: chrome.i18n.getMessage('elementPickerFullPage'),
+      cancel: chrome.i18n.getMessage('elementPickerCancel'),
+      larger: chrome.i18n.getMessage('elementPickerLarger'),
+      smaller: chrome.i18n.getMessage('elementPickerSmaller'),
+    },
+  ]);
+  if (!selection) return;
+
+  // A picker can stay open while the user changes tabs. captureVisibleTab
+  // captures the window's active tab, not a tab id: never capture a different page.
+  const windowId = tab.windowId ?? chrome.windows.WINDOW_ID_CURRENT;
+  const [active] = await chrome.tabs.query({ active: true, windowId });
+  if (active?.id !== tabId) return;
+  if (selection.kind === 'full-page') {
+    await captureFullPage(tab);
+    return;
+  }
+
+  // Element rectangles are viewport-relative, independent of inner scroll panels.
+  // Read fresh dimensions: the user may resize or zoom while choosing.
+  const metrics = await execInTab(tabId, getElementViewport, []);
+  const { rect } = selection;
+  if (
+    ![rect.x, rect.y, rect.width, rect.height, metrics.devicePixelRatio].every(Number.isFinite) ||
+    metrics.devicePixelRatio <= 0 ||
+    rect.width < 2 ||
+    rect.height < 2 ||
+    rect.x < 0 ||
+    rect.y < 0 ||
+    rect.x + rect.width > metrics.viewportWidth ||
+    rect.y + rect.height > metrics.viewportHeight
+  ) {
+    broadcast({
+      type: 'CAPTURE_ERROR',
+      code: 'element-not-visible',
+      message: chrome.i18n.getMessage('elementPickerClipped'),
+    });
+    return;
+  }
+
+  try {
+    const tile = await captureVisibleTabPng(tabId, windowId, true);
+    await showCaptureProgress(tabId, null);
+    const dpr = metrics.devicePixelRatio;
+    const x = Math.round(rect.x * dpr);
+    const y = Math.round(rect.y * dpr);
+    const width = Math.round((rect.x + rect.width) * dpr) - x;
+    const height = Math.round((rect.y + rect.height) * dpr) - y;
+    const dataUrl = await execInTab(tabId, cropTile, [tile, x, y, width, height]);
+    const delivered = await deliverCapture(
+      tabId,
+      dataUrl,
+      width,
+      height,
+      'element',
+      tab.title ?? '',
+      tab.url ?? '',
+      windowId,
+    );
+    if (delivered) broadcast({ type: 'CAPTURE_COMPLETE', imageUrl: dataUrl, width, height });
   } finally {
     await removeCaptureProgress(tabId);
   }
@@ -759,6 +848,8 @@ function commandToMode(command: string): CaptureMode | null {
       return 'visible';
     case 'capture-region':
       return 'region';
+    case 'capture-element':
+      return 'element';
     default:
       return null;
   }

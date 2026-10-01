@@ -15,8 +15,8 @@ export type ArrowHead = 'filled' | 'open' | 'double' | 'dot';
 /** The outlines the editor's Shape tool draws inside its drag box. */
 export type BoxShape = 'rect' | 'rounded' | 'ellipse' | 'triangle';
 
-/** The three capture modes offered in the popup. */
-export type CaptureMode = 'full-page' | 'visible' | 'region';
+/** Capture modes offered in the popup and context menus. */
+export type CaptureMode = 'full-page' | 'visible' | 'region' | 'element';
 
 // --- Popup → Background (capture requests) -------------------------------
 
@@ -49,6 +49,7 @@ export type CaptureErrorCode =
   | 'blank-page'
   | 'too-large'
   | 'no-region'
+  | 'element-not-visible'
   | 'quick-action'
   | 'not-implemented'
   | 'unknown';

@@ -31,6 +31,50 @@
     "message": "Nhấp và kéo để chọn",
     "description": "Subtitle for the Selected Region capture mode."
   },
+  "modeElement": {
+    "message": "Chụp phần tử",
+    "description": "Capture mode: capture a single page element."
+  },
+  "modeElementSub": {
+    "message": "Chọn thẻ, biểu đồ, hình ảnh hoặc bảng",
+    "description": "Subtitle for the element capture mode."
+  },
+  "elementPickerTitle": {
+    "message": "Chụp một phần tử",
+    "description": "Element picker: heading."
+  },
+  "elementPickerInstructions": {
+    "message": "Di chuột để chọn · ↑ Lớn hơn · ↓ Nhỏ hơn · ←/→ Phần tử khác · Enter Chụp · Esc Hủy",
+    "description": "Element picker: pointer and keyboard instructions."
+  },
+  "elementPickerEmpty": {
+    "message": "Trỏ vào một phần tử hoặc dùng ←/→ để chọn.",
+    "description": "Element picker: hint when no element is selected."
+  },
+  "elementPickerClipped": {
+    "message": "Phần tử này chưa hiển thị đầy đủ. Cuộn để xem toàn bộ phần tử hoặc chụp toàn trang.",
+    "description": "Element picker: warning when the selected element is not fully visible."
+  },
+  "elementPickerCapture": {
+    "message": "Chụp",
+    "description": "Element picker: button to capture the selected element."
+  },
+  "elementPickerFullPage": {
+    "message": "Chụp toàn trang",
+    "description": "Element picker: button to capture the full page instead."
+  },
+  "elementPickerCancel": {
+    "message": "Hủy",
+    "description": "Element picker: button to cancel selection."
+  },
+  "elementPickerLarger": {
+    "message": "Vùng lớn hơn",
+    "description": "Element picker: button to select a larger containing element."
+  },
+  "elementPickerSmaller": {
+    "message": "Vùng nhỏ hơn",
+    "description": "Element picker: button to select a smaller nested element."
+  },
   "settingsTitle": {
     "message": "Cài đặt",
     "description": "Settings panel heading."

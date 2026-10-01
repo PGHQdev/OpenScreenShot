@@ -1,7 +1,7 @@
 /**
  * Popup shortcut-chip rules.
  *
- * Every capture mode answers to a digit key while the popup is open (1, 2, 3 in
+ * Every capture mode answers to a digit key while the popup is open (1–4 in
  * list order). Chrome may also hold an OS-level binding, but only when the user
  * or a manifest suggestion registered one. The popup shows the digit on every
  * row so the column never mixes two meanings, and adds the OS binding as a

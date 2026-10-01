@@ -13,6 +13,15 @@
  */
 import type { Metrics, TileSpec } from '../shared/types';
 
+/** Element bounds use window coordinates, even when an inner panel scrolls. */
+export function getElementViewport() {
+  return {
+    viewportWidth: window.innerWidth,
+    viewportHeight: window.innerHeight,
+    devicePixelRatio: window.devicePixelRatio || 1,
+  };
+}
+
 /**
  * Measure the page so the background can plan the scroll loop + canvas size.
  *

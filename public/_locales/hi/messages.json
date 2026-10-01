@@ -31,6 +31,50 @@
     "message": "चुनने के लिए क्लिक करके खींचें",
     "description": "Subtitle for the Selected Region capture mode."
   },
+  "modeElement": {
+    "message": "एलिमेंट कैप्चर करें",
+    "description": "Capture mode: capture a single page element."
+  },
+  "modeElementSub": {
+    "message": "कार्ड, चार्ट, इमेज या टेबल चुनें",
+    "description": "Subtitle for the element capture mode."
+  },
+  "elementPickerTitle": {
+    "message": "एक एलिमेंट कैप्चर करें",
+    "description": "Element picker: heading."
+  },
+  "elementPickerInstructions": {
+    "message": "चुनने के लिए कर्सर ले जाएँ · ↑ बड़ा · ↓ छोटा · ←/→ दूसरे एलिमेंट · Enter कैप्चर करें · Esc रद्द करें",
+    "description": "Element picker: pointer and keyboard instructions."
+  },
+  "elementPickerEmpty": {
+    "message": "किसी एलिमेंट पर कर्सर ले जाएँ या चुनने के लिए ←/→ इस्तेमाल करें।",
+    "description": "Element picker: hint when no element is selected."
+  },
+  "elementPickerClipped": {
+    "message": "यह एलिमेंट पूरी तरह दिखाई नहीं दे रहा है। इसे दिखाने के लिए स्क्रॉल करें या पूरा पेज कैप्चर करें।",
+    "description": "Element picker: warning when the selected element is not fully visible."
+  },
+  "elementPickerCapture": {
+    "message": "कैप्चर करें",
+    "description": "Element picker: button to capture the selected element."
+  },
+  "elementPickerFullPage": {
+    "message": "पूरा पेज कैप्चर करें",
+    "description": "Element picker: button to capture the full page instead."
+  },
+  "elementPickerCancel": {
+    "message": "रद्द करें",
+    "description": "Element picker: button to cancel selection."
+  },
+  "elementPickerLarger": {
+    "message": "बड़ा क्षेत्र",
+    "description": "Element picker: button to select a larger containing element."
+  },
+  "elementPickerSmaller": {
+    "message": "छोटा क्षेत्र",
+    "description": "Element picker: button to select a smaller nested element."
+  },
   "settingsTitle": {
     "message": "सेटिंग",
     "description": "Settings panel heading."

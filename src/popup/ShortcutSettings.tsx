@@ -7,6 +7,7 @@ const captureCommands = [
   ['capture-full-page', 'modeFullPage'],
   ['capture-visible', 'modeVisible'],
   ['capture-region', 'modeRegion'],
+  ['capture-element', 'modeElement'],
 ];
 const recordingCommands = [
   ['stop-recording', 'settingsStopRecording'],

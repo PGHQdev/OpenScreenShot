@@ -31,6 +31,50 @@
     "message": "Klik en sleep om te selecteren",
     "description": "Subtitle for the Selected Region capture mode."
   },
+  "modeElement": {
+    "message": "Element vastleggen",
+    "description": "Capture mode: capture a single page element."
+  },
+  "modeElementSub": {
+    "message": "Selecteer een kaart, grafiek, afbeelding of tabel",
+    "description": "Subtitle for the element capture mode."
+  },
+  "elementPickerTitle": {
+    "message": "Een element vastleggen",
+    "description": "Element picker: heading."
+  },
+  "elementPickerInstructions": {
+    "message": "Beweeg de muis erover om te selecteren · ↑ Groter · ↓ Kleiner · ←/→ Andere elementen · Enter Vastleggen · Esc Annuleren",
+    "description": "Element picker: pointer and keyboard instructions."
+  },
+  "elementPickerEmpty": {
+    "message": "Wijs een element aan of gebruik ←/→ om er een te kiezen.",
+    "description": "Element picker: hint when no element is selected."
+  },
+  "elementPickerClipped": {
+    "message": "Dit element is niet volledig zichtbaar. Scrol het in beeld of leg de volledige pagina vast.",
+    "description": "Element picker: warning when the selected element is not fully visible."
+  },
+  "elementPickerCapture": {
+    "message": "Vastleggen",
+    "description": "Element picker: button to capture the selected element."
+  },
+  "elementPickerFullPage": {
+    "message": "Volledige pagina vastleggen",
+    "description": "Element picker: button to capture the full page instead."
+  },
+  "elementPickerCancel": {
+    "message": "Annuleren",
+    "description": "Element picker: button to cancel selection."
+  },
+  "elementPickerLarger": {
+    "message": "Groter gebied",
+    "description": "Element picker: button to select a larger containing element."
+  },
+  "elementPickerSmaller": {
+    "message": "Kleiner gebied",
+    "description": "Element picker: button to select a smaller nested element."
+  },
   "settingsTitle": {
     "message": "Instellingen",
     "description": "Settings panel heading."

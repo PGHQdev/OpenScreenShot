@@ -13,6 +13,8 @@ export function labelForSource(mode: LastCapture['mode']): string {
       return t('editorSourceVisible');
     case 'region':
       return t('editorSourceRegion');
+    case 'element':
+      return t('modeElement');
     case 'import':
       return t('editorSourceImported');
   }

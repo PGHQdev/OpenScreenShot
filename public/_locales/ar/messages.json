@@ -31,6 +31,50 @@
     "message": "انقر واسحب للتحديد",
     "description": "Subtitle for the Selected Region capture mode."
   },
+  "modeElement": {
+    "message": "التقاط عنصر",
+    "description": "Capture mode: capture a single page element."
+  },
+  "modeElementSub": {
+    "message": "اختر بطاقة أو رسمًا بيانيًا أو صورة أو جدولًا",
+    "description": "Subtitle for the element capture mode."
+  },
+  "elementPickerTitle": {
+    "message": "التقاط عنصر",
+    "description": "Element picker: heading."
+  },
+  "elementPickerInstructions": {
+    "message": "مرّر المؤشر للتحديد · ↑ أكبر · ↓ أصغر · ←/→ عناصر أخرى · Enter التقاط · Esc إلغاء",
+    "description": "Element picker: pointer and keyboard instructions."
+  },
+  "elementPickerEmpty": {
+    "message": "أشر إلى عنصر، أو استخدم ←/→ لاختياره.",
+    "description": "Element picker: hint when no element is selected."
+  },
+  "elementPickerClipped": {
+    "message": "هذا العنصر غير ظاهر بالكامل. مرّر الصفحة لإظهاره أو التقط الصفحة الكاملة.",
+    "description": "Element picker: warning when the selected element is not fully visible."
+  },
+  "elementPickerCapture": {
+    "message": "التقاط",
+    "description": "Element picker: button to capture the selected element."
+  },
+  "elementPickerFullPage": {
+    "message": "التقاط الصفحة الكاملة",
+    "description": "Element picker: button to capture the full page instead."
+  },
+  "elementPickerCancel": {
+    "message": "إلغاء",
+    "description": "Element picker: button to cancel selection."
+  },
+  "elementPickerLarger": {
+    "message": "منطقة أكبر",
+    "description": "Element picker: button to select a larger containing element."
+  },
+  "elementPickerSmaller": {
+    "message": "منطقة أصغر",
+    "description": "Element picker: button to select a smaller nested element."
+  },
   "settingsTitle": {
     "message": "الإعدادات",
     "description": "Settings panel heading."

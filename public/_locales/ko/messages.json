@@ -31,6 +31,50 @@
     "message": "클릭하고 드래그해 선택",
     "description": "Subtitle for the Selected Region capture mode."
   },
+  "modeElement": {
+    "message": "요소 캡처",
+    "description": "Capture mode: capture a single page element."
+  },
+  "modeElementSub": {
+    "message": "카드, 차트, 이미지 또는 표 선택",
+    "description": "Subtitle for the element capture mode."
+  },
+  "elementPickerTitle": {
+    "message": "요소 캡처",
+    "description": "Element picker: heading."
+  },
+  "elementPickerInstructions": {
+    "message": "마우스를 올려 선택 · ↑ 더 넓게 · ↓ 더 좁게 · ←/→ 다른 요소 · Enter 캡처 · Esc 취소",
+    "description": "Element picker: pointer and keyboard instructions."
+  },
+  "elementPickerEmpty": {
+    "message": "요소 위에 마우스를 올리거나 ←/→ 키로 선택하세요.",
+    "description": "Element picker: hint when no element is selected."
+  },
+  "elementPickerClipped": {
+    "message": "이 요소가 완전히 보이지 않습니다. 스크롤하여 전체가 보이게 하거나 전체 페이지를 캡처하세요.",
+    "description": "Element picker: warning when the selected element is not fully visible."
+  },
+  "elementPickerCapture": {
+    "message": "캡처",
+    "description": "Element picker: button to capture the selected element."
+  },
+  "elementPickerFullPage": {
+    "message": "전체 페이지 캡처",
+    "description": "Element picker: button to capture the full page instead."
+  },
+  "elementPickerCancel": {
+    "message": "취소",
+    "description": "Element picker: button to cancel selection."
+  },
+  "elementPickerLarger": {
+    "message": "더 넓은 영역",
+    "description": "Element picker: button to select a larger containing element."
+  },
+  "elementPickerSmaller": {
+    "message": "더 좁은 영역",
+    "description": "Element picker: button to select a smaller nested element."
+  },
   "capturing": {
     "message": "캡처 중…",
     "description": "Status shown while a capture is in progress."
@@ -2617,11 +2661,25 @@
     "message": "다시 다운로드",
     "description": "Capture progress window: button to retry the PNG download."
   },
-  "captureReportTitle": { "message": "Help diagnose this capture error" },
-  "captureReportBody": { "message": "Review the details, then send an anonymous error report to help improve OpenScreenShot." },
-  "captureReportDetails": { "message": "Technical details (optional)" },
-  "captureReportSend": { "message": "Send error report" },
-  "captureReportSending": { "message": "Sending…" },
-  "captureReportSent": { "message": "Thanks — the error report was sent." },
-  "captureReportFailed": { "message": "Couldn’t send the report. Check your connection and try again." }
+  "captureReportTitle": {
+    "message": "Help diagnose this capture error"
+  },
+  "captureReportBody": {
+    "message": "Review the details, then send an anonymous error report to help improve OpenScreenShot."
+  },
+  "captureReportDetails": {
+    "message": "Technical details (optional)"
+  },
+  "captureReportSend": {
+    "message": "Send error report"
+  },
+  "captureReportSending": {
+    "message": "Sending…"
+  },
+  "captureReportSent": {
+    "message": "Thanks — the error report was sent."
+  },
+  "captureReportFailed": {
+    "message": "Couldn’t send the report. Check your connection and try again."
+  }
 }

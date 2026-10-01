@@ -268,8 +268,10 @@ async function submitCaptureError(request, env) {
       },
     });
   }
-  if (request.method !== 'POST') return captureErrorJson(405, { ok: false, error: 'method' }, allowedOrigin);
-  if (!env.FEEDBACK_DB) return captureErrorJson(503, { ok: false, error: 'unavailable' }, allowedOrigin);
+  if (request.method !== 'POST')
+    return captureErrorJson(405, { ok: false, error: 'method' }, allowedOrigin);
+  if (!env.FEEDBACK_DB)
+    return captureErrorJson(503, { ok: false, error: 'unavailable' }, allowedOrigin);
 
   let payload;
   try {
@@ -281,7 +283,8 @@ async function submitCaptureError(request, env) {
   const message = boundedField(payload?.message, CAPTURE_ERROR_MAX_MESSAGE);
   if (!message) return captureErrorJson(400, { ok: false, error: 'message' }, allowedOrigin);
   const detail = boundedField(payload?.detail, CAPTURE_ERROR_MAX_DETAIL);
-  const version = boundedField(payload?.version, CAPTURE_ERROR_MAX_VERSION, /^[\w.+-]*$/) || 'unknown';
+  const version =
+    boundedField(payload?.version, CAPTURE_ERROR_MAX_VERSION, /^[\w.+-]*$/) || 'unknown';
   const locale = boundedField(payload?.locale, CAPTURE_ERROR_MAX_LOCALE, /^[a-z-]*$/i) || 'en';
   const url = boundedField(payload?.url, CAPTURE_ERROR_MAX_URL);
   const title = boundedField(payload?.title, CAPTURE_ERROR_MAX_TITLE);

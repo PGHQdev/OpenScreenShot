@@ -1,4 +1,11 @@
-import type { CaptureError, CaptureHistoryEntry, LastCapture, PageRect, PendingCaptureError, Settings } from './types';
+import type {
+  CaptureError,
+  CaptureHistoryEntry,
+  LastCapture,
+  PageRect,
+  PendingCaptureError,
+  Settings,
+} from './types';
 import { DEFAULT_SETTINGS } from './types';
 import { makeThumbnail } from './thumbnail';
 
@@ -7,7 +14,10 @@ const LAST_CAPTURE_KEY = 'openscreenshot:last-capture';
 const LAST_REGION_KEY = 'openscreenshot:last-region';
 export const PENDING_CAPTURE_ERROR_KEY = 'openscreenshot:pending-capture-error';
 
-export async function setPendingCaptureError(error: CaptureError, tab?: chrome.tabs.Tab): Promise<void> {
+export async function setPendingCaptureError(
+  error: CaptureError,
+  tab?: chrome.tabs.Tab,
+): Promise<void> {
   const manifest = chrome.runtime.getManifest();
   const pending: PendingCaptureError = {
     code: error.code,

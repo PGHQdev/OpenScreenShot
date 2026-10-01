@@ -31,6 +31,50 @@
     "message": "Haz clic y arrastra para seleccionar",
     "description": "Subtitle for the Selected Region capture mode."
   },
+  "modeElement": {
+    "message": "Capturar elemento",
+    "description": "Capture mode: capture a single page element."
+  },
+  "modeElementSub": {
+    "message": "Selecciona una tarjeta, un gráfico, una imagen o una tabla",
+    "description": "Subtitle for the element capture mode."
+  },
+  "elementPickerTitle": {
+    "message": "Capturar un elemento",
+    "description": "Element picker: heading."
+  },
+  "elementPickerInstructions": {
+    "message": "Pasa el cursor para seleccionar · ↑ Más grande · ↓ Más pequeño · ←/→ Otros elementos · Enter Capturar · Esc Cancelar",
+    "description": "Element picker: pointer and keyboard instructions."
+  },
+  "elementPickerEmpty": {
+    "message": "Apunta a un elemento o usa ←/→ para elegir uno.",
+    "description": "Element picker: hint when no element is selected."
+  },
+  "elementPickerClipped": {
+    "message": "Este elemento no se ve por completo. Desplázate hasta que se vea o captura la página completa.",
+    "description": "Element picker: warning when the selected element is not fully visible."
+  },
+  "elementPickerCapture": {
+    "message": "Capturar",
+    "description": "Element picker: button to capture the selected element."
+  },
+  "elementPickerFullPage": {
+    "message": "Capturar página completa",
+    "description": "Element picker: button to capture the full page instead."
+  },
+  "elementPickerCancel": {
+    "message": "Cancelar",
+    "description": "Element picker: button to cancel selection."
+  },
+  "elementPickerLarger": {
+    "message": "Área más grande",
+    "description": "Element picker: button to select a larger containing element."
+  },
+  "elementPickerSmaller": {
+    "message": "Área más pequeña",
+    "description": "Element picker: button to select a smaller nested element."
+  },
   "settingsTitle": {
     "message": "Configuración",
     "description": "Settings panel heading."

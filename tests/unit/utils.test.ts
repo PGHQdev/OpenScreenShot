@@ -142,6 +142,7 @@ describe('menuIdToMode', () => {
     expect(menuIdToMode('oss-full-page')).toBe('full-page');
     expect(menuIdToMode('oss-visible')).toBe('visible');
     expect(menuIdToMode('oss-region')).toBe('region');
+    expect(menuIdToMode('oss-element')).toBe('element');
   });
 
   it('returns null for unknown ids (parent item, other extensions)', () => {

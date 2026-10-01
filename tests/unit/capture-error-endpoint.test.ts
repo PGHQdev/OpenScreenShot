@@ -24,7 +24,11 @@ beforeEach(() => {
 function post(body: unknown, headers: Record<string, string> = {}) {
   return new Request('https://openscreenshot.app/api/capture-errors', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', Origin: 'chrome-extension://abcdefghijklmnopabcdefghijklmnop', ...headers },
+    headers: {
+      'content-type': 'application/json',
+      Origin: 'chrome-extension://abcdefghijklmnopabcdefghijklmnop',
+      ...headers,
+    },
     body: JSON.stringify(body),
   });
 }
@@ -67,21 +71,38 @@ describe('POST /api/capture-errors', () => {
 
   it('caps fields and rejects an untrusted origin', async () => {
     await worker.fetch(
-      post({ message: 'x'.repeat(5000), detail: 'y'.repeat(5000), url: 'z'.repeat(3000), title: 'q'.repeat(900) }),
+      post({
+        message: 'x'.repeat(5000),
+        detail: 'y'.repeat(5000),
+        url: 'z'.repeat(3000),
+        title: 'q'.repeat(900),
+      }),
       env,
     );
     expect((bound[0]?.[2] as string).length).toBe(4000);
     expect((bound[0]?.[3] as string).length).toBe(4000);
     expect((bound[0]?.[6] as string).length).toBe(2000);
     expect((bound[0]?.[7] as string).length).toBe(500);
-    const rejected = await worker.fetch(post({ message: 'nope' }, { Origin: 'https://evil.test' }), env);
+    const rejected = await worker.fetch(
+      post({ message: 'nope' }, { Origin: 'https://evil.test' }),
+      env,
+    );
     expect(rejected.status).toBe(403);
   });
 
   it('accepts site and extension origins and rejects non-POST', async () => {
-    expect((await worker.fetch(post({ message: 'ok' }, { Origin: 'https://openscreenshot.app' }), env)).status).toBe(201);
-    expect((await worker.fetch(post({ message: 'ok' }, { Origin: 'moz-extension://extension-id' }), env)).status).toBe(201);
-    expect((await worker.fetch(new Request('https://openscreenshot.app/api/capture-errors'), env)).status).toBe(405);
+    expect(
+      (await worker.fetch(post({ message: 'ok' }, { Origin: 'https://openscreenshot.app' }), env))
+        .status,
+    ).toBe(201);
+    expect(
+      (await worker.fetch(post({ message: 'ok' }, { Origin: 'moz-extension://extension-id' }), env))
+        .status,
+    ).toBe(201);
+    expect(
+      (await worker.fetch(new Request('https://openscreenshot.app/api/capture-errors'), env))
+        .status,
+    ).toBe(405);
     counter++;
     expect(counter).toBeGreaterThan(0);
   });

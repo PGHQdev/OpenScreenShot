@@ -102,6 +102,7 @@ export const MENU_IDS: Record<CaptureMode, string> = {
   'full-page': 'oss-full-page',
   visible: 'oss-visible',
   region: 'oss-region',
+  element: 'oss-element',
 };
 
 /** Menu item id for "repeat last region" — region mode with the stored rect. */
