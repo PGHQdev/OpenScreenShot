@@ -199,7 +199,7 @@ openscreenshot/
 │   └── shared/              # design tokens, messaging, storage, types, utils
 ├── mcp/                     # optional local CLI + MCP server
 ├── site/                    # Astro website + localized content
-├── docs/                    # generated site build, served by site-worker.js
+├── site-dist/               # generated site build, served by site-worker.js
 ├── tests/unit/              # unit tests (Vitest)
 └── scripts/                 # icon + screenshot pipelines
 ```

@@ -2,7 +2,7 @@
   "name": "openscreenshot",
   "compatibility_date": "2026-07-27",
   "main": "site-worker.js",
-  // docs/ is Astro's outDir and is git-ignored, so a bare `wrangler deploy`
+  // site-dist/ is Astro's outDir and is git-ignored, so a bare `wrangler deploy`
   // (what Workers Builds runs) has nothing to upload. Wrangler runs this
   // before deploy and before `wrangler dev`.
   "build": {
@@ -10,7 +10,7 @@
   },
   "services": [{ "binding": "CAPTURE", "service": "openscreenshot-capture-pilot" }],
   "assets": {
-    "directory": "./docs",
+    "directory": "./site-dist",
     "binding": "ASSETS",
     "run_worker_first": ["/capture", "/capture/*", "/", "/api/*", "/kofi-widget.js", "/kofi-cdn/*"],
   },

@@ -32,7 +32,7 @@ for (const size of [16, 48, 128]) {
   console.log(`✓ generated ${outDir}/icon${size}.png`);
 }
 
-// Website icons (site/public/ is copied verbatim into docs/ by astro build):
+// Website icons (site/public/ is copied verbatim into site-dist/ by astro build):
 //  - favicon.ico  — multi-size ICO (PNG-compressed entries); /favicon.ico is
 //    fetched by browsers, crawlers, and feed readers regardless of <link> tags
 //  - apple-touch-icon.png — requested by iOS for Add to Home Screen

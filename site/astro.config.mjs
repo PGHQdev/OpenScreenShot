@@ -34,7 +34,7 @@ const SITE_LASTMOD = (() => {
 })();
 
 export default defineConfig({
-  outDir: '../docs',
+  outDir: '../site-dist',
   site: 'https://openscreenshot.app',
   // Locale path segments, lowercase. English serves unprefixed at the root;
   // the rest under /de/, /pt-br/, /zh-cn/, ... Pages generate their own

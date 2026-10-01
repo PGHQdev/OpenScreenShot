@@ -12,6 +12,5 @@ the site and the Worker (`npx wrangler deploy`). The `build` hook in `wrangler.j
   the deploy.
 - To confirm a deploy, read the `Workers Builds: openscreenshot` check on the pushed commit:
   `gh api repos/PGHQdev/OpenScreenShot/commits/<sha>/check-runs`.
-- Run `pnpm run site:build` locally only to preview the site. It empties `docs/` before it
-  writes, which deletes the tracked file in `docs/superpowers/specs/`. Restore it with
-  `git checkout -- docs/` before you commit.
+- Run `pnpm run site:build` locally only to preview the site. It writes to `site-dist/`, which
+  git ignores. `docs/` holds tracked documents only; the build never touches it.
