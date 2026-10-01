@@ -316,7 +316,12 @@ try {
     document.querySelector('#image').style.cssText =
       'position:fixed;left:auto;right:0;top:100px;width:140px;height:100px';
   });
-  await page.mouse.move(990, 130);
+  // Linux Chrome keeps the RTL gutter on the right, so a fixed x can land on the scrollbar.
+  const rtlImage = await page.$eval('#image', (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: (r.left + r.right) / 2, y: (r.top + r.bottom) / 2 };
+  });
+  await page.mouse.move(rtlImage.x, rtlImage.y);
   assert.equal(
     (await control(labels.capture)).disabled,
     false,
