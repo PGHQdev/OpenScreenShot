@@ -46,7 +46,7 @@ import { clampRegionRect, computeScrollPositions, MAX_CANVAS_HEIGHT_PX } from '.
 import { recordExportSuccess } from '../shared/rating';
 import {
   cropTile,
-  getElementViewport,
+  getWindowViewport,
   getMetrics,
   hideFixedElements,
   prepareCapture,
@@ -465,7 +465,7 @@ async function captureVisibleTabPng(
 
 async function captureVisible(tab: chrome.tabs.Tab): Promise<void> {
   const tabId = tab.id as number;
-  const metrics = await execInTab(tabId, getMetrics, []);
+  const metrics = await execInTab(tabId, getWindowViewport, []);
   const windowId = tab.windowId ?? chrome.windows.WINDOW_ID_CURRENT;
   try {
     const dataUrl = await captureVisibleTabPng(tabId, windowId);
@@ -490,7 +490,7 @@ async function captureVisible(tab: chrome.tabs.Tab): Promise<void> {
 
 async function captureRegion(tab: chrome.tabs.Tab, repeat = false): Promise<void> {
   const tabId = tab.id as number;
-  const metrics = await execInTab(tabId, getMetrics, []);
+  const metrics = await execInTab(tabId, getWindowViewport, []);
   let rect;
   if (repeat) {
     const stored = await getLastRegion();
@@ -564,7 +564,7 @@ async function captureElement(tab: chrome.tabs.Tab): Promise<void> {
 
   // Element rectangles are viewport-relative, independent of inner scroll panels.
   // Read fresh dimensions: the user may resize or zoom while choosing.
-  const metrics = await execInTab(tabId, getElementViewport, []);
+  const metrics = await execInTab(tabId, getWindowViewport, []);
   const { rect } = selection;
   if (
     ![rect.x, rect.y, rect.width, rect.height, metrics.devicePixelRatio].every(Number.isFinite) ||

@@ -122,7 +122,7 @@ function makeChrome() {
             devicePixelRatio: pixelRatio,
             container: null,
           };
-        if (name === 'getElementViewport') result = func();
+        if (name === 'getWindowViewport') result = func();
         if (name === 'scrollToPosition') result = { scrollY: args[0], atBottom: false };
         if (name === 'selectRegion') result = { x: 20, y: 20, width: 100, height: 100 };
         if (name === 'selectElement') {
@@ -309,7 +309,7 @@ describe('screenshot capture overlay lifecycle', () => {
     );
     expect(setLastRegion).not.toHaveBeenCalled();
     expect(events.indexOf('selectElement')).toBeLessThan(events.indexOf('snapshot'));
-    expect(events.indexOf('getElementViewport')).toBeGreaterThan(events.indexOf('selectElement'));
+    expect(events.indexOf('getWindowViewport')).toBeGreaterThan(events.indexOf('selectElement'));
   });
 
   it('uses window coordinates for elements inside an offset inner scroll panel', async () => {
@@ -318,6 +318,14 @@ describe('screenshot capture overlay lifecycle', () => {
     await capture('element');
     expect(cropArgs).toEqual(['data:image/png;base64,tile', 650, 450, 100, 80]);
     expect(captures).toBe(1);
+  });
+
+  it('sizes visible captures from the window when an inner panel scrolls', async () => {
+    innerScroller = true;
+    await capture('visible');
+    expect(setLastCapture).toHaveBeenCalledWith(
+      expect.objectContaining({ mode: 'visible', width: 800, height: 600 }),
+    );
   });
 
   it('does not capture or deliver when the element picker is cancelled', async () => {

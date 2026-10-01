@@ -13,8 +13,8 @@
  */
 import type { Metrics, TileSpec } from '../shared/types';
 
-/** Element bounds use window coordinates, even when an inner panel scrolls. */
-export function getElementViewport() {
+/** Visible, region, and element captures use window coordinates, even in inner scroll panels. */
+export function getWindowViewport() {
   return {
     viewportWidth: window.innerWidth,
     viewportHeight: window.innerHeight,
