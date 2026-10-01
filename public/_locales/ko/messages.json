@@ -687,6 +687,10 @@
     "message": "WebM 내보내기",
     "description": "Recorder page: button that renders the edited recording to a WebM file."
   },
+  "recorderExportMp4": {
+    "message": "MP4 내보내기",
+    "description": "Recorder page: button that renders the edited recording to an MP4 (H.264 + AAC) file."
+  },
   "recorderExporting": {
     "message": "렌더링 중…",
     "description": "Recorder page: status shown while the export renders."

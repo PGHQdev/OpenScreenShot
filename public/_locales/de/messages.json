@@ -687,6 +687,10 @@
     "message": "WebM exportieren",
     "description": "Recorder page: button that renders the edited recording to a WebM file."
   },
+  "recorderExportMp4": {
+    "message": "MP4 exportieren",
+    "description": "Recorder page: button that renders the edited recording to an MP4 (H.264 + AAC) file."
+  },
   "recorderExporting": {
     "message": "Wird gerendert…",
     "description": "Recorder page: status shown while the export renders."

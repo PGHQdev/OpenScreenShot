@@ -687,6 +687,10 @@
     "message": "WebM を書き出し",
     "description": "Recorder page: button that renders the edited recording to a WebM file."
   },
+  "recorderExportMp4": {
+    "message": "MP4 を書き出し",
+    "description": "Recorder page: button that renders the edited recording to an MP4 (H.264 + AAC) file."
+  },
   "recorderExporting": {
     "message": "レンダリング中…",
     "description": "Recorder page: status shown while the export renders."

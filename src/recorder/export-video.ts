@@ -1,5 +1,5 @@
 /**
- * WebM export for the recorder editor.
+ * WebM and MP4 export for the recorder editor.
  *
  * There is no offline compositor in a browser: the only way to turn a canvas
  * back into a video file is `captureStream` + `MediaRecorder`, and both run
@@ -21,8 +21,8 @@ import {
   type FrameMetrics,
   type FrameOptions,
 } from '../editor/frame';
-import { pickRecorderMime } from '../offscreen/mime';
-import { DEFAULT_SETTINGS } from '../shared/types';
+import { pickExportMime } from '../offscreen/mime';
+import { DEFAULT_SETTINGS, type VideoFormat } from '../shared/types';
 import { cursorAt, normalizeClicks, normalizeMoves, type NormClick } from './events-map';
 import { cursorDrawsPointer, cursorDrawsRipple, type RecorderEdit } from './recorder-draft';
 import { drawExportFrame, RIPPLE_MS } from './render';
@@ -111,6 +111,29 @@ export function exportGeometry(loaded: LoadedSession, draft: ExportDraft): Expor
   const frame = frameFromSettings({ ...DEFAULT_SETTINGS, ...draft.frame });
   const metrics = frameMetrics(frame, videoW, videoH);
   return { width: metrics.outerW, height: metrics.outerH, frame, metrics };
+}
+
+/**
+ * Largest frame Chrome's H.264 encoder accepts: level 5.2 tops out at
+ * 4096×2304 worth of macroblocks. A 5K tab (5120×2880) fails with an
+ * EncodingError, so an MP4 export scales down to this area.
+ */
+export const MP4_MAX_PIXELS = 4096 * 2304;
+
+/**
+ * The size the recorder encodes at. WebM takes the canvas as is. MP4 keeps
+ * the aspect ratio under {@link MP4_MAX_PIXELS} and rounds to even sides,
+ * because H.264 crops an odd side by a pixel.
+ */
+export function encodeSize(
+  width: number,
+  height: number,
+  format: VideoFormat,
+): { width: number; height: number } {
+  if (format === 'webm') return { width, height };
+  const scale = Math.min(1, Math.sqrt(MP4_MAX_PIXELS / (width * height)));
+  const even = (n: number) => Math.max(2, Math.floor((n * scale) / 2) * 2);
+  return { width: even(width), height: even(height) };
 }
 
 /** Segment timings under the draft's trims, always clampTrim-validated. */
@@ -220,18 +243,26 @@ export async function exportVideo(
   draft: ExportDraft,
   onProgress: (p: ExportProgress) => void,
   signal: AbortSignal,
+  format: VideoFormat = 'webm',
 ): Promise<ExportResult> {
   if (loaded.segments.length === 0) return { blob: null, skippedParts: 0 };
+
+  const mime = pickExportMime(MediaRecorder.isTypeSupported, format);
+  if (format === 'mp4' && !mime) throw new Error('MP4 recording is not supported here');
 
   const timings = exportTimings(loaded, draft);
   const total = totalDuration(timings);
   const { width, height, frame, metrics } = exportGeometry(loaded, draft);
+  const encoded = encodeSize(width, height, format);
 
   const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = encoded.width;
+  canvas.height = encoded.height;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('export canvas unavailable');
+  // Frames still draw in full-size coordinates; this maps them onto the
+  // smaller MP4 canvas. drawExportFrame only saves and restores on top of it.
+  ctx.setTransform(encoded.width / width, 0, 0, encoded.height / height, 0, 0);
 
   // Clicks are normalized once per segment, on the segment's own clock —
   // the same source `rippleAt` ages against.
@@ -283,7 +314,6 @@ export async function exportVideo(
     for (const track of dest.stream.getAudioTracks()) stream.addTrack(track);
   }
 
-  const mime = pickRecorderMime(MediaRecorder.isTypeSupported, false);
   const recorder = new MediaRecorder(stream, {
     ...(mime ? { mimeType: mime } : {}),
     videoBitsPerSecond: VIDEO_BITS_PER_SECOND,
@@ -453,5 +483,6 @@ export async function exportVideo(
   if (chunks.length === 0) throw new Error('export produced no data');
 
   onProgress({ fraction: 1, remainingMs: 0 });
-  return { blob: new Blob(chunks, { type: mime || 'video/webm' }), skippedParts };
+  const type = mime || (format === 'mp4' ? 'video/mp4' : 'video/webm');
+  return { blob: new Blob(chunks, { type }), skippedParts };
 }
