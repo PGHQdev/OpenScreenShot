@@ -9,7 +9,7 @@
  * w/h negative); {@link normalizeRect} fixes that for drawing and hit-testing.
  */
 import { tokens } from '../shared/design-tokens';
-import type { BoxShape } from '../shared/types';
+import type { ArrowHead, BoxShape } from '../shared/types';
 
 export interface Rect {
   x: number;
@@ -52,6 +52,8 @@ export interface ArrowAnnotation extends BaseAnnotation {
   y2: number;
   stroke: string;
   strokeWidth: number;
+  /** The tip style. Absent (older drafts) = filled. */
+  head?: ArrowHead;
 }
 
 export interface LineAnnotation extends BaseAnnotation {
@@ -119,6 +121,13 @@ export interface StepAnnotation extends BaseAnnotation {
 export type SpotlightShape = 'rect' | 'rounded' | 'ellipse';
 
 export const BOX_SHAPES: readonly BoxShape[] = ['rect', 'rounded', 'ellipse', 'triangle'];
+
+export const ARROW_HEADS: readonly ArrowHead[] = ['filled', 'open', 'double', 'dot'];
+
+/** A stored tip name, or filled when it is not one this build draws. */
+export function normalizeArrowHead(value: unknown): ArrowHead {
+  return ARROW_HEADS.includes(value as ArrowHead) ? (value as ArrowHead) : 'filled';
+}
 
 /** A stored shape name, or rect when it is not one this build draws. */
 export function normalizeBoxShape(value: unknown): BoxShape {
@@ -467,38 +476,92 @@ function traceBoxShape(ctx: CanvasRenderingContext2D, r: Rect, shape: BoxShape):
 }
 
 /** The shared body of an arrow and a line: one round-capped segment. */
-function drawShaft(ctx: CanvasRenderingContext2D, a: ArrowAnnotation | LineAnnotation): void {
+function drawShaft(
+  ctx: CanvasRenderingContext2D,
+  a: ArrowAnnotation | LineAnnotation,
+  from: Point = { x: a.x1, y: a.y1 },
+  to: Point = { x: a.x2, y: a.y2 },
+): void {
   ctx.lineWidth = a.strokeWidth;
   ctx.strokeStyle = a.stroke;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.beginPath();
-  ctx.moveTo(a.x1, a.y1);
-  ctx.lineTo(a.x2, a.y2);
+  ctx.moveTo(from.x, from.y);
+  ctx.lineTo(to.x, to.y);
   ctx.stroke();
 }
 
 function drawArrow(ctx: CanvasRenderingContext2D, a: ArrowAnnotation): void {
   const dx = a.x2 - a.x1;
   const dy = a.y2 - a.y1;
-  drawShaft(ctx, a);
-  ctx.fillStyle = a.stroke;
   const len = Math.hypot(dx, dy);
-  if (len < 1) return; // too short to draw a head
+  if (len < 1) {
+    drawShaft(ctx, a);
+    return; // too short to draw a head
+  }
   const head = Math.max(10, a.strokeWidth * 3);
   const angle = Math.atan2(dy, dx);
+  const style = normalizeArrowHead(a.head);
+  // A filled tip ends the shaft inside the triangle: run to the point, the
+  // round cap would show past it at thick widths.
+  const inset = Math.min(len / 2, head * 0.7);
+  const ux = dx / len;
+  const uy = dy / len;
+  const filledEnd = style === 'filled' || style === 'double';
+  drawShaft(
+    ctx,
+    a,
+    style === 'double' ? { x: a.x1 + ux * inset, y: a.y1 + uy * inset } : undefined,
+    filledEnd ? { x: a.x2 - ux * inset, y: a.y2 - uy * inset } : undefined,
+  );
+  drawArrowTip(ctx, a, a.x2, a.y2, angle, style === 'double' ? 'filled' : style, head);
+  if (style === 'double') drawArrowTip(ctx, a, a.x1, a.y1, angle + Math.PI, 'filled', head);
+}
+
+/** One arrow tip at (x, y), pointing along `angle`. */
+function drawArrowTip(
+  ctx: CanvasRenderingContext2D,
+  a: ArrowAnnotation,
+  x: number,
+  y: number,
+  angle: number,
+  style: Exclude<ArrowHead, 'double'>,
+  head: number,
+): void {
+  const back = (side: number) => ({
+    x: x - head * Math.cos(angle + (side * Math.PI) / 6),
+    y: y - head * Math.sin(angle + (side * Math.PI) / 6),
+  });
   ctx.beginPath();
-  ctx.moveTo(a.x2, a.y2);
-  ctx.lineTo(
-    a.x2 - head * Math.cos(angle - Math.PI / 6),
-    a.y2 - head * Math.sin(angle - Math.PI / 6),
-  );
-  ctx.lineTo(
-    a.x2 - head * Math.cos(angle + Math.PI / 6),
-    a.y2 - head * Math.sin(angle + Math.PI / 6),
-  );
-  ctx.closePath();
-  ctx.fill();
+  switch (style) {
+    case 'filled': {
+      const l = back(-1);
+      const r = back(1);
+      ctx.moveTo(x, y);
+      ctx.lineTo(l.x, l.y);
+      ctx.lineTo(r.x, r.y);
+      ctx.closePath();
+      ctx.fillStyle = a.stroke;
+      ctx.fill();
+      break;
+    }
+    case 'open': {
+      const l = back(-1);
+      const r = back(1);
+      ctx.moveTo(l.x, l.y);
+      ctx.lineTo(x, y);
+      ctx.lineTo(r.x, r.y);
+      // drawShaft already set the stroke colour, width, cap and join.
+      ctx.stroke();
+      break;
+    }
+    case 'dot':
+      ctx.arc(x, y, head * 0.4, 0, Math.PI * 2);
+      ctx.fillStyle = a.stroke;
+      ctx.fill();
+      break;
+  }
 }
 
 function drawPen(ctx: CanvasRenderingContext2D, a: PenAnnotation): void {

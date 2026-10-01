@@ -1435,6 +1435,26 @@
     "message": "形状",
     "description": "Editor style bar: the spotlight-shape field group label."
   },
+  "editorStyleArrowHead": {
+    "message": "箭头",
+    "description": "Editor style bar: the arrow tip field group label."
+  },
+  "editorArrowHeadFilled": {
+    "message": "实心",
+    "description": "Editor style bar: arrow tip option, a filled triangle."
+  },
+  "editorArrowHeadOpen": {
+    "message": "空心",
+    "description": "Editor style bar: arrow tip option, an open V made of two lines."
+  },
+  "editorArrowHeadDouble": {
+    "message": "双向",
+    "description": "Editor style bar: arrow tip option, filled tips at both ends."
+  },
+  "editorArrowHeadDot": {
+    "message": "圆点",
+    "description": "Editor style bar: arrow tip option, a round dot."
+  },
   "editorStyleFill": {
     "message": "填充",
     "description": "Editor style bar: the rectangle fill field group label."

@@ -57,7 +57,7 @@ import {
   IconUndo,
 } from '../shared/icons';
 import { getSettings, setSettings } from '../shared/storage';
-import type { BoxShape } from '../shared/types';
+import type { ArrowHead, BoxShape } from '../shared/types';
 import {
   SUPPORT_PROJECT_URL,
   openReviewPage,
@@ -960,6 +960,25 @@ function StyleBar({
           </div>
         </div>
       ) : null}
+      {fields.arrowHead ? (
+        <div class="stylebar-group">
+          <span class="stylebar-label">{t('editorStyleArrowHead')}</span>
+          <div class="widths">
+            {ARROW_HEAD_OPTIONS.map((h) => (
+              <button
+                key={h.id}
+                class="shape-btn"
+                title={h.label}
+                aria-label={h.label}
+                aria-pressed={ed.arrowHead === h.id}
+                onClick={() => ed.setArrowHead(h.id)}
+              >
+                <ArrowHeadGlyph head={h.id} />
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
       {fields.boxShape ? (
         <div class="stylebar-group">
           <span class="stylebar-label">{t('editorStyleShape')}</span>
@@ -1077,12 +1096,46 @@ const BLUR_MODES: { id: BlurMode; label: string; hint: string }[] = [
   { id: 'solid', label: t('editorBlurModeSolid'), hint: t('editorBlurModeSolidHint') },
 ];
 
+const ARROW_HEAD_OPTIONS: { id: ArrowHead; label: string }[] = [
+  { id: 'filled', label: t('editorArrowHeadFilled') },
+  { id: 'open', label: t('editorArrowHeadOpen') },
+  { id: 'double', label: t('editorArrowHeadDouble') },
+  { id: 'dot', label: t('editorArrowHeadDot') },
+];
+
 const BOX_SHAPE_OPTIONS: { id: BoxShape; label: string }[] = [
   { id: 'rect', label: t('editorToolRectangle') },
   { id: 'rounded', label: t('editorShapeRounded') },
   { id: 'ellipse', label: t('editorShapeEllipse') },
   { id: 'triangle', label: t('editorShapeTriangle') },
 ];
+
+/** A short left-to-right arrow in each tip style, drawn like the shape glyphs. */
+function ArrowHeadGlyph({ head }: { head: ArrowHead }) {
+  const tip = (x: number, dir: 1 | -1) =>
+    head === 'dot' ? (
+      <circle cx={x} cy="7" r="2.6" class="glyph-solid" />
+    ) : head === 'open' ? (
+      <path d={`M${x - 5 * dir} 2.5 ${x} 7 ${x - 5 * dir} 11.5`} />
+    ) : (
+      <path d={`M${x} 7 ${x - 6 * dir} 2.5V11.5Z`} class="glyph-solid" />
+    );
+  // Wider than the shape glyphs, so two tips leave a visible shaft between them.
+  return (
+    <svg
+      class="shape-glyph"
+      width="22"
+      height="14"
+      viewBox="0 0 22 14"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M2 7H20" />
+      {tip(20, 1)}
+      {head === 'double' ? tip(2, -1) : null}
+    </svg>
+  );
+}
 
 function BoxShapeGlyph({ shape }: { shape: BoxShape }) {
   return (

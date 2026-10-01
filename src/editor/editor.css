@@ -173,7 +173,11 @@ body {
   fill: none;
   stroke: currentColor;
   stroke-width: 1.8;
+  stroke-linecap: round;
   stroke-linejoin: round;
+}
+.shape-glyph .glyph-solid {
+  fill: currentColor;
 }
 /* Compound with .range (shared/controls.css), not a bare class: equal
    specificity plus source order used to let .range's own width: 100% win

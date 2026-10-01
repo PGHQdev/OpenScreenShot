@@ -20,7 +20,9 @@ import {
   STROKE_WIDTHS,
   strokeBarHeight,
   strokeScale,
+  ARROW_HEADS,
   BOX_SHAPES,
+  normalizeArrowHead,
   normalizeBoxShape,
   translateAnnotation,
   unionBBox,
@@ -254,6 +256,104 @@ describe('normalizeBoxShape', () => {
   it('reads a missing or unknown stored shape as a rectangle', () => {
     expect(normalizeBoxShape(undefined)).toBe('rect');
     expect(normalizeBoxShape('hexagon')).toBe('rect');
+  });
+});
+
+describe('drawAnnotation — arrow tips', () => {
+  function pathRecorder() {
+    const calls: string[] = [];
+    const ctx = new Proxy(
+      { fillStyle: '', strokeStyle: '', lineWidth: 0, lineCap: '', lineJoin: '' },
+      {
+        get(target, prop: string) {
+          if (prop in target) return target[prop as keyof typeof target];
+          return (...args: number[]) =>
+            calls.push(`${prop}(${args.map((n) => Math.round(n)).join(',')})`);
+        },
+        set(target, prop: string, value) {
+          (target as Record<string, unknown>)[prop] = value;
+          return true;
+        },
+      },
+    );
+    return { ctx: ctx as unknown as CanvasRenderingContext2D, calls };
+  }
+  // Left to right, 4px wide, so the tip is 12px long (3 × width).
+  const arrow = {
+    id: 'a',
+    type: 'arrow',
+    x1: 0,
+    y1: 50,
+    x2: 100,
+    y2: 50,
+    stroke: '#f00',
+    strokeWidth: 4,
+  };
+  const draw = (head?: string) => {
+    const { ctx, calls } = pathRecorder();
+    drawAnnotation(
+      ctx,
+      { ...arrow, head } as Annotation,
+      {} as HTMLImageElement,
+      createBlurCache(),
+    );
+    return calls.slice(4); // after the shaft: beginPath, moveTo, lineTo, stroke
+  };
+
+  it('fills a triangle at the end by default, and for an older arrow with no tip', () => {
+    expect(draw()).toEqual([
+      'beginPath()',
+      'moveTo(100,50)',
+      'lineTo(90,56)',
+      'lineTo(90,44)',
+      'closePath()',
+      'fill()',
+    ]);
+    expect(draw('filled')).toEqual(draw());
+    expect(draw('bogus')).toEqual(draw());
+  });
+
+  it('ends the shaft inside a filled tip, so its round cap never shows past the point', () => {
+    const { ctx, calls } = pathRecorder();
+    drawAnnotation(ctx, arrow as Annotation, {} as HTMLImageElement, createBlurCache());
+    expect(calls.slice(0, 4)).toEqual(['beginPath()', 'moveTo(0,50)', 'lineTo(92,50)', 'stroke()']);
+    const open = pathRecorder();
+    drawAnnotation(
+      open.ctx,
+      { ...arrow, head: 'open' } as Annotation,
+      {} as HTMLImageElement,
+      createBlurCache(),
+    );
+    expect(open.calls[2]).toBe('lineTo(100,50)');
+  });
+
+  it('strokes an open V for the open tip', () => {
+    expect(draw('open')).toEqual([
+      'beginPath()',
+      'moveTo(90,56)',
+      'lineTo(100,50)',
+      'lineTo(90,44)',
+      'stroke()',
+    ]);
+  });
+
+  it('fills both ends for the double tip, the start pointing back', () => {
+    const calls = draw('double');
+    expect(calls.filter((c) => c === 'fill()')).toHaveLength(2);
+    expect(calls).toContain('moveTo(0,50)');
+    expect(calls).toContain('lineTo(10,44)');
+  });
+
+  it('fills a dot centred on the end for the dot tip', () => {
+    expect(draw('dot')).toEqual(['beginPath()', 'arc(100,50,5,0,6)', 'fill()']);
+  });
+});
+
+describe('normalizeArrowHead', () => {
+  it('keeps every tip this build draws and reads anything else as filled', () => {
+    for (const head of ARROW_HEADS) expect(normalizeArrowHead(head)).toBe(head);
+    expect(normalizeArrowHead(undefined)).toBe('filled');
+    expect(normalizeArrowHead('chevron')).toBe('filled');
   });
 });
 

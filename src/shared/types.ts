@@ -6,6 +6,9 @@
 import type { RecMessage } from './recording-types';
 import { tokens } from './design-tokens';
 
+/** The tips the editor's Arrow tool draws: one filled, one open, both ends, or a dot. */
+export type ArrowHead = 'filled' | 'open' | 'double' | 'dot';
+
 /** The outlines the editor's Shape tool draws inside its drag box. */
 export type BoxShape = 'rect' | 'rounded' | 'ellipse' | 'triangle';
 
@@ -183,6 +186,8 @@ export interface Settings {
   annotationFill: boolean;
   /** The outline the Shape tool draws. See BOX_SHAPES (src/editor/annotations.ts). */
   annotationShape: BoxShape;
+  /** The tip the Arrow tool draws. See ARROW_HEADS (src/editor/annotations.ts). */
+  annotationArrowHead: ArrowHead;
   /** The editor's tool rail, in order. Empty = the default (PRIMARY_TOOLS). */
   toolRail: string[];
   /** Custom colours the user picked, most recent first. */
@@ -217,6 +222,7 @@ export const DEFAULT_SETTINGS: Settings = {
   annotationFontSize: 28,
   annotationFill: false,
   annotationShape: 'rect',
+  annotationArrowHead: 'filled',
   toolRail: [],
   recentColors: [],
   captureDelay: 0,

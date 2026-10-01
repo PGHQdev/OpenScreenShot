@@ -1435,6 +1435,26 @@
     "message": "모양",
     "description": "Editor style bar: the spotlight-shape field group label."
   },
+  "editorStyleArrowHead": {
+    "message": "끝 모양",
+    "description": "Editor style bar: the arrow tip field group label."
+  },
+  "editorArrowHeadFilled": {
+    "message": "채움",
+    "description": "Editor style bar: arrow tip option, a filled triangle."
+  },
+  "editorArrowHeadOpen": {
+    "message": "열림",
+    "description": "Editor style bar: arrow tip option, an open V made of two lines."
+  },
+  "editorArrowHeadDouble": {
+    "message": "양쪽 끝",
+    "description": "Editor style bar: arrow tip option, filled tips at both ends."
+  },
+  "editorArrowHeadDot": {
+    "message": "점",
+    "description": "Editor style bar: arrow tip option, a round dot."
+  },
   "editorStyleFill": {
     "message": "채우기",
     "description": "Editor style bar: the rectangle fill field group label."

@@ -105,6 +105,21 @@ describe('spotlight tool', () => {
     expect(draft).toMatchObject({ type: 'spotlight', x: 4, y: 9, w: 0, h: 0, shape: 'ellipse' });
   });
 
+  it('drafts the chosen arrow tip, and leaves the filled default unmarked', () => {
+    expect(
+      createShapeDraft('arrow', { x: 0, y: 0 }, '#ff3b30', 6, { arrowHead: 'open' }),
+    ).toMatchObject({
+      type: 'arrow',
+      head: 'open',
+    });
+    expect(
+      createShapeDraft('arrow', { x: 0, y: 0 }, '#ff3b30', 6, { arrowHead: 'filled' }),
+    ).not.toHaveProperty('head');
+    expect(
+      createShapeDraft('line', { x: 0, y: 0 }, '#ff3b30', 6, { arrowHead: 'dot' }),
+    ).not.toHaveProperty('head');
+  });
+
   it('drafts the chosen box shape, and leaves a plain rectangle unmarked', () => {
     expect(
       createShapeDraft('rect', { x: 0, y: 0 }, '#ff3b30', 6, { boxShape: 'ellipse' }),

@@ -26,6 +26,8 @@ export interface StylebarFields {
   fill: boolean;
   /** The Shape tool's outline picker (rectangle, rounded, oval, triangle). */
   boxShape: boolean;
+  /** The Arrow tool's tip picker (filled, open, double, dot). */
+  arrowHead: boolean;
 }
 
 const NONE: StylebarFields = {
@@ -37,9 +39,11 @@ const NONE: StylebarFields = {
   strength: false,
   fill: false,
   boxShape: false,
+  arrowHead: false,
 };
 const SHAPE: StylebarFields = { ...NONE, color: true, stroke: true };
 const BOX: StylebarFields = { ...SHAPE, fill: true, boxShape: true };
+const ARROW: StylebarFields = { ...SHAPE, arrowHead: true };
 const GLYPH: StylebarFields = { ...NONE, color: true, fontSize: true };
 const SPOTLIGHT: StylebarFields = { ...NONE, shape: true };
 const BLUR: StylebarFields = { ...NONE, redaction: true, strength: true };
@@ -53,6 +57,7 @@ export function stylebarFields(
       case 'rect':
         return BOX;
       case 'arrow':
+        return ARROW;
       case 'line':
       case 'pen':
       case 'highlight':
@@ -70,6 +75,7 @@ export function stylebarFields(
     case 'rect':
       return BOX;
     case 'arrow':
+      return ARROW;
     case 'line':
     case 'pen':
     case 'highlight':
@@ -100,7 +106,8 @@ export function stylebarEmpty(f: StylebarFields): boolean {
     !f.redaction &&
     !f.strength &&
     !f.fill &&
-    !f.boxShape
+    !f.boxShape &&
+    !f.arrowHead
   );
 }
 

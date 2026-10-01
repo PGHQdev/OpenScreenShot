@@ -29,6 +29,7 @@ import {
   handleAtRect,
   hasStroke,
   measureTextSize,
+  normalizeArrowHead,
   normalizeBoxShape,
   normalizeRect,
   resizeRect,
@@ -100,7 +101,13 @@ import {
   type CarriedBox,
   type Mutation,
 } from './keyboard';
-import type { BoxShape, CaptureHistoryEntry, LastCapture, Settings } from '../shared/types';
+import type {
+  ArrowHead,
+  BoxShape,
+  CaptureHistoryEntry,
+  LastCapture,
+  Settings,
+} from '../shared/types';
 import {
   clearDraft,
   clearDraftImage,
@@ -243,6 +250,7 @@ export function useEditor() {
   const [blurMode, setBlurModeState] = useState<BlurMode>('blur');
   const [rectFill, setRectFillState] = useState(false);
   const [boxShape, setBoxShapeState] = useState<BoxShape>('rect');
+  const [arrowHead, setArrowHeadState] = useState<ArrowHead>('filled');
   const [blurStrength, setBlurStrengthState] = useState<number>(DEFAULT_BLUR_STRENGTH);
   const [frame, setFrameState] = useState<FrameOptions>(DEFAULT_FRAME);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
@@ -310,6 +318,7 @@ export function useEditor() {
   const blurModeRef = useRef(blurMode);
   const rectFillRef = useRef(rectFill);
   const boxShapeRef = useRef(boxShape);
+  const arrowHeadRef = useRef(arrowHead);
   const blurStrengthRef = useRef(blurStrength);
   // True from the moment restoreDraft clears draftPrompt until the restored
   // annotations land. The canvas is transiently empty in that window; without
@@ -491,6 +500,10 @@ export function useEditor() {
   }, [boxShape]);
 
   useEffect(() => {
+    arrowHeadRef.current = arrowHead;
+  }, [arrowHead]);
+
+  useEffect(() => {
     blurStrengthRef.current = blurStrength;
   }, [blurStrength]);
 
@@ -611,6 +624,8 @@ export function useEditor() {
       a.type === 'rect' ? normalizeBoxShape(a.shape) : undefined,
     );
     if (outline !== null) setBoxShapeState(outline);
+    const tip = agreed(sel, (a) => (a.type === 'arrow' ? normalizeArrowHead(a.head) : undefined));
+    if (tip !== null) setArrowHeadState(tip);
     if (strength !== null) setBlurStrengthState(strength);
   }, [selectedIds]);
 
@@ -894,6 +909,15 @@ export function useEditor() {
     [applyStyleToSelected],
   );
 
+  const setArrowHead = useCallback(
+    (head: ArrowHead) => {
+      setArrowHeadState(head);
+      void setSettings({ annotationArrowHead: head });
+      applyStyleToSelected((a) => (a.type === 'arrow' ? { ...a, head } : a));
+    },
+    [applyStyleToSelected],
+  );
+
   const setBlurMode = useCallback(
     (mode: BlurMode) => {
       setBlurModeState(mode);
@@ -975,6 +999,7 @@ export function useEditor() {
       });
       setRectFillState(s.annotationFill);
       setBoxShapeState(normalizeBoxShape(s.annotationShape));
+      setArrowHeadState(normalizeArrowHead(s.annotationArrowHead));
       setFrameState(frameFromSettings(s));
       const requestedCapture = new URLSearchParams(window.location.search).get('capture');
       const cap = requestedCapture ? await openCapture(requestedCapture) : await getLastCapture();
@@ -1802,6 +1827,7 @@ export function useEditor() {
           spotlightShape: spotlightShapeRef.current,
           rectFill: rectFillRef.current,
           boxShape: boxShapeRef.current,
+          arrowHead: arrowHeadRef.current,
           blurMode: blurModeRef.current,
           blurStrength: blurStrengthRef.current,
         },
@@ -2047,6 +2073,7 @@ export function useEditor() {
         spotlightShape: spotlightShapeRef.current,
         rectFill: rectFillRef.current,
         boxShape: boxShapeRef.current,
+        arrowHead: arrowHeadRef.current,
         blurMode: blurModeRef.current,
         blurStrength: blurStrengthRef.current,
       },
@@ -2663,6 +2690,8 @@ export function useEditor() {
     setRectFill,
     boxShape,
     setBoxShape,
+    arrowHead,
+    setArrowHead,
     blurStrength,
     setBlurStrength,
     frame,

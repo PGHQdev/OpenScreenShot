@@ -1435,6 +1435,26 @@
     "message": "Forma",
     "description": "Editor style bar: the spotlight-shape field group label."
   },
+  "editorStyleArrowHead": {
+    "message": "Ponta",
+    "description": "Editor style bar: the arrow tip field group label."
+  },
+  "editorArrowHeadFilled": {
+    "message": "Preenchida",
+    "description": "Editor style bar: arrow tip option, a filled triangle."
+  },
+  "editorArrowHeadOpen": {
+    "message": "Aberta",
+    "description": "Editor style bar: arrow tip option, an open V made of two lines."
+  },
+  "editorArrowHeadDouble": {
+    "message": "Ambas as pontas",
+    "description": "Editor style bar: arrow tip option, filled tips at both ends."
+  },
+  "editorArrowHeadDot": {
+    "message": "Ponto",
+    "description": "Editor style bar: arrow tip option, a round dot."
+  },
   "editorStyleFill": {
     "message": "Preenchimento",
     "description": "Editor style bar: the rectangle fill field group label."
