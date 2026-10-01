@@ -108,7 +108,12 @@ export function selectElement(labels: ElementPickerLabels): Promise<ElementSelec
     const fullPage = button(labels.fullPage);
     const cancel = button(labels.cancel);
     bar.append(title, instructions, status, actions);
-    shadow.append(style, layer, shade, selection, bar);
+    // A fixed box with zero insets covers exactly the area scrollbars leave
+    // free, on whichever side the browser puts them. Root clientLeft reads 0
+    // even when an RTL page's scrollbar sits on the left (Chrome on Linux).
+    const viewportProbe = doc.createElement('div');
+    viewportProbe.style.cssText = 'position:fixed;inset:0;visibility:hidden;pointer-events:none';
+    shadow.append(style, layer, shade, selection, bar, viewportProbe);
 
     let current: Element | null = null;
     let history: Element[] = [];
@@ -211,18 +216,12 @@ export function selectElement(labels: ElementPickerLabels): Promise<ElementSelec
     };
     const fullyVisible = (el: Element, rect: DOMRect) => {
       const visual = window.visualViewport;
-      const gutter = doc.compatMode === 'BackCompat' ? doc.body : doc.documentElement;
-      const left = Math.max(gutter.clientLeft, visual?.offsetLeft ?? 0);
-      const top = visual?.offsetTop ?? 0;
-      const right = Math.min(
-        gutter.clientLeft + Math.min(innerWidth, gutter.clientWidth || innerWidth),
-        (visual?.offsetLeft ?? 0) + (visual?.width ?? innerWidth),
-      );
-      const bottom = Math.min(
-        innerHeight,
-        gutter.clientHeight || innerHeight,
-        top + (visual?.height ?? innerHeight),
-      );
+      const box = viewportProbe.getBoundingClientRect();
+      // The visual viewport is offset from the layout viewport, which starts at box.left/top.
+      const left = Math.max(box.left, box.left + (visual?.offsetLeft ?? 0));
+      const top = Math.max(box.top, box.top + (visual?.offsetTop ?? 0));
+      const right = Math.min(box.right, left + (visual?.width ?? box.width));
+      const bottom = Math.min(box.bottom, top + (visual?.height ?? box.height));
       if (rect.left < left || rect.top < top || rect.right > right || rect.bottom > bottom)
         return false;
       for (let node: Element | null = el; node; node = parent(node)) {
