@@ -352,7 +352,12 @@ try {
         return {
           ua: navigator.userAgent,
           inner: [innerWidth, innerHeight],
-          vv: [visualViewport.offsetLeft, visualViewport.offsetTop, visualViewport.width, visualViewport.height],
+          vv: [
+            visualViewport.offsetLeft,
+            visualViewport.offsetTop,
+            visualViewport.width,
+            visualViewport.height,
+          ],
           scroll: [scrollX, scrollY],
           probe: r(probe),
           host: r(host),
