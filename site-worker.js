@@ -1,6 +1,7 @@
 // Thin wrapper around the static asset handler: adds a Link header on the
-// homepage (RFC 8288 agent discovery) and serves docs/index.md when a client
-// negotiates Accept: text/markdown for the homepage.
+// homepage (RFC 8288 agent discovery), serves a page's index.md when a client
+// negotiates Accept: text/markdown, and points each Markdown copy at its HTML
+// page with a canonical Link header so search engines index the HTML.
 const HOMEPAGE_LINK =
   '</.well-known/api-catalog>; rel="api-catalog", </skills/capture-screenshot.md>; rel="service-doc"';
 
@@ -311,18 +312,29 @@ async function route(url, request, env) {
   if (url.pathname === '/kofi-widget.js') return proxyKofiWidget();
   if (url.pathname.startsWith('/kofi-cdn/')) return proxyKofiAsset(url.pathname);
 
-  if (url.pathname === '/') {
-    if (accept.includes('text/markdown')) {
-      const md = await env.ASSETS.fetch(new URL('/index.md', url));
-      return new Response(md.body, {
-        status: md.status,
-        headers: { 'content-type': 'text/markdown; charset=utf-8' },
-      });
-    }
-    return withInjectedStats(env.ASSETS.fetch(request));
+  if (url.pathname.endsWith('/') && accept.includes('text/markdown')) {
+    const md = await env.ASSETS.fetch(new URL(`${url.pathname}index.md`, url));
+    if (md.ok) return markdownResponse(md, url.pathname, url);
   }
+  if (url.pathname.endsWith('/index.md')) {
+    const md = await env.ASSETS.fetch(request);
+    return md.ok ? markdownResponse(md, url.pathname.slice(0, -'index.md'.length), url) : md;
+  }
+  if (url.pathname === '/') return withInjectedStats(env.ASSETS.fetch(request));
 
   return env.ASSETS.fetch(request);
+}
+
+/** A Markdown copy of an HTML page, canonical to that page. */
+function markdownResponse(md, pagePath, url) {
+  return new Response(md.body, {
+    status: md.status,
+    headers: {
+      'content-type': 'text/markdown; charset=utf-8',
+      Link: `<${new URL(pagePath, url).href}>; rel="canonical"`,
+      Vary: 'Accept',
+    },
+  });
 }
 
 export default {
@@ -332,7 +344,7 @@ export default {
 
     const headers = new Headers(response.headers);
     headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-    if (url.pathname === '/') headers.set('Link', HOMEPAGE_LINK);
+    if (url.pathname === '/') headers.append('Link', HOMEPAGE_LINK);
     return new Response(response.body, { status: response.status, headers });
   },
 };

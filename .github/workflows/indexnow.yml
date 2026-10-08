@@ -1,0 +1,50 @@
+name: IndexNow
+
+# After Workers Builds deploys a site change, tell IndexNow engines (Bing,
+# Yandex, Naver, Seznam, Yep) to recrawl every URL in the live sitemap. The
+# key file is site/public/<key>.txt; IndexNow keys are public by design.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'site-worker.js'
+      - 'scripts/site-markdown.mjs'
+  workflow_dispatch:
+
+env:
+  HOST: openscreenshot.app
+  KEY: c1d1bb7ffad56c908d5177e00c8b5f5f
+
+jobs:
+  submit:
+    runs-on: ubuntu-24.04
+    permissions:
+      checks: read
+    steps:
+      - name: Wait for the Workers Builds deploy
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for i in $(seq 1 60); do
+            state=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/check-runs" \
+              -q '.check_runs[] | select(.name | startswith("Workers Builds")) | "\(.status)/\(.conclusion)"')
+            case "$state" in
+              completed/success) exit 0 ;;
+              completed/*) echo "deploy finished as $state"; exit 1 ;;
+            esac
+            sleep 20
+          done
+          echo "deploy did not finish in 20 minutes"; exit 1
+
+      - name: Submit the sitemap URLs
+        run: |
+          curl -fsS "https://${HOST}/sitemap-0.xml" | grep -o '<loc>[^<]*</loc>' | sed 's/<[^>]*>//g' > urls.txt
+          echo "$(wc -l < urls.txt) URLs"
+          jq -Rn --arg host "$HOST" --arg key "$KEY" \
+            '{host: $host, key: $key, keyLocation: "https://\($host)/\($key).txt", urlList: [inputs]}' \
+            < urls.txt > body.json
+          curl -fsS -o /dev/null -w 'IndexNow HTTP %{http_code}\n' -X POST https://api.indexnow.org/indexnow \
+            -H 'content-type: application/json; charset=utf-8' --data @body.json
