@@ -1,0 +1,9 @@
+---
+import GuideHub from '../../../components/GuideHub.astro';
+import { hubPaths } from '../../../lib/guides';
+import { localeFromParams } from '../../../i18n';
+
+export const getStaticPaths = () => hubPaths('full-page-screenshot');
+---
+
+<GuideHub section="full-page-screenshot" locale={localeFromParams(Astro.params.lang)} />

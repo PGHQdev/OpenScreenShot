@@ -1,0 +1,26 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import Article from '../layouts/Article.astro';
+import { t, type Locale } from '../i18n';
+import { guideParts } from '../lib/guides';
+
+interface Props {
+  guide: CollectionEntry<'guides'>;
+  availableLocales: readonly Locale[];
+}
+const { guide, availableLocales } = Astro.props;
+const { section, locale, slug } = guideParts(guide);
+const s = t(locale, 'guides').sections[section];
+const { Content } = await render(guide);
+---
+
+<Article
+  title={guide.data.title}
+  description={guide.data.description}
+  section={{ label: s.label, path: `/${section}/` }}
+  path={`/${section}/${slug}/`}
+  locale={locale}
+  availableLocales={availableLocales}
+>
+  <Content />
+</Article>

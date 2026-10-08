@@ -1,0 +1,10 @@
+---
+import GuidePage from '../../../components/GuidePage.astro';
+import { guidePaths } from '../../../lib/guides';
+
+export const getStaticPaths = () => guidePaths('alternatives');
+
+const { guide, availableLocales } = Astro.props;
+---
+
+<GuidePage guide={guide} availableLocales={availableLocales} />

@@ -1,0 +1,25 @@
+{
+  "sections": {
+    "alternatives": {
+      "label": "Alternatives",
+      "title": "Screenshot extension alternatives, compared — OpenScreenShot",
+      "description": "Factual comparisons of OpenScreenShot with other screenshot and recording tools: price, permissions, open source, and what each one does well.",
+      "heading": "Looking for an alternative?",
+      "lead": "Each page compares OpenScreenShot with one other tool on facts you can check: price, permissions, source code, and features. We make OpenScreenShot, so we link our sources."
+    },
+    "full-page-screenshot": {
+      "label": "Full-page screenshots by browser",
+      "title": "How to take a full-page screenshot in every browser — OpenScreenShot",
+      "description": "Built-in full-page screenshot methods for Chrome, Edge, Firefox, Safari, Brave, Opera, Vivaldi, and Arc, with shortcuts, limits, and an extension option.",
+      "heading": "Full-page screenshots, browser by browser.",
+      "lead": "Most browsers can capture a whole page without an extension, but each hides it somewhere different. Find your browser for the built-in steps, the limits, and when an extension helps."
+    },
+    "use-cases": {
+      "label": "Use cases",
+      "title": "Screenshot workflows for real tasks — OpenScreenShot",
+      "description": "Step-by-step screenshot workflows for bug reports, design reviews, documentation, and more, using a free local screenshot extension.",
+      "heading": "Screenshots for the job at hand.",
+      "lead": "A screenshot is only useful if the reader gets the point. These workflows show which capture mode, annotations, and export fit each task."
+    }
+  }
+}

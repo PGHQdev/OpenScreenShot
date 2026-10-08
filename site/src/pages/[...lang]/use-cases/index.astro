@@ -1,0 +1,9 @@
+---
+import GuideHub from '../../../components/GuideHub.astro';
+import { hubPaths } from '../../../lib/guides';
+import { localeFromParams } from '../../../i18n';
+
+export const getStaticPaths = () => hubPaths('use-cases');
+---
+
+<GuideHub section="use-cases" locale={localeFromParams(Astro.params.lang)} />

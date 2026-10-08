@@ -16,4 +16,16 @@ const blog = defineCollection({
   }),
 });
 
-export const collections = { blog };
+// Task and comparison pages, grouped by site section:
+// src/content/guides/<section>/<locale>/<slug>.md, served at
+// /<section>/<slug>/. Same translation rules as the blog.
+const guides = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/guides' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    order: z.number(),
+  }),
+});
+
+export const collections = { blog, guides };

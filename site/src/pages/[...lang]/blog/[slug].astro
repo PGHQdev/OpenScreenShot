@@ -1,7 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Article from '../../../layouts/Article.astro';
-import { DEFAULT_LOCALE, LOCALES, localeFromParams, type Locale } from '../../../i18n';
+import { t, DEFAULT_LOCALE, LOCALES, localeFromParams, type Locale } from '../../../i18n';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
@@ -22,12 +22,14 @@ export async function getStaticPaths() {
 const { post, availableLocales } = Astro.props;
 const locale = localeFromParams(Astro.params.lang);
 const { Content } = await render(post);
+const b = t(locale, 'blog');
 ---
 
 <Article
   title={post.data.title}
   description={post.data.description}
-  audience={post.data.audience}
+  section={{ label: b.label, path: '/blog/' }}
+  kicker={b.audiences[post.data.audience]}
   path={`/blog/${Astro.params.slug}/`}
   locale={locale}
   availableLocales={availableLocales}
