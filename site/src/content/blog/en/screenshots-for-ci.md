@@ -1,8 +1,7 @@
 ---
-layout: ../../layouts/Article.astro
 title: Capture website screenshots for CI and release reviews
 description: Create repeatable PNG artifacts with the OpenScreenShot CLI and understand what a screenshot capture can verify in a build pipeline.
-audience: Developers & agents
+audience: developers
 order: 6
 ---
 

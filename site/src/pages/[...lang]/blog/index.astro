@@ -1,0 +1,79 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import { ld } from '../../../lib/json-ld';
+import { t, localizePath, localeFromParams, DEFAULT_LOCALE, LOCALES, LANG_TAGS, type Locale } from '../../../i18n';
+import '../../../styles/doc.css';
+
+const posts = await getCollection('blog');
+const localesWithPosts = LOCALES.filter((l) => posts.some((p) => p.id.startsWith(`${l}/`)));
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return LOCALES.filter((l) => posts.some((p) => p.id.startsWith(`${l}/`))).map((locale) => ({
+    params: { lang: locale === DEFAULT_LOCALE ? undefined : locale },
+  }));
+}
+
+const locale = localeFromParams(Astro.params.lang) as Locale;
+const b = t(locale, 'blog');
+const c = t(locale, 'common');
+const articles = posts
+  .filter((p) => p.id.startsWith(`${locale}/`))
+  .map((p) => ({ ...p.data, href: localizePath(locale, `/blog/${p.id.split('/')[1]}/`) }))
+  .sort((a, z) => a.order - z.order);
+const pageUrl = new URL(localizePath(locale, '/blog/'), Astro.site).href;
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'CollectionPage',
+      name: b.index.heading,
+      description: b.index.description,
+      url: pageUrl,
+      inLanguage: LANG_TAGS[locale],
+      mainEntity: {
+        '@type': 'ItemList',
+        itemListElement: articles.map((a, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          name: a.title,
+          url: new URL(a.href, Astro.site).href,
+        })),
+      },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: c.breadcrumbHome, item: new URL(localizePath(locale, '/'), Astro.site).href },
+        { '@type': 'ListItem', position: 2, name: b.label, item: pageUrl },
+      ],
+    },
+  ],
+};
+---
+
+<Base title={b.index.title} description={b.index.description} path="/blog/" locale={locale} availableLocales={localesWithPosts}
+  navLinks={[{ href: localizePath(locale, '/docs/'), label: c.nav.docs }, { href: localizePath(locale, '/blog/'), label: b.label }, { href: localizePath(locale, '/support/'), label: c.nav.support }]}>
+  <script slot="head" type="application/ld+json" set:html={ld(structuredData)} />
+  <div class="doc container">
+    <header class="doc-head">
+      <p class="eyebrow">{b.label}</p>
+      <h1>{b.index.heading}</h1>
+      <p class="doc-lead">{b.index.lead}</p>
+    </header>
+    {(['everyday', 'developers'] as const).map((audience) => (
+      <section class="doc-section">
+        <h2>{b.audiences[audience]}</h2>
+        <ul>
+          {articles.filter((a) => a.audience === audience).map((a) => (
+            <li>
+              <h3><a href={a.href}>{a.title}</a></h3>
+              <p>{a.description}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+</Base>

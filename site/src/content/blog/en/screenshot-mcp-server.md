@@ -1,8 +1,7 @@
 ---
-layout: ../../layouts/Article.astro
 title: Set up a local screenshot MCP server for an AI agent
 description: Connect OpenScreenShot to a stdio MCP client and request PNG screenshots with explicit URL, viewport, and full-page options.
-audience: Developers & agents
+audience: developers
 order: 5
 ---
 

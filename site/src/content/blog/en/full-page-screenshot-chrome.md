@@ -1,8 +1,7 @@
 ---
-layout: ../../layouts/Article.astro
 title: How to take a full-page screenshot in Chrome
 description: Capture an entire scrolling webpage with OpenScreenShot, check the result, and export it as an image or PDF.
-audience: Everyday screenshots
+audience: everyday
 order: 1
 ---
 

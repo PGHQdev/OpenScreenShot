@@ -1,8 +1,7 @@
 ---
-layout: ../../layouts/Article.astro
 title: Take website screenshots from the command line
 description: Use the OpenScreenShot CLI to save PNG screenshots with a fixed viewport, full-page capture, or binary output to stdout.
-audience: Developers & agents
+audience: developers
 order: 4
 ---
 

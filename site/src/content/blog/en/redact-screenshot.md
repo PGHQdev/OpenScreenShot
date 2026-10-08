@@ -1,8 +1,7 @@
 ---
-layout: ../../layouts/Article.astro
 title: How to redact sensitive information in a screenshot
 description: Use an opaque fill to cover private information, export a flattened screenshot, and check the saved file before sharing.
-audience: Everyday screenshots
+audience: everyday
 order: 3
 ---
 

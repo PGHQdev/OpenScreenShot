@@ -1,0 +1,18 @@
+{
+  "label": "Blog & guides",
+  "index": {
+    "title": "Screenshot guides for people and developers — OpenScreenShot",
+    "description": "Learn full-page capture, PDF export, and screenshot redaction, or automate PNG screenshots with the OpenScreenShot CLI and MCP server.",
+    "heading": "Make screenshots useful.",
+    "lead": "Capture a page, explain a problem, or automate a repeatable workflow. Start with the task you need to finish."
+  },
+  "audiences": {
+    "everyday": "Everyday screenshots",
+    "developers": "Developers & agents"
+  },
+  "byline": "By",
+  "next": {
+    "heading": "Keep going",
+    "body": "<a href=\"/docs/\">Read the documentation</a>, <a href=\"/blog/\">browse all guides</a>, or <a href=\"/support/\">get help with a capture</a>."
+  }
+}

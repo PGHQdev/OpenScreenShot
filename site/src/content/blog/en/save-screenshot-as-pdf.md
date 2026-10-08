@@ -1,8 +1,7 @@
 ---
-layout: ../../layouts/Article.astro
 title: How to save a full-page screenshot as a PDF
 description: Export a screenshot as a single PDF page, fit it to A4 or Letter, or split a long capture into multiple pages.
-audience: Everyday screenshots
+audience: everyday
 order: 2
 ---
 
