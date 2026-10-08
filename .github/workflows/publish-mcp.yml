@@ -41,6 +41,33 @@ jobs:
       - name: Publish to npm
         run: npm publish
 
+      # The official MCP Registry (registry.modelcontextprotocol.io) lists the
+      # npm package under io.github.PGHQdev/openscreenshot; the case must match
+      # the GitHub login. It verifies ownership through package.json mcpName,
+      # so the npm publish above must land first. Versions are immutable.
+      - name: Sync server.json version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          jq --arg v "$V" '.version = $v | .packages[0].version = $v' server.json > server.tmp
+          mv server.tmp server.json
+
+      - name: Install mcp-publisher
+        run: |
+          curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+
+      - name: Log in to the MCP Registry
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish to the MCP Registry
+        # Retries cover the delay before the new npm version is visible.
+        run: |
+          for i in 1 2 3 4 5; do
+            ./mcp-publisher publish && exit 0
+            sleep 30
+          done
+          exit 1
+
       - name: Dump npm debug log
         if: failure()
         run: cat /home/runner/.npm/_logs/*.log || true
