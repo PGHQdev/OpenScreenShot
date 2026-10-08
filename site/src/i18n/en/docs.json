@@ -23,7 +23,7 @@
     "heading": "Capture a screenshot",
     "intro": "Click the OpenScreenShot icon in your toolbar and the full page capture starts — no menu in the way. Everything runs locally in your browser. There are four ways to start a capture:",
     "ways": [
-      "<strong>The toolbar icon</strong> — one click captures the full page. Turn <strong>Icon click captures the full page</strong> off in settings to get the mode picker popup back; right-click the icon for the other modes and settings.",
+      "<strong>The toolbar icon</strong> — one click captures the full page. Turn <strong>One-click Express mode</strong> off in settings to get the mode picker popup back; right-click the icon for the other modes and settings.",
       "<strong>A keyboard shortcut</strong> — <kbd>Ctrl+Shift+S</kbd> for the full page, <kbd>Alt+Shift+V</kbd> for the visible area, <kbd>Ctrl+Shift+E</kbd> for a region. On macOS these are <kbd>⌘⇧S</kbd>, <kbd>⌥⇧V</kbd>, and <kbd>⌘⇧E</kbd>. Capture element has no default key. Set or change any of them at <code>chrome://extensions/shortcuts</code>.",
       "<strong>The right-click menu</strong> — the OpenScreenShot submenu on any page offers the same four modes and Settings.",
       "<strong>Repeat region</strong> — the popup footer and the right-click menu re-capture the last region rectangle. Both items appear once you have selected a region."
@@ -61,7 +61,7 @@
   },
   "annotate": {
     "heading": "Annotate",
-    "intro": "The editor opens in a full tab and shows the most recent capture, ready to copy or save. Click <strong>Edit</strong> to open the tools. Each tool has a one-letter shortcut.",
+    "intro": "The editor opens in a full tab and loads the most recent capture from local storage. Each tool has a one-letter shortcut.",
     "tools": [
       "<strong>Select</strong> <kbd>V</kbd> — move, resize, or delete any annotation. Double-click a text layer to re-edit it.",
       "<strong>Shape</strong> <kbd>R</kbd> — draw a rectangle, rounded rectangle, oval, or triangle. <strong>Fill</strong> sets none or a solid fill in the stroke color; hold <kbd>Shift</kbd> for equal sides, so an oval becomes a circle.",
@@ -80,8 +80,8 @@
     "outro": "Hold <kbd>Shift</kbd> while you draw for square shapes and 45° lines and arrows. The style bar carries an 8-color palette on <kbd>1</kbd>–<kbd>8</kbd>, a custom color, recent colors, four stroke widths that scale with the capture size, and a font-size control. Your choices are remembered across sessions. Drag tools on the rail to put your favorites first, or move the focused tool with <kbd>Alt+↑</kbd> / <kbd>Alt+↓</kbd>. Undo and redo are <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>, or <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd> on macOS."
   },
   "beautify": {
-    "heading": "Beautify",
-    "body": "The <strong>Beautify</strong> panel in the top bar frames the screenshot for sharing: padding, corner radius, and drop-shadow sliders, plus six gradient presets, a custom solid color, or a transparent background. The frame previews live and travels into every export, the clipboard, and PDF."
+    "heading": "Frame",
+    "body": "The <strong>Frame</strong> panel in the top bar frames the screenshot for sharing: a <strong>Preset</strong>, plus <strong>Spacing</strong>, <strong>Corners</strong>, and <strong>Shadow</strong> sliders and a <strong>Background</strong> of six gradients, a custom solid color, or transparency. The frame previews live and travels into every export, the clipboard, and PDF."
   },
   "import": {
     "heading": "Annotate an image you already have",
@@ -89,7 +89,7 @@
   },
   "export": {
     "heading": "Export",
-    "intro": "Click <strong>Export</strong> in the top bar of the editor, or press <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>. Choose a format:",
+    "intro": "Click <strong>Save image</strong> in the top bar of the editor, or press <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>, to open the <strong>Export</strong> dialog. Beside it, <strong>Copy</strong> puts a PNG on the clipboard and <strong>PDF</strong> saves a PDF in one click. In the dialog, choose a format:",
     "formats": [
       "<strong>PNG</strong> — lossless, keeps transparency.",
       "<strong>JPEG</strong> — smaller files, adjustable quality.",

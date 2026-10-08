@@ -14,9 +14,9 @@ To take a full-page screenshot with OpenScreenShot, open the webpage and click t
 3. Wait for the content you need to load. For pages with lazy-loaded images, scroll through the relevant content before starting.
 4. Click the OpenScreenShot icon. Leave the tab in place while the capture completes.
 5. Inspect the image in the editor, especially the first and last sections and any sticky navigation.
-6. Open **Export** and choose PNG, JPEG, WebP, or PDF.
+6. Click **Save image** and choose PNG, JPEG, WebP, or PDF in the **Export** dialog.
 
-If clicking the icon opens the mode picker instead, select **Full Page**. The **Icon click captures the full page** setting controls which behavior you get. If the editor does not open, check **After capture**: Clipboard and Download send the result directly to their destinations.
+If clicking the icon opens the mode picker instead, select **Full Page**. The **One-click Express mode** setting controls which behavior you get. If the editor does not open, check **After capture**: Clipboard and Download send the result directly to their destinations.
 
 ## Full page, visible area, or selected region?
 

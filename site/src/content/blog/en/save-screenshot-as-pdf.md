@@ -5,7 +5,7 @@ audience: everyday
 order: 2
 ---
 
-To save a screenshot as a PDF in OpenScreenShot, open the capture in the editor, choose **Export**, and select **PDF**. Choose a single image page, an A4 or Letter layout, or a multipage export according to how the document will be read.
+To save a screenshot as a PDF in OpenScreenShot, open the capture in the editor, click **Save image** to open the **Export** dialog, and select **PDF**. The **PDF** button in the top bar saves one in a single click with your saved PDF settings: A4, portrait, and multiple pages until you change them in the dialog. Choose a single image page, an A4 or Letter layout, or a multipage export according to how the document will be read.
 
 ## Capture and prepare the screenshot
 
@@ -13,7 +13,7 @@ Start with a [full-page capture](/blog/full-page-screenshot-chrome/) if you need
 
 Before exporting, crop unnecessary margins and add any arrows, text, or step numbers your reader needs. Cover private information with an opaque redaction. Your annotations and Beautify frame appear in the export, so inspect those before saving.
 
-Open **Export** from the editor’s top bar, or use **Ctrl+S** on Windows/Linux or **⌘S** on macOS, then choose PDF.
+Click **Save image** in the editor’s top bar, or use **Ctrl+S** on Windows/Linux or **⌘S** on macOS, then choose PDF in the **Export** dialog.
 
 ## Which PDF layout should you use?
 
