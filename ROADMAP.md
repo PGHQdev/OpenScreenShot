@@ -29,6 +29,7 @@ remain browser-dependent.
 | Repeat last region                                      | ✅ shipped   | Landed in v0.6.1: re-capture the previous selection rect. The rect persists in local storage; entry points are a popup footer link and a context menu item, shown once a rect exists.                                                                                                                                                                                                                                                                                                     |
 | Region loupe + DOM element snapping                     | 🧭 exploring | Pixel-precise crosshair magnifier; snap selection edges to element boundaries.                                                                                                                                                                                                                                                                                                                                                                                                            |
 | Capture an element                                      | ✅ shipped   | Landed in v2.2.0: hover or use the keyboard to select visible cards, charts, tables, or images, adjust the bounds through parent/child elements, then capture to the editor, clipboard, or download. Clipped elements offer a full-page fallback.                                                                                                                                                                                                                                         |
+| Split very long pages into several images               | ✅ shipped   | Landed in v2.4.0: a full-page capture taller than one canvas (32,000 device pixels) saves as up to six equal images instead of failing. Download adds a `_partNofM` suffix; editor and clipboard open each part in its own editor tab.                                                                                                                                                                                                                                                    |
 | Batch capture: list of URLs → one multi-page PDF        | 🧭 exploring | Combines existing scroll-and-stitch with existing PDF export.                                                                                                                                                                                                                                                                                                                                                                                                                             |
 
 ## Editor
@@ -60,14 +61,14 @@ remain browser-dependent.
 
 ## Screenshot workflows
 
-| Feature                     | Status         | Notes                                                                                                                                                                                                          |
-| --------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Readable long-page exports  | 🚧 in progress | Splitting a page taller than one image into several images is on `main` for the next release. An overview with selected detail crops is still to explore.                                                      |
-| Suggested redactions        | 🧭 exploring   | Locally highlight possible sensitive text, such as emails and phone numbers, for the user to review and confirm as solid redactions. Detection can miss information; never imply automatic privacy guarantees. |
-| Combine screenshots         | 🧭 exploring   | Arrange existing captures vertically, side by side, or in a multi-page PDF with captions. Start with saved captures before adding automated batch capture.                                                     |
-| Before-and-after comparison | 🧭 exploring   | Choose two captures from history and compare them with a slider or highlighted differences. Useful for page changes, design reviews, and bug reports.                                                          |
-| Optional source caption     | 🧭 exploring   | Add page title, URL, capture time, and viewport size to an export. Preview and remove sensitive URL parameters before sharing. Provides context, not proof of authenticity.                                    |
-| Create a visual guide       | 🧭 exploring   | Collect captures as steps, add short captions and numbered annotations, and export a clean document locally without an account.                                                                                |
+| Feature                     | Status       | Notes                                                                                                                                                                                                          |
+| --------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Readable long-page exports  | 🧭 exploring | Splitting a page taller than one image landed in v2.4.0 (see Capture). Still to explore: an overview with selected detail crops, or sections sized for reading rather than the canvas limit.                   |
+| Suggested redactions        | 🧭 exploring | Locally highlight possible sensitive text, such as emails and phone numbers, for the user to review and confirm as solid redactions. Detection can miss information; never imply automatic privacy guarantees. |
+| Combine screenshots         | 🧭 exploring | Arrange existing captures vertically, side by side, or in a multi-page PDF with captions. Start with saved captures before adding automated batch capture.                                                     |
+| Before-and-after comparison | 🧭 exploring | Choose two captures from history and compare them with a slider or highlighted differences. Useful for page changes, design reviews, and bug reports.                                                          |
+| Optional source caption     | 🧭 exploring | Add page title, URL, capture time, and viewport size to an export. Preview and remove sensitive URL parameters before sharing. Provides context, not proof of authenticity.                                    |
+| Create a visual guide       | 🧭 exploring | Collect captures as steps, add short captions and numbered annotations, and export a clean document locally without an account.                                                                                |
 
 ## Recording
 
@@ -112,6 +113,8 @@ remain browser-dependent.
 
 | Feature                                                    | Version |
 | ---------------------------------------------------------- | ------- |
+| Split very long pages into several images                  | v2.4.0  |
+| Clear error for local files without file access            | v2.4.0  |
 | Controls in their own tab, with camera preview             | v2.3.0  |
 | Record part of a tab                                       | v2.3.0  |
 | Capture a page element                                     | v2.2.0  |

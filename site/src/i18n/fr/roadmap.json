@@ -8,7 +8,7 @@
     "heading": "Feuille de route",
     "lead": "Ce qui est livré, ce qui est à l’étude, et ce qui reste hors périmètre."
   },
-  "callout": "<strong>La promesse :</strong> tout ce qui figure sur cette page reste 100 % local. Ni serveurs, ni comptes, ni nouvelle collecte de données — jamais. Les éléments de la feuille de route ne portent pas de date. Les retours et les pull requests décident de ce qui sort. Version actuelle : <strong>v2.3.1</strong>.",
+  "callout": "<strong>La promesse :</strong> tout ce qui figure sur cette page reste 100 % local. Ni serveurs, ni comptes, ni nouvelle collecte de données — jamais. Les éléments de la feuille de route ne portent pas de date. Les retours et les pull requests décident de ce qui sort. Version actuelle : <strong>v2.4.0</strong>.",
   "legend": {
     "srLabel": "Légende des statuts :",
     "exploring": "À l’étude",
@@ -40,7 +40,7 @@
         {
           "name": "Exports lisibles de pages longues",
           "status": "exploring",
-          "note": "Exporter une vue d’ensemble avec des détails recadrés, ou découper une capture longue en sections lisibles sans réduire toute la page à une seule image."
+          "note": "Une page plus haute qu’une image se découpe désormais en plusieurs images (v2.4.0). Prochaine piste : une vue d’ensemble avec des extraits de détail choisis."
         },
         {
           "name": "Masquages suggérés",
@@ -139,8 +139,15 @@
     "currentTag": "version actuelle",
     "releases": [
       {
-        "version": "v2.3.1",
+        "version": "v2.4.0",
         "current": true,
+        "items": [
+          "<strong>Les pages très longues se découpent en plusieurs images</strong> — une capture pleine page plus haute qu’une image s’enregistre désormais en six images au plus, au lieu d’échouer. Le téléchargement nomme chaque partie, et l’éditeur ouvre chaque partie dans son propre onglet.",
+          "La capture d’un fichier local sans accès aux fichiers indique maintenant l’option à activer : « Autoriser l’accès aux URL de fichier » dans les détails de l’extension."
+        ]
+      },
+      {
+        "version": "v2.3.1",
         "items": [
           "Le nom de l’extension Chrome inclut désormais Screen Recorder dans toutes les langues : une recherche sur l’enregistrement d’écran dans le store la trouve aussi."
         ]

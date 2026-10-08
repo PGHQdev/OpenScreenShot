@@ -8,7 +8,7 @@
     "heading": "Roadmap",
     "lead": "O que já foi lançado, o que está em estudo e o que fica fora do escopo."
   },
-  "callout": "<strong>A promessa:</strong> tudo nesta página continua 100% local. Sem servidores, sem contas, sem nova coleta de dados — nunca. Os itens do roadmap não têm datas. Feedback e pull requests definem o que é lançado. Versão atual: <strong>v2.3.1</strong>.",
+  "callout": "<strong>A promessa:</strong> tudo nesta página continua 100% local. Sem servidores, sem contas, sem nova coleta de dados — nunca. Os itens do roadmap não têm datas. Feedback e pull requests definem o que é lançado. Versão atual: <strong>v2.4.0</strong>.",
   "legend": {
     "srLabel": "Legenda de status:",
     "exploring": "Em estudo",
@@ -40,7 +40,7 @@
         {
           "name": "Exportações legíveis de páginas longas",
           "status": "exploring",
-          "note": "Exportar uma visão geral com recortes de detalhes selecionados ou dividir uma captura longa em seções legíveis sem reduzir a página inteira a uma única imagem."
+          "note": "Uma página mais alta que uma imagem agora é dividida em várias imagens (v2.4.0). Próximo a explorar: uma visão geral com recortes de detalhe selecionados."
         },
         {
           "name": "Ocultações sugeridas",
@@ -139,8 +139,15 @@
     "currentTag": "versão atual",
     "releases": [
       {
-        "version": "v2.3.1",
+        "version": "v2.4.0",
         "current": true,
+        "items": [
+          "<strong>Páginas muito longas divididas em várias imagens</strong> — uma captura de página inteira mais alta que uma imagem agora é salva em até seis imagens, em vez de falhar. O download nomeia cada parte, e o editor abre cada parte em sua própria aba.",
+          "Ao capturar um arquivo local sem acesso a arquivos, a mensagem agora indica o que ativar: \"Permitir acesso aos URLs de arquivo\" nos detalhes da extensão."
+        ]
+      },
+      {
+        "version": "v2.3.1",
         "items": [
           "O nome da extensão para Chrome agora inclui Screen Recorder em todos os idiomas, então uma busca por gravação na loja também a encontra."
         ]

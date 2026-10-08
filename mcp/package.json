@@ -1,6 +1,6 @@
 {
   "name": "openscreenshot",
-  "version": "2.3.1",
+  "version": "2.4.0",
   "description": "Take website screenshots from the terminal, CI, or an AI agent. Local CLI and MCP server that drives your installed Chrome.",
   "keywords": [
     "screenshot",

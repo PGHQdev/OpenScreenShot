@@ -8,7 +8,7 @@
     "heading": "Roadmap",
     "lead": "Cosa è stato rilasciato, cosa è in valutazione e cosa resta fuori dagli obiettivi."
   },
-  "callout": "<strong>La promessa:</strong> tutto su questa pagina resta 100% locale. Nessun server, nessun account, nessuna nuova raccolta di dati, mai. Le voci della roadmap non hanno date. Feedback e pull request decidono cosa viene rilasciato. Versione corrente: <strong>v2.3.1</strong>.",
+  "callout": "<strong>La promessa:</strong> tutto su questa pagina resta 100% locale. Nessun server, nessun account, nessuna nuova raccolta di dati, mai. Le voci della roadmap non hanno date. Feedback e pull request decidono cosa viene rilasciato. Versione corrente: <strong>v2.4.0</strong>.",
   "legend": {
     "srLabel": "Legenda degli stati:",
     "exploring": "In valutazione",
@@ -40,7 +40,7 @@
         {
           "name": "Esportazioni leggibili di pagine lunghe",
           "status": "exploring",
-          "note": "Esportare una panoramica con ritagli di dettagli selezionati oppure dividere uno screenshot lungo in sezioni leggibili senza ridurre l’intera pagina a una sola immagine."
+          "note": "Una pagina più alta di un’immagine ora si divide in più immagini (v2.4.0). Prossima idea da esplorare: una panoramica con ritagli di dettaglio scelti."
         },
         {
           "name": "Oscuramenti suggeriti",
@@ -139,8 +139,15 @@
     "currentTag": "versione corrente",
     "releases": [
       {
-        "version": "v2.3.1",
+        "version": "v2.4.0",
         "current": true,
+        "items": [
+          "<strong>Pagine molto lunghe divise in più immagini</strong> — una cattura della pagina intera più alta di un’immagine ora si salva in un massimo di sei immagini invece di fallire. Il download dà un nome a ogni parte e l’editor apre ogni parte in una scheda propria.",
+          "Catturando un file locale senza accesso ai file, il messaggio ora indica l’opzione da attivare: «Consenti l’accesso agli URL dei file» nei dettagli dell’estensione."
+        ]
+      },
+      {
+        "version": "v2.3.1",
         "items": [
           "Il nome dell’estensione per Chrome ora include Screen Recorder in tutte le lingue, così una ricerca sulla registrazione nello store la trova."
         ]

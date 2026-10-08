@@ -8,7 +8,7 @@
     "heading": "Hoja de ruta",
     "lead": "Qué se ha publicado, qué está en estudio y qué queda fuera del alcance."
   },
-  "callout": "<strong>La promesa:</strong> todo lo de esta página sigue 100 % local. Sin servidores, sin cuentas, sin nueva recopilación de datos, nunca. Los elementos de la hoja de ruta no llevan fechas. Los comentarios y los pull requests deciden qué se publica. Versión actual: <strong>v2.3.1</strong>.",
+  "callout": "<strong>La promesa:</strong> todo lo de esta página sigue 100 % local. Sin servidores, sin cuentas, sin nueva recopilación de datos, nunca. Los elementos de la hoja de ruta no llevan fechas. Los comentarios y los pull requests deciden qué se publica. Versión actual: <strong>v2.4.0</strong>.",
   "legend": {
     "srLabel": "Leyenda de estados:",
     "exploring": "En estudio",
@@ -40,7 +40,7 @@
         {
           "name": "Exportaciones legibles de páginas largas",
           "status": "exploring",
-          "note": "Exportar una vista general con recortes de detalles seleccionados o dividir una captura larga en secciones legibles sin reducir toda la página a una sola imagen."
+          "note": "Una página más alta que una imagen ahora se divide en varias imágenes (v2.4.0). Lo siguiente por explorar: una vista general con recortes de detalle seleccionados."
         },
         {
           "name": "Ocultaciones sugeridas",
@@ -139,8 +139,15 @@
     "currentTag": "versión actual",
     "releases": [
       {
-        "version": "v2.3.1",
+        "version": "v2.4.0",
         "current": true,
+        "items": [
+          "<strong>Las páginas muy largas se dividen en varias imágenes</strong> — una captura de página completa más alta que una imagen ahora se guarda como hasta seis imágenes en lugar de fallar. La descarga nombra cada parte y el editor abre cada parte en su propia pestaña.",
+          "Al capturar un archivo local sin acceso a archivos, el mensaje ahora indica qué activar: «Permitir el acceso a las URL de archivo» en los detalles de la extensión."
+        ]
+      },
+      {
+        "version": "v2.3.1",
         "items": [
           "El nombre de la extensión de Chrome ahora incluye Screen Recorder en todos los idiomas, así que una búsqueda de grabación en la tienda también la encuentra."
         ]

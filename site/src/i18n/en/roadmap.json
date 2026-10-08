@@ -8,7 +8,7 @@
     "heading": "Roadmap",
     "lead": "What has shipped, what is being explored, and what stays out of scope."
   },
-  "callout": "<strong>The promise:</strong> everything on this page stays 100% local. No servers, no accounts, no new data collection — ever. Roadmap items carry no dates. Feedback and pull requests shape what ships. Current release: <strong>v2.3.1</strong>.",
+  "callout": "<strong>The promise:</strong> everything on this page stays 100% local. No servers, no accounts, no new data collection — ever. Roadmap items carry no dates. Feedback and pull requests shape what ships. Current release: <strong>v2.4.0</strong>.",
   "legend": {
     "srLabel": "Status legend:",
     "exploring": "Exploring",
@@ -40,7 +40,7 @@
         {
           "name": "Readable long-page exports",
           "status": "exploring",
-          "note": "Export an overview with selected detail crops, or split a tall screenshot into readable sections without shrinking the entire page to fit one image."
+          "note": "A page taller than one image now splits into several images (v2.4.0). Next to explore: an overview with selected detail crops."
         },
         {
           "name": "Suggested redactions",
@@ -139,8 +139,15 @@
     "currentTag": "current release",
     "releases": [
       {
-        "version": "v2.3.1",
+        "version": "v2.4.0",
         "current": true,
+        "items": [
+          "<strong>Very long pages split into several images</strong> — a full-page capture taller than one image now saves as up to six images instead of failing. Download names each part, and the editor opens each part in its own tab.",
+          "Capturing a local file without file access now names the toggle to turn on: “Allow access to file URLs” on the extension’s details page."
+        ]
+      },
+      {
+        "version": "v2.3.1",
         "items": [
           "The Chrome extension’s name now includes Screen Recorder in every language, so a store search for recording finds it too."
         ]
