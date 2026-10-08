@@ -180,7 +180,7 @@
     "description": "Capture error: nothing scrollable to capture."
   },
   "errTooLarge": {
-    "message": "Halaman ini terlalu tinggi untuk satu gambar ($PX$ px). Coba area terlihat atau area pilihan.",
+    "message": "Halaman ini terlalu tinggi, bahkan jika dibagi menjadi 6 gambar ($PX$ px). Coba area terlihat atau area pilihan.",
     "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
     "placeholders": {
       "px": {

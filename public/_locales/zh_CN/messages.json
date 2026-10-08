@@ -2436,7 +2436,7 @@
     "description": "Capture error: nothing scrollable to capture."
   },
   "errTooLarge": {
-    "message": "页面太长，无法合成一张图片（$PX$px）。请尝试可见区域或选定区域。",
+    "message": "页面太长，即使分成 6 张图片也无法截取（$PX$px）。请尝试可见区域或选定区域。",
     "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
     "placeholders": {
       "px": {

@@ -180,7 +180,7 @@
     "description": "Capture error: nothing scrollable to capture."
   },
   "errTooLarge": {
-    "message": "Trang này quá dài cho một ảnh ($PX$ px). Hãy thử vùng hiển thị hoặc vùng chọn.",
+    "message": "Trang này quá dài, kể cả khi chia thành 6 ảnh ($PX$ px). Hãy thử vùng hiển thị hoặc vùng chọn.",
     "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
     "placeholders": {
       "px": {

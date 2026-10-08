@@ -2436,7 +2436,7 @@
     "description": "Capture error: nothing scrollable to capture."
   },
   "errTooLarge": {
-    "message": "このページは高すぎて 1 枚の画像に収まりません（$PX$px）。表示領域か選択範囲をお試しください。",
+    "message": "このページは 6 枚の画像に分けても収まりません（$PX$px）。表示領域か選択範囲をお試しください。",
     "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
     "placeholders": {
       "px": {

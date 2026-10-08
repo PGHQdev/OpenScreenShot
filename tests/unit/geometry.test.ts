@@ -3,6 +3,7 @@ import {
   clampRegionRect,
   computeScrollPositions,
   MAX_CANVAS_HEIGHT_PX,
+  splitHeight,
 } from '../../src/shared/geometry';
 
 describe('computeScrollPositions', () => {
@@ -81,5 +82,31 @@ describe('clampRegionRect', () => {
   it('returns null when clipping leaves a sliver under 2px', () => {
     expect(clampRegionRect({ x: 1279, y: 0, width: 100, height: 50 }, 1280, 800)).toBe(null);
     expect(clampRegionRect({ x: 0, y: 799, width: 50, height: 100 }, 1280, 800)).toBe(null);
+  });
+});
+
+describe('splitHeight', () => {
+  it('keeps a page that fits as one band', () => {
+    expect(splitHeight(500, 1000)).toEqual([{ top: 0, height: 500 }]);
+    expect(splitHeight(1000, 1000)).toEqual([{ top: 0, height: 1000 }]);
+  });
+
+  it('splits into the fewest equal bands under the limit', () => {
+    expect(splitHeight(1001, 1000)).toEqual([
+      { top: 0, height: 501 },
+      { top: 501, height: 500 },
+    ]);
+    expect(splitHeight(3000, 1000)).toHaveLength(3);
+  });
+
+  it('covers every pixel once with bands no taller than the limit', () => {
+    const height = 100_003;
+    const parts = splitHeight(height, MAX_CANVAS_HEIGHT_PX);
+    expect(parts).toHaveLength(4);
+    expect(parts.every((p) => p.height <= MAX_CANVAS_HEIGHT_PX)).toBe(true);
+    parts.forEach((p, i) =>
+      expect(p.top).toBe(i === 0 ? 0 : parts[i - 1].top + parts[i - 1].height),
+    );
+    expect(parts.reduce((sum, p) => sum + p.height, 0)).toBe(height);
   });
 });

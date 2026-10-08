@@ -142,6 +142,19 @@ describe('withCapture (byte budget — R-28a)', () => {
     expect(evicted).toEqual([]);
   });
 
+  it('keeps the newest `floor` entries, so a split capture keeps every part', async () => {
+    const { withCapture } = await import('../../src/shared/storage');
+    const existing = [
+      entry({ id: 'part2', imageBytes: 400, capturedAt: 3 }),
+      entry({ id: 'part1', imageBytes: 400, capturedAt: 3 }),
+      entry({ id: 'older', imageBytes: 400, capturedAt: 1 }),
+    ];
+    const fresh = entry({ id: 'part3', imageBytes: 400, capturedAt: 3 });
+    const { kept, evicted } = withCapture(existing, fresh, 12, 500, 3);
+    expect(kept.map((e) => e.id)).toEqual(['part3', 'part2', 'part1']);
+    expect(evicted.map((e) => e.id)).toEqual(['older']);
+  });
+
   it('applies the count cap first, then trims survivors further by bytes', async () => {
     const { withCapture } = await import('../../src/shared/storage');
     const existing = [

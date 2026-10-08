@@ -180,7 +180,7 @@
     "description": "Capture error: nothing scrollable to capture."
   },
   "errTooLarge": {
-    "message": "Bu sayfa tek bir görüntü için çok uzun ($PX$ px). Görünen alanı veya bölge modunu deneyin.",
+    "message": "Bu sayfa 6 görüntüye bölündüğünde bile çok uzun ($PX$ px). Görünen alanı veya bölge modunu deneyin.",
     "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
     "placeholders": {
       "px": {

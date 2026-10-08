@@ -2436,7 +2436,7 @@
     "description": "Capture error: nothing scrollable to capture."
   },
   "errTooLarge": {
-    "message": "이 페이지는 너무 길어 한 이미지에 담을 수 없습니다($PX$px). 보이는 영역이나 선택 영역을 사용해 보세요.",
+    "message": "이 페이지는 이미지 6장으로 나누어도 담을 수 없을 만큼 깁니다($PX$px). 보이는 영역이나 선택 영역을 사용해 보세요.",
     "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
     "placeholders": {
       "px": {

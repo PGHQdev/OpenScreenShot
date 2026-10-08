@@ -180,7 +180,7 @@
     "description": "Capture error: nothing scrollable to capture."
   },
   "errTooLarge": {
-    "message": "Ta strona jest zbyt wysoka na jeden obraz ($PX$ px). Spróbuj widocznego lub zaznaczonego obszaru.",
+    "message": "Ta strona jest zbyt wysoka nawet po podziale na 6 obrazów ($PX$ px). Spróbuj widocznego lub zaznaczonego obszaru.",
     "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
     "placeholders": {
       "px": {

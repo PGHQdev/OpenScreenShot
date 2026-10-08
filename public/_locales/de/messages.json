@@ -2436,7 +2436,7 @@
     "description": "Capture error: nothing scrollable to capture."
   },
   "errTooLarge": {
-    "message": "Diese Seite ist zu hoch für ein einzelnes Bild ($PX$ px). Versuche Sichtbarer Bereich oder Ausschnitt.",
+    "message": "Diese Seite ist selbst in 6 Bilder aufgeteilt zu hoch ($PX$ px). Versuche Sichtbarer Bereich oder Ausschnitt.",
     "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
     "placeholders": {
       "px": {

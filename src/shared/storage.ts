@@ -160,7 +160,9 @@ export const CAPTURE_IMAGE_BYTES_BUDGET = 100 * 1024 * 1024;
 /**
  * Pure eviction policy: prepend `entry` (the newest capture), keep the
  * newest `limit`, then drop from the tail (oldest survivor first) until
- * total `imageBytes` fits `byteBudget` too — never below one entry.
+ * total `imageBytes` fits `byteBudget` too — never below `floor` entries.
+ * A split full-page capture raises `floor` so its later parts cannot evict
+ * its earlier ones.
  * Everything dropped is `evicted` — callers free those entries' full-image
  * keys, since nothing else will ever address them again. Order comes
  * entirely from prepending, newest first; a caller with entries out of
@@ -171,12 +173,13 @@ export function withCapture(
   entry: CaptureHistoryEntry,
   limit: number,
   byteBudget: number,
+  floor = 1,
 ): { kept: CaptureHistoryEntry[]; evicted: CaptureHistoryEntry[] } {
   const next = [entry, ...existing];
   const kept = next.slice(0, limit);
   const evicted = next.slice(limit);
   let total = kept.reduce((sum, e) => sum + e.imageBytes, 0);
-  while (kept.length > 1 && total > byteBudget) {
+  while (kept.length > floor && total > byteBudget) {
     const oldest = kept.pop();
     if (!oldest) break;
     total -= oldest.imageBytes;
@@ -312,10 +315,11 @@ export async function listCaptureHistory(): Promise<CaptureHistoryEntry[]> {
 
 /**
  * Stash a capture: thumbnail it, prepend it to the shelf, evict past the
- * count and byte budgets. The thumbnail encode runs *before* the lock is
- * taken — see `withCaptureLock`'s own doc comment for why.
+ * count and byte budgets, keeping at least the newest `floor` entries. The
+ * thumbnail encode runs *before* the lock is taken — see `withCaptureLock`'s
+ * own doc comment for why.
  */
-export async function setLastCapture(capture: LastCapture): Promise<string> {
+export async function setLastCapture(capture: LastCapture, floor = 1): Promise<string> {
   const id = crypto.randomUUID();
   const thumbnail = await safeThumbnail(capture.dataUrl);
   const entry: CaptureHistoryEntry = {
@@ -337,6 +341,7 @@ export async function setLastCapture(capture: LastCapture): Promise<string> {
       entry,
       CAPTURE_HISTORY_LIMIT,
       CAPTURE_IMAGE_BYTES_BUDGET,
+      floor,
     );
     await chrome.storage.local.set({
       [CAPTURES_KEY]: kept,

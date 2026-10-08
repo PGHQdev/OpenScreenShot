@@ -180,7 +180,7 @@
     "description": "Capture error: nothing scrollable to capture."
   },
   "errTooLarge": {
-    "message": "यह पेज एक छवि के लिए बहुत लंबा है ($PX$ px)। दिखाई देने वाला क्षेत्र या चुना हुआ क्षेत्र आज़माएँ।",
+    "message": "यह पेज 6 छवियों में बाँटने पर भी बहुत लंबा है ($PX$ px)। दिखाई देने वाला क्षेत्र या चुना हुआ क्षेत्र आज़माएँ।",
     "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
     "placeholders": {
       "px": {

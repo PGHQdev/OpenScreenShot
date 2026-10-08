@@ -180,7 +180,7 @@
     "description": "Capture error: nothing scrollable to capture."
   },
   "errTooLarge": {
-    "message": "هذه الصفحة أطول من أن تلتقط في صورة واحدة ($PX$ بكسل). جرّب المنطقة المرئية أو منطقة محددة.",
+    "message": "هذه الصفحة أطول من أن تُلتقط حتى عند تقسيمها إلى 6 صور ($PX$ بكسل). جرّب المنطقة المرئية أو منطقة محددة.",
     "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
     "placeholders": {
       "px": {

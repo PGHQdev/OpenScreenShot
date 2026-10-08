@@ -42,7 +42,13 @@ import {
   normalizeCaptureAction,
   normalizeCaptureDelay,
 } from '../shared/utils';
-import { clampRegionRect, computeScrollPositions, MAX_CANVAS_HEIGHT_PX } from '../shared/geometry';
+import {
+  clampRegionRect,
+  computeScrollPositions,
+  MAX_CANVAS_HEIGHT_PX,
+  MAX_CAPTURE_PARTS,
+  splitHeight,
+} from '../shared/geometry';
 import { recordExportSuccess } from '../shared/rating';
 import {
   cropTile,
@@ -622,7 +628,9 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
   }
   const dpr = metrics.devicePixelRatio;
   const canvasHeight = Math.round(metrics.scrollHeight * dpr);
-  if (canvasHeight > MAX_CANVAS_HEIGHT_PX) {
+  // One canvas cannot pass MAX_CANVAS_HEIGHT_PX, so a taller page becomes several images.
+  const parts = splitHeight(canvasHeight, MAX_CANVAS_HEIGHT_PX);
+  if (parts.length > MAX_CAPTURE_PARTS) {
     broadcast({
       type: 'CAPTURE_ERROR',
       code: 'too-large',
@@ -652,8 +660,48 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
 
   await openCaptureProgress(windowId);
   try {
+    let tiles: TileSpec[] = [];
+    const captureIds: string[] = [];
+    let stitched = 0;
+    let firstPartUrl = '';
+    // Stitch and store each part as soon as the tiles reach its bottom, then
+    // drop the tiles above the next part: memory holds one part, not the page.
+    const flushParts = async (coveredBottom: number): Promise<void> => {
+      while (stitched < parts.length) {
+        const part = parts[stitched];
+        if (part.top + part.height > coveredBottom) return;
+        const partTiles = tiles
+          .filter((t) => t.y < part.top + part.height && t.y + crop.h > part.top)
+          .map((t) => ({ dataUrl: t.dataUrl, y: t.y - part.top }));
+        const dataUrl = await execInTab(tabId, stitchTiles, [
+          partTiles,
+          canvasWidth,
+          part.height,
+          crop,
+        ]);
+        if (stitched === 0) firstPartUrl = dataUrl;
+        if (parts.length > 1) {
+          captureIds.push(
+            await setLastCapture(
+              {
+                dataUrl,
+                width: canvasWidth,
+                height: part.height,
+                mode: 'full-page',
+                title: tab.title ?? '',
+                url: tab.url ?? '',
+                capturedAt: Date.now(),
+              },
+              stitched + 1,
+            ),
+          );
+        }
+        stitched++;
+        const next = parts[stitched];
+        if (next) tiles = tiles.filter((t) => t.y + crop.h > next.top);
+      }
+    };
     // Disable smooth scrolling (but keep fixed elements visible) for the first tile.
-    const tiles: TileSpec[] = [];
     try {
       await runInTab(tabId, prepareCapture, []);
       await reportProgress(0, positions.length);
@@ -672,8 +720,10 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
           await delay(CAPTURE_THROTTLE_MS);
           const { scrollY } = await execInTab(tabId, scrollToPosition, [positions[i]]);
           const dataUrl = await captureVisibleTabPng(tabId, windowId);
-          tiles.push({ dataUrl, y: Math.round(scrollY * dpr) });
+          const y = Math.round(scrollY * dpr);
+          tiles.push({ dataUrl, y });
           await reportProgress(i + 1, positions.length);
+          if (parts.length > 1) await flushParts(y + crop.h);
         }
       }
     } finally {
@@ -681,23 +731,28 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
     }
 
     setCaptureProgress(null);
-    const dataUrl = await execInTab(tabId, stitchTiles, [tiles, canvasWidth, canvasHeight, crop]);
-    const delivered = await deliverCapture(
-      tabId,
-      dataUrl,
-      canvasWidth,
-      canvasHeight,
-      'full-page',
-      tab.title ?? '',
-      tab.url ?? '',
-      windowId,
-    );
+    // Rounding can leave the last tile a pixel short of the page bottom, so the
+    // last part (and a page that fits one image) stitches here.
+    await flushParts(Infinity);
+    const delivered =
+      parts.length > 1
+        ? await deliverCaptureParts(captureIds, windowId)
+        : await deliverCapture(
+            tabId,
+            firstPartUrl,
+            canvasWidth,
+            canvasHeight,
+            'full-page',
+            tab.title ?? '',
+            tab.url ?? '',
+            windowId,
+          );
     if (delivered) {
       broadcast({
         type: 'CAPTURE_COMPLETE',
-        imageUrl: dataUrl,
+        imageUrl: firstPartUrl,
         width: canvasWidth,
-        height: canvasHeight,
+        height: parts[0].height,
       });
     }
   } finally {
@@ -810,6 +865,42 @@ async function deliverCapture(
   await finishCaptureProgress('download', windowId, captureId);
   void recordExportSuccess();
   void flashDoneBadge();
+  return true;
+}
+
+/**
+ * Deliver a full-page capture split into several stored parts. The progress
+ * window's ready state and its quick actions hold one capture, so it closes.
+ * The clipboard holds one image, so that action opens every part in the
+ * editor, one tab per part.
+ */
+async function deliverCaptureParts(captureIds: string[], windowId: number): Promise<boolean> {
+  await closeCaptureProgress();
+  const settings = await getSettings();
+  if (normalizeCaptureAction(settings.captureAction) === 'download') {
+    try {
+      for (const [i, id] of captureIds.entries()) {
+        const capture = await openCapture(id);
+        if (!capture) throw new Error('capture part missing');
+        const base = formatFilename(settings.filenameTemplate, capture);
+        await downloadDataUrl(capture.dataUrl, `${base}_part${i + 1}of${captureIds.length}.png`);
+      }
+    } catch {
+      broadcast({
+        type: 'CAPTURE_ERROR',
+        code: 'quick-action',
+        message: chrome.i18n.getMessage('errSave'),
+      });
+      return false;
+    }
+    void recordExportSuccess();
+    void flashDoneBadge();
+    return true;
+  }
+  for (const [i, id] of captureIds.entries()) {
+    await chrome.tabs.create({ url: `${EDITOR_URL}?capture=${id}`, windowId, active: i === 0 });
+  }
+  await restoreRecBadge();
   return true;
 }
 

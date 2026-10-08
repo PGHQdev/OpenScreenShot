@@ -2436,7 +2436,7 @@
     "description": "Capture error: nothing scrollable to capture."
   },
   "errTooLarge": {
-    "message": "Страница слишком высокая для одного изображения ($PX$ px). Попробуйте видимую часть или область.",
+    "message": "Страница слишком высокая даже для 6 изображений ($PX$ px). Попробуйте видимую часть или область.",
     "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
     "placeholders": {
       "px": {

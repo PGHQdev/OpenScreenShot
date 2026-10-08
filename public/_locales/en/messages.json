@@ -2436,8 +2436,8 @@
     "description": "Capture error: nothing scrollable to capture."
   },
   "errTooLarge": {
-    "message": "This page is too tall to capture in one image ($PX$px). Try visible or region mode.",
-    "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
+    "message": "This page is too tall to capture, even split into 6 images ($PX$px). Try visible or region mode.",
+    "description": "Capture error: page taller than six images (MAX_CAPTURE_PARTS). $PX$ is the height in device pixels.",
     "placeholders": {
       "px": {
         "content": "$1",

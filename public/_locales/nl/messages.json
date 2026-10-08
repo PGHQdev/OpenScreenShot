@@ -180,7 +180,7 @@
     "description": "Capture error: nothing scrollable to capture."
   },
   "errTooLarge": {
-    "message": "Deze pagina is te hoog voor één afbeelding ($PX$ px). Probeer het zichtbare of een geselecteerd gebied.",
+    "message": "Deze pagina is te hoog, zelfs verdeeld over 6 afbeeldingen ($PX$ px). Probeer het zichtbare of een geselecteerd gebied.",
     "description": "Capture error: page taller than one canvas. $PX$ is the height in device pixels.",
     "placeholders": {
       "px": {
