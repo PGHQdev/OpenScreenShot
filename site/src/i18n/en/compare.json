@@ -5,8 +5,8 @@
   },
   "label": "Compare",
   "heading": "OpenScreenShot vs GoFullPage vs FullPage Capture",
-  "lead": "GoFullPage was removed from the Chrome Web Store in August 2026. OpenScreenShot is the open-source full page screenshot you can actually audit. FullPage Capture is a closed extension that says local while asking for access to every website.",
-  "asOf": "Facts as of 31 Aug 2026. GoFullPage's private fork since 2018 is from its own FAQ.",
+  "lead": "GoFullPage is back in the Chrome Web Store after a removal in August 2026, and it now ships for Firefox too, but its code has been private since 2018. OpenScreenShot is the open-source full page screenshot you can audit. FullPage Capture is a closed extension that asks for access to every website at install.",
+  "asOf": "Facts as of 9 Oct 2026, from each store listing, each extension's manifest, and the vendors' own sites. GoFullPage's private fork since 2018 is from its own FAQ.",
   "columns": {
     "feature": "",
     "oss": "OpenScreenShot",
@@ -18,7 +18,19 @@
       "feature": "In the Chrome Web Store",
       "oss": "Yes",
       "fpc": "Yes",
-      "gfp": "Main listing removed; BETA only"
+      "gfp": "Yes, restored 10 Sep 2026 after an August removal"
+    },
+    {
+      "feature": "In Firefox Add-ons",
+      "oss": "Yes",
+      "fpc": "No",
+      "gfp": "Yes, since Sep 2026"
+    },
+    {
+      "feature": "Price",
+      "oss": "Free",
+      "fpc": "Free; Pro $19 a year",
+      "gfp": "Free; Premium $12 a year"
     },
     {
       "feature": "Open source",
@@ -47,8 +59,8 @@
     {
       "feature": "PDF extras",
       "oss": "Free",
-      "fpc": "Free",
-      "gfp": "Paid"
+      "fpc": "Free; searchable PDF is Pro",
+      "gfp": "Smart page splitting is paid"
     },
     {
       "feature": "Tab recording",
