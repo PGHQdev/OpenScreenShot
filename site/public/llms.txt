@@ -1,26 +1,66 @@
 # OpenScreenShot
 
-> Free, open-source full page screenshot extension for Chrome — full-page (scroll-and-stitch), region, and visible-area screenshots with a built-in annotation editor and export to PNG, JPEG, WebP, or PDF. Also records the current tab, with auto zoom at clicks, a webcam bubble, an auto-hiding control bar, an optional synthetic cursor overlay, and WebM export. 100% local and private: works fully offline, screenshots and recordings never leave the device. MIT licensed.
+> Free, open-source (MIT) full page screenshot extension for Chrome and Firefox: full-page (scroll-and-stitch), visible-area, region, and element capture, an annotation editor, and export to PNG, JPEG, WebP, or PDF. The Chrome build also records the current tab, with auto zoom at clicks, a webcam bubble, and MP4 or WebM export. 100% local: screenshots and recordings never leave the device. A separate npm CLI and MCP server, `openscreenshot`, takes website screenshots from a terminal, CI, or an AI agent.
 
 - Chrome Web Store: https://chromewebstore.google.com/detail/hdabbojjccojlapnfjpdppcpfcnhgmdp
+- Firefox Add-ons: https://addons.mozilla.org/firefox/addon/openscreenshot/
 - Source: https://github.com/pghqdev/OpenScreenShot
+- npm: https://www.npmjs.com/package/openscreenshot
+
+Every page on this site has a Markdown copy at `<page URL>index.md`, linked from the page head; the homepage also answers `Accept: text/markdown`. The site is in English, Deutsch, Español, Français, Italiano, 日本語, 한국어, Português (Brasil), Русский, 简体中文, and 繁體中文 (prefix `/de/`, `/es/`, ...).
 
 ## Docs
 
 - [Overview (markdown)](https://openscreenshot.app/index.md): features, install, and agent/CLI usage in one page
-- [Documentation](https://openscreenshot.app/docs/): install, capture modes, annotation, beautify, export, tab recording, shortcuts, and settings
-- [Roadmap](https://openscreenshot.app/roadmap/): shipped releases, what is being explored, and what is out of scope
+- [Documentation](https://openscreenshot.app/docs/): install, capture modes, annotation, frame, export, tab recording, shortcuts, and settings
 - [Support](https://openscreenshot.app/support/): FAQ, known limitations, and how to get help
+- [Roadmap](https://openscreenshot.app/roadmap/): shipped releases, what is being explored, and what is out of scope
+- [Compare](https://openscreenshot.app/compare/): OpenScreenShot vs GoFullPage vs FullPage Capture
 
-## Practical guides (English)
+## Guides and comparisons
 
-- [Blog & guides](https://openscreenshot.app/blog/): guides for screenshot users and developers
-- [Full-page screenshots](https://openscreenshot.app/blog/full-page-screenshot-chrome/): capture steps, mode selection, and dynamic-page limitations
-- [Screenshot to PDF](https://openscreenshot.app/blog/save-screenshot-as-pdf/): single-page, A4/Letter, and multipage exports; image-only PDF limitations
-- [Screenshot redaction](https://openscreenshot.app/blog/redact-screenshot/): opaque fill, original drafts, and export verification
-- [Screenshot CLI](https://openscreenshot.app/blog/screenshot-cli/): PNG output, viewport bounds, browser setup, and exit codes
-- [Screenshot MCP server](https://openscreenshot.app/blog/screenshot-mcp-server/): stdio setup, tool inputs, image output, and client data handling
-- [CI screenshot artifacts](https://openscreenshot.app/blog/screenshots-for-ci/): reproducible captures and the limits of screenshot-only checks
+- [How to take a full-page screenshot in Chrome](https://openscreenshot.app/blog/full-page-screenshot-chrome/): Capture an entire scrolling webpage with OpenScreenShot, check the result, and export it as an image or PDF.
+- [How to save a full-page screenshot as a PDF](https://openscreenshot.app/blog/save-screenshot-as-pdf/): Export a screenshot as a single PDF page, fit it to A4 or Letter, or split a long capture into multiple pages.
+- [How to redact sensitive information in a screenshot](https://openscreenshot.app/blog/redact-screenshot/): Use an opaque fill to cover private information, export a flattened screenshot, and check the saved file before sharing.
+- [Take website screenshots from the command line](https://openscreenshot.app/blog/screenshot-cli/): Use the OpenScreenShot CLI to save PNG screenshots with a fixed viewport, full-page capture, or binary output to stdout.
+- [Set up a local screenshot MCP server for an AI agent](https://openscreenshot.app/blog/screenshot-mcp-server/): Connect OpenScreenShot to a stdio MCP client and request PNG screenshots with explicit URL, viewport, and full-page options.
+- [Capture website screenshots for CI and release reviews](https://openscreenshot.app/blog/screenshots-for-ci/): Create repeatable PNG artifacts with the OpenScreenShot CLI and understand what a screenshot capture can verify in a build pipeline.
+- [Full-page screenshot extensions compared (2026)](https://openscreenshot.app/blog/full-page-screenshot-extensions/): OpenScreenShot, GoFullPage, FullPage Capture, Awesome Screenshot, FireShot, and Nimbus/FuseBase compared by price, source code, install permissions, annotation, PDF, and recording, plus the no-install tools built into browsers.
+- [Open-source screenshot tools for every platform](https://openscreenshot.app/blog/open-source-screenshot-tools/): Open-source screenshot tools sorted by where they run, from OpenScreenShot and Screenity in the browser to ShareX on Windows, Flameshot on Linux, macOS, and Windows, Firefox Screenshots, and shot-scraper, Playwright, and Puppeteer for scripts.
+- [Website screenshot tools for developers, CI, and AI agents](https://openscreenshot.app/blog/website-screenshot-tools-for-developers/): Compare the openscreenshot CLI and MCP server, shot-scraper, capture-website-cli, pageres-cli, Playwright, Puppeteer, and Playwright MCP by runtime, full-page support, CLI, MCP, video, and license.
+
+## Use cases
+
+- [How to take screenshots for bug reports](https://openscreenshot.app/use-cases/bug-reports/): Capture the broken part of a page, mark it with arrows and step numbers, hide tokens and emails, and paste the image into an issue.
+- [How to capture a web page for design review](https://openscreenshot.app/use-cases/design-review/): Capture a full page or one component, point reviewers to details with spotlight and text callouts, and share a multipage PDF.
+- [How to make screenshots for help docs and tutorials](https://openscreenshot.app/use-cases/documentation/): Keep tutorial screenshots the same size, number the steps, highlight the right control, and save each file into a docs folder.
+- [How to make a screenshot ready to share on social media](https://openscreenshot.app/use-cases/social-media/): Crop a screenshot, add a frame with padding, corners, shadow, and a background, hide personal details, and export it at a sharp size.
+- [How to save a visual copy of a web page](https://openscreenshot.app/use-cases/archive-web-pages/): Capture a whole web page as PNG or PDF, name files by date and domain, and handle very long pages that save as several images.
+- [How to record a product demo video in Chrome](https://openscreenshot.app/use-cases/product-demos/): Record a browser tab with webcam and voice, add zoom at each click, trim the take, and export an MP4, all in Chrome on your computer.
+- [How to use screenshots to answer support tickets](https://openscreenshot.app/use-cases/customer-support/): Copy a screenshot straight into a ticket reply, number the steps, hide customer data, and mark up an image a customer sent you.
+
+## Full-page screenshots by browser
+
+- [How to take a full-page screenshot in Chrome: DevTools or an extension](https://openscreenshot.app/full-page-screenshot/chrome/): Use the Capture full size screenshot command in Chrome DevTools, learn where it falls short, and compare it with a full-page capture in OpenScreenShot.
+- [How to take a full-page screenshot in Microsoft Edge](https://openscreenshot.app/full-page-screenshot/edge/): Capture a whole page with Edge’s built-in Screenshot tool or its DevTools command, know the limits, and use OpenScreenShot from the Chrome Web Store.
+- [How to take a full-page screenshot in Firefox](https://openscreenshot.app/full-page-screenshot/firefox/): Capture a whole page with Firefox’s built-in Screenshots tool or the :screenshot command, check the size limits, and use the OpenScreenShot add-on.
+- [How to take a full-page screenshot in Safari](https://openscreenshot.app/full-page-screenshot/safari/): Safari on the Mac has no full-page image capture. Save the whole page as a PDF, capture one element in Web Inspector, or use another browser.
+- [How to take a full-page screenshot in Brave](https://openscreenshot.app/full-page-screenshot/brave/): Turn on Brave’s screenshot toolbar button and capture a full page as PNG, check the limits, and use OpenScreenShot from the Chrome Web Store.
+- [How to take a full-page screenshot in Opera](https://openscreenshot.app/full-page-screenshot/opera/): Opera’s Snapshot tool saves a full page as a PDF only. Learn the steps and limits, and how to capture a full-page image with OpenScreenShot.
+- [How to take a full-page screenshot in Vivaldi](https://openscreenshot.app/full-page-screenshot/vivaldi/): Capture a whole page with Vivaldi’s Capture tool as PNG or JPEG, know its 30,000-pixel limit, and use OpenScreenShot from the Chrome Web Store.
+- [How to take a full-page screenshot in Arc](https://openscreenshot.app/full-page-screenshot/arc/): Run Arc’s Capture Full Page command on macOS to save a PNG, know what Arc leaves undocumented, and use OpenScreenShot from the Chrome Web Store.
+
+## Alternatives
+
+- [GoFullPage alternative: free annotation and open source](https://openscreenshot.app/alternatives/gofullpage/): GoFullPage vs OpenScreenShot for full-page screenshots. OpenScreenShot has free annotation, blur, crop, and PDF page splitting, and its code is public.
+- [FullPage Capture alternative: open source with no all-sites access at install](https://openscreenshot.app/alternatives/fullpage-capture/): FullPage Capture vs OpenScreenShot. Both capture and annotate full pages for free. OpenScreenShot is open source and needs no all-sites access at install.
+- [Awesome Screenshot alternative: free tools that stay on your device](https://openscreenshot.app/alternatives/awesome-screenshot/): Awesome Screenshot vs OpenScreenShot. Free annotation, blur, PDF, and tab recording that stay on your device, one free tier, and no all-sites access at install.
+- [FireShot alternative: a free editor in the browser and open source](https://openscreenshot.app/alternatives/fireshot/): FireShot vs OpenScreenShot. Both capture full pages locally. OpenScreenShot is open source and has a free in-browser editor and tab recording.
+- [Nimbus Screenshot alternative: local capture after the move to FuseBase](https://openscreenshot.app/alternatives/nimbus/): Nimbus Screenshot is now FuseBase Pro. OpenScreenShot is a free, open-source option for full-page capture, annotation, and tab recording on your device.
+- [Lightshot alternative: full-page capture with no public upload](https://openscreenshot.app/alternatives/lightshot/): Lightshot vs OpenScreenShot. Get full-page capture, blur, and PDF export in the browser, with files that stay on your device and no prnt.sc links.
+- [Screenity alternative: screenshots and tab recording in one extension](https://openscreenshot.app/alternatives/screenity/): Screenity vs OpenScreenShot. Both are open source. OpenScreenShot adds full-page screenshots and PDF export, and asks for no all-sites access at install.
+- [Loom alternative: tab recordings that stay on your device](https://openscreenshot.app/alternatives/loom/): Loom vs OpenScreenShot. Record a browser tab with webcam, mic, and auto zoom, and export an MP4 locally, with no account and no paid plan.
+- [Snagit alternative: free web page capture in the browser](https://openscreenshot.app/alternatives/snagit/): Snagit vs OpenScreenShot. If you only capture web pages, OpenScreenShot covers full-page capture, markup, blur, PDF, and tab recording for free in Chrome.
 
 ## Agents & CLI
 
