@@ -85,34 +85,31 @@ export function toMarkdown(mainHtml, pageUrl) {
     .replace(/<table\b[^>]*>(.*?)<\/table>/gis, (_, c) => hold(table(c, pageUrl)))
     .replace(/\s+/g, ' ');
 
+  // Every converted block is held out of the text until the end, so its
+  // decoded content (a literal `<all_urls>`, say) is never read as a tag.
   html = html
     .replace(/<ol\b[^>]*>(.*?)<\/ol>/gis, (_, c) => {
       let n = 0;
-      return `\n\n${c.replace(/<li\b[^>]*>(.*?)<\/li>/gis, (_m, li) => `\n${++n}. ${inline(li, pageUrl)}`)}\n\n`;
+      const items = [...c.matchAll(/<li\b[^>]*>(.*?)<\/li>/gis)];
+      return hold(`\n\n${items.map((m) => `${++n}. ${inline(m[1], pageUrl)}`).join('\n')}\n\n`);
     })
-    .replace(/<li\b[^>]*>(.*?)<\/li>/gis, (_, c) => `\n- ${inline(c, pageUrl)}`)
-    .replace(
-      /<h([1-6])\b[^>]*>(.*?)<\/h\1>/gis,
-      (_, n, c) => `\n\n${'#'.repeat(+n)} ${inline(c, pageUrl)}\n\n`,
+    .replace(/<li\b[^>]*>(.*?)<\/li>/gis, (_, c) => hold(`\n- ${inline(c, pageUrl)}`))
+    .replace(/<h([1-6])\b[^>]*>(.*?)<\/h\1>/gis, (_, n, c) =>
+      hold(`\n\n${'#'.repeat(+n)} ${inline(c, pageUrl)}\n\n`),
     )
-    .replace(
-      /<(p|dt|dd|figcaption|summary)\b[^>]*>(.*?)<\/\1>/gis,
-      (_, _t, c) => `\n\n${inline(c, pageUrl)}\n\n`,
+    .replace(/<(p|dt|dd|figcaption|summary)\b[^>]*>(.*?)<\/\1>/gis, (_, _t, c) =>
+      hold(`\n\n${inline(c, pageUrl)}\n\n`),
     )
-    .replace(
-      /<blockquote\b[^>]*>(.*?)<\/blockquote>/gis,
-      (_, c) => `\n\n> ${inline(c, pageUrl)}\n\n`,
+    .replace(/<blockquote\b[^>]*>(.*?)<\/blockquote>/gis, (_, c) =>
+      hold(`\n\n> ${inline(c, pageUrl)}\n\n`),
     )
     .replace(
       /<\/?(ul|div|section|article|header|footer|aside|nav|details|dl|figure)\b[^>]*>/gi,
       '\n\n',
     );
 
-  return html
-    .split('\n')
-    .map((l) => (l.includes('\uE000') ? l.trim() : inline(l, pageUrl)))
-    .join('\n')
-    .replace(/\uE000(\d+)\uE000/g, (_, i) => blocks[+i])
+  return inline(html.replace(/\uE000/g, ' \uE000 '), pageUrl)
+    .replace(/ ?\uE000 (\d+) \uE000 ?/g, (_, i) => blocks[+i])
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
