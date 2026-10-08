@@ -27,11 +27,6 @@
           "note": "Eine Lupe am Fadenkreuz während du ziehst, mit Kanten, die an Elementgrenzen einrasten."
         },
         {
-          "name": "Ein Element aufnehmen",
-          "status": "exploring",
-          "note": "Mit der Maus über eine Karte, ein Diagramm, eine Tabelle oder einen Artikel fahren und dessen Bereich per Klick aufnehmen. Das Einrasten an Elementen soll manuelle Auswahl und unerwünschte Ränder reduzieren."
-        },
-        {
           "name": "Stapelaufnahme: URL-Liste → ein PDF",
           "status": "exploring",
           "note": "Mehrere Seiten scrollen, zusammensetzen und als ein mehrseitiges PDF exportieren. Es kombiniert zwei Teile, die schon existieren."
@@ -78,11 +73,6 @@
       "id": "recording",
       "heading": "Aufnahme",
       "items": [
-        {
-          "name": "MP4-Export",
-          "status": "planned",
-          "note": "WebCodecs plus ein Muxer, neben dem bestehenden WebM-Export."
-        },
         {
           "name": "Zoom, der dem Cursor folgt",
           "status": "planned",
@@ -149,8 +139,35 @@
     "currentTag": "aktuelle Version",
     "releases": [
       {
-        "version": "v2.1.3",
+        "version": "v2.3.1",
         "current": true,
+        "items": [
+          "Der Name der Chrome-Erweiterung enthält jetzt in allen Sprachen „Screen Recorder“, damit eine Store-Suche nach Bildschirmaufnahme sie ebenfalls findet."
+        ]
+      },
+      {
+        "version": "v2.3.0",
+        "items": [
+          "<strong>Steuerung in einem eigenen Tab</strong> — Aufnehmen öffnet neben der Seite einen Steuerungs-Tab mit Live-Kamerabild. Die Steuerung erscheint nie im Video.",
+          "<strong>Einen Teil des Tabs aufnehmen</strong> — den Aufnahmebereich auf einem Standbild der Seite aufziehen. Zoom, Klick-Wellen und Mauszeiger funktionieren darin."
+        ]
+      },
+      {
+        "version": "v2.2.0",
+        "items": [
+          "<strong>Ein Seitenelement aufnehmen</strong> — per Mauszeiger oder Pfeiltasten eine Karte, ein Diagramm, eine Tabelle oder ein Bild wählen und die Auswahl über Eltern- und Kindelemente vergrößern oder verkleinern.",
+          "<strong>MP4-Export für Aufnahmen</strong> — H.264 + AAC als MP4 ist jetzt Standard, WebM steht daneben zur Wahl.",
+          "<strong>In einen Ordner in Downloads speichern</strong> — ein <code>/</code> in der Dateinamen-Vorlage speichert in einen Unterordner, und die Vorschau zeigt den bereinigten Pfad.",
+          "<strong>Mehr Formen und Pfeile</strong> — abgerundetes Rechteck, Oval und Dreieck mit optionaler Füllung; gefüllte, offene, doppelte und Punkt-Pfeilspitzen; und Pfeile, die sich über einen mittleren Griff biegen lassen.",
+          "<strong>Eigene Werkzeugreihenfolge</strong> — Werkzeuge in der Leiste ziehen oder das fokussierte Werkzeug mit <code>Alt+↑</code> / <code>Alt+↓</code> verschieben.",
+          "<strong>Strichstärken passend zur Aufnahme</strong> — die Stufen skalieren mit der Aufnahmebreite, dazu eine neue 24-px-Stufe.",
+          "<strong>Einstellungen mit Tabs</strong> — eine Einstellungsseite mit visuellen Bedienelementen, und die Verzögerung steht im Popup neben den Screenshot-Modi.",
+          "<strong>Optionale Fehlerberichte</strong> — nach einer fehlgeschlagenen Aufnahme bietet das Popup einen Bericht an. Nichts wird gesendet, bevor du auf Senden drückst.",
+          "Korrekturen: Ganzseitenaufnahmen erfassen jetzt Dashboards, die in einem inneren Bereich scrollen, und das macOS-Kürzel für den sichtbaren Bereich wechselt von Befehl+Umschalt+V (Einsetzen und Stil anpassen) zu Wahl+Umschalt+V."
+        ]
+      },
+      {
+        "version": "v2.1.3",
         "items": [
           "Bewertungsbuttons und Erinnerungen in Firefox öffnen jetzt die Mozilla-Rezensionen. Die Installationsbuttons der Website passen sich dem Browser an und bieten eine Alternative für den anderen Browser. Aktualisierte Roadmap-Prioritäten und Screenshot-Abläufe."
         ]
@@ -255,7 +272,7 @@
   },
   "priorities": {
     "heading": "Empfohlene nächste Prioritäten",
-    "lead": "Zuerst die Aufnahme einzelner Elemente, lokale OCR und das Zusammenfügen von Screenshots erkunden. Diese Ideen sollen durch Nutzerfeedback geprüft werden und sind keine Release-Zusagen. Bei Aufnahmen haben MP4-Export und das Entfernen von Abschnitten mitten im Video Vorrang.",
+    "lead": "Zuerst lokale OCR und das Zusammenfügen von Screenshots erkunden. Diese Ideen sollen durch Nutzerfeedback geprüft werden und sind keine Release-Zusagen. Bei Aufnahmen hat das Entfernen von Abschnitten mitten im Video Vorrang.",
     "guidance": "Der Express-Modus soll einfach bleiben. Zusätzliche Auswahlmöglichkeiten gehören in die Aufnahmeoptionen, Editor-Werkzeuge oder den Verlauf, ohne den Standardablauf zu verlängern. Neue Screenshot-Abläufe sollen Chrome und Firefox unterstützen; Aufnahmefunktionen bleiben browserabhängig."
   }
 }

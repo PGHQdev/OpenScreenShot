@@ -27,11 +27,6 @@
           "note": "Una lupa en el punto de mira mientras arrastras, con bordes que se ajustan a los límites de los elementos."
         },
         {
-          "name": "Capturar un elemento",
-          "status": "exploring",
-          "note": "Pasar el cursor sobre una tarjeta, gráfico, tabla o artículo y hacer clic para capturar sus límites. Aprovechar el ajuste a elementos para reducir la selección manual y el espacio sobrante."
-        },
-        {
           "name": "Captura por lotes: lista de URLs → un PDF",
           "status": "exploring",
           "note": "Capturar y unir varias páginas y exportarlas como un único PDF multipágina. Combina dos partes que ya existen."
@@ -78,11 +73,6 @@
       "id": "recording",
       "heading": "Grabación",
       "items": [
-        {
-          "name": "Exportación a MP4",
-          "status": "planned",
-          "note": "WebCodecs más un muxer, junto a la exportación WebM existente."
-        },
         {
           "name": "Modo de zoom que sigue al cursor",
           "status": "planned",
@@ -149,8 +139,35 @@
     "currentTag": "versión actual",
     "releases": [
       {
-        "version": "v2.1.3",
+        "version": "v2.3.1",
         "current": true,
+        "items": [
+          "El nombre de la extensión de Chrome ahora incluye Screen Recorder en todos los idiomas, así que una búsqueda de grabación en la tienda también la encuentra."
+        ]
+      },
+      {
+        "version": "v2.3.0",
+        "items": [
+          "<strong>Controles en su propia pestaña</strong> — Grabar abre una pestaña de control junto a la página, con la vista de la cámara en directo. Los controles nunca aparecen en el vídeo.",
+          "<strong>Grabar parte de una pestaña</strong> — dibuja el área que quieres grabar sobre una imagen fija de la página. El zoom, las ondas de clic y el puntero funcionan dentro de ella."
+        ]
+      },
+      {
+        "version": "v2.2.0",
+        "items": [
+          "<strong>Capturar un elemento de la página</strong> — pasa el puntero o usa las flechas para elegir una tarjeta, un gráfico, una tabla o una imagen, y amplía o reduce la selección a través de los elementos padre e hijo.",
+          "<strong>Exportación de grabaciones a MP4</strong> — MP4 con H.264 + AAC es ahora el formato predeterminado, con WebM al lado.",
+          "<strong>Guardar en una carpeta dentro de Descargas</strong> — una <code>/</code> en la plantilla del nombre de archivo guarda en una subcarpeta, y la vista previa muestra la ruta limpia.",
+          "<strong>Más formas y flechas</strong> — rectángulo redondeado, óvalo y triángulo con relleno sólido opcional; puntas de flecha rellena, abierta, doble y de punto; y flechas que se curvan desde un tirador central.",
+          "<strong>Tu propio orden de herramientas</strong> — arrastra las herramientas en la barra o mueve la herramienta enfocada con <code>Alt+↑</code> / <code>Alt+↓</code>.",
+          "<strong>Grosores de trazo a la medida de la captura</strong> — los ajustes se escalan con el ancho de la captura, más un nuevo ajuste de 24 px.",
+          "<strong>Ajustes con pestañas</strong> — una página de ajustes con controles visuales, y el retardo de captura junto a los modos de captura en la ventana emergente.",
+          "<strong>Informes de error opcionales</strong> — tras una captura fallida, la ventana emergente ofrece un informe. No se envía nada hasta que pulsas Enviar.",
+          "Correcciones: la captura de página completa ahora admite paneles que se desplazan en un área interna, y el atajo de macOS para el área visible pasa de Comando+Mayús+V (pegar con el mismo estilo) a Opción+Mayús+V."
+        ]
+      },
+      {
+        "version": "v2.1.3",
         "items": [
           "Los botones y recordatorios de valoración de Firefox ahora abren las reseñas de Mozilla. Los botones de instalación del sitio se adaptan al navegador y ofrecen una alternativa para el otro. Prioridades y flujos de capturas actualizados."
         ]
@@ -255,7 +272,7 @@
   },
   "priorities": {
     "heading": "Próximas prioridades sugeridas",
-    "lead": "Explorar primero la captura de elementos, el OCR local y la combinación de capturas. Son hipótesis que se validarán con comentarios de los usuarios, no compromisos de lanzamiento. Para la grabación, priorizar la exportación MP4 y la eliminación de secciones intermedias.",
+    "lead": "Explorar primero el OCR local y la combinación de capturas. Son hipótesis que se validarán con los comentarios de los usuarios, no compromisos de lanzamiento. En la grabación, la prioridad es eliminar fragmentos del medio de una toma.",
     "guidance": "Mantener sencillo el modo Express. Ofrecer opciones adicionales en la captura, las herramientas del editor o el historial sin añadir pasos al flujo predeterminado. Los nuevos flujos de capturas deben admitir Chrome y Firefox; las funciones de grabación dependen del navegador."
   }
 }

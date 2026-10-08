@@ -27,11 +27,6 @@
           "note": "A magnifier at the crosshair while you drag, with edges that snap to element boundaries."
         },
         {
-          "name": "Capture an element",
-          "status": "exploring",
-          "note": "Hover over a card, chart, table, or article and click to capture its bounds. Build on element snapping to reduce manual selection and unwanted surrounding space."
-        },
-        {
           "name": "Batch capture: list of URLs → one PDF",
           "status": "exploring",
           "note": "Scroll-and-stitch several pages and export them as a single multi-page PDF. It combines two parts that already exist."
@@ -78,11 +73,6 @@
       "id": "recording",
       "heading": "Recording",
       "items": [
-        {
-          "name": "MP4 export",
-          "status": "planned",
-          "note": "WebCodecs plus a muxer, alongside the existing WebM export."
-        },
         {
           "name": "Follow-cursor zoom mode",
           "status": "planned",
@@ -149,8 +139,35 @@
     "currentTag": "current release",
     "releases": [
       {
-        "version": "v2.1.3",
+        "version": "v2.3.1",
         "current": true,
+        "items": [
+          "The Chrome extension’s name now includes Screen Recorder in every language, so a store search for recording finds it too."
+        ]
+      },
+      {
+        "version": "v2.3.0",
+        "items": [
+          "<strong>Controls in their own tab</strong> — Record opens a control tab beside the page, with a live camera view. The controls never appear in the video.",
+          "<strong>Record part of a tab</strong> — draw the area to record on a still of the page. Zoom, click ripples, and the pointer work inside it."
+        ]
+      },
+      {
+        "version": "v2.2.0",
+        "items": [
+          "<strong>Capture a page element</strong> — hover or use the arrow keys to select a card, chart, table, or image, then grow or shrink the selection through parent and child elements.",
+          "<strong>MP4 recording export</strong> — H.264 + AAC MP4 is now the default, with WebM beside it.",
+          "<strong>Save into a folder inside Downloads</strong> — a <code>/</code> in the filename template saves into a subfolder, and the preview shows the cleaned path.",
+          "<strong>More shapes and arrows</strong> — rounded rectangle, oval, and triangle shapes with an optional solid fill; filled, open, double, and dot arrow tips; and arrows that bend from a middle handle.",
+          "<strong>Your own tool order</strong> — drag tools on the rail, or move the focused tool with <code>Alt+↑</code> / <code>Alt+↓</code>.",
+          "<strong>Stroke widths that fit the capture</strong> — presets scale with the capture width, plus a new 24px preset.",
+          "<strong>Tabbed settings</strong> — a settings page with visual controls, and the capture delay next to the screenshot modes in the popup.",
+          "<strong>Optional error reports</strong> — after a failed capture, the popup offers a report. Nothing is sent until you press Send.",
+          "Fixes: full-page capture now handles dashboards that scroll an inner panel, and the macOS visible-capture shortcut moved from Command+Shift+V (paste and match style) to Option+Shift+V."
+        ]
+      },
+      {
+        "version": "v2.1.3",
         "items": [
           "Firefox rating buttons and reminders now open Mozilla reviews. Website install buttons match your browser, with an alternative for the other browser. Updated roadmap priorities and screenshot workflows."
         ]
@@ -255,7 +272,7 @@
   },
   "priorities": {
     "heading": "Suggested next priorities",
-    "lead": "Explore element capture, local OCR, and combining screenshots first. These are hypotheses to validate with user feedback, not release commitments. For recording, prioritize MP4 export and removing sections from the middle of a take.",
+    "lead": "Explore local OCR and combining screenshots first. These are hypotheses to validate with user feedback, not release commitments. For recording, prioritize removing sections from the middle of a take.",
     "guidance": "Keep Express mode simple. Put additional choices in capture options, editor tools, or history without adding steps to the default capture flow. New screenshot workflows should support Chrome and Firefox; recording capabilities remain browser-dependent."
   }
 }

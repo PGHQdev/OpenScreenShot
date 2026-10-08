@@ -27,11 +27,6 @@
           "note": "Une loupe au niveau du réticule pendant le glissement, avec des bords qui s’accrochent aux contours des éléments."
         },
         {
-          "name": "Capturer un élément",
-          "status": "exploring",
-          "note": "Survoler une carte, un graphique, un tableau ou un article, puis cliquer pour en capturer les limites. S’appuyer sur l’alignement aux éléments pour réduire la sélection manuelle et les espaces superflus."
-        },
-        {
           "name": "Capture par lots : une liste d’URL → un seul PDF",
           "status": "exploring",
           "note": "Défiler et assembler plusieurs pages, puis les exporter en un seul PDF multipage. Cela combine deux briques qui existent déjà."
@@ -78,11 +73,6 @@
       "id": "recording",
       "heading": "Enregistrement",
       "items": [
-        {
-          "name": "Export MP4",
-          "status": "planned",
-          "note": "WebCodecs plus un muxeur, aux côtés de l’export WebM existant."
-        },
         {
           "name": "Mode zoom qui suit le curseur",
           "status": "planned",
@@ -149,8 +139,35 @@
     "currentTag": "version actuelle",
     "releases": [
       {
-        "version": "v2.1.3",
+        "version": "v2.3.1",
         "current": true,
+        "items": [
+          "Le nom de l’extension Chrome inclut désormais Screen Recorder dans toutes les langues : une recherche sur l’enregistrement d’écran dans le store la trouve aussi."
+        ]
+      },
+      {
+        "version": "v2.3.0",
+        "items": [
+          "<strong>Commandes dans leur propre onglet</strong> — Enregistrer ouvre un onglet de contrôle à côté de la page, avec l’aperçu de la caméra en direct. Les commandes n’apparaissent jamais dans la vidéo.",
+          "<strong>Enregistrer une partie d’un onglet</strong> — tracez la zone à enregistrer sur une image fixe de la page. Le zoom, les ondes de clic et le pointeur fonctionnent à l’intérieur."
+        ]
+      },
+      {
+        "version": "v2.2.0",
+        "items": [
+          "<strong>Capturer un élément de la page</strong> — survolez ou utilisez les flèches pour choisir une carte, un graphique, un tableau ou une image, puis agrandissez ou réduisez la sélection via les éléments parents et enfants.",
+          "<strong>Export MP4 des enregistrements</strong> — le MP4 H.264 + AAC est désormais le format par défaut, avec WebM à côté.",
+          "<strong>Enregistrer dans un dossier de Téléchargements</strong> — un <code>/</code> dans le modèle de nom de fichier enregistre dans un sous-dossier, et l’aperçu affiche le chemin nettoyé.",
+          "<strong>Plus de formes et de flèches</strong> — rectangle arrondi, ovale et triangle avec remplissage plein en option ; pointes de flèche pleine, ouverte, double et point ; et flèches qui se courbent depuis une poignée centrale.",
+          "<strong>Votre ordre d’outils</strong> — faites glisser les outils dans la barre, ou déplacez l’outil actif avec <code>Alt+↑</code> / <code>Alt+↓</code>.",
+          "<strong>Épaisseurs de trait adaptées à la capture</strong> — les préréglages suivent la largeur de la capture, avec un nouveau préréglage de 24 px.",
+          "<strong>Paramètres à onglets</strong> — une page de paramètres avec des contrôles visuels, et le délai de capture à côté des modes de capture dans la fenêtre contextuelle.",
+          "<strong>Rapports d’erreur facultatifs</strong> — après une capture échouée, la fenêtre contextuelle propose un rapport. Rien n’est envoyé avant que vous appuyiez sur Envoyer.",
+          "Corrections : la capture pleine page gère désormais les tableaux de bord qui défilent dans un panneau interne, et le raccourci macOS de la zone visible passe de Commande+Maj+V (coller et adapter le style) à Option+Maj+V."
+        ]
+      },
+      {
+        "version": "v2.1.3",
         "items": [
           "Les boutons et rappels d’évaluation de Firefox ouvrent désormais les avis Mozilla. Les boutons d’installation du site s’adaptent au navigateur et proposent une alternative pour l’autre. Priorités et usages des captures mis à jour."
         ]
@@ -255,7 +272,7 @@
   },
   "priorities": {
     "heading": "Prochaines priorités suggérées",
-    "lead": "Explorer d’abord la capture d’éléments, l’OCR local et l’assemblage de captures. Ces hypothèses sont à valider avec les retours des utilisateurs et ne constituent pas des engagements de livraison. Pour l’enregistrement, privilégier l’export MP4 et la suppression de passages au milieu d’une prise.",
+    "lead": "Explorer d’abord l’OCR local et l’assemblage de captures. Ce sont des hypothèses à valider avec les retours des utilisateurs, pas des engagements de version. Pour l’enregistrement, la priorité est de supprimer des passages au milieu d’une prise.",
     "guidance": "Garder le mode Express simple. Placer les choix supplémentaires dans les options de capture, les outils de l’éditeur ou l’historique sans ajouter d’étapes au parcours par défaut. Les nouveaux usages des captures doivent fonctionner sur Chrome et Firefox ; les capacités d’enregistrement dépendent du navigateur."
   }
 }

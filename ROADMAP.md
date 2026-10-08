@@ -10,9 +10,9 @@ requests are all welcome (see [CONTRIBUTING.md](./CONTRIBUTING.md)), and
 
 ## Suggested next priorities
 
-Explore **element capture**, **local OCR**, and **combining screenshots** first.
+Explore **local OCR** and **combining screenshots** first.
 These are product hypotheses to validate with user feedback, not release commitments.
-For recording, prioritize MP4 export and removing sections from the middle of a take.
+For recording, prioritize removing sections from the middle of a take.
 
 Keep Express mode simple. Surface additional choices where they are useful—in capture
 options, editor tools, or history—without adding steps to the default capture flow.
@@ -53,17 +53,21 @@ remain browser-dependent.
 | Per-layer blur strength control                           | ✅ shipped | Landed in v1.5.0: a slider on the blur tool's style bar instead of a fixed strength, so soft blur can go lighter or heavier per layer.                                                                                                                                                                                                           |
 | Full keyboard operation and screen reader support         | ✅ shipped | Landed in v1.5.0: a focusable canvas with keyboard layer cycling, placement, move, resize, and crop; live-region announcements for every mutation; roving tabindex on both toolbars; visible focus rings and 24×24 minimum target sizes; `forced-colors` and `prefers-contrast` support; and the editor's UI strings moved behind `chrome.i18n`. |
 | Redesigned editor chrome                                  | ✅ shipped | Landed in v1.5.0: a style bar that no longer reflows the canvas on every tool swap, a coral-themed range slider and canvas stage that adapt to light and dark, a consistent pressed state across every control, a grouped tool rail, and real loading and error states on export.                                                                |
+| Rounded, oval, and triangle shapes, with a solid fill     | ✅ shipped | Landed in v2.2.0: the Rectangle tool became Shape, with a picker for rectangle, rounded, oval, and triangle. Shift keeps width and height equal. Fill: None / Solid works on every shape.                                                                                                                                                        |
+| Arrow tip styles and curved arrows                        | ✅ shipped | Landed in v2.2.0: filled, open, both-ends, and dot tips, and a middle handle that bends the shaft into a curve.                                                                                                                                                                                                                                  |
+| Reorder the tool rail                                     | ✅ shipped | Landed in v2.2.0: drag rail tools to a new slot or in from More tools; `Alt+Up/Down` moves the focused tool. The order persists, and More tools offers a reset.                                                                                                                                                                                  |
+| Stroke widths scaled to the capture                       | ✅ shipped | Landed in v2.2.0: presets multiply by the capture width over 2560, and a fourth 24px preset doubles the old maximum.                                                                                                                                                                                                                             |
 
 ## Screenshot workflows
 
-| Feature                     | Status       | Notes                                                                                                                                                                                                          |
-| --------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Readable long-page exports  | 🧭 exploring | Export an overview with selected detail crops, or split a tall screenshot into readable sections without shrinking the entire page to fit one image.                                                           |
-| Suggested redactions        | 🧭 exploring | Locally highlight possible sensitive text, such as emails and phone numbers, for the user to review and confirm as solid redactions. Detection can miss information; never imply automatic privacy guarantees. |
-| Combine screenshots         | 🧭 exploring | Arrange existing captures vertically, side by side, or in a multi-page PDF with captions. Start with saved captures before adding automated batch capture.                                                     |
-| Before-and-after comparison | 🧭 exploring | Choose two captures from history and compare them with a slider or highlighted differences. Useful for page changes, design reviews, and bug reports.                                                          |
-| Optional source caption     | 🧭 exploring | Add page title, URL, capture time, and viewport size to an export. Preview and remove sensitive URL parameters before sharing. Provides context, not proof of authenticity.                                    |
-| Create a visual guide       | 🧭 exploring | Collect captures as steps, add short captions and numbered annotations, and export a clean document locally without an account.                                                                                |
+| Feature                     | Status         | Notes                                                                                                                                                                                                          |
+| --------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Readable long-page exports  | 🚧 in progress | Splitting a page taller than one image into several images is on `main` for the next release. An overview with selected detail crops is still to explore.                                                      |
+| Suggested redactions        | 🧭 exploring   | Locally highlight possible sensitive text, such as emails and phone numbers, for the user to review and confirm as solid redactions. Detection can miss information; never imply automatic privacy guarantees. |
+| Combine screenshots         | 🧭 exploring   | Arrange existing captures vertically, side by side, or in a multi-page PDF with captions. Start with saved captures before adding automated batch capture.                                                     |
+| Before-and-after comparison | 🧭 exploring   | Choose two captures from history and compare them with a slider or highlighted differences. Useful for page changes, design reviews, and bug reports.                                                          |
+| Optional source caption     | 🧭 exploring   | Add page title, URL, capture time, and viewport size to an export. Preview and remove sensitive URL parameters before sharing. Provides context, not proof of authenticity.                                    |
+| Create a visual guide       | 🧭 exploring   | Collect captures as steps, add short captions and numbered annotations, and export a clean document locally without an account.                                                                                |
 
 ## Recording
 
@@ -113,6 +117,12 @@ remain browser-dependent.
 | Capture a page element                                     | v2.2.0  |
 | MP4 recording export                                       | v2.2.0  |
 | Save into a folder inside Downloads                        | v2.2.0  |
+| Rounded, oval, and triangle shapes, with a solid fill      | v2.2.0  |
+| Arrow tip styles and curved arrows                         | v2.2.0  |
+| Reorder the tool rail                                      | v2.2.0  |
+| Stroke widths scaled to the capture                        | v2.2.0  |
+| Tabbed settings page with visual controls                  | v2.2.0  |
+| Optional capture error reports                             | v2.2.0  |
 | Full keyboard operation and screen reader support          | v1.5.0  |
 | Cut tool: remove horizontal bands from a long capture      | v1.5.0  |
 | Named Beautify presets                                     | v1.5.0  |
