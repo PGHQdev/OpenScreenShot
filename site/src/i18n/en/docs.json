@@ -24,8 +24,8 @@
     "intro": "Click the OpenScreenShot icon in your toolbar and the full page capture starts — no menu in the way. Everything runs locally in your browser. There are four ways to start a capture:",
     "ways": [
       "<strong>The toolbar icon</strong> — one click captures the full page. Turn <strong>Icon click captures the full page</strong> off in settings to get the mode picker popup back; right-click the icon for the other modes and settings.",
-      "<strong>A keyboard shortcut</strong> — <kbd>Ctrl+Shift+S</kbd> for the full page, <kbd>Alt+Shift+V</kbd> for the visible area, <kbd>Ctrl+Shift+E</kbd> for a region. On macOS these are <kbd>⌘⇧S</kbd>, <kbd>⌥⇧V</kbd>, and <kbd>⌘⇧E</kbd>. Rebind them at <code>chrome://extensions/shortcuts</code>.",
-      "<strong>The right-click menu</strong> — the OpenScreenShot submenu on any page offers the same three modes and Settings.",
+      "<strong>A keyboard shortcut</strong> — <kbd>Ctrl+Shift+S</kbd> for the full page, <kbd>Alt+Shift+V</kbd> for the visible area, <kbd>Ctrl+Shift+E</kbd> for a region. On macOS these are <kbd>⌘⇧S</kbd>, <kbd>⌥⇧V</kbd>, and <kbd>⌘⇧E</kbd>. Capture element has no default key. Set or change any of them at <code>chrome://extensions/shortcuts</code>.",
+      "<strong>The right-click menu</strong> — the OpenScreenShot submenu on any page offers the same four modes and Settings.",
       "<strong>Repeat region</strong> — the popup footer and the right-click menu re-capture the last region rectangle. Both items appear once you have selected a region."
     ],
     "delay": "The <strong>Delay</strong> row in the popup holds a capture for 3, 5, or 10 seconds, and the toolbar badge counts down. Use it for hover states, dropdown menus, and tooltips that close the moment you click somewhere else."
@@ -34,7 +34,7 @@
     "heading": "Capture modes",
     "full": {
       "title": "Full Page",
-      "body": "Captures the entire scrolling page and stitches it into one image. The extension scrolls the page viewport by viewport, captures each tile, and composites them together. Fixed headers are captured on the first tile and composited once at the top. Pages that scroll an inner element instead of the window work too."
+      "body": "Captures the entire scrolling page and stitches it into one image. The extension scrolls the page viewport by viewport, captures each tile, and composites them together. Fixed headers are captured on the first tile and composited once at the top. Pages that scroll an inner element instead of the window work too. A page taller than one image (32,000 device pixels) is saved as up to six images: Download names each part, and Editor or Clipboard opens each part in its own editor tab."
     },
     "visible": {
       "title": "Visible Area",
@@ -43,6 +43,10 @@
     "region": {
       "title": "Selected Region",
       "body": "Click and drag to draw a rectangle. Resize handles appear on each edge and corner. Use the arrow keys to nudge the selection by one pixel at a time, or hold <kbd>Shift</kbd> to move it ten pixels at a time. Press <kbd>Enter</kbd> to confirm or <kbd>Esc</kbd> to cancel."
+    },
+    "element": {
+      "title": "Element",
+      "body": "Hover over the page to select a card, chart, table, image, or other element, then click or press <kbd>Enter</kbd> to capture exactly its bounds. <kbd>↑</kbd> selects the parent element, <kbd>↓</kbd> the child, and <kbd>←</kbd>/<kbd>→</kbd> the neighbors. If the element is not fully visible, the picker offers a full-page capture instead."
     }
   },
   "afterCapture": {
@@ -57,11 +61,11 @@
   },
   "annotate": {
     "heading": "Annotate",
-    "intro": "The editor opens in a full tab and loads the most recent capture from local storage. Each tool has a one-letter shortcut.",
+    "intro": "The editor opens in a full tab and shows the most recent capture, ready to copy or save. Click <strong>Edit</strong> to open the tools. Each tool has a one-letter shortcut.",
     "tools": [
       "<strong>Select</strong> <kbd>V</kbd> — move, resize, or delete any annotation. Double-click a text layer to re-edit it.",
-      "<strong>Rectangle</strong> <kbd>R</kbd> — draw a border rectangle.",
-      "<strong>Arrow</strong> <kbd>A</kbd> — draw a directional arrow.",
+      "<strong>Shape</strong> <kbd>R</kbd> — draw a rectangle, rounded rectangle, oval, or triangle. <strong>Fill</strong> sets none or a solid fill in the stroke color; hold <kbd>Shift</kbd> for equal sides, so an oval becomes a circle.",
+      "<strong>Arrow</strong> <kbd>A</kbd> — draw a directional arrow with a filled, open, double, or dot tip. Drag the round middle handle to bend it into a curve.",
       "<strong>Line</strong> <kbd>L</kbd> — the arrow without a head.",
       "<strong>Pen</strong> <kbd>P</kbd> — freehand drawing.",
       "<strong>Highlighter</strong> <kbd>H</kbd> — a translucent freehand stroke.",
@@ -70,9 +74,10 @@
       "<strong>Blur</strong> <kbd>B</kbd> — hide sensitive content as a soft blur, a coarse mosaic, or an opaque fill. The opaque fill survives recompression.",
       "<strong>Spotlight</strong> <kbd>O</kbd> — rectangle, rounded rectangle, or ellipse cut-outs that merge into one dim layer.",
       "<strong>Eyedropper</strong> <kbd>I</kbd> — take a color from the capture. It samples what you see, so a color inside a spotlight or on a beautify gradient picks as it looks. The swatch button on the color row opens Chrome’s screen-wide picker for anything outside the canvas.",
-      "<strong>Crop</strong> <kbd>C</kbd> — trim the image to a selected area."
+      "<strong>Crop</strong> <kbd>C</kbd> — trim the image to a selected area.",
+      "<strong>Cut</strong> <kbd>X</kbd> — mark horizontal bands on a long capture and remove them, with a live preview."
     ],
-    "outro": "Hold <kbd>Shift</kbd> while you draw for square rectangles and 45° lines and arrows. The style bar carries an 8-color palette on <kbd>1</kbd>–<kbd>8</kbd>, a custom color, recent colors, three stroke widths, and a font-size control. Your choices are remembered across sessions. Undo and redo are <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>, or <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd> on macOS."
+    "outro": "Hold <kbd>Shift</kbd> while you draw for square shapes and 45° lines and arrows. The style bar carries an 8-color palette on <kbd>1</kbd>–<kbd>8</kbd>, a custom color, recent colors, four stroke widths that scale with the capture size, and a font-size control. Your choices are remembered across sessions. Drag tools on the rail to put your favorites first, or move the focused tool with <kbd>Alt+↑</kbd> / <kbd>Alt+↓</kbd>. Undo and redo are <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>, or <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd> on macOS."
   },
   "beautify": {
     "heading": "Beautify",
@@ -113,7 +118,7 @@
     },
     "export": {
       "title": "Export",
-      "body": "Export re-renders the take through canvas, mixing in the tracks and effects you set, and downloads a WebM file."
+      "body": "Export re-renders the take through canvas, mixing in the tracks and effects you set, and downloads an MP4 file (H.264 and AAC) by default, or WebM from the picker beside the button. MP4 is limited to 4096×2304, so a larger tab is scaled down to fit. Browsers without MP4 recording export WebM only."
     }
   },
   "drafts": {

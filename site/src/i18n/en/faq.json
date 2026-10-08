@@ -46,7 +46,7 @@
     },
     {
       "q": "Which file formats can I export?",
-      "a": "<p>Save screenshots as PNG, JPEG, WebP, or PDF from the editor. You can also copy an image to your clipboard. Tab recordings export as WebM. All exports are processed locally and have no watermark.</p>",
+      "a": "<p>Save screenshots as PNG, JPEG, WebP, or PDF from the editor. You can also copy an image to your clipboard. Tab recordings export as MP4 or WebM. All exports are processed locally and have no watermark.</p>",
       "home": true
     },
     {
@@ -65,12 +65,12 @@
     },
     {
       "q": "Where are my recordings stored?",
-      "a": "<p>Recordings and their audio are saved in local browser storage as you record. They remain there until you delete the session. Export a WebM file to keep a separate copy on your device. The extension does not upload recordings.</p>",
+      "a": "<p>Recordings and their audio are saved in local browser storage as you record. They remain there until you delete the session. Export an MP4 or WebM file to keep a separate copy on your device. The extension does not upload recordings.</p>",
       "home": true
     },
     {
-      "q": "Why WebM and not MP4?",
-      "a": "<p>The recorder exports through <code>MediaRecorder</code>, which writes WebM natively in every browser that supports tab capture. MP4 export is on the <a href=\"/roadmap/\">roadmap</a>, via WebCodecs and a muxer, alongside the WebM path this version ships.</p>"
+      "q": "Which video format do recordings export?",
+      "a": "<p>MP4 (H.264 video and AAC audio) by default, which opens in most video editors and players. WebM is in the picker beside the Export button. Chrome’s <code>MediaRecorder</code> writes both formats; a browser without MP4 recording exports WebM only. MP4 frames are limited to 4096×2304, so a larger tab is scaled down to fit.</p>"
     }
   ]
 }
