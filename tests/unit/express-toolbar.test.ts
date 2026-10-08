@@ -72,6 +72,7 @@ function makeFakeChrome() {
     },
     i18n: { getMessage: vi.fn((key: string) => key), getUILanguage: vi.fn(() => 'en') },
     windows: { WINDOW_ID_CURRENT: -2 },
+    extension: { isAllowedFileSchemeAccess: vi.fn(() => Promise.resolve(false)) },
     downloads: { download: vi.fn(() => Promise.resolve(1)) },
     scripting: { executeScript: vi.fn(() => Promise.resolve([{ result: undefined }])) },
   };
@@ -175,6 +176,31 @@ describe('toolbar-click branching', () => {
     for (const fn of messageListener) fn({ type: 'CAPTURE_ERROR_POPUP_OPENED' });
     await flushMicrotasks();
     expect(lastPopupBinding()).toBe('');
+  });
+
+  it('names the file URL toggle when a local file is captured without file access', async () => {
+    await importBackground();
+    fakeChrome.tabs.query.mockResolvedValue([{ id: 7, windowId: 1, url: 'file:///C:/a.html' }]);
+    const listener = fakeChrome.action.onClicked.addListener.mock.calls[0]?.[0] as () => void;
+    listener();
+    await flushMicrotasks(60);
+    expect(fakeChrome.runtime.sendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'CAPTURE_ERROR', code: 'file-access' }),
+    );
+    expect(fakeChrome.tabs.captureVisibleTab).not.toHaveBeenCalled();
+  });
+
+  it('captures a local file once file access is on', async () => {
+    await importBackground();
+    fakeChrome.extension.isAllowedFileSchemeAccess.mockResolvedValue(true);
+    fakeChrome.tabs.query.mockResolvedValue([{ id: 7, windowId: 1, url: 'file:///C:/a.html' }]);
+    const listener = fakeChrome.action.onClicked.addListener.mock.calls[0]?.[0] as () => void;
+    listener();
+    await flushMicrotasks(60);
+    expect(fakeChrome.runtime.sendMessage).not.toHaveBeenCalledWith(
+      expect.objectContaining({ code: 'file-access' }),
+    );
+    expect(fakeChrome.scripting.executeScript).toHaveBeenCalled();
   });
 
   it('keeps the guidance available on the next click if openPopup is unavailable', async () => {

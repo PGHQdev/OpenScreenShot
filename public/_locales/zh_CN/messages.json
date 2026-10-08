@@ -2431,6 +2431,10 @@
     "message": "无法截取此受保护的页面。",
     "description": "Capture error: browser-protected page."
   },
+  "errFileAccess": {
+    "message": "如需截取本地文件，请在此扩展程序的详情页中开启“允许访问文件网址”。",
+    "description": "Capture error: a file:// page while Chrome's \"Allow access to file URLs\" toggle is off. Quote Chrome's own label for that toggle in this locale."
+  },
   "errBlankPage": {
     "message": "此页面没有可滚动的内容。",
     "description": "Capture error: nothing scrollable to capture."

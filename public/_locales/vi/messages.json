@@ -175,6 +175,10 @@
     "message": "Không thể chụp trang được bảo vệ này.",
     "description": "Capture error: browser-protected page."
   },
+  "errFileAccess": {
+    "message": "Để chụp tệp cục bộ, hãy bật \"Cho phép truy cập vào URL của tệp\" trong phần chi tiết của tiện ích này.",
+    "description": "Capture error: a file:// page while Chrome's \"Allow access to file URLs\" toggle is off. Quote Chrome's own label for that toggle in this locale."
+  },
   "errBlankPage": {
     "message": "Trang này không có nội dung cuộn.",
     "description": "Capture error: nothing scrollable to capture."

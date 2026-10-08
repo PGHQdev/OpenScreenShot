@@ -175,6 +175,10 @@
     "message": "Bu korumalı sayfanın ekran görüntüsü alınamaz.",
     "description": "Capture error: browser-protected page."
   },
+  "errFileAccess": {
+    "message": "Yerel dosyaları yakalamak için bu uzantının ayrıntılarında \"Dosya URL'lerine erişime izin ver\" seçeneğini açın.",
+    "description": "Capture error: a file:// page while Chrome's \"Allow access to file URLs\" toggle is off. Quote Chrome's own label for that toggle in this locale."
+  },
   "errBlankPage": {
     "message": "Bu sayfada kaydırılabilir içerik yok.",
     "description": "Capture error: nothing scrollable to capture."

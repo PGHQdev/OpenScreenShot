@@ -175,6 +175,10 @@
     "message": "Deze beveiligde pagina kan niet worden vastgelegd.",
     "description": "Capture error: browser-protected page."
   },
+  "errFileAccess": {
+    "message": "Zet ‘Toegang tot bestand-URL's toestaan’ aan in de details van deze extensie om lokale bestanden vast te leggen.",
+    "description": "Capture error: a file:// page while Chrome's \"Allow access to file URLs\" toggle is off. Quote Chrome's own label for that toggle in this locale."
+  },
   "errBlankPage": {
     "message": "Deze pagina heeft geen scrollbare inhoud.",
     "description": "Capture error: nothing scrollable to capture."

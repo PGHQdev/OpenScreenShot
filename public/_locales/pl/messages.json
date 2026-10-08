@@ -175,6 +175,10 @@
     "message": "Nie można wykonać zrzutu tej chronionej strony.",
     "description": "Capture error: browser-protected page."
   },
+  "errFileAccess": {
+    "message": "Aby przechwytywać pliki lokalne, włącz „Zezwalaj na dostęp do adresów URL plików” w szczegółach tego rozszerzenia.",
+    "description": "Capture error: a file:// page while Chrome's \"Allow access to file URLs\" toggle is off. Quote Chrome's own label for that toggle in this locale."
+  },
   "errBlankPage": {
     "message": "Ta strona nie ma przewijanej zawartości.",
     "description": "Capture error: nothing scrollable to capture."

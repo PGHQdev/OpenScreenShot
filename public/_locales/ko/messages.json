@@ -2431,6 +2431,10 @@
     "message": "보호된 페이지는 캡처할 수 없습니다.",
     "description": "Capture error: browser-protected page."
   },
+  "errFileAccess": {
+    "message": "로컬 파일을 캡처하려면 이 확장 프로그램의 세부정보 페이지에서 '파일 URL에 대한 액세스 허용'을 사용 설정하세요.",
+    "description": "Capture error: a file:// page while Chrome's \"Allow access to file URLs\" toggle is off. Quote Chrome's own label for that toggle in this locale."
+  },
   "errBlankPage": {
     "message": "이 페이지에는 스크롤할 콘텐츠가 없습니다.",
     "description": "Capture error: nothing scrollable to capture."

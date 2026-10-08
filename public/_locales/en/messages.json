@@ -2431,6 +2431,10 @@
     "message": "Can't screenshot this protected page.",
     "description": "Capture error: browser-protected page."
   },
+  "errFileAccess": {
+    "message": "To capture local files, turn on “Allow access to file URLs” on this extension’s details page.",
+    "description": "Capture error: a file:// page while Chrome's \"Allow access to file URLs\" toggle is off. Quote Chrome's own label for that toggle in this locale."
+  },
   "errBlankPage": {
     "message": "This page has no scrollable content.",
     "description": "Capture error: nothing scrollable to capture."

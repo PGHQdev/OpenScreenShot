@@ -2431,6 +2431,10 @@
     "message": "Diese geschützte Seite kann nicht aufgenommen werden.",
     "description": "Capture error: browser-protected page."
   },
+  "errFileAccess": {
+    "message": "Für lokale Dateien aktiviere „Zugriff auf Datei-URLs zulassen“ auf der Detailseite dieser Erweiterung.",
+    "description": "Capture error: a file:// page while Chrome's \"Allow access to file URLs\" toggle is off. Quote Chrome's own label for that toggle in this locale."
+  },
   "errBlankPage": {
     "message": "Diese Seite hat keinen scrollbaren Inhalt.",
     "description": "Capture error: nothing scrollable to capture."

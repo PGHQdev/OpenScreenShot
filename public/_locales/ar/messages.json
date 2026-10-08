@@ -175,6 +175,10 @@
     "message": "يتعذر التقاط هذه الصفحة المحمية.",
     "description": "Capture error: browser-protected page."
   },
+  "errFileAccess": {
+    "message": "لالتقاط الملفات المحلية، فعّل \"السماح بالوصول إلى عناوين URL للملفات\" في صفحة تفاصيل هذه الإضافة.",
+    "description": "Capture error: a file:// page while Chrome's \"Allow access to file URLs\" toggle is off. Quote Chrome's own label for that toggle in this locale."
+  },
   "errBlankPage": {
     "message": "لا تحتوي هذه الصفحة على محتوى قابل للتمرير.",
     "description": "Capture error: nothing scrollable to capture."

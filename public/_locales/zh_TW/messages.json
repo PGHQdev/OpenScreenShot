@@ -2431,6 +2431,10 @@
     "message": "無法擷取此受保護的網頁。",
     "description": "Capture error: browser-protected page."
   },
+  "errFileAccess": {
+    "message": "如要擷取本機檔案，請在這個擴充功能的詳細資料頁面中開啟「允許存取檔案網址」。",
+    "description": "Capture error: a file:// page while Chrome's \"Allow access to file URLs\" toggle is off. Quote Chrome's own label for that toggle in this locale."
+  },
   "errBlankPage": {
     "message": "此網頁沒有可捲動的內容。",
     "description": "Capture error: nothing scrollable to capture."

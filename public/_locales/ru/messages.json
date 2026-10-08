@@ -2431,6 +2431,10 @@
     "message": "Нельзя снять эту защищённую страницу.",
     "description": "Capture error: browser-protected page."
   },
+  "errFileAccess": {
+    "message": "Чтобы снимать локальные файлы, включите «Разрешить открывать файлы по ссылкам» на странице сведений об этом расширении.",
+    "description": "Capture error: a file:// page while Chrome's \"Allow access to file URLs\" toggle is off. Quote Chrome's own label for that toggle in this locale."
+  },
   "errBlankPage": {
     "message": "На этой странице нет прокручиваемого содержимого.",
     "description": "Capture error: nothing scrollable to capture."

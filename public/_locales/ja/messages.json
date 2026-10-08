@@ -2431,6 +2431,10 @@
     "message": "この保護されたページはスクリーンショットできません。",
     "description": "Capture error: browser-protected page."
   },
+  "errFileAccess": {
+    "message": "ローカルファイルをキャプチャするには、この拡張機能の詳細ページで「ファイルの URL へのアクセスを許可する」をオンにしてください。",
+    "description": "Capture error: a file:// page while Chrome's \"Allow access to file URLs\" toggle is off. Quote Chrome's own label for that toggle in this locale."
+  },
   "errBlankPage": {
     "message": "このページにはスクロール可能なコンテンツがありません。",
     "description": "Capture error: nothing scrollable to capture."

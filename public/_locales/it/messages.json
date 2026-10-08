@@ -2431,6 +2431,10 @@
     "message": "Impossibile catturare questa pagina protetta.",
     "description": "Capture error: browser-protected page."
   },
+  "errFileAccess": {
+    "message": "Per catturare file locali, attiva «Consenti l’accesso agli URL dei file» nei dettagli di questa estensione.",
+    "description": "Capture error: a file:// page while Chrome's \"Allow access to file URLs\" toggle is off. Quote Chrome's own label for that toggle in this locale."
+  },
   "errBlankPage": {
     "message": "Questa pagina non ha contenuto scorrevole.",
     "description": "Capture error: nothing scrollable to capture."

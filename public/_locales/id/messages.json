@@ -175,6 +175,10 @@
     "message": "Tidak dapat menangkap halaman yang dilindungi ini.",
     "description": "Capture error: browser-protected page."
   },
+  "errFileAccess": {
+    "message": "Untuk mengambil file lokal, aktifkan \"Izinkan akses ke URL file\" di detail ekstensi ini.",
+    "description": "Capture error: a file:// page while Chrome's \"Allow access to file URLs\" toggle is off. Quote Chrome's own label for that toggle in this locale."
+  },
   "errBlankPage": {
     "message": "Halaman ini tidak memiliki konten yang dapat digulir.",
     "description": "Capture error: nothing scrollable to capture."

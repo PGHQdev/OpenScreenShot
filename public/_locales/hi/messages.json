@@ -175,6 +175,10 @@
     "message": "इस सुरक्षित पेज का स्क्रीनशॉट नहीं लिया जा सकता।",
     "description": "Capture error: browser-protected page."
   },
+  "errFileAccess": {
+    "message": "स्थानीय फ़ाइलें कैप्चर करने के लिए, इस एक्सटेंशन के विवरण में \"फ़ाइल URL तक पहुंच की अनुमति दें\" चालू करें।",
+    "description": "Capture error: a file:// page while Chrome's \"Allow access to file URLs\" toggle is off. Quote Chrome's own label for that toggle in this locale."
+  },
   "errBlankPage": {
     "message": "इस पेज में स्क्रॉल करने योग्य सामग्री नहीं है।",
     "description": "Capture error: nothing scrollable to capture."

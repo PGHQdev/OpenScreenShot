@@ -382,6 +382,21 @@ async function runCapture(mode: CaptureMode, repeatRegion: boolean): Promise<voi
     });
     return;
   }
+  // Chrome refuses script injection on file:// pages until the user turns on
+  // "Allow access to file URLs", and the raw failure only says "Cannot access
+  // contents of the page". Firefox always answers false here, so skip it there.
+  if (
+    !IS_FIREFOX &&
+    tab.url?.startsWith('file:') &&
+    !(await chrome.extension.isAllowedFileSchemeAccess())
+  ) {
+    broadcast({
+      type: 'CAPTURE_ERROR',
+      code: 'file-access',
+      message: chrome.i18n.getMessage('errFileAccess'),
+    });
+    return;
+  }
   const delaySeconds = normalizeCaptureDelay((await getSettings()).captureDelay);
   if (delaySeconds > 0) {
     if (countdownActive) return; // one countdown at a time — ignore extra requests

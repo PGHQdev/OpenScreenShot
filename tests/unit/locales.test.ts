@@ -64,6 +64,7 @@ const MINIMUM_KEYS = [
   'ratePromptLater',
   'errNoTab',
   'errProtectedPage',
+  'errFileAccess',
   'errBlankPage',
   'errTooLarge',
   'errNoRegion',

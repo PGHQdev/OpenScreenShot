@@ -46,6 +46,7 @@ export interface CaptureComplete {
 
 export type CaptureErrorCode =
   | 'protected-page'
+  | 'file-access'
   | 'blank-page'
   | 'too-large'
   | 'no-region'
