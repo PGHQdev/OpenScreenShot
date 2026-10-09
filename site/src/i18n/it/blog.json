@@ -1,0 +1,18 @@
+{
+  "label": "Blog e guide",
+  "index": {
+    "title": "Guide agli screenshot per persone e sviluppatori — OpenScreenShot",
+    "description": "Impara la cattura a pagina intera, l'esportazione PDF e l'oscuramento degli screenshot, o automatizza screenshot PNG con la CLI e il server MCP di OpenScreenShot.",
+    "heading": "Rendi utili i tuoi screenshot.",
+    "lead": "Cattura una pagina, spiega un problema o automatizza un flusso di lavoro ripetibile. Parti dall'attività che devi portare a termine."
+  },
+  "audiences": {
+    "everyday": "Screenshot di tutti i giorni",
+    "developers": "Sviluppatori e agenti"
+  },
+  "byline": "Di",
+  "next": {
+    "heading": "Continua",
+    "body": "<a href=\"/docs/\">Leggi la documentazione</a>, <a href=\"/blog/\">sfoglia tutte le guide</a> o <a href=\"/support/\">ricevi aiuto con una cattura</a>."
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "meta": {
+    "title": "OpenScreenShot vs GoFullPage vs FullPage Capture",
+    "description": "전체 페이지 스크린샷 확장 프로그램 세 가지의 사실 기반 비교: 스토어 등록 상태, 오픈 소스, 상시 사이트 접근, 원클릭 캡처, 무료 주석, PDF, 탭 녹화."
+  },
+  "label": "비교",
+  "heading": "OpenScreenShot vs GoFullPage vs FullPage Capture",
+  "lead": "GoFullPage는 2026년 8월에 삭제된 뒤 Chrome 웹 스토어에 다시 등록되었고 이제 Firefox용으로도 제공되지만, 코드는 2018년부터 비공개입니다. OpenScreenShot은 직접 검증할 수 있는 오픈 소스 전체 페이지 스크린샷 도구입니다. FullPage Capture는 설치 시 모든 웹사이트에 대한 접근 권한을 요청하는 비공개 확장 프로그램입니다.",
+  "asOf": "2026년 10월 9일 기준 사실이며, 각 스토어 등록 정보, 각 확장 프로그램의 매니페스트, 각 개발사 사이트를 근거로 합니다. GoFullPage가 2018년부터 비공개 포크라는 내용은 GoFullPage 자체 FAQ에서 가져왔습니다.",
+  "columns": {
+    "feature": "",
+    "oss": "OpenScreenShot",
+    "fpc": "FullPage Capture",
+    "gfp": "GoFullPage"
+  },
+  "rows": [
+    {
+      "feature": "Chrome 웹 스토어 등록",
+      "oss": "예",
+      "fpc": "예",
+      "gfp": "예, 8월 삭제 후 2026년 9월 10일 복구"
+    },
+    {
+      "feature": "Firefox Add-ons 등록",
+      "oss": "예",
+      "fpc": "아니요",
+      "gfp": "예, 2026년 9월부터"
+    },
+    {
+      "feature": "가격",
+      "oss": "무료",
+      "fpc": "무료, Pro 연 $19",
+      "gfp": "무료, Premium 연 $12"
+    },
+    {
+      "feature": "오픈 소스",
+      "oss": "예 — MIT, 공개",
+      "fpc": "아니요",
+      "gfp": "이전 저장소만 공개, 2018년부터 비공개 포크"
+    },
+    {
+      "feature": "상시 사이트 접근",
+      "oss": "없음",
+      "fpc": "모든 사이트",
+      "gfp": "설치 시 없음"
+    },
+    {
+      "feature": "원클릭 전체 페이지",
+      "oss": "예",
+      "fpc": "예",
+      "gfp": "예"
+    },
+    {
+      "feature": "주석, 블러, 자르기",
+      "oss": "무료",
+      "fpc": "무료",
+      "gfp": "유료"
+    },
+    {
+      "feature": "PDF 부가 기능",
+      "oss": "무료",
+      "fpc": "무료, 검색 가능한 PDF는 Pro",
+      "gfp": "스마트 페이지 분할은 유료"
+    },
+    {
+      "feature": "탭 녹화",
+      "oss": "무료",
+      "fpc": "아니요",
+      "gfp": "아니요"
+    },
+    {
+      "feature": "읽을 수 있는 소스",
+      "oss": "github.com/pghqdev/OpenScreenShot",
+      "fpc": "없음",
+      "gfp": "예전 GitHub 저장소, 배포 중인 바이너리와 다름"
+    }
+  ],
+  "cta": {
+    "addToChrome": "Chrome에 추가",
+    "starOnGithub": "GitHub에서 스타 주기"
+  }
+}

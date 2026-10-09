@@ -1,0 +1,18 @@
+{
+  "label": "部落格與指南",
+  "index": {
+    "title": "給一般使用者與開發者的截圖指南 — OpenScreenShot",
+    "description": "學習整頁擷取、PDF 匯出和截圖遮蔽，或用 OpenScreenShot CLI 和 MCP 伺服器自動擷取 PNG 截圖。",
+    "heading": "讓截圖派上用場。",
+    "lead": "擷取頁面、說明問題，或把重複的工作流程自動化。從你需要完成的工作開始。"
+  },
+  "audiences": {
+    "everyday": "日常截圖",
+    "developers": "開發者與 AI 代理"
+  },
+  "byline": "作者",
+  "next": {
+    "heading": "繼續閱讀",
+    "body": "<a href=\"/docs/\">閱讀說明文件</a>、<a href=\"/blog/\">瀏覽所有指南</a>，或<a href=\"/support/\">取得擷取方面的協助</a>。"
+  }
+}

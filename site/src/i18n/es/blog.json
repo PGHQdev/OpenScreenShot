@@ -1,0 +1,18 @@
+{
+  "label": "Blog y guías",
+  "index": {
+    "title": "Guías de capturas para personas y desarrolladores — OpenScreenShot",
+    "description": "Aprende a hacer capturas de página completa, exportarlas a PDF y ocultar datos, o automatiza capturas PNG con la CLI y el servidor MCP de OpenScreenShot.",
+    "heading": "Haz que tus capturas sirvan.",
+    "lead": "Captura una página, explica un problema o automatiza un flujo de trabajo repetible. Empieza por la tarea que necesitas terminar."
+  },
+  "audiences": {
+    "everyday": "Capturas del día a día",
+    "developers": "Desarrolladores y agentes"
+  },
+  "byline": "Por",
+  "next": {
+    "heading": "Sigue leyendo",
+    "body": "<a href=\"/docs/\">Lee la documentación</a>, <a href=\"/blog/\">explora todas las guías</a> u <a href=\"/support/\">obtén ayuda con una captura</a>."
+  }
+}

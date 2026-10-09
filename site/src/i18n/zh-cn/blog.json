@@ -1,0 +1,18 @@
+{
+  "label": "博客与指南",
+  "index": {
+    "title": "面向普通用户和开发者的截图指南 — OpenScreenShot",
+    "description": "了解整页截图、PDF 导出和截图打码，或用 OpenScreenShot CLI 和 MCP 服务器自动截取 PNG 截图。",
+    "heading": "让截图发挥作用。",
+    "lead": "截取页面、说明问题，或把重复的流程自动化。从你需要完成的任务开始。"
+  },
+  "audiences": {
+    "everyday": "日常截图",
+    "developers": "开发者与智能体"
+  },
+  "byline": "作者",
+  "next": {
+    "heading": "继续阅读",
+    "body": "<a href=\"/docs/\">阅读文档</a>、<a href=\"/blog/\">浏览所有指南</a>，或<a href=\"/support/\">获取截图帮助</a>。"
+  }
+}

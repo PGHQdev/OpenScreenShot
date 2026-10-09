@@ -1,0 +1,25 @@
+{
+  "sections": {
+    "alternatives": {
+      "label": "Alternatives",
+      "title": "Alternatives aux extensions de capture d’écran, comparées — OpenScreenShot",
+      "description": "Comparaisons factuelles d’OpenScreenShot avec d’autres outils de capture et d’enregistrement : prix, autorisations, open source et points forts de chacun.",
+      "heading": "Vous cherchez une alternative ?",
+      "lead": "Chaque page compare OpenScreenShot à un autre outil sur des faits vérifiables : prix, autorisations, code source et fonctionnalités. Nous développons OpenScreenShot, c’est pourquoi nous citons nos sources."
+    },
+    "full-page-screenshot": {
+      "label": "Captures de page entière par navigateur",
+      "title": "Comment faire une capture de page entière dans chaque navigateur — OpenScreenShot",
+      "description": "Les méthodes intégrées de capture de page entière de Chrome, Edge, Firefox, Safari, Brave, Opera, Vivaldi et Arc : raccourcis, limites et option d’extension.",
+      "heading": "Captures de page entière, navigateur par navigateur.",
+      "lead": "La plupart des navigateurs peuvent capturer une page entière sans extension, mais chacun cache cette fonction à un endroit différent. Trouvez votre navigateur pour les étapes intégrées, les limites et les cas où une extension aide."
+    },
+    "use-cases": {
+      "label": "Cas d’usage",
+      "title": "Des captures d’écran pour des tâches concrètes — OpenScreenShot",
+      "description": "Des procédures de capture pas à pas pour les rapports de bug, les revues de design, la documentation et plus encore, avec une extension de capture gratuite et locale.",
+      "heading": "Des captures adaptées à la tâche.",
+      "lead": "Une capture n’est utile que si le lecteur comprend le message. Ces procédures montrent le mode de capture, les annotations et l’export qui conviennent à chaque tâche."
+    }
+  }
+}

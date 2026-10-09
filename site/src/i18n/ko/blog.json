@@ -1,0 +1,18 @@
+{
+  "label": "블로그 및 가이드",
+  "index": {
+    "title": "일반 사용자와 개발자를 위한 스크린샷 가이드 — OpenScreenShot",
+    "description": "전체 페이지 캡처, PDF 내보내기, 스크린샷 가리기를 알아보거나 OpenScreenShot CLI와 MCP 서버로 PNG 스크린샷을 자동화하세요.",
+    "heading": "스크린샷을 쓸모 있게.",
+    "lead": "페이지를 캡처하고, 문제를 설명하고, 반복되는 작업 흐름을 자동화하세요. 끝내야 할 작업부터 시작하세요."
+  },
+  "audiences": {
+    "everyday": "일상 스크린샷",
+    "developers": "개발자 및 에이전트"
+  },
+  "byline": "작성자",
+  "next": {
+    "heading": "더 알아보기",
+    "body": "<a href=\"/docs/\">문서 읽기</a>, <a href=\"/blog/\">모든 가이드 보기</a>, 또는 <a href=\"/support/\">캡처 관련 도움 받기</a>."
+  }
+}

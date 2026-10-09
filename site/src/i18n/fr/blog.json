@@ -1,0 +1,18 @@
+{
+  "label": "Blog et guides",
+  "index": {
+    "title": "Guides de capture d’écran pour tous et pour les développeurs — OpenScreenShot",
+    "description": "Apprenez la capture de page entière, l’export PDF et le masquage, ou automatisez des captures PNG avec la CLI et le serveur MCP d’OpenScreenShot.",
+    "heading": "Des captures d’écran utiles.",
+    "lead": "Capturez une page, expliquez un problème ou automatisez une tâche répétitive. Commencez par la tâche que vous devez terminer."
+  },
+  "audiences": {
+    "everyday": "Captures au quotidien",
+    "developers": "Développeurs et agents"
+  },
+  "byline": "Par",
+  "next": {
+    "heading": "Pour aller plus loin",
+    "body": "<a href=\"/docs/\">Lisez la documentation</a>, <a href=\"/blog/\">parcourez tous les guides</a> ou <a href=\"/support/\">obtenez de l’aide pour une capture</a>."
+  }
+}

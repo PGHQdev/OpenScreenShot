@@ -1,0 +1,25 @@
+{
+  "sections": {
+    "alternatives": {
+      "label": "Alternativen",
+      "title": "Alternativen zu Screenshot-Erweiterungen im Vergleich — OpenScreenShot",
+      "description": "Sachliche Vergleiche von OpenScreenShot mit anderen Screenshot- und Aufnahme-Tools: Preis, Berechtigungen, Open Source und was jedes gut kann.",
+      "heading": "Suchst du eine Alternative?",
+      "lead": "Jede Seite vergleicht OpenScreenShot mit einem anderen Tool anhand von Fakten, die du prüfen kannst: Preis, Berechtigungen, Quellcode und Funktionen. Wir entwickeln OpenScreenShot, deshalb verlinken wir unsere Quellen."
+    },
+    "full-page-screenshot": {
+      "label": "Ganzseiten-Screenshots nach Browser",
+      "title": "Ganzseiten-Screenshots in jedem Browser aufnehmen — OpenScreenShot",
+      "description": "Eingebaute Wege für Ganzseiten-Screenshots in Chrome, Edge, Firefox, Safari, Brave, Opera, Vivaldi und Arc, mit Kürzeln, Grenzen und einer Erweiterung als Option.",
+      "heading": "Ganzseiten-Screenshots, Browser für Browser.",
+      "lead": "Die meisten Browser können eine ganze Seite ohne Erweiterung aufnehmen, doch jeder versteckt die Funktion an einer anderen Stelle. Finde deinen Browser für die eingebauten Schritte, die Grenzen und wann eine Erweiterung hilft."
+    },
+    "use-cases": {
+      "label": "Anwendungsfälle",
+      "title": "Screenshot-Abläufe für echte Aufgaben — OpenScreenShot",
+      "description": "Schritt-für-Schritt-Abläufe für Bug-Reports, Design-Reviews, Dokumentation und mehr, mit einer kostenlosen, lokalen Screenshot-Erweiterung.",
+      "heading": "Screenshots für die jeweilige Aufgabe.",
+      "lead": "Ein Screenshot nützt nur, wenn der Leser versteht, worum es geht. Diese Abläufe zeigen, welcher Aufnahmemodus, welche Anmerkungen und welcher Export zu jeder Aufgabe passen."
+    }
+  }
+}

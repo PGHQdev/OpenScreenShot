@@ -1,0 +1,25 @@
+{
+  "sections": {
+    "alternatives": {
+      "label": "替代方案",
+      "title": "截图扩展替代方案对比 — OpenScreenShot",
+      "description": "OpenScreenShot 与其他截图和录屏工具的客观对比：价格、权限、是否开源，以及各自擅长的功能。",
+      "heading": "在找替代方案？",
+      "lead": "每个页面都基于可核实的事实，把 OpenScreenShot 与另一款工具进行比较：价格、权限、源代码和功能。OpenScreenShot 是我们开发的，因此我们附上了信息来源。"
+    },
+    "full-page-screenshot": {
+      "label": "各浏览器整页截图",
+      "title": "如何在各浏览器中截取整页截图 — OpenScreenShot",
+      "description": "Chrome、Edge、Firefox、Safari、Brave、Opera、Vivaldi 和 Arc 的内置整页截图方法，含快捷键、限制和扩展方案。",
+      "heading": "整页截图，逐个浏览器介绍。",
+      "lead": "大多数浏览器无需扩展就能截取整个页面，但各自把这个功能藏在不同的地方。找到你的浏览器，查看内置步骤、限制，以及何时用扩展更合适。"
+    },
+    "use-cases": {
+      "label": "使用场景",
+      "title": "面向实际任务的截图流程 — OpenScreenShot",
+      "description": "使用免费的本地截图扩展，按步骤完成缺陷报告、设计审阅、文档编写等任务的截图流程。",
+      "heading": "为手头的工作截图。",
+      "lead": "只有读者看懂要点，截图才有用。这些流程说明了每项任务适合哪种截图模式、标注和导出方式。"
+    }
+  }
+}

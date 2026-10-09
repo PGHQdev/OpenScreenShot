@@ -1,0 +1,82 @@
+{
+  "meta": {
+    "title": "OpenScreenShot vs GoFullPage vs FullPage Capture",
+    "description": "三款整页截图扩展的客观对比：商店上架情况、是否开源、常驻网站访问权限、一键截图、免费标注、PDF 和标签页录制。"
+  },
+  "label": "对比",
+  "heading": "OpenScreenShot vs GoFullPage vs FullPage Capture",
+  "lead": "GoFullPage 在 2026 年 8 月被下架后已重新上架 Chrome 应用商店，现在也提供 Firefox 版，但其代码自 2018 年起就不再公开。OpenScreenShot 是可供你审查的开源整页截图工具。FullPage Capture 是一款闭源扩展，安装时会请求访问所有网站。",
+  "asOf": "信息截至 2026 年 10 月 9 日，来自各商店页面、各扩展的清单文件以及厂商自己的网站。GoFullPage 自 2018 年起为私有分支一事，出自其自己的常见问题。",
+  "columns": {
+    "feature": "",
+    "oss": "OpenScreenShot",
+    "fpc": "FullPage Capture",
+    "gfp": "GoFullPage"
+  },
+  "rows": [
+    {
+      "feature": "已上架 Chrome 应用商店",
+      "oss": "是",
+      "fpc": "是",
+      "gfp": "是，8 月下架后于 2026 年 9 月 10 日恢复"
+    },
+    {
+      "feature": "已上架 Firefox Add-ons",
+      "oss": "是",
+      "fpc": "否",
+      "gfp": "是，自 2026 年 9 月起"
+    },
+    {
+      "feature": "价格",
+      "oss": "免费",
+      "fpc": "免费；Pro 每年 $19",
+      "gfp": "免费；Premium 每年 $12"
+    },
+    {
+      "feature": "开源",
+      "oss": "是 — MIT，公开",
+      "fpc": "否",
+      "gfp": "仅有早期仓库；自 2018 年起为私有分支"
+    },
+    {
+      "feature": "常驻网站访问权限",
+      "oss": "无",
+      "fpc": "所有网站",
+      "gfp": "安装时无"
+    },
+    {
+      "feature": "一键整页截图",
+      "oss": "是",
+      "fpc": "是",
+      "gfp": "是"
+    },
+    {
+      "feature": "标注、模糊、裁剪",
+      "oss": "免费",
+      "fpc": "免费",
+      "gfp": "付费"
+    },
+    {
+      "feature": "PDF 附加功能",
+      "oss": "免费",
+      "fpc": "免费；可搜索 PDF 需 Pro",
+      "gfp": "智能分页需付费"
+    },
+    {
+      "feature": "标签页录制",
+      "oss": "免费",
+      "fpc": "否",
+      "gfp": "否"
+    },
+    {
+      "feature": "可读的源代码",
+      "oss": "github.com/pghqdev/OpenScreenShot",
+      "fpc": "无",
+      "gfp": "旧的 GitHub 仓库，并非实际发布的版本"
+    }
+  ],
+  "cta": {
+    "addToChrome": "添加至 Chrome",
+    "starOnGithub": "在 GitHub 上加星标"
+  }
+}

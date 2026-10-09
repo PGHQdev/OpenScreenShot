@@ -1,0 +1,82 @@
+{
+  "meta": {
+    "title": "OpenScreenShot vs GoFullPage vs FullPage Capture",
+    "description": "ページ全体のスクリーンショット拡張機能 3 つを事実に基づいて比較。ストアでの公開状況、オープンソース、常時のサイト アクセス、ワンクリック キャプチャ、無料の注釈、PDF、タブの録画。"
+  },
+  "label": "比較",
+  "heading": "OpenScreenShot vs GoFullPage vs FullPage Capture",
+  "lead": "GoFullPage は 2026年8月に削除された後、Chrome ウェブストア に復帰し、現在は Firefox 版も提供されていますが、そのコードは 2018 年から非公開です。OpenScreenShot は、自分で監査できるオープンソースのページ全体のスクリーンショット ツールです。FullPage Capture は、インストール時にすべてのウェブサイトへのアクセスを求めるクローズドな拡張機能です。",
+  "asOf": "2026年10月9日時点の情報です。各ストアの掲載ページ、各拡張機能のマニフェスト、各開発元のサイトに基づいています。GoFullPage が 2018 年から非公開のフォークであることは、同社の FAQ によるものです。",
+  "columns": {
+    "feature": "",
+    "oss": "OpenScreenShot",
+    "fpc": "FullPage Capture",
+    "gfp": "GoFullPage"
+  },
+  "rows": [
+    {
+      "feature": "Chrome ウェブストア で公開",
+      "oss": "あり",
+      "fpc": "あり",
+      "gfp": "あり。8 月の削除後、2026年9月10日に復帰"
+    },
+    {
+      "feature": "Firefox Add-ons で公開",
+      "oss": "あり",
+      "fpc": "なし",
+      "gfp": "あり。2026年9月から"
+    },
+    {
+      "feature": "価格",
+      "oss": "無料",
+      "fpc": "無料。Pro は年 $19",
+      "gfp": "無料。Premium は年 $12"
+    },
+    {
+      "feature": "オープンソース",
+      "oss": "はい — MIT、公開",
+      "fpc": "いいえ",
+      "gfp": "元になったリポジトリのみ。2018 年から非公開でフォーク"
+    },
+    {
+      "feature": "常時のサイト アクセス",
+      "oss": "なし",
+      "fpc": "すべてのサイト",
+      "gfp": "インストール時はなし"
+    },
+    {
+      "feature": "ワンクリックでページ全体",
+      "oss": "あり",
+      "fpc": "あり",
+      "gfp": "あり"
+    },
+    {
+      "feature": "注釈、ぼかし、切り抜き",
+      "oss": "無料",
+      "fpc": "無料",
+      "gfp": "有料"
+    },
+    {
+      "feature": "PDF の追加機能",
+      "oss": "無料",
+      "fpc": "無料。検索可能な PDF は Pro",
+      "gfp": "スマートなページ分割は有料"
+    },
+    {
+      "feature": "タブの録画",
+      "oss": "無料",
+      "fpc": "なし",
+      "gfp": "なし"
+    },
+    {
+      "feature": "読めるソースコード",
+      "oss": "github.com/pghqdev/OpenScreenShot",
+      "fpc": "なし",
+      "gfp": "古い GitHub。配布中のバイナリとは別物"
+    }
+  ],
+  "cta": {
+    "addToChrome": "Chrome に追加",
+    "starOnGithub": "GitHub でスター"
+  }
+}

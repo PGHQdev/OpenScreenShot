@@ -1,0 +1,18 @@
+{
+  "label": "Blog & Anleitungen",
+  "index": {
+    "title": "Screenshot-Anleitungen für Nutzer und Entwickler — OpenScreenShot",
+    "description": "Lerne Ganzseiten-Aufnahme, PDF-Export und das Schwärzen von Screenshots, oder automatisiere PNG-Screenshots mit der CLI und dem MCP-Server von OpenScreenShot.",
+    "heading": "Mach Screenshots nützlich.",
+    "lead": "Nimm eine Seite auf, erkläre ein Problem oder automatisiere einen wiederholbaren Ablauf. Beginne mit der Aufgabe, die du erledigen musst."
+  },
+  "audiences": {
+    "everyday": "Screenshots im Alltag",
+    "developers": "Entwickler & Agenten"
+  },
+  "byline": "Von",
+  "next": {
+    "heading": "Weiterlesen",
+    "body": "<a href=\"/docs/\">Lies die Dokumentation</a>, <a href=\"/blog/\">sieh dir alle Anleitungen an</a> oder <a href=\"/support/\">hol dir Hilfe bei einer Aufnahme</a>."
+  }
+}

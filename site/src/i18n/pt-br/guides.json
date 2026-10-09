@@ -1,0 +1,25 @@
+{
+  "sections": {
+    "alternatives": {
+      "label": "Alternativas",
+      "title": "Alternativas de extensões de captura de tela, comparadas — OpenScreenShot",
+      "description": "Comparações factuais do OpenScreenShot com outras ferramentas de captura e gravação: preço, permissões, código aberto e os pontos fortes de cada uma.",
+      "heading": "Procurando uma alternativa?",
+      "lead": "Cada página compara o OpenScreenShot com outra ferramenta em fatos que você pode verificar: preço, permissões, código-fonte e recursos. Nós fazemos o OpenScreenShot, por isso indicamos nossas fontes."
+    },
+    "full-page-screenshot": {
+      "label": "Capturas de página inteira por navegador",
+      "title": "Como fazer uma captura de página inteira em qualquer navegador — OpenScreenShot",
+      "description": "Métodos nativos de captura de página inteira no Chrome, Edge, Firefox, Safari, Brave, Opera, Vivaldi e Arc, com atalhos, limites e uma opção de extensão.",
+      "heading": "Capturas de página inteira, navegador por navegador.",
+      "lead": "A maioria dos navegadores captura uma página inteira sem extensão, mas cada um esconde o recurso em um lugar diferente. Encontre seu navegador para ver os passos nativos, os limites e quando uma extensão ajuda."
+    },
+    "use-cases": {
+      "label": "Casos de uso",
+      "title": "Fluxos de captura de tela para tarefas reais — OpenScreenShot",
+      "description": "Fluxos de captura de tela passo a passo para relatórios de bugs, revisões de design, documentação e mais, com uma extensão de captura local e gratuita.",
+      "heading": "Capturas de tela para cada tarefa.",
+      "lead": "Uma captura de tela só é útil se o leitor entende a mensagem. Estes fluxos mostram qual modo de captura, quais anotações e qual exportação servem para cada tarefa."
+    }
+  }
+}

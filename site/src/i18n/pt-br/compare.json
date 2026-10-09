@@ -1,0 +1,82 @@
+{
+  "meta": {
+    "title": "OpenScreenShot vs GoFullPage vs FullPage Capture",
+    "description": "Uma comparação factual das três extensões de captura de página inteira: status na loja, código aberto, acesso permanente a sites, captura em um clique, anotação grátis, PDF e gravação de abas."
+  },
+  "label": "Comparação",
+  "heading": "OpenScreenShot vs GoFullPage vs FullPage Capture",
+  "lead": "O GoFullPage voltou à Chrome Web Store depois de ser removido em agosto de 2026 e agora também está disponível para Firefox, mas o código dele é privado desde 2018. O OpenScreenShot é a captura de página inteira de código aberto que você pode auditar. O FullPage Capture é uma extensão de código fechado que pede acesso a todos os sites na instalação.",
+  "asOf": "Fatos de 9 de out. de 2026, com base na página de cada extensão na loja, no manifesto de cada extensão e nos sites dos próprios fornecedores. O fork privado do GoFullPage desde 2018 consta no FAQ dele.",
+  "columns": {
+    "feature": "",
+    "oss": "OpenScreenShot",
+    "fpc": "FullPage Capture",
+    "gfp": "GoFullPage"
+  },
+  "rows": [
+    {
+      "feature": "Na Chrome Web Store",
+      "oss": "Sim",
+      "fpc": "Sim",
+      "gfp": "Sim, restaurado em 10 de set. de 2026 após uma remoção em agosto"
+    },
+    {
+      "feature": "No Firefox Add-ons",
+      "oss": "Sim",
+      "fpc": "Não",
+      "gfp": "Sim, desde set. de 2026"
+    },
+    {
+      "feature": "Preço",
+      "oss": "Grátis",
+      "fpc": "Grátis; Pro por US$ 19 por ano",
+      "gfp": "Grátis; Premium por US$ 12 por ano"
+    },
+    {
+      "feature": "Código aberto",
+      "oss": "Sim — MIT, público",
+      "fpc": "Não",
+      "gfp": "Só o repositório original; fork privado desde 2018"
+    },
+    {
+      "feature": "Acesso permanente a sites",
+      "oss": "Nenhum",
+      "fpc": "Todos os sites",
+      "gfp": "Nenhum na instalação"
+    },
+    {
+      "feature": "Página inteira em um clique",
+      "oss": "Sim",
+      "fpc": "Sim",
+      "gfp": "Sim"
+    },
+    {
+      "feature": "Anotar, desfocar, recortar",
+      "oss": "Grátis",
+      "fpc": "Grátis",
+      "gfp": "Pago"
+    },
+    {
+      "feature": "Extras de PDF",
+      "oss": "Grátis",
+      "fpc": "Grátis; PDF pesquisável no Pro",
+      "gfp": "Divisão inteligente de páginas é paga"
+    },
+    {
+      "feature": "Gravação de abas",
+      "oss": "Grátis",
+      "fpc": "Não",
+      "gfp": "Não"
+    },
+    {
+      "feature": "Código-fonte legível",
+      "oss": "github.com/pghqdev/OpenScreenShot",
+      "fpc": "Nenhum",
+      "gfp": "GitHub antigo, que não corresponde ao binário publicado"
+    }
+  ],
+  "cta": {
+    "addToChrome": "Adicionar ao Chrome",
+    "starOnGithub": "Dar estrela no GitHub"
+  }
+}

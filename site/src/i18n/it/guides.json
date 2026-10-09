@@ -1,0 +1,25 @@
+{
+  "sections": {
+    "alternatives": {
+      "label": "Alternative",
+      "title": "Alternative alle estensioni per screenshot a confronto — OpenScreenShot",
+      "description": "Confronti basati sui fatti tra OpenScreenShot e altri strumenti per screenshot e registrazione: prezzo, permessi, open source e cosa fa bene ciascuno.",
+      "heading": "Cerchi un'alternativa?",
+      "lead": "Ogni pagina confronta OpenScreenShot con un altro strumento su fatti che puoi verificare: prezzo, permessi, codice sorgente e funzioni. OpenScreenShot è un nostro prodotto, quindi citiamo le nostre fonti."
+    },
+    "full-page-screenshot": {
+      "label": "Screenshot a pagina intera per browser",
+      "title": "Come fare uno screenshot a pagina intera in ogni browser — OpenScreenShot",
+      "description": "I metodi integrati per screenshot a pagina intera in Chrome, Edge, Firefox, Safari, Brave, Opera, Vivaldi e Arc, con scorciatoie, limiti e un'estensione.",
+      "heading": "Screenshot a pagina intera, browser per browser.",
+      "lead": "La maggior parte dei browser può catturare una pagina intera senza estensioni, ma ognuno nasconde la funzione in un posto diverso. Trova il tuo browser per i passaggi integrati, i limiti e i casi in cui un'estensione aiuta."
+    },
+    "use-cases": {
+      "label": "Casi d'uso",
+      "title": "Flussi di lavoro con gli screenshot per attività reali — OpenScreenShot",
+      "description": "Flussi di lavoro passo passo con gli screenshot per segnalazioni di bug, revisioni di design, documentazione e altro, con un'estensione gratuita che lavora in locale.",
+      "heading": "Screenshot per il lavoro che devi fare.",
+      "lead": "Uno screenshot è utile solo se chi lo legge capisce il punto. Questi flussi di lavoro mostrano quale modalità di cattura, quali annotazioni e quale esportazione si adattano a ogni attività."
+    }
+  }
+}
