@@ -23,9 +23,9 @@
     "heading": "Capturer une image",
     "intro": "Cliquez sur l’icône OpenScreenShot dans la barre d’outils et la capture pleine page démarre — sans menu intermédiaire. Tout s’exécute localement dans votre navigateur. Il y a quatre façons de lancer une capture :",
     "ways": [
-      "<strong>L’icône de la barre d’outils</strong> — un clic capture la page entière. Désactivez <strong>Un clic sur l’icône capture la page entière</strong> dans les paramètres pour retrouver le sélecteur de modes ; le clic droit sur l’icône donne les autres modes et les paramètres.",
-      "<strong>Un raccourci clavier</strong> — <kbd>Ctrl+Shift+S</kbd> pour la page entière, <kbd>Alt+Shift+V</kbd> pour la zone visible, <kbd>Ctrl+Shift+E</kbd> pour une zone. Sur macOS : <kbd>⌘⇧S</kbd>, <kbd>⌥⇧V</kbd> et <kbd>⌘⇧E</kbd>. Modifiez-les sur <code>chrome://extensions/shortcuts</code>.",
-      "<strong>Le menu contextuel</strong> — le sous-menu OpenScreenShot sur n’importe quelle page propose les trois mêmes modes et les Paramètres.",
+      "<strong>L’icône de la barre d’outils</strong> — un clic capture la page entière. Désactivez <strong>Mode Express en un clic</strong> dans les paramètres pour retrouver le sélecteur de modes ; le clic droit sur l’icône donne les autres modes et les paramètres.",
+      "<strong>Un raccourci clavier</strong> — <kbd>Ctrl+Shift+S</kbd> pour la page entière, <kbd>Alt+Shift+V</kbd> pour la zone visible, <kbd>Ctrl+Shift+E</kbd> pour une zone. Sur macOS : <kbd>⌘⇧S</kbd>, <kbd>⌥⇧V</kbd> et <kbd>⌘⇧E</kbd>. Capturer un élément n’a pas de raccourci par défaut. Définissez ou modifiez chacun d’eux sur <code>chrome://extensions/shortcuts</code>.",
+      "<strong>Le menu contextuel</strong> — le sous-menu OpenScreenShot sur n’importe quelle page propose les quatre mêmes modes et les Paramètres.",
       "<strong>Répéter la zone</strong> — le pied du popup et le menu du clic droit recapturent le dernier rectangle de zone. Les deux entrées apparaissent une fois que vous avez sélectionné une zone."
     ],
     "delay": "La ligne <strong>Délai</strong> du popup retient une capture pendant 3, 5 ou 10 secondes, et le badge de la barre d’outils affiche le compte à rebours. Utilisez-la pour les états de survol, les menus déroulants et les infobulles qui se ferment dès que vous cliquez ailleurs."
@@ -34,7 +34,7 @@
     "heading": "Modes de capture",
     "full": {
       "title": "Page entière",
-      "body": "Capture toute la page défilante et l’assemble en une seule image. L’extension fait défiler la page écran par écran, capture chaque tuile et les composite ensemble. Les en-têtes fixes sont capturés sur la première tuile et composités une seule fois en haut. Les pages qui font défiler un élément interne plutôt que la fenêtre fonctionnent aussi."
+      "body": "Capture toute la page défilante et l’assemble en une seule image. L’extension fait défiler la page écran par écran, capture chaque tuile et les composite ensemble. Les en-têtes fixes sont capturés sur la première tuile et composités une seule fois en haut. Les pages qui font défiler un élément interne plutôt que la fenêtre fonctionnent aussi. Une page plus haute qu’une seule image (32 000 pixels d’appareil) est enregistrée en six images au maximum : Télécharger nomme chaque partie, et Éditeur ou Presse-papiers ouvre chaque partie dans son propre onglet d’éditeur."
     },
     "visible": {
       "title": "Zone visible",
@@ -43,6 +43,10 @@
     "region": {
       "title": "Zone sélectionnée",
       "body": "Cliquez-glissez pour tracer un rectangle. Des poignées de redimensionnement apparaissent sur chaque bord et chaque coin. Utilisez les flèches pour déplacer la sélection pixel par pixel, ou maintenez <kbd>Shift</kbd> pour la déplacer de dix pixels à la fois. Appuyez sur <kbd>Enter</kbd> pour confirmer ou <kbd>Esc</kbd> pour annuler."
+    },
+    "element": {
+      "title": "Élément",
+      "body": "Survolez la page pour sélectionner une carte, un graphique, un tableau, une image ou un autre élément, puis cliquez ou appuyez sur <kbd>Enter</kbd> pour capturer exactement ses limites. <kbd>↑</kbd> sélectionne l’élément parent, <kbd>↓</kbd> l’enfant, et <kbd>←</kbd>/<kbd>→</kbd> les éléments voisins. Si l’élément n’est pas entièrement visible, le sélecteur propose à la place une capture de page entière."
     }
   },
   "afterCapture": {
@@ -60,8 +64,8 @@
     "intro": "L’éditeur s’ouvre dans un onglet complet et charge la capture la plus récente depuis le stockage local. Chaque outil a un raccourci d’une lettre.",
     "tools": [
       "<strong>Sélection</strong> <kbd>V</kbd> — déplacer, redimensionner ou supprimer n’importe quelle annotation. Double-cliquez sur un calque de texte pour le rééditer.",
-      "<strong>Rectangle</strong> <kbd>R</kbd> — tracer un rectangle à bordure.",
-      "<strong>Flèche</strong> <kbd>A</kbd> — tracer une flèche directionnelle.",
+      "<strong>Forme</strong> <kbd>R</kbd> — tracer un rectangle, un rectangle arrondi, un ovale ou un triangle. <strong>Remplissage</strong> choisit aucun remplissage ou un remplissage plein dans la couleur du trait ; maintenez <kbd>Shift</kbd> pour des côtés égaux, et un ovale devient un cercle.",
+      "<strong>Flèche</strong> <kbd>A</kbd> — tracer une flèche directionnelle avec une pointe pleine, ouverte, double ou en point. Faites glisser la poignée ronde du milieu pour la courber.",
       "<strong>Ligne</strong> <kbd>L</kbd> — la flèche sans pointe.",
       "<strong>Crayon</strong> <kbd>P</kbd> — dessin à main levée.",
       "<strong>Surligneur</strong> <kbd>H</kbd> — un trait à main levée translucide.",
@@ -70,13 +74,14 @@
       "<strong>Flou</strong> <kbd>B</kbd> — masquer du contenu sensible par un flou doux, une mosaïque grossière ou un aplat opaque. L’aplat opaque résiste à la recompression.",
       "<strong>Spotlight</strong> <kbd>O</kbd> — des découpes en rectangle, rectangle arrondi ou ellipse qui fusionnent en un seul calque assombri.",
       "<strong>Pipette</strong> <kbd>I</kbd> — prélever une couleur dans la capture. Elle échantillonne ce que vous voyez : une couleur dans un spotlight ou sur un dégradé Beautify se prélève telle qu’elle apparaît. La pastille de la ligne de couleurs ouvre le sélecteur plein écran de Chrome pour tout ce qui est hors du canevas.",
-      "<strong>Recadrer</strong> <kbd>C</kbd> — rogner l’image à une zone sélectionnée."
+      "<strong>Recadrer</strong> <kbd>C</kbd> — rogner l’image à une zone sélectionnée.",
+      "<strong>Cut</strong> <kbd>X</kbd> — marquer des bandes horizontales sur une longue capture et les retirer, avec un aperçu en direct."
     ],
-    "outro": "Maintenez <kbd>Shift</kbd> pendant le tracé pour des rectangles carrés et des lignes et flèches à 45°. La barre de style porte une palette de 8 couleurs sur <kbd>1</kbd>–<kbd>8</kbd>, une couleur personnalisée, les couleurs récentes, trois épaisseurs de trait et un réglage de taille de police. Vos choix sont mémorisés d’une session à l’autre. Annuler et rétablir : <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>, ou <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd> sur macOS."
+    "outro": "Maintenez <kbd>Shift</kbd> pendant le tracé pour des formes à côtés égaux et des lignes et flèches à 45°. La barre de style porte une palette de 8 couleurs sur <kbd>1</kbd>–<kbd>8</kbd>, une couleur personnalisée, les couleurs récentes, quatre épaisseurs de trait qui s’adaptent à la taille de la capture et un réglage de taille de police. Vos choix sont mémorisés d’une session à l’autre. Faites glisser les outils dans la barre latérale pour placer vos favoris en premier, ou déplacez l’outil qui a le focus avec <kbd>Alt+↑</kbd> / <kbd>Alt+↓</kbd>. Annuler et rétablir : <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>, ou <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd> sur macOS."
   },
   "beautify": {
     "heading": "Beautify",
-    "body": "Le panneau <strong>Beautify</strong> de la barre du haut habille la capture pour le partage : curseurs de marges, de rayon des coins et d’ombre portée, plus six dégradés prédéfinis, une couleur unie personnalisée ou un fond transparent. Le cadre s’affiche en direct et suit dans chaque export, le presse-papiers et le PDF."
+    "body": "Le panneau <strong>Beautify</strong> de la barre du haut habille la capture pour le partage : une <strong>Apparence</strong>, des curseurs <strong>Marges</strong>, <strong>Coins</strong> et <strong>Ombre</strong>, et un <strong>Fond</strong> composé de six dégradés, d’une couleur unie personnalisée ou de transparence. Le cadre s’affiche en direct et suit dans chaque export, le presse-papiers et le PDF."
   },
   "import": {
     "heading": "Annoter une image que vous avez déjà",
@@ -84,7 +89,7 @@
   },
   "export": {
     "heading": "Exporter",
-    "intro": "Cliquez sur <strong>Exporter</strong> dans la barre du haut de l’éditeur, ou appuyez sur <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>. Choisissez un format :",
+    "intro": "Cliquez sur <strong>Enregistrer l’image</strong> dans la barre du haut de l’éditeur, ou appuyez sur <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>, pour ouvrir la boîte <strong>Exporter</strong>. À côté, <strong>Copier</strong> place un PNG dans le presse-papiers et <strong>PDF</strong> enregistre un PDF en un seul clic. Dans la boîte de dialogue, choisissez un format :",
     "formats": [
       "<strong>PNG</strong> — sans perte, conserve la transparence.",
       "<strong>JPEG</strong> — fichiers plus légers, qualité réglable.",
@@ -113,7 +118,7 @@
     },
     "export": {
       "title": "Exporter",
-      "body": "L’export refait le rendu de la prise via canvas, en mélangeant les pistes et les effets que vous avez réglés, et télécharge un fichier WebM."
+      "body": "L’export refait le rendu de la prise via canvas, en mélangeant les pistes et les effets que vous avez réglés, et télécharge par défaut un fichier MP4 (H.264 et AAC), ou un fichier WebM depuis le sélecteur à côté du bouton. Le MP4 est limité à 4096×2304 : un onglet plus grand est donc réduit pour tenir. Les navigateurs sans enregistrement MP4 exportent uniquement en WebM."
     }
   },
   "drafts": {

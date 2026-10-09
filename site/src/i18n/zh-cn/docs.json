@@ -23,9 +23,9 @@
     "heading": "截取截图",
     "intro": "点击工具栏中的 OpenScreenShot 图标，整页截图立即开始，无需经过菜单。一切都在浏览器本地运行。开始截图有四种方式：",
     "ways": [
-      "<strong>工具栏图标</strong> — 一键截取整页。在设置中关闭<strong>点击图标即截取整页</strong>可恢复模式选择弹窗；右键点击图标可选择其他模式和设置。",
-      "<strong>键盘快捷键</strong>——整页 <kbd>Ctrl+Shift+S</kbd>，可见区域 <kbd>Alt+Shift+V</kbd>，区域 <kbd>Ctrl+Shift+E</kbd>。macOS 上分别是 <kbd>⌘⇧S</kbd>、<kbd>⌥⇧V</kbd> 和 <kbd>⌘⇧E</kbd>。可在 <code>chrome://extensions/shortcuts</code> 重新绑定。",
-      "<strong>右键菜单</strong> — 任意页面上的 OpenScreenShot 子菜单提供相同的三种模式和设置。",
+      "<strong>工具栏图标</strong> — 一键截取整页。在设置中关闭<strong>一键 Express 模式</strong>可恢复模式选择弹窗；右键点击图标可选择其他模式和设置。",
+      "<strong>键盘快捷键</strong>——整页 <kbd>Ctrl+Shift+S</kbd>，可见区域 <kbd>Alt+Shift+V</kbd>，区域 <kbd>Ctrl+Shift+E</kbd>。macOS 上分别是 <kbd>⌘⇧S</kbd>、<kbd>⌥⇧V</kbd> 和 <kbd>⌘⇧E</kbd>。截取元素没有默认快捷键。可在 <code>chrome://extensions/shortcuts</code> 设置或更改其中任何一个。",
+      "<strong>右键菜单</strong> — 任意页面上的 OpenScreenShot 子菜单提供相同的四种模式和设置。",
       "<strong>重复区域</strong>——弹出窗口底部和右键菜单可重新截取上一次的区域矩形。这两项在你选择过一次区域后出现。"
     ],
     "delay": "弹出窗口中的<strong>延时</strong>一行可将截图推迟 3、5 或 10 秒，工具栏徽章会倒计时。用它截取悬停状态、下拉菜单，以及你一点别处就会关闭的工具提示。"
@@ -34,7 +34,7 @@
     "heading": "截图模式",
     "full": {
       "title": "整页",
-      "body": "截取整个可滚动页面并拼接成一张图片。扩展逐视口滚动页面，截取每个分块，再合成到一起。固定页头在第一个分块中截取，只在顶部合成一次。滚动内部元素而非窗口的页面同样适用。"
+      "body": "截取整个可滚动页面并拼接成一张图片。扩展逐视口滚动页面，截取每个分块，再合成到一起。固定页头在第一个分块中截取，只在顶部合成一次。滚动内部元素而非窗口的页面同样适用。超过单张图片上限（32,000 设备像素）的页面最多保存为六张图片：下载会为每个部分分别命名，编辑器或剪贴板会在单独的编辑器标签页中打开每个部分。"
     },
     "visible": {
       "title": "可见区域",
@@ -43,6 +43,10 @@
     "region": {
       "title": "选定区域",
       "body": "点击并拖动画出一个矩形。每条边和每个角都有调整大小的控制点。用方向键将选区一次移动一个像素，按住 <kbd>Shift</kbd> 一次移动十个像素。按 <kbd>Enter</kbd> 确认，按 <kbd>Esc</kbd> 取消。"
+    },
+    "element": {
+      "title": "元素",
+      "body": "将鼠标悬停在页面上，选中卡片、图表、表格、图片或其他元素，然后点击或按 <kbd>Enter</kbd>，按其边界精确截取。<kbd>↑</kbd> 选择父元素，<kbd>↓</kbd> 选择子元素，<kbd>←</kbd>/<kbd>→</kbd> 选择相邻元素。如果元素没有完全可见，选择器会改为提供整页截图。"
     }
   },
   "afterCapture": {
@@ -60,8 +64,8 @@
     "intro": "编辑器在完整标签页中打开，并从本地存储加载最近一次截图。每个工具都有一个单字母快捷键。",
     "tools": [
       "<strong>选择</strong> <kbd>V</kbd>——移动、调整大小或删除任何标注。双击文字图层可重新编辑。",
-      "<strong>矩形</strong> <kbd>R</kbd>——绘制边框矩形。",
-      "<strong>箭头</strong> <kbd>A</kbd>——绘制方向箭头。",
+      "<strong>形状</strong> <kbd>R</kbd>——绘制矩形、圆角矩形、椭圆或三角形。<strong>填充</strong>可设为无或使用描边颜色的实心填充；按住 <kbd>Shift</kbd> 可使各边相等，椭圆因此变为圆形。",
+      "<strong>箭头</strong> <kbd>A</kbd>——绘制方向箭头，箭头样式可选实心、空心、双向或圆点。拖动中间的圆形控制点可将其弯成曲线。",
       "<strong>直线</strong> <kbd>L</kbd>——不带箭头的直线。",
       "<strong>画笔</strong> <kbd>P</kbd>——自由绘制。",
       "<strong>荧光笔</strong> <kbd>H</kbd>——半透明的自由笔迹。",
@@ -70,13 +74,14 @@
       "<strong>模糊</strong> <kbd>B</kbd>——用柔和模糊、粗块马赛克或不透明填充遮住敏感内容。不透明填充经重新压缩仍有效。",
       "<strong>Spotlight（聚光）</strong> <kbd>O</kbd>——矩形、圆角矩形或椭圆挖空区域，合并成一个变暗图层。",
       "<strong>吸管</strong> <kbd>I</kbd>——从截图中取色。它取样的是你看到的画面，因此聚光内或 Beautify 渐变上的颜色所见即所得。颜色行上的色块按钮可打开 Chrome 的全屏取色器，取画布之外的颜色。",
-      "<strong>裁剪</strong> <kbd>C</kbd>——把图片修剪到选定区域。"
+      "<strong>裁剪</strong> <kbd>C</kbd>——把图片修剪到选定区域。",
+      "<strong>Cut（裁切）</strong> <kbd>X</kbd>——在长截图上标记水平条带并将其删除，带实时预览。"
     ],
-    "outro": "绘制时按住 <kbd>Shift</kbd> 可得到正方形，以及吸附到 45° 的直线和箭头。样式栏提供绑定在 <kbd>1</kbd>–<kbd>8</kbd> 上的 8 色调色板、自定义颜色、最近使用的颜色、三种线宽和一个字号控件。你的选择会跨会话记住。撤销和重做是 <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>，macOS 上是 <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd>。"
+    "outro": "绘制时按住 <kbd>Shift</kbd> 可得到等边形状，以及吸附到 45° 的直线和箭头。样式栏提供绑定在 <kbd>1</kbd>–<kbd>8</kbd> 上的 8 色调色板、自定义颜色、最近使用的颜色、四种随截图尺寸缩放的线宽和一个字号控件。你的选择会跨会话记住。在工具条上拖动工具可把常用工具排到前面，也可以用 <kbd>Alt+↑</kbd> / <kbd>Alt+↓</kbd> 移动当前聚焦的工具。撤销和重做是 <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>，macOS 上是 <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd>。"
   },
   "beautify": {
     "heading": "Beautify",
-    "body": "顶栏中的 <strong>Beautify</strong> 面板为分享装点截图：内边距、圆角和阴影滑块，外加六种渐变预设、自定义纯色或透明背景。边框实时预览，并进入每次导出、剪贴板和 PDF。"
+    "body": "顶栏中的 <strong>Beautify</strong> 面板为分享装点截图：一个<strong>样式</strong>预设，外加<strong>内边距</strong>、<strong>圆角</strong>和<strong>阴影</strong>滑块，以及<strong>背景</strong>，可选六种渐变、自定义纯色或透明。边框实时预览，并进入每次导出、剪贴板和 PDF。"
   },
   "import": {
     "heading": "标注已有的图片",
@@ -84,7 +89,7 @@
   },
   "export": {
     "heading": "导出",
-    "intro": "点击编辑器顶栏的<strong>导出</strong>，或按 <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>。选择格式：",
+    "intro": "点击编辑器顶栏的<strong>保存图片</strong>，或按 <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>，打开<strong>导出</strong>对话框。旁边的<strong>复制</strong>会把 PNG 放到剪贴板，<strong>PDF</strong> 一键保存 PDF。在对话框中选择格式：",
     "formats": [
       "<strong>PNG</strong>——无损，保留透明。",
       "<strong>JPEG</strong>——文件更小，质量可调。",
@@ -113,7 +118,7 @@
     },
     "export": {
       "title": "导出",
-      "body": "导出会通过画布重新渲染素材，混入你设置的轨道和效果，并下载一个 WebM 文件。"
+      "body": "导出会通过画布重新渲染素材，混入你设置的轨道和效果，默认下载 MP4 文件（H.264 和 AAC），也可在按钮旁的选择器中改为 WebM。MP4 最大为 4096×2304，因此更大的标签页会缩小以适应。不支持 MP4 录制的浏览器只能导出 WebM。"
     }
   },
   "drafts": {

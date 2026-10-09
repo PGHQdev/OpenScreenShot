@@ -46,7 +46,7 @@
     },
     {
       "q": "Welche Dateiformate kann ich exportieren?",
-      "a": "<p>Speichere Screenshots im Editor als PNG, JPEG, WebP oder PDF. Du kannst ein Bild auch in die Zwischenablage kopieren. Tab-Aufnahmen werden als WebM exportiert. Alle Exporte werden lokal verarbeitet und haben kein Wasserzeichen.</p>",
+      "a": "<p>Speichere Screenshots im Editor als PNG, JPEG, WebP oder PDF. Du kannst ein Bild auch in die Zwischenablage kopieren. Tab-Aufnahmen werden als MP4 oder WebM exportiert. Alle Exporte werden lokal verarbeitet und haben kein Wasserzeichen.</p>",
       "home": true
     },
     {
@@ -65,12 +65,12 @@
     },
     {
       "q": "Wo werden meine Aufnahmen gespeichert?",
-      "a": "<p>Videoaufnahmen und ihr Ton werden während der Aufnahme im lokalen Browserspeicher abgelegt. Sie bleiben dort, bis du die Sitzung löschst. Exportiere eine WebM-Datei, um eine separate Kopie auf deinem Gerät zu behalten. Die Erweiterung lädt keine Aufnahmen hoch.</p>",
+      "a": "<p>Videoaufnahmen und ihr Ton werden während der Aufnahme im lokalen Browserspeicher abgelegt. Sie bleiben dort, bis du die Sitzung löschst. Exportiere eine MP4- oder WebM-Datei, um eine separate Kopie auf deinem Gerät zu behalten. Die Erweiterung lädt keine Aufnahmen hoch.</p>",
       "home": true
     },
     {
-      "q": "Warum WebM und nicht MP4?",
-      "a": "<p>Der Rekorder exportiert über <code>MediaRecorder</code>, der WebM in jedem Browser mit Tab-Aufnahme nativ schreibt. MP4-Export steht auf der <a href=\"/roadmap/\">Roadmap</a>, über WebCodecs und einen Muxer, neben dem WebM-Weg dieser Version.</p>"
+      "q": "In welchem Videoformat werden Aufnahmen exportiert?",
+      "a": "<p>Standardmäßig in MP4 (H.264-Video und AAC-Audio), das sich in den meisten Videoeditoren und Playern öffnen lässt. WebM findest du in der Auswahl neben der Schaltfläche „Exportieren“. Chromes <code>MediaRecorder</code> schreibt beide Formate; ein Browser ohne MP4-Aufnahme exportiert nur WebM. MP4-Frames sind auf 4096×2304 begrenzt, daher wird ein größerer Tab passend verkleinert.</p>"
     }
   ]
 }

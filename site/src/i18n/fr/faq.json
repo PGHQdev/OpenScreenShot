@@ -46,7 +46,7 @@
     },
     {
       "q": "Quels formats de fichiers puis-je exporter ?",
-      "a": "<p>Enregistrez vos captures en PNG, JPEG, WebP ou PDF depuis l’éditeur. Vous pouvez aussi copier une image dans le presse-papiers. Les enregistrements d’onglets s’exportent en WebM. Tous les exports sont traités en local et sans filigrane.</p>",
+      "a": "<p>Enregistrez vos captures en PNG, JPEG, WebP ou PDF depuis l’éditeur. Vous pouvez aussi copier une image dans le presse-papiers. Les enregistrements d’onglets s’exportent en MP4 ou en WebM. Tous les exports sont traités en local et sans filigrane.</p>",
       "home": true
     },
     {
@@ -65,12 +65,12 @@
     },
     {
       "q": "Où mes enregistrements sont-ils stockés ?",
-      "a": "<p>Les enregistrements et leur audio sont sauvegardés dans le stockage local du navigateur pendant l’enregistrement. Ils y restent jusqu’à ce que vous supprimiez la session. Exportez un fichier WebM pour conserver une copie séparée sur votre appareil. L’extension ne téléverse pas les enregistrements.</p>",
+      "a": "<p>Les enregistrements et leur audio sont sauvegardés dans le stockage local du navigateur pendant l’enregistrement. Ils y restent jusqu’à ce que vous supprimiez la session. Exportez un fichier MP4 ou WebM pour conserver une copie séparée sur votre appareil. L’extension ne téléverse pas les enregistrements.</p>",
       "home": true
     },
     {
-      "q": "Pourquoi WebM plutôt que MP4 ?",
-      "a": "<p>L’enregistreur exporte via <code>MediaRecorder</code>, qui écrit du WebM nativement dans chaque navigateur qui gère la capture d’onglet. L’export MP4 figure sur la <a href=\"/roadmap/\">feuille de route</a>, via WebCodecs et un muxeur, en complément de l’export WebM livré dans cette version.</p>"
+      "q": "Dans quel format vidéo les enregistrements s’exportent-ils ?",
+      "a": "<p>En MP4 (vidéo H.264 et audio AAC) par défaut, un format qui s’ouvre dans la plupart des éditeurs et lecteurs vidéo. Le WebM se trouve dans le sélecteur à côté du bouton Exporter. Le <code>MediaRecorder</code> de Chrome écrit les deux formats ; un navigateur sans enregistrement MP4 exporte uniquement en WebM. Les images MP4 sont limitées à 4096×2304 : un onglet plus grand est donc réduit pour tenir.</p>"
     }
   ]
 }

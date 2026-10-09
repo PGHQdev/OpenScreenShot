@@ -46,7 +46,7 @@
     },
     {
       "q": "¿En qué formatos puedo exportar?",
-      "a": "<p>Guarda capturas como PNG, JPEG, WebP o PDF desde el editor. También puedes copiar una imagen al portapapeles. Las grabaciones de pestañas se exportan como WebM. Todas las exportaciones se procesan localmente y no tienen marca de agua.</p>",
+      "a": "<p>Guarda capturas como PNG, JPEG, WebP o PDF desde el editor. También puedes copiar una imagen al portapapeles. Las grabaciones de pestañas se exportan como MP4 o WebM. Todas las exportaciones se procesan localmente y no tienen marca de agua.</p>",
       "home": true
     },
     {
@@ -65,12 +65,12 @@
     },
     {
       "q": "¿Dónde se guardan mis grabaciones?",
-      "a": "<p>Las grabaciones y su audio se guardan en el almacenamiento local del navegador mientras grabas. Permanecen allí hasta que eliminas la sesión. Exporta un archivo WebM para conservar una copia independiente en tu dispositivo. La extensión no sube las grabaciones a ningún servidor.</p>",
+      "a": "<p>Las grabaciones y su audio se guardan en el almacenamiento local del navegador mientras grabas. Permanecen allí hasta que eliminas la sesión. Exporta un archivo MP4 o WebM para conservar una copia independiente en tu dispositivo. La extensión no sube las grabaciones a ningún servidor.</p>",
       "home": true
     },
     {
-      "q": "¿Por qué WebM y no MP4?",
-      "a": "<p>La grabadora exporta con <code>MediaRecorder</code>, que escribe WebM de forma nativa en todos los navegadores que admiten la captura de pestañas. La exportación a MP4 está en la <a href=\"/roadmap/\">hoja de ruta</a>, con WebCodecs y un muxer, junto a la vía WebM que trae esta versión.</p>"
+      "q": "¿En qué formato de vídeo se exportan las grabaciones?",
+      "a": "<p>En MP4 (vídeo H.264 y audio AAC) por defecto, que se abre en la mayoría de los editores y reproductores de vídeo. WebM está en el selector junto al botón Exportar. El <code>MediaRecorder</code> de Chrome escribe ambos formatos; un navegador sin grabación MP4 solo exporta WebM. Los fotogramas MP4 están limitados a 4096×2304, así que una pestaña más grande se reduce para que quepa.</p>"
     }
   ]
 }

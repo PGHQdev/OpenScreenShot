@@ -23,9 +23,9 @@
     "heading": "Hacer una captura",
     "intro": "Haz clic en el icono de OpenScreenShot en la barra de herramientas y la captura de página completa comienza, sin menús de por medio. Todo se ejecuta localmente en tu navegador. Hay cuatro formas de iniciar una captura:",
     "ways": [
-      "<strong>El icono de la barra de herramientas</strong>: un clic captura la página completa. Desactiva <strong>Al hacer clic en el icono se captura la página completa</strong> en los ajustes para recuperar el selector de modos; con clic derecho en el icono tienes los demás modos y los ajustes.",
-      "<strong>Un atajo de teclado</strong> — <kbd>Ctrl+Shift+S</kbd> para la página completa, <kbd>Alt+Shift+V</kbd> para el área visible, <kbd>Ctrl+Shift+E</kbd> para una región. En macOS son <kbd>⌘⇧S</kbd>, <kbd>⌥⇧V</kbd> y <kbd>⌘⇧E</kbd>. Cámbialos en <code>chrome://extensions/shortcuts</code>.",
-      "<strong>El menú contextual</strong>: el submenú de OpenScreenShot en cualquier página ofrece los mismos tres modos y los Ajustes.",
+      "<strong>El icono de la barra de herramientas</strong>: un clic captura la página completa. Desactiva <strong>Modo Express de un clic</strong> en los ajustes para recuperar el selector de modos; con clic derecho en el icono tienes los demás modos y los ajustes.",
+      "<strong>Un atajo de teclado</strong> — <kbd>Ctrl+Shift+S</kbd> para la página completa, <kbd>Alt+Shift+V</kbd> para el área visible, <kbd>Ctrl+Shift+E</kbd> para una región. En macOS son <kbd>⌘⇧S</kbd>, <kbd>⌥⇧V</kbd> y <kbd>⌘⇧E</kbd>. Capturar elemento no tiene tecla por defecto. Asigna o cambia cualquiera de ellos en <code>chrome://extensions/shortcuts</code>.",
+      "<strong>El menú contextual</strong>: el submenú de OpenScreenShot en cualquier página ofrece los mismos cuatro modos y los Ajustes.",
       "<strong>Repetir región</strong> — el pie del menú y el menú del clic derecho vuelven a capturar el último rectángulo de región. Ambos elementos aparecen cuando ya has seleccionado una región."
     ],
     "delay": "La fila <strong>Retardo</strong> del menú retiene una captura durante 3, 5 o 10 segundos, y la insignia de la barra de herramientas cuenta atrás. Úsala para estados hover, menús desplegables y tooltips que se cierran en cuanto haces clic en otro sitio."
@@ -34,7 +34,7 @@
     "heading": "Modos de captura",
     "full": {
       "title": "Página completa",
-      "body": "Captura toda la página con su scroll y la une en una sola imagen. La extensión desplaza la página viewport a viewport, captura cada franja y las compone juntas. Las cabeceras fijas se capturan en la primera franja y se componen una sola vez arriba. Las páginas que desplazan un elemento interno en lugar de la ventana también funcionan."
+      "body": "Captura toda la página con su scroll y la une en una sola imagen. La extensión desplaza la página viewport a viewport, captura cada franja y las compone juntas. Las cabeceras fijas se capturan en la primera franja y se componen una sola vez arriba. Las páginas que desplazan un elemento interno en lugar de la ventana también funcionan. Una página más alta que una imagen (32 000 píxeles de dispositivo) se guarda como hasta seis imágenes: Descargar pone nombre a cada parte, y Editor o Portapapeles abre cada parte en su propia pestaña del editor."
     },
     "visible": {
       "title": "Área visible",
@@ -43,6 +43,10 @@
     "region": {
       "title": "Región",
       "body": "Haz clic y arrastra para dibujar un rectángulo. Aparecen tiradores de tamaño en cada borde y esquina. Usa las flechas del teclado para mover la selección píxel a píxel, o mantén <kbd>Shift</kbd> para moverla de diez en diez. Pulsa <kbd>Enter</kbd> para confirmar o <kbd>Esc</kbd> para cancelar."
+    },
+    "element": {
+      "title": "Elemento",
+      "body": "Pasa el cursor por la página para seleccionar una tarjeta, un gráfico, una tabla, una imagen u otro elemento, y luego haz clic o pulsa <kbd>Enter</kbd> para capturar sus límites exactos. <kbd>↑</kbd> selecciona el elemento padre, <kbd>↓</kbd> el hijo, y <kbd>←</kbd>/<kbd>→</kbd> los vecinos. Si el elemento no se ve por completo, el selector ofrece en su lugar una captura de página completa."
     }
   },
   "afterCapture": {
@@ -60,8 +64,8 @@
     "intro": "El editor se abre en una pestaña completa y carga la captura más reciente del almacenamiento local. Cada herramienta tiene un atajo de una letra.",
     "tools": [
       "<strong>Seleccionar</strong> <kbd>V</kbd> — mueve, redimensiona o elimina cualquier anotación. Doble clic en una capa de texto para reeditarla.",
-      "<strong>Rectángulo</strong> <kbd>R</kbd> — dibuja un rectángulo con borde.",
-      "<strong>Flecha</strong> <kbd>A</kbd> — dibuja una flecha direccional.",
+      "<strong>Forma</strong> <kbd>R</kbd> — dibuja un rectángulo, un rectángulo redondeado, un óvalo o un triángulo. <strong>Relleno</strong> elige sin relleno o un relleno sólido del color del trazo; mantén <kbd>Shift</kbd> para lados iguales, así un óvalo se convierte en un círculo.",
+      "<strong>Flecha</strong> <kbd>A</kbd> — dibuja una flecha direccional con punta rellena, abierta, doble o de punto. Arrastra el tirador redondo central para curvarla.",
       "<strong>Línea</strong> <kbd>L</kbd> — la flecha sin punta.",
       "<strong>Lápiz</strong> <kbd>P</kbd> — dibujo a mano alzada.",
       "<strong>Resaltador</strong> <kbd>H</kbd> — un trazo translúcido a mano alzada.",
@@ -70,13 +74,14 @@
       "<strong>Desenfocar</strong> <kbd>B</kbd> — oculta contenido sensible como desenfoque suave, mosaico grueso o relleno opaco. El relleno opaco resiste la recompresión.",
       "<strong>Spotlight</strong> <kbd>O</kbd> — recortes en rectángulo, rectángulo redondeado o elipse que se funden en una sola capa oscurecida.",
       "<strong>Cuentagotas</strong> <kbd>I</kbd> — toma un color de la captura. Muestrea lo que ves, así que un color dentro de un spotlight o sobre un degradado de Beautify se toma tal como se ve. El botón de muestra en la fila de color abre el selector de pantalla completa de Chrome para cualquier cosa fuera del lienzo.",
-      "<strong>Recortar</strong> <kbd>C</kbd> — recorta la imagen al área seleccionada."
+      "<strong>Recortar</strong> <kbd>C</kbd> — recorta la imagen al área seleccionada.",
+      "<strong>Cut</strong> <kbd>X</kbd> — marca franjas horizontales en una captura larga y elimínalas, con vista previa en vivo."
     ],
-    "outro": "Mantén <kbd>Shift</kbd> mientras dibujas para rectángulos cuadrados y líneas y flechas a 45°. La barra de estilo lleva una paleta de 8 colores en <kbd>1</kbd>–<kbd>8</kbd>, un color personalizado, colores recientes, tres grosores de trazo y un control de tamaño de fuente. Tus elecciones se recuerdan entre sesiones. Deshacer y rehacer son <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>, o <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd> en macOS."
+    "outro": "Mantén <kbd>Shift</kbd> mientras dibujas para formas de lados iguales y líneas y flechas a 45°. La barra de estilo lleva una paleta de 8 colores en <kbd>1</kbd>–<kbd>8</kbd>, un color personalizado, colores recientes, cuatro grosores de trazo que se adaptan al tamaño de la captura y un control de tamaño de fuente. Tus elecciones se recuerdan entre sesiones. Arrastra las herramientas en la barra lateral para poner primero tus favoritas, o mueve la herramienta enfocada con <kbd>Alt+↑</kbd> / <kbd>Alt+↓</kbd>. Deshacer y rehacer son <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>, o <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd> en macOS."
   },
   "beautify": {
     "heading": "Beautify",
-    "body": "El panel <strong>Beautify</strong> de la barra superior enmarca la captura para compartirla: deslizadores de relleno, radio de esquina y sombra, más seis degradados predefinidos, un color sólido personalizado o un fondo transparente. El marco se previsualiza en vivo y viaja a todas las exportaciones, al portapapeles y al PDF."
+    "body": "El panel <strong>Beautify</strong> de la barra superior enmarca la captura para compartirla: un <strong>Estilo</strong>, más los deslizadores <strong>Relleno</strong>, <strong>Esquinas</strong> y <strong>Sombra</strong>, y un <strong>Fondo</strong> de seis degradados, un color sólido personalizado o transparencia. El marco se previsualiza en vivo y viaja a todas las exportaciones, al portapapeles y al PDF."
   },
   "import": {
     "heading": "Anotar una imagen que ya tienes",
@@ -84,7 +89,7 @@
   },
   "export": {
     "heading": "Exportar",
-    "intro": "Haz clic en <strong>Exportar</strong> en la barra superior del editor, o pulsa <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>. Elige un formato:",
+    "intro": "Haz clic en <strong>Guardar imagen</strong> en la barra superior del editor, o pulsa <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>, para abrir el diálogo <strong>Exportar</strong>. A su lado, <strong>Copiar</strong> pone un PNG en el portapapeles y <strong>PDF</strong> guarda un PDF con un solo clic. En el diálogo, elige un formato:",
     "formats": [
       "<strong>PNG</strong> — sin pérdida, conserva la transparencia.",
       "<strong>JPEG</strong> — archivos más pequeños, calidad ajustable.",
@@ -100,7 +105,7 @@
     "start": {
       "title": "Iniciar una grabación",
       "p1": "La pestaña de grabación muestra una imagen de tu página y la vista en directo de tu cámara. Activa ahí <strong>Mic</strong>, <strong>Audio</strong> o <strong>Webcam</strong>; el aviso de permiso del navegador aparece en esa pestaña. Arrastra sobre la imagen para grabar solo una parte de la página, o deja <strong>Pestaña completa</strong>. Haz clic en <strong>Empezar a grabar</strong> y OpenScreenShot cambia a tu página.",
-      "p2": "Si una grabación navega a otro sitio, el registro de clics necesita el permiso opcional «Grabar en todos los sitios» (consulta <a href=\"#settings\">Ajustes</a>) para seguirla. Sin ese permiso, la insignia de la barra se vuelve ámbar y el zoom y los efectos de clic se detienen durante el resto del vídeo. El vídeo sigue grabándose."
+      "p2": "Si una grabación navega a otro sitio, el registro de clics necesita el permiso opcional «Grabar entre sitios» (consulta <a href=\"#settings\">Ajustes</a>) para seguirla. Sin ese permiso, la insignia de la barra se vuelve ámbar y el zoom y los efectos de clic se detienen durante el resto del vídeo. El vídeo sigue grabándose."
     },
     "bar": {
       "title": "La pestaña de grabación",
@@ -113,7 +118,7 @@
     },
     "export": {
       "title": "Exportar",
-      "body": "Exportar vuelve a renderizar la toma a través de canvas, mezclando las pistas y los efectos que configuraste, y descarga un archivo WebM."
+      "body": "Exportar vuelve a renderizar la toma a través de canvas, mezclando las pistas y los efectos que configuraste, y descarga por defecto un archivo MP4 (H.264 y AAC), o WebM desde el selector junto al botón. MP4 está limitado a 4096×2304, así que una pestaña más grande se reduce para que quepa. Los navegadores sin grabación MP4 solo exportan WebM."
     }
   },
   "drafts": {
@@ -144,7 +149,7 @@
       "<strong>Plantilla de nombre</strong> — haz clic en un chip para insertar <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code> o <code>{h}</code>. Una vista previa en vivo muestra el resultado. Con <code>/</code> se guarda en una carpeta dentro de Descargas, por ejemplo <code>Screenshots/{title}</code>."
     ],
     "storage": "Los ajustes viven en el almacenamiento local de este dispositivo. <strong>Restablecer valores</strong>, al final del panel, pide dos clics.",
-    "recordAcrossSites": "<strong>Grabar en todos los sitios</strong>: desactivado de forma predeterminada. Al activarlo se solicita el permiso de host opcional <code>&lt;all_urls&gt;</code>, para que el registro de clics pueda seguir a una pestaña que navega a otro sitio durante la grabación."
+    "recordAcrossSites": "<strong>Grabar entre sitios</strong>: desactivado de forma predeterminada. Al activarlo se solicita el permiso de host opcional <code>&lt;all_urls&gt;</code>, para que el registro de clics pueda seguir a una pestaña que navega a otro sitio durante la grabación."
   },
   "agentsCli": {
     "heading": "Agentes y CLI",

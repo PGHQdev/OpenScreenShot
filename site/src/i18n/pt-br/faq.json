@@ -46,7 +46,7 @@
     },
     {
       "q": "Em quais formatos posso exportar?",
-      "a": "<p>Salve capturas como PNG, JPEG, WebP ou PDF pelo editor. Você também pode copiar uma imagem para a área de transferência. As gravações de abas são exportadas como WebM. Todas as exportações são processadas localmente e não têm marca d’água.</p>",
+      "a": "<p>Salve capturas como PNG, JPEG, WebP ou PDF pelo editor. Você também pode copiar uma imagem para a área de transferência. As gravações de abas são exportadas como MP4 ou WebM. Todas as exportações são processadas localmente e não têm marca d’água.</p>",
       "home": true
     },
     {
@@ -65,12 +65,12 @@
     },
     {
       "q": "Onde minhas gravações ficam armazenadas?",
-      "a": "<p>As gravações e seus áudios são salvos no armazenamento local do navegador enquanto você grava. Eles ficam lá até você excluir a sessão. Exporte um arquivo WebM para manter uma cópia separada no seu dispositivo. A extensão não envia gravações para servidores.</p>",
+      "a": "<p>As gravações e seus áudios são salvos no armazenamento local do navegador enquanto você grava. Eles ficam lá até você excluir a sessão. Exporte um arquivo MP4 ou WebM para manter uma cópia separada no seu dispositivo. A extensão não envia gravações para servidores.</p>",
       "home": true
     },
     {
-      "q": "Por que WebM e não MP4?",
-      "a": "<p>O gravador exporta pelo <code>MediaRecorder</code>, que grava WebM nativamente em todo navegador com suporte à captura de abas. A exportação em MP4 está no <a href=\"/roadmap/\">roadmap</a>, via WebCodecs e um muxer, ao lado do caminho WebM desta versão.</p>"
+      "q": "Em qual formato de vídeo as gravações são exportadas?",
+      "a": "<p>MP4 (vídeo H.264 e áudio AAC) por padrão, que abre na maioria dos editores e players de vídeo. O WebM fica no seletor ao lado do botão Exportar. O <code>MediaRecorder</code> do Chrome grava os dois formatos; um navegador sem gravação em MP4 exporta apenas WebM. Os quadros MP4 são limitados a 4096×2304, então uma aba maior é reduzida para caber.</p>"
     }
   ]
 }

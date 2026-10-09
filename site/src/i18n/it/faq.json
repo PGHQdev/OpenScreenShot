@@ -46,7 +46,7 @@
     },
     {
       "q": "Quali formati di file posso esportare?",
-      "a": "<p>Salva gli screenshot in PNG, JPEG, WebP o PDF dall’editor. Puoi anche copiare un’immagine negli appunti. Le registrazioni delle schede vengono esportate in WebM. Tutte le esportazioni vengono elaborate in locale e non hanno filigrane.</p>",
+      "a": "<p>Salva gli screenshot in PNG, JPEG, WebP o PDF dall’editor. Puoi anche copiare un’immagine negli appunti. Le registrazioni delle schede vengono esportate in MP4 o WebM. Tutte le esportazioni vengono elaborate in locale e non hanno filigrane.</p>",
       "home": true
     },
     {
@@ -65,12 +65,12 @@
     },
     {
       "q": "Dove vengono salvate le mie registrazioni?",
-      "a": "<p>Le registrazioni e il loro audio vengono salvati nella memoria locale del browser mentre registri. Restano lì finché non elimini la sessione. Esporta un file WebM per conservare una copia separata sul tuo dispositivo. L’estensione non carica online le registrazioni.</p>",
+      "a": "<p>Le registrazioni e il loro audio vengono salvati nella memoria locale del browser mentre registri. Restano lì finché non elimini la sessione. Esporta un file MP4 o WebM per conservare una copia separata sul tuo dispositivo. L’estensione non carica online le registrazioni.</p>",
       "home": true
     },
     {
-      "q": "Perché WebM e non MP4?",
-      "a": "<p>Il registratore esporta tramite <code>MediaRecorder</code>, che scrive WebM in modo nativo in ogni browser che supporta la cattura della scheda. L'esportazione MP4 è nella <a href=\"/roadmap/\">roadmap</a>, via WebCodecs e un muxer, accanto al percorso WebM di questa versione.</p>"
+      "q": "In quale formato video vengono esportate le registrazioni?",
+      "a": "<p>MP4 (video H.264 e audio AAC) per impostazione predefinita, che si apre nella maggior parte degli editor e dei player video. WebM è nel selettore accanto al pulsante Esporta. Il <code>MediaRecorder</code> di Chrome scrive entrambi i formati; un browser senza registrazione MP4 esporta solo WebM. I fotogrammi MP4 sono limitati a 4096×2304, quindi una scheda più grande viene ridimensionata per rientrarci.</p>"
     }
   ]
 }

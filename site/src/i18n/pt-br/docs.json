@@ -23,9 +23,9 @@
     "heading": "Fazer uma captura de tela",
     "intro": "Clique no ícone do OpenScreenShot na barra de ferramentas e a captura de página inteira começa — sem menu no caminho. Tudo roda localmente no seu navegador. Há quatro formas de iniciar uma captura:",
     "ways": [
-      "<strong>O ícone da barra de ferramentas</strong> — um clique captura a página inteira. Desative <strong>Clicar no ícone captura a página inteira</strong> nas configurações para recuperar o seletor de modos; o clique direito no ícone traz os outros modos e as configurações.",
-      "<strong>Um atalho de teclado</strong> — <kbd>Ctrl+Shift+S</kbd> para a página inteira, <kbd>Alt+Shift+V</kbd> para a área visível, <kbd>Ctrl+Shift+E</kbd> para uma região. No macOS são <kbd>⌘⇧S</kbd>, <kbd>⌥⇧V</kbd> e <kbd>⌘⇧E</kbd>. Reatribua em <code>chrome://extensions/shortcuts</code>.",
-      "<strong>O menu de contexto</strong> — o submenu do OpenScreenShot em qualquer página oferece os mesmos três modos e as Configurações.",
+      "<strong>O ícone da barra de ferramentas</strong> — um clique captura a página inteira. Desative <strong>Modo Express de um clique</strong> nas configurações para recuperar o seletor de modos; o clique direito no ícone traz os outros modos e as configurações.",
+      "<strong>Um atalho de teclado</strong> — <kbd>Ctrl+Shift+S</kbd> para a página inteira, <kbd>Alt+Shift+V</kbd> para a área visível, <kbd>Ctrl+Shift+E</kbd> para uma região. No macOS são <kbd>⌘⇧S</kbd>, <kbd>⌥⇧V</kbd> e <kbd>⌘⇧E</kbd>. Capturar elemento não tem tecla padrão. Defina ou altere qualquer um deles em <code>chrome://extensions/shortcuts</code>.",
+      "<strong>O menu de contexto</strong> — o submenu do OpenScreenShot em qualquer página oferece os mesmos quatro modos e as Configurações.",
       "<strong>Repetir região</strong> — o rodapé do popup e o menu do botão direito recapturam o último retângulo de região. Os dois itens aparecem depois que você seleciona uma região."
     ],
     "delay": "A linha <strong>Atraso</strong> no popup segura a captura por 3, 5 ou 10 segundos, e o selo na barra de ferramentas faz a contagem regressiva. Use para estados de hover, menus suspensos e tooltips que fecham no momento em que você clica em outro lugar."
@@ -34,7 +34,7 @@
     "heading": "Modos de captura",
     "full": {
       "title": "Página inteira",
-      "body": "Captura toda a página com rolagem e a costura em uma única imagem. A extensão rola a página janela por janela, captura cada bloco e os compõe juntos. Cabeçalhos fixos são capturados no primeiro bloco e compostos uma única vez no topo. Páginas que rolam um elemento interno em vez da janela também funcionam."
+      "body": "Captura toda a página com rolagem e a costura em uma única imagem. A extensão rola a página janela por janela, captura cada bloco e os compõe juntos. Cabeçalhos fixos são capturados no primeiro bloco e compostos uma única vez no topo. Páginas que rolam um elemento interno em vez da janela também funcionam. Uma página mais alta do que uma imagem (32.000 pixels de dispositivo) é salva em até seis imagens: com Baixar, cada parte recebe um nome; com Editor ou Copiar, cada parte abre na própria aba do editor."
     },
     "visible": {
       "title": "Área visível",
@@ -43,6 +43,10 @@
     "region": {
       "title": "Região selecionada",
       "body": "Clique e arraste para desenhar um retângulo. Alças de redimensionamento aparecem em cada borda e canto. Use as teclas de seta para mover a seleção um pixel por vez, ou segure <kbd>Shift</kbd> para mover dez pixels por vez. Pressione <kbd>Enter</kbd> para confirmar ou <kbd>Esc</kbd> para cancelar."
+    },
+    "element": {
+      "title": "Elemento",
+      "body": "Passe o cursor sobre a página para selecionar um cartão, gráfico, tabela, imagem ou outro elemento, depois clique ou pressione <kbd>Enter</kbd> para capturar exatamente os limites dele. <kbd>↑</kbd> seleciona o elemento pai, <kbd>↓</kbd> o filho, e <kbd>←</kbd>/<kbd>→</kbd> os vizinhos. Se o elemento não estiver totalmente visível, o seletor oferece uma captura de página inteira."
     }
   },
   "afterCapture": {
@@ -60,8 +64,8 @@
     "intro": "O editor abre em uma aba inteira e carrega a captura mais recente do armazenamento local. Cada ferramenta tem um atalho de uma letra.",
     "tools": [
       "<strong>Selecionar</strong> <kbd>V</kbd> — mova, redimensione ou exclua qualquer anotação. Clique duas vezes em uma camada de texto para editá-la de novo.",
-      "<strong>Retângulo</strong> <kbd>R</kbd> — desenha um retângulo de contorno.",
-      "<strong>Seta</strong> <kbd>A</kbd> — desenha uma seta direcional.",
+      "<strong>Forma</strong> <kbd>R</kbd> — desenha um retângulo, retângulo arredondado, elipse ou triângulo. <strong>Preenchimento</strong> define nenhum preenchimento ou um preenchimento sólido na cor do traço; segure <kbd>Shift</kbd> para lados iguais, e a elipse vira um círculo.",
+      "<strong>Seta</strong> <kbd>A</kbd> — desenha uma seta direcional com ponta preenchida, aberta, dupla ou em ponto. Arraste a alça redonda do meio para curvá-la.",
       "<strong>Linha</strong> <kbd>L</kbd> — a seta sem ponta.",
       "<strong>Caneta</strong> <kbd>P</kbd> — desenho à mão livre.",
       "<strong>Marca-texto</strong> <kbd>H</kbd> — um traço translúcido à mão livre.",
@@ -70,13 +74,14 @@
       "<strong>Desfoque</strong> <kbd>B</kbd> — oculta conteúdo sensível como desfoque suave, mosaico grosso ou preenchimento opaco. O preenchimento opaco sobrevive à recompressão.",
       "<strong>Spotlight</strong> <kbd>O</kbd> — recortes em retângulo, retângulo arredondado ou elipse que se fundem em uma única camada escurecida.",
       "<strong>Conta-gotas</strong> <kbd>I</kbd> — pega uma cor da captura. Ele amostra o que você vê, então uma cor dentro de um spotlight ou em um gradiente do Beautify é capturada como aparece. O botão de amostra na linha de cores abre o seletor de tela inteira do Chrome para qualquer coisa fora do canvas.",
-      "<strong>Recortar</strong> <kbd>C</kbd> — apara a imagem para uma área selecionada."
+      "<strong>Recortar</strong> <kbd>C</kbd> — apara a imagem para uma área selecionada.",
+      "<strong>Cut</strong> <kbd>X</kbd> — marca faixas horizontais em uma captura longa e as remove, com prévia ao vivo."
     ],
-    "outro": "Segure <kbd>Shift</kbd> enquanto desenha para retângulos quadrados e linhas e setas a 45°. A barra de estilo traz uma paleta de 8 cores em <kbd>1</kbd>–<kbd>8</kbd>, uma cor personalizada, cores recentes, três espessuras de traço e um controle de tamanho de fonte. Suas escolhas são lembradas entre sessões. Desfazer e refazer são <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>, ou <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd> no macOS."
+    "outro": "Segure <kbd>Shift</kbd> enquanto desenha para formas com lados iguais e linhas e setas a 45°. A barra de estilo traz uma paleta de 8 cores em <kbd>1</kbd>–<kbd>8</kbd>, uma cor personalizada, cores recentes, quatro espessuras de traço que se ajustam ao tamanho da captura e um controle de tamanho de fonte. Suas escolhas são lembradas entre sessões. Arraste as ferramentas na barra lateral para colocar suas favoritas primeiro, ou mova a ferramenta em foco com <kbd>Alt+↑</kbd> / <kbd>Alt+↓</kbd>. Desfazer e refazer são <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>, ou <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd> no macOS."
   },
   "beautify": {
     "heading": "Beautify",
-    "body": "O painel <strong>Beautify</strong> na barra superior emoldura a captura para compartilhar: controles de margem interna, raio dos cantos e sombra, mais seis predefinições de gradiente, uma cor sólida personalizada ou um fundo transparente. O quadro tem prévia ao vivo e acompanha todas as exportações, a área de transferência e o PDF."
+    "body": "O painel <strong>Beautify</strong> na barra superior emoldura a captura para compartilhar: um <strong>Estilo</strong>, mais os controles <strong>Margem interna</strong>, <strong>Cantos</strong> e <strong>Sombra</strong> e um <strong>Fundo</strong> com seis gradientes, uma cor sólida personalizada ou transparência. O quadro tem prévia ao vivo e acompanha todas as exportações, a área de transferência e o PDF."
   },
   "import": {
     "heading": "Anotar uma imagem que você já tem",
@@ -84,7 +89,7 @@
   },
   "export": {
     "heading": "Exportar",
-    "intro": "Clique em <strong>Exportar</strong> na barra superior do editor, ou pressione <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>. Escolha um formato:",
+    "intro": "Clique em <strong>Salvar imagem</strong> na barra superior do editor, ou pressione <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>, para abrir o diálogo <strong>Exportar</strong>. Ao lado, <strong>Copiar</strong> coloca um PNG na área de transferência e <strong>PDF</strong> salva um PDF com um clique. No diálogo, escolha um formato:",
     "formats": [
       "<strong>PNG</strong> — sem perdas, mantém a transparência.",
       "<strong>JPEG</strong> — arquivos menores, qualidade ajustável.",
@@ -113,7 +118,7 @@
     },
     "export": {
       "title": "Exportar",
-      "body": "Exportar renderiza a tomada de novo via canvas, misturando as trilhas e os efeitos que você definiu, e baixa um arquivo WebM."
+      "body": "Exportar renderiza a tomada de novo via canvas, misturando as trilhas e os efeitos que você definiu, e baixa um arquivo MP4 (H.264 e AAC) por padrão, ou WebM pelo seletor ao lado do botão. O MP4 é limitado a 4096×2304, então uma aba maior é reduzida para caber. Navegadores sem gravação em MP4 exportam apenas WebM."
     }
   },
   "drafts": {

@@ -23,9 +23,9 @@
     "heading": "Einen Screenshot aufnehmen",
     "intro": "Klicke auf das OpenScreenShot-Symbol in der Symbolleiste und die Ganzseiten-Aufnahme startet — ohne Menü dazwischen. Alles läuft lokal in deinem Browser. Es gibt vier Wege, eine Aufnahme zu starten:",
     "ways": [
-      "<strong>Das Symbol in der Symbolleiste</strong> — ein Klick nimmt die ganze Seite auf. Schalte <strong>Klick auf das Symbol nimmt die ganze Seite auf</strong> in den Einstellungen aus, um das Auswahlmenü zurückzubekommen; Rechtsklick auf das Symbol öffnet die anderen Modi und Einstellungen.",
-      "<strong>Ein Tastenkürzel</strong> — <kbd>Ctrl+Shift+S</kbd> für die ganze Seite, <kbd>Alt+Shift+V</kbd> für den sichtbaren Bereich, <kbd>Ctrl+Shift+E</kbd> für einen Ausschnitt. Auf macOS sind es <kbd>⌘⇧S</kbd>, <kbd>⌥⇧V</kbd> und <kbd>⌘⇧E</kbd>. Ändere sie unter <code>chrome://extensions/shortcuts</code>.",
-      "<strong>Das Kontextmenü</strong> — das OpenScreenShot-Untermenü auf jeder Seite bietet dieselben drei Modi und die Einstellungen.",
+      "<strong>Das Symbol in der Symbolleiste</strong> — ein Klick nimmt die ganze Seite auf. Schalte <strong>Ein-Klick-Express-Modus</strong> in den Einstellungen aus, um das Auswahlmenü zurückzubekommen; Rechtsklick auf das Symbol öffnet die anderen Modi und Einstellungen.",
+      "<strong>Ein Tastenkürzel</strong> — <kbd>Ctrl+Shift+S</kbd> für die ganze Seite, <kbd>Alt+Shift+V</kbd> für den sichtbaren Bereich, <kbd>Ctrl+Shift+E</kbd> für einen Ausschnitt. Auf macOS sind es <kbd>⌘⇧S</kbd>, <kbd>⌥⇧V</kbd> und <kbd>⌘⇧E</kbd>. „Element erfassen“ hat kein Standardkürzel. Lege jedes Kürzel unter <code>chrome://extensions/shortcuts</code> fest oder ändere es.",
+      "<strong>Das Kontextmenü</strong> — das OpenScreenShot-Untermenü auf jeder Seite bietet dieselben vier Modi und die Einstellungen.",
       "<strong>Ausschnitt erneut</strong> — die Popup-Fußzeile und das Rechtsklick-Menü nehmen das letzte Ausschnitt-Rechteck noch einmal auf. Beide Einträge erscheinen, sobald du einmal einen Ausschnitt gewählt hast."
     ],
     "delay": "Die Zeile <strong>Timer</strong> im Popup hält eine Aufnahme 3, 5 oder 10 Sekunden zurück, und das Symbol-Badge zählt herunter. Nutze sie für Hover-Zustände, Dropdown-Menüs und Tooltips, die sich schließen, sobald du woanders klickst."
@@ -34,7 +34,7 @@
     "heading": "Aufnahmemodi",
     "full": {
       "title": "Ganze Seite",
-      "body": "Nimmt die ganze scrollbare Seite auf und setzt sie zu einem Bild zusammen. Die Erweiterung scrollt die Seite Viewport für Viewport, nimmt jede Kachel auf und fügt sie zusammen. Fixierte Kopfzeilen werden auf der ersten Kachel aufgenommen und einmal oben eingefügt. Seiten, die ein inneres Element statt des Fensters scrollen, funktionieren auch."
+      "body": "Nimmt die ganze scrollbare Seite auf und setzt sie zu einem Bild zusammen. Die Erweiterung scrollt die Seite Viewport für Viewport, nimmt jede Kachel auf und fügt sie zusammen. Fixierte Kopfzeilen werden auf der ersten Kachel aufgenommen und einmal oben eingefügt. Seiten, die ein inneres Element statt des Fensters scrollen, funktionieren auch. Eine Seite, die höher als ein Bild ist (32.000 Gerätepixel), wird als bis zu sechs Bilder gespeichert: „Speichern“ benennt jeden Teil, und „Editor“ oder „Kopieren“ öffnet jeden Teil in einem eigenen Editor-Tab."
     },
     "visible": {
       "title": "Sichtbarer Bereich",
@@ -43,6 +43,10 @@
     "region": {
       "title": "Ausschnitt",
       "body": "Klicke und ziehe, um ein Rechteck aufzuziehen. An jeder Kante und Ecke erscheinen Griffe zum Skalieren. Mit den Pfeiltasten verschiebst du die Auswahl pixelweise, mit gedrückter <kbd>Shift</kbd>-Taste in Schritten von zehn Pixeln. <kbd>Enter</kbd> bestätigt, <kbd>Esc</kbd> bricht ab."
+    },
+    "element": {
+      "title": "Element",
+      "body": "Fahre mit der Maus über die Seite, um eine Karte, ein Diagramm, eine Tabelle, ein Bild oder ein anderes Element auszuwählen, und klicke dann oder drücke <kbd>Enter</kbd>, um genau seine Grenzen aufzunehmen. <kbd>↑</kbd> wählt das übergeordnete Element, <kbd>↓</kbd> das untergeordnete und <kbd>←</kbd>/<kbd>→</kbd> die Nachbarn. Ist das Element nicht vollständig sichtbar, bietet die Auswahl stattdessen eine Ganzseiten-Aufnahme an."
     }
   },
   "afterCapture": {
@@ -60,8 +64,8 @@
     "intro": "Der Editor öffnet sich in einem vollen Tab und lädt die letzte Aufnahme aus dem lokalen Speicher. Jedes Werkzeug hat ein Kürzel aus einem Buchstaben.",
     "tools": [
       "<strong>Auswählen</strong> <kbd>V</kbd> — jede Anmerkung verschieben, skalieren oder löschen. Doppelklick auf eine Textebene bearbeitet sie erneut.",
-      "<strong>Rechteck</strong> <kbd>R</kbd> — ein Rahmen-Rechteck zeichnen.",
-      "<strong>Pfeil</strong> <kbd>A</kbd> — einen Richtungspfeil zeichnen.",
+      "<strong>Form</strong> <kbd>R</kbd> — ein Rechteck, ein abgerundetes Rechteck, ein Oval oder ein Dreieck zeichnen. <strong>Füllung</strong> setzt keine oder eine volle Füllung in der Linienfarbe; halte <kbd>Shift</kbd> für gleich lange Seiten, so wird aus einem Oval ein Kreis.",
+      "<strong>Pfeil</strong> <kbd>A</kbd> — einen Richtungspfeil mit gefüllter, offener, doppelter oder Punkt-Spitze zeichnen. Ziehe den runden Griff in der Mitte, um ihn zu einer Kurve zu biegen.",
       "<strong>Linie</strong> <kbd>L</kbd> — der Pfeil ohne Spitze.",
       "<strong>Stift</strong> <kbd>P</kbd> — Freihandzeichnen.",
       "<strong>Textmarker</strong> <kbd>H</kbd> — ein durchscheinender Freihandstrich.",
@@ -70,13 +74,14 @@
       "<strong>Unschärfe</strong> <kbd>B</kbd> — sensible Inhalte verbergen: weiche Unschärfe, grobes Mosaik oder eine deckende Füllung. Die deckende Füllung übersteht erneutes Komprimieren.",
       "<strong>Spotlight</strong> <kbd>O</kbd> — Rechteck-, abgerundete oder Ellipsen-Ausschnitte, die zu einer abgedunkelten Ebene verschmelzen.",
       "<strong>Pipette</strong> <kbd>I</kbd> — eine Farbe aus der Aufnahme übernehmen. Sie tastet ab, was du siehst, sodass eine Farbe in einem Spotlight oder auf einem Beautify-Verlauf so gewählt wird, wie sie aussieht. Das Farbfeld in der Farbzeile öffnet Chromes bildschirmweiten Wähler für alles außerhalb der Leinwand.",
-      "<strong>Zuschneiden</strong> <kbd>C</kbd> — das Bild auf einen gewählten Bereich beschneiden."
+      "<strong>Zuschneiden</strong> <kbd>C</kbd> — das Bild auf einen gewählten Bereich beschneiden.",
+      "<strong>Cut</strong> <kbd>X</kbd> — waagerechte Streifen auf einer langen Aufnahme markieren und mit Live-Vorschau entfernen."
     ],
-    "outro": "Halte <kbd>Shift</kbd> beim Zeichnen für quadratische Rechtecke und für Linien und Pfeile auf 45°. Die Stilleiste trägt eine 8-Farben-Palette auf <kbd>1</kbd>–<kbd>8</kbd>, eine eigene Farbe, zuletzt genutzte Farben, drei Linienstärken und einen Schriftgrößen-Regler. Deine Wahl bleibt über Sitzungen erhalten. Rückgängig und Wiederholen sind <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>, auf macOS <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd>."
+    "outro": "Halte <kbd>Shift</kbd> beim Zeichnen für gleichseitige Formen und für Linien und Pfeile auf 45°. Die Stilleiste trägt eine 8-Farben-Palette auf <kbd>1</kbd>–<kbd>8</kbd>, eine eigene Farbe, zuletzt genutzte Farben, vier Linienstärken, die mit der Größe der Aufnahme skalieren, und einen Schriftgrößen-Regler. Deine Wahl bleibt über Sitzungen erhalten. Ziehe Werkzeuge in der Leiste, um deine Favoriten nach vorn zu stellen, oder verschiebe das fokussierte Werkzeug mit <kbd>Alt+↑</kbd> / <kbd>Alt+↓</kbd>. Rückgängig und Wiederholen sind <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>, auf macOS <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd>."
   },
   "beautify": {
     "heading": "Beautify",
-    "body": "Das <strong>Beautify</strong>-Panel in der oberen Leiste rahmt den Screenshot fürs Teilen: Regler für Abstand, Eckenradius und Schatten, dazu sechs Verlaufs-Presets, eine eigene Farbe oder ein transparenter Hintergrund. Der Rahmen zeigt eine Live-Vorschau und wandert in jeden Export, die Zwischenablage und ins PDF."
+    "body": "Das <strong>Beautify</strong>-Panel in der oberen Leiste rahmt den Screenshot fürs Teilen: ein <strong>Look</strong>, dazu die Regler <strong>Abstand</strong>, <strong>Ecken</strong> und <strong>Schatten</strong> und ein <strong>Hintergrund</strong> aus sechs Verläufen, einer eigenen Farbe oder Transparenz. Der Rahmen zeigt eine Live-Vorschau und wandert in jeden Export, die Zwischenablage und ins PDF."
   },
   "import": {
     "heading": "Ein vorhandenes Bild kommentieren",
@@ -84,7 +89,7 @@
   },
   "export": {
     "heading": "Exportieren",
-    "intro": "Klicke auf <strong>Exportieren</strong> in der oberen Leiste des Editors oder drücke <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>. Wähle ein Format:",
+    "intro": "Klicke auf <strong>Bild speichern</strong> in der oberen Leiste des Editors oder drücke <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>, um den Dialog <strong>Exportieren</strong> zu öffnen. Daneben legt <strong>Kopieren</strong> ein PNG in die Zwischenablage, und <strong>PDF</strong> speichert mit einem Klick ein PDF. Wähle im Dialog ein Format:",
     "formats": [
       "<strong>PNG</strong> — verlustfrei, behält Transparenz.",
       "<strong>JPEG</strong> — kleinere Dateien, einstellbare Qualität.",
@@ -100,7 +105,7 @@
     "start": {
       "title": "Eine Aufnahme starten",
       "p1": "Der Aufnahme-Tab zeigt ein Bild deiner Seite und ein Live-Bild deiner Kamera. Schalte dort <strong>Mikro</strong>, <strong>Tab-Audio</strong> oder <strong>Webcam</strong> ein; die Berechtigungsabfrage deines Browsers erscheint in diesem Tab. Ziehe über das Bild, um nur einen Teil der Seite aufzunehmen, oder behalte <strong>Ganzer Tab</strong>. Klicke auf <strong>Aufnahme starten</strong>, und OpenScreenShot wechselt zu deiner Seite.",
-      "p2": "Wechselt eine Aufnahme zu einer anderen Website, braucht die Klickerfassung die optionale Berechtigung „Seitenübergreifend aufnehmen“ (siehe <a href=\"#settings\">Einstellungen</a>), um zu folgen. Ohne sie wird das Symbolleisten-Badge gelb, und Zoom und Klickeffekte fehlen im restlichen Video. Das Video selbst wird weiter aufgenommen."
+      "p2": "Wechselt eine Aufnahme zu einer anderen Website, braucht die Klickerfassung die optionale Berechtigung „Auf allen Websites“ (siehe <a href=\"#settings\">Einstellungen</a>), um zu folgen. Ohne sie wird das Symbolleisten-Badge gelb, und Zoom und Klickeffekte fehlen im restlichen Video. Das Video selbst wird weiter aufgenommen."
     },
     "bar": {
       "title": "Der Aufnahme-Tab",
@@ -113,7 +118,7 @@
     },
     "export": {
       "title": "Exportieren",
-      "body": "Der Export rendert den Take über Canvas neu, mischt die gewählten Spuren und Effekte hinein und lädt eine WebM-Datei herunter."
+      "body": "Der Export rendert den Take über Canvas neu, mischt die gewählten Spuren und Effekte hinein und lädt standardmäßig eine MP4-Datei (H.264 und AAC) herunter, oder WebM über die Auswahl neben der Schaltfläche. MP4 ist auf 4096×2304 begrenzt, daher wird ein größerer Tab passend verkleinert. Browser ohne MP4-Aufnahme exportieren nur WebM."
     }
   },
   "drafts": {
@@ -144,7 +149,7 @@
       "<strong>Dateinamen-Vorlage</strong> — klicke auf einen Token-Chip, um <code>{date}</code>, <code>{time}</code>, <code>{title}</code>, <code>{domain}</code>, <code>{w}</code> oder <code>{h}</code> einzufügen. Eine Live-Vorschau zeigt das Ergebnis. Mit <code>/</code> wird in einen Ordner unter Downloads gespeichert, z. B. <code>Screenshots/{title}</code>."
     ],
     "storage": "Einstellungen liegen im lokalen Speicher dieses Geräts. <strong>Zurücksetzen</strong> ganz unten im Panel braucht zwei Klicks.",
-    "recordAcrossSites": "<strong>Seitenübergreifend aufnehmen</strong> — standardmäßig aus. Beim Einschalten wird die optionale Host-Berechtigung <code>&lt;all_urls&gt;</code> angefragt, damit die Klickerfassung einem Tab folgen kann, der während der Aufnahme zu einer neuen Website wechselt."
+    "recordAcrossSites": "<strong>Auf allen Websites</strong> — standardmäßig aus. Beim Einschalten wird die optionale Host-Berechtigung <code>&lt;all_urls&gt;</code> angefragt, damit die Klickerfassung einem Tab folgen kann, der während der Aufnahme zu einer neuen Website wechselt."
   },
   "agentsCli": {
     "heading": "Agenten & CLI",

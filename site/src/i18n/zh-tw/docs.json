@@ -23,9 +23,9 @@
     "heading": "擷取截圖",
     "intro": "點一下工具列中的 OpenScreenShot 圖示，整頁擷取隨即開始，不經過任何選單。一切都在瀏覽器本機執行。開始擷取有四種方式：",
     "ways": [
-      "<strong>工具列圖示</strong> — 一鍵擷取整個網頁。在設定中關閉<strong>點一下圖示即擷取整個網頁</strong>即可恢復模式選擇彈窗；在圖示上按右鍵可選擇其他模式與設定。",
-      "<strong>鍵盤快速鍵</strong>——整個網頁 <kbd>Ctrl+Shift+S</kbd>、可見範圍 <kbd>Alt+Shift+V</kbd>、選取區域 <kbd>Ctrl+Shift+E</kbd>。macOS 上是 <kbd>⌘⇧S</kbd>、<kbd>⌥⇧V</kbd> 和 <kbd>⌘⇧E</kbd>。可到 <code>chrome://extensions/shortcuts</code> 重新綁定。",
-      "<strong>右鍵選單</strong> — 任何網頁上的 OpenScreenShot 子選單都提供相同的三種模式與設定。",
+      "<strong>工具列圖示</strong> — 一鍵擷取整個網頁。在設定中關閉<strong>一鍵 Express 模式</strong>即可恢復模式選擇彈窗；在圖示上按右鍵可選擇其他模式與設定。",
+      "<strong>鍵盤快速鍵</strong>——整個網頁 <kbd>Ctrl+Shift+S</kbd>、可見範圍 <kbd>Alt+Shift+V</kbd>、選取區域 <kbd>Ctrl+Shift+E</kbd>。macOS 上是 <kbd>⌘⇧S</kbd>、<kbd>⌥⇧V</kbd> 和 <kbd>⌘⇧E</kbd>。擷取元素沒有預設按鍵。可到 <code>chrome://extensions/shortcuts</code> 設定或變更任何一個快速鍵。",
+      "<strong>右鍵選單</strong> — 任何網頁上的 OpenScreenShot 子選單都提供相同的四種模式與設定。",
       "<strong>重複區域</strong>——彈出式視窗底部和右鍵選單可重新擷取上次的區域矩形。這兩個項目在你選取過區域後才會出現。"
     ],
     "delay": "彈出式視窗的「<strong>延遲</strong>」列可讓擷取等 3、5 或 10 秒，工具列徽章會倒數。適合用在懸停狀態、下拉選單，以及一點別處就關閉的提示框。"
@@ -34,7 +34,7 @@
     "heading": "擷取模式",
     "full": {
       "title": "整個網頁",
-      "body": "擷取整個可捲動的網頁並拼接成一張圖片。擴充功能逐個視窗高度捲動頁面，擷取每個圖塊，再合成在一起。固定式頁首在第一個圖塊被擷取，並且只在頂端合成一次。捲動的是內部元素而非視窗的頁面也可以。"
+      "body": "擷取整個可捲動的網頁並拼接成一張圖片。擴充功能逐個視窗高度捲動頁面，擷取每個圖塊，再合成在一起。固定式頁首在第一個圖塊被擷取，並且只在頂端合成一次。捲動的是內部元素而非視窗的頁面也可以。高度超過單張圖片上限（32,000 裝置像素）的頁面，最多會存成六張圖片：選「下載」時每個部分會分別命名，選「編輯器」或「剪貼簿」時每個部分會在各自的編輯器分頁中開啟。"
     },
     "visible": {
       "title": "可見範圍",
@@ -43,6 +43,10 @@
     "region": {
       "title": "選取區域",
       "body": "按住拖曳畫出矩形。每個邊和角都會出現調整控點。用方向鍵一次微調 1 像素，按住 <kbd>Shift</kbd> 一次移動 10 像素。按 <kbd>Enter</kbd> 確認，按 <kbd>Esc</kbd> 取消。"
+    },
+    "element": {
+      "title": "元素",
+      "body": "在頁面上移動滑鼠，選取卡片、圖表、表格、圖片或其他元素，然後點一下或按 <kbd>Enter</kbd>，即可精確擷取它的邊界範圍。<kbd>↑</kbd> 選取父元素，<kbd>↓</kbd> 選取子元素，<kbd>←</kbd>/<kbd>→</kbd> 選取相鄰的元素。如果元素沒有完全顯示，選取工具會改為提供整頁擷取。"
     }
   },
   "afterCapture": {
@@ -60,8 +64,8 @@
     "intro": "編輯器在完整分頁開啟，並從本機儲存空間載入最近一次擷取。每個工具都有一個字母快速鍵。",
     "tools": [
       "<strong>選取</strong> <kbd>V</kbd>——移動、調整大小或刪除任何註解。雙擊文字圖層可重新編輯。",
-      "<strong>矩形</strong> <kbd>R</kbd>——畫一個框線矩形。",
-      "<strong>箭頭</strong> <kbd>A</kbd>——畫一個有方向的箭頭。",
+      "<strong>形狀</strong> <kbd>R</kbd>——畫矩形、圓角矩形、橢圓或三角形。<strong>填色</strong>可設為無，或以線條顏色實心填滿；按住 <kbd>Shift</kbd> 可讓各邊等長，橢圓就會變成圓形。",
+      "<strong>箭頭</strong> <kbd>A</kbd>——畫一個有方向的箭頭，尖端可選實心、空心、雙向或圓點。拖曳中間的圓形控點可把它彎成曲線。",
       "<strong>直線</strong> <kbd>L</kbd>——沒有尖端的箭頭。",
       "<strong>畫筆</strong> <kbd>P</kbd>——自由手繪。",
       "<strong>螢光筆</strong> <kbd>H</kbd>——半透明的自由筆畫。",
@@ -70,13 +74,14 @@
       "<strong>模糊</strong> <kbd>B</kbd>——用柔和模糊、粗馬賽克或不透明填滿遮住敏感內容。不透明填滿在重新壓縮後仍然有效。",
       "<strong>Spotlight（聚光）</strong> <kbd>O</kbd>——矩形、圓角矩形或橢圓挖空，會合併成同一層變暗遮罩。",
       "<strong>滴管</strong> <kbd>I</kbd>——從擷取取色。它取樣的是你看到的畫面，所以聚光範圍內或美化漸層上的顏色都照所見取色。顏色列上的色票按鈕會開啟 Chrome 的全螢幕取色器，可取畫布以外的任何顏色。",
-      "<strong>裁切</strong> <kbd>C</kbd>——把圖片修剪成選取的範圍。"
+      "<strong>裁切</strong> <kbd>C</kbd>——把圖片修剪成選取的範圍。",
+      "<strong>Cut（剪除）</strong> <kbd>X</kbd>——在長擷取上標出水平區帶並將其移除，附即時預覽。"
     ],
-    "outro": "繪製時按住 <kbd>Shift</kbd> 可畫正方形，以及對齊 45° 的直線和箭頭。樣式列有對應 <kbd>1</kbd>–<kbd>8</kbd> 的 8 色調色盤、自訂顏色、最近使用的顏色、三種線寬和字級控制項。你的選擇會跨工作階段記住。復原和重做是 <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>，macOS 上是 <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd>。"
+    "outro": "繪製時按住 <kbd>Shift</kbd> 可畫出等邊的形狀，以及對齊 45° 的直線和箭頭。樣式列有對應 <kbd>1</kbd>–<kbd>8</kbd> 的 8 色調色盤、自訂顏色、最近使用的顏色、四種會依擷取大小縮放的線寬，以及字級控制項。你的選擇會跨工作階段記住。在工具欄上拖曳工具，即可把常用的工具排在前面，或用 <kbd>Alt+↑</kbd> / <kbd>Alt+↓</kbd> 移動目前聚焦的工具。復原和重做是 <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>，macOS 上是 <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd>。"
   },
   "beautify": {
     "heading": "Beautify（美化）",
-    "body": "頂欄的「<strong>Beautify（美化）</strong>」面板為截圖加上分享用的外框：邊距、圓角和陰影滑桿，加上六種漸層預設、自訂單色或透明背景。外框即時預覽，並帶進每次匯出、剪貼簿和 PDF。"
+    "body": "頂欄的「<strong>Beautify（美化）</strong>」面板為截圖加上分享用的外框：「<strong>風格</strong>」，加上「<strong>邊距</strong>」、「<strong>圓角</strong>」和「<strong>陰影</strong>」滑桿，以及由六種漸層、自訂單色或透明組成的「<strong>背景</strong>」。外框即時預覽，並帶進每次匯出、剪貼簿和 PDF。"
   },
   "import": {
     "heading": "註解你已有的圖片",
@@ -84,7 +89,7 @@
   },
   "export": {
     "heading": "匯出",
-    "intro": "點編輯器頂欄的「<strong>匯出</strong>」，或按 <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>。選擇格式：",
+    "intro": "點編輯器頂欄的「<strong>儲存圖片</strong>」，或按 <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>，即可開啟「<strong>匯出</strong>」對話框。旁邊的「<strong>複製</strong>」會把 PNG 放到剪貼簿，「<strong>PDF</strong>」則一鍵儲存 PDF。在對話框中選擇格式：",
     "formats": [
       "<strong>PNG</strong>——無損，保留透明。",
       "<strong>JPEG</strong>——檔案較小，品質可調。",
@@ -113,7 +118,7 @@
     },
     "export": {
       "title": "匯出",
-      "body": "匯出會透過畫布重新算繪整段錄影，混入你設定的音軌和效果，並下載一個 WebM 檔案。"
+      "body": "匯出會透過畫布重新算繪整段錄影，混入你設定的音軌和效果，預設下載 MP4 檔案（H.264 與 AAC），也可以從按鈕旁的選擇器改為 WebM。MP4 上限為 4096×2304，所以較大的分頁會縮小到符合上限。不支援 MP4 錄製的瀏覽器只能匯出 WebM。"
     }
   },
   "drafts": {

@@ -23,9 +23,9 @@
     "heading": "Cattura uno screenshot",
     "intro": "Fai clic sull’icona di OpenScreenShot nella barra degli strumenti e la cattura della pagina intera parte subito, senza menu di mezzo. Tutto gira in locale nel browser. Ci sono quattro modi per avviare una cattura:",
     "ways": [
-      "<strong>L’icona nella barra degli strumenti</strong> — un clic cattura la pagina intera. Disattiva <strong>Un clic sull’icona cattura la pagina intera</strong> nelle impostazioni per riavere il selettore delle modalità; con il clic destro sull’icona trovi le altre modalità e le impostazioni.",
-      "<strong>Una scorciatoia da tastiera</strong> — <kbd>Ctrl+Shift+S</kbd> per la pagina intera, <kbd>Alt+Shift+V</kbd> per l'area visibile, <kbd>Ctrl+Shift+E</kbd> per una regione. Su macOS sono <kbd>⌘⇧S</kbd>, <kbd>⌥⇧V</kbd> e <kbd>⌘⇧E</kbd>. Cambiale in <code>chrome://extensions/shortcuts</code>.",
-      "<strong>Il menu contestuale</strong> — il sottomenu OpenScreenShot su qualsiasi pagina offre le stesse tre modalità e le Impostazioni.",
+      "<strong>L’icona nella barra degli strumenti</strong> — un clic cattura la pagina intera. Disattiva <strong>Modalità Express con un clic</strong> nelle impostazioni per riavere il selettore delle modalità; con il clic destro sull’icona trovi le altre modalità e le impostazioni.",
+      "<strong>Una scorciatoia da tastiera</strong> — <kbd>Ctrl+Shift+S</kbd> per la pagina intera, <kbd>Alt+Shift+V</kbd> per l'area visibile, <kbd>Ctrl+Shift+E</kbd> per una regione. Su macOS sono <kbd>⌘⇧S</kbd>, <kbd>⌥⇧V</kbd> e <kbd>⌘⇧E</kbd>. Cattura elemento non ha un tasto predefinito. Imposta o cambia ognuna di esse in <code>chrome://extensions/shortcuts</code>.",
+      "<strong>Il menu contestuale</strong> — il sottomenu OpenScreenShot su qualsiasi pagina offre le stesse quattro modalità e le Impostazioni.",
       "<strong>Ripeti regione</strong> — il footer del popup e il menu del tasto destro ricatturano l'ultimo rettangolo di regione. Entrambe le voci appaiono dopo che hai selezionato una regione."
     ],
     "delay": "La riga <strong>Ritardo</strong> nel popup rimanda una cattura di 3, 5 o 10 secondi, e il badge sull'icona fa il conto alla rovescia. Usala per stati hover, menu a discesa e tooltip che si chiudono appena clicchi altrove."
@@ -34,7 +34,7 @@
     "heading": "Modalità di cattura",
     "full": {
       "title": "Pagina intera",
-      "body": "Cattura tutta la pagina scorrevole e la unisce in una sola immagine. L'estensione fa scorrere la pagina una schermata alla volta, cattura ogni porzione e le compone insieme. Le intestazioni fisse vengono catturate nella prima porzione e composte una sola volta in alto. Funzionano anche le pagine che fanno scorrere un elemento interno anziché la finestra."
+      "body": "Cattura tutta la pagina scorrevole e la unisce in una sola immagine. L'estensione fa scorrere la pagina una schermata alla volta, cattura ogni porzione e le compone insieme. Le intestazioni fisse vengono catturate nella prima porzione e composte una sola volta in alto. Funzionano anche le pagine che fanno scorrere un elemento interno anziché la finestra. Una pagina più alta di un'immagine (32.000 pixel del dispositivo) viene salvata in un massimo di sei immagini: Scarica dà un nome a ogni parte, mentre Editor o Appunti aprono ogni parte nella sua scheda dell'editor."
     },
     "visible": {
       "title": "Area visibile",
@@ -43,6 +43,10 @@
     "region": {
       "title": "Regione selezionata",
       "body": "Clicca e trascina per disegnare un rettangolo. Le maniglie di ridimensionamento appaiono su ogni lato e angolo. Usa i tasti freccia per spostare la selezione di un pixel alla volta, o tieni premuto <kbd>Shift</kbd> per spostarla di dieci pixel alla volta. Premi <kbd>Enter</kbd> per confermare o <kbd>Esc</kbd> per annullare."
+    },
+    "element": {
+      "title": "Elemento",
+      "body": "Passa il puntatore sulla pagina per selezionare un riquadro, un grafico, una tabella, un'immagine o un altro elemento, poi clicca o premi <kbd>Enter</kbd> per catturare esattamente i suoi limiti. <kbd>↑</kbd> seleziona l'elemento padre, <kbd>↓</kbd> il figlio e <kbd>←</kbd>/<kbd>→</kbd> gli elementi vicini. Se l'elemento non è del tutto visibile, il selettore propone invece una cattura a pagina intera."
     }
   },
   "afterCapture": {
@@ -60,8 +64,8 @@
     "intro": "L'editor si apre in una scheda dedicata e carica la cattura più recente dall'archiviazione locale. Ogni strumento ha una scorciatoia di una lettera.",
     "tools": [
       "<strong>Seleziona</strong> <kbd>V</kbd> — sposta, ridimensiona o elimina qualsiasi annotazione. Doppio clic su un livello di testo per modificarlo di nuovo.",
-      "<strong>Rettangolo</strong> <kbd>R</kbd> — disegna un rettangolo con bordo.",
-      "<strong>Freccia</strong> <kbd>A</kbd> — disegna una freccia direzionale.",
+      "<strong>Forma</strong> <kbd>R</kbd> — disegna un rettangolo, un rettangolo arrotondato, un ovale o un triangolo. <strong>Riempimento</strong> imposta nessun riempimento o un riempimento pieno nel colore del tratto; tieni premuto <kbd>Shift</kbd> per lati uguali, così un ovale diventa un cerchio.",
+      "<strong>Freccia</strong> <kbd>A</kbd> — disegna una freccia direzionale con punta piena, aperta, doppia o a punto. Trascina la maniglia rotonda centrale per piegarla in una curva.",
       "<strong>Linea</strong> <kbd>L</kbd> — la freccia senza punta.",
       "<strong>Penna</strong> <kbd>P</kbd> — disegno a mano libera.",
       "<strong>Evidenziatore</strong> <kbd>H</kbd> — un tratto traslucido a mano libera.",
@@ -70,13 +74,14 @@
       "<strong>Sfocatura</strong> <kbd>B</kbd> — nasconde contenuti sensibili con una sfocatura morbida, un mosaico a blocchi grossi o un riempimento opaco. Il riempimento opaco resiste alla ricompressione.",
       "<strong>Spotlight</strong> <kbd>O</kbd> — ritagli a rettangolo, rettangolo arrotondato o ellisse che si fondono in un solo livello scurito.",
       "<strong>Contagocce</strong> <kbd>I</kbd> — preleva un colore dalla cattura. Campiona quello che vedi, quindi un colore dentro uno spotlight o su una sfumatura Beautify viene preso come appare. Il pulsante campione nella riga colore apre il selettore di Chrome per tutto lo schermo, per tutto ciò che è fuori dal canvas.",
-      "<strong>Ritaglia</strong> <kbd>C</kbd> — riduce l'immagine a un'area selezionata."
+      "<strong>Ritaglia</strong> <kbd>C</kbd> — riduce l'immagine a un'area selezionata.",
+      "<strong>Cut</strong> <kbd>X</kbd> — segna fasce orizzontali su una cattura lunga e le rimuove, con un'anteprima dal vivo."
     ],
-    "outro": "Tieni premuto <kbd>Shift</kbd> mentre disegni per rettangoli quadrati e linee e frecce a 45°. La barra degli stili ha una palette di 8 colori su <kbd>1</kbd>–<kbd>8</kbd>, un colore personalizzato, i colori recenti, tre spessori di tratto e un controllo della dimensione del carattere. Le tue scelte vengono ricordate tra le sessioni. Annulla e ripeti sono <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>, o <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd> su macOS."
+    "outro": "Tieni premuto <kbd>Shift</kbd> mentre disegni per forme quadrate e linee e frecce a 45°. La barra degli stili ha una palette di 8 colori su <kbd>1</kbd>–<kbd>8</kbd>, un colore personalizzato, i colori recenti, quattro spessori di tratto che si adattano alla dimensione della cattura e un controllo della dimensione del carattere. Le tue scelte vengono ricordate tra le sessioni. Trascina gli strumenti sulla barra laterale per mettere i preferiti in cima, o sposta lo strumento attivo con <kbd>Alt+↑</kbd> / <kbd>Alt+↓</kbd>. Annulla e ripeti sono <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Shift+Z</kbd>, o <kbd>⌘Z</kbd> / <kbd>⌘⇧Z</kbd> su macOS."
   },
   "beautify": {
     "heading": "Beautify",
-    "body": "Il pannello <strong>Beautify</strong> nella barra superiore incornicia lo screenshot per la condivisione: cursori per spaziatura, raggio degli angoli e ombra, più sei sfumature predefinite, un colore in tinta unita personalizzato o uno sfondo trasparente. La cornice si vede in anteprima dal vivo e arriva in ogni esportazione, negli appunti e nel PDF."
+    "body": "Il pannello <strong>Beautify</strong> nella barra superiore incornicia lo screenshot per la condivisione: uno <strong>Stile</strong>, più i cursori <strong>Spaziatura</strong>, <strong>Angoli</strong> e <strong>Ombra</strong> e uno <strong>Sfondo</strong> scelto tra sei sfumature, un colore in tinta unita personalizzato o la trasparenza. La cornice si vede in anteprima dal vivo e arriva in ogni esportazione, negli appunti e nel PDF."
   },
   "import": {
     "heading": "Annota un'immagine che hai già",
@@ -84,7 +89,7 @@
   },
   "export": {
     "heading": "Esporta",
-    "intro": "Clicca <strong>Esporta</strong> nella barra superiore dell'editor, o premi <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>. Scegli un formato:",
+    "intro": "Clicca <strong>Salva immagine</strong> nella barra superiore dell'editor, o premi <kbd>Ctrl+S</kbd> / <kbd>⌘S</kbd>, per aprire la finestra <strong>Esporta</strong>. Accanto, <strong>Copia</strong> mette un PNG negli appunti e <strong>PDF</strong> salva un PDF con un clic. Nella finestra, scegli un formato:",
     "formats": [
       "<strong>PNG</strong> — senza perdita, mantiene la trasparenza.",
       "<strong>JPEG</strong> — file più piccoli, qualità regolabile.",
@@ -113,7 +118,7 @@
     },
     "export": {
       "title": "Esporta",
-      "body": "L'esportazione ricompone la ripresa tramite canvas, mescolando le tracce e gli effetti impostati, e scarica un file WebM."
+      "body": "L'esportazione ricompone la ripresa tramite canvas, mescolando le tracce e gli effetti impostati, e scarica per impostazione predefinita un file MP4 (H.264 e AAC), oppure WebM dal selettore accanto al pulsante. L'MP4 è limitato a 4096×2304, quindi una scheda più grande viene ridimensionata per rientrarci. I browser senza registrazione MP4 esportano solo WebM."
     }
   },
   "drafts": {
