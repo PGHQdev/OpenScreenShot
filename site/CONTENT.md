@@ -1,8 +1,9 @@
 # Search and answer discovery
 
-The website source is `site/`; `pnpm run site:build` generates `docs/`.
-Do not edit generated pages directly. The initial guides are English-only;
-add translated routes before advertising them through hreflang or language links.
+The website source is `site/`; `pnpm run site:build` generates `site-dist/`
+(git-ignored) and writes a Markdown copy beside every indexable page. Do not
+edit generated pages directly. Blog posts and guides are translated into all
+11 site locales; a page appears in hreflang only for the locales that have it.
 
 ## Audience and first content set
 
@@ -23,11 +24,17 @@ No Search Console or install attribution data was available for this pass.
 
 ## Publishing and maintenance
 
-Create an article in `src/pages/blog/` with the existing Markdown frontmatter:
-`layout`, `title`, `description`, `audience`, and `order`. The blog index reads
-these files automatically. Keep the audience values consistent with the two
-existing groups. Reuse the article layout so canonical, social, breadcrumb,
-and BlogPosting metadata remain consistent.
+Blog posts live in `src/content/blog/<locale>/<slug>.md` with the frontmatter
+`title`, `description`, `audience` (`everyday` or `developers`), and `order`.
+Guides live in `src/content/guides/<section>/<locale>/<slug>.md` with `title`,
+`description`, and `order`; the sections are `use-cases`, `full-page-screenshot`,
+and `alternatives`, each with a hub page. Write English first, then add the
+translations under the same slug. In a translation, prefix internal page links
+with the locale (`/de/docs/`); JSON dictionaries keep them locale-less.
+
+Comparison pages name competitors. Date every fact about another product,
+link the vendor's own page for it, disclose that OpenScreenShot is ours, and
+say who should not switch. Leave out anything you could not verify.
 
 Start with a direct answer, then show the steps, expected output, and important
 limits. Verify command examples against `mcp/src/`; verify extension behavior
@@ -35,7 +42,7 @@ against `src/` and the browser-specific build. Explain when a feature is availab
 only in a source build rather than implying it is published in a browser store.
 
 Link each new guide from an appropriate existing page and to relevant reference
-sections. Add it to `public/llms.txt` for tools that use that file. This file is
+sections. Add it to `public/llms.txt` for tools that use that file, and to `public/index.md` when it opens a new section. This file is
 agent navigation, not a Google ranking mechanism. Keep substantive information
 in the visible HTML. Use schema that describes the actual page; do not add
 invented reviews, authors, rankings, or publication dates. Add real publication

@@ -63,6 +63,8 @@ const {
 } = Astro.props;
 
 const c = t(locale, 'common');
+const b = t(locale, 'blog');
+const g = t(locale, 'guides');
 
 const OG_DEFAULT = {
   src: ogCard.src,
@@ -194,7 +196,10 @@ const alternates = availableLocales.map((l) => ({
         <nav class="foot-col" aria-label={c.footer.productHead}>
           <p class="foot-head">{c.footer.productHead}</p>
           <a href={localizePath(locale, '/docs/')}>{c.footer.docs}</a>
-          <a href="/blog/" lang="en">{locale === 'en' ? 'Blog & guides' : 'Blog & guides (English)'}</a>
+          <a href={localizePath(locale, '/blog/')}>{b.label}</a>
+          <a href={localizePath(locale, '/use-cases/')}>{g.sections['use-cases'].label}</a>
+          <a href={localizePath(locale, '/full-page-screenshot/')}>{g.sections['full-page-screenshot'].label}</a>
+          <a href={localizePath(locale, '/alternatives/')}>{g.sections.alternatives.label}</a>
           <a href={localizePath(locale, '/roadmap/')}>{c.footer.roadmap}</a>
           <a href={localizePath(locale, '/support/')}>{c.footer.supportFaq}</a>
           <a href={localizePath(locale, '/compare/')}>{c.footer.compare}</a>
