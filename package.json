@@ -25,7 +25,7 @@
     "test:watch": "vitest",
     "build": "pnpm run tokens && tsc --noEmit && vite build",
     "package": "pnpm run build && rm -f openscreenshot-v$npm_package_version.zip && cd dist && zip -r -X ../openscreenshot-v$npm_package_version.zip .",
-    "site:build": "astro build --root site && node scripts/site-markdown.mjs",
+    "site:build": "astro build --root site && node scripts/site-markdown.mjs && node scripts/site-lastmod.mjs",
     "site:dev": "astro dev --root site",
     "site:preview": "wrangler dev",
     "site:deploy": "wrangler deploy",
