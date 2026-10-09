@@ -1,8 +1,10 @@
 name: IndexNow
 
 # After Workers Builds deploys a site change, tell IndexNow engines (Bing,
-# Yandex, Naver, Seznam, Yep) to recrawl every URL in the live sitemap. The
-# key file is site/public/<key>.txt; IndexNow keys are public by design.
+# Yandex, Naver, Seznam, Yep) which URLs the deploy changed or removed, from
+# the live sitemap-lastmod.json (scripts/site-lastmod.mjs). A manual run
+# submits every URL in the live sitemap. The key file is
+# site/public/<key>.txt; IndexNow keys are public by design.
 
 on:
   push:
@@ -11,6 +13,7 @@ on:
       - 'site/**'
       - 'site-worker.js'
       - 'scripts/site-markdown.mjs'
+      - 'scripts/site-lastmod.mjs'
   workflow_dispatch:
 
 env:
@@ -39,10 +42,16 @@ jobs:
           done
           echo "deploy did not finish in 20 minutes"; exit 1
 
-      - name: Submit the sitemap URLs
+      - name: Submit the URLs
         run: |
-          curl -fsS "https://${HOST}/sitemap-0.xml" | grep -o '<loc>[^<]*</loc>' | sed 's/<[^>]*>//g' > urls.txt
+          if [ "$GITHUB_EVENT_NAME" = push ]; then
+            curl -fsS "https://${HOST}/sitemap-lastmod.json" \
+              | jq -r --arg site "https://${HOST}" '(.changed + .removed)[] | $site + .' > urls.txt
+          else
+            curl -fsS "https://${HOST}/sitemap-0.xml" | grep -o '<loc>[^<]*</loc>' | sed 's/<[^>]*>//g' > urls.txt
+          fi
           echo "$(wc -l < urls.txt) URLs"
+          [ -s urls.txt ] || { echo "nothing changed"; exit 0; }
           jq -Rn --arg host "$HOST" --arg key "$KEY" \
             '{host: $host, key: $key, keyLocation: "https://\($host)/\($key).txt", urlList: [inputs]}' \
             < urls.txt > body.json
