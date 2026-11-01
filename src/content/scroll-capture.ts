@@ -35,8 +35,13 @@ export function getWindowViewport() {
  * `data-oss-expanded`, so the capture holds them whole. {@link restoreCapture}
  * puts them back.
  */
-export function getMetrics(excludeScrollbars = false): Metrics {
+export function getMetrics(excludeScrollbars = false, scrollTarget = false): Metrics {
   const de = document.documentElement;
+  // The element picker's "Capture whole scrolling area" tags the box to scroll.
+  // Only that capture uses the tag; any other capture clears a stale one.
+  const tagged = document.querySelector<HTMLElement>('[data-oss-scroll-target]');
+  if (tagged && !scrollTarget) tagged.removeAttribute('data-oss-scroll-target');
+  const forced = scrollTarget ? tagged : null;
   const dpr = window.devicePixelRatio || 1;
   // client dimensions exclude classic scrollbar gutters without reflowing
   // the page. Overlay scrollbars are made transparent during preparation.
@@ -63,9 +68,9 @@ export function getMetrics(excludeScrollbars = false): Metrics {
   // When the document can grow, a panel that overflows by less than half a
   // viewport is expanded in place instead, which keeps the page around it.
   // ponytail: linear DOM scan, fine for a one-shot capture; index by overflow if it ever matters.
-  let scroller: HTMLElement | null = null;
+  let scroller: HTMLElement | null = forced;
   let bestOverflow = Math.max(documentScrolls ? vh * 0.5 : 4, de.scrollHeight - vh);
-  for (const el of document.querySelectorAll<HTMLElement>('*')) {
+  for (const el of forced ? [] : document.querySelectorAll<HTMLElement>('*')) {
     const cs = getComputedStyle(el);
     if (cs.overflowY !== 'auto' && cs.overflowY !== 'scroll') continue;
     const overflow = el.scrollHeight - el.clientHeight;
@@ -324,6 +329,7 @@ export function restoreCapture(): void {
   }
   const scroller = document.querySelector<HTMLElement>('[data-oss-scroller="1"]');
   if (scroller) delete scroller.dataset.ossScroller;
+  document.querySelector('[data-oss-scroll-target]')?.removeAttribute('data-oss-scroll-target');
 }
 
 /**

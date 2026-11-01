@@ -67,6 +67,10 @@
     "message": "Capturer la page entière",
     "description": "Element picker: button to capture the full page instead."
   },
+  "elementPickerScrollArea": {
+    "message": "Capturer toute la zone défilante",
+    "description": "Element picker: button shown when the selection is inside a box that scrolls; it captures the box's whole scrolling content, not just the visible part."
+  },
   "elementPickerCancel": {
     "message": "Annuler",
     "description": "Element picker: button to cancel selection."

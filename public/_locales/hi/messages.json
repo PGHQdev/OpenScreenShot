@@ -67,6 +67,10 @@
     "message": "पूरा पेज कैप्चर करें",
     "description": "Element picker: button to capture the full page instead."
   },
+  "elementPickerScrollArea": {
+    "message": "पूरा स्क्रॉल क्षेत्र कैप्चर करें",
+    "description": "Element picker: button shown when the selection is inside a box that scrolls; it captures the box's whole scrolling content, not just the visible part."
+  },
   "elementPickerCancel": {
     "message": "रद्द करें",
     "description": "Element picker: button to cancel selection."

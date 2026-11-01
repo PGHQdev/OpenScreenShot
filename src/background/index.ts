@@ -569,6 +569,7 @@ async function captureElement(tab: chrome.tabs.Tab): Promise<void> {
       cancel: chrome.i18n.getMessage('elementPickerCancel'),
       larger: chrome.i18n.getMessage('elementPickerLarger'),
       smaller: chrome.i18n.getMessage('elementPickerSmaller'),
+      scrollArea: chrome.i18n.getMessage('elementPickerScrollArea'),
     },
   ]);
   if (!selection) return;
@@ -580,6 +581,12 @@ async function captureElement(tab: chrome.tabs.Tab): Promise<void> {
   if (active?.id !== tabId) return;
   if (selection.kind === 'full-page') {
     await captureFullPage(tab);
+    return;
+  }
+  if (selection.kind === 'scroll-area') {
+    // The whole content of a scrolling box: the full-page pipeline, scrolling
+    // the box the picker tagged and cropping to it.
+    await captureFullPage(tab, { mode: 'element', scrollTarget: true });
     return;
   }
 
@@ -630,9 +637,13 @@ async function captureElement(tab: chrome.tabs.Tab): Promise<void> {
   }
 }
 
-async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
+async function captureFullPage(
+  tab: chrome.tabs.Tab,
+  { mode = 'full-page', scrollTarget = false }: { mode?: CaptureMode; scrollTarget?: boolean } = {},
+): Promise<void> {
   const tabId = tab.id as number;
-  const metrics = await execInTab(tabId, getMetrics, [true]);
+  // scrollTarget: scroll the box the element picker tagged instead of the page.
+  const metrics = await execInTab(tabId, getMetrics, [true, scrollTarget]);
   if (metrics.viewportHeight <= 0 || metrics.scrollHeight <= 0) {
     await runInTab(tabId, restoreCapture, []);
     broadcast({
@@ -704,7 +715,7 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
                 dataUrl,
                 width: canvasWidth,
                 height: part.height,
-                mode: 'full-page',
+                mode,
                 title: tab.title ?? '',
                 url: tab.url ?? '',
                 capturedAt: Date.now(),
@@ -759,7 +770,7 @@ async function captureFullPage(tab: chrome.tabs.Tab): Promise<void> {
             firstPartUrl,
             canvasWidth,
             canvasHeight,
-            'full-page',
+            mode,
             tab.title ?? '',
             tab.url ?? '',
             windowId,

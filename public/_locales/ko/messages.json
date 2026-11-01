@@ -67,6 +67,10 @@
     "message": "전체 페이지 캡처",
     "description": "Element picker: button to capture the full page instead."
   },
+  "elementPickerScrollArea": {
+    "message": "스크롤 영역 전체 캡처",
+    "description": "Element picker: button shown when the selection is inside a box that scrolls; it captures the box's whole scrolling content, not just the visible part."
+  },
   "elementPickerCancel": {
     "message": "취소",
     "description": "Element picker: button to cancel selection."

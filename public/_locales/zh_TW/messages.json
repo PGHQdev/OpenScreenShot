@@ -67,6 +67,10 @@
     "message": "擷取整個網頁",
     "description": "Element picker: button to capture the full page instead."
   },
+  "elementPickerScrollArea": {
+    "message": "擷取整個捲動區域",
+    "description": "Element picker: button shown when the selection is inside a box that scrolls; it captures the box's whole scrolling content, not just the visible part."
+  },
   "elementPickerCancel": {
     "message": "取消",
     "description": "Element picker: button to cancel selection."

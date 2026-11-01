@@ -67,6 +67,10 @@
     "message": "Chụp toàn trang",
     "description": "Element picker: button to capture the full page instead."
   },
+  "elementPickerScrollArea": {
+    "message": "Chụp toàn bộ vùng cuộn",
+    "description": "Element picker: button shown when the selection is inside a box that scrolls; it captures the box's whole scrolling content, not just the visible part."
+  },
   "elementPickerCancel": {
     "message": "Hủy",
     "description": "Element picker: button to cancel selection."
