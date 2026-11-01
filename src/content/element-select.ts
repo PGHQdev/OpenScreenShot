@@ -10,15 +10,26 @@ export interface ElementPickerLabels {
   cancel: string;
   larger: string;
   smaller: string;
+  /** Button that captures the whole content of a scrolling box. */
+  scrollArea: string;
 }
 
-export type ElementSelection = { kind: 'element'; rect: PageRect } | { kind: 'full-page' };
+/**
+ * What the picker chose. `scroll-area` means the whole content of a scrolling
+ * box: the picker tags that box `data-oss-scroll-target`, and the full-page
+ * pipeline scrolls it instead of the page (getMetrics in scroll-capture.ts).
+ */
+export type ElementSelection =
+  { kind: 'element'; rect: PageRect } | { kind: 'full-page' } | { kind: 'scroll-area' };
 
 /** Injected with executeScript: all runtime helpers must stay inside this function. */
 export function selectElement(labels: ElementPickerLabels): Promise<ElementSelection | null> {
   return new Promise((resolve) => {
     const doc = document;
     const marker = 'data-openscreenshot-element-picker';
+    const scrollTag = 'data-oss-scroll-target';
+    // A tag left by a capture that never ran must not steer this one.
+    for (const el of doc.querySelectorAll(`[${scrollTag}]`)) el.removeAttribute(scrollTag);
     // A DOM event also works across separately serialized invocations.
     doc.querySelector(`[${marker}]`)?.dispatchEvent(new Event('openscreenshot-cancel'));
     let active = doc.activeElement;
@@ -105,6 +116,8 @@ export function selectElement(labels: ElementPickerLabels): Promise<ElementSelec
     const smaller = button(labels.smaller);
     const capture = button(labels.capture);
     capture.className = 'primary';
+    const scrollArea = button(labels.scrollArea);
+    scrollArea.hidden = true;
     const fullPage = button(labels.fullPage);
     const cancel = button(labels.cancel);
     bar.append(title, instructions, status, actions);
@@ -247,6 +260,18 @@ export function selectElement(labels: ElementPickerLabels): Promise<ElementSelec
       }
       return true;
     };
+    // The selection, or the nearest box around it, that scrolls vertically and
+    // sits fully on screen: its whole content can be captured by scrolling it.
+    const scrollBox = (from: Element | null): HTMLElement | null => {
+      for (let el = from; el && el !== doc.body && el !== doc.documentElement; el = parent(el)) {
+        if (!(el instanceof HTMLElement) || !usable(el)) continue;
+        const css = getComputedStyle(el);
+        if (!/^(auto|scroll)$/.test(css.overflowY) || el.scrollHeight <= el.clientHeight + 1)
+          continue;
+        return fullyVisible(el, el.getBoundingClientRect()) ? el : null;
+      }
+      return null;
+    };
     const render = () => {
       if (current && !usable(current)) {
         current = null;
@@ -267,6 +292,7 @@ export function selectElement(labels: ElementPickerLabels): Promise<ElementSelec
       }
       capture.disabled = !visible;
       fullPage.hidden = !current || visible;
+      scrollArea.hidden = !scrollBox(current);
       larger.disabled = !ancestor(current);
       smaller.disabled = !history.some(usable) && !(smallerTarget && usable(smallerTarget));
       const text =
@@ -391,7 +417,13 @@ export function selectElement(labels: ElementPickerLabels): Promise<ElementSelec
       if (target.disabled || target.hidden) return;
       if (target === cancel) finish(null);
       else if (target === capture) confirm();
-      else if (target === fullPage) {
+      else if (target === scrollArea) {
+        const box = scrollBox(current);
+        if (box) {
+          box.setAttribute(scrollTag, '');
+          finish({ kind: 'scroll-area' });
+        }
+      } else if (target === fullPage) {
         render();
         if (!fullPage.hidden) finish({ kind: 'full-page' });
       } else if (target === larger) grow();
@@ -442,7 +474,7 @@ export function selectElement(labels: ElementPickerLabels): Promise<ElementSelec
       event.stopImmediatePropagation();
       if (event.key === 'Tab') {
         event.preventDefault();
-        const available = [larger, smaller, capture, fullPage, cancel].filter(
+        const available = [larger, smaller, capture, scrollArea, fullPage, cancel].filter(
           (el) => !el.disabled && !el.hidden,
         );
         const index = available.indexOf(shadow.activeElement as HTMLButtonElement);

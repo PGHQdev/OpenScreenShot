@@ -8,6 +8,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const SOURCE = join(ROOT, 'src/content/element-select.ts');
+const SCROLL_SOURCE = join(ROOT, 'src/content/scroll-capture.ts');
 const CHROME =
   process.env.CHROME_BIN ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const labels = {
@@ -20,6 +21,7 @@ const labels = {
   cancel: 'Cancel',
   larger: 'Larger',
   smaller: 'Smaller',
+  scrollArea: 'Capture whole scrolling area',
 };
 
 async function loadPuppeteer() {
@@ -52,7 +54,9 @@ html,body{margin:0;background:white;min-height:1600px;font:16px Arial}
 #overflow{width:200px;height:120px;background:white}
 #shadow{position:absolute;left:80px;top:440px;width:240px;height:100px}
 iframe{position:absolute;left:360px;top:440px;width:180px;height:100px;border:0}
-</style><button id="prior">Before picker</button><section id="group"><article id="card"><a id="link" href="#activated"><span>Read this card</span></a></article></section><img id="image" alt="Image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='100'%3E%3Crect width='140' height='100' fill='white'/%3E%3C/svg%3E"><article id="clipped"></article><div id="scroller"><article id="overflow"></article></div><div id="shadow"></div><iframe srcdoc="<button>Frame action</button>"></iframe>`;
+#feed{position:absolute;left:800px;top:80px;width:160px;height:200px;overflow-y:auto;background:#ddd}
+#feed article{height:110px;margin:8px;background:white;border-radius:6px}
+</style><button id="prior">Before picker</button><section id="group"><article id="card"><a id="link" href="#activated"><span>Read this card</span></a></article></section><img id="image" alt="Image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='100'%3E%3Crect width='140' height='100' fill='white'/%3E%3C/svg%3E"><article id="clipped"></article><div id="scroller"><article id="overflow"></article></div><div id="shadow"></div><iframe srcdoc="<button>Frame action</button>"></iframe><div id="feed"><article></article><article></article><article></article><article></article><article></article></div>`;
 
 let browser;
 let work;
@@ -410,6 +414,68 @@ try {
     'restores focus inside open shadow roots',
   );
   console.log('PASS shadow DOM, iframe boundaries and duplicate cleanup');
+
+  // A box that scrolls offers its whole content; one that does not, doesn't.
+  await setup();
+  await page.mouse.move(850, 120);
+  assert.equal(
+    (await control(labels.scrollArea)).hidden,
+    false,
+    'a card inside a scrolling box offers the whole scrolling area',
+  );
+  await page.mouse.move(130, 130);
+  assert.equal(
+    (await control(labels.scrollArea)).hidden,
+    true,
+    'an element with no scrolling box around it does not',
+  );
+  await page.mouse.move(850, 120);
+  await clickControl(labels.scrollArea);
+  assert.deepEqual((await result()).value, { kind: 'scroll-area' });
+  assert.equal(
+    await page.evaluate(() => document.querySelector('[data-oss-scroll-target]')?.id),
+    'feed',
+    'the picker tags the scrolling box for the capture',
+  );
+  // The capture's measurement uses the tagged box, and restoring clears the tag.
+  const { code: scrollCode } = await transformWithEsbuild(
+    await readFile(SCROLL_SOURCE, 'utf8'),
+    SCROLL_SOURCE,
+    { loader: 'ts', format: 'iife', globalName: '__sc' },
+  );
+  await page.addScriptTag({ content: scrollCode });
+  const measured = await page.evaluate(() => {
+    const m = globalThis.__sc.getMetrics(true, true);
+    const tagged = document.querySelector('[data-oss-scroller="1"]')?.id;
+    globalThis.__sc.restoreCapture();
+    return {
+      tagged,
+      scrollHeight: m.scrollHeight,
+      container: m.container,
+      left: document.querySelectorAll('[data-oss-scroll-target],[data-oss-scroller]').length,
+    };
+  });
+  assert.equal(measured.tagged, 'feed', 'getMetrics scrolls the tagged box');
+  assert.equal(measured.scrollHeight, 5 * 118 + 8, 'its full content height');
+  assert.deepEqual(
+    measured.container,
+    { x: 800, y: 80, width: 160, height: 200 },
+    'tiles crop to the box',
+  );
+  assert.equal(measured.left, 0, 'restoreCapture removes both tags');
+  // Starting the picker again clears a tag a capture never used.
+  await page.evaluate(() =>
+    document.querySelector('#feed').setAttribute('data-oss-scroll-target', ''),
+  );
+  await start();
+  assert.equal(
+    await page.evaluate(() => document.querySelectorAll('[data-oss-scroll-target]').length),
+    0,
+    'a stale scroll target is cleared when the picker opens',
+  );
+  await page.keyboard.press('Escape');
+  await result();
+  console.log('PASS whole scrolling area: offer, tag, measure, and cleanup');
   console.log('Element picker smoke passed.');
 } finally {
   if (browser) await browser.close();

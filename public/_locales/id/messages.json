@@ -67,6 +67,10 @@
     "message": "Tangkap halaman penuh",
     "description": "Element picker: button to capture the full page instead."
   },
+  "elementPickerScrollArea": {
+    "message": "Tangkap seluruh area gulir",
+    "description": "Element picker: button shown when the selection is inside a box that scrolls; it captures the box's whole scrolling content, not just the visible part."
+  },
   "elementPickerCancel": {
     "message": "Batal",
     "description": "Element picker: button to cancel selection."
